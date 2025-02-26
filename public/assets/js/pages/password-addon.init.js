@@ -1,0 +1,1 @@
+Array.from(document.querySelectorAll("form .auth-pass-inputgroup")).forEach((function(r){Array.from(r.querySelectorAll(".password-addon")).forEach((function(o){o.addEventListener("click",(function(o){var e=r.querySelector(".password-input");"password"===e.type?e.type="text":e.type="password"}))}))}));

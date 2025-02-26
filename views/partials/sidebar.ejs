@@ -1,0 +1,1258 @@
+<!-- ========== App Menu ========== -->
+<div class="app-menu navbar-menu">
+  <!-- LOGO -->
+  <div class="navbar-brand-box">
+    <!-- Dark Logo-->
+    <a href="/index" class="logo logo-dark">
+      <span class="logo-sm">
+        <img src="/assets/images/logo-sm.png" alt="" height="22">
+      </span>
+      <span class="logo-lg">
+        <img src="/assets/images/logo-dark.png" alt="" height="17">
+      </span>
+    </a>
+    <!-- Light Logo-->
+    <a href="/index" class="logo logo-light">
+      <span class="logo-sm">
+        <img src="/assets/images/logo-sm.png" alt="" height="22">
+      </span>
+      <span class="logo-lg">
+        <img src="/assets/images/logo-light.png" alt="" height="17">
+      </span>
+    </a>
+    <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+      <i class="ri-record-circle-line"></i>
+    </button>
+  </div>
+  <div class="dropdown sidebar-user m-1 rounded">
+    <button type="button" class="btn material-shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown"
+      aria-haspopup="true" aria-expanded="false">
+      <span class="d-flex align-items-center gap-2">
+        <img class="rounded header-profile-user" src="assets/images/users/avatar-1.jpg" alt="Header Avatar">
+        <span class="text-start">
+          <span class="d-block fw-medium sidebar-user-name-text">Anna Adame</span>
+          <span class="d-block fs-14 sidebar-user-name-sub-text"><i
+              class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span
+              class="align-middle">Online</span></span>
+        </span>
+      </span>
+    </button>
+    <div class="dropdown-menu dropdown-menu-end">
+      <!-- item-->
+      <h6 class="dropdown-header">Welcome Anna!</h6>
+      <a class="dropdown-item" href="pages-profile"><i
+          class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
+          class="align-middle">Profile</span></a>
+      <a class="dropdown-item" href="apps-chat"><i
+          class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i> <span
+          class="align-middle">Messages</span></a>
+      <a class="dropdown-item" href="apps-tasks-kanban"><i
+          class="mdi mdi-calendar-check-outline text-muted fs-16 align-middle me-1"></i> <span
+          class="align-middle">Taskboard</span></a>
+      <a class="dropdown-item" href="pages-faqs"><i class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i>
+        <span class="align-middle">Help</span></a>
+      <div class="dropdown-divider"></div>
+      <a class="dropdown-item" href="pages-profile"><i class="mdi mdi-wallet text-muted fs-16 align-middle me-1"></i>
+        <span class="align-middle">Balance : <b>$5971.67</b></span></a>
+      <a class="dropdown-item" href="pages-profile-settings"><span
+          class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
+          class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span
+          class="align-middle">Settings</span></a>
+      <a class="dropdown-item" href="auth-lockscreen-basic"><i
+          class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Lock screen</span></a>
+      <a class="dropdown-item" href="auth-logout-basic"><i
+          class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle"
+          data-key="t-logout">Logout</span></a>
+    </div>
+  </div>
+  <div id="scrollbar">
+    <div class="container-fluid">
+
+      <div id="two-column-menu">
+      </div>
+      <ul class="navbar-nav" id="navbar-nav">
+        <li class="menu-title"><span data-key="t-menu"><%=translation.t_menu %></span></li>
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarDashboards" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarDashboards">
+            <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards"><%=translation.t_dashboards %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarDashboards">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="/dashboard-analytics" class="nav-link" data-key="t-analytics"> <%=translation.t_analytics %>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="/dashboard-crm" class="nav-link" data-key="t-crm"> <%=translation.t_crm %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/index" class="nav-link" data-key="t-ecommerce"> <%=translation.t_ecommerce %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/dashboard-crypto" class="nav-link" data-key="t-crypto"> <%=translation.t_crypto %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/dashboard-projects" class="nav-link" data-key="t-projects"> <%=translation.t_projects %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/dashboard-nft" class="nav-link" data-key="t-nft"> <%=translation.t_nft %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/dashboard-job" class="nav-link" data-key="t-job"><%=translation.t_job %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/dashboard-blog" class="nav-link"><span data-key="t-blog"><%=translation.t_blog %></span>
+                  <span class="badge bg-success" data-key="t-new"><%=translation.t_new %></span></a>
+              </li>
+            </ul>
+          </div>
+        </li> <!-- end Dashboard Menu -->
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarApps" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarApps">
+            <i class="ri-apps-2-line"></i> <span data-key="t-apps"><%=translation.t_apps %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarApps">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="#sidebarCalendar" class="nav-link" data-bs-toggle="collapse" role="button"
+                  aria-expanded="false" data-key="t-calender" aria-controls="sidebarCalendar" data-key="t-calender">
+                  <%=translation.t_calendar %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarCalendar">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-calendar" class="nav-link" data-key="t-calender"> <%=translation.t_main_calender %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-calendar-month-grid" class="nav-link" data-key="t-month-grid">
+                        <%=translation.t_month_grid %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="/apps-chat" class="nav-link" data-key="t-chat"> <%=translation.t_chat %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/#sidebarEmail" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarEmail" data-key="t-email">
+                  <%=translation.t_email %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarEmail">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-mailbox" class="nav-link" data-key="t-mailbox"> <%=translation.t_mailbox %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#sidebaremailTemplates" class="nav-link" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebaremailTemplates" data-key="t-email-templates">
+                        <%=translation.t_email_templates %>
+                      </a>
+                      <div class="collapse menu-dropdown" id="sidebaremailTemplates">
+                        <ul class="nav nav-sm flex-column">
+                          <li class="nav-item">
+                            <a href="/apps-email-basic" class="nav-link" data-key="t-basic-action">
+                              <%=translation.t_basic_action %> </a>
+                          </li>
+                          <li class="nav-item">
+                            <a href="/apps-email-ecommerce" class="nav-link" data-key="t-ecommerce-action">
+                              <%=translation.t_ecommerce_action %> </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarEcommerce" class="nav-link" data-bs-toggle="collapse" role="button"
+                  aria-expanded="false" aria-controls="sidebarEcommerce" data-key="t-ecommerce">
+                  <%=translation.t_ecommerce %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarEcommerce">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-products" class="nav-link" data-key="t-products">
+                        <%=translation.t_products %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-product-details" class="nav-link" data-key="t-product-Details">
+                        <%=translation.t_product_Details %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-add-product" class="nav-link" data-key="t-create-product">
+                        <%=translation.t_create_product %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-orders" class="nav-link" data-key="t-orders">
+                        <%=translation.t_orders %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-order-details" class="nav-link" data-key="t-order-details">
+                        <%=translation.t_order_details %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-customers" class="nav-link" data-key="t-customers">
+                        <%=translation.t_customers %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-cart" class="nav-link" data-key="t-shopping-cart">
+                        <%=translation.t_shopping_cart %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-checkout" class="nav-link" data-key="t-checkout">
+                        <%=translation.t_checkout %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-sellers" class="nav-link" data-key="t-sellers">
+                        <%=translation.t_sellers %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-ecommerce-seller-details" class="nav-link" data-key="t-sellers-details">
+                        <%=translation.t_sellers_details %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarProjects" class="nav-link" data-bs-toggle="collapse" role="button"
+                  aria-expanded="false" aria-controls="sidebarProjects" data-key="t-projects">
+                  <%=translation.t_projects %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarProjects">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-projects-list" class="nav-link" data-key="t-list"> <%=translation.t_list %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-projects-overview" class="nav-link" data-key="t-overview">
+                        <%=translation.t_overview %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-projects-create" class="nav-link" data-key="t-create-project">
+                        <%=translation.t_create_project %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarTasks" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarTasks" data-key="t-tasks"> <%=translation.t_tasks %></a>
+                <div class="collapse menu-dropdown" id="sidebarTasks">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-tasks-kanban" class="nav-link" data-key="t-kanbanboard">
+                        <%=translation.t_kanbanboard %></a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-tasks-list-view" class="nav-link" data-key="t-list-view">
+                        <%=translation.t_list_view %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-tasks-details" class="nav-link" data-key="t-task-details">
+                        <%=translation.t_task_details %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarCRM" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarCRM" data-key="t-crm"> <%=translation.t_crm %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarCRM">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-crm-contacts" class="nav-link" data-key="t-contacts">
+                        <%=translation.t_contacts %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-crm-companies" class="nav-link" data-key="t-companies">
+                        <%=translation.t_companies %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-crm-deals" class="nav-link" data-key="t-deals"> <%=translation.t_deals %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-crm-leads" class="nav-link" data-key="t-leads"> <%=translation.t_leads %>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarCrypto" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarCrypto" data-key="t-crypto"> <%=translation.t_crypto %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarCrypto">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-crypto-transactions" class="nav-link" data-key="t-transactions">
+                        <%=translation.t_transactions %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-crypto-buy-sell" class="nav-link" data-key="t-buy-sell">
+                        <%=translation.t_buy_sell %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-crypto-orders" class="nav-link" data-key="t-orders">
+                        <%=translation.t_orders %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-crypto-wallet" class="nav-link" data-key="t-my-wallet">
+                        <%=translation.t_my_wallet %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-crypto-ico" class="nav-link" data-key="t-ico-list"> <%=translation.t_ico_list %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-crypto-kyc" class="nav-link" data-key="t-kyc-application">
+                        <%=translation.t_kyc_application %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarInvoices" class="nav-link" data-bs-toggle="collapse" role="button"
+                  aria-expanded="false" aria-controls="sidebarInvoices" data-key="t-invoices">
+                  <%=translation.t_invoices %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarInvoices">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-invoices-list" class="nav-link" data-key="t-list-view">
+                        <%=translation.t_list_view %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-invoices-details" class="nav-link" data-key="t-details">
+                        <%=translation.t_details %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-invoices-create" class="nav-link" data-key="t-create-invoice">
+                        <%=translation.t_create_invoice %></a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarTickets" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarTickets" data-key="t-supprt-tickets">
+                  <%=translation.t_supprt_tickets %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarTickets">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-tickets-list" class="nav-link" data-key="t-list-view">
+                        <%=translation.t_list_view %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-tickets-details" class="nav-link" data-key="t-ticket-details">
+                        <%=translation.t_ticket_details %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarnft" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarnft" data-key="t-nft-marketplace">
+                  <%=translation.t_nft_marketplace %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarnft">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-nft-marketplace" class="nav-link" data-key="t-marketplace">
+                        <%=translation.t_marketplace %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-nft-explore" class="nav-link" data-key="t-explore-now">
+                        <%=translation.t_explore_now %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-nft-auction" class="nav-link" data-key="t-live-auction">
+                        <%=translation.t_live_auction %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-nft-item-details" class="nav-link" data-key="t-item-details">
+                        <%=translation.t_item_details %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-nft-collections" class="nav-link" data-key="t-collections">
+                        <%=translation.t_collections %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-nft-creators" class="nav-link" data-key="t-creators"> <%=translation.t_creators %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-nft-ranking" class="nav-link" data-key="t-ranking"> <%=translation.t_ranking %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-nft-wallet" class="nav-link" data-key="t-wallet-connect">
+                        <%=translation.t_wallet_connect %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-nft-create" class="nav-link" data-key="t-create-nft">
+                        <%=translation.t_create_nft %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="/apps-file-manager" class="nav-link"> <span
+                    data-key="t-file-manager"><%=translation.t_file_manager %></span></a>
+              </li>
+              <li class="nav-item">
+                <a href="/apps-todo" class="nav-link"> <span data-key="t-to-do"><%=translation.t_to_do %></span></a>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarjobs" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarjobs" data-key="t-jobs"> <%=translation.t_jobs %></a>
+                <div class="collapse menu-dropdown" id="sidebarjobs">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/apps-job-statistics" class="nav-link" data-key="t-statistics">
+                        <%=translation.t_statistics %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#sidebarJoblists" class="nav-link" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarJoblists" data-key="t-job-lists">
+                        <%=translation.t_job_lists %>
+                      </a>
+                      <div class="collapse menu-dropdown" id="sidebarJoblists">
+                        <ul class="nav nav-sm flex-column">
+                          <li class="nav-item">
+                            <a href="/apps-job-lists" class="nav-link" data-key="t-list"> <%=translation.t_list %>
+                            </a>
+                          </li>
+                          <li class="nav-item">
+                            <a href="/apps-job-grid-lists" class="nav-link" data-key="t-grid"> <%=translation.t_grid %>
+                            </a>
+                          </li>
+                          <li class="nav-item">
+                            <a href="/apps-job-details" class="nav-link" data-key="t-overview">
+                              <%=translation.t_overview %></a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#sidebarCandidatelists" class="nav-link" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarCandidatelists" data-key="t-candidate-lists">
+                        <%=translation.t_candidate_lists %>
+                      </a>
+                      <div class="collapse menu-dropdown" id="sidebarCandidatelists">
+                        <ul class="nav nav-sm flex-column">
+                          <li class="nav-item">
+                            <a href="/apps-job-candidate-lists" class="nav-link" data-key="t-list-view">
+                              <%=translation.t_list_view %>
+                            </a>
+                          </li>
+                          <li class="nav-item">
+                            <a href="/apps-job-candidate-grid" class="nav-link" data-key="t-grid-view">
+                              <%=translation.t_grid_view %></a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-job-application" class="nav-link" data-key="t-application">
+                        <%=translation.t_application %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-job-new" class="nav-link" data-key="t-new-job"> <%=translation.t_new_job %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-job-companies-lists" class="nav-link" data-key="t-companies-list">
+                        <%=translation.t_companies_list %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/apps-job-categories" class="nav-link" data-key="t-job-categories">
+                        <%=translation.t_job_categories %></a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="/apps-api-key" class="nav-link" data-key="t-api-key"><%=translation.t_api_key %></a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarLayouts" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarLayouts">
+            <i class="ri-layout-3-line"></i> <span data-key="t-layouts"><%=translation.t_layouts %></span> <span
+              class="badge badge-pill bg-danger" data-key="t-hot"><%=translation.t_hot %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarLayouts">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="/layouts-horizontal" target="_blank" class="nav-link"
+                  data-key="t-horizontal"><%=translation.t_horizontal %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/layouts-detached" target="_blank" class="nav-link"
+                  data-key="t-detached"><%=translation.t_detached %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/layouts-two-column" target="_blank" class="nav-link"
+                  data-key="t-two-column"><%=translation.t_two_column %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/layouts-vertical-hovered" target="_blank" class="nav-link"
+                  data-key="t-hovered"><%=translation.t_hovered %></a>
+              </li>
+            </ul>
+          </div>
+        </li> <!-- end Dashboard Menu -->
+
+        <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages"><%=translation.t_pages %></span>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarAuth" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarAuth">
+            <i class="ri-account-circle-line"></i> <span
+              data-key="t-authentication"><%=translation.t_authentication %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarAuth">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="#sidebarSignIn" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarSignIn" data-key="t-signin"> <%=translation.t_signin %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarSignIn">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/auth-signin-basic" class="nav-link" data-key="t-basic"> <%=translation.t_basic %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-signin-cover" class="nav-link" data-key="t-cover"> <%=translation.t_cover %>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarSignUp" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarSignUp" data-key="t-signup"> <%=translation.t_signup %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarSignUp">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/auth-signup-basic" class="nav-link" data-key="t-basic"><%=translation.t_basic %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-signup-cover" class="nav-link" data-key="t-cover"><%=translation.t_cover %>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="nav-item">
+                <a href="#sidebarResetPass" class="nav-link" data-bs-toggle="collapse" role="button"
+                  aria-expanded="false" aria-controls="sidebarResetPass" data-key="t-password-reset">
+                  <%=translation.t_password_reset %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarResetPass">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/auth-pass-reset-basic" class="nav-link" data-key="t-basic">
+                        <%=translation.t_basic %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-pass-reset-cover" class="nav-link" data-key="t-cover">
+                        <%=translation.t_cover %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="nav-item">
+                <a href="#sidebarchangePass" class="nav-link" data-bs-toggle="collapse" role="button"
+                  aria-expanded="false" aria-controls="sidebarchangePass" data-key="t-password-create">
+                  <%=translation.t_password_create %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarchangePass">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/auth-pass-change-basic" class="nav-link" data-key="t-basic">
+                        <%=translation.t_basic %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-pass-change-cover" class="nav-link" data-key="t-cover">
+                        <%=translation.t_cover %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="nav-item">
+                <a href="#sidebarLockScreen" class="nav-link" data-bs-toggle="collapse" role="button"
+                  aria-expanded="false" aria-controls="sidebarLockScreen" data-key="t-lock-screen">
+                  <%=translation.t_lock_screen %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarLockScreen">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/auth-lockscreen-basic" class="nav-link" data-key="t-basic">
+                        <%=translation.t_basic %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-lockscreen-cover" class="nav-link" data-key="t-cover">
+                        <%=translation.t_cover %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+
+              <li class="nav-item">
+                <a href="#sidebarLogout" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarLogout" data-key="t-logout"> <%=translation.t_logout %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarLogout">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/auth-logout-basic" class="nav-link" data-key="t-basic"> <%=translation.t_basic %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-logout-cover" class="nav-link" data-key="t-cover"> <%=translation.t_cover %>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarSuccessMsg" class="nav-link" data-bs-toggle="collapse" role="button"
+                  aria-expanded="false" aria-controls="sidebarSuccessMsg" data-key="t-success-message">
+                  <%=translation.t_success_message %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarSuccessMsg">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/auth-success-msg-basic" class="nav-link" data-key="t-basic">
+                        <%=translation.t_basic %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-success-msg-cover" class="nav-link" data-key="t-cover">
+                        <%=translation.t_cover %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarTwoStep" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarTwoStep" data-key="t-two-step-verification">
+                  <%=translation.t_two_step_verification %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarTwoStep">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/auth-twostep-basic" class="nav-link" data-key="t-basic"><%=translation.t_basic %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-twostep-cover" class="nav-link" data-key="t-cover"><%=translation.t_cover %>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarErrors" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarErrors" data-key="t-errors"> <%=translation.t_errors %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarErrors">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/auth-404-basic" class="nav-link" data-key="t-404-basic"> <%=translation.t_404_basic %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-404-cover" class="nav-link" data-key="t-404-cover"> <%=translation.t_404_cover %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-404-alt" class="nav-link" data-key="t-404-alt"> <%=translation.t_404_alt %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-500" class="nav-link" data-key="t-500"> <%=translation.t_500 %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/auth-offline" class="nav-link" data-key="t-offline-page">
+                        <%=translation.t_offline_page %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarPages" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarPages">
+            <i class="ri-pages-line"></i> <span data-key="t-pages"><%=translation.t_pages %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarPages">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="/pages-starter" class="nav-link" data-key="t-starter"> <%=translation.t_starter %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarProfile" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarProfile" data-key="t-profile"> <%=translation.t_profile %></a>
+                <div class="collapse menu-dropdown" id="sidebarProfile">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/pages-profile" class="nav-link" data-key="t-simple-page">
+                        <%=translation.t_simple_page %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/pages-profile-settings" class="nav-link" data-key="t-settings">
+                        <%=translation.t_settings %> </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-team" class="nav-link" data-key="t-team"> <%=translation.t_team %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-timeline" class="nav-link" data-key="t-timeline"> <%=translation.t_timeline %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-faqs" class="nav-link" data-key="t-faqs"> <%=translation.t_faqs %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-pricing" class="nav-link" data-key="t-pricing"> <%=translation.t_pricing %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-gallery" class="nav-link" data-key="t-gallery"> <%=translation.t_gallery %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-maintenance" class="nav-link" data-key="t-maintenance"> <%=translation.t_maintenance %>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-coming-soon" class="nav-link" data-key="t-coming-soon"> <%=translation.t_coming_soon %>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-sitemap" class="nav-link" data-key="t-sitemap"> <%=translation.t_sitemap %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-search-results" class="nav-link" data-key="t-search-results">
+                  <%=translation.t_search_results %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-privacy-policy" class="nav-link"
+                  data-key="t-privacy-policy"><%=translation.t_privacy_policy %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/pages-term-conditions" class="nav-link"
+                  data-key="t-term-conditions"><%=translation.t_term_conditions %></a>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarBlogs" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarBlogs">
+                  <span data-key="t-blogs"><%=translation.t_blogs %></span> <span class="badge badge-pill bg-success"
+                    data-key="t-new">New</span>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarBlogs">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/pages-blog-list" class="nav-link"
+                        data-key="t-list-view"><%=translation.t_list_view %></a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/pages-blog-grid" class="nav-link"
+                        data-key="t-grid-view"><%=translation.t_grid_view %></a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/pages-blog-overview" class="nav-link"
+                        data-key="t-overview"><%=translation.t_overview %></a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarLanding" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarLanding">
+            <i class="ri-rocket-line"></i> <span data-key="t-landing"><%=translation.t_landing %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarLanding">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="/landing" class="nav-link" data-key="t-one-page"><%=translation.t_one_page %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/nft-landing" class="nav-link" data-key="t-nft-landing"> <%=translation.t_nft_landing %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/job-landing" class="nav-link" data-key="t-job"><%=translation.t_job %></a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="menu-title"><i class="ri-more-fill"></i> <span
+            data-key="t-components"><%=translation.t_components %></span></li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarUI" data-bs-toggle="collapse" role="button" aria-expanded="false"
+            aria-controls="sidebarUI">
+            <i class="ri-pencil-ruler-2-line"></i> <span data-key="t-base-ui"><%=translation.t_base_ui %></span>
+          </a>
+          <div class="collapse menu-dropdown mega-dropdown-menu" id="sidebarUI">
+            <div class="row">
+              <div class="col-lg-4">
+                <ul class="nav nav-sm flex-column">
+                  <li class="nav-item">
+                    <a href="/ui-alerts" class="nav-link" data-key="t-alerts"><%=translation.t_alerts %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-badges" class="nav-link" data-key="t-badges"><%=translation.t_badges %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-buttons" class="nav-link" data-key="t-buttons"><%=translation.t_buttons %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-colors" class="nav-link" data-key="t-colors"><%=translation.t_colors %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-cards" class="nav-link" data-key="t-cards"><%=translation.t_cards %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-carousel" class="nav-link" data-key="t-carousel"><%=translation.t_carousel %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-dropdowns" class="nav-link" data-key="t-dropdowns"><%=translation.t_dropdowns %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-grid" class="nav-link" data-key="t-grid"><%=translation.t_grid %></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="col-lg-4">
+                <ul class="nav nav-sm flex-column">
+                  <li class="nav-item">
+                    <a href="/ui-images" class="nav-link" data-key="t-images"><%=translation.t_images %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-tabs" class="nav-link" data-key="t-tabs"><%=translation.t_tabs %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-accordions" class="nav-link"
+                      data-key="t-accordion-collapse"><%=translation.t_accordion_collapse %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-modals" class="nav-link" data-key="t-modals"><%=translation.t_modals %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-offcanvas" class="nav-link" data-key="t-offcanvas"><%=translation.t_offcanvas %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-placeholders" class="nav-link"
+                      data-key="t-placeholders"><%=translation.t_placeholders %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-progress" class="nav-link" data-key="t-progress"><%=translation.t_progress %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-notifications" class="nav-link"
+                      data-key="t-notifications"><%=translation.t_notifications %></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="col-lg-4">
+                <ul class="nav nav-sm flex-column">
+                  <li class="nav-item">
+                    <a href="/ui-media" class="nav-link" data-key="t-media-object"><%=translation.t_media_object %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-embed-video" class="nav-link"
+                      data-key="t-embed-video"><%=translation.t_embed_video %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-typography" class="nav-link" data-key="t-typography"><%=translation.t_typography %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-lists" class="nav-link" data-key="t-lists"><%=translation.t_lists %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-links" class="nav-link"><span data-key="t-links"><%=translation.t_links %></span> <span
+                        class="badge badge-pill bg-success" data-key="t-new">New</span></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-general" class="nav-link" data-key="t-general"><%=translation.t_general %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-ribbons" class="nav-link" data-key="t-ribbons"><%=translation.t_ribbons %></a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="/ui-utilities" class="nav-link" data-key="t-utilities"><%=translation.t_utilities %></a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarAdvanceUI" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarAdvanceUI">
+            <i class="ri-stack-line"></i> <span data-key="t-advance-ui"><%=translation.t_advance_ui %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarAdvanceUI">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="/advance-ui-sweetalerts" class="nav-link"
+                  data-key="t-sweet-alerts"><%=translation.t_sweet_alerts %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/advance-ui-nestable" class="nav-link"
+                  data-key="t-nestable-list"><%=translation.t_nestable_list %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/advance-ui-scrollbar" class="nav-link"
+                  data-key="t-scrollbar"><%=translation.t_scrollbar %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/advance-ui-animation" class="nav-link"
+                  data-key="t-animation"><%=translation.t_animation %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/advance-ui-tour" class="nav-link" data-key="t-tour"><%=translation.t_tour %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/advance-ui-swiper" class="nav-link"
+                  data-key="t-swiper-slider"><%=translation.t_swiper_slider %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/advance-ui-ratings" class="nav-link" data-key="t-ratings"><%=translation.t_ratings %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/advance-ui-highlight" class="nav-link"
+                  data-key="t-highlight"><%=translation.t_highlight %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/advance-ui-scrollspy" class="nav-link"
+                  data-key="t-scrollSpy"><%=translation.t_scrollSpy %></a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="/widgets">
+            <i class="ri-honour-line"></i> <span data-key="t-widgets"><%=translation.t_widgets %></span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarForms" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarForms">
+            <i class="ri-file-list-3-line"></i> <span data-key="t-forms"><%=translation.t_forms %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarForms">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="/forms-elements" class="nav-link"
+                  data-key="t-basic-elements"><%=translation.t_basic_elements %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-select" class="nav-link" data-key="t-form-select"> <%=translation.t_form_select %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-checkboxs-radios" class="nav-link"
+                  data-key="t-checkboxs-radios"><%=translation.t_checkboxs_radios %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-pickers" class="nav-link" data-key="t-pickers"> <%=translation.t_pickers%> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-masks" class="nav-link" data-key="t-input-masks"><%=translation.t_input_masks %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-advanced" class="nav-link" data-key="t-advanced"><%=translation.t_advanced %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-range-sliders" class="nav-link" data-key="t-range-slider">
+                  <%=translation.t_range_slider %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-validation" class="nav-link" data-key="t-validation"><%=translation.t_validation %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-wizard" class="nav-link" data-key="t-wizard"><%=translation.t_wizard %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-editors" class="nav-link" data-key="t-editors"><%=translation.t_editors %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-file-uploads" class="nav-link"
+                  data-key="t-file-uploads"><%=translation.t_file_uploads %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-layouts" class="nav-link" data-key="t-form-layouts"><%=translation.t_form_layouts %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/forms-select2" class="nav-link" data-key="t-select2"><%=translation.t_select2 %></a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarTables" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarTables">
+            <i class="ri-layout-grid-line"></i> <span data-key="t-tables"><%=translation.t_tables %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarTables">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="/tables-basic" class="nav-link" data-key="t-basic-tables"><%=translation.t_basic_tables %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/tables-gridjs" class="nav-link" data-key="t-grid-js"><%=translation.t_grid_js %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/tables-listjs" class="nav-link" data-key="t-list-js"><%=translation.t_list_js %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/tables-datatables" class="nav-link" data-key="t-datatables"><%=translation.t_datatables %></a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarCharts" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarCharts">
+            <i class="ri-pie-chart-line"></i> <span data-key="t-charts"><%=translation.t_charts %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarCharts">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="#sidebarApexcharts" class="nav-link" data-bs-toggle="collapse" role="button"
+                  aria-expanded="false" aria-controls="sidebarApexcharts" data-key="t-apexcharts">
+                  <%=translation.t_apexcharts %>
+                </a>
+                <div class="collapse menu-dropdown" id="sidebarApexcharts">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="/charts-apex-line" class="nav-link" data-key="t-line"> <%=translation.t_line %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-area" class="nav-link" data-key="t-area"> <%=translation.t_area %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-column" class="nav-link" data-key="t-column">
+                        <%=translation.t_column %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-bar" class="nav-link" data-key="t-bar"> <%=translation.t_bar %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-mixed" class="nav-link" data-key="t-mixed"> <%=translation.t_mixed %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-timeline" class="nav-link" data-key="t-timeline">
+                        <%=translation.t_timeline %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-range-area" class="nav-link"
+                        data-key="t-range-area"><%=translation.t_range_area %></a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-funnel" class="nav-link" data-key="t-funnel"><%=translation.t_funnel %></a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-candlestick" class="nav-link" data-key="t-candlstick">
+                        <%=translation.t_candlstick %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-boxplot" class="nav-link" data-key="t-boxplot">
+                        <%=translation.t_boxplot %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-bubble" class="nav-link" data-key="t-bubble">
+                        <%=translation.t_bubble %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-scatter" class="nav-link" data-key="t-scatter">
+                        <%=translation.t_scatter %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-heatmap" class="nav-link" data-key="t-heatmap">
+                        <%=translation.t_heatmap %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-treemap" class="nav-link" data-key="t-treemap">
+                        <%=translation.t_treemap %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-pie" class="nav-link" data-key="t-pie"> <%=translation.t_pie %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-radialbar" class="nav-link" data-key="t-radialbar">
+                        <%=translation.t_radialbar %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-radar" class="nav-link" data-key="t-radar"> <%=translation.t_radar %>
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-polar" class="nav-link" data-key="t-polar-area">
+                        <%=translation.t_polar_area %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="/charts-apex-slope" class="nav-link"><span
+                          data-key="t-slope"><%=translation.t_slope %></span> <span class="badge badge-pill bg-success"
+                          data-key="t-new"><%=translation.t_new %></span></a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a href="/charts-chartjs" class="nav-link" data-key="t-chartjs"> <%=translation.t_chartjs %> </a>
+              </li>
+              <li class="nav-item">
+                <a href="/charts-echarts" class="nav-link" data-key="t-echarts"> <%=translation.t_echarts %> </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarIcons" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarIcons">
+            <i class="ri-compasses-2-line"></i> <span data-key="t-icons"><%=translation.t_icons %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarIcons">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="/icons-remix" class="nav-link"><span data-key="t-remix"><%=translation.t_remix %></span> <span
+                    class="badge badge-pill bg-info">v4.3</span></a>
+              </li>
+              <li class="nav-item">
+                <a href="/icons-boxicons" class="nav-link" data-key="t-boxicons"><%=translation.t_boxicons %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/icons-materialdesign" class="nav-link"
+                  data-key="t-material-design"><%=translation.t_material_design %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/icons-lineawesome" class="nav-link"
+                  data-key="t-line-awesome"><%=translation.t_line_awesome %></a>
+              </li>
+              <li class="nav-item">
+                <a href="/icons-feather" class="nav-link"><span data-key="t-feather"><%=translation.t_feather %></span>
+                  <span class="badge badge-pill bg-info">v4.29.2</span></a>
+              </li>
+              <li class="nav-item">
+                <a href="/icons-crypto" class="nav-link"> <span
+                    data-key="t-crypto-svg"><%=translation.t_crypto_svg %></span></a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarMaps" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarMaps">
+            <i class="ri-map-pin-line"></i> <span data-key="t-maps"><%=translation.t_maps %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarMaps">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="/maps-google" class="nav-link" data-key="t-google">
+                  <%=translation.t_google %>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="/maps-vector" class="nav-link" data-key="t-vector">
+                  <%=translation.t_vector %>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="/maps-leaflet" class="nav-link" data-key="t-leaflet">
+                  <%=translation.t_leaflet %>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarMultilevel" data-bs-toggle="collapse" role="button"
+            aria-expanded="false" aria-controls="sidebarMultilevel">
+            <i class="ri-share-line"></i> <span data-key="t-multi-level"><%=translation.t_multi_level %></span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarMultilevel">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <a href="#" class="nav-link" data-key="t-level-1.1"> <%=translation.t_level_1_1 %></a>
+              </li>
+              <li class="nav-item">
+                <a href="#sidebarAccount" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="false"
+                  aria-controls="sidebarAccount" data-key="t-level-1.2"> <%=translation.t_level_1_2 %></a>
+                <div class="collapse menu-dropdown" id="sidebarAccount">
+                  <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                      <a href="#" class="nav-link" data-key="t-level-2.1"> <%=translation.t_level_2_1 %> </a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="#sidebarCrm" class="nav-link" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarCrm" data-key="t-level-2.2">
+                        <%=translation.t_level_2_2 %></a>
+                      <div class="collapse menu-dropdown" id="sidebarCrm">
+                        <ul class="nav nav-sm flex-column">
+                          <li class="nav-item">
+                            <a href="#" class="nav-link" data-key="t-level-3.1"> <%=translation.t_level_3_1 %>
+                            </a>
+                          </li>
+                          <li class="nav-item">
+                            <a href="#" class="nav-link" data-key="t-level-3.2"> <%=translation.t_level_3_2 %>
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+      </ul>
+    </div>
+    <!-- Sidebar -->
+  </div>
+
+  <div class="sidebar-background"></div>
+</div>
+<!-- Left Sidebar End -->
+<!-- Vertical Overlay-->
+<div class="vertical-overlay"></div>
