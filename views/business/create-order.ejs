@@ -1,0 +1,416 @@
+<%- contentFor('HeaderCss') %>
+<%- contentFor('body') %>
+
+<div class="row justify-content-center">
+  <div class="col-xl-11">
+    <div class="card" style="border-radius: 30px;">
+      <div class="card-body checkout-tab">
+
+        <form action="#">
+          <div class="step-arrow-nav mt-n3 mx-n3 mb-3" style="border-top-left-radius: 30px; border-top-right-radius: 30px;">
+
+            <ul class="nav nav-pills nav-justified custom-nav" role="tablist" >
+              <li class="nav-item" role="presentation">
+                <button class="nav-link fs-15 p-3 active" id="pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#pills-bill-info" type="button" role="tab" aria-controls="pills-bill-info" aria-selected="true">
+                  <i class="ri-user-2-line fs-16 p-2 bg-primary-subtle text-primary rounded-circle align-middle me-2"></i> Customer Info
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link fs-15 p-3" id="pills-bill-address-tab" data-bs-toggle="pill" data-bs-target="#pills-bill-address" type="button" role="tab" aria-controls="pills-bill-address" aria-selected="false">
+                  <i class="ri-truck-line fs-16 p-2 bg-primary-subtle text-primary rounded-circle align-middle me-2"></i> Shipping Info
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link fs-15 p-3" id="pills-payment-tab" data-bs-toggle="pill" data-bs-target="#pills-payment" type="button" role="tab" aria-controls="pills-payment" aria-selected="false">
+                  <i class="ri-bank-card-line fs-16 p-2 bg-primary-subtle text-primary rounded-circle align-middle me-2"></i> Extra Details
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link fs-15 p-3" id="pills-finish-tab" data-bs-toggle="pill" data-bs-target="#pills-finish" type="button" role="tab" aria-controls="pills-finish" aria-selected="false">
+                  <i class="ri-checkbox-circle-line fs-16 p-2 bg-primary-subtle text-primary rounded-circle align-middle me-2"></i> Finish
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="pills-bill-info" role="tabpanel" aria-labelledby="pills-bill-info-tab">
+              <div>
+                <h5 class="mb-1">Customer Information</h5>
+                <p class="text-muted mb-4">Please fill all information below</p>
+              </div>
+
+              <div>
+                <div class="row">
+                  <div class="col-sm-6">
+                    <div class="mb-3">
+                      <label for="billinginfo-firstName" class="form-label">Full Name</label>
+                      <input type="text" class="form-control" id="billinginfo-firstName" placeholder="Enter Full Name" value="">
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <div class="mb-3">
+                      <label for="billinginfo-phoneNumber" class="form-label">Phon Number</label>
+                      <input type="number" class="form-control" id="billinginfo-phoneNumber" placeholder="0115601209934" value="">
+                    </div>
+                  </div>
+                </div>
+
+
+                <div class="row">
+                  <div class="mb-3 col-md-6">
+                    <label for="billinginfo-address" class="form-label">Address</label>
+                    <textarea class="form-control" id="billinginfo-address" placeholder="Enter address" rows="2"></textarea>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="row">
+
+                      <div class="mb-3 col-md-6">
+                        <label for="state" class="form-label">Selcet Government</label>
+                        <select class="form-select" id="state" data-plugin="choices">
+                          <option value="">Select State...</option>
+                          <option value="Alabama">Alabama</option>
+                          <option value="Alaska">Alaska</option>
+                          <option value="American Samoa">American Samoa</option>
+                          <option value="California" selected>California</option>
+                          <option value="Colorado">Colorado</option>
+                          <option value="District Of Columbia">District Of Columbia</option>
+                          <option value="Florida">Florida</option>
+                          <option value="Georgia">Georgia</option>
+                          <option value="Guam">Guam</option>
+                          <option value="Hawaii">Hawaii</option>
+                          <option value="Idaho">Idaho</option>
+                          <option value="Kansas">Kansas</option>
+                          <option value="Louisiana">Louisiana</option>
+                          <option value="Montana">Montana</option>
+                          <option value="Nevada">Nevada</option>
+                          <option value="New Jersey">New Jersey</option>
+                          <option value="New Mexico">New Mexico</option>
+                          <option value="New York">New York</option>
+                        </select>
+                      </div>
+                      <div class="mb-3 col-md-6">
+                        <label for="state" class="form-label">Selcet Zone</label>
+                        <select class="form-select" id="state" data-plugin="choices">
+                          <option value="">Select State...</option>
+                          <option value="Alabama">Alabama</option>
+                          <option value="Alaska">Alaska</option>
+                          <option value="American Samoa">American Samoa</option>
+                          <option value="California" selected>California</option>
+                          <option value="Colorado">Colorado</option>
+                          <option value="District Of Columbia">District Of Columbia</option>
+                          <option value="Florida">Florida</option>
+                          <option value="Georgia">Georgia</option>
+                          <option value="Guam">Guam</option>
+                          <option value="Hawaii">Hawaii</option>
+                          <option value="Idaho">Idaho</option>
+                          <option value="Kansas">Kansas</option>
+                          <option value="Louisiana">Louisiana</option>
+                          <option value="Montana">Montana</option>
+                          <option value="Nevada">Nevada</option>
+                          <option value="New Jersey">New Jersey</option>
+                          <option value="New Mexico">New Mexico</option>
+                          <option value="New York">New York</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="d-flex align-items-start gap-3 mt-3">
+                  <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-bill-address-tab">
+                    <i class="ri-truck-line label-icon align-middle fs-16 ms-2"></i>Proceed to Shipping
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- end tab pane -->
+
+            <div class="tab-pane fade" id="pills-bill-address" role="tabpanel" aria-labelledby="pills-bill-address-tab">
+              <div>
+                <h5 class="mb-1">Shipping Information</h5>
+                <p class="text-muted mb-4">Please fill all information below</p>
+              </div>
+
+              <div class="mb-3">
+                <label for="delivery-description" class="form-label">Product/s Description</label>
+                <textarea class="form-control" id="delivery-description" placeholder="Enter Product description" rows="1"></textarea>
+              </div>
+
+              <div class="mb-3 col-md-2">
+                <label for="shipping-count" class="form-label">Number of Shippings</label>
+                <div class="input-group">
+                  <button type="button" class="btn btn-outline-secondary" id="decrement-shipping">-</button>
+                  <input type="number" class="form-control text-center" id="shipping-count" placeholder="Enter number of shippings" value="0" min="0">
+                  <button type="button" class="btn btn-outline-secondary" id="increment-shipping">+</button>
+                </div>
+              </div>
+              <div id="shipping-message" class="text-muted" style="display: none;">
+                Please note that shipping charges will apply for each item.
+              </div>
+              <hr>
+              <div>
+                <h6 class="mb-1">Order Type</h6>
+                <p class="text-muted mb-4"></p>
+              </div>
+              <div class="row g-4">
+                <div class="col-lg-3 col-sm-6">
+                  <div class="form-check card-radio">
+                    <input id="paymentMethod01" name="paymentMethod" type="radio" class="form-check-input">
+                    <label class="form-check-label" for="paymentMethod01">
+                      <span class="fs-16 text-muted me-2"><i class="ri-truck-line align-bottom"></i></span>
+                      <span class="fs-14 text-wrap">Deliver</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div class="form-check card-radio">
+                    <input id="paymentMethod02" name="paymentMethod" type="radio" class="form-check-input" checked>
+                    <label class="form-check-label" for="paymentMethod02">
+                      <span class="fs-16 text-muted me-2"><i class="ri-exchange-line align-bottom"></i></span>
+                      <span class="fs-14 text-wrap">Exchange</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div class="form-check card-radio">
+                    <input id="paymentMethod03" name="paymentMethod" type="radio" class="form-check-input">
+                    <label class="form-check-label" for="paymentMethod03">
+                      <span class="fs-16 text-muted me-2"><i class="ri-arrow-go-back-line align-bottom"></i></span>
+                      <span class="fs-14 text-wrap">Return</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="col-lg-3 col-sm-6">
+                  <div class="form-check card-radio">
+                    <input id="paymentMethod04" name="paymentMethod" type="radio" class="form-check-input">
+                    <label class="form-check-label" for="paymentMethod04">
+                      <span class="fs-16 text-muted me-2"><i class="ri-money-dollar-circle-line align-bottom"></i></span>
+                      <span class="fs-14 text-wrap">Cash Collection</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div id="cash-on-delivery-section" style="display: none;">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="cash-on-delivery-checkbox">
+                  <label class="form-check-label" for="cash-on-delivery-checkbox">
+                    Cash on Delivery
+                  </label>
+                </div>
+                <div class="mb-3" id="cash-on-delivery-amount" style="display: none;">
+                  <label for="cash-on-delivery-input" class="form-label">Amount</label>
+                  <input type="number" class="form-control" id="cash-on-delivery-input" placeholder="Enter amount">
+                </div>
+              </div>
+
+              <div id="cash-difference-section" style="display: none;">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="cash-difference-checkbox">
+                  <label class="form-check-label" for="cash-difference-checkbox">
+                    Cash Difference
+                  </label>
+                </div>
+                <div class="mb-3" id="cash-difference-amount" style="display: none;">
+                  <label for="cash-difference-input" class="form-label">Difference Amount</label>
+                  <input type="number" class="form-control" id="cash-difference-input" placeholder="Enter difference amount">
+                </div>
+              </div>
+
+              <div id="cash-collection-section" style="display: none;">
+                <div class="mb-3">
+                  <label for="cash-collection-input" class="form-label">Cash Collection Amount</label>
+                  <input type="number" class="form-control" id="cash-collection-input" placeholder="Enter cash collection amount">
+                </div>
+              </div>
+
+        
+
+              <div class="d-flex align-items-start gap-3 mt-4">
+                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-info-tab"><i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back to Personal Info</button>
+                <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-payment-tab"><i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>Continue to Payment</button>
+              </div>
+            </div>
+
+            <!-- end tab pane -->
+
+            <div class="tab-pane fade" id="pills-payment" role="tabpanel" aria-labelledby="pills-payment-tab">
+              <div>
+                <h5 class="mb-1"> Extra Details </h5>
+                <p class="text-muted mb-4">Please select and enter your Extra information</p>
+              </div>
+              <div class="row">
+
+                  <div class="col-lg-4 col-md-8 col-sm-6 mt-2">
+                    <div class="form-check card-radio">
+                      <input class="form-check-input" type="checkbox" id="order-preview-checkbox">
+                      <label class="form-check-label" for="order-preview-checkbox">
+                        <span class="fs-16 text-muted me-2"><i class="ri-eye-line align-bottom"></i></span>
+                        <span class="fs-14 text-wrap">Order can be opened for preview</span>
+                      </label>
+                    </div>
+                 </div>
+  
+                <div class="mb-3 col-md-3">
+                  <label for="referral-number" class="form-label">Referral Number (Optional)</label>
+                  <input type="text" class="form-control" id="referral-number" placeholder="Enter referral number">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="delivery-notes" class="form-label">Delivery Notes</label>
+                <textarea class="form-control" id="delivery-notes" placeholder="Enter any delivery notes" rows="2"></textarea>
+              </div>
+
+              <div class="d-flex align-items-start gap-3 mt-4">
+                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-address-tab"><i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back to Shipping</button>
+                <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-finish-tab"><i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i>Complete Order</button>
+              </div>
+            </div>
+            <!-- end tab pane -->
+
+            <div class="tab-pane fade" id="pills-finish" role="tabpanel" aria-labelledby="pills-finish-tab">
+              <div class="text-center py-5">
+
+                <div class="mb-4">
+                  <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>
+                </div>
+                <h5>Thank you ! Your Order is Completed !</h5>
+                <p class="text-muted">You will receive an order confirmation email with details of your order.</p>
+
+                <h3 class="fw-semibold">Order ID: <a href="apps-ecommerce-order-details" class="text-decoration-underline">VZ2451</a></h3>
+              </div>
+            </div>
+            <!-- end tab pane -->
+          </div>
+          <!-- end tab content -->
+        </form>
+      </div>
+      <!-- end card body -->
+    </div>
+    <!-- end card -->
+  </div>
+  <!-- end col -->
+
+
+</div>
+<!-- end row -->
+
+
+<!-- removeItemModal -->
+<div id="removeItemModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mt-2 text-center">
+          <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+          <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+            <h4>Are you sure ?</h4>
+            <p class="text-muted mx-4 mb-0">Are you sure you want to remove this address ?</p>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+          <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn w-sm btn-danger ">Yes, Delete It!</button>
+        </div>
+      </div>
+
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<!-- editItemModal -->
+<div id="addAddressModal" class="modal fade zoomIn" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addAddressModalLabel">Address</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <div class="mb-3">
+            <label for="addaddress-Name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="addaddress-Name" placeholder="Enter name">
+          </div>
+
+          <div class="mb-3">
+            <label for="addaddress-textarea" class="form-label">Address</label>
+            <textarea class="form-control" id="addaddress-textarea" placeholder="Enter address" rows="2"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="addaddress-Name" class="form-label">Phone</label>
+            <input type="text" class="form-control" id="addaddress-Name" placeholder="Enter phone no.">
+          </div>
+
+          <div class="mb-3">
+            <label for="state" class="form-label">Address Type</label>
+            <select class="form-select" id="state" data-choices data-choices-search-false>
+              <option value="homeAddress">Home (7am to 10pm)</option>
+              <option value="officeAddress">Office (11am to 7pm)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success">Save</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<%- contentFor('FooterJs') %>
+<script>
+  document.getElementById('increment-shipping').addEventListener('click', function() {
+    let shippingCount = document.getElementById('shipping-count');
+    shippingCount.value = parseInt(shippingCount.value) + 1;
+    if (shippingCount.value > 1) {
+      document.getElementById('shipping-message').style.display = 'block';
+    }
+  });
+
+  document.getElementById('decrement-shipping').addEventListener('click', function() {
+    let shippingCount = document.getElementById('shipping-count');
+    if (shippingCount.value > 0) {
+      shippingCount.value = parseInt(shippingCount.value) - 1;
+    }
+    if (shippingCount.value <= 1) {
+      document.getElementById('shipping-message').style.display = 'none';
+    }
+  });
+
+          document.querySelectorAll('input[name="paymentMethod"]').forEach(function(element) {
+          element.addEventListener('change', function() {
+          document.getElementById('cash-on-delivery-section').style.display = 'none';
+          document.getElementById('cash-difference-section').style.display = 'none';
+          document.getElementById('cash-collection-section').style.display = 'none';
+
+          if (this.id === 'paymentMethod01') {
+          document.getElementById('cash-on-delivery-section').style.display = 'block';
+          } else if (this.id === 'paymentMethod02') {
+          document.getElementById('cash-difference-section').style.display = 'block';
+          } else if (this.id === 'paymentMethod04') {
+          document.getElementById('cash-collection-section').style.display = 'block';
+          }
+          });
+          });
+
+          document.getElementById('cash-on-delivery-checkbox').addEventListener('change', function() {
+          document.getElementById('cash-on-delivery-amount').style.display = this.checked ? 'block' : 'none';
+          });
+
+          document.getElementById('cash-difference-checkbox').addEventListener('change', function() {
+          document.getElementById('cash-difference-amount').style.display = this.checked ? 'block' : 'none';
+          });
+</script>
+<!-- init js -->
+<script src="/assets/js/pages/ecommerce-product-checkout.init.js"></script>

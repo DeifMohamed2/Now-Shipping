@@ -152,6 +152,14 @@
 [data-theme='galaxy'][data-bs-theme='dark']:root .btn-subtle-dark {
   --vz-btn-color: #fff;
 }
+input,select{
+  transition: all 0.3s ease;
+}
+input:hover,select:hover{
+  border: 1.3px solid #00b9c0d6 !important;
+  box-shadow: 0 0 0 2px rgba(0, 185, 192, 0.25) !important;
+}
+
 [data-theme='galaxy'][data-bs-theme='dark']:root[data-sidebar='dark'] {
   --vz-vertical-menu-bg: transparent;
   --vz-vertical-menu-border: #2a4562;

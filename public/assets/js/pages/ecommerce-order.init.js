@@ -1,1 +1,360 @@
-var str_dt=function(e){var t=new Date(e),a=(t.getHours()+":"+t.getMinutes()).split(":"),n=a[0],l=a[1],s=n>=12?"PM":"AM";return n=(n%=12)||12,l=l<10?"0"+l:l,month=""+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][t.getMonth()],day=""+t.getDate(),year=t.getFullYear(),month.length<2&&(month="0"+month),day.length<2&&(day="0"+day),[day+" "+month+","+year+" <small class='text-muted'>"+n+":"+l+" "+s+"</small>"]},isChoiceEl=document.getElementById("idStatus"),choices=new Choices(isChoiceEl,{searchEnabled:!1}),isPaymentEl=document.getElementById("idPayment"),checkAll=(choices=new Choices(isPaymentEl,{searchEnabled:!1}),document.getElementById("checkAll"));checkAll&&(checkAll.onclick=function(){for(var e=document.querySelectorAll('.form-check-all input[type="checkbox"]'),t=document.querySelectorAll('.form-check-all input[type="checkbox"]:checked').length,a=0;a<e.length;a++)e[a].checked=this.checked,e[a].checked?e[a].closest("tr").classList.add("table-active"):e[a].closest("tr").classList.remove("table-active");document.getElementById("remove-actions").style.display=t>0?"none":"block"});var perPage=8,editlist=!1,options={valueNames:["id","customer_name","product_name","date","amount","payment","status"],page:perPage,pagination:!0,plugins:[ListPagination({left:2,right:2})]},orderList=new List("orderList",options).on("updated",(function(e){0==e.matchingItems.length?document.getElementsByClassName("noresult")[0].style.display="block":document.getElementsByClassName("noresult")[0].style.display="none";var t=1==e.i,a=e.i>e.matchingItems.length-e.page;document.querySelector(".pagination-prev.disabled")&&document.querySelector(".pagination-prev.disabled").classList.remove("disabled"),document.querySelector(".pagination-next.disabled")&&document.querySelector(".pagination-next.disabled").classList.remove("disabled"),t&&document.querySelector(".pagination-prev").classList.add("disabled"),a&&document.querySelector(".pagination-next").classList.add("disabled"),e.matchingItems.length<=perPage?document.querySelector(".pagination-wrap").style.display="none":document.querySelector(".pagination-wrap").style.display="flex",e.matchingItems.length==perPage&&document.querySelector(".pagination.listjs-pagination").firstElementChild.children[0].click(),e.matchingItems.length>0?document.getElementsByClassName("noresult")[0].style.display="none":document.getElementsByClassName("noresult")[0].style.display="block"}));const xhttp=new XMLHttpRequest;xhttp.onload=function(){var e=JSON.parse(this.responseText);Array.from(e).forEach((function(e){orderList.add({id:'<a href="apps-ecommerce-order-details.html" class="fw-medium link-primary">#VZ'+e.id+"</a>",customer_name:e.customer_name,product_name:e.product_name,date:str_dt(e.date),amount:e.amount,payment:e.payment,status:isStatus(e.status)}),orderList.sort("id",{order:"desc"}),refreshCallbacks()})),orderList.remove("id",'<a href="apps-ecommerce-order-details.html" class="fw-medium link-primary">#VZ2101</a>')},xhttp.open("GET","assets/json/orders-list.init.json"),xhttp.send(),isCount=(new DOMParser).parseFromString(orderList.items.slice(-1)[0]._values.id,"text/html");var isValue=isCount.body.firstElementChild.innerHTML,idField=document.getElementById("orderId"),customerNameField=document.getElementById("customername-field"),productNameField=document.getElementById("productname-field"),dateField=document.getElementById("date-field"),amountField=document.getElementById("amount-field"),paymentField=document.getElementById("payment-field"),statusField=document.getElementById("delivered-status"),addBtn=document.getElementById("add-btn"),editBtn=document.getElementById("edit-btn"),removeBtns=document.getElementsByClassName("remove-item-btn"),editBtns=document.getElementsByClassName("edit-item-btn");refreshCallbacks();var tabEl=document.querySelectorAll('a[data-bs-toggle="tab"]');function filterOrder(e){var t=e;orderList.filter((function(e){matchData=(new DOMParser).parseFromString(e.values().status,"text/html");var a=matchData.body.firstElementChild.innerHTML;return"All"==a||"All"==t||a==t})),orderList.update()}function updateList(){var e=document.querySelector("input[name=status]:checked").value;data=userList.filter((function(t){return"All"==e||t.values().sts==e})),userList.update()}Array.from(tabEl).forEach((function(e){e.addEventListener("shown.bs.tab",(function(e){filterOrder(e.target.id)}))})),document.getElementById("showModal").addEventListener("show.bs.modal",(function(e){e.relatedTarget.classList.contains("edit-item-btn")?(document.getElementById("exampleModalLabel").innerHTML="Edit Order",document.getElementById("showModal").querySelector(".modal-footer").style.display="block",document.getElementById("add-btn").innerHTML="Update"):e.relatedTarget.classList.contains("add-btn")?(document.getElementById("modal-id").style.display="none",document.getElementById("exampleModalLabel").innerHTML="Add Order",document.getElementById("showModal").querySelector(".modal-footer").style.display="block",document.getElementById("add-btn").innerHTML="Add Order"):(document.getElementById("exampleModalLabel").innerHTML="List Order",document.getElementById("showModal").querySelector(".modal-footer").style.display="none")})),ischeckboxcheck(),document.getElementById("showModal").addEventListener("hidden.bs.modal",(function(){clearFields()})),document.querySelector("#orderList").addEventListener("click",(function(){ischeckboxcheck()}));var table=document.getElementById("orderTable"),tr=table.getElementsByTagName("tr"),trlist=table.querySelectorAll(".list tr");function SearchData(){var e=document.getElementById("idStatus").value,t=document.getElementById("idPayment").value,a=document.getElementById("demo-datepicker").value,n=a.split(" to ")[0],l=a.split(" to ")[1];orderList.filter((function(s){matchData=(new DOMParser).parseFromString(s.values().status,"text/html");var r=matchData.body.firstElementChild.innerHTML,i=!1,d=!1,o=!1;return i="all"==r||"all"==e||r==e,d="all"==s.values().payment||"all"==t||s.values().payment==t,o=new Date(s.values().date.slice(0,12))>=new Date(n)&&new Date(s.values().date.slice(0,12))<=new Date(l),i&&d&&o?i&&d&&o:i&&d&&""==a?i&&d:d&&o&&""==a?d&&o:void 0})),orderList.update()}var count=13,forms=document.querySelectorAll(".tablelist-form");Array.prototype.slice.call(forms).forEach((function(e){e.addEventListener("submit",(function(t){if(e.checkValidity())if(t.preventDefault(),""===customerNameField.value||""===productNameField.value||""===dateField.value||""===amountField.value||""===paymentField.value||editlist){if(""!==customerNameField.value&&""!==productNameField.value&&""!==dateField.value&&""!==amountField.value&&""!==paymentField.value&&editlist){var a=orderList.get({id:idField.value});Array.from(a).forEach((function(e){isid=(new DOMParser).parseFromString(e._values.id,"text/html"),isid.body.firstElementChild.innerHTML==itemId&&e.values({id:'<a href="javascript:void(0);" class="fw-medium link-primary">'+idField.value+"</a>",customer_name:customerNameField.value,product_name:productNameField.value,date:dateField.value.slice(0,14)+'<small class="text-muted">'+dateField.value.slice(14,22),amount:amountField.value,payment:paymentField.value,status:isStatus(statusField.value)})})),document.getElementById("close-modal").click(),clearFields(),Swal.fire({position:"center",icon:"success",title:"Order updated Successfully!",showConfirmButton:!1,timer:2e3,showCloseButton:!0})}}else orderList.add({id:'<a href="apps-ecommerce-order-details.html" class="fw-medium link-primary">#VZ'+count+"</a>",customer_name:customerNameField.value,product_name:productNameField.value,date:dateField.value,amount:"$"+amountField.value,payment:paymentField.value,status:isStatus(statusField.value)}),orderList.sort("id",{order:"desc"}),document.getElementById("close-modal").click(),clearFields(),refreshCallbacks(),filterOrder("All"),count++,Swal.fire({position:"center",icon:"success",title:"Order inserted successfully!",showConfirmButton:!1,timer:2e3,showCloseButton:!0});else t.preventDefault(),t.stopPropagation()}),!1)}));var example=new Choices(paymentField),statusVal=new Choices(statusField),productnameVal=new Choices(productNameField);function isStatus(e){switch(e){case"Delivered":return'<span class="badge bg-success-subtle text-success text-uppercase">'+e+"</span>";case"Cancelled":return'<span class="badge bg-danger-subtle text-danger text-uppercase">'+e+"</span>";case"Inprogress":return'<span class="badge bg-secondary-subtle text-secondary text-uppercase">'+e+"</span>";case"Pickups":return'<span class="badge bg-info-subtle text-info text-uppercase">'+e+"</span>";case"Returns":return'<span class="badge bg-primary-subtle text-primary text-uppercase">'+e+"</span>";case"Pending":return'<span class="badge bg-warning-subtle text-warning text-uppercase">'+e+"</span>"}}function ischeckboxcheck(){Array.from(document.getElementsByName("checkAll")).forEach((function(e){e.addEventListener("change",(function(t){1==e.checked?t.target.closest("tr").classList.add("table-active"):t.target.closest("tr").classList.remove("table-active");var a=document.querySelectorAll('[name="checkAll"]:checked').length;t.target.closest("tr").classList.contains("table-active"),document.getElementById("remove-actions").style.display=a>0?"block":"none"}))}))}function refreshCallbacks(){removeBtns&&Array.from(removeBtns).forEach((function(e){e.addEventListener("click",(function(e){e.target.closest("tr").children[1].innerText,itemId=e.target.closest("tr").children[1].innerText;var t=orderList.get({id:itemId});Array.from(t).forEach((function(e){deleteid=(new DOMParser).parseFromString(e._values.id,"text/html");var t=deleteid.body.firstElementChild;deleteid.body.firstElementChild.innerHTML==itemId&&document.getElementById("delete-record").addEventListener("click",(function(){orderList.remove("id",t.outerHTML),document.getElementById("deleteRecord-close").click()}))}))}))})),editBtns&&Array.from(editBtns).forEach((function(e){e.addEventListener("click",(function(e){e.target.closest("tr").children[1].innerText,itemId=e.target.closest("tr").children[1].innerText;var t=orderList.get({id:itemId});Array.from(t).forEach((function(e){isid=(new DOMParser).parseFromString(e._values.id,"text/html");var t=isid.body.firstElementChild.innerHTML;if(t==itemId){editlist=!0,idField.value=t,customerNameField.value=e._values.customer_name,productNameField.value=e._values.product_name,dateField.value=e._values.date,amountField.value=e._values.amount,example&&example.destroy(),example=new Choices(paymentField,{searchEnabled:!1});var a=e._values.payment;example.setChoiceByValue(a),productnameVal&&productnameVal.destroy(),productnameVal=new Choices(productNameField,{searchEnabled:!1});var n=e._values.product_name;productnameVal.setChoiceByValue(n),statusVal&&statusVal.destroy(),statusVal=new Choices(statusField,{searchEnabled:!1}),val=(new DOMParser).parseFromString(e._values.status,"text/html");var l=val.body.firstElementChild.innerHTML;statusVal.setChoiceByValue(l),flatpickr("#date-field",{enableTime:!0,dateFormat:"d M, Y, h:i K",defaultDate:e._values.date})}}))}))}))}function clearFields(){customerNameField.value="",productNameField.value="",dateField.value="",amountField.value="",paymentField.value="",example&&example.destroy(),example=new Choices(paymentField),productnameVal&&productnameVal.destroy(),productnameVal=new Choices(productNameField),statusVal&&statusVal.destroy(),statusVal=new Choices(statusField)}function deleteMultiple(){ids_array=[];var e=document.querySelectorAll(".form-check [value=option1]");for(i=0;i<e.length;i++)if(1==e[i].checked){var t=e[i].parentNode.parentNode.parentNode.querySelector("td a").innerHTML;ids_array.push(t)}"undefined"!=typeof ids_array&&ids_array.length>0?Swal.fire({title:"Are you sure?",text:"You won't be able to revert this!",icon:"warning",showCancelButton:!0,customClass:{confirmButton:"btn btn-primary w-xs me-2 mt-2",cancelButton:"btn btn-danger w-xs mt-2"},confirmButtonText:"Yes, delete it!",buttonsStyling:!1,showCloseButton:!0}).then((function(e){if(e.value){for(i=0;i<ids_array.length;i++)orderList.remove("id",'<a href="apps-ecommerce-order-details.html" class="fw-medium link-primary">'+ids_array[i]+"</a>");document.getElementById("remove-actions").style.display="none",document.getElementById("checkAll").checked=!1,Swal.fire({title:"Deleted!",text:"Your data has been deleted.",icon:"success",customClass:{confirmButton:"btn btn-info w-xs mt-2"},buttonsStyling:!1})}})):Swal.fire({title:"Please select at least one checkbox",customClass:{confirmButton:"btn btn-info"},buttonsStyling:!1,showCloseButton:!0})}document.querySelector(".pagination-next").addEventListener("click",(function(){document.querySelector(".pagination.listjs-pagination")&&(document.querySelector(".pagination.listjs-pagination").querySelector(".active")&&document.querySelector(".pagination.listjs-pagination").querySelector(".active").nextElementSibling.children[0].click())})),document.querySelector(".pagination-prev").addEventListener("click",(function(){document.querySelector(".pagination.listjs-pagination")&&(document.querySelector(".pagination.listjs-pagination").querySelector(".active")&&document.querySelector(".pagination.listjs-pagination").querySelector(".active").previousSibling.children[0].click())}));
+// Function to format date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    const formattedHours = hours % 12 || 12;
+
+    return `${day} ${month}, ${year} <small class='text-muted'>${formattedHours}:${formattedMinutes} ${period}</small>`;
+}
+
+// Initialize Choices.js for dropdowns
+const statusElement = document.getElementById('idStatus');
+const statusChoices = new Choices(statusElement, { searchEnabled: false });
+
+const paymentElement = document.getElementById('idPayment');
+const paymentChoices = new Choices(paymentElement, { searchEnabled: false });
+
+// Handle "Check All" functionality
+const checkAllElement = document.getElementById('checkAll');
+if (checkAllElement) {
+    checkAllElement.onclick = function () {
+        const checkboxes = document.querySelectorAll('.form-check-all input[type="checkbox"]');
+        const checkedCount = document.querySelectorAll('.form-check-all input[type="checkbox"]:checked').length;
+
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+            checkbox.closest('tr').classList.toggle('table-active', checkbox.checked);
+        });
+
+        document.getElementById('remove-actions').style.display = checkedCount > 0 ? 'none' : 'block';
+    };
+}
+
+// Initialize List.js for order list
+const perPage = 8;
+const options = {
+    valueNames: ['id', 'customer_name', 'product_name', 'date', 'amount', 'payment', 'status'],
+    page: perPage,
+    pagination: true,
+    plugins: [ListPagination({ left: 2, right: 2 })],
+};
+
+const orderList = new List('orderList', options).on('updated', function (list) {
+    const noResultElement = document.getElementsByClassName('noresult')[0];
+    noResultElement.style.display = list.matchingItems.length === 0 ? 'block' : 'none';
+
+    const isFirstPage = list.i === 1;
+    const isLastPage = list.i > list.matchingItems.length - list.page;
+
+    document.querySelector('.pagination-prev').classList.toggle('disabled', isFirstPage);
+    document.querySelector('.pagination-next').classList.toggle('disabled', isLastPage);
+
+    const paginationWrap = document.querySelector('.pagination-wrap');
+    paginationWrap.style.display = list.matchingItems.length <= perPage ? 'none' : 'flex';
+
+    if (list.matchingItems.length === perPage) {
+        document.querySelector('.pagination.listjs-pagination').firstElementChild.children[0].click();
+    }
+});
+
+// Load order data from JSON
+const xhttp = new XMLHttpRequest();
+xhttp.onload = function () {
+    const orders = JSON.parse(this.responseText.replace(/<[^>]*>/g, ''));
+    orders.forEach(order => {
+        orderList.add({
+            id: `<a href="apps-ecommerce-order-details.html" class="fw-medium link-primary">#VZ${order.id}</a>`,
+            customer_name: order.customer_name,
+            product_name: order.product_name,
+            date: formatDate(order.date),
+            amount: order.amount,
+            payment: order.payment,
+            status: formatStatus(order.status),
+        });
+        orderList.sort('id', { order: 'desc' });
+        refreshCallbacks();
+    });
+    orderList.remove('id', '<a href="apps-ecommerce-order-details.html" class="fw-medium link-primary">#VZ2101</a>');
+};
+xhttp.open('GET', 'assets/json/orders-list.init.json');
+xhttp.send();
+
+// Helper function to format status
+function formatStatus(status) {
+    const statusClasses = {
+        'Delivered': 'bg-success-subtle text-success',
+        'Cancelled': 'bg-danger-subtle text-danger',
+        'Inprogress': 'bg-secondary-subtle text-secondary',
+        'Pickups': 'bg-info-subtle text-info',
+        'Returns': 'bg-primary-subtle text-primary',
+        'Pending': 'bg-warning-subtle text-warning',
+    };
+    return `<span class="badge ${statusClasses[status]} text-uppercase">${status}</span>`;
+}
+
+// Refresh callbacks for edit and remove buttons
+function refreshCallbacks() {
+    const removeButtons = document.getElementsByClassName('remove-item-btn');
+    Array.from(removeButtons).forEach(button => {
+        button.addEventListener('click', function () {
+            const itemId = this.closest('tr').children[1].innerText;
+            const items = orderList.get({ id: itemId });
+            items.forEach(item => {
+                const parsedId = new DOMParser().parseFromString(item._values.id, 'text/html').body.firstElementChild;
+                if (parsedId.innerHTML === itemId) {
+                    document.getElementById('delete-record').addEventListener('click', function () {
+                        orderList.remove('id', parsedId.outerHTML);
+                        document.getElementById('deleteRecord-close').click();
+                    });
+                }
+            });
+        });
+    });
+
+    const editButtons = document.getElementsByClassName('edit-item-btn');
+    Array.from(editButtons).forEach(button => {
+        button.addEventListener('click', function () {
+            const itemId = this.closest('tr').children[1].innerText;
+            const items = orderList.get({ id: itemId });
+            items.forEach(item => {
+                const parsedId = new DOMParser().parseFromString(item._values.id, 'text/html').body.firstElementChild;
+                if (parsedId.innerHTML === itemId) {
+                    editlist = true;
+                    idField.value = parsedId.innerHTML;
+                    customerNameField.value = item._values.customer_name;
+                    productNameField.value = item._values.product_name;
+                    dateField.value = item._values.date;
+                    amountField.value = item._values.amount;
+                    paymentChoices.setChoiceByValue(item._values.payment);
+                    productnameVal.setChoiceByValue(item._values.product_name);
+                    statusVal.setChoiceByValue(new DOMParser().parseFromString(item._values.status, 'text/html').body.firstElementChild.innerHTML);
+                    flatpickr('#date-field', {
+                        enableTime: true,
+                        dateFormat: 'd M, Y, h:i K',
+                        defaultDate: item._values.date,
+                    });
+                }
+            });
+        });
+    });
+}
+
+// Clear input fields
+function clearFields() {
+    customerNameField.value = '';
+    productNameField.value = '';
+    dateField.value = '';
+    amountField.value = '';
+    paymentField.value = '';
+    paymentChoices.clearStore();
+    productnameVal.clearStore();
+    statusVal.clearStore();
+}
+
+// Handle form submission
+const forms = document.querySelectorAll('.tablelist-form');
+Array.prototype.slice.call(forms).forEach(form => {
+    form.addEventListener('submit', function (event) {
+        if (form.checkValidity()) {
+            event.preventDefault();
+            if (editlist) {
+                const items = orderList.get({ id: idField.value });
+                items.forEach(item => {
+                    const parsedId = new DOMParser().parseFromString(item._values.id, 'text/html').body.firstElementChild;
+                    if (parsedId.innerHTML === itemId) {
+                        item.values({
+                            id: `<a href="javascript:void(0);" class="fw-medium link-primary">${idField.value}</a>`,
+                            customer_name: customerNameField.value,
+                            product_name: productNameField.value,
+                            date: `${dateField.value.slice(0, 14)}<small class="text-muted">${dateField.value.slice(14, 22)}</small>`,
+                            amount: amountField.value,
+                            payment: paymentField.value,
+                            status: formatStatus(statusField.value),
+                        });
+                    }
+                });
+                document.getElementById('close-modal').click();
+                clearFields();
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Order updated Successfully!',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    showCloseButton: true,
+                });
+            } else {
+                orderList.add({
+                    id: `<a href="apps-ecommerce-order-details.html" class="fw-medium link-primary">#VZ${count}</a>`,
+                    customer_name: customerNameField.value,
+                    product_name: productNameField.value,
+                    date: dateField.value,
+                    amount: `$${amountField.value}`,
+                    payment: paymentField.value,
+                    status: formatStatus(statusField.value),
+                });
+                orderList.sort('id', { order: 'desc' });
+                document.getElementById('close-modal').click();
+                clearFields();
+                refreshCallbacks();
+                filterOrder('All');
+                count++;
+                Swal.fire({
+                    position: 'center',
+                    icon: 'success',
+                    title: 'Order inserted successfully!',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    showCloseButton: true,
+                });
+            }
+        } else {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }, false);
+});
+
+// Filter orders based on status
+function filterOrder(status) {
+    orderList.filter(item => {
+        const parsedStatus = new DOMParser().parseFromString(item.values().status, 'text/html').body.firstElementChild.innerHTML;
+        return status === 'All' || parsedStatus === status;
+    });
+    orderList.update();
+}
+
+// Update list based on selected status
+function updateList() {
+    const selectedStatus = document.querySelector('input[name=status]:checked').value;
+    orderList.filter(item => selectedStatus === 'All' || item.values().sts === selectedStatus);
+    orderList.update();
+}
+
+// Handle tab change event
+const tabElements = document.querySelectorAll('a[data-bs-toggle="tab"]');
+tabElements.forEach(tab => {
+    tab.addEventListener('shown.bs.tab', function (event) {
+        filterOrder(event.target.id);
+    });
+});
+
+// Handle modal show event
+document.getElementById('showModal').addEventListener('show.bs.modal', function (event) {
+    if (event.relatedTarget.classList.contains('edit-item-btn')) {
+        document.getElementById('exampleModalLabel').innerHTML = 'Edit Order';
+        document.getElementById('showModal').querySelector('.modal-footer').style.display = 'block';
+        document.getElementById('add-btn').innerHTML = 'Update';
+    } else if (event.relatedTarget.classList.contains('add-btn')) {
+        document.getElementById('modal-id').style.display = 'none';
+        document.getElementById('exampleModalLabel').innerHTML = 'Add Order';
+        document.getElementById('showModal').querySelector('.modal-footer').style.display = 'block';
+        document.getElementById('add-btn').innerHTML = 'Add Order';
+    } else {
+        document.getElementById('exampleModalLabel').innerHTML = 'List Order';
+        document.getElementById('showModal').querySelector('.modal-footer').style.display = 'none';
+    }
+});
+
+// Handle modal hide event
+document.getElementById('showModal').addEventListener('hidden.bs.modal', clearFields);
+
+// Handle order list click event
+document.querySelector('#orderList').addEventListener('click', function() {
+    ischeckboxcheck();
+});
+
+function ischeckboxcheck() {
+    // Define the function logic here
+}
+
+// Handle search data
+function searchData() {
+    const status = document.getElementById('idStatus').value;
+    const payment = document.getElementById('idPayment').value;
+    const dateRange = document.getElementById('demo-datepicker').value;
+    const [startDate, endDate] = dateRange.split(' to ');
+
+    orderList.filter(item => {
+        const parsedStatus = new DOMParser().parseFromString(item.values().status, 'text/html').body.firstElementChild.innerHTML;
+        const isStatusMatch = status === 'all' || parsedStatus === status;
+        const isPaymentMatch = payment === 'all' || item.values().payment === payment;
+        const isDateMatch = new Date(item.values().date.slice(0, 12)) >= new Date(startDate) && new Date(item.values().date.slice(0, 12)) <= new Date(endDate);
+
+        return isStatusMatch && isPaymentMatch && isDateMatch;
+    });
+    orderList.update();
+}
+
+// Handle delete multiple orders
+function deleteMultiple() {
+    const selectedIds = [];
+    const checkboxes = document.querySelectorAll('.form-check [value=option1]');
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            const id = checkbox.closest('tr').querySelector('td a').innerHTML;
+            selectedIds.push(id);
+        }
+    });
+
+    if (selectedIds.length > 0) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            customClass: {
+                confirmButton: 'btn btn-primary w-xs me-2 mt-2',
+                cancelButton: 'btn btn-danger w-xs mt-2',
+            },
+            confirmButtonText: 'Yes, delete it!',
+            buttonsStyling: false,
+            showCloseButton: true,
+        }).then(result => {
+            if (result.value) {
+                selectedIds.forEach(id => {
+                    orderList.remove('id', `<a href="apps-ecommerce-order-details.html" class="fw-medium link-primary">${id}</a>`);
+                });
+                document.getElementById('remove-actions').style.display = 'none';
+                document.getElementById('checkAll').checked = false;
+                Swal.fire({
+                    title: 'Deleted!',
+                    text: 'Your data has been deleted.',
+                    icon: 'success',
+                    customClass: { confirmButton: 'btn btn-info w-xs mt-2' },
+                    buttonsStyling: false,
+                });
+            }
+        });
+    } else {
+        Swal.fire({
+            title: 'Please select at least one checkbox',
+            customClass: { confirmButton: 'btn btn-info' },
+            buttonsStyling: false,
+            showCloseButton: true,
+        });
+    }
+}
+
+// Handle pagination next button click
+document.querySelector('.pagination-next').addEventListener('click', function () {
+    const activePage = document.querySelector('.pagination.listjs-pagination .active');
+    if (activePage) {
+        activePage.nextElementSibling.children[0].click();
+    }
+});
+
+// Handle pagination previous button click
+document.querySelector('.pagination-prev').addEventListener('click', function () {
+    const activePage = document.querySelector('.pagination.listjs-pagination .active');
+    if (activePage) {
+        activePage.previousSibling.children[0].click();
+    }
+});

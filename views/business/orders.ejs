@@ -1,0 +1,452 @@
+<%- contentFor('HeaderCss') %>
+<link rel="stylesheet" href="/assets/rCSS/business.css">
+
+
+<%- contentFor('body') %>
+<!-- Verficaions -->
+
+
+<div class="row">
+  <div class="col-lg-12">
+    <button class="btn btn-success mb-3" onclick="window.location.href='/business/create-order'">
+      <i class="ri-add-line"></i> Create Order
+    </button>
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title mb-0">Add, Edit & Remove</h4>
+      </div><!-- end card header -->
+
+      <div class="card-body">
+        <div class="listjs-table" id="customerList">
+          <!-- Filter Bar -->
+          <div class="filterazon-bar mb-4 p-3 bg-light rounded-3 shadow-sm">
+            <div class="row g-3 align-items-center">
+              <!-- Left Filters -->
+            <div class="col-md-7">
+                <div class="d-flex flex-wrap gap-3">
+                    <!-- Status Filter -->
+                    <div class="filter-dropdown">
+                        <button class="btn btn-filter d-flex align-items-center" type="button">
+                            <i class="ri-filter-2-line me-2"></i>
+                            Status
+                            <i class="ri-arrow-down-s-line ms-2"></i>
+                        </button>
+                        <div class="filter-menu">
+                            <div class="filter-menu-header">
+                                <h6>Delivery Status</h6>
+                                <i class="ri-close-line filter-close"></i>
+                            </div>
+                            <div class="filter-menu-body" style="max-height: 200px; overflow-y: auto;">
+                                <label class="filter-option">
+                                    <input type="checkbox"> Active
+                                    <span class="checkmark"></span>
+                                </label>
+                                <label class="filter-option">
+                                    <input type="checkbox"> Pending
+                                    <span class="checkmark"></span>
+                                </label>
+                                <label class="filter-option">
+                                    <input type="checkbox"> Completed
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                            <div class="filter-menu-footer">
+                                <button class="btn btn-apply">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date Filter -->
+                    <div class="filter-dropdown">
+                        <button class="btn btn-filter d-flex align-items-center" type="button">
+                            <i class="ri-calendar-line me-2"></i>
+                            Date Range
+                            <i class="ri-arrow-down-s-line ms-2"></i>
+                        </button>
+                        <div class="filter-menu">
+                            <div class="filter-menu-header">
+                                <h6>Select Date Range</h6>
+                                <i class="ri-close-line filter-close"></i>
+                            </div>
+                            <div class="filter-menu-body" style="max-height: 200px; overflow-y: auto;">
+                                <input type="date" class="form-control mb-2">
+                                <input type="date" class="form-control">
+                            </div>
+                            <div class="filter-menu-footer">
+                                <button class="btn btn-apply">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Filters -->
+                    <div class="filter-dropdown">
+                        <button class="btn btn-filter d-flex align-items-center" type="button">
+                            <i class="ri-settings-3-line me-2"></i>
+                            Advanced
+                            <i class="ri-arrow-down-s-line ms-2"></i>
+                        </button>
+                        <div class="filter-menu">
+                            <div class="filter-menu-header">
+                                <h6>Advanced Filters</h6>
+                                <i class="ri-close-line filter-close"></i>
+                            </div>
+                            <div class="filter-menu-body" style="max-height: 200px; overflow-y: auto;">
+                                <div class="mb-3">
+                                    <label>Customer Type</label>
+                                    <select class="form-select">
+                                        <option>All</option>
+                                        <option>VIP</option>
+                                        <option>Regular</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Order Value</label>
+                                    <input type="range" class="form-range">
+                                </div>
+                            </div>
+                            <div class="filter-menu-footer">
+                                <button class="btn btn-apply">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-dropdown">
+                        <button class="btn btn-filter d-flex align-items-center" type="button">
+                            <i class="ri-settings-3-line me-2"></i>
+                            Advanced
+                            <i class="ri-arrow-down-s-line ms-2"></i>
+                        </button>
+                        <div class="filter-menu">
+                            <div class="filter-menu-header">
+                                <h6>Advanced Filters</h6>
+                                <i class="ri-close-line filter-close"></i>
+                            </div>
+                            <div class="filter-menu-body" style="max-height: 200px; overflow-y: auto;">
+                                <div class="mb-3">
+                                    <label>Customer Type</label>
+                                    <select class="form-select">
+                                        <option>All</option>
+                                        <option>VIP</option>
+                                        <option>Regular</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Order Value</label>
+                                    <input type="range" class="form-range">
+                                </div>
+                            </div>
+                            <div class="filter-menu-footer">
+                                <button class="btn btn-apply">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-dropdown">
+                        <button class="btn btn-filter d-flex align-items-center" type="button">
+                            <i class="ri-settings-3-line me-2"></i>
+                            Advanced
+                            <i class="ri-arrow-down-s-line ms-2"></i>
+                        </button>
+                        <div class="filter-menu">
+                            <div class="filter-menu-header">
+                                <h6>Advanced Filters</h6>
+                                <i class="ri-close-line filter-close"></i>
+                            </div>
+                            <div class="filter-menu-body" style="max-height: 200px; overflow-y: auto;">
+                                <div class="mb-3">
+                                    <label>Customer Type</label>
+                                    <select class="form-select">
+                                        <option>All</option>
+                                        <option>VIP</option>
+                                        <option>Regular</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Order Value</label>
+                                    <input type="range" class="form-range">
+                                </div>
+                            </div>
+                            <div class="filter-menu-footer">
+                                <button class="btn btn-apply">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-dropdown">
+                        <button class="btn btn-filter d-flex align-items-center" type="button">
+                            <i class="ri-settings-3-line me-2"></i>
+                            Advanced
+                            <i class="ri-arrow-down-s-line ms-2"></i>
+                        </button>
+                        <div class="filter-menu">
+                            <div class="filter-menu-header">
+                                <h6>Advanced Filters</h6>
+                                <i class="ri-close-line filter-close"></i>
+                            </div>
+                            <div class="filter-menu-body" style="max-height: 200px; overflow-y: auto;">
+                                <div class="mb-3">
+                                    <label>Customer Type</label>
+                                    <select class="form-select">
+                                        <option>All</option>
+                                        <option>VIP</option>
+                                        <option>Regular</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Order Value</label>
+                                    <input type="range" class="form-range">
+                                </div>
+                            </div>
+                            <div class="filter-menu-footer">
+                                <button class="btn btn-apply">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-dropdown">
+                        <button class="btn btn-filter d-flex align-items-center" type="button">
+                            <i class="ri-settings-3-line me-2"></i>
+                            Advanced
+                            <i class="ri-arrow-down-s-line ms-2"></i>
+                        </button>
+                        <div class="filter-menu">
+                            <div class="filter-menu-header">
+                                <h6>Advanced Filters</h6>
+                                <i class="ri-close-line filter-close"></i>
+                            </div>
+                            <div class="filter-menu-body" style="max-height: 200px; overflow-y: auto;">
+                                <div class="mb-3">
+                                    <label>Customer Type</label>
+                                    <select class="form-select">
+                                        <option>All</option>
+                                        <option>VIP</option>
+                                        <option>Regular</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Order Value</label>
+                                    <input type="range" class="form-range">
+                                </div>
+                            </div>
+                            <div class="filter-menu-footer">
+                                <button class="btn btn-apply">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+              <!-- Right Search -->
+              <div class="col-md-5">
+                <div class="search-bar">
+                  <div class="input-group">
+                    <!-- Search Method Dropdown -->
+                    <button class="btn btn-light dropdown-toggle search-method"  type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="ri-filter-line me-2"></i>
+                      <span class="search-method-text">Name</span>
+                    </button>
+                    <ul class="dropdown-menu search-method-menu">
+                      <li><a class="dropdown-item" href="#" data-method="name">Name</a></li>
+                      <li><a class="dropdown-item" href="#" data-method="phone">Phone</a></li>
+                      <li><a class="dropdown-item" href="#" data-method="order-number">Order Number</a></li>
+                      <li><a class="dropdown-item" href="#" data-method="reference">Reference</a></li>
+                      <li><a class="dropdown-item" href="#" data-method="email">Email</a></li>
+                    </ul>
+
+                    <!-- Search Input -->
+                    <input type="text" class="form-control search-input" placeholder="Search customers...">
+                    <!-- Reset Button -->
+                    <span class="input-group-text bg-white">
+                        <i class="ri-search-line"></i>
+                    </span>
+                    <button class="btn btn-light filter-reset">
+                      <i class="ri-close-circle-line"></i>
+                    </button>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rest of your existing table code -->
+        </div>
+
+        <div class="table-responsive table-card mt-3 mb-1">
+          <table class="table align-middle table-nowrap" id="customerTable">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" style="width: 50px;">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="checkAll" value="option">
+                  </div>
+                </th>
+                <th class="sort" data-sort="customer_name">#Order ID</th>
+                <th class="sort" data-sort="email">Type</th>
+                <th class="sort" data-sort="phone">Customer Info </th>
+                <th class="sort" data-sort="date">Location</th>
+                <th class="sort" data-sort="status">Amount </th>
+                <th class="sort" data-sort="status">Order Status</th>
+                <th class="sort" data-sort="status">Last Update</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody class="list form-check-all">
+
+              <tr>
+                <th scope="row">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="chk_child" value="option1">
+                  </div>
+                </th>
+                <td class="id" style="display:none;"><a href="javascript:void(0);" class="fw-medium link-primary">#VZ2101</a></td>
+                <td class="customer_name">Mary Cousar</td>
+                <td class="email">marycousar@velzon.com</td>
+                <td class="phone">580-464-4694</td>
+                <td class="date">06 Apr, 2021</td>
+                <td class="status"><span class="badge bg-success-subtle text-success text-uppercase">Active</span></td>
+                <td class="status"><span class="badge bg-success-subtle text-success text-uppercase">Active</span></td>
+                <td class="status"><span class="badge bg-success-subtle text-success text-uppercase">Active</span></td>
+                <td>
+                  <div class="dropdown">
+                    <i class="ri-more-fill dropdown-toggle" style="font-size: 1.5rem; font-weight: bold;" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                    <style>
+                      #dropdownMenuButton::after {
+                        display: none;
+                      }
+
+                      .dropdown-menu {
+                        position: fixed !important;
+                        z-index: 1050 !important;
+                        /* Ensure the dropdown is above other elements */
+                      }
+                    </style>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showModal">Edit</a></li>
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showModal">Edit</a></li>
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showModal">Edit</a></li>
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showModal">Edit</a></li>
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#showModal">Edit</a></li>
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deleteRecordModal">Remove</a></li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+          <div class="noresult" style="display: none">
+            <div class="text-center">
+              <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
+              <h5 class="mt-2">Sorry! No Result Found</h5>
+              <p class="text-muted mb-0">We've searched more than 150+ Orders We did not find any orders for you search.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <div class="pagination-wrap hstack gap-2">
+            <a class="page-item pagination-prev disabled" href="javascript:void(0);">
+              Previous
+            </a>
+            <ul class="pagination listjs-pagination mb-0"></ul>
+            <a class="page-item pagination-next" href="javascript:void(0);">
+              Next
+            </a>
+          </div>
+        </div>
+      </div>
+    </div><!-- end card -->
+  </div>
+  <!-- end col -->
+</div>
+<!-- end col -->
+</div>
+
+
+<%- contentFor('FooterJs') %>
+<script>
+  // Add interactive functionality
+  // Add interactive functionality
+  document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
+    const button = dropdown.querySelector('.btn-filter');
+    const menu = dropdown.querySelector('.filter-menu');
+    const closeBtn = dropdown.querySelector('.filter-close');
+    const applyBtn = dropdown.querySelector('.btn-apply');
+
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.filter-menu').forEach(m => m.classList.remove('show'));
+      menu.classList.toggle('show');
+      button.classList.toggle('active');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      menu.classList.remove('show');
+      button.classList.remove('active');
+    });
+
+    applyBtn.addEventListener('click', () => {
+      menu.classList.remove('show');
+      button.classList.remove('active');
+      alert('Filters applied!'); // Replace with actual filter logic
+    });
+  });
+
+  // Close menus when clicking outside
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('.filter-menu').forEach(menu => {
+      if (!menu.contains(e.target) && !e.target.closest('.btn-filter')) {
+        menu.classList.remove('show');
+        document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
+      }
+    });
+  });
+
+  // Search input clear button
+  document.querySelectorAll('.filter-reset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.previousElementSibling.value = '';
+    });
+  });
+  // Search Method Selection
+  document.querySelectorAll('.search-method-menu .dropdown-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const method = e.target.getAttribute('data-method');
+      const methodText = e.target.textContent;
+
+      // Update the search method text
+      document.querySelector('.search-method-text').textContent = methodText;
+
+      // Update the placeholder based on the selected method
+      const searchInput = document.querySelector('.search-input');
+      switch (method) {
+        case 'name':
+          searchInput.placeholder = 'Search by name...';
+          break;
+        case 'phone':
+          searchInput.placeholder = 'Search by phone...';
+          break;
+        case 'order-number':
+          searchInput.placeholder = 'Search by order number...';
+          break;
+        case 'reference':
+          searchInput.placeholder = 'Search by reference...';
+          break;
+        case 'email':
+          searchInput.placeholder = 'Search by email...';
+          break;
+        default:
+          searchInput.placeholder = 'Search customers...';
+      }
+    });
+  });
+
+  // Search Reset Button
+  document.querySelector('.filter-reset').addEventListener('click', () => {
+    const searchInput = document.querySelector('.search-input');
+    searchInput.value = '';
+    searchInput.focus();
+  });
+</script>
+
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+<!-- <script src="/assets/js/pages/form-file-upload.init.js"></script> -->
+<script src="/assets/rJS/business/main.js"></script>

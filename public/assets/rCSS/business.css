@@ -1,0 +1,266 @@
+.card_verification {
+  border-radius: 1.9rem !important;
+  box-shadow: 1px 1px 10px 1px #0000002f !important;
+}
+
+.card_verification .card-header {
+  background-color: #f8f9fa !important;
+  border-radius: 1.9rem 1.9rem 0 0 !important;
+  padding: 1.5rem !important;
+}
+.payment-option {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  transition: all 0.1s ease !important;
+}
+
+.payment-option:hover {
+  border-color: #0d6efd; /* Bootstrap primary color */
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* When selected, apply styles to the entire card */
+.payment-option.selected {
+  border: 1px solid #31dba88c !important;
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  box-shadow: 0 0 10px rgba(13, 110, 253, 0.2);
+}
+
+.brand-option {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  transition: all 0.1s ease-in-out !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+  text-align: center;
+}
+
+.brand-option:hover {
+  border-color: #0d6efd;
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.brand-option.selected {
+  border: 1px solid #31dba88c !important;
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  box-shadow: 0 0 10px rgba(13, 110, 253, 0.2);
+}
+
+.brand-option i {
+  font-size: 40px;
+}
+
+.brand-option h5 {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+#dropdownMenuButton::after {
+  display: none;
+}
+.dropdown-menu {
+  position: fixed !important;
+  z-index: 1050 !important; /* Ensure the dropdown is above other elements */
+}
+/* Filterazon Styles */
+/* Filterazon Styles */
+.filterazon-bar {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.btn-filter {
+  background: #fff;
+  border: 2px solid #dee2e6 !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-filter.active {
+  background: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-dropdown {
+  position: relative;
+}
+
+.filter-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 280px;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+}
+
+.filter-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.filter-menu-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-menu-body {
+  padding: 1rem;
+}
+
+.filter-menu-footer {
+  padding: 1rem;
+  border-top: 1px solid #e9ecef;
+  text-align: right;
+}
+
+.btn-apply {
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-apply:hover {
+  background: #0b5ed7;
+}
+
+.filter-option {
+  display: block;
+  position: relative;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.filter-option:hover {
+  background: #f8f9fa;
+}
+
+.search-bar {
+  position: relative;
+}
+
+.search-input {
+  border-radius: 8px;
+  padding-left: 2.5rem;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+.filter-reset {
+  opacity: 0.5;
+  transition: all 0.2s ease;
+}
+
+.filter-reset:hover {
+  opacity: 1;
+  color: #dc3545;
+}
+
+/* Click Animation */
+@keyframes clickEffect {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.btn-filter:active {
+  animation: clickEffect 0.2s ease;
+}
+
+/* Search Bar Styles */
+.search-bar {
+  position: relative;
+}
+
+.search-method {
+  border: 1px solid #848484 !important;
+  border-radius: 8px 0 0 8px;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.search-method:hover {
+  background: #f8f9fa;
+}
+
+.search-method-text {
+  font-weight: 500;
+}
+
+.search-method-menu {
+  min-width: 160px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.search-input {
+  border-radius: 0 8px 8px 0;
+  padding-left: 2.5rem;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+.filter-reset {
+  opacity: 0.5;
+  transition: all 0.2s ease;
+}
+
+.filter-reset:hover {
+  opacity: 1;
+  color: #dc3545;
+}
+
+
+.card{
+  border-radius: 1.3rem !important;
+  box-shadow: 1px 1px 10px 1px #0000002f !important;
+}
+

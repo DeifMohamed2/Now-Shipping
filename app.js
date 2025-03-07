@@ -5,6 +5,7 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const pageRouter = require('./routes/routes');
+const businessRouter = require('./routes/businessRoutes');
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
@@ -73,6 +74,8 @@ app.use((err, req, res, next) => {
 
 // Define All Route 
 pageRouter(app);
+
+app.use('/business', businessRouter);
 
 app.all("*", function (req, res) {
     res.locals = {
