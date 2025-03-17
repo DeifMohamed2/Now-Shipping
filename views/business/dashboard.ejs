@@ -4,361 +4,398 @@
 <link rel="stylesheet" href="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
 
 <%- contentFor('body') %>
-<!-- Verficaions -->
+<!-- Verifications -->
+<style>
+  /* Custom styles */
+  .completed {
+    color: green;
+    border: 2px solid green;
+    border-radius: 50%;
+  }
 
+  .payment-box {
+    display: none;
+  }
+
+  .payment-box.d-none {
+    display: none;
+  }
+
+  /* Highlight selected payment and brand options */
+  .payment-option.active,
+  .brand-option.active {
+    border: 2px solid blue;
+  }
+
+  /* Bootstrap invalid field styling */
+  .is-invalid {
+    border-color: #dc3545;
+  }
+</style>
 
 <div class="row">
-<div class="col-xl-12">
-  <div class="card card_verification">
-    <div class="card-header">
-      <h4 class="card-title mb-0">Account activation steps</h4>
-    </div>
-    <!-- end card header -->
-    <div class="card-body form-steps">
-      <form class="vertical-navs-step">
-        <div class="row gy-5">
-          <div class="col-lg-3">
-            <div class="nav flex-column custom-nav nav-pills" role="tablist" aria-orientation="vertical">
-              <button class="nav-link " id="v-pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-bill-info" type="button" role="tab">
-                <span class="step-title me-2">
-                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 1
-                </span>
-                Email Verification
-              </button>
-              <button class="nav-link " id="v-pills-brand-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-brand-info" type="button" role="tab">
-                <span class="step-title me-2">
-                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 2
-                </span>
-                Brand Info
-              </button>
-              <button class="nav-link" id="v-pills-pickUp-tab" data-bs-toggle="pill" data-bs-target="#v-pills-location" type="button" role="tab">
-                <span class="step-title me-2">
-                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 3
-                </span>
-                PickUp Address
-              </button>
-              <button class="nav-link" id="v-pills-payment-tab" data-bs-toggle="pill" data-bs-target="#v-payment-method" type="button" role="tab">
-                <span class="step-title me-2">
-                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 4
-                </span>
-                Payment Method
-              </button>
-              <button class="nav-link" id="v-pills-brand-type-tab" data-bs-toggle="pill" data-bs-target="#v-brand-type" type="button" role="tab">
-                <span class="step-title me-2">
-                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 5
-                </span>
-                Brand Type
-              </button>
-              <button class="nav-link" id="v-pills-finish-tab" data-bs-toggle="pill" data-bs-target="#v-pills-finish" type="button" role="tab">
-                <span class="step-title me-2">
-                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 6
-                </span>
-                Finish
-              </button>
+  <% if (!user.isCompleted) { %>
+  <div class="col-xl-12">
+    <div class="card card_verification">
+      <div class="card-header">
+        <h4 class="card-title mb-0">Account activation steps</h4>
+      </div>
+      <!-- end card header -->
+      <div class="card-body form-steps">
+        <form class="vertical-navs-step" id="verificationForm">
+          <div class="row gy-5">
+            <div class="col-lg-3">
+              <div class="nav flex-column custom-nav nav-pills" role="tablist" aria-orientation="vertical">
+                <button class="nav-link" id="v-pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-bill-info" type="button" role="tab">
+                  <span class="step-title me-2">
+                    <i class="ri-<%= user.isVerified ? 'check' : 'close' %>-circle-fill step-icon me-2 <%= user.isVerified ? 'text-success' : '' %>"></i> Step 1
+                  </span>
+                  Email Verification
+                </button>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-brand-info" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                  <span class="step-title me-2">
+                    <i class="ri-close-circle-fill step-icon me-2"></i> Step 2
+                  </span>
+                  Brand Info
+                </button>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-pickUp-tab" data-bs-toggle="pill" data-bs-target="#v-pills-location" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                  <span class="step-title me-2">
+                    <i class="ri-close-circle-fill step-icon me-2"></i> Step 3
+                  </span>
+                  PickUp Address
+                </button>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-payment-tab" data-bs-toggle="pill" data-bs-target="#v-payment-method" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                  <span class="step-title me-2">
+                    <i class="ri-close-circle-fill step-icon me-2"></i> Step 4
+                  </span>
+                  Payment Method
+                </button>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-type-tab" data-bs-toggle="pill" data-bs-target="#v-brand-type" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                  <span class="step-title me-2">
+                    <i class="ri-close-circle-fill step-icon me-2"></i> Step 5
+                  </span>
+                  Brand Type
+                </button>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-finish-tab" data-bs-toggle="pill" data-bs-target="#v-pills-finish" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                  <span class="step-title me-2">
+                    <i class="ri-close-circle-fill step-icon me-2"></i> Step 6
+                  </span>
+                  Finish
+                </button>
+              </div>
+              <!-- end nav -->
             </div>
-            <!-- end nav -->
-          </div>
-          <!-- end col-->
-          <div class="col-lg-9">
-            <div class="px-lg-4">
-              <div class="tab-content">
-                <!-- Step 1: Email Verification -->
-                <div class="tab-pane fade text-center p-4" id="v-pills-bill-info" role="tabpanel" aria-labelledby="v-pills-bill-info-tab">
-                  <div class="mb-3">
-                    <h4 class="fw-bold">Email Verification</h4>
-                    <p class="text-muted">Click the button below to verify your email via Gmail</p>
+            <!-- end col-->
+            <div class="col-lg-9">
+              <div class="px-lg-4">
+                <div class="tab-content">
+                  <!-- Step 1: Email Verification -->
+                  <div class="tab-pane fade text-center p-4" id="v-pills-bill-info" role="tabpanel" aria-labelledby="v-pills-bill-info-tab">
+                    <% if (user.isVerified) { %>
+                    <div class="mb-3">
+                      <h4 class="fw-bold">Email Verified</h4>
+                      <p class="text-muted">Your email has been successfully verified.</p>
+                    </div>
+                    <div class="mb-4">
+                      <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>
+                    </div>
+                    <% } else { %>
+                    <div class="mb-3">
+                      <h4 class="fw-bold">Email Verification</h4>
+                      <p class="text-muted">Click the button below to verify your email via Gmail</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-lg d-flex align-items-center mx-auto shadow-sm px-4 py-2" onclick="window.open('https://mail.google.com', '_blank')">
+                      <i class="ri-mail-fill fs-5 me-2"></i> Send Verification Email
+                    </button>
+                    <% } %>
                   </div>
-                  <button type="button" class="btn btn-outline-danger btn-lg d-flex align-items-center mx-auto shadow-sm px-4 py-2" onclick="window.open('https://mail.google.com', '_blank')">
-                    <i class="ri-mail-fill fs-5 me-2"></i> Verify via Gmail
-                  </button>
-                </div>
+                  <!-- Step 2: Brand Info -->
+                  <div class="tab-pane fade p-4" id="v-pills-brand-info" role="tabpanel" aria-labelledby="v-pills-brand-info-tab">
+                    <div class="mb-4">
+                      <h4 class="fw-bold">Brand Profile</h4>
+                      <p class="text-muted">Add your business details</p>
+                    </div>
+                    <div class="mb-3">
+                      <label for="brandName" class="form-label fw-semibold">Brand Name</label>
+                      <input type="text" class="form-control" id="brandName" name="brandName" placeholder="Enter your brand name" required>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label for="industry" class="form-label fw-semibold">Industry</label>
+                        <select class="form-select" id="industry" name="industry" required>
+                          <option value="">Select an industry...</option>
+                          <option>Books, Arts & Media</option>
+                          <option>Fashion & Clothing</option>
+                          <option>Electronics</option>
+                          <option>Health & Beauty</option>
+                          <option>Home & Furniture</option>
+                          <option>Other</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="orderSize" class="form-label fw-semibold">Monthly Order Volume</label>
+                        <select class="form-select" id="orderSize" name="monthlyOrders" required>
+                          <option value="">Select...</option>
+                          <option>1 - 10</option>
+                          <option>11 - 50</option>
+                          <option>51 - 200</option>
+                          <option>201 - 1000</option>
+                          <option>1000+</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="mt-4">
+                      <h5 class="fw-bold">Where do you sell your products?</h5>
+                      <p class="text-muted">Select all the sales channels you use.</p>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <div class="card p-3">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="instagram" name="sellingPoints[]" value="instagram">
+                            <label class="form-check-label d-flex align-items-center" for="instagram">
+                              <i class="ri-instagram-line me-2 fs-5 text-danger"></i> Instagram
+                            </label>
+                          </div>
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="tiktok" name="sellingPoints[]" value="tiktok">
+                            <label class="form-check-label d-flex align-items-center" for="tiktok">
+                              <i class="ri-tiktok-line me-2 fs-5 text-dark"></i> TikTok
+                            </label>
+                          </div>
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="woocommerce" name="sellingPoints[]" value="woocommerce">
+                            <label class="form-check-label d-flex align-items-center" for="woocommerce">
+                              <i class="ri-store-2-line me-2 fs-5 text-primary"></i> WooCommerce
+                            </label>
+                          </div>
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="customWebsite" name="sellingPoints[]" value="customWebsite">
+                            <label class="form-check-label d-flex align-items-center" for="customWebsite">
+                              <i class="ri-global-line me-2 fs-5 text-secondary"></i> Custom Website
+                            </label>                           
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card p-3">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="facebookShop" name="sellingPoints[]" value="facebookShop" >
+                            <label class="form-check-label d-flex align-items-center" for="facebookShop">
+                              <i class="ri-facebook-circle-line me-2 fs-5 text-primary"></i> Facebook Shop
+                            </label>
+                          </div>
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="facebookMessenger" name="sellingPoints[]" value="facebookMessenger">
+                            <label class="form-check-label d-flex align-items-center" for="facebookMessenger">
+                              <i class="ri-messenger-line me-2 fs-5 text-info"></i> Facebook Messenger
+                            </label>
+                          </div>
+                          <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="shopify">
+                            <label class="form-check-label d-flex align-items-center" for="shopify">
+                              <i class="ri-shopping-cart-line me-2 fs-5 text-success"></i> Shopify
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3 mt-4">
+                      <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-bill-info-tab">
+                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Email Verification
+                      </button>
+                      <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-pickUp-tab">
+                        Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                      </button>
+                    </div>
+                  </div>
 
-                <!-- Step 2: Brand Info -->
-                <div class="tab-pane fade p-4" id="v-pills-brand-info" role="tabpanel" aria-labelledby="v-pills-brand-info-tab">
-                  <div class="mb-4">
-                    <h4 class="fw-bold">Brand Profile</h4>
-                    <p class="text-muted">Add your business details</p>
-                  </div>
-                  <div class="mb-3">
-                    <label for="brandName" class="form-label fw-semibold">Brand Name</label>
-                    <input type="text" class="form-control" id="brandName" placeholder="Enter your brand name" required>
-                  </div>
-                  <div class="row g-3">
-                    <div class="col-md-6">
-                      <label for="industry" class="form-label fw-semibold">Industry</label>
-                      <select class="form-select" id="industry" required>
-                        <option value="">Select an industry...</option>
-                        <option>Books, Arts & Media</option>
-                        <option>Fashion & Clothing</option>
-                        <option>Electronics</option>
-                        <option>Health & Beauty</option>
-                        <option>Home & Furniture</option>
-                        <option>Other</option>
-                      </select>
+                  <!-- Step 3: PickUp Address -->
+                  <div class="tab-pane fade" id="v-pills-location" role="tabpanel" aria-labelledby="v-pills-pickUp-tab">
+                    <div>
+                      <h5>Choose Location</h5>
+                      <p class="text-muted">Select your preferred location for receiving orders.</p>
                     </div>
-                    <div class="col-md-6">
-                      <label for="orderSize" class="form-label fw-semibold">Monthly Order Volume</label>
-                      <select class="form-select" id="orderSize" required>
-                        <option value="">Select...</option>
-                        <option>1 - 10</option>
-                        <option>11 - 50</option>
-                        <option>51 - 200</option>
-                        <option>201 - 1000</option>
-                        <option>1000+</option>
-                      </select>
+                    <div class="mb-3">
+                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#locationModal">
+                        Select Location on Map
+                      </button>
                     </div>
-                  </div>
-                  <div class="mt-4">
-                    <h5 class="fw-bold">Where do you sell your products?</h5>
-                    <p class="text-muted">Select all the sales channels you use.</p>
-                  </div>
-                  <div class="row g-3">
-                    <div class="col-md-6">
-                      <div class="card p-3">
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" id="instagram">
-                          <label class="form-check-label d-flex align-items-center" for="instagram">
-                            <i class="ri-instagram-line me-2 fs-5 text-danger"></i> Instagram
-                          </label>
-                        </div>
-                        <div class="form-check mt-2">
-                          <input class="form-check-input" type="checkbox" id="tiktok">
-                          <label class="form-check-label d-flex align-items-center" for="tiktok">
-                            <i class="ri-tiktok-line me-2 fs-5 text-dark"></i> TikTok
-                          </label>
-                        </div>
-                        <div class="form-check mt-2">
-                          <input class="form-check-input" type="checkbox" id="woocommerce">
-                          <label class="form-check-label d-flex align-items-center" for="woocommerce">
-                            <i class="ri-store-2-line me-2 fs-5 text-primary"></i> WooCommerce
-                          </label>
-                        </div>
-                        <div class="form-check mt-2">
-                          <input class="form-check-input" type="checkbox" id="customWebsite">
-                          <label class="form-check-label d-flex align-items-center" for="customWebsite">
-                            <i class="ri-global-line me-2 fs-5 text-secondary"></i> Custom Website
-                          </label>
+                    <div class="row g-3">
+                      <div class="col-md-12">
+                        <label for="country" class="form-label">Country</label>
+                        <select class="form-select" id="country" name="country" required>
+                          <option value="" selected disabled>Select Country</option>
+                          <option value="egypt">Egypt</option>
+                        </select>
+                      </div>
+                      <div class="col-md-12">
+                        <label for="region" class="form-label">Region</label>
+                        <input type="text" class="form-control" name="city" id="region" placeholder="Enter region" required>
+                      </div>
+                      <div class="col-md-12">
+                        <label for="address-details" class="form-label">Address Details</label>
+                        <input type="text" class="form-control" name="adressDetails" id="address-details" placeholder="Street, Building, Floor, Apartment" required>
+                      </div>
+                      <div class="col-md-12">
+                        <label for="landmark" class="form-label">Nearby Landmark</label>
+                        <input type="text" class="form-control" name="nearbyLandmark" id="landmark" placeholder="e.g. Near the school">
+                      </div>
+                    </div>
+                    <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="locationModalLabel">Select Location</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                            <div id="map" style="width: 100%; height: 400px;"></div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="confirmLocation">Confirm Location</button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div class="col-md-6">
-                      <div class="card p-3">
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" id="facebookShop" checked>
-                          <label class="form-check-label d-flex align-items-center" for="facebookShop">
-                            <i class="ri-facebook-circle-line me-2 fs-5 text-primary"></i> Facebook Shop
-                          </label>
-                        </div>
-                        <div class="form-check mt-2">
-                          <input class="form-check-input" type="checkbox" id="facebookMessenger">
-                          <label class="form-check-label d-flex align-items-center" for="facebookMessenger">
-                            <i class="ri-messenger-line me-2 fs-5 text-info"></i> Facebook Messenger
-                          </label>
-                        </div>
-                        <div class="form-check mt-2">
-                          <input class="form-check-input" type="checkbox" id="shopify">
-                          <label class="form-check-label d-flex align-items-center" for="shopify">
-                            <i class="ri-shopping-cart-line me-2 fs-5 text-success"></i> Shopify
-                          </label>
-                        </div>
-                      </div>
+                    <div class="d-flex align-items-start gap-3 mt-4">
+                      <button type="button" class="btn btn-light btn-label previestab" data-previous="v-pills-brand-info-tab">
+                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Brand Info
+                      </button>
+                      <button type="button" class="btn btn-success btn-label right ms-auto nexttab" data-nexttab="v-pills-payment-tab">
+                        <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Continue to Payment
+                      </button>
                     </div>
                   </div>
-                  <div class="d-flex align-items-start gap-3 mt-4">
-                    <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-bill-info-tab">
-                      <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Email Verification
-                    </button>
-                    <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-pickUp-tab">
-                      Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
-                    </button>
-                  </div>
-                </div>
 
-                <!-- Step 3: PickUp Address -->
-                <div class="tab-pane fade" id="v-pills-location" role="tabpanel" aria-labelledby="v-pills-pickUp-tab">
-                  <div>
-                    <h5>Choose Location</h5>
-                    <p class="text-muted">Select your preferred location for receiving orders.</p>
-                  </div>
-                  <div class="mb-3">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#locationModal">
-                      Select Location on Map
-                    </button>
-                  </div>
-                  <div class="row g-3">
-                    <div class="col-md-12">
-                      <label for="country" class="form-label">Country</label>
-                      <select class="form-select" id="country" required>
-                        <option value="" selected disabled>Select Country</option>
-                        <option value="egypt">Egypt</option>
-                      </select>
+             
+                  <!-- Step 4: Payment Method -->
+                  <div class="tab-pane fade p-4" id="v-payment-method" role="tabpanel" aria-labelledby="v-pills-payment-tab">
+                    <div class="mb-4">
+                      <h4 class="fw-bold">Select Payment Method</h4>
+                      <p class="text-muted">Choose your preferred payment option for checkout.</p>
                     </div>
-                    <div class="col-md-12">
-                      <label for="region" class="form-label">Region</label>
-                      <input type="text" class="form-control" id="region" placeholder="Enter region" required>
-                    </div>
-                    <div class="col-md-12">
-                      <label for="address-details" class="form-label">Address Details</label>
-                      <input type="text" class="form-control" id="address-details" placeholder="Street, Building, Floor, Apartment" required>
-                    </div>
-                    <div class="col-md-12">
-                      <label for="landmark" class="form-label">Nearby Landmark</label>
-                      <input type="text" class="form-control" id="landmark" placeholder="e.g. Near the school">
-                    </div>
-                  </div>
-                  <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="locationModalLabel">Select Location</h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="row g-3">
+                      <!-- InstaPay -->
+                      <div class="col-md-4">
+                        <div class="card p-3 text-center payment-option" data-value="instapay">
+                          <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="instapay" value="instaPay" required>
+                          <label class="form-check-label" for="instapay">
+                            <i class="ri-smartphone-line fs-2 mb-2 text-primary"></i>
+                            <h5>InstaPay</h5>
+                          </label>
                         </div>
-                        <div class="modal-body">
-                          <div id="map" style="width: 100%; height: 400px;"></div>
+                      </div>
+                      <!-- Mobile Wallet -->
+                      <div class="col-md-4">
+                        <div class="card p-3 text-center payment-option" data-value="mobileWallet">
+                          <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="mobileWallet" value="mobileWallet" required>
+                          <label class="form-check-label" for="mobileWallet">
+                            <i class="ri-wallet-line fs-2 mb-2 text-success"></i>
+                            <h5>Mobile Wallet</h5>
+                          </label>
                         </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                          <button type="button" class="btn btn-primary">Confirm Location</button>
+                      </div>
+                      <!-- Bank Transfer -->
+                      <div class="col-md-4">
+                        <div class="card p-3 text-center payment-option" data-value="bankTransfer">
+                          <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="bankTransfer" value="bankTransfer" required>
+                          <label class="form-check-label" for="bankTransfer">
+                            <i class="ri-bank-line fs-2 mb-2 text-danger"></i>
+                            <h5>Bank Transfer</h5>
+                          </label>
                         </div>
                       </div>
                     </div>
+                    <!-- Payment Details Section -->
+                    <div id="paymentDetails" class="mt-4" style="display: none;">
+                      <!-- InstaPay Input -->
+                      <div id="instapayDetails" class="payment-detail" style="display: none;">
+                        <label for="ipaAddress" class="form-label">Enter your IPA Address:</label>
+                        <input type="text" id="ipaAddress" name="IPAorPhoneNumber" class="form-control" placeholder="Example: ABCD1234">
+                      </div>
+                      <!-- Mobile Wallet Input -->
+                      <div id="mobileWalletDetails" class="payment-detail" style="display: none;">
+                        <label for="mobileNumber" class="form-label">Enter your Mobile Number:</label>
+                        <input type="text" id="mobileNumber" name="phoneNumber" class="form-control" placeholder="Example: +201234567890">
+                      </div>
+                      <!-- Bank Transfer Inputs -->
+                      <div id="bankTransferDetails" class="payment-detail" style="display: none;">
+                        <label for="bankSelect" class="form-label">Select Your Bank:</label>
+                        <select id="bankSelect" class="form-select" name="bankName">
+                          <option value="">Choose your bank</option>
+                          <option value="nbe">National Bank of Egypt</option>
+                          <option value="cib">CIB (Commercial International Bank)</option>
+                          <option value="qnb">QNB Alahli</option>
+                          <option value="hsbc">HSBC</option>
+                          <option value="saib">SAIB Bank</option>
+                        </select>
+                        <label for="ibanNumber" class="form-label mt-3">Enter your IBAN:</label>
+                        <input type="text" id="ibanNumber" class="form-control" name="IBAN" placeholder="Example: EG12 3456 7890 1234 5678 90">
+                        <label for="accountName" class="form-label mt-3">Enter your Account Name:</label>
+                        <input type="text" id="accountName" class="form-control" name="accountName" placeholder="Example: John Doe">
+                      </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-3 mt-4">
+                      <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-location-tab">
+                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Location
+                      </button>
+                      <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-brand-type-tab">
+                        Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                      </button>
+                    </div>
                   </div>
-                  <div class="d-flex align-items-start gap-3 mt-4">
-                    <button type="button" class="btn btn-light btn-label previestab" data-previous="v-pills-brand-info-tab">
-                      <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Brand Info
-                    </button>
-                    <button type="button" class="btn btn-success btn-label right ms-auto nexttab" data-nexttab="v-pills-payment-tab">
-                      <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Continue to Payment
-                    </button>
-                  </div>
-                </div>
 
-                <!-- Step 4: Payment Method -->
-                <div class="tab-pane fade p-4" id="v-payment-method" role="tabpanel" aria-labelledby="v-pills-payment-tab">
-                  <div class="mb-4">
-                    <h4 class="fw-bold">Select Payment Method</h4>
-                    <p class="text-muted">Choose your preferred payment option for checkout.</p>
-                  </div>
-                  <div class="row g-3">
-                    <!-- InstaPay -->
-                    <div class="col-md-4">
-                      <div class="card p-3 text-center payment-option" data-value="instapay">
-                        <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="instapay" value="instapay" required>
-                        <label class="form-check-label" for="instapay">
-                          <i class="ri-smartphone-line fs-2 mb-2 text-primary"></i>
-                          <h5>InstaPay</h5>
-                        </label>
-                      </div>
+                  <!-- Step 5: Brand Type -->
+                  <div class="tab-pane fade p-4" id="v-brand-type" role="tabpanel" aria-labelledby="v-pills-brand-type-tab">
+                    <div class="mb-4">
+                      <h4 class="fw-bold">Brand Type</h4>
+                      <p class="text-muted">Select the type of your brand.</p>
                     </div>
-                    <!-- Mobile Wallet -->
-                    <div class="col-md-4">
-                      <div class="card p-3 text-center payment-option" data-value="mobileWallet">
-                        <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="mobileWallet" value="mobileWallet" required>
-                        <label class="form-check-label" for="mobileWallet">
-                          <i class="ri-wallet-line fs-2 mb-2 text-success"></i>
-                          <h5>Mobile Wallet</h5>
-                        </label>
-                      </div>
-                    </div>
-                    <!-- Bank Transfer -->
-                    <div class="col-md-4">
-                      <div class="card p-3 text-center payment-option" data-value="bankTransfer">
-                        <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="bankTransfer" value="bankTransfer" required>
-                        <label class="form-check-label" for="bankTransfer">
-                          <i class="ri-bank-line fs-2 mb-2 text-danger"></i>
-                          <h5>Bank Transfer</h5>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Payment Details Section -->
-                  <div id="paymentDetails" class="mt-4" style="display: none;">
-                    <!-- InstaPay Input -->
-                    <div id="instapayDetails" class="payment-detail" style="display: none;">
-                      <label for="ipaAddress" class="form-label">Enter your IPA Address:</label>
-                      <input type="text" id="ipaAddress" class="form-control" placeholder="Example: ABCD1234">
-                    </div>
-                    <!-- Mobile Wallet Input -->
-                    <div id="mobileWalletDetails" class="payment-detail" style="display: none;">
-                      <label for="mobileNumber" class="form-label">Enter your Mobile Number:</label>
-                      <input type="text" id="mobileNumber" class="form-control" placeholder="Example: +201234567890">
-                    </div>
-                    <!-- Bank Transfer Inputs -->
-                    <div id="bankTransferDetails" class="payment-detail" style="display: none;">
-                      <label for="bankSelect" class="form-label">Select Your Bank:</label>
-                      <select id="bankSelect" class="form-select">
-                        <option value="">Choose your bank</option>
-                        <option value="nbe">National Bank of Egypt</option>
-                        <option value="cib">CIB (Commercial International Bank)</option>
-                        <option value="qnb">QNB Alahli</option>
-                        <option value="hsbc">HSBC</option>
-                        <option value="saib">SAIB Bank</option>
-                      </select>
-                      <label for="ibanNumber" class="form-label mt-3">Enter your IBAN:</label>
-                      <input type="text" id="ibanNumber" class="form-control" placeholder="Example: EG12 3456 7890 1234 5678 90">
-                      <label for="accountName" class="form-label mt-3">Enter your Account Name:</label>
-                      <input type="text" id="accountName" class="form-control" placeholder="Example: John Doe">
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-start gap-3 mt-4">
-                    <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-location-tab">
-                      <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Location
-                    </button>
-                    <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-brand-type-tab">
-                      Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Step 5: Brand Type -->
-                <div class="tab-pane fade p-4" id="v-brand-type" role="tabpanel" aria-labelledby="v-pills-brand-type-tab">
-                  <div class="mb-4">
-                    <h4 class="fw-bold">Brand Type</h4>
-                    <p class="text-muted">Select the type of your brand.</p>
-                  </div>
-                  <div class="row g-3">
-                    <!-- Personal -->
-                    <div class="col-md-6">
-                      <div class="card p-3 text-center brand-option" data-value="personal">
-                        <input class="form-check-input d-none brand-radio" type="radio" name="brandType" id="brandType1" value="personal" required>
-                        <label class="form-check-label" for="brandType1">
-                          <i class="ri-user-line fs-2 mb-2 text-primary"></i>
-                          <h5>Personal</h5>
-                        </label>
-                      </div>
-                    </div>
-                    <!-- Company -->
-                    <div class="col-md-6">
-                      <div class="card p-3 text-center brand-option" data-value="company">
-                        <input class="form-check-input d-none brand-radio" type="radio" name="brandType" id="brandType2" value="company" required>
-                        <label class="form-check-label" for="brandType2">
-                          <i class="ri-building-line fs-2 mb-2 text-success"></i>
-                          <h5>Company</h5>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Personal Fields -->
-                  <div id="personalFields" class="mt-4" style="display: none;">
-                    <label for="nationalIdNumber" class="form-label">Enter your National ID Number:</label>
-                    <input type="text" id="nationalIdNumber" class="form-control" placeholder="Example: 29811234567890">
-                    <label for="nationalIdUpload" class="form-label mt-3">Upload National ID:</label>
-                    <div class="col-lg-12">
-                      <div class="card">
-                        <div class="card-header">
-                          <h4 class="card-title mb-0">Upload Your National ID</h4>
+                    <div class="row g-3">
+                      <!-- Personal -->
+                      <div class="col-md-6">
+                        <div class="card p-3 text-center brand-option" data-value="personal">
+                          <input class="form-check-input d-none brand-radio" type="radio" name="brandType" id="brandType1" value="personal" required>
+                          <label class="form-check-label" for="brandType1">
+                            <i class="ri-user-line fs-2 mb-2 text-primary"></i>
+                            <h5>Personal</h5>
+                          </label>
                         </div>
-                        <div class="card-body">
-                          <p class="text-muted">Upload Front Side And Back Side</p>
-                          <input type="file" class="filepond filepond-input-multiple" multiple name="filepond" data-allow-reorder="true" data-max-file-size="3MB" data-max-files="3">
+                      </div>
+                      <!-- Company -->
+                      <div class="col-md-6">
+                        <div class="card p-3 text-center brand-option" data-value="company">
+                          <input class="form-check-input d-none brand-radio" type="radio" name="brandType" id="brandType2" value="company" required>
+                          <label class="form-check-label" for="brandType2">
+                            <i class="ri-building-line fs-2 mb-2 text-success"></i>
+                            <h5>Company</h5>
+                          </label>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <!-- Company Fields -->
-                  <div id="companyFields" class="mt-4" style="display: none;">
-                    <label for="taxNumber" class="form-label">Enter your Tax Number:</label>
-                    <input type="text" id="taxNumber" class="form-control" placeholder="Example: 1234567890">
+                    <!-- Personal Fields -->
+                    <div id="personalFields" class="mt-4" style="display: none;">
+                      <label for="nationalIdNumber" class="form-label">Enter your National ID Number:</label>
+                      <input type="number" min="14" max="14" id="nationalIdNumber" class="form-control" name="nationalId" placeholder="Example: 29811234567890" required>
+                      <label for="nationalIdUpload" class="form-label mt-3">Upload National ID:</label>
+                      <div class="col-lg-12">
+                        <div class="card">
+                          <div class="card-header">
+                            <h4 class="card-title mb-0">Upload Your National ID</h4>
+                          </div>
+                          <div class="card-body">
+                            <p class="text-muted">Upload Front Side And Back Side</p>
+                            <input type="file" class="filepond filepond-input-multiple" multiple name="filepond" data-allow-reorder="true" data-max-file-size="3MB" data-max-files="3" required>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Company Fields -->
+                    <div id="companyFields" class="mt-4" style="display: none;">
+                      <label for="taxNumber" class="form-label">Enter your Tax Number:</label>
+                      <input type="number" id="taxNumber" class="form-control" name="taxNumber" placeholder="Example: 1234567890" required>
                     <label for="companyDocs" class="form-label mt-3">Upload Company Papers:</label>
                     <div class="col-lg-12">
                       <div class="card">
@@ -367,78 +404,78 @@
                         </div>
                         <div class="card-body">
                           <p class="text-muted">Please Upload All Papers</p>
-                          <input type="file" class="filepond filepond-input-multiple" multiple name="filepond" data-allow-reorder="true" data-max-file-size="3MB" data-max-files="3">
+                          <input type="file" class="filepond filepond-input-multiple" multiple name="filepond" data-allow-reorder="true" data-max-file-size="3MB" data-max-files="10"> <!-- ✅ Increased max-files -->
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="d-flex align-items-start gap-3 mt-4">
-                    <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-payment-tab">
-                      <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Payment Method
-                    </button>
-                    <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-finish-tab">
-                      Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
-                    </button>
-                  </div>
-                </div>
 
-                <!-- Step 6: Finish -->
-                <div class="tab-pane fade" id="v-pills-finish" role="tabpanel" aria-labelledby="v-pills-finish-tab">
-                  <div class="text-center pt-4 pb-2">
-                    <div class="mb-4">
-                      <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>
                     </div>
-                    <h5>Your Order is Completed !</h5>
-                    <p class="text-muted">You Will receive an order confirmation email with details of your order.</p>
+                    <div class="d-flex align-items-start gap-3 mt-4">
+                      <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-payment-tab">
+                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Payment Method
+                      </button>
+                        <p id="photoCount" class="mt-2 text-success fw-bold">Uploaded Photos: 0</p> <!-- ✅ Photo Count Display -->
+
+                      <button type="submit" id="submitButton" class="btn btn-success ms-auto nexttab">
+                        Submit All <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Step 6: Finish -->
+                  <div class="tab-pane fade" id="v-pills-finish" role="tabpanel" aria-labelledby="v-pills-finish-tab">
+                    <div class="text-center pt-4 pb-2">
+                      <div class="mb-4">
+                        <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>
+                      </div>
+                      <h5>Your Order is Completed!</h5>
+                      <p class="text-muted">You will receive an order confirmation email with details of your order.</p>
+                    </div>
                   </div>
                 </div>
+                <!-- end tab content -->
               </div>
-              <!-- end tab content -->
             </div>
+            <!-- end col -->
           </div>
-          <!-- end col -->
-        </div>
-        <!-- end row -->
-      </form>
+          <!-- end row -->
+        </form>
+      </div>
     </div>
+    <!-- end card -->
   </div>
-  <!-- end -->
-</div>
-
-
-  <!-- Some widgts with some data -->
+    <% } %>
+  <!-- Additional Widgets -->
   <div class="col-lg-12">
     <div class="row">
-       <div class="col-xl-3 col-md-6">
-         <!-- card -->
-         <div class="card card-animate">
-           <div class="card-body">
-             <div class="d-flex align-items-center">
-               <div class="flex-grow-1">
-                 <p class="text-uppercase fw-medium text-muted mb-0">Total Earnings</p>
-               </div>
-               <div class="flex-shrink-0">
-                 <h5 class="text-success fs-14 mb-0">
-                   <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +16.24 %
-                 </h5>
-               </div>
-             </div>
-             <div class="d-flex align-items-end justify-content-between mt-4">
-               <div>
-                 <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span class="counter-value" data-target="559.25">0</span>k
-                 </h4>
-                 <a href="" class="text-decoration-underline">View net earnings</a>
-               </div>
-               <div class="avatar-sm flex-shrink-0">
-                 <span class="avatar-title bg-success-subtle rounded fs-3 material-shadow">
-                   <i class="bx bx-dollar-circle text-success"></i>
-                 </span>
-               </div>
-             </div>
-           </div><!-- end card body -->
-         </div><!-- end card -->
-       </div><!-- end col -->
-
+      <div class="col-xl-3 col-md-6">
+        <!-- card -->
+        <div class="card card-animate">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Earnings</p>
+              </div>
+              <div class="flex-shrink-0">
+                <h5 class="text-success fs-14 mb-0">
+                  <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +16.24 %
+                </h5>
+              </div>
+            </div>
+            <div class="d-flex align-items-end justify-content-between mt-4">
+              <div>
+                <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span class="counter-value" data-target="559.25">0</span>k</h4>
+                <a href="" class="text-decoration-underline">View net earnings</a>
+              </div>
+              <div class="avatar-sm flex-shrink-0">
+                <span class="avatar-title bg-success-subtle rounded fs-3 material-shadow">
+                  <i class="bx bx-dollar-circle text-success"></i>
+                </span>
+              </div>
+            </div>
+          </div><!-- end card body -->
+        </div><!-- end card -->
+      </div><!-- end col -->
 
       <div class="col-xl-3 col-md-6">
         <!-- card -->
@@ -456,8 +493,7 @@
             </div>
             <div class="d-flex align-items-end justify-content-between mt-4">
               <div>
-                <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="183.35">0</span>M
-                </h4>
+                <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="183.35">0</span>M</h4>
                 <a href="" class="text-decoration-underline">See details</a>
               </div>
               <div class="avatar-sm flex-shrink-0">
@@ -469,43 +505,39 @@
           </div><!-- end card body -->
         </div><!-- end card -->
       </div><!-- end col -->
-  
-        <div class="col-xl-3 col-md-6">
-          <!-- card -->
-          <div class="card card-animate bg-info">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="flex-grow-1">
-                  <p class="text-uppercase fw-medium text-white-50 mb-0">Orders</p>
-                </div>
-                <div class="flex-shrink-0">
-                  <h5 class="text-warning fs-14 mb-0">
-                    <i class="ri-arrow-right-down-line fs-13 align-middle"></i> -3.57 %
-                  </h5>
-                </div>
+
+      <div class="col-xl-3 col-md-6">
+        <!-- card -->
+        <div class="card card-animate bg-info">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <p class="text-uppercase fw-medium text-white-50 mb-0">Orders</p>
               </div>
-              <div class="d-flex align-items-end justify-content-between mt-4">
-                <div>
-                  <h4 class="fs-22 fw-semibold ff-secondary mb-4 text-white"><span class="counter-value" data-target="36894">0</span></h4>
-                  <a href="" class="text-decoration-underline text-white-50">View all orders</a>
-                </div>
-                <div class="avatar-sm flex-shrink-0">
-                  <span class="avatar-title bg-white bg-opacity-25 rounded fs-3 material-shadow">
-                    <i class="bx bx-shopping-bag text-white"></i>
-                  </span>
-                </div>
+              <div class="flex-shrink-0">
+                <h5 class="text-warning fs-14 mb-0">
+                  <i class="ri-arrow-right-down-line fs-13 align-middle"></i> -3.57 %
+                </h5>
               </div>
-            </div><!-- end card body -->
-          </div><!-- end card -->
-        </div><!-- end col -->
-      
+            </div>
+            <div class="d-flex align-items-end justify-content-between mt-4">
+              <div>
+                <h4 class="fs-22 fw-semibold ff-secondary mb-4 text-white"><span class="counter-value" data-target="36894">0</span></h4>
+                <a href="" class="text-decoration-underline text-white-50">View all orders</a>
+              </div>
+              <div class="avatar-sm flex-shrink-0">
+                <span class="avatar-title bg-white bg-opacity-25 rounded fs-3 material-shadow">
+                  <i class="bx bx-shopping-bag text-white"></i>
+                </span>
+              </div>
+            </div>
+          </div><!-- end card body -->
+        </div><!-- end card -->
+      </div><!-- end col -->
     </div>
-
   </div>
-
   <!-- end col -->
 </div>
-
 
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/filepond/filepond.min.js"></script>
@@ -514,6 +546,54 @@
 <script src="/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js"></script>
 <script src="/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js"></script>
 
-<!-- <script src="/assets/js/pages/form-file-upload.init.js"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="/assets/js/pages/form-file-upload.init.js"></script>
 <script src="/assets/rJS/business/main.js"></script>
 <script src="/assets/rJS/business/dashboard.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('v-pills-bill-info-tab').click();
+  });
+</script>
+
+     <!-- <script>
+       let map;
+       let marker;
+
+       function initMap() {
+         map = new google.maps.Map(document.getElementById("map"), {
+           center: {
+             lat: 30.0444,
+             lng: 31.2357
+           },
+           zoom: 8,
+         });
+
+         map.addListener("click", (e) => {
+           placeMarkerAndPanTo(e.latLng, map);
+         });
+       }
+
+       function placeMarkerAndPanTo(latLng, map) {
+         if (marker) {
+           marker.setPosition(latLng);
+         } else {
+           marker = new google.maps.Marker({
+             position: latLng,
+             map: map,
+           });
+         }
+         map.panTo(latLng);
+       }
+
+       document.getElementById("confirmLocation").addEventListener("click", () => {
+         if (marker) {
+           const position = marker.getPosition();
+           console.log(`Selected Location: Latitude: ${position.lat()}, Longitude: ${position.lng()}`);
+         }
+       });
+
+       window.initMap = initMap;
+     </script>
+     <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script> -->

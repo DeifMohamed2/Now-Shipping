@@ -59,7 +59,7 @@
                <h4 class="card-title mb-0 text-center">Register Now With US</h4>
              </div><!-- end card header -->
              <div class="card-body">
-               <form action="#" class="form-steps" autocomplete="off">
+               <form class="form-steps" id="signup-form">
                  <div class="text-center pt-3 pb-4 mb-1 d-flex justify-content-center">
                   <h1>Now Shipping</h1>
                    <!-- <img src="/assets/images/Now Shipping .png" class="card-logo card-logo-dark" style="width: 100px;" alt="logo dark" height="17">
@@ -75,7 +75,7 @@
                        <button class="nav-link " id="steparrow-description-info-tab" data-bs-toggle="pill" data-bs-target="#steparrow-description-info" type="button" role="tab" aria-controls="steparrow-description-info" aria-selected="false">More Info</button>
                      </li>
                      <li class="nav-item" role="presentation">
-                       <button class="nav-link" id="pills-experience-tab" data-bs-toggle="pill" data-bs-target="#pills-experience" type="button" role="tab" aria-controls="pills-experience" aria-selected="false">Finish</button>
+                       <button class="nav-link" id="finish-account-tab" data-bs-toggle="pill" data-bs-target="#finish-account" type="button" disabled >Finish</button>
                      </li>
                    </ul>
                  </div>
@@ -87,7 +87,7 @@
                          <div class="col-lg-12">
                            <div class="mb-3">
                              <label class="form-label" for="steparrow-gen-info-username-input">Full Name</label>
-                             <input type="text" class="form-control" id="steparrow-gen-info-username-input" placeholder="" required>
+                             <input type="text" class="form-control" name="fullName" id="steparrow-gen-info-username-input" placeholder="" required>
                              <div class="invalid-feedback">Please enter a user name</div>
                            </div>
                          </div>
@@ -100,10 +100,10 @@
                                     <img src="assets/images/flags/eg.svg" alt="flag img" height="20" class="country-flagimg rounded">
                                     <span class="ms-2 country-codeno">+20</span>
                                   </button>
-                                  <input type="text" class="form-control rounded-end flag-input" value="" placeholder="1155244145" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" required />
+                                  <input type="text" class="form-control rounded-end flag-input" value="" name="phoneNumber" placeholder="1155244145" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" required />
                                   <div class="dropdown-menu w-100">
                                     <div class="p-2 px-3 pt-1 searchlist-input">
-                                      <input type="text" class="form-control form-control-sm border search-countryList" placeholder="Search country name or country code..." />
+                                      <input type="text" class="form-control form-control-sm border search-countryList" name="countryCode" placeholder="Search country name or country code..." />
                                     </div>
                                     <ul class="list-unstyled dropdown-menu-list mb-0"></ul>
                                   </div>
@@ -115,21 +115,21 @@
                          <div class="col-lg-12">
                            <div class="mb-3">
                              <label class="form-label" for="steparrow-gen-info-email-input">Email</label>
-                             <input type="email" class="form-control" id="steparrow-gen-info-email-input" placeholder="example@example" required>
+                             <input type="email" class="form-control" id="steparrow-gen-info-email-input" name="email" placeholder="example@example" required>
                              <div class="invalid-feedback">Please enter an email address</div>
                            </div>
                          </div>
                          <div class="col-lg-12">
                           <div class="mb-3">
                             <label class="form-label" for="steparrow-gen-info-password-input">Password</label>
-                            <input type="password" class="form-control" id="steparrow-gen-info-password-input" placeholder="Enter password" required>
+                            <input type="password" class="form-control" id="steparrow-gen-info-password-input" name="password" placeholder="Enter password" required>
                             <div class="invalid-feedback">Please enter a password</div>
                           </div>
                          </div>
 
                         <div class="col-lg-12">
                           <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <input class="form-check-input" type="checkbox" name="termsCheck" id="termsCheck" required>
                             <label class="form-check-label" for="termsCheck">
                               I agree to the <a href="/terms" target="_blank">terms and conditions</a>
                             </label>
@@ -142,7 +142,7 @@
                   
                      </div>
                      <div class="d-flex align-items-start gap-3 mt-4">
-                       <button type="button" class="btn btn-success btn-label right ms-auto nexttab nexttab" data-nexttab="steparrow-description-info-tab"><i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>Create</button>
+                       <button type="button" class="btn btn-success btn-label right ms-auto nexttab nexttab" data-nexttab="steparrow-description-info-tab"><i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>Next</button>
                      </div>
                    </div>
                    <!-- end tab pane -->
@@ -154,7 +154,7 @@
                          <label class="radio-box" for="usingNowShipping">
                            <span>Using Now Shipping for shipping</span>
                            <i class="ri-truck-line"></i> <!-- Truck icon for shipping -->
-                           <input class="form-check-input" type="radio" name="shippingOption" id="usingNowShipping" value="usingNowShipping" required>
+                           <input class="form-check-input" type="radio" name="shippingOption" id="usingNowShipping" value="business" required>
                          </label>
                        </div>
 
@@ -169,7 +169,7 @@
 
                      <div class="mt-4">
                        <div class="form-check">
-                         <input class="form-check-input" type="checkbox" id="storageOption" required>
+                         <input class="form-check-input" type="checkbox" name="storageCheck" id="storageOption" required>
                          <label class="form-check-label" for="storageOption">
                            I want storage
                          </label>
@@ -181,7 +181,7 @@
                      <button type="button" class="btn btn-light btn-label previestab" data-previous="steparrow-gen-info-tab">
                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to General
                      </button>
-                     <button type="button" class="btn btn-success btn-label right ms-auto nexttab" data-nexttab="pills-experience-tab">
+                     <button type="submit"id="submitBTN"  class="btn btn-success btn-label right ms-auto nexttab" >
                        <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Submit
                      </button>
                    </div>
@@ -190,7 +190,7 @@
 
                    <!-- end tab pane -->
 
-                   <div class="tab-pane fade" id="pills-experience" role="tabpanel">
+                   <div class="tab-pane fade" id="finish-account" role="tabpanel">
                      <div class="text-center">
 
                        <div class="avatar-md mt-5 mb-4 mx-auto">
@@ -200,6 +200,7 @@
                        </div>
                        <h5>Well Done !</h5>
                        <p class="text-muted">You have Successfully Signed Up</p>
+                        <p class="text-muted">Now login and enjoy your journey <a href="/login" class="text-success"><i class="ri-login-circle-line"></i> Login here</a></p>
                      </div>
                    </div>
                    <!-- end tab pane -->
@@ -241,6 +242,8 @@
 
 
 <script>
+  
+
   // Add active class when selected
   document.querySelectorAll(".radio-box").forEach(box => {
     box.addEventListener("click", function() {
@@ -251,7 +254,8 @@
   });
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
-<script src="/assets/rJS/login.js"></script>
+<script src="/assets/rJS/register.js"></script>
 

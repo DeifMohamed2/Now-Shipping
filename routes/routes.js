@@ -5,19 +5,19 @@ const AuthController = require("../controllers/AuthController")
 
 module.exports = function (route) {
 
-    // route.use((req, res, next) => {
-    //     var uemail = req.session.useremail;
-    //     const allowUrls = ["/login", "/auth-validate", "/register", "/signup", "/forgotpassword", "/sendforgotpasswordlink", "/resetpassword", "/error", "/changepassword"];
-    //     if (allowUrls.indexOf(req.path) !== -1) {
-    //         if (uemail != null && uemail != undefined) {
-    //             return res.redirect('/');
-    //         }
+    route.use((req, res, next) => {
+        var uemail = req.session.useremail;
+        const allowUrls = ["/login", "/auth-validate", "/register", "/signup", "/forgotpassword", "/sendforgotpasswordlink", "/resetpassword", "/error", "/changepassword"];
+        if (allowUrls.indexOf(req.path) !== -1) {
+            if (uemail != null && uemail != undefined) {
+                return res.redirect('/');
+            }
 
-    //     } else if (!uemail) {
-    //         return res.redirect('/login');
-    //     }
-    //     next();
-    // })
+        } else if (!uemail) {
+            return res.redirect('/login');
+        }
+        next();
+    })
 
 
     route.get('/auth-signin-basic', (req, res, next) => {

@@ -1,19 +1,22 @@
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
+require('dotenv').config();
 
 const express = require('express');
 const app = express();
 const path = require('path');
-const pageRouter = require('./routes/routes');
+
+// Routes
 const businessRouter = require('./routes/businessRoutes');
+const manageRouter = require('./routes/manageRoutes');
+const authRouter = require('./routes/authRoutes');
+
+
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const upload = require('express-fileupload');
-const dotenv = require('dotenv');
-dotenv.config({
-    path: "./config.env"
-});
+
 const flash = require("connect-flash");
 var i18n = require("i18n-express");
 var bodyParser = require('body-parser');
@@ -34,7 +37,14 @@ app.use(session({
 }));
 app.use(cookieParser());
 
-app.set('layout', 'layouts/layout');
+app.use((req, res, next) => {
+    if (req.path.startsWith('/manage')) {
+        app.set('layout', 'layouts/manage-layout');
+    } else {
+        app.set('layout', 'layouts/layout');
+    }
+    next();
+});
 app.use(expressLayouts);
 app.use(flash());
 
@@ -42,6 +52,7 @@ app.use(express.static(__dirname + '/public'));
 
 /* ---------for Local database connection---------- */
 const DB = process.env.DATABASE_URL;
+
 mongoose.connect(DB, {
     useNewUrlParser: true
 }).then((con) => console.log("DB connection successfully..!"));
@@ -73,9 +84,9 @@ app.use((err, req, res, next) => {
 });
 
 // Define All Route 
-pageRouter(app);
-
+app.use('/', authRouter);
 app.use('/business', businessRouter);
+app.use('/manage', manageRouter);
 
 app.all("*", function (req, res) {
     res.locals = {

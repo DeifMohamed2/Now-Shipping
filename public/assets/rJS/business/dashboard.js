@@ -1,271 +1,314 @@
-// Profile Image Upload
-document
-  .querySelector('#profile-img-file-input')
-  ?.addEventListener('change', function () {
-    const profileImage = document.querySelector('.user-profile-image');
-    const file = this.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        profileImage.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+// Helper function to check if an element is visible
+function isVisible(el) {
+  return el.offsetParent !== null; // Ensures only displayed elements are considered
+}
+
+// Helper function to clear all input values inside a container
+function clearFormInputs(container) {
+  if (!container) return;
+  const inputs = container.querySelectorAll('input, select, textarea');
+  inputs.forEach((input) => {
+    if (input.type === 'checkbox' || input.type === 'radio') {
+      input.checked = false;
+    } else {
+      input.value = '';
     }
+    input.classList.remove('is-invalid'); // Remove validation errors when clearing
   });
+}
 
-// Email Verification Step
-document
-  .querySelector('#verify-gmail-btn')
-  ?.addEventListener('click', function () {
-    const emailVerificationTab = document.querySelector(
-      '#v-pills-bill-info-tab'
-    );
-    if (emailVerificationTab) {
-      emailVerificationTab.classList.add('done');
-    }
-  });
-
-// Form Wizard Functionality
-document.querySelectorAll('.form-steps').forEach((formSteps) => {
-  // Next Tab Navigation
-  formSteps.querySelectorAll('.nexttab').forEach((nextBtn) => {
-    nextBtn.addEventListener('click', function () {
-      const currentTabPane = formSteps.querySelector('.tab-pane.show.active');
-      let isValid = validateCurrentStep(currentTabPane);
-
-      if (isValid) {
-        const nextTabId = this.getAttribute('data-nexttab');
-        const nextTab = document.getElementById(nextTabId);
-        if (nextTab) {
-          nextTab.click();
-          updateProgress(formSteps);
-          markStepAsDone(currentTabPane); // Mark current step as done
-        } else {
-          console.error('Next tab not found:', nextTabId);
-        }
-      } else {
-        formSteps.classList.add('was-validated');
-      }
-    });
-  });
-
-  // Previous Tab Navigation
-  formSteps.querySelectorAll('.previestab').forEach((prevBtn) => {
-    prevBtn.addEventListener('click', function () {
-      const prevTabId = this.getAttribute('data-previous');
-      const prevTab = document.getElementById(prevTabId);
-      if (prevTab) {
-        prevTab.click();
-        updateProgress(formSteps);
-      } else {
-        console.error('Previous tab not found:', prevTabId);
-      }
-    });
-  });
-
-  // Progress Bar Update
-  function updateProgress(form) {
-    const tabs = form.querySelectorAll('[data-bs-toggle="pill"]');
-    const activeTab = form.querySelector('.nav-link.active');
-    const progressBar = document.querySelector('.progress-bar');
-
-    if (progressBar) {
-      const activeIndex = parseInt(activeTab.getAttribute('data-position'));
-      const progress = (activeIndex / (tabs.length - 1)) * 100;
-      progressBar.style.width = `${progress}%`;
-    }
-  }
-
-  // Initialize Progress
-  updateProgress(formSteps);
-});
-
-// Payment Method Dynamic Fields
-document.querySelectorAll('input[name="paymentMethod"]').forEach((radio) => {
-  radio.addEventListener('change', function () {
-    // Hide all payment details
-    document
-      .querySelectorAll('.payment-detail')
-      .forEach((div) => (div.style.display = 'none'));
-
-    // Show the selected payment method's details
-    const detailsDiv = document.querySelector(`#${this.value}Details`);
-    if (detailsDiv) {
-      detailsDiv.style.display = 'block';
-    }
-  });
-});
-
-// Brand Type Dynamic Fields
-document.querySelectorAll('input[name="brandType"]').forEach((radio) => {
-  radio.addEventListener('change', function () {
-    // Hide all brand type fields
-    document
-      .querySelectorAll('#personalFields, #companyFields')
-      .forEach((div) => (div.style.display = 'none'));
-
-    // Show the selected brand type's fields
-    const fieldsDiv = document.querySelector(`#${this.value}Fields`);
-    if (fieldsDiv) {
-      fieldsDiv.style.display = 'block';
-    }
-  });
-});
-
-// Validate Current Step
+// Validate only the visible required fields in the current tab
 function validateCurrentStep(currentTabPane) {
   let isValid = true;
+  const requiredElements = currentTabPane.querySelectorAll(
+    'input[required], select[required], textarea[required]'
+  );
 
-  // Clear previous errors
-  currentTabPane
-    .querySelectorAll('.is-invalid')
-    .forEach((el) => el.classList.remove('is-invalid'));
-  currentTabPane
-    .querySelectorAll('.invalid-feedback')
-    .forEach((el) => el.remove());
+  requiredElements.forEach((el) => {
+    if (!isVisible(el)) {
+      el.removeAttribute('required'); // Prevents hidden fields from being validated
+      return;
+    }
 
-  // Validate required fields
-  currentTabPane.querySelectorAll('[required]').forEach((input) => {
-    if (!input.value.trim()) {
-      isValid = false;
-      input.classList.add('is-invalid');
-      const error = document.createElement('div');
-      error.className = 'invalid-feedback';
-      error.textContent = 'This field is required';
-      input.parentNode.appendChild(error);
+    if (el.type === 'radio') {
+      const groupName = el.name;
+      const radioGroup = currentTabPane.querySelectorAll(
+        `input[name="${groupName}"]`
+      );
+      const groupChecked = Array.from(radioGroup).some(
+        (radio) => radio.checked
+      );
+
+      if (!groupChecked) {
+        isValid = false;
+        radioGroup.forEach((radio) => radio.classList.add('is-invalid'));
+      } else {
+        radioGroup.forEach((radio) => radio.classList.remove('is-invalid'));
+      }
+    } else {
+      if (!el.value) {
+        isValid = false;
+        el.classList.add('is-invalid');
+      } else {
+        el.classList.remove('is-invalid');
+      }
     }
   });
-
-  // Step-specific validations
-  switch (currentTabPane.id) {
-    case 'v-pills-brand-info': // Step 2
-      const checkboxesChecked =
-        currentTabPane.querySelectorAll("input[type='checkbox']:checked")
-          .length > 0;
-      if (!checkboxesChecked) {
-        isValid = false;
-        const error = document.createElement('div');
-        error.className = 'invalid-feedback d-block mt-2';
-        error.textContent = 'Please select at least one sales channel';
-        currentTabPane.querySelector('.row.g-3').appendChild(error);
-      }
-      break;
-
-    case 'v-payment-method': // Step 4
-      const paymentSelected = currentTabPane.querySelector(
-        "input[name='paymentMethod']:checked"
-      );
-      if (!paymentSelected) {
-        isValid = false;
-        const error = document.createElement('div');
-        error.className = 'invalid-feedback d-block mt-2';
-        error.textContent = 'Please select a payment method';
-        currentTabPane.querySelector('.row.g-3').appendChild(error);
-      } else {
-        const detailsDiv = document.querySelector(
-          `#${paymentSelected.value}Details`
-        );
-        detailsDiv?.querySelectorAll('input, select').forEach((input) => {
-          if (!input.value.trim() && input.required) {
-            isValid = false;
-            input.classList.add('is-invalid');
-            const error = document.createElement('div');
-            error.className = 'invalid-feedback';
-            error.textContent = 'This field is required';
-            input.parentNode.appendChild(error);
-          }
-        });
-      }
-      break;
-
-    case 'v-brand-type': // Step 5
-      const brandTypeSelected = currentTabPane.querySelector(
-        "input[name='brandType']:checked"
-      );
-      if (!brandTypeSelected) {
-        isValid = false;
-        const error = document.createElement('div');
-        error.className = 'invalid-feedback d-block mt-2';
-        error.textContent = 'Please select a brand type';
-        currentTabPane.querySelector('.row.g-3').appendChild(error);
-      } else {
-        const detailsDiv = document.querySelector(
-          `#${brandTypeSelected.value}Fields`
-        );
-        detailsDiv
-          ?.querySelectorAll('input, select, .filepond')
-          .forEach((input) => {
-            if (input.classList.contains('filepond')) {
-              if (input.files.length === 0) {
-                isValid = false;
-                const error = document.createElement('div');
-                error.className = 'invalid-feedback d-block mt-2';
-                error.textContent = 'Please upload required files';
-                input.parentNode.appendChild(error);
-              }
-            } else if (!input.value.trim() && input.required) {
-              isValid = false;
-              input.classList.add('is-invalid');
-              const error = document.createElement('div');
-              error.className = 'invalid-feedback';
-              error.textContent = 'This field is required';
-              input.parentNode.appendChild(error);
-            }
-          });
-      }
-      break;
-  }
 
   return isValid;
 }
 
-// Mark Step as Done
+// Mark step as completed
 function markStepAsDone(currentTabPane) {
-  const currentTab = document.querySelector(
-    `[data-bs-target="#${currentTabPane.id}"]`
+  const tabId = currentTabPane.getAttribute('id');
+  const tabLink = document.querySelector(
+    `[href="#${tabId}"], [data-bs-target="#${tabId}"]`
   );
-  if (currentTab && !currentTab.classList.contains('done')) {
-    currentTab.classList.add('done');
+  if (tabLink) {
+    tabLink.classList.add('completed');
+    const icon = tabLink.querySelector('.step-icon');
+    if (icon) {
+      icon.classList.remove('ri-close-circle-fill');
+      icon.classList.add('ri-check-circle-fill');
+    }
   }
 }
 
-// Bootstrap Form Validation Reset
-document.querySelectorAll('.form-control').forEach((input) => {
-  input.addEventListener('input', function () {
-    this.classList.remove('is-invalid');
-    const error = this.parentNode.querySelector('.invalid-feedback');
-    if (error) error.remove();
+document.querySelectorAll('.form-steps').forEach((formSteps) => {
+  // Prevent navigation unless the current tab is valid
+  document.querySelectorAll('.nav-link').forEach((navLink) => {
+    navLink.addEventListener('click', function (e) {
+      const currentTabPane = document.querySelector('.tab-pane.show.active');
+      if (currentTabPane && !validateCurrentStep(currentTabPane)) {
+        e.preventDefault();
+        alert('Please fill all required fields before leaving this step.');
+        return false;
+      }
+    });
+  });
+
+  // Payment Method Selection
+  formSteps.querySelectorAll('.payment-option').forEach((paymentOption) => {
+    paymentOption.addEventListener('click', function () {
+      formSteps
+        .querySelectorAll('.payment-option')
+        .forEach((option) => option.classList.remove('active'));
+      this.classList.add('active');
+
+      document.querySelectorAll('.payment-detail').forEach((detail) => {
+        clearFormInputs(detail);
+        detail.style.display = 'none';
+      });
+
+      const method = this.getAttribute('data-value');
+      if (method) {
+        const detailDiv = document.getElementById(method + 'Details');
+        if (detailDiv) {
+          detailDiv.style.display = 'block';
+          document.getElementById('paymentDetails').style.display = 'block';
+        }
+      }
+
+      const radioInput = this.querySelector('.payment-radio');
+      if (radioInput) {
+        radioInput.checked = true;
+      }
+    });
+  });
+
+  // Brand Type Selection
+  formSteps.querySelectorAll('.brand-option').forEach((brandOption) => {
+    brandOption.addEventListener('click', function () {
+      formSteps
+        .querySelectorAll('.brand-option')
+        .forEach((option) => option.classList.remove('active'));
+      this.classList.add('active');
+
+      const brandType = this.getAttribute('data-value');
+      const personalFields = document.getElementById('personalFields');
+      const companyFields = document.getElementById('companyFields');
+
+      if (brandType === 'personal') {
+        clearFormInputs(companyFields);
+        companyFields
+          .querySelectorAll('input, select')
+          .forEach((el) => el.removeAttribute('required')); // Disable validation for hidden fields
+        personalFields
+          .querySelectorAll('input, select')
+          .forEach((el) => el.setAttribute('required', 'required'));
+        personalFields.style.display = 'block';
+        companyFields.style.display = 'none';
+      } else if (brandType === 'company') {
+        clearFormInputs(personalFields);
+        personalFields
+          .querySelectorAll('input, select')
+          .forEach((el) => el.removeAttribute('required')); // Disable validation for hidden fields
+        companyFields
+          .querySelectorAll('input, select')
+          .forEach((el) => el.setAttribute('required', 'required'));
+        companyFields.style.display = 'block';
+        personalFields.style.display = 'none';
+      }
+
+      const radioInput = this.querySelector('.brand-radio');
+      if (radioInput) {
+        radioInput.checked = true;
+      }
+    });
+  });
+
+  // Next Tab Navigation
+  formSteps.querySelectorAll('.nexttab').forEach((nextBtn) => {
+    nextBtn.addEventListener('click', function () {
+      const currentTabPane = formSteps.querySelector('.tab-pane.show.active');
+      if (!validateCurrentStep(currentTabPane)) {
+        alert('Please complete all required fields before continuing.');
+        return;
+      }
+
+      const nextTabId = this.getAttribute('data-nexttab');
+      if (!nextTabId) {
+        console.error('Next tab not found');
+        return;
+      }
+
+      const nextTab = document.getElementById(nextTabId);
+      if (nextTab) {
+        currentTabPane.classList.remove('show', 'active');
+        nextTab.click();
+        markStepAsDone(currentTabPane);
+      }
+    });
+  });
+
+  // Submit Form
+  const verificationForm = document.getElementById('verificationForm');
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
+const CLOUDINARY_UPLOAD_PRESET = 'order_project'; // Get this from Cloudinary settings
+
+
+let uploadedPhotos = []; // Store uploaded image URLs
+const submitButton = document.getElementById('submitButton'); // Get Submit Button
+const photoCountDisplay = document.getElementById('photoCount'); // Get Photo Count Display
+
+// ✅ Handle Multiple File Uploads to Cloudinary (Keep Old Photos & Show Progress)
+document.querySelectorAll('.filepond-input-multiple').forEach((input) => {
+  input.addEventListener('change', async function (event) {
+    const files = Array.from(event.target.files);
+    uploadedPhotos = []; // Reset previously uploaded images
+
+    if (files.length > 0) {
+      submitButton.disabled = true;
+      submitButton.innerText = 'Uploading Photos... 0%';
+
+      const totalFiles = files.length;
+      let uploadedCount = 0;
+      let startTime = Date.now();
+
+      const uploadPromises = files.map(async (file, index) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+        try {
+          const response = await fetch(CLOUDINARY_URL, {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await response.json();
+          if (data.secure_url) {
+            uploadedPhotos.push(data.secure_url);
+            uploadedCount++;
+
+            // ✅ Calculate Progress
+            let progress = Math.round((uploadedCount / totalFiles) * 100);
+            let elapsedTime = (Date.now() - startTime) / 1000; // Time in seconds
+            let avgTimePerFile = elapsedTime / uploadedCount;
+            let remainingTime = Math.max(
+              0,
+              Math.round(avgTimePerFile * (totalFiles - uploadedCount))
+            );
+
+            submitButton.innerText = `Uploading Photos... ${progress}% (${remainingTime}s left)`;
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      submitButton.disabled = false;
+      submitButton.innerText = 'Submit All';
+      photoCountDisplay.innerText = `Uploaded Photos: ${uploadedPhotos.length}`;
+      console.log('Uploaded Photos:', uploadedPhotos);
+    }
   });
 });
 
-// Register FilePond plugins
-FilePond.registerPlugin(
-  FilePondPluginFileEncode,
-  FilePondPluginFileValidateSize,
-  FilePondPluginImageExifOrientation,
-  FilePondPluginImagePreview
-);
+// ✅ Form Submission
+document
+  .getElementById('verificationForm')
+  .addEventListener('submit', async (e) => {
+    e.preventDefault();
+    console.log('Submit button clicked');
 
-// Initialize FilePond for file uploads
-const inputMultipleElements = document.querySelectorAll(
-  'input.filepond-input-multiple'
-);
-if (inputMultipleElements) {
-  Array.from(inputMultipleElements).forEach(function (element) {
-    FilePond.create(element);
-  });
+    const lastStep = document.querySelector('.tab-pane.show.active');
+    if (!validateCurrentStep(lastStep)) {
+      alert('Please complete all required fields before submitting.');
+      return;
+    }
 
-  FilePond.create(document.querySelector('.filepond-input-circle'), {
-    labelIdle:
-      'Drag & Drop your picture or <span class="filepond--label-action">Browse</span>',
-    imagePreviewHeight: 170,
-    imageCropAspectRatio: '1:1',
-    imageResizeTargetWidth: 200,
-    imageResizeTargetHeight: 200,
-    stylePanelLayout: 'compact circle',
-    styleLoadIndicatorPosition: 'center bottom',
-    styleProgressIndicatorPosition: 'right bottom',
-    styleButtonRemoveItemPosition: 'left bottom',
-    styleButtonProcessItemPosition: 'right bottom',
+    try {
+      const formData = new FormData(e.target);
+      const formObject = Object.fromEntries(formData.entries());
+
+      // ✅ Capture Selling Points
+      const sellingPoints = [];
+      document
+      .querySelectorAll('input[name="sellingPoints[]"]:checked')
+      .forEach((checkbox) => {
+        sellingPoints.push(checkbox.value);
+      });
+
+      formObject.sellingPoints = sellingPoints;
+      formObject.photosOfBrandType = uploadedPhotos; // ✅ Attach Cloudinary image URLs
+
+      console.log('Final Form Data:', formObject); // Debugging
+
+      const response = await fetch('/business/completionConfirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formObject),
+      });
+
+      const data = await response.json();
+      console.log('Server Response:', data);
+      if (response.ok) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: data.message || 'Account Successfully Fully Completed',
+        confirmButtonText: 'OK',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.reload();
+        }
+      });
+      } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: data.error || 'An error occurred. Please try again.',
+      });
+      }
+    } catch (err) {
+      console.error('An error occurred:', err);
+      Swal.fire({
+      icon: 'error',
+      title: 'Oops...',
+      text: 'An error occurred. Please try again.',
+      });
+    }
   });
-}
+});

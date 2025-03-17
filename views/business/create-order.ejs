@@ -1,15 +1,90 @@
 <%- contentFor('HeaderCss') %>
 <%- contentFor('body') %>
+<style>
+  /* Enhanced Design */
+  .hover-effect:hover {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+  }
+
+  .card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+  }
+
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .input-group {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .input-group .btn {
+    border-radius: 0;
+  }
+
+  .form-control {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    padding: 0.5rem 1rem;
+  }
+
+  .form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+
+  .btn-primary {
+    background-color: #0d6efd;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+  }
+
+  .btn-primary:hover {
+    background-color: #0b5ed7;
+  }
+
+  .btn-light {
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+  }
+
+  .nav-pills .nav-link {
+    border-radius: 30px;
+    transition: all 0.3s ease;
+  }
+
+  .nav-pills .nav-link.active {
+    background-color: #0d6efd;
+    color: #fff;
+  }
+
+  .nav-pills .nav-link:hover {
+    background-color: #f8f9fa;
+  }
+</style>
 
 <div class="row justify-content-center">
   <div class="col-xl-11">
     <div class="card" style="border-radius: 30px;">
       <div class="card-body checkout-tab">
-
-        <form action="#">
-          <div class="step-arrow-nav mt-n3 mx-n3 mb-3" style="border-top-left-radius: 30px; border-top-right-radius: 30px;">
-
-            <ul class="nav nav-pills nav-justified custom-nav" role="tablist" >
+        <form id="createOrderForm">
+          <!-- Step Navigation -->
+          <div class="step-arrow-nav mt-n3 mx-n3 mb-3" >
+            <ul class="nav nav-pills nav-justified custom-nav" role="tablist" style="border-top-left-radius: 30px !important; border-top-right-radius: 30px !important;">
               <li class="nav-item" role="presentation">
                 <button class="nav-link fs-15 p-3 active" id="pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#pills-bill-info" type="button" role="tab" aria-controls="pills-bill-info" aria-selected="true">
                   <i class="ri-user-2-line fs-16 p-2 bg-primary-subtle text-primary rounded-circle align-middle me-2"></i> Customer Info
@@ -33,93 +108,109 @@
             </ul>
           </div>
 
+          <!-- Tab Content -->
           <div class="tab-content">
+            <!-- Customer Info Tab -->
             <div class="tab-pane fade show active" id="pills-bill-info" role="tabpanel" aria-labelledby="pills-bill-info-tab">
               <div>
-                <h5 class="mb-1">Customer Information</h5>
-                <p class="text-muted mb-4">Please fill all information below</p>
+              <h5 class="mb-1">Customer Information</h5>
+              <p class="text-muted mb-4">Please fill all information below</p>
               </div>
-
+              <!-- Customer Info Form -->
               <div>
                 <div class="row">
                   <div class="col-sm-6">
                     <div class="mb-3">
                       <label for="billinginfo-firstName" class="form-label">Full Name</label>
-                      <input type="text" class="form-control" id="billinginfo-firstName" placeholder="Enter Full Name" value="">
+                      <input type="text" class="form-control" name="fullName" id="billinginfo-firstName" placeholder="Enter Full Name" >
                     </div>
                   </div>
-
                   <div class="col-sm-6">
                     <div class="mb-3">
-                      <label for="billinginfo-phoneNumber" class="form-label">Phon Number</label>
-                      <input type="number" class="form-control" id="billinginfo-phoneNumber" placeholder="0115601209934" value="">
+                      <label for="billinginfo-phoneNumber" class="form-label">Phone Number</label>
+                      <input type="number" class="form-control" name="phoneNumber" id="billinginfo-phoneNumber" placeholder="0115601209934" >
                     </div>
                   </div>
                 </div>
-
-
                 <div class="row">
                   <div class="mb-3 col-md-6">
                     <label for="billinginfo-address" class="form-label">Address</label>
-                    <textarea class="form-control" id="billinginfo-address" placeholder="Enter address" rows="2"></textarea>
+                    <textarea class="form-control" name="address" id="billinginfo-address" placeholder="Enter address" rows="2"></textarea>
                   </div>
-
                   <div class="col-md-6">
                     <div class="row">
-
                       <div class="mb-3 col-md-6">
-                        <label for="state" class="form-label">Selcet Government</label>
-                        <select class="form-select" id="state" data-plugin="choices">
+                        <label for="state" class="form-label">Select Government</label>
+                        <select class="form-select" id="state" name="government" data-plugin="choices">
                           <option value="">Select State...</option>
-                          <option value="Alabama">Alabama</option>
-                          <option value="Alaska">Alaska</option>
-                          <option value="American Samoa">American Samoa</option>
-                          <option value="California" selected>California</option>
-                          <option value="Colorado">Colorado</option>
-                          <option value="District Of Columbia">District Of Columbia</option>
-                          <option value="Florida">Florida</option>
-                          <option value="Georgia">Georgia</option>
-                          <option value="Guam">Guam</option>
-                          <option value="Hawaii">Hawaii</option>
-                          <option value="Idaho">Idaho</option>
-                          <option value="Kansas">Kansas</option>
-                          <option value="Louisiana">Louisiana</option>
-                          <option value="Montana">Montana</option>
-                          <option value="Nevada">Nevada</option>
-                          <option value="New Jersey">New Jersey</option>
-                          <option value="New Mexico">New Mexico</option>
-                          <option value="New York">New York</option>
+                          <option value="Cairo">Cairo</option>
+                          <option value="Alexandria">Alexandria</option>
+                          <option value="Giza">Giza</option>
+                          <option value="Luxor">Luxor</option>
+                          <option value="Aswan">Aswan</option>
+                          <option value="Suez">Suez</option>
+                          <option value="Port Said">Port Said</option>
+                          <option value="Ismailia">Ismailia</option>
+                          <option value="Faiyum">Faiyum</option>
+                          <option value="Sharqia">Sharqia</option>
+                          <option value="Dakahlia">Dakahlia</option>
+                          <option value="Qalyubia">Qalyubia</option>
+                          <option value="Gharbia">Gharbia</option>
+                          <option value="Monufia">Monufia</option>
+                          <option value="Beheira">Beheira</option>
+                          <option value="Kafr El Sheikh">Kafr El Sheikh</option>
+                          <option value="Beni Suef">Beni Suef</option>
+                          <option value="Minya">Minya</option>
+                          <option value="Assiut">Assiut</option>
+                          <option value="Sohag">Sohag</option>
+                          <option value="Qena">Qena</option>
+                          <option value="Red Sea">Red Sea</option>
+                          <option value="New Valley">New Valley</option>
+                          <option value="Matruh">Matruh</option>
+                          <option value="North Sinai">North Sinai</option>
+                          <option value="South Sinai">South Sinai</option>
+                          <!-- Add other options -->
                         </select>
                       </div>
                       <div class="mb-3 col-md-6">
-                        <label for="state" class="form-label">Selcet Zone</label>
-                        <select class="form-select" id="state" data-plugin="choices">
+                        <label for="state" class="form-label">Select Zone</label>
+                        <select class="form-select" name="zone" id="state" data-plugin="choices" >
                           <option value="">Select State...</option>
-                          <option value="Alabama">Alabama</option>
-                          <option value="Alaska">Alaska</option>
-                          <option value="American Samoa">American Samoa</option>
-                          <option value="California" selected>California</option>
-                          <option value="Colorado">Colorado</option>
-                          <option value="District Of Columbia">District Of Columbia</option>
-                          <option value="Florida">Florida</option>
-                          <option value="Georgia">Georgia</option>
-                          <option value="Guam">Guam</option>
-                          <option value="Hawaii">Hawaii</option>
-                          <option value="Idaho">Idaho</option>
-                          <option value="Kansas">Kansas</option>
-                          <option value="Louisiana">Louisiana</option>
-                          <option value="Montana">Montana</option>
-                          <option value="Nevada">Nevada</option>
-                          <option value="New Jersey">New Jersey</option>
-                          <option value="New Mexico">New Mexico</option>
-                          <option value="New York">New York</option>
+                          <option value="Helwan">Helwan</option>
+                          <option value="Nasr City">Nasr City</option>
+                          <option value="6th of October">6th of October</option>
+                          <option value="Shubra">Shubra</option>
+                          <option value="Maadi">Maadi</option>
+                          <option value="Zamalek">Zamalek</option>
+                          <option value="Haram">Haram</option>
+                          <option value="Dokki">Dokki</option>
+                          <option value="Mohandessin">Mohandessin</option>
+                          <option value="New Cairo">New Cairo</option>
+                          <option value="Obour City">Obour City</option>
+                          <option value="Badr City">Badr City</option>
+                          <option value="10th of Ramadan">10th of Ramadan</option>
+                          <option value="Sheikh Zayed">Sheikh Zayed</option>
+                          <option value="Mokattam">Mokattam</option>
+                          <option value="Garden City">Garden City</option>
+                          <option value="Hadayek El-Kobba">Hadayek El-Kobba</option>
+                          <option value="Ain Shams">Ain Shams</option>
+                          <option value="El-Marg">El-Marg</option>
+                          <option value="El-Mataria">El-Mataria</option>
+                          <option value="El-Nozha">El-Nozha</option>
+                          <option value="El-Salam City">El-Salam City</option>
+                          <option value="El-Shorouk City">El-Shorouk City</option>
+                          <option value="El-Tagamoa">El-Tagamoa</option>
+                          <option value="El-Waily">El-Waily</option>
+                          <option value="Hadayek Helwan">Hadayek Helwan</option>
+                          <option value="Heliopolis">Heliopolis</option>
+                          <option value="Masr El-Gedida">Masr El-Gedida</option>
+                          <option value="Zaytoun">Zaytoun</option>
+                          <!-- Add other options -->
                         </select>
                       </div>
                     </div>
                   </div>
-
                 </div>
-
                 <div class="d-flex align-items-start gap-3 mt-3">
                   <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-bill-address-tab">
                     <i class="ri-truck-line label-icon align-middle fs-16 ms-2"></i>Proceed to Shipping
@@ -127,290 +218,241 @@
                 </div>
               </div>
             </div>
-            <!-- end tab pane -->
 
+            <!-- Shipping Info Tab -->
             <div class="tab-pane fade" id="pills-bill-address" role="tabpanel" aria-labelledby="pills-bill-address-tab">
               <div>
-                <h5 class="mb-1">Shipping Information</h5>
-                <p class="text-muted mb-4">Please fill all information below</p>
+                <h5 class="mb-3">Shipping Information</h5>
+                <p class="text-muted mb-4">Please fill all information below to proceed with your order.</p>
               </div>
-
-              <div class="mb-3">
-                <label for="delivery-description" class="form-label">Product/s Description</label>
-                <textarea class="form-control" id="delivery-description" placeholder="Enter Product description" rows="1"></textarea>
-              </div>
-
-              <div class="mb-3 col-md-2">
-                <label for="shipping-count" class="form-label">Number of Shippings</label>
-                <div class="input-group">
-                  <button type="button" class="btn btn-outline-secondary" id="decrement-shipping">-</button>
-                  <input type="number" class="form-control text-center" id="shipping-count" placeholder="Enter number of shippings" value="0" min="0">
-                  <button type="button" class="btn btn-outline-secondary" id="increment-shipping">+</button>
+              <!-- Order Type Section -->
+              <div class="card mb-4">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">Order Type</h6>
                 </div>
-              </div>
-              <div id="shipping-message" class="text-muted" style="display: none;">
-                Please note that shipping charges will apply for each item.
-              </div>
-              <hr>
-              <div>
-                <h6 class="mb-1">Order Type</h6>
-                <p class="text-muted mb-4"></p>
-              </div>
-              <div class="row g-4">
-                <div class="col-lg-3 col-sm-6">
-                  <div class="form-check card-radio">
-                    <input id="paymentMethod01" name="paymentMethod" type="radio" class="form-check-input">
-                    <label class="form-check-label" for="paymentMethod01">
-                      <span class="fs-16 text-muted me-2"><i class="ri-truck-line align-bottom"></i></span>
-                      <span class="fs-14 text-wrap">Deliver</span>
-                    </label>
-                  </div>
-                </div>
-                <div class="col-lg-3 col-sm-6">
-                  <div class="form-check card-radio">
-                    <input id="paymentMethod02" name="paymentMethod" type="radio" class="form-check-input" checked>
-                    <label class="form-check-label" for="paymentMethod02">
-                      <span class="fs-16 text-muted me-2"><i class="ri-exchange-line align-bottom"></i></span>
-                      <span class="fs-14 text-wrap">Exchange</span>
-                    </label>
-                  </div>
-                </div>
-                <div class="col-lg-3 col-sm-6">
-                  <div class="form-check card-radio">
-                    <input id="paymentMethod03" name="paymentMethod" type="radio" class="form-check-input">
-                    <label class="form-check-label" for="paymentMethod03">
-                      <span class="fs-16 text-muted me-2"><i class="ri-arrow-go-back-line align-bottom"></i></span>
-                      <span class="fs-14 text-wrap">Return</span>
-                    </label>
-                  </div>
-                </div>
-                <div class="col-lg-3 col-sm-6">
-                  <div class="form-check card-radio">
-                    <input id="paymentMethod04" name="paymentMethod" type="radio" class="form-check-input">
-                    <label class="form-check-label" for="paymentMethod04">
-                      <span class="fs-16 text-muted me-2"><i class="ri-money-dollar-circle-line align-bottom"></i></span>
-                      <span class="fs-14 text-wrap">Cash Collection</span>
-                    </label>
+                <div class="card-body">
+                  <div class="row g-3">
+                    <div class="col-lg-3 col-sm-6">
+                      <div class="form-check card-radio hover-effect">
+                        <input id="paymentMethod01" name="orderType" type="radio" class="form-check-input"  value="Deliver" >
+                        <label class="form-check-label" for="paymentMethod01">
+                          <span class="fs-16 text-muted me-2"><i class="ri-truck-line align-bottom"></i></span>
+                          <span class="fs-14 text-wrap">Deliver</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                      <div class="form-check card-radio hover-effect">
+                        <input id="paymentMethod02" name="orderType" type="radio" class="form-check-input" value="Exchange" >
+                        <label class="form-check-label" for="paymentMethod02">
+                          <span class="fs-16 text-muted me-2"><i class="ri-exchange-line align-bottom"></i></span>
+                          <span class="fs-14 text-wrap">Exchange</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                      <div class="form-check card-radio hover-effect">
+                        <input id="paymentMethod03" name="orderType" type="radio" class="form-check-input" value="Return" >
+                        <label class="form-check-label" for="paymentMethod03">
+                          <span class="fs-16 text-muted me-2"><i class="ri-arrow-go-back-line align-bottom"></i></span>
+                          <span class="fs-14 text-wrap">Return</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                      <div class="form-check card-radio hover-effect">
+                        <input id="paymentMethod04" name="orderType" type="radio" class="form-check-input" value="Cash Collection" >
+                        <label class="form-check-label" for="paymentMethod04">
+                          <span class="fs-16 text-muted me-2"><i class="ri-money-dollar-circle-line align-bottom"></i></span>
+                          <span class="fs-14 text-wrap">Cash Collection</span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div id="cash-on-delivery-section" style="display: none;">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="cash-on-delivery-checkbox">
-                  <label class="form-check-label" for="cash-on-delivery-checkbox">
-                    Cash on Delivery
-                  </label>
+              <!-- Deliver Section -->
+              <div id="deliver-section" class="card mb-4" style="display: none;">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">Deliver Details</h6>
                 </div>
-                <div class="mb-3" id="cash-on-delivery-amount" style="display: none;">
-                  <label for="cash-on-delivery-input" class="form-label">Amount</label>
-                  <input type="number" class="form-control" id="cash-on-delivery-input" placeholder="Enter amount">
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="delivery-description" class="form-label">Product/s Description</label>
+                    <textarea class="form-control" name="productDescription" id="delivery-description" placeholder="Enter product description" rows="2" ></textarea>
+                  </div>
+                  <div class="mb-3 col-md-3">
+                    <label for="shipping-count" class="form-label">Number of Items</label>
+                    <div class="input-group">
+                      <button type="button" class="btn btn-outline-secondary" id="decrement-shipping">-</button>
+                      <input type="number" name="numberOfItems" class="form-control text-center" id="shipping-count" placeholder="Enter number of items" value="0" min="0" >
+                      <button type="button" class="btn btn-outline-secondary" id="increment-shipping">+</button>
+                    </div>
+                  </div>
+                  <div id="cash-on-delivery-section" style="display: none;">
+                    <div class="form-check">
+                      <input class="form-check-input" name="COD" type="checkbox" id="cash-on-delivery-checkbox" >
+                      <label class="form-check-label" for="cash-on-delivery-checkbox">
+                        Cash on Delivery
+                      </label>
+                    </div>
+                    <div class="mb-3" id="cash-on-delivery-amount" style="display: none;">
+                      <label for="cash-on-delivery-input" class="form-label">Amount</label>
+                      <input type="number" name="amountCOD" class="form-control" id="cash-on-delivery-input" placeholder="Enter amount" >
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div id="cash-difference-section" style="display: none;">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="cash-difference-checkbox">
-                  <label class="form-check-label" for="cash-difference-checkbox">
-                    Cash Difference
-                  </label>
+              <!-- Exchange Section -->
+              <div id="exchange-section" class="card mb-4" style="display: none;">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">Exchange Details</h6>
                 </div>
-                <div class="mb-3" id="cash-difference-amount" style="display: none;">
-                  <label for="cash-difference-input" class="form-label">Difference Amount</label>
-                  <input type="number" class="form-control" id="cash-difference-input" placeholder="Enter difference amount">
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="exchange-current-product" class="form-label">Current Product Description</label>
+                    <textarea class="form-control" name="currentPD" id="exchange-current-product" placeholder="Enter current product description" rows="2" ></textarea>
+                  </div>
+                  <div class="mb-3 col-md-3">
+                    <label for="exchange-current-count" class="form-label">Number of Current Items</label>
+                    <div class="input-group">
+                      <button type="button" class="btn btn-outline-secondary" id="decrement-current">-</button>
+                      <input type="number" name="numberOfItemsCurrentPD" class="form-control text-center" id="exchange-current-count" placeholder="Enter number of items" value="0" min="0" >
+                      <button type="button" class="btn btn-outline-secondary" id="increment-current">+</button>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="exchange-new-product" class="form-label">New Product Description</label>
+                    <textarea class="form-control" name="newPD" id="exchange-new-product" placeholder="Enter new product description" rows="2" ></textarea>
+                  </div>
+                  <div class="mb-3 col-md-3">
+                    <label for="exchange-new-count" class="form-label">Number of New Items</label>
+                    <div class="input-group">
+                      <button type="button" class="btn btn-outline-secondary" id="decrement-new">-</button>
+                      <input type="number" name="numberOfItemsNewPD" class="form-control text-center" id="exchange-new-count" placeholder="Enter number of items" value="0" min="0" >
+                      <button type="button" class="btn btn-outline-secondary" id="increment-new">+</button>
+                    </div>
+                  </div>
+                  <div id="cash-difference-section" style="display: none;">
+                    <div class="form-check">
+                      <input class="form-check-input" name="CashDifference" type="checkbox" id="cash-difference-checkbox" >
+                      <label class="form-check-label" for="cash-difference-checkbox">
+                        Cash Difference
+                      </label>
+                    </div>
+                    <div class="mb-3" id="cash-difference-amount" style="display: none;">
+                      <label for="cash-difference-input" class="form-label">Difference Amount</label>
+                      <input type="number" name="amountCashDifference" class="form-control" id="cash-difference-input" placeholder="Enter difference amount" >
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div id="cash-collection-section" style="display: none;">
-                <div class="mb-3">
-                  <label for="cash-collection-input" class="form-label">Cash Collection Amount</label>
-                  <input type="number" class="form-control" id="cash-collection-input" placeholder="Enter cash collection amount">
+              <!-- Return Section -->
+              <!-- <div id="return-section" class="card mb-4" style="display: none;">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">Return Details</h6>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="return-product-description" class="form-label">Product Description</label>
+                    <textarea class="form-control" id="return-product-description" placeholder="Enter product description" rows="2"></textarea>
+                  </div>
+                  <div class="mb-3 col-md-3">
+                    <label for="return-count" class="form-label">Number of Items</label>
+                    <div class="input-group">
+                      <button type="button" class="btn btn-outline-secondary" id="decrement-return">-</button>
+                      <input type="number" class="form-control text-center" id="return-count" placeholder="Enter number of items" value="0" min="0">
+                      <button type="button" class="btn btn-outline-secondary" id="increment-return">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div> -->
+
+              <!-- Cash Collection Section -->
+              <div id="cash-collection-section" class="card mb-4" style="display: none;">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">Cash Collection Details</h6>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="cash-collection-input" class="form-label">Cash Collection Amount</label>
+                    <input type="number" name="amountCashCollection" class="form-control" id="cash-collection-input" placeholder="Enter cash collection amount" >
+                  </div>
                 </div>
               </div>
 
-        
-
+              <!-- Navigation Buttons -->
               <div class="d-flex align-items-start gap-3 mt-4">
-                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-info-tab"><i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back to Personal Info</button>
-                <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-payment-tab"><i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>Continue to Payment</button>
+                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-info-tab">
+                  <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back to Personal Info
+                </button>
+                <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-payment-tab">
+                  <i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>Continue to Extra Details
+                </button>
               </div>
             </div>
 
-            <!-- end tab pane -->
-
+            <!-- Extra Details Tab -->
             <div class="tab-pane fade" id="pills-payment" role="tabpanel" aria-labelledby="pills-payment-tab">
               <div>
-                <h5 class="mb-1"> Extra Details </h5>
+                <h5 class="mb-1">Extra Details</h5>
                 <p class="text-muted mb-4">Please select and enter your Extra information</p>
               </div>
               <div class="row">
-
-                  <div class="col-lg-4 col-md-8 col-sm-6 mt-2">
-                    <div class="form-check card-radio">
-                      <input class="form-check-input" type="checkbox" id="order-preview-checkbox">
-                      <label class="form-check-label" for="order-preview-checkbox">
-                        <span class="fs-16 text-muted me-2"><i class="ri-eye-line align-bottom"></i></span>
-                        <span class="fs-14 text-wrap">Order can be opened for preview</span>
-                      </label>
-                    </div>
-                 </div>
-  
+                <div class="col-lg-4 col-md-8 col-sm-6 mt-2 " id="orderCanbeOpened" >
+                  <div class="form-check card-radio">
+                    <input class="form-check-input" name="previewPermission" type="checkbox" id="order-preview-checkbox">
+                    <label class="form-check-label" for="order-preview-checkbox">
+                      <span class="fs-16 text-muted me-2"><i class="ri-eye-line align-bottom"></i></span>
+                      <span class="fs-14 text-wrap">Order can be opened for preview</span>
+                    </label>
+                  </div>
+                </div>
                 <div class="mb-3 col-md-3">
                   <label for="referral-number" class="form-label">Referral Number (Optional)</label>
-                  <input type="text" class="form-control" id="referral-number" placeholder="Enter referral number">
+                  <input type="text" name="referralNumber" class="form-control" id="referral-number" placeholder="Enter referral number" >
                 </div>
               </div>
-
               <div class="mb-3">
                 <label for="delivery-notes" class="form-label">Delivery Notes</label>
-                <textarea class="form-control" id="delivery-notes" placeholder="Enter any delivery notes" rows="2"></textarea>
+                <textarea class="form-control" name="Notes" id="delivery-notes" placeholder="Enter any delivery notes" rows="2" ></textarea>
               </div>
-
               <div class="d-flex align-items-start gap-3 mt-4">
-                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-address-tab"><i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back to Shipping</button>
-                <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-finish-tab"><i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i>Complete Order</button>
+                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-address-tab">
+                  <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back to Shipping
+                </button>
+                <button type="submit" id="completeOrderBTN" class="btn btn-primary btn-label right ms-auto nexttab" >
+                  <i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i>Complete Order
+                </button>
               </div>
             </div>
-            <!-- end tab pane -->
 
+            <!-- Finish Tab -->
             <div class="tab-pane fade" id="pills-finish" role="tabpanel" aria-labelledby="pills-finish-tab">
               <div class="text-center py-5">
-
                 <div class="mb-4">
                   <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>
                 </div>
-                <h5>Thank you ! Your Order is Completed !</h5>
+                <h5>Thank you! Your Order is Completed!</h5>
                 <p class="text-muted">You will receive an order confirmation email with details of your order.</p>
-
-                <h3 class="fw-semibold">Order ID: <a href="apps-ecommerce-order-details" class="text-decoration-underline">VZ2451</a></h3>
+                <h3 class="fw-semibold">Order ID: <a href="apps-ecommerce-order-details" class="text-decoration-underline" id="orderNmber"></a></h3>
               </div>
             </div>
-            <!-- end tab pane -->
           </div>
-          <!-- end tab content -->
         </form>
       </div>
-      <!-- end card body -->
     </div>
-    <!-- end card -->
   </div>
-  <!-- end col -->
-
-
 </div>
-<!-- end row -->
-
-
-<!-- removeItemModal -->
-<div id="removeItemModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mt-2 text-center">
-          <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
-          <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-            <h4>Are you sure ?</h4>
-            <p class="text-muted mx-4 mb-0">Are you sure you want to remove this address ?</p>
-          </div>
-        </div>
-        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-          <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn w-sm btn-danger ">Yes, Delete It!</button>
-        </div>
-      </div>
-
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-<!-- editItemModal -->
-<div id="addAddressModal" class="modal fade zoomIn" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addAddressModalLabel">Address</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div>
-          <div class="mb-3">
-            <label for="addaddress-Name" class="form-label">Name</label>
-            <input type="text" class="form-control" id="addaddress-Name" placeholder="Enter name">
-          </div>
-
-          <div class="mb-3">
-            <label for="addaddress-textarea" class="form-label">Address</label>
-            <textarea class="form-control" id="addaddress-textarea" placeholder="Enter address" rows="2"></textarea>
-          </div>
-
-          <div class="mb-3">
-            <label for="addaddress-Name" class="form-label">Phone</label>
-            <input type="text" class="form-control" id="addaddress-Name" placeholder="Enter phone no.">
-          </div>
-
-          <div class="mb-3">
-            <label for="state" class="form-label">Address Type</label>
-            <select class="form-select" id="state" data-choices data-choices-search-false>
-              <option value="homeAddress">Home (7am to 10pm)</option>
-              <option value="officeAddress">Office (11am to 7pm)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-success">Save</button>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
 
 <%- contentFor('FooterJs') %>
-<script>
-  document.getElementById('increment-shipping').addEventListener('click', function() {
-    let shippingCount = document.getElementById('shipping-count');
-    shippingCount.value = parseInt(shippingCount.value) + 1;
-    if (shippingCount.value > 1) {
-      document.getElementById('shipping-message').style.display = 'block';
-    }
-  });
 
-  document.getElementById('decrement-shipping').addEventListener('click', function() {
-    let shippingCount = document.getElementById('shipping-count');
-    if (shippingCount.value > 0) {
-      shippingCount.value = parseInt(shippingCount.value) - 1;
-    }
-    if (shippingCount.value <= 1) {
-      document.getElementById('shipping-message').style.display = 'none';
-    }
-  });
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-          document.querySelectorAll('input[name="paymentMethod"]').forEach(function(element) {
-          element.addEventListener('change', function() {
-          document.getElementById('cash-on-delivery-section').style.display = 'none';
-          document.getElementById('cash-difference-section').style.display = 'none';
-          document.getElementById('cash-collection-section').style.display = 'none';
+<script src="/assets/rJS/business/create-order.js"></script>
 
-          if (this.id === 'paymentMethod01') {
-          document.getElementById('cash-on-delivery-section').style.display = 'block';
-          } else if (this.id === 'paymentMethod02') {
-          document.getElementById('cash-difference-section').style.display = 'block';
-          } else if (this.id === 'paymentMethod04') {
-          document.getElementById('cash-collection-section').style.display = 'block';
-          }
-          });
-          });
-
-          document.getElementById('cash-on-delivery-checkbox').addEventListener('change', function() {
-          document.getElementById('cash-on-delivery-amount').style.display = this.checked ? 'block' : 'none';
-          });
-
-          document.getElementById('cash-difference-checkbox').addEventListener('change', function() {
-          document.getElementById('cash-difference-amount').style.display = this.checked ? 'block' : 'none';
-          });
-</script>
 <!-- init js -->
 <script src="/assets/js/pages/ecommerce-product-checkout.init.js"></script>

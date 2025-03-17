@@ -1,0 +1,411 @@
+<%- contentFor('HeaderCss') %>
+<%- contentFor('body') %>
+  <style>
+    /* Enhanced Design */
+    .hover-effect:hover {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+    }
+
+    .card {
+      border: 1px solid #e9ecef;
+      border-radius: 12px !important;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+      padding: 1rem;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .input-group {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .input-group .btn {
+      border-radius: 0;
+    }
+
+    .form-control {
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      padding: 0.5rem 1rem;
+    }
+
+    .form-control:focus {
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .btn-primary {
+      background-color: #0d6efd;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1.5rem;
+    }
+
+    .btn-primary:hover {
+      background-color: #0b5ed7;
+    }
+
+    .btn-light {
+      border-radius: 8px;
+      padding: 0.5rem 1.5rem;
+    }
+
+    .section-title {
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .form-check.card-radio {
+      padding: 1rem;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-check.card-radio:hover {
+      background-color: #f8f9fa;
+    }
+
+    .sticky-actions {
+      position: sticky;
+      bottom: 20px;
+      background-color: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+  </style>
+
+  <% if (order) { %>
+   
+
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-xl-10">
+        <h2 class="mb-4 text-center" >Edit Order-<%= order.orderNumber  %></h2>
+
+        <form id="editOrderForm">
+          <input type="hidden"  id="orderId" value="<%= order._id %>">
+          <!-- Two-column layout for larger screens -->
+          <div class="row">
+            <!-- Left column -->
+            <div class="col-lg-6">
+              <!-- Customer Information Section -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="ri-user-2-line me-2"></i>Customer Information</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="fullName" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" name="fullName" id="fullName" placeholder="Enter Full Name" value="<%= order.orderCustomer.fullName %>">
+                  </div>
+                  <div class="mb-3">
+                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                    <input type="number" class="form-control" name="phoneNumber" id="phoneNumber" placeholder="Enter Phone Number" value="<%= order.orderCustomer.phoneNumber %>">
+                  </div>
+                  <div class="mb-3">
+                    <label for="address" class="form-label">Address</label>
+                    <textarea class="form-control" name="address" id="address" placeholder="Enter address" rows="2"><%= order.orderCustomer.address %></textarea>
+                  </div>
+                  <div class="row">
+                    <div class="mb-3 col-md-6">
+                      <label for="government" class="form-label">Select Government</label>
+                      <select class="form-select" id="government" name="government">
+                        <option value="">Select Government...</option>
+                        <option value="Cairo" <%= order.orderCustomer.government === 'Cairo' ? 'selected' : '' %>>Cairo</option>
+                        <option value="Alexandria" <%= order.orderCustomer.government === 'Alexandria' ? 'selected' : '' %>>Alexandria</option>
+                        <option value="Giza" <%= order.orderCustomer.government === 'Giza' ? 'selected' : '' %>>Giza</option>
+                        <option value="Luxor" <%= order.orderCustomer.government === 'Luxor' ? 'selected' : '' %>>Luxor</option>
+                        <option value="Aswan" <%= order.orderCustomer.government === 'Aswan' ? 'selected' : '' %>>Aswan</option>
+                        <option value="Suez" <%= order.orderCustomer.government === 'Suez' ? 'selected' : '' %>>Suez</option>
+                        <option value="Port Said" <%= order.orderCustomer.government === 'Port Said' ? 'selected' : '' %>>Port Said</option>
+                        <option value="Ismailia" <%= order.orderCustomer.government === 'Ismailia' ? 'selected' : '' %>>Ismailia</option>
+                        <option value="Faiyum" <%= order.orderCustomer.government === 'Faiyum' ? 'selected' : '' %>>Faiyum</option>
+                        <option value="Sharqia" <%= order.orderCustomer.government === 'Sharqia' ? 'selected' : '' %>>Sharqia</option>
+                        <option value="Dakahlia" <%= order.orderCustomer.government === 'Dakahlia' ? 'selected' : '' %>>Dakahlia</option>
+                        <option value="Qalyubia" <%= order.orderCustomer.government === 'Qalyubia' ? 'selected' : '' %>>Qalyubia</option>
+                        <option value="Gharbia" <%= order.orderCustomer.government === 'Gharbia' ? 'selected' : '' %>>Gharbia</option>
+                        <option value="Monufia" <%= order.orderCustomer.government === 'Monufia' ? 'selected' : '' %>>Monufia</option>
+                        <option value="Beheira" <%= order.orderCustomer.government === 'Beheira' ? 'selected' : '' %>>Beheira</option>
+                        <option value="Kafr El Sheikh" <%= order.orderCustomer.government === 'Kafr El Sheikh' ? 'selected' : '' %>>Kafr El Sheikh</option>
+                        <option value="Beni Suef" <%= order.orderCustomer.government === 'Beni Suef' ? 'selected' : '' %>>Beni Suef</option>
+                        <option value="Minya" <%= order.orderCustomer.government === 'Minya' ? 'selected' : '' %>>Minya</option>
+                        <option value="Assiut" <%= order.orderCustomer.government === 'Assiut' ? 'selected' : '' %>>Assiut</option>
+                        <option value="Sohag" <%= order.orderCustomer.government === 'Sohag' ? 'selected' : '' %>>Sohag</option>
+                        <option value="Qena" <%= order.orderCustomer.government === 'Qena' ? 'selected' : '' %>>Qena</option>
+                        <option value="Red Sea" <%= order.orderCustomer.government === 'Red Sea' ? 'selected' : '' %>>Red Sea</option>
+                        <option value="New Valley" <%= order.orderCustomer.government === 'New Valley' ? 'selected' : '' %>>New Valley</option>
+                        <option value="Matruh" <%= order.orderCustomer.government === 'Matruh' ? 'selected' : '' %>>Matruh</option>
+                        <option value="North Sinai" <%= order.orderCustomer.government === 'North Sinai' ? 'selected' : '' %>>North Sinai</option>
+                        <option value="South Sinai" <%= order.orderCustomer.government === 'South Sinai' ? 'selected' : '' %>>South Sinai</option>
+                      </select>
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label for="zone" class="form-label">Select Zone</label>
+                        <select class="form-select" name="zone" id="zone">
+                        <option value="">Select Zone...</option>
+                         <option value="Helwan" <%= order.orderCustomer.zone === 'Helwan' ? 'selected' : '' %>>Helwan</option>
+                         <option value="Nasr City" <%= order.orderCustomer.zone === 'Nasr City' ? 'selected' : '' %>>Nasr City</option>
+                         <option value="6th of October" <%= order.orderCustomer.zone === '6th of October' ? 'selected' : '' %>>6th of October</option>
+                         <option value="Shubra" <%= order.orderCustomer.zone === 'Shubra' ? 'selected' : '' %>>Shubra</option>
+                         <option value="Maadi" <%= order.orderCustomer.zone === 'Maadi' ? 'selected' : '' %>>Maadi</option>
+                         <option value="Zamalek" <%= order.orderCustomer.zone === 'Zamalek' ? 'selected' : '' %>>Zamalek</option>
+                         <option value="Haram" <%= order.orderCustomer.zone === 'Haram' ? 'selected' : '' %>>Haram</option>
+                         <option value="Dokki" <%= order.orderCustomer.zone === 'Dokki' ? 'selected' : '' %>>Dokki</option>
+                         <option value="Mohandessin" <%= order.orderCustomer.zone === 'Mohandessin' ? 'selected' : '' %>>Mohandessin</option>
+                         <option value="New Cairo" <%= order.orderCustomer.zone === 'New Cairo' ? 'selected' : '' %>>New Cairo</option>
+                         <option value="Obour City" <%= order.orderCustomer.zone === 'Obour City' ? 'selected' : '' %>>Obour City</option>
+                         <option value="Badr City" <%= order.orderCustomer.zone === 'Badr City' ? 'selected' : '' %>>Badr City</option>
+                         <option value="10th of Ramadan" <%= order.orderCustomer.zone === '10th of Ramadan' ? 'selected' : '' %>>10th of Ramadan</option>
+                         <option value="Sheikh Zayed" <%= order.orderCustomer.zone === 'Sheikh Zayed' ? 'selected' : '' %>>Sheikh Zayed</option>
+                         <option value="Mokattam" <%= order.orderCustomer.zone === 'Mokattam' ? 'selected' : '' %>>Mokattam</option>
+                         <option value="Garden City" <%= order.orderCustomer.zone === 'Garden City' ? 'selected' : '' %>>Garden City</option>
+                         <option value="Hadayek El-Kobba" <%= order.orderCustomer.zone === 'Hadayek El-Kobba' ? 'selected' : '' %>>Hadayek El-Kobba</option>
+                         <option value="Ain Shams" <%= order.orderCustomer.zone === 'Ain Shams' ? 'selected' : '' %>>Ain Shams</option>
+                         <option value="El-Marg" <%= order.orderCustomer.zone === 'El-Marg' ? 'selected' : '' %>>El-Marg</option>
+                         <option value="El-Mataria" <%= order.orderCustomer.zone === 'El-Mataria' ? 'selected' : '' %>>El-Mataria</option>
+                         <option value="El-Nozha" <%= order.orderCustomer.zone === 'El-Nozha' ? 'selected' : '' %>>El-Nozha</option>
+                         <option value="El-Salam City" <%= order.orderCustomer.zone === 'El-Salam City' ? 'selected' : '' %>>El-Salam City</option>
+                         <option value="El-Shorouk City" <%= order.orderCustomer.zone === 'El-Shorouk City' ? 'selected' : '' %>>El-Shorouk City</option>
+                         <option value="El-Tagamoa" <%= order.orderCustomer.zone === 'El-Tagamoa' ? 'selected' : '' %>>El-Tagamoa</option>
+                         <option value="El-Waily" <%= order.orderCustomer.zone === 'El-Waily' ? 'selected' : '' %>>El-Waily</option>
+                         <option value="Hadayek Helwan" <%= order.orderCustomer.zone === 'Hadayek Helwan' ? 'selected' : '' %>>Hadayek Helwan</option>
+                         <option value="Heliopolis" <%= order.orderCustomer.zone === 'Heliopolis' ? 'selected' : '' %>>Heliopolis</option>
+                         <option value="Masr El-Gedida" <%= order.orderCustomer.zone === 'Masr El-Gedida' ? 'selected' : '' %>>Masr El-Gedida</option>
+                         <option value="Zaytoun" <%= order.orderCustomer.zone === 'Zaytoun' ? 'selected' : '' %>>Zaytoun</option>
+                        </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Order Type Section -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="ri-truck-line me-2"></i>Order Type</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="form-check card-radio hover-effect">
+                        <input id="orderTypeDeliver" name="orderType" type="radio" class="form-check-input" value="Deliver" <%= order.orderShipping.orderType === 'Deliver' ? 'checked' : '' %> disabled>
+                        <label class="form-check-label" for="orderTypeDeliver">
+                          <span class="fs-16 text-muted me-2"><i class="ri-truck-line align-bottom"></i></span>
+                          <span class="fs-14 text-wrap">Deliver</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-check card-radio hover-effect">
+                        <input id="orderTypeExchange" name="orderType" type="radio" class="form-check-input" value="Exchange" <%= order.orderShipping.orderType === 'Exchange' ? 'checked' : '' %> disabled>
+                        <label class="form-check-label" for="orderTypeExchange">
+                          <span class="fs-16 text-muted me-2"><i class="ri-exchange-line align-bottom"></i></span>
+                          <span class="fs-14 text-wrap">Exchange</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-check card-radio hover-effect">
+                        <input id="orderTypeReturn" name="orderType" type="radio" class="form-check-input" value="Return" <%= order.orderShipping.orderType === 'Return' ? 'checked' : '' %> disabled>
+                        <label class="form-check-label" for="orderTypeReturn">
+                          <span class="fs-16 text-muted me-2"><i class="ri-arrow-go-back-line align-bottom"></i></span>
+                          <span class="fs-14 text-wrap">Return</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-check card-radio hover-effect">
+                        <input id="orderTypeCashCollection" name="orderType" type="radio" class="form-check-input" value="Cash Collection" <%= order.orderShipping.orderType === 'Cash Collection' ? 'checked' : '' %> disabled>
+                        <label class="form-check-label" for="orderTypeCashCollection">
+                          <span class="fs-16 text-muted me-2"><i class="ri-money-dollar-circle-line align-bottom"></i></span>
+                          <span class="fs-14 text-wrap">Cash Collection</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right column -->
+            <div class="col-lg-6">
+              <!-- Deliver Details Section -->
+                <div id="deliver-section" class="card mb-4" <%= order.orderShipping.orderType === 'Deliver' || order.orderShipping.orderType === 'Return' ? 'style="display: block;"' : 'style="display: none;"' %>>
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="ri-truck-line me-2"></i>Deliver Details</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="productDescription" class="form-label">Product/s Description</label>
+                    <textarea class="form-control" name="productDescription" id="productDescription" placeholder="Enter product description" rows="2"><%= order.orderShipping.productDescription %></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="numberOfItems" class="form-label">Number of Items</label>
+                    <div class="input-group">
+                      <button type="button" class="btn btn-outline-secondary" id="decrement-shipping">-</button>
+                      <input type="number" name="numberOfItems" class="form-control text-center" id="numberOfItems" placeholder="Enter number of items" value="<%= order.orderShipping.numberOfItems %>" min="0">
+                      <button type="button" class="btn btn-outline-secondary" id="increment-shipping">+</button>
+                    </div>
+                  </div>
+                  <div id="cash-on-delivery-section">
+                    <div class="form-check mb-2">
+                      <input class="form-check-input" name="COD" type="checkbox" id="cash-on-delivery-checkbox" <%= order.orderShipping.amountType === 'COD' ? 'checked' : '' %>>
+                      <label class="form-check-label" for="cash-on-delivery-checkbox">
+                        Cash on Delivery
+                      </label>
+                    </div>
+                    <div class="mb-3" id="cash-on-delivery-amount" <%= order.orderShipping.amountType === 'COD' ? 'style="display: block;"' : 'style="display: none;"' %>>
+                      <label for="amountCOD" class="form-label">Amount COD</label>
+                        <input type="number" name="amountCOD" class="form-control" id="amountCOD" placeholder="Enter amount" value="<%= order.orderShipping.amountType === 'COD' ? order.orderShipping.amount : '' %>">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Exchange Details Section (initially hidden) -->
+              <div id="exchange-section" class="card mb-4" <%= order.orderShipping.orderType === 'Exchange' ? 'style="display: block;"' : 'style="display: none;"' %>>
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="ri-exchange-line me-2"></i>Exchange Details</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="currentPD" class="form-label">Current Product Description</label>
+                    <textarea class="form-control" name="currentPD" id="currentPD" placeholder="Enter current product description" rows="2"><%= order.orderShipping.productDescription %></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="numberOfItemsCurrentPD" class="form-label">Number of Current Items</label>
+                    <div class="input-group">
+                      <button type="button" class="btn btn-outline-secondary" id="decrement-current">-</button>
+                      <input type="number" name="numberOfItemsCurrentPD" class="form-control text-center" id="numberOfItemsCurrentPD" placeholder="Enter number of items" value="<%= order.orderShipping.numberOfItems %>" min="0">
+                      <button type="button" class="btn btn-outline-secondary" id="increment-current">+</button>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="newPD" class="form-label">New Product Description</label>
+                    <textarea class="form-control" name="newPD" id="newPD" placeholder="Enter new product description" rows="2"><%= order.orderShipping.productDescriptionReplacement %></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="numberOfItemsNewPD" class="form-label">Number of New Items</label>
+                    <div class="input-group">
+                      <button type="button" class="btn btn-outline-secondary" id="decrement-new">-</button>
+                      <input type="number" name="numberOfItemsNewPD" class="form-control text-center" id="numberOfItemsNewPD" placeholder="Enter number of items" value="<%= order.orderShipping.numberOfItemsReplacement %>" min="0">
+                      <button type="button" class="btn btn-outline-secondary" id="increment-new">+</button>
+                    </div>
+                  </div>
+                  <div id="cash-difference-section">
+                    <div class="form-check mb-2">
+                      <input class="form-check-input" name="CashDifference" type="checkbox" id="cash-difference-checkbox" <%= order.orderShipping.amountType === 'CD' ? 'checked' : '' %>>
+                      <label class="form-check-label" for="cash-difference-checkbox">
+                        Cash Difference
+                      </label>
+                    </div>
+                    <div class="mb-3" id="cash-difference-amount" <%= order.orderShipping.amountType === 'CD' ? 'style="display: block;"' : 'style="display: none;"' %>>
+                      <label for="amountCashDifference" class="form-label">Difference Amount</label>
+                        <input type="number" name="amountCashDifference" class="form-control" id="amountCashDifference" placeholder="Enter difference amount" value="<%= order.orderShipping.amountType === 'CD' ? order.orderShipping.amount : '' %>">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cash Collection Section (initially hidden) -->
+              <div id="cash-collection-section" class="card mb-4" <%= order.orderShipping.orderType === 'CC' ? 'style="display: block;"' : 'style="display: none;"' %>>
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="ri-money-dollar-circle-line me-2"></i>Cash Collection Details</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="amountCashCollection" class="form-label">Cash Collection Amount</label>
+                    <input type="number" name="amountCashCollection" class="form-control" id="amountCashCollection" placeholder="Enter cash collection amount" value="<%= order.orderShipping.amountType === 'CC' ? order.orderShipping.amount : '' %>">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Extra Details Section -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="ri-information-line me-2"></i>Extra Details</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <div class="form-check card-radio">
+                      <input class="form-check-input" name="previewPermission" type="checkbox" id="order-preview-checkbox" <%= order.isOrderAvailableForPreview ? 'checked' : '' %>>
+                      <label class="form-check-label" for="order-preview-checkbox">
+                        <span class="fs-16 text-muted me-2"><i class="ri-eye-line align-bottom"></i></span>
+                        <span class="fs-14 text-wrap">Order can be opened for preview</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="referralNumber" class="form-label">Referral Number (Optional)</label>
+                    <input type="text" name="referralNumber" class="form-control" id="referralNumber" placeholder="Enter referral number" value="<%= order.referralNumber %>">
+                  </div>
+                  <div class="mb-3">
+                    <label for="Notes" class="form-label">Delivery Notes</label>
+                    <textarea class="form-control" name="Notes" id="Notes" placeholder="Enter any delivery notes" rows="2"><%= order.orderNotes %></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sticky Save Button -->
+          <div class="sticky-actions text-center">
+            <button type="submit" id="saveOrderBtn" class="btn btn-primary">
+              <i class="ri-save-line me-1"></i> Save Changes
+            </button>
+            <a href="/business/orders" class="btn btn-light ms-2">
+              <i class="ri-close-line me-1"></i> Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <% } else{ %>
+
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-xl-10">
+        <div class="text-center">
+          <img src="/assets/images/empty/empty-cart.png" alt="Empty Cart" height="200">
+          <h3 class="mt-4">No Order Found</h3>
+          <p class="text-muted mt-2">The order you are looking for does not exist.</p>
+          <a href="/business/orders" class="btn btn-primary mt-3">
+            <i class="ri-arrow-left-line me-1"></i> Go Back to Orders
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <% } %>
+
+
+<%- contentFor('FooterJs') %>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script src="/assets/rJS/business/edit-order.js"></script>
+
+
+<!-- init js -->
+<script src="/assets/js/pages/ecommerce-product-checkout.init.js"></script>
+
+
+

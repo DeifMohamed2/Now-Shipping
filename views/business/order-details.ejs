@@ -1,20 +1,24 @@
 <%- contentFor('HeaderCss') %>
 <%- contentFor('body') %>
+
+<% if (order) { %>
+
 <div class="row">
   <div class="col-xl-9">
     <div class="card">
       <div class="card-header">
         <div class="d-sm-flex align-items-center">
-          <h5 class="card-title flex-grow-1 mb-0">Order Status</h5>
+          <h5 class="card-title flex-grow-1 mb-0">Order Status - <span style="color: #007bff;"><strong><%= order.orderNumber %></strong></span></h5>
           <div class="flex-shrink-0 mt-2 mt-sm-0">
-            <a href="javasccript:void(0);" class="btn btn-soft-info material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-map-pin-line align-middle me-1"></i> Change Address</a>
-            <a href="javasccript:void(0);" class="btn btn-soft-danger material-shadow-none btn-sm mt-2 mt-sm-0"><i class="mdi mdi-archive-remove-outline align-middle me-1"></i> Cancel Order</a>
+            <a href="/business/edit-order/<%= order.orderNumber %>" class="btn btn-soft-info material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-map-pin-line align-middle me-1"></i> Change Address</a>
+            <button class="btn btn-soft-danger material-shadow-none btn-sm mt-2 mt-sm-0" onclick="cancelOrder('<%= order._id %>')"><i class="mdi mdi-archive-remove-outline align-middle me-1"></i> Cancel Order</button>
           </div>
         </div>
       </div>
       <div class="card-body">
         <div class="profile-timeline">
           <div class="accordion accordion-flush" id="accordionFlushExample">
+            <!-- order Placed -->
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingOne">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
@@ -25,12 +29,12 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-0 fw-semibold">Order Placed - <span class="fw-normal">Wed, 15 Dec 2021</span></h6>
+                      <h6 class="fs-15 mb-0 fw-semibold">Order Placed - <span class="fw-normal"><%= new Date(order.orderDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
                 </a>
               </div>
-              <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+              <!-- <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                 <div class="accordion-body ms-2 ps-5 pt-0">
                   <h6 class="mb-1">An order has been placed.</h6>
                   <p class="text-muted">Wed, 15 Dec 2021 - 05:34PM</p>
@@ -38,11 +42,14 @@
                   <h6 class="mb-1">Seller has processed your order.</h6>
                   <p class="text-muted mb-0">Thu, 16 Dec 2021 - 5:48AM</p>
                 </div>
-              </div>
+              </div> -->
             </div>
+            <!-- order Packed -->
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingTwo">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+
+                  <% if (order.orderStages[1]) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -50,21 +57,39 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Packed - <span class="fw-normal">Thu, 16 Dec 2021</span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold">Packed - <span class="fw-normal"><%= new Date(order.orderStages[1].stageDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
+                  <% } else{%>
+
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="mdi mdi-gift-outline"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Packed </h6>
+                    </div>
+                  </div>
+                  <% } %>
+
                 </a>
               </div>
-              <div id="collapseTwo" class="accordion-collapse collapse show" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+              <!-- <div id="collapseTwo" class="accordion-collapse collapse show" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
                 <div class="accordion-body ms-2 ps-5 pt-0">
                   <h6 class="mb-1">Your Item has been picked up by courier partner</h6>
                   <p class="text-muted mb-0">Fri, 17 Dec 2021 - 9:45AM</p>
                 </div>
-              </div>
+              </div> -->
+
             </div>
+            <!-- order shipping -->
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingThree">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+
+                  <% if (order.orderStages[2]) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -72,48 +97,90 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Shipping - <span class="fw-normal">Thu, 16 Dec 2021</span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold">Shipping - <span class="fw-normal"><%= new Date(order.orderStages[2].stageDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
-                </a>
-              </div>
-              <div id="collapseThree" class="accordion-collapse collapse show" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
-                <div class="accordion-body ms-2 ps-5 pt-0">
-                  <h6 class="fs-14">RQK Logistics - MFDS1400457854</h6>
-                  <h6 class="mb-1">Your item has been shipped.</h6>
-                  <p class="text-muted mb-0">Sat, 18 Dec 2021 - 4.54PM</p>
-                </div>
-              </div>
-            </div>
-            <div class="accordion-item border-0">
-              <div class="accordion-header" id="headingFour">
-                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFour" aria-expanded="false">
+                  <% } else{%>
+
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
-                      <div class="avatar-title bg-light text-success rounded-circle material-shadow">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="ri-truck-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Shipping </h6>
+                    </div>
+                  </div>
+                  <% } %>
+
+                </a>
+              </div>
+              <!-- <div id="collapseThree" class="accordion-collapse collapse show" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+              <div class="accordion-body ms-2 ps-5 pt-0">
+                <h6 class="fs-14">RQK Logistics - MFDS1400457854</h6>
+                <h6 class="mb-1">Your item has been shipped.</h6>
+                <p class="text-muted mb-0">Sat, 18 Dec 2021 - 4.54PM</p>
+              </div>
+              </div> -->
+            </div>
+            <!-- order out forDelivery -->
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingFour">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                  <% if (order.orderStages[3]) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-success rounded-circle material-shadow">
                         <i class="ri-takeaway-fill"></i>
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-14 mb-0 fw-semibold">Out For Delivery</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold">Out For Delivery - <span class="fw-normal"><%= new Date(order.orderStages[3].stageDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
+                  <% } else{%>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="ri-takeaway-fill"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Out For Delivery </h6>
+                    </div>
+                  </div>
+                  <% } %>
                 </a>
               </div>
             </div>
+            <!-- order Delivered -->
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingFive">
-                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFile" aria-expanded="false">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                  <% if (order.orderStages[4]) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
-                      <div class="avatar-title bg-light text-success rounded-circle material-shadow">
+                      <div class="avatar-title bg-success rounded-circle material-shadow">
                         <i class="mdi mdi-package-variant"></i>
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-14 mb-0 fw-semibold">Delivered</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold">Delivered - <span class="fw-normal"><%= new Date(order.orderStages[4].stageDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
+                  <% } else{%>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="mdi mdi-package-variant"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Delivered </h6>
+                    </div>
+                  </div>
+                  <% } %>
                 </a>
               </div>
             </div>
@@ -125,28 +192,150 @@
     <!--end card-->
     <div class="card">
       <div class="card-header">
-      <div class="d-flex align-items-center">
-        <h5 class="card-title flex-grow-1 mb-0">Customer Details</h5>
-     
-      </div>
+        <div class="d-flex align-items-center">
+          <h5 class="card-title flex-grow-1 mb-0">Customer Details</h5>
+        </div>
       </div>
       <div class="card-body">
-      <ul class="list-unstyled mb-0 vstack gap-3">
-        <li>
-        <div class="d-flex align-items-center">
-          <div class="flex-grow-1 ms-3">
-          <h6 class="fs-14 mb-1">Joseph Parkers</h6>
-          <p class="text-muted mb-0">Customer</p>
+        <ul class="list-unstyled mb-0 vstack gap-3">
+          <div class="row">
+            <div class="col-md-6">
+              <li>
+                <div class="d-flex align-items-center">
+                  <div class="flex-shrink-0">
+                    <div class="avatar-xs">
+                      <div class="avatar-title bg-soft-primary text-white rounded-circle">
+                        <i class="ri-user-3-line"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1 ms-3">
+                    <h6 class="fs-14 mb-1"><%= order.orderCustomer.fullName %></h6>
+                    <p class="text-muted mb-0">Customer</p>
+                  </div>
+                </div>
+              </li>
+            </div>
+            <div class="col-md-6">
+              <li class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                  <div class="avatar-xs">
+                    <div class="avatar-title bg-soft-info text-white rounded-circle">
+                      <i class="ri-phone-line"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h6 class="fs-14 mb-0"><%= order.orderCustomer.phoneNumber %></h6>
+                  <p class="text-muted mb-0">Contact Number</p>
+                </div>
+              </li>
+            </div>
           </div>
-        </div>
-        </li>
-        <li><i class="ri-mail-line me-2 align-middle text-muted fs-16"></i>josephparker@gmail.com</li>
-        <li><i class="ri-phone-line me-2 align-middle text-muted fs-16"></i>+(256) 245451 441</li>
-      </ul>
+          <div class="row">
+            <div class="col-md-12">
+              <li class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                  <div class="avatar-xs">
+                    <div class="avatar-title bg-soft-success text-white rounded-circle">
+                      <i class="ri-map-pin-line"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <p class="text-muted mb-0">Shipping Address</p>
+                    <h6 class="fs-14 mb-1"><%= order.orderCustomer.address %></h6>
+                    <h6 class="fs-14 mb-1"><%= order.orderCustomer.zone %></h6>
+                    <h6 class="fs-14 mb-1"><%= order.orderCustomer.government %></h6>
+                </div>
+              </li>
+            </div>
+          </div>
+        </ul>
       </div>
     </div>
     <!--end card-->
-    
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header bg-light py-3">
+    <h5 class="card-title mb-0">
+      <i class="ri-truck-line align-middle me-2 text-primary"></i>
+      Order Shipping Details
+    </h5>
+  </div>
+  <div class="card-body p-4">
+    <!-- Original Order Section -->
+    <div class="border rounded p-3 mb-4 bg-white">
+      <h6 class="mb-3 d-flex align-items-center">
+        <i class="ri-shopping-bag-line me-2 text-primary"></i>
+        Original Order
+      </h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <p class="text-muted small mb-1 fw-medium">Product Description:</p>
+          <h6 class="mb-0 text-wrap fw-semibold"><%= order.orderShipping.productDescription %></h6>
+        </div>
+        <div class="col-md-6">
+          <p class="text-muted small mb-1 fw-medium">Number of Items:</p>
+          <h6 class="mb-0">
+            <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+              <%= order.orderShipping.numberOfItems %>
+            </span>
+          </h6>
+        </div>
+      </div>
+    </div>
+
+    <!-- Replacement Items Section (Conditional) -->
+    <% if (order.orderShipping.productDescriptionReplacement) { %>
+    <div class="border border-primary border-opacity-25 rounded p-3 mb-4 bg-white">
+      <h6 class="mb-3 d-flex align-items-center">
+        <i class="ri-refresh-line me-2 text-primary"></i>
+        Replacement Items
+      </h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <p class="text-muted small mb-1 fw-medium">Replacement Product Description:</p>
+          <h6 class="mb-0 text-wrap fw-semibold"><%= order.orderShipping.productDescriptionReplacement %></h6>
+        </div>
+        <div class="col-md-6">
+          <p class="text-muted small mb-1 fw-medium">Number of Replacement Items:</p>
+          <h6 class="mb-0">
+            <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+              <%= order.orderShipping.numberOfItemsReplacement %>
+            </span>
+          </h6>
+        </div>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Payment Information Section (Conditional) -->
+    <% if (order.orderShipping.amountType) { %>
+    <div class="border border-warning border-opacity-25 rounded p-3 bg-white">
+      <h6 class="mb-3 d-flex align-items-center">
+        <i class="ri-money-dollar-circle-line me-2 text-warning"></i>
+        Payment Information
+      </h6>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <p class="text-muted small mb-1 fw-medium">
+            <% if (order.orderShipping.amountType === 'COD') { %>
+            Cash on Delivery Amount:
+            <% } else if (order.orderShipping.amountType === 'CD') { %>
+            Cash Difference Amount:
+            <% } else if (order.orderShipping.amountType === 'CC') { %>
+            Cash Collection Amount:
+            <% } %>
+          </p>
+        </div>
+        <div class="col-md-6">
+          <h6 class="mb-0 fw-bold fs-5 text-primary"><%= order.orderShipping.amount %></h6>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
   </div>
   <!--end col-->
   <div class="col-xl-3">
@@ -158,99 +347,88 @@
       </div>
       <div class="card-body">
         <div class="text-center">
+          <% if (order.orderStages[3]) { %>
           <lord-icon src="https://cdn.lordicon.com/uetqnvvg.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">RQK Logistics</h5>
+          <h5 class="fs-16 mt-2">Out For Delivery </h5>
           <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <% } else if (order.orderStages[2]) { %>
+          <lord-icon src="https://cdn.lordicon.com/dxjqoygy.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
+          <h5 class="fs-16 mt-2">Shipping</h5>
+          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <% } else if (order.orderStages[1]) { %>
+          <lord-icon src="https://cdn.lordicon.com/ndydpcaq.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
+          <h5 class="fs-16 mt-2">Packed</h5>
+          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <% } else { %>
+          <lord-icon src="https://cdn.lordicon.com/tdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
+          <h5 class="fs-16 mt-2">Order Placed</h5>
+          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <% } %>
         </div>
       </div>
     </div>
 
 
-    <!--end card-->
-    <div class="card">
-      <div class="card-header">
-        <h5 class="card-title mb-0"><i class="ri-map-pin-line align-middle me-1 text-muted"></i> Billing Address</h5>
-      </div>
-      <div class="card-body">
-        <ul class="list-unstyled vstack gap-2 fs-13 mb-0">
-          <li class="fw-medium fs-14">Joseph Parker</li>
-          <li>+(256) 245451 451</li>
-          <li>2186 Joyce Street Rocky Mount</li>
-          <li>New York - 25645</li>
-          <li>United States</li>
-        </ul>
-      </div>
-    </div>
-    <!--end card-->
-    <div class="card">
-      <div class="card-header">
-        <h5 class="card-title mb-0"><i class="ri-map-pin-line align-middle me-1 text-muted"></i> Shipping Address</h5>
-      </div>
-      <div class="card-body">
-        <ul class="list-unstyled vstack gap-2 fs-13 mb-0">
-          <li class="fw-medium fs-14">Joseph Parker</li>
-          <li>+(256) 245451 451</li>
-          <li>2186 Joyce Street Rocky Mount</li>
-          <li>California - 24567</li>
-          <li>United States</li>
-        </ul>
-      </div>
-    </div>
-    <!--end card-->
+
 
     <div class="card">
       <div class="card-header">
-        <h5 class="card-title mb-0"><i class="ri-secure-payment-line align-bottom me-1 text-muted"></i> Payment Details</h5>
+        <h5 class="card-title mb-0"><i class="ri-secure-payment-line align-bottom me-1 text-muted"></i> Billing Info</h5>
       </div>
       <div class="card-body">
         <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
-            <p class="text-muted mb-0">Transactions:</p>
+            <p class="text-muted mb-0">Order Type:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0">#VLZ124561278124</h6>
+            <h6 class="mb-0"><%= order.orderShipping.orderType %></h6>
           </div>
         </div>
         <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
-            <p class="text-muted mb-0">Payment Method:</p>
+            <p class="text-muted mb-0">Amount Type:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0">Debit Card</h6>
+            <h6 class="mb-0"><%= order.orderShipping.amountType %></h6>
           </div>
         </div>
         <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
-            <p class="text-muted mb-0">Card Holder Name:</p>
+            <p class="text-muted mb-0">Amount:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0">Joseph Parker</h6>
-          </div>
-        </div>
-        <div class="d-flex align-items-center mb-2">
-          <div class="flex-shrink-0">
-            <p class="text-muted mb-0">Card Number:</p>
-          </div>
-          <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0">xxxx xxxx xxxx 2456</h6>
-          </div>
-        </div>
-        <div class="d-flex align-items-center">
-          <div class="flex-shrink-0">
-            <p class="text-muted mb-0">Total Amount:</p>
-          </div>
-          <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0">$415.96</h6>
+            <h6 class="mb-0"><%= order.orderShipping.amount %></h6>
           </div>
         </div>
       </div>
     </div>
+    
     <!--end card-->
   </div>
   <!--end col-->
 </div>
+
+<% } else{%>
+
+<div class="row">
+  <div class="col-xl-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-center">
+          <img src="/assets/images/empty.svg" alt="" class="img-fluid" style="max-width: 220px;">
+          <h4 class="mt-4">No Order Found</h4>
+          <p class="text-muted  mb-0">We couldn't find the order you are looking for.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% } %>
 <!--end row-->
 <%- contentFor('FooterJs') %>
 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script src="/assets/rJS/business/order-details.js"></script>
 <!-- App js -->
