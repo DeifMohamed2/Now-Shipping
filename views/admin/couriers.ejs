@@ -1,0 +1,1048 @@
+<%- contentFor('HeaderCss') %>
+<!-- jsvectormap css -->
+<link href="/assets/libs/jsvectormap/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+<!--Swiper slider css-->
+<link href="/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+<%- contentFor('body') %>
+
+  <!-- Custom CSS -->
+  <style>
+
+      /* Fix for dropdown menus in tables */
+      .dropdown-fix .dropdown-menu {
+      position: fixed !important;
+      z-index: 1050 !important;
+      }
+
+      /* Ensure the table doesn't constrain the dropdown */
+      #orderTable {
+      overflow: scroll !important;
+      }
+
+      /* Make sure parent containers don't clip the dropdown */
+      .card-body,
+      .card {
+      overflow: visible !important;
+      }
+    .dropdown-fix .dropdown-menu {
+      min-width: 220px;
+    }
+
+    .badge-courier-active {
+      background-color: #0ab39c;
+      color: #fff;
+    }
+
+    .badge-courier-inactive {
+      background-color: #f06548;
+      color: #fff;
+    }
+
+    .zone-badge {
+      display: inline-block;
+      margin: 2px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background-color: #405189;
+      color: white;
+      font-size: 0.75rem;
+    }
+
+    .zone-select-container {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ced4da;
+      border-radius: 0.25rem;
+      padding: 0.5rem;
+    }
+
+    .zone-select-item {
+      padding: 5px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .zone-select-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .zone-select-item.selected {
+      background-color: #e9ecef;
+    }
+
+    .courier-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .paper-size-option {
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s, background-color 0.3s;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #f8f9fa;
+    }
+
+    .paper-size-option:hover {
+      transform: scale(1.1);
+      background-color: #e9ecef;
+    }
+
+    .paper-size-option.selected {
+      background-color: #0d6efd;
+      color: white;
+    }
+
+    .paper-size-option p {
+      margin-top: 10px;
+    }
+    .zone-badge-container {
+        display: grid;
+        grid-template-columns: repeat(2, 0.8fr);
+        gap: 5px;
+    }
+  </style>
+
+  <div class="container-fluid">
+    <div class="card" id="courierList">
+      <div class="card-header border-0">
+        <div class="row align-items-center gy-3">
+          <div class="col-sm">
+            <h5 class="card-title mb-0">Couriers Management</h5>
+          </div>
+          <div class="col-sm-auto">
+            <div class="d-flex gap-1 flex-wrap">
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourierModal">
+                <i class="ri-user-add-line align-bottom me-1"></i> Add Courier
+              </button>
+              <button type="button" class="btn btn-info">
+                <i class="ri-file-download-line align-bottom me-1"></i> Export
+              </button>
+              <button class="btn btn-soft-danger" id="remove-actions">
+                <i class="ri-delete-bin-2-line"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body border border-dashed border-end-0 border-start-0">
+        <form>
+          <div class="row g-3">
+            <div class="col-xxl-5 col-sm-6">
+              <div class="search-box">
+                <input type="text" class="form-control search" placeholder="Search for courier ID, name, phone or zones...">
+                <i class="ri-search-line search-icon"></i>
+              </div>
+            </div>
+            <div class="col-xxl-2 col-sm-6">
+              <div>
+                <input type="text" class="form-control" data-provider="flatpickr" data-date-format="d M, Y" data-range-date="true" id="date-range" placeholder="Select date range">
+              </div>
+            </div>
+            <div class="col-xxl-2 col-sm-4">
+              <div>
+                <select class="form-control" id="statusFilter">
+                  <option value="">Status</option>
+                  <option value="all" selected>All</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="On Leave">On Leave</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-xxl-2 col-sm-4">
+              <div>
+                <select class="form-control" id="zoneFilter">
+                  <option value="">Select Zone</option>
+                  <option value="all" selected>All Zones</option>
+                  <option value="Cairo">Cairo</option>
+                  <option value="Giza">Giza</option>
+                  <option value="Alexandria">Alexandria</option>
+                  <option value="Sharm El Sheikh">Sharm El Sheikh</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-xxl-1 col-sm-4">
+              <div>
+                <button type="button" class="btn btn-primary w-100">
+                  <i class="ri-equalizer-fill me-1 align-bottom"></i> Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="card-body pt-0">
+        <div>
+          <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
+            <li class="nav-item">
+              <button class="btn btn-link nav-link active All py-3" data-bs-toggle="tab" id="All" role="tab" aria-selected="true">
+                <i class="ri-team-line me-1 align-bottom"></i> All Couriers
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn btn-link nav-link py-3 Active" data-bs-toggle="tab" id="Active" role="tab" aria-selected="false">
+                <i class="ri-user-follow-line me-1 align-bottom"></i> Active
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn btn-link nav-link py-3 Inactive" data-bs-toggle="tab" id="Inactive" role="tab" aria-selected="false">
+                <i class="ri-user-unfollow-line me-1 align-bottom"></i> Inactive
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn btn-link nav-link py-3 OnLeave" data-bs-toggle="tab" id="OnLeave" role="tab" aria-selected="false">
+                <i class="ri-calendar-event-line me-1 align-bottom"></i> On Leave
+              </button>
+            </li>
+          </ul>
+
+          <div class="table-responsive table-card mb-1">
+            <table class="table table-nowrap align-middle" id="courierTable">
+              <thead class="text-muted table-light">
+                <tr class="text-uppercase">
+                  <th scope="col" style="width: 25px;">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="checkAll" value="option">
+                    </div>
+                  </th>
+                  <th>Courier ID</th>
+                  <th>Courier</th>
+                  <th>Contact</th>
+                  <th>Assigned Zones</th>
+                  <th>Active Orders</th>
+                  <th>Completed Orders</th>
+                  <th>Status</th>
+                  <th>Joined Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody class="list form-check-all" id="couriersTable">
+                <!-- Sample courier data -->
+
+              </tbody>
+            </table>
+
+            <div class="noresult" style="display: none">
+              <div class="text-center">
+                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+                <h5 class="mt-2">Sorry! No Result Found</h5>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end">
+          <div class="pagination-wrap hstack gap-2">
+            <a class="page-item pagination-prev disabled" href="javascript:void(0);">
+              Previous
+            </a>
+            <ul class="pagination listjs-pagination mb-0">
+              <li class="active"><a class="page" href="#" data-i="1">1</a></li>
+              <li><a class="page" href="#" data-i="2">2</a></li>
+              <li><a class="page" href="#" data-i="3">3</a></li>
+            </ul>
+            <a class="page-item pagination-next" href="javascript:void(0);">
+              Next
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Courier Modal -->
+  <div class="modal fade" id="addCourierModal" tabindex="-1" aria-labelledby="addCourierModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+     <form action="" id="addCourierForm" >
+      <div class="modal-content">
+        <div class="modal-header text-white">
+          <h5 class="modal-title" id="addCourierModalLabel">Add New Courier</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addCourierForm" class="needs-validation" novalidate>
+            <div class="row g-3">
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <label for="firstName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" name="fullName" id="firstName" placeholder="Enter full name" required>
+                  <div class="invalid-feedback">Please enter full name</div>
+                </div>
+              </div>
+            
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="email" class="form-label">Personal Email(Optional)</label>
+                  <input type="email" class="form-control" name="personalEmail" id="email" placeholder="Enter email address" >
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                  <input type="tel" class="form-control" name="phoneNumber" id="phone" placeholder="Enter phone number" required>
+                  <div class="invalid-feedback">Please enter phone number</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="nationalId" class="form-label">National ID <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" name="nationalId" id="nationalId" placeholder="Enter national ID" required>
+                  <div class="invalid-feedback">Please enter national ID</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="dateOfBirth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" name="dateOfBirth" id="dateOfBirth" required>
+                    <div class="invalid-feedback">Please enter date of birth</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="vehicleType" class="form-label">Vehicle Type <span class="text-danger">*</span></label>
+                  <select class="form-select" name="vehicleType" id="vehicleType" required>
+                    <option value="">Select Vehicle Type</option>
+                    <option value="Motorcycle">Motorcycle</option>
+                    <option value="Car">Car</option>
+                    <option value="Van">Van</option>
+                    <option value="Bicycle">Bicycle</option>
+                  </select>
+                    <div class="invalid-feedback">Please select vehicle type</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="vehiclePlate" class="form-label">Vehicle Plate Number <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" name="vehiclePlateNumber" id="vehiclePlate" placeholder="Enter vehicle plate number" required>
+                    <div class="invalid-feedback">Please enter vehicle plate number</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="address" name="address" rows="2" placeholder="Enter full address" required></textarea>
+                <div class="invalid-feedback">Please enter address</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Initial Zone Assignment <span class="text-danger">*</span></label>
+            <div class="zone-select-container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                            <i class="ri-checkbox-blank-circle-line me-1"></i> Cairo Downtown
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                            <i class="ri-checkbox-blank-circle-line me-1"></i> Zamalek
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                            <i class="ri-checkbox-blank-circle-line me-1"></i> Maadi
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                            <i class="ri-checkbox-blank-circle-line me-1"></i> Heliopolis
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                            <i class="ri-checkbox-blank-circle-line me-1"></i> Nasr City
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                            <i class="ri-checkbox-blank-circle-line me-1"></i> New Cairo
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                            <i class="ri-checkbox-blank-circle-line me-1"></i> Giza
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                            <i class="ri-checkbox-blank-circle-line me-1"></i> 6th October
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                            <i class="ri-checkbox-blank-circle-line me-1"></i> Alexandria
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="username" class="form-label">email <span class="text-danger">*</span></label>
+                  <input type="email" class="form-control" name="email" id="username" placeholder="Enter email" required>
+                  <div class="invalid-feedback">Please enter email</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                  <div class="position-relative">
+                    <input type="password" class="form-control" name="password" id="password" placeholder="Enter password" required>
+                    <button type="button" class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" onclick="togglePassword()">
+                      <i class="ri-eye-fill align-middle"></i>
+                    </button>
+                  </div>
+                  <div class="invalid-feedback">Please enter password</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Upload Photo</label>
+                <input type="file" class="form-control filepond-input" id="courierPhoto" accept="image/*">
+                <div class="mt-2" id="photoStatus">No photo uploaded</div>
+            </div>
+
+        
+
+            
+
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="addCourierBtn">Create Courier Account</button>
+        </div>
+      </div>
+    </form>
+    </div>
+  </div>
+
+  <!-- Assign Zones Modal -->
+  <div class="modal fade" id="assignZonesModal" tabindex="-1" aria-labelledby="assignZonesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="assignZonesModalLabel">Assign Zones to Courier</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="assignZonesForm">
+            <input type="hidden" id="courierIdForZones" name="courierId" value="">
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Courier Name</label>
+              <div class="d-flex align-items-center">
+                <img src="/placeholder.svg?height=40&width=40" class="courier-avatar me-2" alt="Courier">
+                <h5 class="fs-6 mb-0" id="courierNameForZones">Ahmed Mohamed</h5>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Currently Assigned Zones</label>
+              <div id="currentZones" class="mb-2">
+                <span class="zone-badge">Cairo Downtown</span>
+                <span class="zone-badge">Zamalek</span>
+                <span class="zone-badge">Maadi</span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Select Zones to Assign</label>
+              <div class="zone-select-container">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> Cairo Downtown
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> Zamalek
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item selected" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-circle-fill me-1"></i> Maadi
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> Heliopolis
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> Nasr City
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> New Cairo
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> Giza
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> 6th October
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> Alexandria
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> Montazah
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> Sharm El Sheikh
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
+                      <i class="ri-checkbox-blank-circle-line me-1"></i> Hurghada
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Zone Assignment Notes</label>
+              <textarea class="form-control" id="zoneNotes" rows="2" placeholder="Add notes about zone assignment"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="saveZonesBtn">Save Zone Assignments</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Courier Modal -->
+  <div class="modal fade" id="editCourierModal" tabindex="-1" aria-labelledby="editCourierModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-white">
+          <h5 class="modal-title" id="editCourierModalLabel">Edit Courier Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editCourierForm" class="needs-validation" novalidate>
+            <input type="hidden" id="editCourierId" name="courierId" value="">
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="editFirstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="editFirstName" placeholder="Enter first name" required value="Ahmed">
+                  <div class="invalid-feedback">Please enter first name</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="editLastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="editLastName" placeholder="Enter last name" required value="Mohamed">
+                  <div class="invalid-feedback">Please enter last name</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="editEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                  <input type="email" class="form-control" id="editEmail" placeholder="Enter email address" required value="ahmed.m@example.com">
+                  <div class="invalid-feedback">Please enter a valid email</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="editPhone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                  <input type="tel" class="form-control" id="editPhone" placeholder="Enter phone number" required value="+20 123 456 7890">
+                  <div class="invalid-feedback">Please enter phone number</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="editVehicleType" class="form-label">Vehicle Type</label>
+                  <select class="form-select" id="editVehicleType">
+                    <option value="">Select Vehicle Type</option>
+                    <option value="Motorcycle" selected>Motorcycle</option>
+                    <option value="Car">Car</option>
+                    <option value="Van">Van</option>
+                    <option value="Bicycle">Bicycle</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="editStatus" class="form-label">Status</label>
+                  <select class="form-select" id="editStatus">
+                    <option value="Active" selected>Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="On Leave">On Leave</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="editAddress" class="form-label">Address</label>
+              <textarea class="form-control" id="editAddress" rows="2" placeholder="Enter full address">123 Main St, Cairo, Egypt</textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-warning" id="updateCourierBtn">Update Courier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  
+
+<%- contentFor('FooterJs') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    // Toggle zone selection
+    function toggleZoneSelection(element) {
+      if (element.classList.contains('selected')) {
+        element.classList.remove('selected');
+        element.querySelector('i').classList.remove('ri-checkbox-circle-fill');
+        element.querySelector('i').classList.add('ri-checkbox-blank-circle-line');
+      } else {
+        element.classList.add('selected');
+        element.querySelector('i').classList.remove('ri-checkbox-blank-circle-line');
+        element.querySelector('i').classList.add('ri-checkbox-circle-fill');
+      }
+    }
+
+    // Toggle password visibility
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const passwordAddon = document.querySelector('.password-addon i');
+
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        passwordAddon.classList.remove('ri-eye-fill');
+        passwordAddon.classList.add('ri-eye-off-fill');
+      } else {
+        passwordInput.type = 'password';
+        passwordAddon.classList.remove('ri-eye-off-fill');
+        passwordAddon.classList.add('ri-eye-fill');
+      }
+    }
+
+    // Handle assign zones modal
+    document.addEventListener('DOMContentLoaded', function() {
+      const assignZonesModal = document.getElementById('assignZonesModal');
+      if (assignZonesModal) {
+        assignZonesModal.addEventListener('show.bs.modal', function(event) {
+          const button = event.relatedTarget;
+          const courierId = button.getAttribute('data-courier-id');
+          document.getElementById('courierIdForZones').value = courierId;
+
+          // In a real application, you would fetch the courier's data and current zones
+          // For demo purposes, we're just setting static data
+          if (courierId === 'CR001') {
+            document.getElementById('courierNameForZones').textContent = 'Ahmed Mohamed';
+            document.getElementById('currentZones').innerHTML = `
+            <span class="zone-badge">Cairo Downtown</span>
+            <span class="zone-badge">Zamalek</span>
+            <span class="zone-badge">Maadi</span>
+          `;
+          } else if (courierId === 'CR002') {
+            document.getElementById('courierNameForZones').textContent = 'Sara Ahmed';
+            document.getElementById('currentZones').innerHTML = `
+            <span class="zone-badge">Giza</span>
+            <span class="zone-badge">6th October</span>
+          `;
+          } else if (courierId === 'CR003') {
+            document.getElementById('courierNameForZones').textContent = 'Mohamed Ali';
+            document.getElementById('currentZones').innerHTML = `
+            <span class="zone-badge">Alexandria</span>
+            <span class="zone-badge">Montazah</span>
+          `;
+          }
+        });
+      }
+
+      // Form validation
+      const forms = document.querySelectorAll('.needs-validation');
+      Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
+
+      // Save zones button click handler
+      const saveZonesBtn = document.getElementById('saveZonesBtn');
+      if (saveZonesBtn) {
+        saveZonesBtn.addEventListener('click', function() {
+          // Get selected zones
+          const selectedZones = document.querySelectorAll('#assignZonesModal .zone-select-item.selected');
+          const zones = Array.from(selectedZones).map(zone => zone.textContent.trim());
+
+          // In a real application, you would save these zones to the server
+          console.log('Saving zones for courier:', document.getElementById('courierIdForZones').value);
+          console.log('Selected zones:', zones);
+
+          // Close the modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('assignZonesModal'));
+          modal.hide();
+
+          // Show success message
+          alert('Zones assigned successfully!');
+        });
+      }
+
+
+      // Update courier button click handler
+      const updateCourierBtn = document.getElementById('updateCourierBtn');
+      if (updateCourierBtn) {
+        updateCourierBtn.addEventListener('click', function() {
+          const form = document.getElementById('editCourierForm');
+          if (form.checkValidity()) {
+            // In a real application, you would update the courier data on the server
+            console.log('Updating courier:', document.getElementById('editCourierId').value);
+
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editCourierModal'));
+            modal.hide();
+
+            // Show success message
+            alert('Courier details updated successfully!');
+          } else {
+            form.classList.add('was-validated');
+          }
+        });
+      }
+
+      // Edit courier modal
+      const editCourierModal = document.getElementById('editCourierModal');
+      if (editCourierModal) {
+        editCourierModal.addEventListener('show.bs.modal', function(event) {
+          const button = event.relatedTarget;
+          const courierId = button.getAttribute('data-courier-id');
+          document.getElementById('editCourierId').value = courierId;
+
+          // In a real application, you would fetch the courier's data
+          // For demo purposes, we're just setting static data based on courier ID
+          if (courierId === 'CR001') {
+            document.getElementById('editFirstName').value = 'Ahmed';
+            document.getElementById('editLastName').value = 'Mohamed';
+            document.getElementById('editEmail').value = 'ahmed.m@example.com';
+            document.getElementById('editPhone').value = '+20 123 456 7890';
+          } else if (courierId === 'CR002') {
+            document.getElementById('editFirstName').value = 'Sara';
+            document.getElementById('editLastName').value = 'Ahmed';
+            document.getElementById('editEmail').value = 'sara.a@example.com';
+            document.getElementById('editPhone').value = '+20 123 456 7891';
+          } else if (courierId === 'CR003') {
+            document.getElementById('editFirstName').value = 'Mohamed';
+            document.getElementById('editLastName').value = 'Ali';
+            document.getElementById('editEmail').value = 'mohamed.a@example.com';
+            document.getElementById('editPhone').value = '+20 123 456 7892';
+            document.getElementById('editStatus').value = 'On Leave';
+          }
+        });
+      }
+    });
+ 
+ //Handel submmition of Add curior 
+
+// const addCourierForm = document.getElementById('addCourierForm');
+// //    const modal = bootstrap.Modal.getInstance(document.getElementById('addCourierModal'));
+// //    modal.hide();
+// addCourierForm.addEventListener('submit', async (e) => {
+//   e.preventDefault();
+//   try{
+//   const formData = new FormData(addCourierForm);
+//   const data = Object.fromEntries(formData.entries());
+//     const selectedZones = document.querySelectorAll('#addCourierModal .zone-select-item.selected');
+//     const zones = Array.from(selectedZones).map(zone => zone.textContent.trim());
+//     data.zones = zones;
+
+//     const response = await fetch('/admin/couriers/create-courier', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(data),
+//     });
+    
+//     const responseData = await response.json();
+//     if (response.ok) {
+//       swal('Success', 'Courier added successfully!', 'success').then(() => {
+//         location.reload();
+//       });
+//     } else {
+//       swal('Error', `${responseData.error}`, 'error');
+//     }
+
+//     }catch(err){
+//         console.log(err);
+//         swal('Error', 'An error occurred. Please try again.', 'error');
+//     }
+
+
+
+// });
+ 
+ </script>
+
+    <script>
+      const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
+      const CLOUDINARY_UPLOAD_PRESET = 'order_project';
+      let uploadedPhoto = '';
+
+    document.getElementById('courierPhoto').addEventListener('change', async function(event) {
+        const file = event.target.files[0];
+        uploadedPhoto = '';
+
+        if (file) {
+            const submitButton = document.getElementById('addCourierBtn');
+            submitButton.disabled = true;
+            submitButton.innerText = 'Uploading Photo...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', CLOUDINARY_URL, true);
+
+                xhr.upload.onprogress = function(event) {
+                    if (event.lengthComputable) {
+                        const percentCompleted = Math.round((event.loaded * 100) / event.total);
+                        document.getElementById('photoStatus').innerText = `Uploading: ${percentCompleted}%`;
+                    }
+                };
+
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.secure_url) {
+                            uploadedPhoto = data.secure_url;
+                            document.getElementById('photoStatus').innerText = 'Photo uploaded successfully';
+                        }
+                    } else {
+                        document.getElementById('photoStatus').innerText = 'Error uploading photo';
+                    }
+                    submitButton.disabled = false;
+                    submitButton.innerText = 'Create Courier Account';
+                };
+
+                xhr.onerror = function() {
+                    document.getElementById('photoStatus').innerText = 'Error uploading photo';
+                    submitButton.disabled = false;
+                    submitButton.innerText = 'Create Courier Account';
+                };
+
+                xhr.send(formData);
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                document.getElementById('photoStatus').innerText = 'Error uploading photo';
+                submitButton.disabled = false;
+                submitButton.innerText = 'Create Courier Account';
+            }
+        }
+    });
+
+      addCourierForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const formData = new FormData(addCourierForm);
+          const data = Object.fromEntries(formData.entries());
+          const selectedZones = document.querySelectorAll('#addCourierModal .zone-select-item.selected');
+          const zones = Array.from(selectedZones).map(zone => zone.textContent.trim());
+          data.zones = zones;
+          data.photo = uploadedPhoto;
+
+          const response = await fetch('/admin/couriers/create-courier', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+          });
+
+          const responseData = await response.json();
+          if (response.ok) {
+            Swal.fire({
+            title: 'Success',
+            text: 'Account Created Successfully',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            }).then(() => {
+            window.location.reload();
+            });
+          } else {
+            Swal.fire({
+            title: 'Error',
+            text: `${responseData.error}`,
+            icon: 'error',
+            confirmButtonText: 'OK',
+            });
+          }
+        } catch (err) {
+          console.log(err);
+            Swal.fire({
+                title: 'Error',
+                text: 'An error occurred. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+      });
+   
+
+
+async function fetchCouriers(status = "All") {
+    try {
+        const tableBody = document.getElementById("couriersTable");
+        const NoResult = document.querySelector(".noresult");
+
+        // Show loading spinner
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        const response = await fetch(`/admin/get-couriers?status=${status}`);
+        const couriers = await response.json();
+        if (response.ok) {
+            tableBody.innerHTML = ""; // Clear existing rows
+            NoResult.style.display = "none";
+            if (couriers.length === 0) {
+                NoResult.style.display = "block";
+                return;
+            }
+            populateCouriersTable(couriers);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: `Error fetching couriers: ${couriers.message || 'Unknown error'}`,
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching couriers:", error);
+    }
+}
+
+function populateCouriersTable(couriers) {
+    const tableBody = document.getElementById("couriersTable");
+    tableBody.innerHTML = ""; // Clear existing rows
+    couriers.forEach(courier => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <th scope="row">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="checkAll[]" value="${courier.courierID}">
+                </div>
+            </th>
+            <td class="id"><a href="" class="fw-medium fs-15 link-primary">${courier.courierID}</a></td>
+            <td class="courier_name">
+                <div class="d-flex align-items-center">
+                    <img src="${courier.personalPhoto || '/placeholder.svg?height=40&width=40'}" class="courier-avatar me-2" alt="${courier.name}">
+                    <div>
+                        <h5 class="fs-6 mb-1">${courier.name.split(' ').slice(0, 2).join(' ')}</h5>
+                        <p class="text-muted mb-0">ID: #${courier.courierID}</p>
+                    </div>
+                </div>
+            </td>
+            <td class="contact fs-13 fw-medium">
+                <div>${courier.phoneNumber}</div>
+            </td>
+            <td class="zones">
+                <div class="zone-badge-container">
+                    ${courier.assignedZones.map(zone => `<span class="zone-badge">${zone}</span>`).join('')}
+                </div>
+            </td>
+            <td class="active_orders">
+                <div class="badge bg-info-subtle text-info">${courier.activeOrders || 0} Orders</div>
+            </td>
+            <td class="completed">
+                <div>${courier.completedOrders || 0} Orders</div>
+                <div class="text-muted">${courier.successRate || 0}% Success Rate</div>
+            </td>
+            <td class="status">
+                <span class="badge ${courier.isAvailable ? 'badge-courier-active' : 'badge-courier-inactive'} text-uppercase">${courier.isAvailable ? 'Active' : 'Inactive'}</span>
+            </td>
+            <td class="date">${new Date(courier.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
+            <td>
+                <div class="dropdown dropdown-fix">
+                    <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ri-more-fill align-middle"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#assignZonesModal" data-courier-id="${courier.courierID}"><i class="ri-map-pin-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Zones</span></button></li>
+                        <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editCourierModal" data-courier-id="${courier.courierID}"><i class="ri-edit-2-fill align-bottom me-2 text-warning"></i> <span class="fs-6">Edit Courier</span></button></li>
+                        <li><button class="dropdown-item"><i class="ri-delete-bin-6-fill align-bottom me-2 text-danger"></i> <span class="fs-6">Delete Courier</span></button></li>
+                        <li><button class="dropdown-item"><i class="ri-truck-line align-bottom me-2 text-info"></i> <span class="fs-6">View Deliveries</span></button></li>
+                        <li><button class="dropdown-item"><i class="ri-file-chart-line align-bottom me-2 text-primary"></i> <span class="fs-6">Performance Report</span></button></li>
+                    </ul>
+                </div>
+            </td>
+        `;
+
+        tableBody.appendChild(row);
+    });
+}
+
+// Fetch couriers on page load
+document.addEventListener("DOMContentLoaded", () => fetchCouriers());
+
+    
+
+</script>
+

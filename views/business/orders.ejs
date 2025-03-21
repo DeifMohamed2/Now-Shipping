@@ -15,8 +15,10 @@
     overflow: visible !important;
   }
 
+      .table-responsive{
+      overflow: scroll !important;
+      }
   /* Make sure parent containers don't clip the dropdown */
-  .table-responsive,
   .card-body,
   .card {
     overflow: visible !important;
@@ -242,7 +244,7 @@
 <!--end row-->
 
 <%- contentFor('FooterJs') %>
-
+<!-- 
 <script>
   const tableBody = document.getElementById("ordersTable");
   const NoResult = document.getElementById("NoResult");
@@ -405,7 +407,7 @@ async function cancelOrder(orderId) {
 
 
 
-</script>
+</script> -->
 
 
 <!-- list.js min js -->

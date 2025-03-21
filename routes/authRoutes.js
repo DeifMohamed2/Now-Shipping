@@ -11,4 +11,12 @@ router.post('/login', authController.login);
 
 router.get('/verify-email', authController.verifyEmailBytoken);
 
+router.get('/admin-login', authController.adminLogin);
+router.post('/admin-login', authController.loginAsAdmin);
+router.post('/create-admin', authController.createAdminAccount);
+
+router.get('/courier-login', authController.courierLogin);
+
+router.post('/courier-login', authController.loginAsCourier);
+
 module.exports = router; 

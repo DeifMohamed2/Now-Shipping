@@ -1,0 +1,1201 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<!-- Remix Icons -->
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<!-- Quagga JS for barcode scanning -->
+<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+
+<%- contentFor('body') %>
+<style>
+  .order-details-card {
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+
+  .order-header {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 2px solid #F39720;
+  }
+
+  .scan-box {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s;
+    background-color: #f8f9fa;
+    margin-bottom: 20px;
+  }
+
+  .scan-box:hover {
+    border-color: #F39720;
+  }
+
+  .scan-box.active {
+    border-color: #F39720;
+    background-color: #fff8e1;
+  }
+
+  #scanner-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 300px;
+    margin: 0 auto;
+    overflow: hidden;
+    display: none;
+  }
+
+  #scanner-container video {
+    width: 100%;
+    height: auto;
+  }
+
+  #scanner-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .scan-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .address-box {
+    background-color: #f8f9fa;
+    border-left: 4px solid #F39720;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+
+  .status-badge {
+    font-size: 0.85rem;
+    padding: 5px 10px;
+    border-radius: 4px;
+  }
+
+  .detail-label {
+    font-weight: 500;
+    color: #6c757d;
+    margin-bottom: 5px;
+  }
+
+  .detail-value {
+    font-weight: 600;
+    color: #212529;
+  }
+
+  .pickup-table {
+    margin-top: 20px;
+  }
+
+  .pickup-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+
+  .pickup-item {
+    transition: background-color 0.2s;
+  }
+
+  .pickup-item:hover {
+    background-color: #f9f9f9;
+  }
+
+  .btn-scan {
+    background-color: #F39720;
+    border-color: #F39720;
+  }
+
+  .btn-scan:hover {
+    background-color: #e08a1b;
+    border-color: #e08a1b;
+  }
+
+  .btn-manual {
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+
+  .btn-manual:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+  }
+
+  .btn-deliver {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+
+  .btn-deliver:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+
+  .order-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .order-actions .btn {
+    flex: 1;
+  }
+
+  .order-summary-box {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .summary-item:last-child {
+    margin-bottom: 0;
+    padding-top: 10px;
+    border-top: 1px solid #dee2e6;
+    font-weight: 600;
+  }
+
+  .product-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .product-item:last-child {
+    border-bottom: none;
+  }
+
+  .tab-content {
+    padding: 20px 0;
+  }
+
+  .nav-tabs .nav-link.active {
+    border-bottom: 2px solid #F39720;
+    color: #F39720;
+  }
+
+  .nav-tabs .nav-link {
+    color: #6c757d;
+  }
+
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .order-actions {
+      flex-direction: column;
+    }
+
+    #scanner-container {
+      height: 200px;
+    }
+  }
+</style>
+
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-header border-0">
+        <div class="row align-items-center gy-3">
+          <div class="col-sm">
+            <h5 class="card-title mb-0">Pickup Details</h5>
+          </div>
+          <div class="col-sm-auto">
+            <a href="/courier/orders" class="btn btn-outline-primary btn-sm">
+              <i class="ri-arrow-left-line me-1"></i> Back to Orders
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- Pickup Details Section -->
+        <div class="pickup-details-card mb-4">
+          <div class="order-header">
+            <div class="row align-items-center">
+              <div class="col-md-6">
+                <h5 class="mb-0">Pickup Information</h5>
+              </div>
+              <div class="col-md-6 text-md-end">
+                <span class="badge status-badge bg-primary-subtle text-primary" id="pickupStatusDisplay">Pending</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="table-responsive">
+                  <table class="table table-borderless">
+                    <tbody>
+                      <tr>
+                        <th scope="row" style="width: 40%;">Pickup Number:</th>
+                        <td >#<%= pickup.pickupNumber %></td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Business Name:</th>
+                        <td ><%= pickup.business.brandInfo.brandName %></td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Contact Person:</th>
+                        <td ><%= pickup.business.name %></td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Contact Phone:</th>
+                        <td ><%= pickup.business.phoneNumber %></td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Pickup Date:</th>
+                        <td ><%= new Date(pickup.pickupDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="address-box mb-3">
+                  <h6 class="mb-2">Pickup Address:</h6>
+                  <p id="pickupAddressDisplay" class="mb-2"><%= pickup.business.pickUpAdress.adressDetails %>, <%= pickup.business.pickUpAdress.city %></p>
+                  <a href="#" class="btn btn-sm btn-primary" >
+                    <i class="ri-map-pin-line me-1"></i> Navigate to Address
+                  </a>
+                </div>
+                <div class="mb-3">
+                  <h6 class="mb-2">Notes:</h6>
+                  <p id="pickupNotesDisplay" class="mb-0">N/A</p>
+                </div>
+                <div class="order-summary-box">
+                  <h6 class="mb-2">Pickup Summary:</h6>
+                  <div class="summary-item">
+                    <span>Number of Orders:</span>
+                    <span id="numberOfOrdersDisplay"><%= pickup.numberOfOrders %></span>
+                  </div>
+                  <div class="summary-item">
+                    <span>Total PickedUp Items:</span>
+                    <span id="totalItemsDisplay"><%= pickup.ordersPickedUp.length %></span>
+                  </div>
+                  <!-- <div class="summary-item">
+                    <span>Estimated Weight:</span>
+                    <span id="estimatedWeightDisplay">8.5 kg</span>
+                  </div> -->
+                </div>
+              </div>
+            </div>
+
+            <div class="order-actions mt-4">
+              <button class="btn btn-success" id="completePickupBtn">
+                <i class="ri-check-double-line me-1"></i> Complete Pickup
+              </button>
+              <button class="btn btn-warning" id="businessClosedBtn">
+                <i class="ri-store-2-line me-1"></i> Business Closed
+              </button>
+              <button class="btn btn-danger" id="rejectPickupBtn">
+                <i class="ri-close-circle-line me-1"></i> Reject Pickup
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scan/Manual Entry Section -->
+        <div class="scan-box" id="scanBox">
+          <div class="row">
+            <div class="col-md-6 mb-3 mb-md-0">
+              <h5><i class="ri-barcode-line me-2"></i>Scan or Enter Order ID</h5>
+              <p class="text-muted">Scan a barcode or manually enter an order ID to retrieve order details</p>
+              <div class="input-group mb-3">
+                <input type="text" class="form-control" id="orderIdInput" placeholder="Enter Pickup ID">
+                <button class="btn btn-primary" type="button" id="searchOrderBtn">
+                  <i class="ri-search-line me-1"></i> Search
+                </button>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-scan" id="startScanBtn">
+                  <i class="ri-camera-line me-1"></i> Scan Barcode
+                </button>
+                <button class="btn btn-manual" id="toggleManualBtn">
+                  <i class="ri-keyboard-line me-1"></i> Manual Entry
+                </button>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div id="scanner-container">
+                <div id="scan-overlay" class="scan-overlay" style="display: none;">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              </div>
+              <div id="manual-entry" class="text-center">
+                <img src="/assets/images/barcode-scan.svg" alt="Barcode Scan" class="img-fluid" style="max-height: 150px;">
+                <p class="mt-2 text-muted">Click "Scan Barcode" to activate camera</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Details Section -->
+        <div id="orderDetailsSection" style="display: none;">
+          <div class="order-details-card">
+            <div class="order-header">
+              <div class="row align-items-center">
+                <div class="col-md-6">
+                  <h5 class="mb-0" id="orderNumberDisplay">#12345</h5>
+                  <p class="text-muted mb-0" id="orderDateDisplay">June 23, 2023</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                  <span class="badge status-badge bg-warning-subtle text-warning" id="orderStatusDisplay">Pending</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <ul class="nav nav-tabs" id="orderDetailsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details-tab-pane" type="button" role="tab" aria-controls="details-tab-pane" aria-selected="true">
+                    <i class="ri-information-line me-1"></i> Details
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products-tab-pane" type="button" role="tab" aria-controls="products-tab-pane" aria-selected="false">
+                    <i class="ri-shopping-bag-line me-1"></i> Products
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment-tab-pane" type="button" role="tab" aria-controls="payment-tab-pane" aria-selected="false">
+                    <i class="ri-money-dollar-circle-line me-1"></i> Payment
+                  </button>
+                </li>
+              </ul>
+
+              <div class="tab-content" id="orderDetailsTabContent">
+                <!-- Details Tab -->
+                <div class="tab-pane fade show active" id="details-tab-pane" role="tabpanel" aria-labelledby="details-tab" tabindex="0">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <h6 class="mb-3">Customer Information</h6>
+                      <div class="mb-4">
+                        <p class="detail-label">Customer Name</p>
+                        <p class="detail-value" id="customerNameDisplay">John Doe</p>
+                      </div>
+                      <div class="mb-4">
+                        <p class="detail-label">Contact Information</p>
+                        <p class="detail-value" id="customerPhoneDisplay">+1 234 567 8900</p>
+                        <p class="detail-value" id="customerEmailDisplay">john.doe@example.com</p>
+                      </div>
+                      <div>
+                        <p class="detail-label">Delivery Address</p>
+                        <div class="address-box" id="deliveryAddressDisplay">
+                          123 Main Street, Apt 4B
+                          Anytown, CA 12345
+                          United States
+                        </div>
+                        <a href="#" class="btn btn-sm btn-outline-primary" id="navigateAddressBtn">
+                          <i class="ri-map-pin-line me-1"></i> Navigate to Address
+                        </a>
+                      </div>
+                    </div>
+
+                    <div class="col-md-6">
+                      <h6 class="mb-3">Order Information</h6>
+                      <div class="mb-4">
+                        <p class="detail-label">Business</p>
+                        <p class="detail-value" id="businessNameDisplay">Acme Inc</p>
+                      </div>
+                      <div class="mb-4">
+                        <p class="detail-label">Order Type</p>
+                        <p class="detail-value" id="orderTypeDisplay">Standard Delivery</p>
+                      </div>
+                      <div class="mb-4">
+                        <p class="detail-label">Delivery Notes</p>
+                        <p class="detail-value" id="deliveryNotesDisplay">Please call before delivery</p>
+                      </div>
+                      <div>
+                        <p class="detail-label">Timeline</p>
+                        <div class="timeline-item d-flex align-items-center mb-2">
+                          <div class="timeline-icon bg-primary-subtle text-primary rounded-circle p-1 me-2">
+                            <i class="ri-shopping-cart-line"></i>
+                          </div>
+                          <div>
+                            <p class="mb-0 fw-medium">Order Placed</p>
+                            <p class="text-muted small mb-0" id="orderPlacedTimeDisplay">June 23, 2023 - 10:30 AM</p>
+                          </div>
+                        </div>
+                        <div class="timeline-item d-flex align-items-center">
+                          <div class="timeline-icon bg-warning-subtle text-warning rounded-circle p-1 me-2">
+                            <i class="ri-truck-line"></i>
+                          </div>
+                          <div>
+                            <p class="mb-0 fw-medium">Assigned to Courier</p>
+                            <p class="text-muted small mb-0" id="assignedTimeDisplay">June 24, 2023 - 09:15 AM</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="order-actions mt-4">
+                    <button class="btn btn-deliver" id="deliverOrderBtn">
+                      <i class="ri-check-double-line me-1"></i> Deliver Order
+                    </button>
+                    <button class="btn btn-warning" id="customerUnavailableBtn">
+                      <i class="ri-user-unfollow-line me-1"></i> Customer Unavailable
+                    </button>
+                    <button class="btn btn-danger" id="rejectOrderBtn">
+                      <i class="ri-close-circle-line me-1"></i> Reject Order
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Products Tab -->
+                <div class="tab-pane fade" id="products-tab-pane" role="tabpanel" aria-labelledby="products-tab" tabindex="0">
+                  <div class="table-responsive">
+                    <table class="table table-borderless">
+                      <thead>
+                        <tr>
+                          <th scope="col">Product</th>
+                          <th scope="col">Quantity</th>
+                          <th scope="col">Price</th>
+                          <th scope="col">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody id="productsTableBody">
+                        <!-- Products will be inserted here dynamically -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Payment Tab -->
+                <div class="tab-pane fade" id="payment-tab-pane" role="tabpanel" aria-labelledby="payment-tab" tabindex="0">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <h6 class="mb-3">Payment Details</h6>
+                      <div class="mb-4">
+                        <p class="detail-label">Payment Method</p>
+                        <p class="detail-value" id="paymentMethodDisplay">Cash on Delivery</p>
+                      </div>
+                      <div class="mb-4">
+                        <p class="detail-label">Payment Status</p>
+                        <p class="detail-value" id="paymentStatusDisplay">
+                          <span class="badge bg-success-subtle text-success">Paid</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="col-md-6">
+                      <h6 class="mb-3">Order Summary</h6>
+                      <div class="order-summary-box">
+                        <div class="summary-item">
+                          <span>Subtotal</span>
+                          <span id="subtotalDisplay">$120.00</span>
+                        </div>
+                        <div class="summary-item">
+                          <span>Shipping</span>
+                          <span id="shippingDisplay">$10.00</span>
+                        </div>
+                        <div class="summary-item">
+                          <span>Tax</span>
+                          <span id="taxDisplay">$12.00</span>
+                        </div>
+                        <div class="summary-item">
+                          <span>Discount</span>
+                          <span id="discountDisplay">-$5.00</span>
+                        </div>
+                        <div class="summary-item">
+                          <span>Total</span>
+                          <span id="totalDisplay">$137.00</span>
+                        </div>
+                      </div>
+                      <div class="alert alert-info" id="codAlertDisplay" style="display: none;">
+                        <i class="ri-information-line me-1"></i> Please collect <strong>$137.00</strong> from the customer upon delivery.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Picked Up Orders Section -->
+        <div class="mt-4">
+          <h5 class="mb-3">Pickup Orders</h5>
+          <div class="table-responsive pickup-table">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Address To</th>
+                  <th>Order Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="pickedUpOrdersTableBody">
+                <!-- Picked up orders will be inserted here dynamically -->
+              </tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="noPickedUpOrders" style="display: none;">
+            <img src="/assets/images/empty-box.svg" alt="No Orders" style="max-height: 120px;">
+            <h6 class="mt-3">No Pickups Scanned Yet</h6>
+            <p class="text-muted">Scan or search for pickups to add them to your list</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Actions Modal -->
+<div class="modal fade" id="orderActionsModal" tabindex="-1" aria-labelledby="orderActionsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="orderActionsModalLabel">Pickup Actions Modal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="orderActionsForm">
+          <input type="hidden" id="actionOrderId" name="actionOrderId" value="">
+          <input type="hidden" id="actionType" name="actionType" value="">
+          <div class="mb-3">
+            <label for="actionReason" class="form-label">Reason</label>
+            <select class="form-select" id="actionReason" name="actionReason">
+              <option value="">Select a reason</option>
+              <option value="business_closed">Business closed</option>
+              <option value="no_packages_ready">No packages ready</option>
+              <option value="business_refused">Business refused</option>
+              <option value="wrong_address">Wrong address</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="mb-3" id="otherReasonContainer" style="display: none;">
+            <label for="otherReason" class="form-label">Specify reason</label>
+            <textarea class="form-control" id="otherReason" name="otherReason" rows="3"></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+<script>
+  // Global variables
+  let currentPickupId = null;
+  let scannedPickups = [];
+  let scanner = null;
+
+  // DOM Elements
+  const pickupIdInput = document.getElementById('orderIdInput');
+  const searchOrderBtn = document.getElementById('searchOrderBtn');
+  const startScanBtn = document.getElementById('startScanBtn');
+  const toggleManualBtn = document.getElementById('toggleManualBtn');
+  const scannerContainer = document.getElementById('scanner-container');
+  const manualEntry = document.getElementById('manual-entry');
+  const scanOverlay = document.getElementById('scan-overlay');
+  const orderDetailsSection = document.getElementById('orderDetailsSection');
+  const pickedUpOrdersTableBody = document.getElementById('pickedUpOrdersTableBody');
+  const noPickedUpOrders = document.getElementById('noPickedUpOrders');
+
+  // Event Listeners
+  document.addEventListener("DOMContentLoaded", () => {
+    // Initialize
+    loadScannedOrders();
+
+    // Search pickup button
+    searchOrderBtn.addEventListener('click', () => {
+      const pickupId = pickupIdInput.value.trim();
+      if (pickupId) {
+        fetchPickupDetails(pickupId);
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Empty Pickup ID',
+          text: 'Please enter a pickup ID to search',
+        });
+      }
+    });
+
+    // Start scan button
+    startScanBtn.addEventListener('click', toggleScanner);
+
+    // Toggle manual entry button
+    toggleManualBtn.addEventListener('click', () => {
+      if (scanner) {
+        stopScanner();
+      }
+      scannerContainer.style.display = 'none';
+      manualEntry.style.display = 'block';
+      pickupIdInput.focus();
+    });
+
+    // Pickup ID input - search on Enter key
+    pickupIdInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchOrderBtn.click();
+      }
+    });
+
+    // Action buttons
+    document.getElementById('completePickupBtn').addEventListener('click', () => {
+      if (currentPickupId) {
+        Swal.fire({
+          title: 'Confirm Pickup',
+          text: `Mark pickup #${currentPickupId} as completed?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#28a745',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Yes, complete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            updatePickupStatus(currentPickupId, 'pickedUp');
+          }
+        });
+      }
+    });
+
+    document.getElementById('businessClosedBtn').addEventListener('click', () => {
+      if (currentPickupId) {
+        showPickupActions(currentPickupId, 'rejected', 'business_closed');
+      }
+    });
+
+    document.getElementById('rejectPickupBtn').addEventListener('click', () => {
+      if (currentPickupId) {
+        showPickupActions(currentPickupId, 'rejected');
+      }
+    });
+
+    // Navigate to address button
+    document.getElementById('navigateAddressBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      const address = document.getElementById('pickupAddressDisplay').textContent.trim();
+      if (address) {
+        window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank');
+      }
+    });
+
+    // Action reason dropdown change event
+    document.getElementById('actionReason').addEventListener('change', function() {
+      const otherReasonContainer = document.getElementById('otherReasonContainer');
+      if (this.value === 'other') {
+        otherReasonContainer.style.display = 'block';
+      } else {
+        otherReasonContainer.style.display = 'none';
+      }
+    });
+
+    // Confirm action button
+    document.getElementById('confirmActionBtn').addEventListener('click', () => {
+      processPickupAction();
+    });
+  });
+
+  // Toggle barcode scanner
+  function toggleScanner() {
+    if (scanner) {
+      stopScanner();
+      return;
+    }
+
+    scannerContainer.style.display = 'block';
+    manualEntry.style.display = 'none';
+    startScanBtn.innerHTML = '<i class="ri-stop-line me-1"></i> Stop Scanning';
+    startScanBtn.classList.remove('btn-scan');
+    startScanBtn.classList.add('btn-danger');
+
+    // Initialize Quagga
+    Quagga.init({
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: scannerContainer,
+        constraints: {
+          width: 640,
+          height: 480,
+          facingMode: "environment"
+        },
+      },
+      locator: {
+        patchSize: "medium",
+        halfSample: true
+      },
+      numOfWorkers: 2,
+      decoder: {
+        readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "code_39_vin_reader", "codabar_reader", "upc_reader", "upc_e_reader"]
+      },
+      locate: true
+    }, function(err) {
+      if (err) {
+        console.error(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Camera Error',
+          text: 'Could not access the camera. Please check permissions or use manual entry.',
+        });
+        stopScanner();
+        return;
+      }
+
+      scanner = true;
+      Quagga.start();
+    });
+
+    // When a barcode is detected
+    Quagga.onDetected((result) => {
+      if (result && result.codeResult && result.codeResult.code) {
+        const code = result.codeResult.code;
+        pickupIdInput.value = code;
+
+        // Show overlay while processing
+        scanOverlay.style.display = 'flex';
+
+        // Stop scanner and fetch pickup details
+        stopScanner();
+        fetchPickupDetails(code);
+      }
+    });
+  }
+
+  // Stop barcode scanner
+  function stopScanner() {
+    if (scanner) {
+      Quagga.stop();
+      scanner = null;
+      scanOverlay.style.display = 'none';
+      startScanBtn.innerHTML = '<i class="ri-camera-line me-1"></i> Scan Barcode';
+      startScanBtn.classList.remove('btn-danger');
+      startScanBtn.classList.add('btn-scan');
+    }
+  }
+
+  // Fetch pickup details
+//   async function fetchPickupDetails(pickupId) {
+//     try {
+//       // Show loading
+//       Swal.fire({
+//         title: 'Fetching Pickup...',
+//         text: `Looking up pickup #${pickupId}`,
+//         allowOutsideClick: false,
+//         didOpen: () => {
+//           Swal.showLoading();
+//         }
+//       });
+
+//       const response = await fetch(`/courier/get-pickup-details/${pickupId}`);
+//       const pickup = await response.json();
+
+//       Swal.close();
+
+//       if (response.ok) {
+//         displayPickupDetails(pickup);
+//         currentPickupId = pickupId;
+
+//         // Add to scanned pickups if not already there
+//         if (!scannedPickups.some(p => p.pickupNumber === pickupId)) {
+//           scannedPickups.push(pickup);
+//           updateScannedPickupsTable();
+//         }
+//       } else {
+//         Swal.fire({
+//           icon: 'error',
+//           title: 'Pickup Not Found',
+//           text: pickup.message || `Could not find pickup #${pickupId}`,
+//         });
+//       }
+//     } catch (error) {
+//       console.error("Error fetching pickup details:", error);
+//       Swal.fire({
+//         icon: 'error',
+//         title: 'Error',
+//         text: 'An unexpected error occurred. Please try again.',
+//       });
+//     }
+//   }
+
+
+
+  // Display pickup details
+  function displayPickupDetails(pickup) {
+    // Show pickup details section
+    orderDetailsSection.style.display = 'block';
+
+    // Basic pickup info
+    document.getElementById('pickupNumberDisplay').textContent = `#${pickup.pickupNumber}`;
+    document.getElementById('businessNameDisplay').textContent = pickup.business?.brandInfo?.brandName || 'N/A';
+    document.getElementById('contactPersonDisplay').textContent = pickup.contactPerson || 'N/A';
+    document.getElementById('contactPhoneDisplay').textContent = pickup.phoneNumber || 'N/A';
+
+    // Format date and time
+    const pickupDate = new Date(pickup.pickupDate);
+    document.getElementById('pickupDateDisplay').textContent = pickupDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+
+    // Status
+    const statusBadge = document.getElementById('pickupStatusDisplay');
+    const status = pickup.picikupStatus || 'new';
+    statusBadge.textContent = getStatusText(status);
+
+    // Set appropriate status badge class
+    statusBadge.className = 'badge status-badge';
+    if (status.toLowerCase() === 'new' || status.toLowerCase() === 'driverassigned') {
+      statusBadge.classList.add('bg-primary-subtle', 'text-primary');
+    } else if (status.toLowerCase() === 'pickedup' || status.toLowerCase() === 'completed') {
+      statusBadge.classList.add('bg-success-subtle', 'text-success');
+    } else if (status.toLowerCase() === 'rejected' || status.toLowerCase() === 'canceled' || status.toLowerCase() === 'cancelled') {
+      statusBadge.classList.add('bg-danger-subtle', 'text-danger');
+    } else {
+      statusBadge.classList.add('bg-info-subtle', 'text-info');
+    }
+
+    // Address
+    document.getElementById('pickupAddressDisplay').textContent =
+      `${pickup.business?.pickUpAdress?.adressDetails || 'N/A'}, ${pickup.business?.pickUpAdress?.city || 'N/A'}`;
+
+    // Notes
+    document.getElementById('pickupNotesDisplay').textContent = pickup.notes || 'No special instructions';
+
+    // Summary
+    document.getElementById('numberOfOrdersDisplay').textContent = pickup.numberOfOrders || '0';
+    document.getElementById('totalItemsDisplay').textContent = pickup.totalItems || pickup.numberOfOrders || '0';
+    document.getElementById('estimatedWeightDisplay').textContent = pickup.estimatedWeight ? `${pickup.estimatedWeight} kg` : 'N/A';
+  }
+
+  // Get status text
+  function getStatusText(status) {
+    if (!status) return 'New';
+
+    switch (status.toLowerCase()) {
+      case 'new':
+        return 'New';
+      case 'driverassigned':
+        return 'Assigned';
+      case 'pickedup':
+        return 'Picked Up';
+      case 'completed':
+        return 'Completed';
+      case 'rejected':
+        return 'Rejected';
+      case 'canceled':
+      case 'cancelled':
+        return 'Canceled';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  }
+
+  // Load scanned Orders
+  function loadScannedOrders() {
+    // Try to load from localStorage
+    const savedPickups = localStorage.getItem('scannedPickups');
+    if (savedPickups) {
+      try {
+        scannedPickups = JSON.parse(savedPickups);
+        updateScannedPickupsTable();
+      } catch (e) {
+        console.error('Error loading saved pickups:', e);
+        scannedPickups = [];
+      }
+    } else {
+      scannedPickups = [];
+      updateScannedPickupsTable();
+    }
+  }
+
+  // Update scanned pickups table
+  function updateScannedPickupsTable() {
+    // Save to localStorage
+    localStorage.setItem('scannedPickups', JSON.stringify(scannedPickups));
+
+    // Update table
+    if (scannedPickups.length === 0) {
+      pickedUpOrdersTableBody.innerHTML = '';
+      noPickedUpOrders.style.display = 'block';
+      return;
+    }
+
+    noPickedUpOrders.style.display = 'none';
+    pickedUpOrdersTableBody.innerHTML = '';
+
+    scannedPickups.forEach(pickup => {
+      const row = document.createElement('tr');
+      row.className = 'pickup-item';
+
+      // Get status badge class
+      let statusClass = 'bg-primary-subtle text-primary';
+      const status = pickup.picikupStatus || 'new';
+
+      if (status.toLowerCase() === 'pickedup' || status.toLowerCase() === 'completed') {
+        statusClass = 'bg-success-subtle text-success';
+      } else if (status.toLowerCase() === 'rejected' || status.toLowerCase() === 'canceled' || status.toLowerCase() === 'cancelled') {
+        statusClass = 'bg-danger-subtle text-danger';
+      }
+
+      row.innerHTML = `
+        <td>
+          <a href="javascript:void(0);" onclick="fetchPickupDetails('${pickup.pickupNumber}')" class="fw-medium link-primary">
+            #${pickup.pickupNumber}
+          </a>
+        </td>
+        <td>${pickup.business?.brandInfo?.brandName || 'N/A'}</td>
+        <td>${pickup.business?.pickUpAdress?.city || 'N/A'}</td>
+        <td>${pickup.numberOfOrders || '0'}</td>
+        <td><span class="badge ${statusClass}">${getStatusText(status)}</span></td>
+        <td>
+          <div class="dropdown dropdown-fix">
+            <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ri-more-fill align-middle"></i>
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <button class="dropdown-item" onclick="fetchPickupDetails('${pickup.pickupNumber}')">
+                  <i class="ri-eye-fill align-bottom me-2 text-primary"></i> View Details
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" onclick="completePickup('${pickup.pickupNumber}')">
+                  <i class="ri-check-double-line align-bottom me-2 text-success"></i> Complete Pickup
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" onclick="showPickupActions('${pickup.pickupNumber}', 'rejected', 'business_closed')">
+                  <i class="ri-store-2-line align-bottom me-2 text-warning"></i> Business Closed
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" onclick="removeFromScanned('${pickup.pickupNumber}')">
+                  <i class="ri-delete-bin-6-line align-bottom me-2 text-danger"></i> Remove
+                </button>
+              </li>
+            </ul>
+          </div>
+        </td>
+      `;
+
+      pickedUpOrdersTableBody.appendChild(row);
+    });
+  }
+
+  // Remove pickup from scanned list
+  function removeFromScanned(pickupId) {
+    Swal.fire({
+      title: 'Remove Pickup?',
+      text: `Remove pickup #${pickupId} from your scanned list?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, remove it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        scannedPickups = scannedPickups.filter(pickup => pickup.pickupNumber !== pickupId);
+        updateScannedPickupsTable();
+
+        if (currentPickupId === pickupId) {
+          currentPickupId = null;
+          orderDetailsSection.style.display = 'none';
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Pickup Removed',
+          text: `Pickup #${pickupId} has been removed from your list.`,
+          timer: 1500
+        });
+      }
+    });
+  }
+
+  // Complete pickup
+  function completePickup(pickupId) {
+    Swal.fire({
+      title: 'Confirm Pickup',
+      text: `Mark pickup #${pickupId} as completed?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, complete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updatePickupStatus(pickupId, 'pickedUp');
+      }
+    });
+  }
+
+  // Show pickup actions modal
+  function showPickupActions(pickupId, actionType, defaultReason = '') {
+    document.getElementById('actionOrderId').value = pickupId;
+    document.getElementById('actionType').value = actionType;
+    document.getElementById('orderActionsModalLabel').textContent = `Actions for Pickup #${pickupId}`;
+
+    if (defaultReason) {
+      document.getElementById('actionReason').value = defaultReason;
+
+      // Show/hide other reason field
+      const otherReasonContainer = document.getElementById('otherReasonContainer');
+      otherReasonContainer.style.display = defaultReason === 'other' ? 'block' : 'none';
+    } else {
+      document.getElementById('actionReason').value = '';
+      document.getElementById('otherReasonContainer').style.display = 'none';
+    }
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('orderActionsModal'));
+    modal.show();
+  }
+
+  // Process pickup action
+  function processPickupAction() {
+    const pickupId = document.getElementById('actionOrderId').value;
+    const actionType = document.getElementById('actionType').value;
+    const reason = document.getElementById('actionReason').value;
+    const otherReason = document.getElementById('otherReason').value;
+
+    if (!reason) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Select Reason',
+        text: 'Please select a reason for this action.',
+      });
+      return;
+    }
+
+    if (reason === 'other' && !otherReason) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Specify Reason',
+        text: 'Please specify the reason for this action.',
+      });
+      return;
+    }
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('orderActionsModal'));
+    modal.hide();
+
+    // Update pickup status
+    updatePickupStatus(pickupId, actionType, reason === 'other' ? otherReason : reason);
+  }
+
+  // Update pickup status
+  async function updatePickupStatus(pickupId, status, reason = '') {
+    try {
+      // Show loading
+      Swal.fire({
+        title: 'Updating Status...',
+        text: `Updating pickup #${pickupId}`,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch('/courier/update-pickup-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pickupId,
+          status,
+          reason
+        }),
+      });
+
+      const result = await response.json();
+
+      Swal.close();
+
+      if (response.ok) {
+        // Update pickup in scanned pickups
+        const pickupIndex = scannedPickups.findIndex(pickup => pickup.pickupNumber === pickupId);
+        if (pickupIndex !== -1) {
+          scannedPickups[pickupIndex].picikupStatus = status;
+          updateScannedPickupsTable();
+        }
+
+        // Update current pickup display if it's the same pickup
+        if (currentPickupId === pickupId) {
+          const statusBadge = document.getElementById('pickupStatusDisplay');
+          statusBadge.textContent = getStatusText(status);
+
+          // Update badge class
+          statusBadge.className = 'badge status-badge';
+          if (status === 'pickedUp' || status === 'completed') {
+            statusBadge.classList.add('bg-success-subtle', 'text-success');
+          } else if (status === 'rejected') {
+            statusBadge.classList.add('bg-danger-subtle', 'text-danger');
+          } else {
+            statusBadge.classList.add('bg-primary-subtle', 'text-primary');
+          }
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated',
+          text: result.message || 'Pickup status has been updated successfully.',
+          timer: 1500
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: result.message || 'Failed to update pickup status.',
+        });
+      }
+    } catch (error) {
+      console.error('Error updating pickup status:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'An unexpected error occurred. Please try again.',
+      });
+    }
+  }
+
+  // Make functions available globally
+  window.fetchPickupDetails = fetchPickupDetails;
+  window.completePickup = completePickup;
+  window.showPickupActions = showPickupActions;
+  window.removeFromScanned = removeFromScanned;
+</script>

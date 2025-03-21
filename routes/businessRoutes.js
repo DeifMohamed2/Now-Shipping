@@ -4,6 +4,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const jwtSecret = process.env.JWT_SECRET;
+
+const businessController = require('../controllers/businessController.js');
+
 async function authenticateUser(req, res, next) {
   const token = req.cookies.token;
   if (!token) {
@@ -16,10 +19,10 @@ async function authenticateUser(req, res, next) {
     req.userId = decode.userId;
     const user = await User.findOne({ _id: decode.userId });
     req.userData = user; // Attach user data to request object
-    // if(!user.role){
-    //   res.clearCookie('token');
-    //   return res.status(401).redirect('../login');
-    // }
+    if(!user){
+      res.clearCookie('token');
+      return res.status(401).redirect('/login');
+    }
 
     next(); // Move to the next middleware
   } catch (error) {
@@ -29,32 +32,53 @@ async function authenticateUser(req, res, next) {
 }
 
 
-// Load controller
-
-const businessController = require('../controllers/businessController.js');
+router.use(authenticateUser);
 
 // Define routes
 //dashboard
-router.get('/dashboard',authenticateUser, businessController.getDashboardPage);
-router.post('/completionConfirm', authenticateUser , businessController.completionConfirm);
+router.get('/dashboard', businessController.getDashboardPage);
+router.post('/completionConfirm' , businessController.completionConfirm);
 
 
+//orders
+router.get('/orders', businessController.get_ordersPage);
 
-router.get('/orders',authenticateUser, businessController.get_ordersPage);
-router.get('/get-orders', authenticateUser, businessController.get_orders);
-router.get('/create-order'  , authenticateUser ,businessController.get_createOrderPage);
-router.post('/submit-order', authenticateUser, businessController.submitOrder);
-router.post('/orders/print-policy/:orderNumber/:pageSize', authenticateUser, businessController.printPolicy);
+router.get('/get-orders', businessController.get_orders);
+
+router.get('/create-order'  ,businessController.get_createOrderPage);
+
+router.post('/submit-order', businessController.submitOrder);
+
+router.post('/orders/print-policy/:orderNumber/:pageSize', businessController.printPolicy);
+
 router.get('/order-details/:orderNumber', businessController.get_orderDetailsPage);
-router.get('/edit-order/:orderNumber', authenticateUser, businessController.get_editOrderPage);
-router.put('/orders/edit-order/:orderId', authenticateUser, businessController.editOrder);
-router.delete('/orders/delete-order/:orderId', authenticateUser, businessController.deleteOrder);
+
+router.get('/edit-order/:orderNumber', businessController.get_editOrderPage);
+
+router.put('/orders/edit-order/:orderId', businessController.editOrder);
+
+router.delete('/orders/delete-order/:orderId', businessController.deleteOrder);
 
 
-router.get('/pickup', authenticateUser, businessController.get_pickupPage);
-router.get('/wallet/overview',authenticateUser, businessController.get_walletOverviewPage);
+// pickups
+router.get('/pickups', businessController.get_pickupPage);
+
+router.get('/get-pickups', businessController.get_pickups);
+
+router.get('/pickup-details/:pickupNumber', businessController.get_pickupDetailsPage);
+
+router.get('/pickup-details/:pickupNumber/get-pickedup-orders', businessController.get_pickedupOrders);
+
+router.post('/pickup-details/:pickupNumber/rate-pickup', businessController.ratePickup);
+
+router.post('/pickup/create-pickup', businessController.createPickup);
+
+router.delete('/pickup/delete-pickup/:pickupId', businessController.deletePickup);
+
+
+
+router.get('/wallet/overview', businessController.get_walletOverviewPage);
 router.get('/wallet/transactions', businessController.get_walletTransactionsPage);
 router.get('/shop', businessController.get_shopPage);
-router.get('/pickup-details', businessController.get_pickupDetailsPage);
 
 module.exports = router;

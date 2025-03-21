@@ -1,4 +1,3 @@
-const e = require('connect-flash');
 const mongoose = require('mongoose');
 
 const stageSchema = new mongoose.Schema({
@@ -37,6 +36,19 @@ const orderSchema = new mongoose.Schema({
   orderStatus: {
     type: String,
     required: true,
+    enum: [
+      'new',
+      'pickedUp',
+      'inStock',
+      'inProgress',
+      'headingToCustomer',
+      'headingToYou',
+      'completed',
+      'canceled',
+      'rejected',
+      'returned',
+      'terminated',
+    ],
   },
   orderCustomer: {
     fullName: {
@@ -86,11 +98,12 @@ const orderSchema = new mongoose.Schema({
     orderType: {
       type: String,
       required: true,
+      enum: ['Deliver', 'Return', 'Exchange', 'CashCollection'],
     },
     amountType: {
       type: String,
       required: true,
-      enum: ['COD', 'CD', 'CC',"NA"], // COD for Cash On Delvirt and CD for Cash Differnce and CC for Cash Collection
+      enum: ['COD', 'CD', 'CC', 'NA'], // COD for Cash On Delvirt and CD for Cash Differnce and CC for Cash Collection
     },
     amount: {
       type: Number,
@@ -112,6 +125,11 @@ const orderSchema = new mongoose.Schema({
   orderStages: {
     type: [stageSchema],
     required: true,
+  },
+  deliveryMan: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'courier',
+    required: false,
   },
   business: {
     type: mongoose.Schema.Types.ObjectId,

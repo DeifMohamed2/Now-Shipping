@@ -358,10 +358,15 @@
   <div class="row">
     <div class="col-md-12 mb-4">
       <div class="d-flex align-items-center justify-content-between">
-        <h4 class="section-title mb-0">Pickup Details</h4>
-        <button type="button" class="btn btn-danger" onclick="cancelPickup('<%= pickup._id %>')">
-          <i class="ri-delete-bin-6-line me-1"></i> Cancel Pickup
+      <h4 class="section-title mb-0">Pickup Details</h4>
+      <div>
+        <button type="button" class="btn btn-danger me-2" onclick="cancelPickup('<%= pickup._id %>')">
+        <i class="ri-delete-bin-6-line me-1"></i> Cancel Pickup
         </button>
+        <button type="button" class="btn btn-danger" style="background-color: #f10000b9; border-color: #ea3737ca;" onclick="deletePickup('<%= pickup._id %>')">
+        <i class="ri-delete-bin-6-line me-1"></i> Delete Pickup
+        </button>
+      </div>
       </div>
     </div>
 
@@ -396,7 +401,7 @@
                   </td>
                   <td>
                   <h6 class="fs-14 mb-1 text-muted">Pickup Status</h6>
-                  <p class="mb-0"><span class="badge bg-success"><%= pickup.picikupStatus %></span></p>
+                  <p class="mb-0" id="pickupStatus" ><span class="badge bg-success"></span></p>
                   </td>
                 </tr>
                 <tr>
@@ -450,7 +455,7 @@
                   </td>
                   <td>
                     <h6 class="fs-14 mb-1 text-muted">Vehicle Type</h6>
-                    <p class="mb-0">Delivery Van</p>
+                    <p class="mb-0"><%= pickup.assignedDriver ? pickup.assignedDriver.vehicleType : 'N/A' %></p>
                   </td>
                 </tr>
                 <tr>
@@ -469,8 +474,6 @@
                  <div id="driver-rater" dir="ltr"></div>
                  <input type="hidden" id="driverRating" name="driverRating" value="<%= pickup.driverRating %>">
                  <% if (!pickup.pickupStages[4]) { %>
-                 <!-- Not in the final stage -->
-                 <p class="text-muted fs-12">You can rate the driver after the pickup is completed.</p>
                  <% } %>
                </td>
                <td>
@@ -478,19 +481,10 @@
                  <div id="service-rater" dir="ltr"></div>
                  <input type="hidden" id="pickupRating" name="pickupRating" value="<%= pickup.pickupRating %>">
                  <% if (!pickup.pickupStages[4]) { %>
-                 <!-- Not in the final stage -->
-                 <p class="text-muted fs-12">You can rate the service after the pickup is completed.</p>
                  <% } %>
                </td>
             
              </tr>
-            <tr>
-              <td colspan="2" class="text-center">
-                <button type="button" class="btn btn-primary" id="submitRating" onclick="submitRating()">
-                  Submit Rating
-                </button>
-              </td>
-            </tr>
 
               </tbody>
             </table>
@@ -572,71 +566,7 @@
                 </tr>
               </thead>
               <tbody id="TBody">
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option1">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0001</a></td>
-                  <td>Deliver</td>
-                  <td><span class="badge bg-success">Completed</span></td>
-                  <td>New York</td>
-                  <td>$120.00</td>
-               
-                </tr>
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option2">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0002</a></td>
-                  <td>Exchange</td>
-                  <td><span class="badge bg-success">Completed</span></td>
-                  <td>New York</td>
-                  <td>$89.50</td>
-                
-                </tr>
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option3">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0003</a></td>
-                  <td>Return</td>
-                  <td><span class="badge bg-success">Completed</span></td>
-                  <td>New York</td>
-                  <td>$45.00</td>
-                 
-                </tr>
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option4">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0004</a></td>
-                  <td>Cash Collection</td>
-                  <td><span class="badge bg-warning">Pending</span></td>
-                  <td>New York</td>
-                  <td>$200.00</td>
-              
-                </tr>
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option5">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0005</a></td>
-                  <td>Deliver</td>
-                  <td><span class="badge bg-warning">Pending</span></td>
-                  <td>New York</td>
-                  <td>$75.00</td>
-               
-                </tr>
+         
               </tbody>
             </table>
             <div class="noresult" style="display: none">
@@ -696,7 +626,7 @@ document.addEventListener('DOMContentLoaded', function() {
     starSize: 22,
     rating: driverRating,
     element: document.querySelector("#driver-rater"),
-    readOnly: isDriverRated || isFinalStage,
+    readOnly: true,
     rateCallback: function(rate, done) {
       if (!isDriverRated) {
         this.setRating(rate);
@@ -714,7 +644,7 @@ document.addEventListener('DOMContentLoaded', function() {
     starSize: 22,
     rating: pickupRating,
     element: document.querySelector("#service-rater"),
-    readOnly: isPickupRated || isFinalStage,
+    readOnly: true ,
     rateCallback: function(rate, done) {
       if (!isPickupRated) {
         this.setRating(rate);
@@ -754,7 +684,7 @@ async function submitRating() {
   }
 
   try {
-    const response = await fetch(`/business/pickup-details/${pickupNumber}/rate-pickup`, {
+    const response = await fetch(`/admin/pickup-details/${pickupNumber}/rate-pickup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -803,7 +733,7 @@ async function fetchOrders(search = "") {
         </tr>
       `;
    
-      const response = await fetch(`/business/pickup-details/<%= pickup.pickupNumber %>/get-pickedup-orders?search=${search}`);
+      const response = await fetch(`/admin/pickup-details/<%= pickup.pickupNumber %>/get-pickedup-orders?search=${search}`);
       const pickup = await response.json();
       if (response.ok) {
         tableBody.innerHTML = ""; // Clear existing rows
@@ -862,9 +792,9 @@ async function cancelPickup(pickupId) {
   .then(async (result) => {
     if (result.isConfirmed) {
       const response = await fetch(
-        `/business/delete-pickup/${pickupId}`,
+        `/admin/cancel-pickup/${pickupId}`,
         {
-          method: 'DELETE',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -878,7 +808,7 @@ async function cancelPickup(pickupId) {
           icon: 'success',
           confirmButtonText: 'OK',
         }).then(() => {
-          window.location.href = '/business/pickups';
+          window.location.href = '/admin/pickups';
         });
       }
     }
@@ -893,6 +823,105 @@ async function cancelPickup(pickupId) {
     });
   });
 }
+
+
+async function deletePickup(pickupId) {
+  Swal.fire({
+    title: 'Are you sure you want to delete this pickup?',
+    text: "This action cannot be undone!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, delete it!',
+  })
+  .then(async (result) => {
+    if (result.isConfirmed) {
+      const response = await fetch(
+        `/admin/delete-pickup/${pickupId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Your pickup has been deleted.',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        }).then(() => {
+          window.location.href = '/admin/pickups';
+        });
+      }
+    }
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+    Swal.fire({
+      title: 'Error!',
+      text: 'There was an error deleting the pickup. Please try again later.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+    });
+  });
+}
+
+
+  function getPickupStatusDetails(status) {
+    let badgeClass = '';
+    let statusText = '';
+
+    if (status === 'new') {
+      badgeClass = 'bg-primary-subtle text-primary';
+      statusText = 'New';
+    } else if (status === 'driverAssigned') {
+      badgeClass = 'bg-secondary-subtle text-secondary';
+      statusText = 'Driver Assigned';
+    } else if (status === 'pickedUp') {
+      badgeClass = 'bg-info-subtle text-info';
+      statusText = 'Picked Up';
+    } else if (status === 'inStock') {
+      badgeClass = 'bg-warning-subtle text-warning';
+      statusText = 'In Stock';
+    } else if (status === 'inProgress') {
+      badgeClass = 'bg-success-subtle text-success';
+      statusText = 'In Progress';
+    } else if (status === 'completed') {
+      badgeClass = 'bg-success-subtle text-success';
+      statusText = 'Completed';
+    } else if (status === 'canceled') {
+      badgeClass = 'bg-danger-subtle text-danger';
+      statusText = 'Canceled';
+    } else if (status === 'rejected') {
+      badgeClass = 'bg-danger-subtle text-danger';
+      statusText = 'Rejected';
+    } else if (status === 'returned') {
+      badgeClass = 'bg-danger-subtle text-danger';
+      statusText = 'Returned';
+    } else if (status === 'terminated') {
+      badgeClass = 'bg-danger-subtle text-danger';
+      statusText = 'Terminated';
+    } else {
+      statusText = 'Unknown';
+    }
+
+    return { badgeClass, statusText };
+  }
+
+  // Update pickup status badge
+  document.addEventListener('DOMContentLoaded', function() {
+    const pickupStatus = '<%= pickup.picikupStatus %>';
+    console.log(pickupStatus);
+    const { badgeClass, statusText } = getPickupStatusDetails(pickupStatus);
+    const pickupStatusElement = document.getElementById('pickupStatus').querySelector('.badge');
+    pickupStatusElement.className = `badge ${badgeClass}`;
+    pickupStatusElement.textContent = statusText;
+  });
+
 
 
 

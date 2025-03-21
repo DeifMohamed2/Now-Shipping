@@ -7,6 +7,8 @@ const app = express();
 const path = require('path');
 
 // Routes
+const adminRouter = require('./routes/adminRoutes');
+const courierRouter = require('./routes/courierRoutes');
 const businessRouter = require('./routes/businessRoutes');
 const manageRouter = require('./routes/manageRoutes');
 const authRouter = require('./routes/authRoutes');
@@ -38,9 +40,11 @@ app.use(session({
 app.use(cookieParser());
 
 app.use((req, res, next) => {
-    if (req.path.startsWith('/manage')) {
-        app.set('layout', 'layouts/manage-layout');
-    } else {
+    if (req.path.startsWith('/admin')) {
+        app.set('layout', 'layouts/admin-layout');
+    }  else if (req.path.startsWith('/courier')) {
+        app.set('layout', 'layouts/courier-layout');
+    } else if (req.path.startsWith('/business')) {
         app.set('layout', 'layouts/layout');
     }
     next();
@@ -85,8 +89,10 @@ app.use((err, req, res, next) => {
 
 // Define All Route 
 app.use('/', authRouter);
+app.use('/admin', adminRouter);
 app.use('/business', businessRouter);
 app.use('/manage', manageRouter);
+app.use('/courier', courierRouter);
 
 app.all("*", function (req, res) {
     res.locals = {

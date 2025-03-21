@@ -2,6 +2,7 @@ const PDFDocument = require('pdfkit');
 
 const User = require('../models/user');
 const Order = require('../models/order');
+const Pickup = require('../models/pickup');
 //================================================ Dashboard  ================================================= //
 const getDashboardPage = (req, res) => {
   
@@ -156,7 +157,6 @@ const get_orders = async (req, res) => {
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 };
-
 
 
 const get_createOrderPage = (req, res) => {
@@ -444,6 +444,8 @@ const get_orderDetailsPage = async(req, res) => {
   .findOne({ orderNumber })
   .populate('business');
 
+
+  
   if (!order) {
     res.render('business/order-details', {
       title: 'Order Details',
@@ -452,6 +454,16 @@ const get_orderDetailsPage = async(req, res) => {
       order: null,
     });
     return;
+  }
+
+  if(order.business._id.toString() !== req.userData._id.toString()){
+       res.render('business/order-details', {
+         title: 'Order Details',
+         page_title: 'Order Details',
+         folder: 'Pages',
+         order: null,
+       });
+       return;
   }
 
   console.log(order);
@@ -562,17 +574,187 @@ const printPolicy = async (req, res) => {
 
 //================================================END Orders  ================================================= //
 
+//================================================ Pickup ================================================= //
 
 
 const get_pickupPage = (req, res) => {
   res.render('business/pickup' , {
     title: "Pickup",
     page_title: 'Pickup',
-    folder: 'Pages'
-   
+    folder: 'Pages',
+    userData: req.userData
   });
   
 }
+
+const get_pickupDetailsPage = async(req, res) => {
+  const { pickupNumber } = req.params;  
+
+  const pickup = await Pickup.findOne({ pickupNumber }).populate('business');
+
+  if (!pickup) {
+    res.render('business/pickup-details', {
+      title: 'Pickup Details',
+      page_title: 'Pickup Details',
+      folder: 'Pages',
+      pickup: null,
+    });
+    return;
+  }
+
+  res.render('business/pickup-details', {
+    title: 'Pickup Details',
+    page_title: 'Pickup Details',
+    folder: 'Pages',
+    pickup,
+  });
+};
+
+
+const get_pickedupOrders = async (req, res) => {
+  const { pickupNumber } = req.params;
+  const {search} = req.query;
+  try {
+    const pickedUpOrders = await Pickup.findOne(
+      { pickupNumber },
+      { 'ordersPickedUp': 1 }
+    )
+      .populate({
+      path: 'ordersPickedUp',
+      match: search ? { orderNumber: search } : {}
+      });
+
+    if (!pickedUpOrders) {
+      return res.status(404).json({ error: 'Pickup not found' });
+    }
+
+    console.log(pickedUpOrders);
+    res.status(200).json(pickedUpOrders || []);
+
+  } catch (error) {
+    console.error('Error in get_pickedupOrders:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
+const createPickup = async (req, res) => {
+  const {
+    numberOfOrders,
+    pickupDate,
+    phoneNumber,
+    isFragileItems,
+    isLargeItems,
+    pickupNotes,
+  } = req.body;
+
+  try {
+
+    // ✅ 1. Validate required fields
+    if (!numberOfOrders || !pickupDate || !phoneNumber) {
+      return res.status(400).json({ error: 'All pickup info fields are required.' });
+    }
+    console.log(req.body);
+    // ✅ 2. Create Pickup
+    const newPickup = new Pickup({
+      business: req.userData._id,
+      pickupNumber: `${
+        Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000
+      }`,
+      business: req.userData._id,
+      numberOfOrders,
+      pickupDate,
+      phoneNumber,
+      isFragileItems: isFragileItems === 'true',
+      isLargeItems: isLargeItems === 'true',
+      picikupStatus: 'new',
+      pickupNotes,
+    });
+    newPickup.pickupStages.push({
+      stageName: 'Pickup Created',
+      stageDate: new Date(),
+      stageNotes: [{ text: 'Pickup has been created.', date: new Date() }],
+    });
+
+
+    const savedPickup = await newPickup.save();
+    res.status(201).json({ message: 'Pickup created successfully.', pickup: savedPickup });
+  } catch (error) {
+    console.error('Error in createPickup:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+const get_pickups = async (req, res) => {
+  try {
+    const { pickupType } = req.query;
+    let pickups = [];
+    if (pickupType === 'Upcoming') {
+      pickups = await Pickup.find({
+        business: req.userData._id,
+        picikupStatus: { $ne: 'Completed' },
+      })
+        .populate('business')
+        .populate('assignedDriver');
+      
+    } else if (pickupType === 'Completed') {
+      pickups = await Pickup.find({
+        business: req.userData._id,
+        picikupStatus: 'Completed',
+      }).populate('business')
+       .populate('assignedDriver');
+    }
+ 
+    res.status(200).json(pickups || []);
+  } catch (error) {
+    console.error('Error in pickups:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+const ratePickup = async (req, res) => {
+  const { pickupNumber } = req.params;
+  const { driverRating,pickupRating, } = req.body;
+
+  try {
+    const pickup = await Pickup.findOne({ pickupNumber  });
+
+    if (!pickup) {
+      return res.status(404).json({ error: 'Pickup not found' });
+    }
+
+    pickup.driverRating = driverRating;
+    pickup.pickupRating = pickupRating;
+
+    const updatedPickup = await pickup.save();
+
+    res.status(200).json({ message: 'Pickup rated successfully.', pickup: updatedPickup });
+  }
+  catch (error) {
+    console.error('Error in ratePickup:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+
+};
+
+const deletePickup  = async (req, res) => {
+  const { pickupId } = req.params;
+
+  try {
+    const deletedPickup = await Pickup.findByIdAndDelete(pickupId);
+
+    if (!deletedPickup) {
+      return res.status(404).json({ error: 'Pickup not found' });
+    }
+
+    res.status(200).json({ message: 'Pickup deleted successfully.' });
+  } catch (error) {
+    console.error('Error in deletePickup:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+
+//================================================END Pickup  ================================================= //
 
 
 const get_walletOverviewPage  = (req, res) => {
@@ -607,22 +789,13 @@ const get_shopPage = (req, res) => {
 
 
 
-const get_pickupDetailsPage = (req, res) => {
-  res.render('business/pickup-details' , {
-    title: "Pickup Details",
-    page_title: 'Pickup Details',
-    folder: 'Pages'
-   
-  });
-  
-}
 
 
 module.exports = {
   getDashboardPage,
   completionConfirm,
 
-
+  // Orders
   get_ordersPage,
   get_orders,
   get_createOrderPage,
@@ -633,9 +806,16 @@ module.exports = {
   deleteOrder,
   printPolicy,
 
+  // Pickup
   get_pickupPage,
+  get_pickups,
+  get_pickupDetailsPage,
+  get_pickedupOrders,
+  ratePickup,
+  createPickup,
+  deletePickup,
+
   get_walletOverviewPage,
   get_walletTransactionsPage,
   get_shopPage,
-  get_pickupDetailsPage,
 };
