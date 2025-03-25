@@ -13,11 +13,11 @@ const stageSchema = new mongoose.Schema({
     stageNotes: [{
         text: {
             type: String,
-            required: true
+            required: false
         },
         date: {
             type: Date,
-            required: true,
+            required: false,
             default: Date.now
         }
     }]
@@ -31,6 +31,10 @@ const orderSchema = new mongoose.Schema({
   },
   orderDate: {
     type: Date,
+    required: true,
+  },
+  orderFees: {
+    type: Number,
     required: true,
   },
   orderStatus: {
@@ -50,6 +54,17 @@ const orderSchema = new mongoose.Schema({
       'terminated',
     ],
   },
+  orderStatusHistory: [{
+    status: {
+      type: String,
+      required: true,
+    },
+    date: { 
+      type: Date,
+      required: true,
+      default: Date.now
+    },
+  }],
   orderCustomer: {
     fullName: {
       type: String,
@@ -136,8 +151,110 @@ const orderSchema = new mongoose.Schema({
     ref: 'users',
     required: true,
   },
+
+  orderFullyCompleted: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+
+
+
+  completedDate: {
+    type: Date,
+    required: false,
+  },
+
+  moneyReleaseDate: {
+    type: Date,
+    required: false,
+  },
+
 });
 
-const Order = mongoose.model('Order', orderSchema);
+
+
+// Middleware to check pickup status when order status changes to inStock
+orderSchema.post('save', async function() {
+    console.log('order status is inStock', this.orderStatus);
+    // Only proceed if orderStatus is 'inStock'
+    if (this.orderStatus === 'inStock') {
+        try {
+            console.log('order status is inStock', this.orderStatus);
+            // Find pickup that contains this order in ordersPickedUp
+            const pickup = await mongoose.model('Pickup').findOne({
+                ordersPickedUp: this._id
+            });
+
+            console.log('pickup', pickup);
+
+            if (pickup) {
+                // Get all orders referenced in this pickup
+                const orders = await mongoose.model('order').find({
+                    _id: { $in: pickup.ordersPickedUp }
+                });
+
+                console.log('orders', orders);
+
+                // Check if all orders are now in stock
+                const allOrdersInStock = orders.every(order => order.orderStatus === 'inStock');
+
+                // If all orders are in stock, update pickup status to completed
+                if (allOrdersInStock) {
+                    pickup.picikupStatus = 'completed';
+                    pickup.pickupStages.push({
+                        stageName: 'completed',
+                        stageDate: new Date(),
+                        stageNotes: [{
+                            text: 'All orders from this pickup are now in stock',
+                            date: new Date()
+                        }]
+                    });
+                    await pickup.save();
+                }
+            }
+        } catch (error) {
+            console.error('Error in order post-save middleware:', error);
+        }
+    }
+});
+
+orderSchema.post('save', async function(doc, next) {
+  if (this.isModified('orderStatus')) {
+    this.orderStatusHistory.push({
+      status: this.orderStatus,
+      date: new Date()
+    });
+    await this.save();
+  }
+  next();
+});
+
+
+// Set money release date to next Wednesday when order is completed
+orderSchema.post('save', async function(doc, next) {
+  if (this.orderStatus === 'completed' && !this.moneyReleaseDate) {
+    const completionDate = new Date();
+    const dayOfWeek = completionDate.getDay(); // 0 = Sunday, 3 = Wednesday
+    const daysUntilWednesday = (3 - dayOfWeek + 7) % 7; // Calculate days until next Wednesday
+    
+    const releaseDate = new Date(completionDate);
+    if (dayOfWeek === 3) { // If today is Wednesday
+      releaseDate.setDate(releaseDate.getDate() + 7); // Set to next Wednesday
+    } else if (daysUntilWednesday > 0) {
+      releaseDate.setDate(releaseDate.getDate() + daysUntilWednesday);
+    }
+    
+    this.moneyReleaseDate = releaseDate;
+    this.completedDate = new Date();
+    await this.save();
+  }
+  next();
+});
+
+
+
+
+const Order = mongoose.model('order', orderSchema);
 
 module.exports = Order;

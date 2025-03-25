@@ -76,9 +76,23 @@ router.post('/pickup/create-pickup', businessController.createPickup);
 router.delete('/pickup/delete-pickup/:pickupId', businessController.deletePickup);
 
 
-
+//wallet
 router.get('/wallet/overview', businessController.get_walletOverviewPage);
+
+router.get('/wallet/get-wallet-Overview-data', businessController.get_walletOverviewData);
+
 router.get('/wallet/transactions', businessController.get_walletTransactionsPage);
+
+
+
+
 router.get('/shop', businessController.get_shopPage);
+
+
+
+
+
+//logout
+router.get('/logout', businessController.logOut);
 
 module.exports = router;

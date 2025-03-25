@@ -416,7 +416,12 @@
         <td class="status">
             <span class="badge text-uppercase fs-6 ${getStatusDetails(order.orderStatus).badgeClass}">${getStatusDetails(order.orderStatus).statusText}</span>
         </td>
-        <td class="assign_to">${order.deliveryMan ? order.deliveryMan.fullName : 'N/A'}</td>
+        <td class="assign_to">
+          ${order.deliveryMan ? `
+            <div class="fw-bold">${order.deliveryMan.name}</div>
+            <div class="text-muted small">#${order.deliveryMan.courierID}</div>
+          ` : 'N/A'}
+        </td>
         <td class="date">${new Date(order.orderDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
         <td>
           <div class="dropdown dropdown-fix">
@@ -424,7 +429,9 @@
               <i class="ri-more-fill align-middle"></i>
             </button>
             <ul class="dropdown-menu">
-                <li><button class="dropdown-item" onclick="assignDeliveryMan('${order.orderNumber}','${order.orderCustomer.zone}')" data-bs-toggle="modal" data-bs-target="#assignDeliveryManModal"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span></button></li>
+                ${order.orderStatus === 'pickedUp' ? 
+                  `<li><button class="dropdown-item" onclick="assignDeliveryMan('${order.orderNumber}','${order.orderCustomer.zone}')" data-bs-toggle="modal" data-bs-target="#assignDeliveryManModal"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span></button></li>` 
+                  : ''}
                 <li><a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
                 <i class="ri-edit-2-fill align-bottom me-2 text-warning"></i> <span class="fs-6">Edit Order</span>
               </a></li>

@@ -1,183 +1,598 @@
 <%- contentFor('HeaderCss') %>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="/assets/rCSS/business.css">
+<style>
+  .card-animate {
+    transition: all 0.4s;
+  }
+  .card-animate:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  .stat-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+  }
+  .dashboard-card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  .table-container {
+    border-radius: 0px;
+    overflow: scroll;
+  }
+  .table thead th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+  .badge-status {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-weight: 500;
+  }
+  .filter-section {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .time-filter-btn {
+    border-radius: 6px;
+    padding: 8px 15px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-right: 8px;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    color: #495057;
+  }
+  .time-filter-btn.active {
+    background-color: #405189;
+    color: #fff;
+    border-color: #405189;
+  }
+</style>
 <%- contentFor('body') %>
-<div class="row">
-  <div class="col-xl-3 col-md-6">
-    <!-- card -->
-    <div class="card card-animate">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="flex-grow-1">
-            <h4 class="text-uppercase fw-large  mb-0">Total Income </h4>
-          </div>
-      
-        </div>
-        <div class="d-flex align-items-end justify-content-between mt-4">
-          <div>
-            <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span class="counter-value" data-target="559.25">0</span>k</h4>
-            <span class="badge bg-warning me-1">2,258</span> <span class="text-muted">Invoices sent</span>
-          </div>
-          <div class="avatar-sm flex-shrink-0">
-            <span class="avatar-title bg-light rounded fs-3">
-              <i data-feather="file-text" class="text-success icon-dual-success"></i>
-            </span>
-          </div>
-        </div>
-      </div><!-- end card body -->
-    </div><!-- end card -->
-  </div><!-- end col -->
-
-  <div class="col-xl-3 col-md-6">
-    <!-- card -->
-    <div class="card card-animate">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="flex-grow-1">
-            <h4 class="text-uppercase fw-large  mb-0">Fees </h4>
-          </div>
-   
-        </div>
-        <div class="d-flex align-items-end justify-content-between mt-4">
-          <div>
-            <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span class="counter-value" data-target="409.66">0</span>k</h4>
-            <span class="badge bg-warning me-1">1,958</span> <span class="text-muted">Paid by clients</span>
-          </div>
-          <div class="avatar-sm flex-shrink-0">
-            <span class="avatar-title bg-light rounded fs-3">
-              <i data-feather="check-square" class="text-success icon-dual-success"></i>
-            </span>
-          </div>
-        </div>
-      </div><!-- end card body -->
-    </div><!-- end card -->
-  </div><!-- end col -->
-
-
-</div> <!-- end row-->
-
-<div class="row">
-  <div class="col-lg-12">
-    <div class="card" id="invoiceList">
-      <div class="card-header border-0">
-        <div class="d-flex align-items-center">
-          <h5 class="card-title mb-0 flex-grow-1">Invoices</h5>
-     
+<!-- Page Title -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <h4 class="fw-bold mb-0">Transaction Dashboard</h4>
+        <p class="text-muted mb-0">Monitor your orders, transactions and fees</p>
+      </div>
+      <div class="d-flex">
+        <div class="btn-group" role="group">
+          <button type="button" class="time-filter-btn" data-period="today">Today</button>
+          <button type="button" class="time-filter-btn active" data-period="week">This Week</button>
+          <button type="button" class="time-filter-btn" data-period="month">This Month</button>
+          <button type="button" class="time-filter-btn" data-period="year">This Year</button>
+          <button type="button" class="time-filter-btn" data-period="all">All Time</button>
         </div>
       </div>
-      <div class="card-body bg-light-subtle border border-dashed border-start-0 border-end-0">
-        <form>
-          <div class="row g-3">
-                     <div class="col-xxl-3 col-sm-4">
-              <input type="text" class="form-control bg-light border-light" id="datepicker-range" placeholder="Select date">
+    </div>
+  </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row">
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate dashboard-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0">Total Income</h5>
+          </div>
+          <div class="stat-icon bg-soft-primary">
+            <i data-feather="dollar-sign" class="text-primary"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div>
+            <h2 class="fw-bold mb-2"><span class="counter-value" id="totalIncome">559.25</span>EGP</h2>
+            <div class="d-flex align-items-center">
+              <!-- <span class="badge bg-soft-success text-success me-2"><i class="ri-arrow-up-line align-middle"></i> 8.2%</span> -->
+              <!-- <span class="text-muted fs-13">from last period</span> -->
             </div>
-            <!--end col-->
+          </div>
+        </div>
+        <div class="mt-3 pt-2 border-top">
+          <!-- <span class="badge bg-soft-warning text-warning me-1">2,258</span> -->
+          <!-- <span class="text-muted">Invoices sent</span> -->
+        </div>
+      </div>
+    </div>  
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate dashboard-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0">Total Fees</h5>
+          </div>
+          <div class="stat-icon bg-soft-success">
+            <i data-feather="check-circle" class="text-success"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div>
+            <h2 class="fw-bold mb-2"><span class="counter-value" id="totalFees"></span>EGP</h2>
+            <div class="d-flex align-items-center">
+              <!-- <span class="badge bg-soft-success text-success me-2"><i class="ri-arrow-up-line align-middle"></i> 5.4%</span> -->
+              <!-- <span class="text-muted fs-13">from last period</span> -->
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2 border-top">
+          <!-- <span class="badge bg-soft-warning text-warning me-1">1,958</span> -->
+          <!-- <span class="text-muted">Paid by clients</span> -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate dashboard-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0">Pending Orders</h5>
+          </div>
+          <div class="stat-icon bg-soft-warning">
+            <i data-feather="clock" class="text-warning"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div>
+            <h2 class="fw-bold mb-2"><span class="counter-value"  id="inProgressCount"></span></h2>
+            <div class="d-flex align-items-center">
+              <!-- <span class="badge bg-soft-danger text-danger me-2"><i class="ri-arrow-down-line align-middle"></i> 2.8%</span> -->
+              <!-- <span class="text-muted fs-13">from last period</span> -->
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2 border-top">
+          <!-- <span class="badge bg-soft-info text-info me-1">124.32EGP</span> -->
+          <!-- <span class="text-muted">Pending value</span> -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate dashboard-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0">Completed Orders</h5>
+          </div>
+          <div class="stat-icon bg-soft-info">
+            <i data-feather="check-square" class="text-info"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div>
+            <h2 class="fw-bold mb-2"><span class="counter-value"id="completedCount"></span></h2>
+            <div class="d-flex align-items-center">
+              <!-- <span class="badge bg-soft-success text-success me-2"><i class="ri-arrow-up-line align-middle"></i> 12.3%</span> -->
+              <!-- <span class="text-muted fs-13">from last period</span> -->
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 pt-2 border-top">
+          <!-- <span class="badge bg-soft-primary text-primary me-1">94.6%</span> -->
+          <!-- <span class="text-muted">Completion rate</span> -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Invoices Table -->
+<div class="row mt-4">
+  <div class="col-lg-12">
+    <div class="card" id="invoiceList">
+      <div class="card-header border-0 bg-white">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <h5 class="card-title mb-0 flex-grow-1">Transaction History</h5>
+            <p class="text-muted mb-0">View all your order transactions and fees</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-soft-primary btn-sm">
+              <i class="ri-download-2-line align-middle me-1"></i> Export
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- <div class="card-body filter-section">
+        <form>
+          <div class="row g-3 align-items-center">
             <div class="col-xxl-3 col-sm-4">
+              <div class="search-box">
+                <input type="text" class="form-control search" placeholder="Search for order ID, type...">
+                <i class="ri-search-line search-icon"></i>
+              </div>
+            </div>
+            
+            <div class="col-xxl-3 col-sm-4">
+              <input type="text" class="form-control bg-light border-light flatpickr-input" id="datepicker-range" placeholder="Select date range">
+            </div>
+            
+            <div class="col-xxl-2 col-sm-4">
               <div class="input-light">
                 <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="idStatus">
                   <option value="">Status</option>
                   <option value="all" selected>All</option>
                   <option value="Unpaid">Unpaid</option>
                   <option value="Paid">Paid</option>
-                  <option value="Cancel">Cancel</option>
-                  <option value="Refund">Refund</option>
+                  <option value="Cancel">Cancelled</option>
+                  <option value="Refund">Refunded</option>
                 </select>
               </div>
             </div>
-            <!--end col-->
+            
+            <div class="col-xxl-2 col-sm-4">
+              <div class="input-light">
+                <select class="form-control" data-choices data-choices-search-false name="choices-type-default" id="orderType">
+                  <option value="">Order Type</option>
+                  <option value="all" selected>All Types</option>
+                  <option value="Standard">Standard</option>
+                  <option value="Express">Express</option>
+                  <option value="Premium">Premium</option>
+                </select>
+              </div>
+            </div>
 
-            <div class="col-xxl-1 col-sm-4">
+            <div class="col-xxl-2 col-sm-4">
               <button type="button" class="btn btn-primary w-100" onclick="SearchData();">
-                <i class="ri-equalizer-fill me-1 align-bottom"></i> Filters
+                <i class="ri-equalizer-fill me-1 align-bottom"></i> Apply Filters
               </button>
             </div>
-            <!--end col-->
           </div>
-          <!--end row-->
         </form>
-      </div>
+      </div> -->
+      
       <div class="card-body">
-        <div>
-          <div class="table-responsive table-card">
-            <table class="table align-middle table-nowrap" id="invoiceTable">
-              <thead class="text-muted">
+        <div class="table-container">
+          <div class="table-responsive ">
+            <table class="table " id="invoiceTable">
+              <thead>
                 <tr>
                   <th scope="col" style="width: 50px;">
                     <div class="form-check">
                       <input class="form-check-input" type="checkbox" id="checkAll" value="option">
                     </div>
                   </th>
-                  <th class="sort text-uppercase" data-sort="invoice_id">#Order ID</th>
-                  <th class="sort text-uppercase" data-sort="customer_name">Order Type</th>
-                  <th class="sort text-uppercase" data-sort="email">Status</th>
-                  <th class="sort text-uppercase" data-sort="country">Government</th>
-                  <th class="sort text-uppercase" data-sort="date">Total Amount</th>
-                  <th class="sort text-uppercase" data-sort="invoice_amount">Fees</th>
-                  <th class="sort text-uppercase" data-sort="status">Deposit Date</th>
-                  <th class="sort text-uppercase" data-sort="status">Payment Date</th>
+                  <th class="text-uppercase">Order ID</th>
+                  <th class="text-uppercase" >Order Type</th>
+                  <th class="text-uppercase" >Status</th>
+                  <th class="text-uppercase" >Pickup Date</th>
+                  <th class="text-uppercase" >Order Location</th>
+                  <th class="text-uppercase" >Total Amount</th>
+                  <th class="text-uppercase">Fees</th>
+                  <th class="text-uppercase" >Deposit Date</th>
+                  <th class="text-uppercase" >Money Release Date</th>
                 </tr>
               </thead>
               <tbody class="list form-check-all" id="invoice-list-data">
+                <!-- Sample data for preview - will be populated dynamically -->
+
+                <tr>
+                  <td>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox">
+                    </div>
+                  </td>
+                  <td><a href="#" class="fw-medium link-primary">#ORD-0120</a></td>
+                  <td>Standard</td>
+                  <td><span class="badge badge-status bg-success-subtle text-success">Paid</span></td>
+                  <td>Federal</td>
+                  <td>$2,300.00</td>
+                  <td>$120.00</td>
+                  <td>15 Mar, 2023</td>
+                  <td>18 Mar, 2023</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox">
+                    </div>
+                  </td>
+                  <td><a href="#" class="fw-medium link-primary">#ORD-0119</a></td>
+                  <td>Express</td>
+                  <td><span class="badge badge-status bg-warning-subtle text-warning">Pending</span></td>
+                  <td>State</td>
+                  <td>$1,750.00</td>
+                  <td>$87.50</td>
+                  <td>12 Mar, 2023</td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox">
+                    </div>
+                  </td>
+                  <td><a href="#" class="fw-medium link-primary">#ORD-0118</a></td>
+                  <td>Premium</td>
+                  <td><span class="badge badge-status bg-danger-subtle text-danger">Cancelled</span></td>
+                  <td>Local</td>
+                  <td>$3,400.00</td>
+                  <td>$170.00</td>
+                  <td>10 Mar, 2023</td>
+                  <td>-</td>
+                </tr>
 
               </tbody>
             </table>
             <div class="noresult" style="display: none">
-              <div class="text-center">
-                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
-                <h5 class="mt-2">Sorry! No Result Found</h5>
-                <p class="text-muted mb-0">We've searched more than 150+ invoices We did not find any invoices for you search.</p>
+              <div class="text-center py-4">
+                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
+                <h5 class="mt-2">No Results Found</h5>
+                <p class="text-muted mb-0">We couldn't find any transactions matching your search criteria.</p>
               </div>
             </div>
           </div>
           <div class="d-flex justify-content-end mt-3">
             <div class="pagination-wrap hstack gap-2">
               <a class="page-item pagination-prev disabled" href="#">
-                Previous
+                <i class="ri-arrow-left-s-line"></i> Previous
               </a>
               <ul class="pagination listjs-pagination mb-0"></ul>
               <a class="page-item pagination-next" href="#">
-                Next
+                Next <i class="ri-arrow-right-s-line"></i>
               </a>
             </div>
           </div>
         </div>
-
-        <!-- Modal -->
-        <div class="modal fade flip" id="deleteOrder" tabindex="-1" aria-labelledby="deleteOrderLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-body p-5 text-center">
-                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#405189,secondary:#f06548" style="width:90px;height:90px"></lord-icon>
-                <div class="mt-4 text-center">
-                  <h4>You are about to delete a order ?</h4>
-                  <p class="text-muted fs-15 mb-4">Deleting your order will remove all of your information from our database.</p>
-                  <div class="hstack gap-2 justify-content-center remove">
-                    <button class="btn btn-link link-success fw-medium text-decoration-none" id="deleteRecord-close" data-bs-dismiss="modal"><i class="ri-close-line me-1 align-middle"></i> Close</button>
-                    <button class="btn btn-danger" id="delete-record">Yes, Delete It</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!--end modal -->
       </div>
     </div>
-
   </div>
-  <!--end col-->
 </div>
-<!--end row-->
+
 <%- contentFor('FooterJs') %>
-
-
-<!-- list.js min js -->
+<!-- Required libs -->
 <script src="/assets/libs/list.js/list.min.js"></script>
-
-<!--list pagination js-->
 <script src="/assets/libs/list.pagination.js/list.pagination.min.js"></script>
-
-<!-- invoicelist init js -->
-<script src="/assets/js/pages/invoiceslist.init.js"></script>
+<script src="/assets/libs/flatpickr/flatpickr.min.js"></script>
+<script src="/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
-<!-- App js -->
+<script src="/assets/libs/apexcharts/apexcharts.min.js"></script>
+
+<!-- Custom scripts -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize flatpickr date range picker
+    flatpickr("#datepicker-range", {
+      mode: "range",
+      dateFormat: "d M, Y",
+    });
+    
+
+    getOrdersAndTotals('week');
+
+
+
+
+    // Initialize choices for select dropdowns
+    const selectElements = document.querySelectorAll('[data-choices]');
+    selectElements.forEach(element => {
+      const choices = new Choices(element, {
+        searchEnabled: element.getAttribute('data-choices-search-false') !== 'true',
+        itemSelectText: '',
+      });
+    });
+    
+    // Counter animation for stats
+    // const counterElements = document.querySelectorAll('.counter-value');
+    // counterElements.forEach(element => {
+    //   const target = parseFloat(element.getAttribute('data-target'));
+    //   let count = 0;
+    //   const duration = 2000; // 2 seconds
+    //   const increment = target / (duration / 16); // 60fps
+      
+    //   const updateCount = () => {
+    //     count += increment;
+    //     if (count < target) {
+    //       element.textContent = count.toFixed(2);
+    //       requestAnimationFrame(updateCount);
+    //     } else {
+    //       element.textContent = target;
+    //     }
+    //   };
+      
+    //   updateCount();
+    // });
+    
+    // Time filter buttons
+    const timeFilterButtons = document.querySelectorAll('.time-filter-btn');
+    timeFilterButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        timeFilterButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        
+        const period = this.getAttribute('data-period');
+        console.log(`Fetching data for period: ${period}`);
+        
+        // Show loading state
+        const loadingToast = Swal.fire({
+          title: 'Loading data...',
+          text: `Fetching transactions for ${period}`,
+          icon: 'info',
+          showConfirmButton: false,
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        // Call API to get data
+        getOrdersAndTotals(period)
+          .then(() => {
+            loadingToast.close();
+            Swal.fire({
+              title: 'Data Updated',
+              text: `Transaction data for ${period} has been loaded`,
+              icon: 'success', 
+              timer: 1500,
+              showConfirmButton: false
+            });
+          })
+          .catch(error => {
+            loadingToast.close();
+            Swal.fire({
+              title: 'Error',
+              text: 'Failed to load transaction data',
+              icon: 'error',
+              timer: 1500,
+              showConfirmButton: false
+            });
+          });
+      });
+    });
+    // Initialize list.js for table
+    const options = {
+      valueNames: [
+        'invoice_id',
+        'customer_name',
+        'email',
+        'country',
+        'date',
+        'invoice_amount',
+        'status',
+      ],
+      page: 8,
+      pagination: true,
+      plugins: [
+        ListPagination({})
+      ]
+    };
+    
+    // Initialize the list
+    new List('invoiceList', options);
+    
+    // Initialize feather icons
+    feather.replace();
+  });
+  
+  // Search function
+  function SearchData() {
+    const status = document.getElementById('idStatus').value;
+    const orderType = document.getElementById('orderType').value;
+    const dateRange = document.getElementById('datepicker-range').value;
+    
+    console.log(`Searching with filters: Status=${status}, Type=${orderType}, Date=${dateRange}`);
+    
+    // Here you would typically make an API call with these filters
+    // For demo purposes, just show a success message
+    Swal.fire({
+      title: 'Filters Applied',
+      text: 'The transaction list has been filtered according to your criteria',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false
+    });
+  }
+
+
+    //Get all orders and totals and populate the in table
+    
+    async function getOrdersAndTotals(timePeriod) {
+        try {
+            const response = await fetch(`/business/wallet/get-wallet-Overview-data?timePeriod=${timePeriod}`);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to fetch orders');
+            }
+            console.log(data);
+            // Update summary stats
+            document.getElementById('totalIncome').innerHTML = `${data.totalIncome.toFixed(2)||0}`;
+            document.getElementById('totalIncome').setAttribute('data-target', data.totalIncome||0);
+            document.getElementById('totalFees').innerHTML = `${data.totalFees.toFixed(2)||0}`;
+            document.getElementById('totalFees').setAttribute('data-target', data.totalFees||0);
+            document.getElementById('inProgressCount').innerHTML = data.inProgressCount||0;
+            document.getElementById('inProgressCount').setAttribute('data-target', data.inProgressCount||0);
+            document.getElementById('completedCount').innerHTML = data.completedCount||0;
+            document.getElementById('completedCount').setAttribute('data-target', data.completedCount||0);
+
+            populateTable(data.orders);
+
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: 'Failed to load orders. Please try again later.',
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
+        }
+    }
+
+    function populateTable(orders) {
+        const tableBody = document.getElementById('invoice-list-data');
+        tableBody.innerHTML = '';
+
+        if (!orders || orders.length === 0) {
+            document.querySelector('.noresult').style.display = 'block';
+            return;
+        }
+
+        document.querySelector('.noresult').style.display = 'none';
+
+        orders.forEach(order => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox">
+                    </div>
+                </td>
+                <td><a href="/business/orders/${order.orderNumber}" class="fw-medium link-primary">#${order.orderNumber}</a></td>
+                <td>${order.orderShipping.orderType}</td>
+                <td><span class="badge badge-status bg-${getStatusColor(order.orderStatus)}-subtle text-${getStatusColor(order.orderStatus)}">${order.orderStatus}</span></td>
+                <td>${new Date(order.orderDate).toLocaleDateString('en-US', {day: 'numeric', month: 'short', year: 'numeric'})}</td>
+                <td>${order.orderCustomer.government}</td>
+                <td>${order.orderShipping.amount ? order.orderShipping.amount.toFixed(2) : '0.00'}EGP</td>
+                <td>${order.orderFees ? order.orderFees.toFixed(2) : '0.00'}EGP</td>
+                <td>${order.completedDate ? new Date(order.completedDate).toLocaleDateString('en-US', {day: 'numeric', month: 'short', year: 'numeric'}) : '-'}</td>
+                <td>${order.moneyReleaseDate ? new Date(order.moneyReleaseDate).toLocaleDateString('en-US', {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'}) : '-'}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function getStatusColor(status) {
+        const statusColors = {
+            'new': 'info',
+            'completed': 'success', 
+            'canceled': 'danger',
+            'pending': 'warning',
+            'rejected': 'danger',
+            'returned': 'warning',
+            'inProgress': 'info',
+            'headingToCustomer': 'info',
+            'inStock': 'info',
+            'headingToYou': 'info'
+        };
+        return statusColors[status.toLowerCase()] || 'secondary';
+    }
+
+
+
+
+
+</script>

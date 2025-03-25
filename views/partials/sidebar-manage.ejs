@@ -44,11 +44,11 @@
       <div id="two-column-menu">
       </div>
       <ul class="navbar-nav" id="navbar-nav">
-        <li class="menu-title"><span data-key="t-menu"><%=translation.t_menu %></span></li>
+        <li class="menu-title"><span data-key="t-menu">Dashboard</span></li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/dashboard" role="button"
             aria-expanded="false" aria-controls="sidebarDashboards">
-            <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards"><%=translation.t_dashboard %></span>
+            <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Dashboard</span>
           </a>
         </li> 
         <li class="nav-item">
@@ -68,25 +68,30 @@
           </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link menu-link" href="/admin/stock-managment" role="button">
+            <i class="ri-store-line"></i> <span data-key="">Stock Managment</span>
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link menu-link" href="#sidebarWallet" data-bs-toggle="collapse" role="button"
             aria-expanded="false" aria-controls="sidebarWallet">
-            <i class="ri-wallet-line"></i> <span data-key="t-wallet">My Wallet</span>
+            <i class="ri-wallet-line"></i> <span data-key="t-wallet">Wallet Management</span>
           </a>
           <div class="collapse ms-3" id="sidebarWallet">
             <ul class="nav flex-column">
               <li class="nav-item">
-          <a class="nav-link" href="/business/wallet/overview">
-            <i class="ri-file-list-3-line"></i> <span data-key="t-overview">Overview</span>
+          <a class="nav-link" href="/admin/wallet-overview">
+            <i class="ri-file-list-3-line"></i> <span data-key="t-overview">Wallets Overview</span>
           </a>
               </li>
               <li class="nav-item">
-          <a class="nav-link" href="/business/wallet/transactions">
-            <i class="ri-exchange-dollar-line"></i> <span data-key="t-transactions">Transactions</span>
+          <a class="nav-link" href="/admin/wallet-orders">
+            <i class="ri-exchange-dollar-line"></i> <span data-key="t-transactions">Orders</span>
           </a>
               </li>
               <li class="nav-item">
-          <a class="nav-link" href="/wallet/settings">
-            <i class="ri-settings-3-line"></i> <span data-key="t-settings">Settings</span>
+          <a class="nav-link" href="/admin/wallet-deposits">
+            <i class="ri-money-dollar-box-line"></i> <span data-key="t-deposits">Deposits</span>
           </a>
               </li>
             </ul>
@@ -96,6 +101,12 @@
         <li class="nav-item">
           <a class="nav-link menu-link" href="/business/shop" role="button">
             <i class="ri-store-line"></i> <span data-key="t-shop">Shop</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="/admin/logout" role="button">
+            <i class="ri-logout-box-line"></i> <span data-key="t-logout">Log Out</span>
           </a>
         </li>
     

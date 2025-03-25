@@ -161,7 +161,12 @@
                   <option value="new">New</option>
                   <option value="driverAssigned">Driver Assigned</option>
                   <option value="pickedUp">Picked Up</option>
+                  <option value="completed">Completed</option>
+                  <option value="inStock">In Stock</option>
+                  <option value="canceled">Canceled</option>
                   <option value="rejected">Rejected</option>
+                  <option value="returned">Returned</option>
+                  <option value="terminated">Terminated</option>
                 </select>
               </div>
             </div>
@@ -257,30 +262,7 @@
   </div>
 </div>
 
-<!-- Pickup Details Modal -->
-<div class="modal fade" id="pickupDetailsModal" tabindex="-1" aria-labelledby="pickupDetailsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="pickupDetailsModalLabel">Pickup Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div id="pickupDetailsContent">
-          <!-- Pickup details will be loaded here -->
-          <div class="text-center">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <%- contentFor('FooterJs') %>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -426,9 +408,9 @@
                   <span class="badge bg-info badge-count ms-2">${businessPickups.length} pickups</span>
                 </h6>
                 <div>
-                  <button class="btn btn-sm btn-danger me-2" onclick="rejectAllBusinessPickups('${businessName}', '${zone}')">
+                  <!-- <button class="btn btn-sm btn-danger me-2" onclick="rejectAllBusinessPickups('${businessName}', '${zone}')">
                     <i class="ri-close-circle-line me-1"></i> Reject All
-                  </button>
+                  </button> -->
                   <button class="btn btn-sm btn-outline-secondary" onclick="toggleBusiness('business-${businessName.replace(/\s+/g, '-')}-${zone.replace(/\s+/g, '-')}')">
                     <i class="ri-arrow-down-s-line"></i>
                   </button>
@@ -445,7 +427,7 @@
           html += `
             <div class="pickup-item" data-pickup-id="${pickup.pickupNumber}">
               <div class="row align-items-center">
-                <div class="col-md-3">
+                <div class="col-md-2 col-sm-6">
                   <div class="d-flex align-items-center">
                     <div class="form-check me-2">
                       <input class="form-check-input" type="checkbox" value="${pickup.pickupNumber}" name="pickupCheckbox">
@@ -456,27 +438,31 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-xs-6">
                   <div>
                     <div class="fw-medium">${pickup.business?.pickUpAdress?.adressDetails || 'No address'}</div>
                     <div class="text-muted small">${pickup.phoneNumber || 'No phone'}</div>
                   </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2 col-sm-6">
                   <div>
                     <span class="badge ${statusDetails.badgeClass} pickup-status">${statusDetails.statusText}</span>
-                    <div class="text-muted small">${pickup.numberOfOrders || 0} items</div>
                   </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1 col-sm-6">
+                  <div class="">Expected:<br><strong>${pickup.numberOfOrders || 0}</strong> orders</div>
+                </div>
+                <div class="col-md-1 col-sm-6">
+                  <div class="">Picked up:<br><strong>${pickup.ordersPickedUp.length || 0}</strong> orders</div>
+                </div>
+                <div class="col-md-2 col-sm-6">
                   <div class="fw-medium">${new Date(pickup.pickupDate).toLocaleDateString('en-US', { weekday: 'short' })}</div>
                   <div class="text-muted small">${new Date(pickup.pickupDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
-                <div class="col-md-2">
+                ${pickup.picikupStatus !== 'completed' && pickup.picikupStatus !== 'inStock' && pickup.picikupStatus !== 'canceled' && pickup.picikupStatus !== 'rejected' && pickup.picikupStatus !== 'returned' && pickup.picikupStatus !== 'terminated' ? `        
+                <div class="col-md-1 col-sm-12">
                   <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-success btn-sm pickup-btn" onclick="completePickup('${pickup._id}', '${pickup.pickupNumber}')">
-                      <i class="ri-check-line me-1"></i> Complete
-                    </button>
+              
                     <div class="dropdown dropdown-fix">
                       <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="ri-more-2-fill"></i>
@@ -488,9 +474,9 @@
                           </button>
                         </li>
                         <li>
-                          <button class="dropdown-item" onclick="viewPickupDetails('${pickup._id}')">
+                          <a class="dropdown-item" href="/courier/pickup-details/${pickup.pickupNumber}">
                             <i class="ri-information-line me-2 text-info"></i> View Details
-                          </button>
+                          </a>
                         </li>
                         <li>
                           <a class="dropdown-item" href="https://maps.google.com/?q=${encodeURIComponent(pickup.business?.pickUpAdress?.adressDetails || '')}" target="_blank">
@@ -501,6 +487,7 @@
                     </div>
                   </div>
                 </div>
+                ` : ''}
               </div>
             </div>
           `;
@@ -628,88 +615,6 @@
     handlePickupsResponse(filteredPickups);
   }
 
-  // Show pickup actions modal
-  function showPickupActions(pickupId, pickupNumber, defaultReason = '') {
-    document.getElementById('actionPickupId').value = pickupId;
-    document.getElementById('pickupActionsModalLabel').textContent = `Actions for Pickup #${pickupNumber}`;
-
-    if (defaultReason) {
-      document.getElementById('actionReason').value = defaultReason;
-
-      // Show/hide other reason field
-      const otherReasonContainer = document.getElementById('otherReasonContainer');
-      otherReasonContainer.style.display = defaultReason === 'other' ? 'block' : 'none';
-    }
-
-    // Set up confirm button action
-    document.getElementById('confirmActionBtn').onclick = function() {
-      processPickupAction(pickupId, pickupNumber);
-    };
-
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('pickupActionsModal'));
-    modal.show();
-  }
-
-  // Process pickup action (reject)
-  function processPickupAction(pickupId, pickupNumber) {
-    const reason = document.getElementById('actionReason').value;
-    const otherReason = document.getElementById('otherReason').value;
-
-    if (!reason) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Select Reason',
-        text: 'Please select a reason for this action.',
-      });
-      return;
-    }
-
-    if (reason === 'other' && !otherReason) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Specify Reason',
-        text: 'Please specify the reason for this action.',
-      });
-      return;
-    }
-
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('pickupActionsModal'));
-    modal.hide();
-
-    // Show confirmation
-    Swal.fire({
-      title: 'Are you sure?',
-      text: `Reject pickup #${pickupNumber}?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, reject it!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        updatePickupStatus(pickupId, 'rejected', reason === 'other' ? otherReason : reason);
-      }
-    });
-  }
-
-  // Complete pickup
-  function completePickup(pickupId, pickupNumber) {
-    Swal.fire({
-      title: 'Confirm Pickup',
-      text: `Mark pickup #${pickupNumber} as completed?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#F39720',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, complete it!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        updatePickupStatus(pickupId, 'pickedUp');
-      }
-    });
-  }
 
   // Reject all pickups for a business
   function rejectAllBusinessPickups(businessName, zone) {
@@ -779,186 +684,63 @@
     });
   }
 
-  // Reject all pickups for a business with reason
-  async function rejectBusinessPickups(businessName, zone, reason, otherReason = '') {
-    try {
-      const response = await fetch('/courier/reject-business-pickups', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          businessName,
-          zone,
-          reason,
-          otherReason
-        }),
-      });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Pickups Rejected',
-          text: result.message || 'All pickups for this business have been rejected.',
-        }).then(() => {
-          // Refresh pickups with current filter
-          fetchPickups(currentFilter);
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Rejection Failed',
-          text: result.message || 'Failed to reject pickups.',
-        });
-      }
-    } catch (error) {
-      console.error('Error rejecting pickups:', error);
+    // Complete pickup
+  function completePickup(pickupNumber) {
+    Swal.fire({
+      title: 'Confirm Pickup',
+      text: `Mark pickup #${pickupNumber} as completed?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, complete it!'
+    }).then(async(result) => {
+      // Show loading
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'An unexpected error occurred. Please try again.',
+        title: 'Completing Pickup...',
+        text: `Completing pickup #${pickupNumber}`,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
       });
-    }
-  }
-
-  // Update pickup status
-  async function updatePickupStatus(pickupId, status, reason = '') {
-    try {
-      const response = await fetch('/courier/update-pickup-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          pickupId,
-          status,
-          reason
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Status Updated',
-          text: result.message || 'Pickup status has been updated successfully.',
-        }).then(() => {
-          // Refresh pickups with current filter
-          fetchPickups(currentFilter);
+      if (result.isConfirmed) {
+        const response = await fetch(`/courier/complete-pickup/${pickupNumber}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: 'completed' }),
         });
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Pickup Completed',
+            text: `Pickup #${pickupNumber} has been marked as completed.`,
+            timer: 2500
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          const result = await response.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'Completion Failed',
+            text: result.message || 'Failed to complete the pickup.',
+          });
+        }
       } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Update Failed',
-          text: result.message || 'Failed to update pickup status.',
-        });
+       Swal.close();
       }
-    } catch (error) {
-      console.error('Error updating pickup status:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'An unexpected error occurred. Please try again.',
-      });
-    }
+    });
   }
 
-  // View pickup details
-  async function viewPickupDetails(pickupId) {
-    try {
-      const pickupDetailsContent = document.getElementById('pickupDetailsContent');
-      pickupDetailsContent.innerHTML = `
-        <div class="text-center">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      `;
 
-      const modal = new bootstrap.Modal(document.getElementById('pickupDetailsModal'));
-      modal.show();
 
-      const response = await fetch(`/courier/pickup-details/${pickupId}`);
-      const pickup = await response.json();
 
-      if (response.ok) {
-        const statusDetails = getPickupStatusDetails(pickup.picikupStatus);
 
-        pickupDetailsContent.innerHTML = `
-          <div class="row">
-            <div class="col-md-6">
-              <h6 class="mb-2">Pickup Information</h6>
-              <div class="card mb-3">
-                <div class="card-body">
-                  <p class="mb-1"><strong>Pickup Number:</strong> #${pickup.pickupNumber}</p>
-                  <p class="mb-1"><strong>Status:</strong> <span class="badge ${statusDetails.badgeClass}">${statusDetails.statusText}</span></p>
-                  <p class="mb-1"><strong>Date:</strong> ${new Date(pickup.pickupDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                  <p class="mb-1"><strong>Time:</strong> ${new Date(pickup.pickupDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
-                  <p class="mb-0"><strong>Number of Items:</strong> ${pickup.numberOfOrders || 0}</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <h6 class="mb-2">Business Information</h6>
-              <div class="card">
-                <div class="card-body">
-                  <p class="mb-1"><strong>Business Name:</strong> ${pickup.business?.brandInfo?.brandName || 'N/A'}</p>
-                  <p class="mb-1"><strong>Address:</strong> ${pickup.business?.pickUpAdress?.adressDetails || 'N/A'}</p>
-                  <p class="mb-1"><strong>City:</strong> ${pickup.business?.pickUpAdress?.city || 'N/A'}</p>
-                  <p class="mb-0"><strong>Contact:</strong> ${pickup.phoneNumber || 'N/A'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          ${pickup.notes ? `
-          <div class="row mt-3">
-            <div class="col-12">
-              <h6 class="mb-2">Notes</h6>
-              <div class="card">
-                <div class="card-body">
-                  <p class="mb-0">${pickup.notes}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          ` : ''}
-          
-          <div class="row mt-3">
-            <div class="col-12">
-              <div class="d-flex justify-content-between">
-                <a href="https://maps.google.com/?q=${encodeURIComponent(pickup.business?.pickUpAdress?.adressDetails || '')}" target="_blank" class="btn btn-info">
-                  <i class="ri-map-pin-line me-1"></i> Navigate to Address
-                </a>
-                <div>
-                  <button class="btn btn-success me-2" onclick="completePickup('${pickup._id}', '${pickup.pickupNumber}')">
-                    <i class="ri-check-line me-1"></i> Complete Pickup
-                  </button>
-                  <button class="btn btn-danger" onclick="showPickupActions('${pickup._id}', '${pickup.pickupNumber}')">
-                    <i class="ri-close-circle-line me-1"></i> Reject Pickup
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        pickupDetailsContent.innerHTML = `
-          <div class="alert alert-danger" role="alert">
-            Failed to load pickup details: ${pickup.message || 'Unknown error'}
-          </div>
-        `;
-      }
-    } catch (error) {
-      console.error('Error loading pickup details:', error);
-      document.getElementById('pickupDetailsContent').innerHTML = `
-        <div class="alert alert-danger" role="alert">
-          An unexpected error occurred while loading pickup details. Please try again.
-        </div>
-      `;
-    }
-  }
+
+
 </script>

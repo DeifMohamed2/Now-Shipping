@@ -129,6 +129,20 @@ const UserSchema = new mongoose.Schema(
         },
       },
     },
+    balance: {
+      type: Number,
+      default: 0,
+    },
+    balanceHistory: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+    balanceTransactions: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+    
+
     isCompleted: {
       type: Boolean,
       default: false,

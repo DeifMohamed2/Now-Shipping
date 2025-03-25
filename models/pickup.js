@@ -35,6 +35,11 @@ const pickupSchema = new Schema(
       type: Number,
       required: true,
     },
+    pickupFees: {
+      type: Number,
+      required: true,
+      default: 70,
+    },
     pickupDate: {
       type: Date,
       required: true,
@@ -91,7 +96,13 @@ const pickupSchema = new Schema(
     },
     ordersPickedUp: {
       type: [mongoose.Schema.Types.ObjectId],
-      ref: 'Order',
+      ref: 'order',
+      validate: {
+        validator: function (value) {
+          return value.length === new Set(value.map(String)).size;
+        },
+        message: 'Duplicate orders are not allowed.',
+      },
     },
     business: {
       type: mongoose.Schema.Types.ObjectId,
@@ -102,9 +113,16 @@ const pickupSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'courier',
     },
+
+
+    
   },
   { timestamps: true }
 );
+
+
+
+
 
 const Pickup = mongoose.model('Pickup', pickupSchema);
 

@@ -45,6 +45,9 @@ router.get('/orders', courierController.get_ordersPage);
 
 router.get('/get-orders', courierController.get_orders);
 
+router.get('/order-details/:orderNumber', courierController.get_orderDetailsPage);
+
+router.put('/complete-order/:orderNumber', courierController.completeOrder);
 
 // Pickups
 
@@ -54,7 +57,19 @@ router.get('/get-pickups', courierController.get_pickups);
 
 router.get('/pickup-details/:pickupNumber', courierController.get_pickupDetailsPage);
 
+router.get('/getAndSet-order-details/:pickupNumber/:orderNumber', courierController.getAndSet_orderDetails);
+
+router.get('/get-picked-up-orders/:pickupNumber', courierController.get_picked_up_orders);
+
+router.delete('/remove-picked-up-order/:pickupNumber/:orderNumber', courierController.removePickedUpOrder);
+
+router.put('/complete-pickup/:pickupNumber', courierController.completePickup);
 
 
+
+
+//logout
+
+router.get('/logout', courierController.logOut);
 
 module.exports = router;

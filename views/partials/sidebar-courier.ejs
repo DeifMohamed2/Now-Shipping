@@ -44,11 +44,11 @@
       <div id="two-column-menu">
       </div>
       <ul class="navbar-nav" id="navbar-nav">
-        <li class="menu-title"><span data-key="t-menu"><%=translation.t_menu %></span></li>
+        <li class="menu-title"><span data-key="t-menu">Dashboard</span></li>
         <li class="nav-item">
-          <a class="nav-link menu-link" href="/admin/dashboard" role="button"
+          <a class="nav-link menu-link" href="/courier/dashboard" role="button"
             aria-expanded="false" aria-controls="sidebarDashboards">
-            <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards"><%=translation.t_dashboard %></span>
+            <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Dashboard</span>
           </a>
         </li> 
         <li class="nav-item">
@@ -93,7 +93,12 @@
             <i class="ri-store-line"></i> <span data-key="t-shop">Shop</span>
           </a>
         </li>
-    
+
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="/courier/logout" role="button">
+            <i class="ri-logout-box-line"></i> <span data-key="t-logout">Log Out</span>
+          </a>
+        </li>
         <!-- end Dashboard Menu -->
 
       </ul>

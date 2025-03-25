@@ -286,7 +286,7 @@
                     <label for="shipping-count" class="form-label">Number of Items</label>
                     <div class="input-group">
                       <button type="button" class="btn btn-outline-secondary" id="decrement-shipping">-</button>
-                      <input type="number" name="numberOfItems" class="form-control text-center" id="shipping-count" placeholder="Enter number of items" value="0" min="0" >
+                      <input type="number" name="numberOfItems" class="form-control text-center" id="shipping-count" placeholder="Enter number of items" value="1" min="1" >
                       <button type="button" class="btn btn-outline-secondary" id="increment-shipping">+</button>
                     </div>
                   </div>
@@ -319,7 +319,7 @@
                     <label for="exchange-current-count" class="form-label">Number of Current Items</label>
                     <div class="input-group">
                       <button type="button" class="btn btn-outline-secondary" id="decrement-current">-</button>
-                      <input type="number" name="numberOfItemsCurrentPD" class="form-control text-center" id="exchange-current-count" placeholder="Enter number of items" value="0" min="0" >
+                      <input type="number" name="numberOfItemsCurrentPD" class="form-control text-center" id="exchange-current-count" placeholder="Enter number of items" value="1" min="1" >
                       <button type="button" class="btn btn-outline-secondary" id="increment-current">+</button>
                     </div>
                   </div>
@@ -331,7 +331,7 @@
                     <label for="exchange-new-count" class="form-label">Number of New Items</label>
                     <div class="input-group">
                       <button type="button" class="btn btn-outline-secondary" id="decrement-new">-</button>
-                      <input type="number" name="numberOfItemsNewPD" class="form-control text-center" id="exchange-new-count" placeholder="Enter number of items" value="0" min="0" >
+                      <input type="number" name="numberOfItemsNewPD" class="form-control text-center" id="exchange-new-count" placeholder="Enter number of items" value="1" min="1" >
                       <button type="button" class="btn btn-outline-secondary" id="increment-new">+</button>
                     </div>
                   </div>
@@ -364,7 +364,7 @@
                     <label for="return-count" class="form-label">Number of Items</label>
                     <div class="input-group">
                       <button type="button" class="btn btn-outline-secondary" id="decrement-return">-</button>
-                      <input type="number" class="form-control text-center" id="return-count" placeholder="Enter number of items" value="0" min="0">
+                      <input type="number" class="form-control text-center" id="return-count" placeholder="Enter number of items" value="1" min="1">
                       <button type="button" class="btn btn-outline-secondary" id="increment-return">+</button>
                     </div>
                   </div>
@@ -420,6 +420,21 @@
                 <label for="delivery-notes" class="form-label">Delivery Notes</label>
                 <textarea class="form-control" name="Notes" id="delivery-notes" placeholder="Enter any delivery notes" rows="2" ></textarea>
               </div>
+
+              <!-- Fees Calculation Section -->
+              <div class="card mb-3 border">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">Delivery Fees</h6>
+                </div>
+                <div class="card-body text-center py-3">
+                  <h4 class="mb-0">
+                    <span id="totalFee">0</span>
+                    <small>EGP</small>
+                  </h4>
+                  <p class="text-muted small mb-0">Total Delivery Fee</p>
+                </div>
+              </div>
+
               <div class="d-flex align-items-start gap-3 mt-4">
                 <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-address-tab">
                   <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back to Shipping

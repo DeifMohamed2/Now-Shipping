@@ -41,7 +41,34 @@ function setupCounter(buttonId, inputId, increment = true) {
     document.getElementById(buttonId).addEventListener('click', function() {
         const input = document.getElementById(inputId);
         let value = parseInt(input.value) || 0;
-        input.value = increment ? value + 1 : Math.max(0, value - 1);
+        if(increment) {
+            input.value = value + 1;
+        } else {
+            if(value > 1) {
+                input.value = value - 1;
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Value',
+                    text: 'Number of items cannot be zero or negative.',
+                });
+            }
+        }
+    });
+}
+
+// Add input validation for number fields
+function setupNumberValidation(inputId) {
+    document.getElementById(inputId).addEventListener('input', function() {
+        const value = parseInt(this.value);
+        if(value <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Value',
+                text: 'Number of items cannot be zero or negative.',
+            });
+            this.value = 1;
+        }
     });
 }
 
@@ -54,6 +81,11 @@ setupCounter('decrement-new', 'exchange-new-count', false);
 // setupCounter('increment-return', 'return-count', true);
 // setupCounter('decrement-return', 'return-count', false);
 
+// Setup validation for all number input fields
+setupNumberValidation('shipping-count');
+setupNumberValidation('exchange-current-count');
+setupNumberValidation('exchange-new-count');
+
 // Handle form submission
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('createOrderForm');
@@ -62,6 +94,69 @@ document.addEventListener('DOMContentLoaded', function () {
     const exchangeSection = document.getElementById('exchange-section');
     const cashCollectionSection = document.getElementById('cash-collection-section');
     const completeOrderBTN = document.getElementById('completeOrderBTN');
+
+    // Fee calculation configuration
+    const feeConfig = {
+        zones: {
+            'Helwan': { base: 30, surcharge: 0 },
+            'Nasr City': { base: 25, surcharge: 0 },
+            '6th of October': { base: 35, surcharge: 5 },
+            'Shubra': { base: 25, surcharge: 0 },
+            'Maadi': { base: 30, surcharge: 0 },
+            'Zamalek': { base: 25, surcharge: 0 },
+            'Haram': { base: 35, surcharge: 5 },
+            'Dokki': { base: 25, surcharge: 0 },
+            'Mohandessin': { base: 25, surcharge: 0 },
+            'New Cairo': { base: 40, surcharge: 10 },
+            'Obour City': { base: 40, surcharge: 10 },
+            'Badr City': { base: 45, surcharge: 15 },
+            '10th of Ramadan': { base: 45, surcharge: 15 },
+            'Sheikh Zayed': { base: 40, surcharge: 10 },
+            'Mokattam': { base: 35, surcharge: 5 },
+            'Garden City': { base: 25, surcharge: 0 },
+            'Hadayek El-Kobba': { base: 30, surcharge: 0 },
+            'Ain Shams': { base: 30, surcharge: 0 },
+            'El-Marg': { base: 35, surcharge: 5 },
+            'El-Mataria': { base: 30, surcharge: 0 },
+            'El-Nozha': { base: 30, surcharge: 0 },
+            'El-Salam City': { base: 40, surcharge: 10 },
+            'El-Shorouk City': { base: 40, surcharge: 10 },
+            'El-Tagamoa': { base: 40, surcharge: 10 },
+            'El-Waily': { base: 30, surcharge: 0 },
+            'Hadayek Helwan': { base: 35, surcharge: 5 },
+            'Heliopolis': { base: 30, surcharge: 0 },
+            'Masr El-Gedida': { base: 30, surcharge: 0 },
+            'Zaytoun': { base: 30, surcharge: 0 }
+        },
+        orderTypes: {
+            'Deliver': { fee: 0 },
+            'Exchange': { fee: 10 },
+            'Return': { fee: 5 },
+            'Cash Collection': { fee: 15 }
+        }
+    };
+
+    // Function to update fees display
+    function updateFees() {
+        console.log('updateFees');
+        const selectedZone = form.querySelector('select[name="zone"]').value;
+        const selectedOrderType = form.querySelector('input[name="orderType"]:checked')?.value || 'Deliver';
+        
+        const zoneFees = feeConfig.zones[selectedZone] || { base: 0, surcharge: 0 };
+        const orderTypeFee = feeConfig.orderTypes[selectedOrderType]?.fee || 0;
+        
+        const totalFee = zoneFees.base + zoneFees.surcharge + orderTypeFee;
+        document.getElementById('totalFee').textContent = totalFee;
+    }
+
+    // Add event listeners for zone and order type changes
+    form.querySelector('select[name="zone"]').addEventListener('change', updateFees);
+    orderTypeRadios.forEach(radio => {
+        radio.addEventListener('change', updateFees);
+    });
+
+    // Initial fees calculation
+    updateFees();
 
     // Function to validate Customer Info tab
     function validateCustomerInfo() {
@@ -98,11 +193,11 @@ document.addEventListener('DOMContentLoaded', function () {
             // Deliver
             const productDescription = form.querySelector('textarea[name="productDescription"]');
             const numberOfItems = form.querySelector('input[name="numberOfItems"]');
-            if (!productDescription.value.trim() || !numberOfItems.value) {
+            if (!productDescription.value.trim() || !numberOfItems.value || parseInt(numberOfItems.value) <= 0) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Missing Information',
-                    text: 'Please fill out all required fields in the Deliver section.',
+                    text: 'Please fill out all required fields in the Deliver section with valid values.',
                 });
                 return false;
             }
@@ -112,28 +207,27 @@ document.addEventListener('DOMContentLoaded', function () {
             const numberOfItemsCurrentPD = form.querySelector('input[name="numberOfItemsCurrentPD"]');
             const newPD = form.querySelector('textarea[name="newPD"]');
             const numberOfItemsNewPD = form.querySelector('input[name="numberOfItemsNewPD"]');
-            if (!currentPD.value.trim() || !numberOfItemsCurrentPD.value || !newPD.value.trim() || !numberOfItemsNewPD.value) {
+            if (!currentPD.value.trim() || !numberOfItemsCurrentPD.value || parseInt(numberOfItemsCurrentPD.value) <= 0 || 
+                !newPD.value.trim() || !numberOfItemsNewPD.value || parseInt(numberOfItemsNewPD.value) <= 0) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Missing Information',
-                    text: 'Please fill out all required fields in the Exchange section.',
+                    text: 'Please fill out all required fields in the Exchange section with valid values.',
                 });
                 return false;
             }
         } else if(selectedOrderType.id === 'paymentMethod03') {
-
             // Deliver
             const productDescription = form.querySelector('textarea[name="productDescription"]');
             const numberOfItems = form.querySelector('input[name="numberOfItems"]');
-            if (!productDescription.value.trim() || !numberOfItems.value) {
+            if (!productDescription.value.trim() || !numberOfItems.value || parseInt(numberOfItems.value) <= 0) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Missing Information',
-                    text: 'Please fill out all required fields in the Deliver section.',
+                    text: 'Please fill out all required fields in the Deliver section with valid values.',
                 });
                 return false;
             }
-
         }
         else if (selectedOrderType.id === 'paymentMethod04') {
             // Cash Collection

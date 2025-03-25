@@ -9,7 +9,6 @@ const jwtSecret = process.env.JWT_SECRET;
 
 async function authenticateAdmin(req, res, next) {
     const token = req.cookies.token;
-    console.log(token);
     if (!token) {
         console.log('Token not found');
         return res.status(401).redirect('/admin-login');
@@ -49,7 +48,7 @@ router.get('/get-couriers', adminController.get_couriers);
 
 router.post('/couriers/create-courier', adminController.createCourier);
 
-
+// pickups
 router.get('/pickups', adminController.get_pickupsPage);
 
 router.get('/get-pickups', adminController.get_pickups);
@@ -66,5 +65,34 @@ router.get('/get-pickup-men', adminController.get_pickupMenByZone);
 
 router.post('/assign-pickup-man', adminController.assignPickupMan);
 
+
+
+// stock managment
+
+router.get('/stock-managment', adminController.get_stockManagmentPage);
+
+router.get('/get-stock-orders', adminController.get_stock_orders);
+
+router.post('/add-to-stock', adminController.add_to_stock);
+
+router.get('/get-couriers-by-zone', adminController.get_couriers_by_zone);
+
+router.post('/stock-managment/assign-courier', adminController.assignCourierToStock);
+
+router.post('/stock-managment/courier-received', adminController.courier_received);
+
+
+// router.get('/get-stock-managment', adminController.get_stockManagment);
+
+
+
+// wallet overview
+
+router.get('/wallet-overview', adminController.get_walletOverviewPage);
+
+
+
+//logout
+router.get('/logout', adminController.logOut);
 
 module.exports = router;

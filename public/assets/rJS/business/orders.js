@@ -89,7 +89,7 @@ function populateOrdersTable(orders) {
         <div class="text-muted">${order.orderShipping.amountType}</div>
       </td>
       <td class="status">
-        <span class="badge bg-warning-subtle text-warning text-uppercase fs-6">${order.orderStatus}</span>
+        <span class="badge ${getStatusDetails(order.orderStatus).badgeClass} text-uppercase fs-6">${getStatusDetails(order.orderStatus).statusText}</span>
       </td>
       <td class="date">${new Date(order.orderDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
       <td>
@@ -114,6 +114,53 @@ function populateOrdersTable(orders) {
     tableBody.appendChild(row);
   });
 }
+
+
+function getStatusDetails(status) {
+  let badgeClass = '';
+  let statusText = '';
+
+  if (status === 'new') {
+    badgeClass = 'bg-primary-subtle text-primary';
+    statusText = 'New';
+  } else if (status === 'pickedUp') {
+    badgeClass = 'bg-secondary-subtle text-secondary';
+    statusText = 'Picked Up';
+  } else if (status === 'inStock') {
+    badgeClass = 'bg-info-subtle text-info';
+    statusText = 'In Stock';
+  } else if (status === 'inProgress') {
+    badgeClass = 'bg-warning-subtle text-warning';
+    statusText = 'In Progress';
+  } else if (status === 'headingToCustomer') {
+    badgeClass = 'bg-success-subtle text-success';
+    statusText = 'Heading To Customer';
+  } else if (status === 'headingToYou') {
+    badgeClass = 'bg-success-subtle text-success';
+    statusText = 'Heading To You';
+  } else if (status === 'completed') {
+    badgeClass = 'bg-success-subtle text-success';
+    statusText = 'Completed';
+  } else if (status === 'canceled') {
+    badgeClass = 'bg-danger-subtle text-danger';
+    statusText = 'Canceled';
+  } else if (status === 'rejected') {
+    badgeClass = 'bg-danger-subtle text-danger';
+    statusText = 'Rejected';
+  } else if (status === 'returned') {
+    badgeClass = 'bg-danger-subtle text-danger';
+    statusText = 'Returned';
+  } else if (status === 'terminated') {
+    badgeClass = 'bg-danger-subtle text-danger';
+    statusText = 'Terminated';
+  } else {
+    badgeClass = 'bg-danger-subtle text-danger';
+    statusText = 'Terminated';
+  }
+
+  return { badgeClass, statusText };
+}
+
 
 async function filterOrders(status) {
   console.log("Filtering orders by status:", status);

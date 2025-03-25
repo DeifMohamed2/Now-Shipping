@@ -235,6 +235,7 @@ const submitOrder = async (req, res) => {
     }`,
     orderDate: new Date(),
     orderStatus: 'new',
+    orderFees: 120,
     orderCustomer: {
       fullName,
       phoneNumber,
@@ -258,7 +259,12 @@ const submitOrder = async (req, res) => {
       {
         stageName: 'Order Created',
         stageDate: new Date(),
-        stageNotes: ['Order has been created.'],
+        stageNotes: [
+          {
+            text: 'Order has been created.',
+            date: new Date()
+          }
+        ],
       },
     ],
     business: req.userData._id,
@@ -766,6 +772,88 @@ const get_walletOverviewPage  = (req, res) => {
   });
 }
 
+const get_walletOverviewData = async (req, res) => {
+  try {
+    const { timePeriod } = req.query;
+    let dateFilter = {};
+    const now = new Date();
+    console.log(now,timePeriod);
+    // Set date filter based on time period
+    switch(timePeriod) {
+      case 'today':
+        dateFilter = {
+          completedDate: {
+            $gte: new Date(now.setHours(0,0,0,0)),
+            $lt: new Date(now.setHours(23,59,59,999))
+          }
+        };
+        break;
+      case 'week':
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+        const weekEnd = new Date(now);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        dateFilter = {
+          completedDate: {
+            $gte: new Date(weekStart.setHours(0,0,0,0)),
+            $lt: new Date(weekEnd.setHours(23,59,59,999))
+          }
+        };
+        console.log(`Week from ${weekStart.toLocaleDateString()} to ${weekEnd.toLocaleDateString()}`);
+        break;
+      case 'month':
+        dateFilter = {
+          completedDate: {
+            $gte: new Date(now.getFullYear(), now.getMonth(), 1),
+            $lt: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+          }
+        };
+        break;
+      case 'year':
+        dateFilter = {
+          completedDate: {
+            $gte: new Date(now.getFullYear(), 0, 1),
+            $lt: new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+          }
+        };
+        break;
+      case 'all':
+      default:
+        dateFilter = {};
+    }
+    console.log(dateFilter.completedDate);
+    const orders = await Order.find({ 
+      business: req.userData._id,
+      orderStatus: 'completed',
+      completedDate: dateFilter.completedDate
+    });
+    const inProgressCount = await Order.countDocuments({
+      business: req.userData._id,
+      orderStatus: { $in: ['inProgress', 'headingToCustomer', 'inStock', 'headingToYou'] },
+      completedDate: dateFilter.completedDate
+    });
+
+    const totalIncome = orders.reduce((acc, order) => acc + order.orderShipping.amount, 0);
+    const totalFees = orders.reduce((acc, order) => acc + order.orderFees, 0);
+
+    console.log(inProgressCount, totalIncome, totalFees, orders.length);
+    res.status(200).json({ 
+      totalIncome, 
+      totalFees,
+      orders,
+      inProgressCount, 
+      completedCount: orders.length 
+    });
+
+  } catch (error) {
+    console.error('Error in get_walletOverviewData:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+
+
+
+
 const get_walletTransactionsPage = (req, res) => {
   res.render('business/wallet-transactions' , {
     title: "Wallet Transaction",
@@ -789,6 +877,11 @@ const get_shopPage = (req, res) => {
 
 
 
+
+const logOut = (req, res) => {
+  res.clearCookie('token');
+  res.redirect('/login');
+}
 
 
 module.exports = {
@@ -816,6 +909,10 @@ module.exports = {
   deletePickup,
 
   get_walletOverviewPage,
+  get_walletOverviewData,
+
   get_walletTransactionsPage,
   get_shopPage,
+
+  logOut,
 };

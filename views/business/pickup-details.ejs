@@ -386,7 +386,7 @@
                   </td>
                   <td>
                   <h6 class="fs-14 mb-1 text-muted">Pickup Type</h6>
-                  <p class="mb-0"><%= pickup.isFragileItems ? 'Fragile' : 'Regular' %></p>
+                  <p class="mb-0">Normal</p>
                   </td>
                 </tr>
                 <tr>
@@ -396,7 +396,7 @@
                   </td>
                   <td>
                   <h6 class="fs-14 mb-1 text-muted">Pickup Status</h6>
-                  <p class="mb-0"><span class="badge bg-success"><%= pickup.picikupStatus %></span></p>
+                  <p class="mb-0" id="pickupStatus"></p>
                   </td>
                 </tr>
                 <tr>
@@ -572,71 +572,7 @@
                 </tr>
               </thead>
               <tbody id="TBody">
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option1">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0001</a></td>
-                  <td>Deliver</td>
-                  <td><span class="badge bg-success">Completed</span></td>
-                  <td>New York</td>
-                  <td>$120.00</td>
-               
-                </tr>
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option2">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0002</a></td>
-                  <td>Exchange</td>
-                  <td><span class="badge bg-success">Completed</span></td>
-                  <td>New York</td>
-                  <td>$89.50</td>
-                
-                </tr>
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option3">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0003</a></td>
-                  <td>Return</td>
-                  <td><span class="badge bg-success">Completed</span></td>
-                  <td>New York</td>
-                  <td>$45.00</td>
-                 
-                </tr>
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option4">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0004</a></td>
-                  <td>Cash Collection</td>
-                  <td><span class="badge bg-warning">Pending</span></td>
-                  <td>New York</td>
-                  <td>$200.00</td>
-              
-                </tr>
-                <tr>
-                  <th scope="row">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="checkAll" value="option5">
-                    </div>
-                  </th>
-                  <td><a href="javascript:void(0);" class="fw-medium">#ORD-0005</a></td>
-                  <td>Deliver</td>
-                  <td><span class="badge bg-warning">Pending</span></td>
-                  <td>New York</td>
-                  <td>$75.00</td>
-               
-                </tr>
+           
               </tbody>
             </table>
             <div class="noresult" style="display: none">
@@ -830,11 +766,11 @@ function populateOrdersTable(orders) {
     tableBody.innerHTML = ""; // Clear existing rows
     orders.forEach(order => {
       const row = document.createElement("tr");
-
+      const statusInfo = getOrderStatusInfo(order.orderStatus);
       row.innerHTML = `  
         <td><a href="/business/order-details/${order.orderNumber}" class="fw-medium link-primary fs-15">${order.orderNumber}</a></td>
         <td>${order.orderShipping.orderType}</td>
-        <td><span class="badge ${order.orderStatus === 'Completed' ? 'bg-success' : 'bg-warning'} fs-13">${order.orderStatus}</span></td>
+        <td><span class="badge ${statusInfo.badge} fs-13">${statusInfo.text}</span></td>
         <td>${order.orderCustomer.zone}</td>
         <td>${order.orderShipping.amount || 0} EGP</td>
       `;
@@ -842,6 +778,118 @@ function populateOrdersTable(orders) {
       tableBody.appendChild(row);
     });
 }
+
+// Helper functions to get status badges and text
+function getOrderStatusInfo(status) {
+  const statusMap = {
+    'new': {
+      badge: 'bg-info',
+      text: 'New Order'
+    },
+    'pickedUp': {
+      badge: 'bg-primary',
+      text: 'Picked Up'
+    },
+    'inStock': {
+      badge: 'bg-success', 
+      text: 'In Stock'
+    },
+    'inProgress': {
+      badge: 'bg-warning',
+      text: 'In Progress' 
+    },
+    'headingToCustomer': {
+      badge: 'bg-info',
+      text: 'Heading To Customer'
+    },
+    'headingToYou': {
+      badge: 'bg-info', 
+      text: 'Heading To You'
+    },
+    'completed': {
+      badge: 'bg-success',
+      text: 'Completed'
+    },
+    'canceled': {
+      badge: 'bg-danger',
+      text: 'Canceled'
+    },
+    'rejected': {
+      badge: 'bg-danger',
+      text: 'Rejected'
+    },
+    'returned': {
+      badge: 'bg-warning',
+      text: 'Returned'
+    },
+    'terminated': {
+      badge: 'bg-danger',
+      text: 'Terminated'
+    }
+  };
+
+  return statusMap[status] || {
+    badge: 'bg-secondary',
+    text: 'Unknown Status'
+  };
+}
+
+function getPickupStatusInfo(status) {
+  const statusMap = {
+    'new': {
+      badge: 'bg-info',
+      text: 'New Pickup'
+    },
+    'driverAssigned': {
+      badge: 'bg-primary',
+      text: 'Driver Assigned'
+    },
+    'pickedUp': {
+      badge: 'bg-primary',
+      text: 'Picked Up'
+    },
+    'inStock': {
+      badge: 'bg-success',
+      text: 'In Stock'
+    },
+    'inProgress': {
+      badge: 'bg-warning',
+      text: 'In Progress'
+    },
+    'completed': {
+      badge: 'bg-success',
+      text: 'Completed'
+    },
+    'canceled': {
+      badge: 'bg-danger',
+      text: 'Canceled'
+    },
+    'rejected': {
+      badge: 'bg-danger',
+      text: 'Rejected'
+    },
+    'returned': {
+      badge: 'bg-warning',
+      text: 'Returned'
+    },
+    'terminated': {
+      badge: 'bg-danger',
+      text: 'Terminated'
+    }
+  };
+
+  return statusMap[status] || {
+    badge: 'bg-secondary', 
+    text: 'Unknown Status'
+  };
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  const pickupStatus = document.getElementById('pickupStatus');
+  const pickupStatusInfo = getPickupStatusInfo('<%= pickup.picikupStatus %>');
+  pickupStatus.innerHTML = `<span class="badge ${pickupStatusInfo.badge}">${pickupStatusInfo.text}</span>`;
+});
 
 
 // Fetch orders on page load

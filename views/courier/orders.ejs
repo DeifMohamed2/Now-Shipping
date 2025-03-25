@@ -386,75 +386,90 @@
 
         // For each order in this business
         businessOrders.forEach(order => {
-          const statusClass = getStatusClass(order.orderStatus);
-
+          const { statusClass, statusText } = getStatusClass(order.orderStatus);
+          console.log(statusClass, statusText);
           html += `
             <div class="order-item" data-order-id="${order.orderNumber}">
               <div class="row align-items-center">
-                <div class="col-md-3">
-                  <div class="d-flex align-items-center">
-                    <div class="form-check me-2">
-                      <input class="form-check-input" type="checkbox" value="${order.orderNumber}" name="orderCheckbox">
-                    </div>
-                    <div>
-                      <a href="/business/order-details/${order.orderNumber}" class="fw-medium link-primary">#${order.orderNumber}</a>
-                      <div class="text-muted small">${new Date(order.orderDate).toLocaleDateString()}</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-3">
-                  <div>
-                    <div class="fw-medium">${order.orderCustomer.fullName}</div>
-                    <div class="text-muted small">${order.orderCustomer.phone || 'No phone'}</div>
-                  </div>
-                </div>
-                <div class="col-md-2">
-                  <div>
-                    <span class="badge ${statusClass} order-status">${order.orderStatus}</span>
-                    <div class="text-muted small">${order.orderShipping.orderType}</div>
-                  </div>
-                </div>
-                <div class="col-md-2">
-                  <div class="fw-medium">${order.orderShipping.amount || 0} EGP</div>
-                  <div class="text-muted small">${order.orderShipping.amountType}</div>
-                </div>
-                <div class="col-md-2">
-                  <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-success btn-sm deliver-btn" onclick="deliverOrder('${order._id}', '${order.orderNumber}')">
-                      <i class="ri-check-line me-1"></i> Deliver
-                    </button>
-                    <div class="dropdown dropdown-fix">
-                      <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ri-more-2-fill"></i>
-                      </button>
-                      <ul class="dropdown-menu">
-                        <li>
-                          <button class="dropdown-item" onclick="showOrderActions('${order._id}', '${order.orderNumber}', 'customer_not_available')">
-                            <i class="ri-user-unfollow-line me-2 text-warning"></i> Customer Not Available
-                          </button>
-                        </li>
-                        <li>
-                          <button class="dropdown-item" onclick="showOrderActions('${order._id}', '${order.orderNumber}', 'customer_refused')">
-                            <i class="ri-close-circle-line me-2 text-danger"></i> Customer Refused
-                          </button>
-                        </li>
-                        <li>
-                          <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#printPolicyModal" onclick="setOrderId('${order.orderNumber}')">
-                            <i class="ri-printer-fill me-2 text-primary"></i> Print Policy
-                          </button>
-                        </li>
-                        <li>
-                          <a class="dropdown-item" href="/business/order-details/${order.orderNumber}">
-                            <i class="ri-information-line me-2 text-info"></i> Order Details
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+              <div class="col-md-3">
+              <div class="d-flex align-items-center">
+              <div class="form-check me-2">
+              <input class="form-check-input" type="checkbox" value="${order.orderNumber}" name="orderCheckbox">
+              </div>
+              <div>
+              <a href="/courier/order-details/${order.orderNumber}" class="fw-medium link-primary">#${order.orderNumber}</a>
+              <div class="text-muted small">${new Date(order.orderDate).toLocaleDateString()}</div>
+              </div>
+              </div>
+              </div>
+              <div class="col-md-3">
+              <div>
+              <div class="fw-medium">${order.orderCustomer.fullName}</div>
+              </div>
+              </div>
+              <div class="col-md-2">
+              <div>
+              <span class="badge ${statusClass} order-status">${statusText}</span>
+              <div class="text-muted small">${order.orderShipping.orderType}</div>
+              </div>
+              </div>
+              <div class="col-md-2">
+              <div class="fw-medium">${order.orderShipping.amount || 0} EGP</div>
+              <div class="text-muted small">${order.orderShipping.amountType}</div>
+              </div>
+              <div class="col-md-2">
+              <div class="d-flex gap-2 justify-content-end">
+              ${order.orderStatus !== 'completed' && order.orderStatus !== 'canceled' && order.orderStatus !== 'rejected' && order.orderStatus !== 'returned' && order.orderStatus !== 'terminated' ? `
+              <button class="btn btn-success btn-sm deliver-btn" onclick="deliverOrder('${order._id}', '${order.orderNumber}')">
+              <i class="ri-check-line me-1"></i> Deliver
+              </button>
+              ` : ''}
+              <div class="dropdown dropdown-fix">
+              <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ri-more-2-fill"></i>
+              </button>
+              <ul class="dropdown-menu">
+              <li>
+              <button class="dropdown-item" onclick="showOrderActions('${order._id}', '${order.orderNumber}', 'customer_not_available')">
+              <i class="ri-user-unfollow-line me-2 text-warning"></i> Customer Not Available
+              </button>
+              </li>
+              <li>
+              <button class="dropdown-item" onclick="showOrderActions('${order._id}', '${order.orderNumber}', 'customer_refused')">
+              <i class="ri-close-circle-line me-2 text-danger"></i> Customer Refused
+              </button>
+              </li>
+              <li>
+              ${order.orderStatus !== 'completed' && order.orderStatus !== 'canceled' && order.orderStatus !== 'rejected' && order.orderStatus !== 'returned' && order.orderStatus !== 'terminated' ? `
+              <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#printPolicyModal" onclick="setOrderId('${order.orderNumber}')">
+              <i class="ri-printer-fill me-2 text-primary"></i> Print Policy
+              </button>
+              ` : ''}
+              </li>
+              <li>
+              <a class="dropdown-item" href="/business/order-details/${order.orderNumber}">
+              <i class="ri-information-line me-2 text-info"></i> Order Details
+              </a>
+              </li>
+              </ul>
+              </div>
+              </div>
+              </div>
+              </div>
+              <div class="row mt-2">
+              <div class="col-md-12">
+              <div class="text-muted small">
+              ${order.orderShipping.orderType === 'Deliver' ? `<strong>Number of Items:</strong> ${order.orderShipping.numberOfItems}` : ''}
+              ${order.orderShipping.orderType === 'Exchange' ? `<strong>Current Items:</strong> ${order.orderShipping.numberOfItems}, <strong>Replacement Items:</strong> ${order.orderShipping.numberOfItemsReplacement}` : ''}
+              ${order.orderShipping.orderType === 'CashCollection' ? `<strong>Amount to Collect:</strong> ${order.orderShipping.amount}` : ''}
+              ${order.orderShipping.amountType === 'CD' ? `<strong>Cash Difference:</strong> ${order.orderShipping.amount}` : ''}
+              ${order.orderShipping.amountType === 'COD' ? `<strong>Cash on Delivery:</strong> ${order.orderShipping.amount}` : ''}
+              ${order.orderShipping.amountType === 'CC' ? `<strong>Cash Collection:</strong> ${order.orderShipping.amount}` : ''}
+              </div>
+              </div>
               </div>
             </div>
-          `;
+            `;
         });
 
         html += `
@@ -474,16 +489,66 @@
 
   function getStatusClass(status) {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return 'bg-warning-subtle text-warning';
-      case 'delivered':
-        return 'bg-success-subtle text-success';
+      case 'new':
+        return {
+          statusClass: 'bg-info-subtle text-info', 
+          statusText: 'New'
+        };
+      case 'pickedup':
+        return {
+          statusClass: 'bg-warning-subtle text-warning',
+          statusText: 'Picked Up'
+        };
+      case 'instock':
+        return {
+          statusClass: 'bg-primary-subtle text-primary',
+          statusText: 'In Stock'
+        };
+      case 'inprogress': 
+        return {
+          statusClass: 'bg-info-subtle text-info',
+          statusText: 'In Progress'
+        };
+      case 'headingtocustomer':
+        return {
+          statusClass: 'bg-warning-subtle text-warning',
+          statusText: 'Heading to Customer'
+        };
+      case 'headingtoyou':
+        return {
+          statusClass: 'bg-warning-subtle text-warning',
+          statusText: 'Heading to You'
+        };
+      case 'completed':
+        return {
+          statusClass: 'bg-success-subtle text-success',
+          statusText: 'Completed'
+        };
+      case 'canceled':
+        return {
+          statusClass: 'bg-danger-subtle text-danger',
+          statusText: 'Canceled'
+        };
+      case 'rejected':
+        return {
+          statusClass: 'bg-danger-subtle text-danger',
+          statusText: 'Rejected'
+        };
       case 'returned':
-        return 'bg-danger-subtle text-danger';
-      case 'exchange':
-        return 'bg-info-subtle text-info';
+        return {
+          statusClass: 'bg-danger-subtle text-danger',
+          statusText: 'Returned'
+        };
+      case 'terminated':
+        return {
+          statusClass: 'bg-danger-subtle text-danger',
+          statusText: 'Terminated'
+        };
       default:
-        return 'bg-secondary-subtle text-secondary';
+        return {
+          statusClass: 'bg-secondary-subtle text-secondary',
+          statusText: status
+        };
     }
   }
 

@@ -40,7 +40,7 @@ const get_orders = async (req, res) => {
     }
 
     console.log(query);
-    orders = await Order.find(query).populate('business', 'brandInfo');
+    orders = await Order.find(query).populate('business', 'brandInfo').populate('deliveryMan');
     res.status(200).json(orders || []);
   } catch (error) {
     console.error('Error in orders:', error);
@@ -52,7 +52,7 @@ const get_orders = async (req, res) => {
 const get_orderDetailsPage = async (req, res) => {
   const { orderNumber } = req.params;
 
-  const order = await Order.findOne({ orderNumber }).populate('business');
+  const order = await Order.findOne({ orderNumber }).populate('business').populate('deliveryMan');
 
   if (!order) {
     res.render('admin/order-details', {
@@ -105,20 +105,78 @@ const get_couriers = async (req, res) => {
     let couriers = [];
    
     try {
-    if (status === 'active') {
-        couriers = await Courier.find({ isAvailable: true });
-    } else if (status === 'inactive') {
-        couriers = await Courier.find({ isAvailable: false });
-    } else {
-        couriers = await Courier.find({});
-    }
-    
-    res.status(200).json(couriers || []);
-}catch (error) { 
-    console.error('Error in couriers:', error);
-    res.status(500).json({ error: 'Internal server error. Please try again.' });
-    }
+        // Get base courier query based on status
+        let courierQuery;
+        if (status === 'active') {
+            courierQuery = Courier.find({ isAvailable: true });
+        } else if (status === 'inactive') {
+            courierQuery = Courier.find({ isAvailable: false }); 
+        } else {
+            courierQuery = Courier.find({});
+        }
 
+        // Get couriers
+        couriers = await courierQuery;
+
+        // Get additional stats for each courier
+        let courierStats = await Promise.all(couriers.map(async courier => {
+            // Get completed and cancelled/rejected orders
+            const completedOrders = await Order.countDocuments({
+                deliveryMan: courier._id,
+                orderStatus: 'completed'
+            });
+
+            const cancelledOrders = await Order.countDocuments({
+                deliveryMan: courier._id,
+                orderStatus: {$in: ['canceled', 'rejected']}
+            });
+
+            // Calculate success percentage
+            const totalOrders = completedOrders + cancelledOrders;
+            const successPercentage = totalOrders > 0 ? 
+                Math.round((completedOrders / totalOrders) * 100) : 0;
+
+            // Get active orders
+            const activeOrders = await Order.countDocuments({
+                deliveryMan: courier._id,
+                orderStatus: {$in: ['headingToCustomer', 'headingToYou']}
+            });
+
+            // Get active pickups
+            const activePickups = await Pickup.countDocuments({
+                assignedDriver: courier._id,
+                picikupStatus: 'pickedUp'
+            });
+
+            // Get total assigned orders
+            const totalAssignedOrders = await Order.countDocuments({
+                deliveryMan: courier._id
+            });
+
+            // Get total assigned pickups 
+            const totalAssignedPickups = await Pickup.countDocuments({
+                assignedDriver: courier._id
+            });
+
+            return {
+                ...courier.toObject(),
+                successPercentage,
+                activeOrders,
+                activePickups,
+                totalAssignedOrders,
+                totalAssignedPickups
+            };
+        }));
+
+        // Sort couriers by success percentage in descending order
+        courierStats.sort((a, b) => b.successPercentage - a.successPercentage);
+
+        res.status(200).json(courierStats || []);
+
+    } catch (error) {
+        console.error('Error in couriers:', error);
+        res.status(500).json({ error: 'Internal server error. Please try again.' });
+    }
 }
 
 
@@ -428,6 +486,193 @@ const deletePickup  = async (req, res) => {
 // ========================================End Pickups ======================================== //
 
 
+// ======================================== Stock Managment ======================================== //
+
+const get_stockManagmentPage = (req, res) => {
+  res.render('admin/stock-managment', {
+    title: 'Stock Managment',
+    page_title: 'Stock Managment',
+    folder: 'Pages',
+  });
+}
+
+
+const get_stock_orders = async (req, res) => {
+    try {
+        const orders = await Order.find({ orderStatus: { $in: ['inStock', 'inProgress'] } })
+            .populate('business')
+            .populate('deliveryMan')
+        res.status(200).json(orders || []);
+    } catch (error) {
+        console.error('Error in get_stock_orders:', error);
+        res.status(500).json({ error: 'Internal server error. Please try again.' });
+    }
+}
+
+
+
+const add_to_stock = async (req, res) => {
+  const { orderNumber } = req.body;
+  try {
+    const order = await Order.findOne({ orderNumber });
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+
+    if(order.orderStatus==='inStock'){
+        return res.status(400).json({ error: 'Order is already in stock' });
+    }
+
+
+    if(order.orderStatus !== 'pickedUp'){
+        return res.status(400).json({ error: 'Order is not picked up' });
+    }
+
+    if(order.orderStatus === 'inProgress'){
+      return res.status(400).json({ error: 'Order is already in progress' });
+    }
+
+
+    if(order.orderStatus === 'pickedUp'){
+      order.orderStatus = 'inStock';
+      if(order.orderStages.length === 2){
+      order.orderStages.push({
+        stageName: 'inStock',
+        stageDate: new Date(),
+        stageNotes: [
+          { text: `Order added to stock`, date: new Date() },
+        ],
+      });
+      }
+      await order.save();
+    }
+    
+    res.status(200).json({ message: 'Order added to stock successfully' });
+  } catch (error) {
+    console.error('Error in add_to_stock:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+
+const get_couriers_by_zone = async (req, res) => {
+  const { zone } = req.query;
+  try {
+    const couriers = await Courier.find({ assignedZones: zone });
+    res.status(200).json(couriers || []);
+  } catch (error) {
+    console.error('Error in get_couriers_by_zone:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+const assignCourierToStock = async (req, res) => {
+  const { orderNumbers, courierId } = req.body;
+  try {
+    console.log(orderNumbers, courierId);
+    const courier = await Courier.findById(courierId);
+    if (!courier) {
+      return res.status(404).json({ error: 'Courier not found' });
+    }
+
+    const orders = await Order.find({ orderNumber: { $in: orderNumbers } });
+    if (orders.length !== orderNumbers.length) {
+      return res.status(404).json({ error: 'Some orders not found' });
+    }
+
+    // Validate all orders before making any changes
+    for (const order of orders) {
+      if(order.orderStatus !== 'inProgress'){
+          
+        if (order.orderStatus !== 'inStock' && order.orderStatus !== 'pickedUp') {
+          return res.status(400).json({ error: `Order ${order.orderNumber} is not in stock` });
+        }
+        if (order.orderStatus === 'headingToCustomer' || order.orderStatus === 'headingToYou') {
+          return res.status(400).json({ error: `Order ${order.orderNumber} Can\'t be assigned to courier because it is on the way to customer` });
+        }
+      }
+    }
+
+    // Update all orders after validation passes
+    const updatePromises = orders.map(order => {
+      order.deliveryMan = courierId;
+      order.orderStatus = 'inProgress';
+      return order.save();
+    });
+
+    await Promise.all(updatePromises);
+
+    res.status(200).json({ message: 'Orders assigned to courier successfully' });
+  } catch (error) {
+    console.error('Error in assignCourierToStock:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+const courier_received = async (req, res) => {
+  const { courierId } = req.body;
+  try {
+    const courier = await Courier.findById(courierId);
+    if (!courier) {
+      return res.status(404).json({ error: 'Courier not found' });
+    }
+
+    const orders = await Order.find({ deliveryMan: courierId, orderStatus: 'inProgress' });
+    if (!orders.length) {
+      return res.status(404).json({ error: 'No orders found for this courier' });
+    }
+
+    const updatePromises = orders.map(order => {
+      order.orderStatus = 'headingToCustomer';
+      if(order.orderStages.length === 3) {
+        order.orderStages.push({
+          stageName: 'headingToCustomer', 
+          stageDate: new Date(),
+          stageNotes: [
+            { text: `Order assigned to courier ${courier.name}`, date: new Date() },
+          ],
+        });
+      }
+      return order.save();
+    });
+
+    await Promise.all(updatePromises);
+
+    res.status(200).json({ message: 'Orders marked as received by courier successfully' });
+  } catch (error) {
+    console.error('Error in courier_received:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+
+
+
+
+// ======================================== Wallet Overview ======================================== //
+
+const get_walletOverviewPage = (req, res) => {
+  res.render('admin/wallet-overview', {
+    title: 'Wallet Overview',
+    page_title: 'Wallet Overview',
+    folder: 'Pages',
+  });
+} 
+
+// ======================================== End Wallet Overview ======================================== //
+
+
+
+// ======================================== Logout ======================================== //
+
+const logOut = (req, res) => {
+  req.session.destroy();
+  res.clearCookie('token');
+  res.redirect('/admin-login');
+}
+
+
 module.exports = {
   getDashboardPage,
   get_deliveryMenByZone,
@@ -449,4 +694,19 @@ module.exports = {
   cancelPickup,
   deletePickup,
   get_pickedupOrders,
+
+
+  // Stock Managment
+  get_stockManagmentPage,
+  add_to_stock, 
+  get_stock_orders,
+  get_couriers_by_zone,
+  assignCourierToStock,
+  courier_received,
+
+  // Wallet Overview
+  get_walletOverviewPage,
+
+  // Logout
+  logOut,
 };

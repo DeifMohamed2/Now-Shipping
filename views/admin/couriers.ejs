@@ -217,10 +217,11 @@
                   <th>Courier</th>
                   <th>Contact</th>
                   <th>Assigned Zones</th>
-                  <th>Active Orders</th>
-                  <th>Completed Orders</th>
+                  <th>Active Tasks</th>  
+                  <th>Total Assigned Orders</th>
+                  <th>Total Assigned Pickups</th>
+                  <!-- <th>Success Rate</th> -->
                   <th>Status</th>
-                  <th>Joined Date</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -1008,13 +1009,39 @@ function populateCouriersTable(couriers) {
                     ${courier.assignedZones.map(zone => `<span class="zone-badge">${zone}</span>`).join('')}
                 </div>
             </td>
-            <td class="active_orders">
-                <div class="badge bg-info-subtle text-info">${courier.activeOrders || 0} Orders</div>
+            <td class="active_tasks">
+                <div class="d-flex flex-column gap-1">
+                    <div class="badge bg-info-subtle text-info">
+                        <i class="ri-truck-line me-1"></i>
+                        ${courier.activeOrders} Orders
+                    </div>
+                    <div class="badge bg-warning-subtle text-warning">
+                        <i class="ri-takeaway-line me-1"></i>
+                        ${courier.activePickups} Pickups
+                    </div>
+                </div>
             </td>
             <td class="completed">
-                <div>${courier.completedOrders || 0} Orders</div>
-                <div class="text-muted">${courier.successRate || 0}% Success Rate</div>
+                <div class="d-flex flex-column gap-1">
+                    <div class="badge bg-success-subtle text-success">
+                        <i class="ri-check-line me-1"></i>
+                        ${courier.totalAssignedOrders} Total Orders
+                    </div>
+                    <div class="badge bg-primary-subtle text-primary">
+                        <i class="ri-percent-line me-1"></i>
+                        ${courier.successPercentage}% Success Rate
+                    </div>
+                </div>
             </td>
+            <td class="completed">
+                <div class="d-flex flex-column gap-1">
+                    <div class="badge bg-success-subtle text-success">
+                        <i class="ri-check-line me-1"></i>
+                        ${courier.totalAssignedPickups} Total Pickups
+                    </div>
+                </div>
+            </td>
+
             <td class="status">
                 <span class="badge ${courier.isAvailable ? 'badge-courier-active' : 'badge-courier-inactive'} text-uppercase">${courier.isAvailable ? 'Active' : 'Inactive'}</span>
             </td>
