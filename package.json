@@ -85,6 +85,7 @@
     "masonry-layout": "^4.2.2",
     "moment": "2.24.0",
     "multi.js": "^0.5.3",
+    "node-cron": "^3.0.3",
     "node-waves": "^0.7.6",
     "nouislider": "^15.8.1",
     "particles.js": "^2.0.0",

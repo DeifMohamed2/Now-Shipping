@@ -165,9 +165,13 @@ const UserSchema = new mongoose.Schema(
 
 // Method to generate a verification token
 UserSchema.methods.generateVerificationToken = function() {
+  console.log('Generating verification token...');
     const token = crypto.randomBytes(20).toString('hex');
     this.verificationToken = token;
+    console.log('Verification token:', this.verificationToken);
     this.verificationTokenExpires = Date.now() + 3600000; // 1 hour
+    // save the user with the new token and expiration time
+    this.save();
     return token;
 };
 
@@ -179,6 +183,7 @@ UserSchema.methods.verifyEmail = function(token) {
         this.verificationTokenExpires = undefined;
         return true;
     }
+    
     return false;
 };
 

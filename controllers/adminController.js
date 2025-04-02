@@ -1,6 +1,9 @@
 const Order = require('../models/order');
 const Courier = require('../models/Courier');
 const Pickup = require('../models/pickup');
+const Release = require('../models/releases');
+const User = require('../models/user');
+const Transaction = require('../models/transactions');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET
@@ -22,7 +25,6 @@ const get_ordersPage = (req, res) => {
     folder: 'Pages',
   });
 };
-
 
 const get_orders = async (req, res) => {
   const { orderType, status } = req.query;
@@ -652,19 +654,172 @@ const courier_received = async (req, res) => {
 
 // ======================================== Wallet Overview ======================================== //
 
-const get_walletOverviewPage = (req, res) => {
-  res.render('admin/wallet-overview', {
-    title: 'Wallet Overview',
-    page_title: 'Wallet Overview',
+const get_releaseAmountsPage = (req, res) => {
+  res.render('admin/release-amounts', {
+    title: 'Release Amounts',
+    page_title: 'Release Amounts',
     folder: 'Pages',
   });
 } 
+
+
+const get_releasesAllData = async (req, res) => {
+  const { filter } = req.query;
+  try {
+    // Fetch all releases
+    let query = {};
+
+    if (filter === 'pending') {
+      query.releaseStatus = 'pending';
+    } else if (filter === 'scheduled') {
+      query.releaseStatus = 'scheduled';
+    }else if (filter === 'released') {
+      query.releaseStatus = 'released';
+    } else if (filter === 'all') {
+      query = {};
+    }
+    // Fetch all releases with the specified status
+    const releases = await Release.find(query).populate('business', 'brandInfo')
+    console.log(releases);
+    // Calculate Total Funds Available
+    const totalFundsAvailable = releases.reduce((sum, release) => {
+      if (release.releaseStatus === 'pending' || release.releaseStatus === 'scheduled') {
+        return sum + release.amount;
+      }
+      return sum;
+    }, 0);
+
+    // Calculate Next Release Date (always the next Wednesday)
+    const today = new Date();
+    const nextWednesday = new Date(today);
+    nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7 || 7));
+    // Calculate Total Payments Released
+    const totalPaymentsReleased = releases
+      .filter(release => release.releaseStatus === 'released')
+      .reduce((sum, release) => sum + release.amount, 0);
+
+    // Calculate Payments Pending
+    const paymentsPending = releases
+      .filter(release => release.releaseStatus === 'pending')
+      .reduce((sum, release) => sum + release.amount, 0);
+
+    // Calculate Scheduled Releases
+    const scheduledReleases = releases
+      .filter(release => release.releaseStatus === 'scheduled')
+      .reduce((sum, release) => sum + release.amount, 0);
+
+    // Calculate the number of releases for each category
+    const totalPaymentsReleasedCount = releases.filter(release => release.releaseStatus === 'released').length;
+    const paymentsPendingCount = releases.filter(release => release.releaseStatus === 'pending').length;
+    const scheduledReleasesCount = releases.filter(release => release.releaseStatus === 'scheduled').length;
+
+    // Send response
+    res.status(200).json({
+      totalFundsAvailable,
+      nextReleaseDate: nextWednesday.toDateString(),
+      totalPaymentsReleased,
+      paymentsPending,
+      scheduledReleases,
+      totalPaymentsReleasedCount,
+      paymentsPendingCount,
+      scheduledReleasesCount,
+      releases,
+    });
+  } catch (error) {
+    console.error('Error in get_releasesAllData:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
+
+const rescheduleRelease = async (req, res) => {
+  const { releaseId , newDate, reason, notes} = req.body;
+  try {
+    const release = await Release.findById(releaseId);
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+    release.scheduledReleaseDate = newDate;
+    release.reason = reason||'';
+    release.releaseNotes = notes||'';
+    release.releaseStatus = 'scheduled';
+    await release.save();
+    res.status(200).json({ message: 'Release rescheduled successfully' });
+  } catch (error) {
+    console.error('Error in rescheduleRelease:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+const releaseFunds = async (req, res) => {
+  const {releaseId,notes} = req.body;
+  try {
+    const release = await Release.findById(releaseId).populate('business');
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    if (release.releaseStatus === 'released') {
+      return res.status(400).json({ error: 'Release already released' });
+    }
+
+    release.releaseStatus = 'released';
+    release.scheduledReleaseDate = null;
+    release.reason = null;
+    release.releaseNotes = notes||'';
+    await release.save();
+
+    // Create a transaction record
+    const transaction = new Transaction({
+      transactionId: Math.floor(100000 + Math.random() * 900000).toString(),
+      transactionType: 'withdrawal',
+      transactionAmount: -release.amount,
+      transactionNotes: `Funds released` ,
+      business: release.business._id,
+    });
+
+    await transaction.save();
+
+    res.status(200).json({ message: 'Funds released successfully' });
+
+  } catch (error) {
+    console.error('Error in releaseFunds:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+    
+
+
+
 
 // ======================================== End Wallet Overview ======================================== //
 
 
 
+// ======================================== Businesses ======================================== //
+
+const get_businessesPage = (req, res) => {
+  res.render('admin/businesses', {
+    title: 'Businesses',
+    page_title: 'Businesses',
+    folder: 'Pages',
+  });
+}
+
+
+
 // ======================================== Logout ======================================== //
+
+
+// ======================================== Tickets ======================================== //
+const get_ticketsPage = (req, res) => {
+  res.render('admin/tickets', {
+    title: 'Tickets',
+    page_title: 'Tickets',
+    folder: 'Pages',
+  });
+}
+
 
 const logOut = (req, res) => {
   req.session.destroy();
@@ -705,8 +860,16 @@ module.exports = {
   courier_received,
 
   // Wallet Overview
-  get_walletOverviewPage,
+  get_releaseAmountsPage,
+  get_releasesAllData,
+  rescheduleRelease,
+  releaseFunds,
 
+  get_businessesPage,
+
+
+  // Tickets
+  get_ticketsPage,
   // Logout
   logOut,
 };

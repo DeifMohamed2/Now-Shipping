@@ -2,9 +2,6 @@
 <link rel="stylesheet" href="/assets/rCSS/business.css">
 <link rel="stylesheet" href="/assets/libs/filepond/filepond.min.css" type="text/css" />
 <link rel="stylesheet" href="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
-
-<%- contentFor('body') %>
-<!-- Verifications -->
 <style>
   /* Custom styles */
   .completed {
@@ -24,15 +21,130 @@
   /* Highlight selected payment and brand options */
   .payment-option.active,
   .brand-option.active {
-    border: 2px solid blue;
+    border: 2px solid #405189;
+    box-shadow: 0 0 10px rgba(64, 81, 137, 0.2);
+    transform: translateY(-3px);
+    transition: all 0.3s ease;
   }
 
   /* Bootstrap invalid field styling */
   .is-invalid {
     border-color: #dc3545;
   }
+
+  /* Step navigation styling */
+  .nav-link {
+    position: relative;
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .nav-link:hover {
+    background-color: rgba(64, 81, 137, 0.05);
+  }
+
+  .nav-link.active {
+    background-color: rgba(64, 81, 137, 0.1);
+    color: #405189;
+    font-weight: 600;
+  }
+
+  .step-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+  }
+
+  .step-icon {
+    font-size: 1.25rem;
+  }
+
+  /* Form styling */
+  .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  .card {
+    transition: all 0.3s ease;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Button styling */
+  .btn {
+    padding: 0.6rem 1.5rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-success {
+    background-color: #0ab39c;
+    border-color: #0ab39c;
+  }
+
+  .btn-success:hover {
+    background-color: #099885;
+    border-color: #099885;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(10, 179, 156, 0.2);
+  }
+
+  .btn-outline-secondary {
+    color: #74788d;
+    border-color: #74788d;
+  }
+
+  .btn-outline-secondary:hover {
+    background-color: #74788d;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(116, 120, 141, 0.2);
+  }
+
+  /* Upload progress styling */
+  .upload-progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #e9ecef;
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+
+  .upload-progress-bar {
+    height: 100%;
+    background-color: #0ab39c;
+    transition: width 0.3s ease;
+  }
+
+  /* Photo count badge */
+  .photo-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    color: #fff;
+    background-color: #0ab39c;
+    border-radius: 2rem;
+  }
+
+  .photo-count i {
+    margin-right: 0.25rem;
+  }
 </style>
 
+<%- contentFor('body') %>
+<!-- Verifications -->
 <div class="row">
   <% if (!user.isCompleted) { %>
   <div class="col-xl-12">
@@ -46,37 +158,37 @@
           <div class="row gy-5">
             <div class="col-lg-3">
               <div class="nav flex-column custom-nav nav-pills" role="tablist" aria-orientation="vertical">
-                <button class="nav-link" id="v-pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-bill-info" type="button" role="tab">
+                <button class="nav-link active" id="v-pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-bill-info" type="button" role="tab" aria-controls="v-pills-bill-info" aria-selected="true">
                   <span class="step-title me-2">
                     <i class="ri-<%= user.isVerified ? 'check' : 'close' %>-circle-fill step-icon me-2 <%= user.isVerified ? 'text-success' : '' %>"></i> Step 1
                   </span>
                   Email Verification
                 </button>
-                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-brand-info" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-brand-info" type="button" role="tab" aria-controls="v-pills-brand-info" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 2
                   </span>
                   Brand Info
                 </button>
-                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-pickUp-tab" data-bs-toggle="pill" data-bs-target="#v-pills-location" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-pickUp-tab" data-bs-toggle="pill" data-bs-target="#v-pills-location" type="button" role="tab" aria-controls="v-pills-location" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 3
                   </span>
                   PickUp Address
                 </button>
-                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-payment-tab" data-bs-toggle="pill" data-bs-target="#v-payment-method" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-payment-tab" data-bs-toggle="pill" data-bs-target="#v-payment-method" type="button" role="tab" aria-controls="v-payment-method" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 4
                   </span>
                   Payment Method
                 </button>
-                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-type-tab" data-bs-toggle="pill" data-bs-target="#v-brand-type" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-type-tab" data-bs-toggle="pill" data-bs-target="#v-brand-type" type="button" role="tab" aria-controls="v-brand-type" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 5
                   </span>
                   Brand Type
                 </button>
-                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-finish-tab" data-bs-toggle="pill" data-bs-target="#v-pills-finish" type="button" role="tab" <%= user.isVerified ? '' : 'disabled' %>>
+                <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-finish-tab" data-bs-toggle="pill" data-bs-target="#v-pills-finish" type="button" role="tab" aria-controls="v-pills-finish" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 6
                   </span>
@@ -90,7 +202,7 @@
               <div class="px-lg-4">
                 <div class="tab-content">
                   <!-- Step 1: Email Verification -->
-                  <div class="tab-pane fade text-center p-4" id="v-pills-bill-info" role="tabpanel" aria-labelledby="v-pills-bill-info-tab">
+                  <div class="tab-pane fade show active text-center p-4" id="v-pills-bill-info" role="tabpanel" aria-labelledby="v-pills-bill-info-tab">
                     <% if (user.isVerified) { %>
                     <div class="mb-3">
                       <h4 class="fw-bold">Email Verified</h4>
@@ -99,12 +211,15 @@
                     <div class="mb-4">
                       <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>
                     </div>
+                    <button type="button" class="btn btn-success nexttab" data-nexttab="v-pills-brand-info-tab">
+                      Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                    </button>
                     <% } else { %>
                     <div class="mb-3">
                       <h4 class="fw-bold">Email Verification</h4>
                       <p class="text-muted">Click the button below to verify your email via Gmail</p>
                     </div>
-                    <button type="button" class="btn btn-outline-danger btn-lg d-flex align-items-center mx-auto shadow-sm px-4 py-2" onclick="window.open('https://mail.google.com', '_blank')">
+                    <button type="button" class="btn btn-outline-danger btn-lg d-flex align-items-center mx-auto shadow-sm" id="sendVerificationEmail">
                       <i class="ri-mail-fill fs-5 me-2"></i> Send Verification Email
                     </button>
                     <% } %>
@@ -173,14 +288,14 @@
                             <input class="form-check-input" type="checkbox" id="customWebsite" name="sellingPoints[]" value="customWebsite">
                             <label class="form-check-label d-flex align-items-center" for="customWebsite">
                               <i class="ri-global-line me-2 fs-5 text-secondary"></i> Custom Website
-                            </label>                           
+                            </label>
                           </div>
                         </div>
                       </div>
                       <div class="col-md-6">
                         <div class="card p-3">
                           <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="facebookShop" name="sellingPoints[]" value="facebookShop" >
+                            <input class="form-check-input" type="checkbox" id="facebookShop" name="sellingPoints[]" value="facebookShop">
                             <label class="form-check-label d-flex align-items-center" for="facebookShop">
                               <i class="ri-facebook-circle-line me-2 fs-5 text-primary"></i> Facebook Shop
                             </label>
@@ -192,7 +307,7 @@
                             </label>
                           </div>
                           <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" id="shopify">
+                            <input class="form-check-input" type="checkbox" id="shopify" name="sellingPoints[]" value="shopify">
                             <label class="form-check-label d-flex align-items-center" for="shopify">
                               <i class="ri-shopping-cart-line me-2 fs-5 text-success"></i> Shopify
                             </label>
@@ -231,7 +346,39 @@
                       </div>
                       <div class="col-md-12">
                         <label for="region" class="form-label">Region</label>
-                        <input type="text" class="form-control" name="city" id="region" placeholder="Enter region" required>
+                        <select class="form-select" name="city" id="region" required>
+                          <option value="">Select Region...</option>
+                          <option value="Helwan">Helwan</option>
+                          <option value="Nasr City">Nasr City</option>
+                          <option value="6th of October">6th of October</option>
+                          <option value="Shubra">Shubra</option>
+                          <option value="Maadi">Maadi</option>
+                          <option value="Zamalek">Zamalek</option>
+                          <option value="Haram">Haram</option>
+                          <option value="Dokki">Dokki</option>
+                          <option value="Mohandessin">Mohandessin</option>
+                          <option value="New Cairo">New Cairo</option>
+                          <option value="Obour City">Obour City</option>
+                          <option value="Badr City">Badr City</option>
+                          <option value="10th of Ramadan">10th of Ramadan</option>
+                          <option value="Sheikh Zayed">Sheikh Zayed</option>
+                          <option value="Mokattam">Mokattam</option>
+                          <option value="Garden City">Garden City</option>
+                          <option value="Hadayek El-Kobba">Hadayek El-Kobba</option>
+                          <option value="Ain Shams">Ain Shams</option>
+                          <option value="El-Marg">El-Marg</option>
+                          <option value="El-Mataria">El-Mataria</option>
+                          <option value="El-Nozha">El-Nozha</option>
+                          <option value="El-Salam City">El-Salam City</option>
+                          <option value="El-Shorouk City">El-Shorouk City</option>
+                          <option value="El-Tagamoa">El-Tagamoa</option>
+                          <option value="El-Waily">El-Waily</option>
+                          <option value="Hadayek Helwan">Hadayek Helwan</option>
+                          <option value="Heliopolis">Heliopolis</option>
+                          <option value="Masr El-Gedida">Masr El-Gedida</option>
+                          <option value="Zaytoun">Zaytoun</option>
+                          <!-- Add other zones as needed -->
+                        </select>
                       </div>
                       <div class="col-md-12">
                         <label for="address-details" class="form-label">Address Details</label>
@@ -260,16 +407,16 @@
                       </div>
                     </div>
                     <div class="d-flex align-items-start gap-3 mt-4">
-                      <button type="button" class="btn btn-light btn-label previestab" data-previous="v-pills-brand-info-tab">
+                      <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-brand-info-tab">
                         <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Brand Info
                       </button>
-                      <button type="button" class="btn btn-success btn-label right ms-auto nexttab" data-nexttab="v-pills-payment-tab">
-                        <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i> Continue to Payment
+                      <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-payment-tab">
+                        Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                       </button>
                     </div>
                   </div>
 
-             
+
                   <!-- Step 4: Payment Method -->
                   <div class="tab-pane fade p-4" id="v-payment-method" role="tabpanel" aria-labelledby="v-pills-payment-tab">
                     <div class="mb-4">
@@ -338,7 +485,7 @@
                       </div>
                     </div>
                     <div class="d-flex align-items-start gap-3 mt-4">
-                      <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-location-tab">
+                      <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-pickUp-tab">
                         <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Location
                       </button>
                       <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-brand-type-tab">
@@ -378,7 +525,7 @@
                     <!-- Personal Fields -->
                     <div id="personalFields" class="mt-4" style="display: none;">
                       <label for="nationalIdNumber" class="form-label">Enter your National ID Number:</label>
-                      <input type="number" min="14" max="14" id="nationalIdNumber" class="form-control" name="nationalId" placeholder="Example: 29811234567890" required>
+                      <input type="text" id="nationalIdNumber" class="form-control" name="nationalId" placeholder="Example: 29811234"  id="nationalIdNumber" class="form-control" name="nationalId" placeholder="Example: 29811234567890" required>
                       <label for="nationalIdUpload" class="form-label mt-3">Upload National ID:</label>
                       <div class="col-lg-12">
                         <div class="card">
@@ -388,6 +535,7 @@
                           <div class="card-body">
                             <p class="text-muted">Upload Front Side And Back Side</p>
                             <input type="file" class="filepond filepond-input-multiple" multiple name="filepond" data-allow-reorder="true" data-max-file-size="3MB" data-max-files="3" required>
+                            <!-- Add a div for upload progress that will be created dynamically -->
                           </div>
                         </div>
                       </div>
@@ -395,28 +543,29 @@
                     <!-- Company Fields -->
                     <div id="companyFields" class="mt-4" style="display: none;">
                       <label for="taxNumber" class="form-label">Enter your Tax Number:</label>
-                      <input type="number" id="taxNumber" class="form-control" name="taxNumber" placeholder="Example: 1234567890" required>
-                    <label for="companyDocs" class="form-label mt-3">Upload Company Papers:</label>
-                    <div class="col-lg-12">
-                      <div class="card">
-                        <div class="card-header">
-                          <h4 class="card-title mb-0">Upload Papers</h4>
-                        </div>
-                        <div class="card-body">
-                          <p class="text-muted">Please Upload All Papers</p>
-                          <input type="file" class="filepond filepond-input-multiple" multiple name="filepond" data-allow-reorder="true" data-max-file-size="3MB" data-max-files="10"> <!-- ✅ Increased max-files -->
+                      <input type="text" id="taxNumber" class="form-control" name="taxNumber" placeholder="Example: 1234567890" required>
+                      <label for="companyDocs" class="form-label mt-3">Upload Company Papers:</label>
+                      <div class="col-lg-12">
+                        <div class="card">
+                          <div class="card-header">
+                            <h4 class="card-title mb-0">Upload Papers</h4>
+                          </div>
+                          <div class="card-body">
+                            <p class="text-muted">Please Upload All Papers</p>
+                            <input type="file" class="filepond filepond-input-multiple" multiple name="filepond" data-allow-reorder="true" data-max-file-size="3MB" data-max-files="10">
+                            <!-- Add a div for upload progress that will be created dynamically -->
+                          </div>
                         </div>
                       </div>
-                    </div>
-
                     </div>
                     <div class="d-flex align-items-start gap-3 mt-4">
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-payment-tab">
                         <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Payment Method
                       </button>
-                        <p id="photoCount" class="mt-2 text-success fw-bold">Uploaded Photos: 0</p> <!-- ✅ Photo Count Display -->
-
-                      <button type="submit" id="submitButton" class="btn btn-success ms-auto nexttab">
+                      <span class="photo-count ms-auto me-3" id="photoCount" style="display: none;">
+                        <i class="ri-image-line"></i> <span>0</span> files
+                      </span>
+                      <button type="button" class="btn btn-success nexttab" data-nexttab="v-pills-finish-tab" id="submitButton">
                         Submit All <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                       </button>
                     </div>
@@ -428,8 +577,11 @@
                       <div class="mb-4">
                         <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>
                       </div>
-                      <h5>Your Order is Completed!</h5>
-                      <p class="text-muted">You will receive an order confirmation email with details of your order.</p>
+                      <h5>Your Account Setup is Completed!</h5>
+                      <p class="text-muted">You will receive a confirmation email with details of your account setup.</p>
+                      <div class="mt-4">
+                        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -444,8 +596,7 @@
     </div>
     <!-- end card -->
   </div>
-    <% } %>
-  <!-- Additional Widgets -->
+  <% } else { %>
   <div class="col-lg-12">
     <div class="row">
       <div class="col-xl-3 col-md-6">
@@ -536,6 +687,7 @@
       </div><!-- end col -->
     </div>
   </div>
+  <% } %>
   <!-- end col -->
 </div>
 
@@ -550,50 +702,528 @@
 
 <script src="/assets/js/pages/form-file-upload.init.js"></script>
 <script src="/assets/rJS/business/main.js"></script>
-<script src="/assets/rJS/business/dashboard.js"></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap components
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Helper function to check if an element is visible
+    function isVisible(el) {
+      return el && el.offsetParent !== null; // Ensures only displayed elements are considered
+    }
+
+    // Helper function to clear all input values inside a container
+    function clearFormInputs(container) {
+      if (!container) return;
+      const inputs = container.querySelectorAll('input, select, textarea');
+      inputs.forEach((input) => {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+          input.checked = false;
+        } else {
+          input.value = '';
+        }
+        input.classList.remove('is-invalid'); // Remove validation errors when clearing
+      });
+    }
+
+    // Validate only the visible required fields in the current tab
+    function validateCurrentStep(currentTabPane) {
+      let isValid = true;
+      const requiredElements = currentTabPane.querySelectorAll(
+        'input[required], select[required], textarea[required]'
+      );
+
+      requiredElements.forEach((el) => {
+        if (!isVisible(el)) {
+          return; // Skip hidden elements
+        }
+
+        if (el.type === 'radio') {
+          const groupName = el.name;
+          const radioGroup = currentTabPane.querySelectorAll(
+            `input[name="${groupName}"]`
+          );
+          const groupChecked = Array.from(radioGroup).some(
+            (radio) => radio.checked
+          );
+
+          if (!groupChecked) {
+            isValid = false;
+            // Find the parent container for styling
+            const parentContainer = el.closest('.row');
+            if (parentContainer) {
+              parentContainer.querySelectorAll('.card').forEach(card => {
+                card.classList.add('border-danger');
+              });
+            }
+          } else {
+            // Remove error styling
+            const parentContainer = el.closest('.row');
+            if (parentContainer) {
+              parentContainer.querySelectorAll('.card').forEach(card => {
+                card.classList.remove('border-danger');
+              });
+            }
+          }
+        } else {
+          if (!el.value.trim()) {
+            isValid = false;
+            el.classList.add('is-invalid');
+          } else {
+            el.classList.remove('is-invalid');
+          }
+        }
+      });
+
+      return isValid;
+    }
+
+    // Mark step as completed
+    function markStepAsDone(tabId) {
+      const tabLink = document.querySelector(`button[data-bs-target="#${tabId}"]`);
+      if (tabLink) {
+        const icon = tabLink.querySelector('.step-icon');
+        if (icon) {
+          icon.classList.remove('ri-close-circle-fill');
+          icon.classList.add('ri-check-circle-fill', 'text-success');
+        }
+      }
+    }
+
+    // Function to activate a specific tab
+    function activateTab(tabId) {
+      const tabElement = document.getElementById(tabId);
+      if (!tabElement) return;
+
+      // Get the tab button
+      const tabButton = document.querySelector(`[data-bs-target="#${tabId}"]`);
+      if (!tabButton) return;
+
+      // Remove active class from all tabs and tab panes
+      document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
+      });
+
+      document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('show', 'active');
+      });
+
+      // Add active class to the selected tab and tab pane
+      tabButton.classList.add('active');
+      tabButton.setAttribute('aria-selected', 'true');
+      tabElement.classList.add('show', 'active');
+    }
+
+    // Initialize form steps
+    document.querySelectorAll('.form-steps').forEach((formSteps) => {
+      // Handle next tab navigation
+      formSteps.querySelectorAll('.nexttab').forEach((nextBtn) => {
+        nextBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+
+          const currentTabPane = formSteps.querySelector('.tab-pane.show.active');
+          if (!currentTabPane) return;
+
+          const currentTabId = currentTabPane.getAttribute('id');
+
+          // Validate current step
+          if (!validateCurrentStep(currentTabPane)) {
+            Swal.fire({
+              title: 'Validation Error',
+              text: 'Please complete all required fields before continuing.',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+            return;
+          }
+
+          // Mark current step as done
+          markStepAsDone(currentTabId);
+
+          // Get next tab ID
+          const nextTabId = this.getAttribute('data-nexttab');
+          if (!nextTabId) return;
+
+          // Get the actual tab element
+          const nextTabButton = document.getElementById(nextTabId);
+          if (nextTabButton) {
+            // Enable the next tab if it was disabled
+            nextTabButton.classList.remove('disabled');
+            nextTabButton.removeAttribute('disabled');
+
+            // Activate the next tab
+            nextTabButton.click();
+          }
+        });
+      });
+
+      // Handle previous tab navigation
+      formSteps.querySelectorAll('.previestab').forEach((prevBtn) => {
+        prevBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+
+          const previousTabId = this.getAttribute('data-previous');
+          if (!previousTabId) return;
+
+          const previousTabButton = document.getElementById(previousTabId);
+          if (previousTabButton) {
+            previousTabButton.click();
+          }
+        });
+      });
+
+      // Payment Method Selection
+      formSteps.querySelectorAll('.payment-option').forEach((paymentOption) => {
+        paymentOption.addEventListener('click', function() {
+          // Remove active class from all payment options
+          formSteps.querySelectorAll('.payment-option').forEach((option) => {
+            option.classList.remove('active');
+          });
+
+          // Add active class to the clicked option
+          this.classList.add('active');
+
+          // Hide all payment details
+          document.querySelectorAll('.payment-detail').forEach((detail) => {
+            detail.style.display = 'none';
+            clearFormInputs(detail);
+          });
+
+          // Show the relevant payment details
+          const method = this.getAttribute('data-value');
+          if (method) {
+            const detailDiv = document.getElementById(method + 'Details');
+            if (detailDiv) {
+              detailDiv.style.display = 'block';
+              document.getElementById('paymentDetails').style.display = 'block';
+            }
+          }
+
+          // Check the radio input
+          const radioInput = this.querySelector('.payment-radio');
+          if (radioInput) {
+            radioInput.checked = true;
+          }
+        });
+      });
+
+      // Brand Type Selection
+      formSteps.querySelectorAll('.brand-option').forEach((brandOption) => {
+        brandOption.addEventListener('click', function() {
+          // Remove active class from all brand options
+          formSteps.querySelectorAll('.brand-option').forEach((option) => {
+            option.classList.remove('active');
+          });
+
+          // Add active class to the clicked option
+          this.classList.add('active');
+
+          // Get the brand type
+          const brandType = this.getAttribute('data-value');
+          const personalFields = document.getElementById('personalFields');
+          const companyFields = document.getElementById('companyFields');
+
+          // Show/hide fields based on selection
+          if (brandType === 'personal') {
+            if (companyFields) {
+              clearFormInputs(companyFields);
+              companyFields.style.display = 'none';
+            }
+            if (personalFields) {
+              personalFields.style.display = 'block';
+            }
+          } else if (brandType === 'company') {
+            if (personalFields) {
+              clearFormInputs(personalFields);
+              personalFields.style.display = 'none';
+            }
+            if (companyFields) {
+              companyFields.style.display = 'block';
+            }
+          }
+
+          // Check the radio input
+          const radioInput = this.querySelector('.brand-radio');
+          if (radioInput) {
+            radioInput.checked = true;
+          }
+        });
+      });
+    });
+
+    // File Upload Handling
+    const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
+    const CLOUDINARY_UPLOAD_PRESET = 'order_project';
+
+    let uploadedPhotos = [];
+    const photoCountDisplay = document.getElementById('photoCount');
+    const submitButton = document.getElementById('submitButton');
+
+    // Initialize FilePond
+    FilePond.registerPlugin(
+      FilePondPluginImagePreview,
+      FilePondPluginFileValidateSize,
+      FilePondPluginImageExifOrientation,
+      FilePondPluginFileEncode
+    );
+
+    // Create FilePond instances
+    document.querySelectorAll('.filepond-input-multiple').forEach((input) => {
+      // Create a progress container for this input if it doesn't exist
+      let progressContainer = document.createElement('div');
+      progressContainer.className = 'upload-progress mt-2';
+      progressContainer.style.display = 'none';
+
+      let progressBar = document.createElement('div');
+      progressBar.className = 'upload-progress-bar';
+      progressBar.style.width = '0%';
+
+      progressContainer.appendChild(progressBar);
+
+      // Add the progress container after the input
+      input.parentNode.appendChild(progressContainer);
+
+      const pond = FilePond.create(input, {
+        allowMultiple: true,
+        maxFiles: input.getAttribute('data-max-files') || 5,
+        maxFileSize: input.getAttribute('data-max-file-size') || '3MB',
+        server: {
+          process: (fieldName, file, metadata, load, error, progress, abort) => {
+            // Show progress indicator
+            progressContainer.style.display = 'block';
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+            // Create and send XHR request
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', CLOUDINARY_URL, true);
+
+            // Update progress
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                progress(percentComplete, {
+                  type: 'upload',
+                  value: percentComplete
+                });
+
+                progressBar.style.width = percentComplete + '%';
+              }
+            };
+
+            // Handle response
+            xhr.onload = function() {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                const response = JSON.parse(xhr.responseText);
+                uploadedPhotos.push(response.secure_url);
+
+                // Update photo count display
+                if (photoCountDisplay) {
+                  photoCountDisplay.style.display = 'inline-flex';
+                  photoCountDisplay.querySelector('span').textContent = uploadedPhotos.length;
+                }
+
+                load(response.secure_url);
+              } else {
+                error('Upload failed');
+              }
+            };
+
+            // Handle error
+            xhr.onerror = function() {
+              error('Upload failed');
+            };
+
+            // Send the form data
+            xhr.send(formData);
+
+            // Return abort function
+            return {
+              abort: () => {
+                xhr.abort();
+                abort();
+              }
+            };
+          }
+        },
+        labelIdle: 'Drag & Drop your files or <span class="filepond--label-action">Browse</span>',
+        labelFileProcessing: 'Uploading',
+        labelFileProcessingComplete: 'Upload Complete',
+        labelTapToCancel: 'tap to cancel',
+        labelTapToRetry: 'tap to retry',
+        labelTapToUndo: 'tap to undo',
+        onaddfile: (error, file) => {
+          if (error) {
+            console.error('Error adding file:', error);
+            return;
+          }
+        },
+        onremovefile: (error, file) => {
+          if (error) {
+            console.error('Error removing file:', error);
+            return;
+          }
+        }
+      });
+    });
+
+    // Form Submission
+    const verificationForm = document.getElementById('verificationForm');
+    if (verificationForm) {
+      verificationForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const lastStep = document.querySelector('.tab-pane.show.active');
+        if (!validateCurrentStep(lastStep)) {
+          Swal.fire({
+            title: 'Validation Error',
+            text: 'Please complete all required fields before submitting.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+
+        // Show loading state
+        Swal.fire({
+          title: 'Processing',
+          text: 'Submitting your information...',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        try {
+          const formData = new FormData(verificationForm);
+          const formObject = Object.fromEntries(formData.entries());
+
+          // Add selling points
+          const sellingPoints = [];
+          document.querySelectorAll('input[name="sellingPoints[]"]:checked').forEach((checkbox) => {
+            sellingPoints.push(checkbox.value);
+          });
+          formObject.sellingPoints = sellingPoints;
+
+          // Add uploaded photos
+          formObject.photosOfBrandType = uploadedPhotos;
+
+          // Send data to server
+          const response = await fetch('/business/completionConfirm', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formObject)
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            // Show success message
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: data.message || 'Account Successfully Completed',
+              confirmButtonText: 'OK'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                // Enable and activate the finish tab
+                const finishTab = document.getElementById('v-pills-finish-tab');
+                if (finishTab) {
+                  finishTab.classList.remove('disabled');
+                  finishTab.removeAttribute('disabled');
+                  finishTab.click();
+                }
+                markStepAsDone('v-brand-type');
+              }
+            });
+          } else {
+            // Show error message
+            Swal.fire({
+              icon: 'error',
+              title: 'Submission Failed',
+              text: data.error || 'An error occurred. Please try again.',
+              confirmButtonText: 'OK'
+            });
+          }
+        } catch (err) {
+          console.error('An error occurred:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Submission Failed',
+            text: 'An error occurred. Please try again.',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
+    }
+
+    // Submit button should trigger form submission
+    if (submitButton) {
+      submitButton.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        // Trigger form submission
+        const form = document.getElementById('verificationForm');
+        if (form) {
+          form.dispatchEvent(new Event('submit'));
+        }
+      });
+    }
+
+    // Email Verification
+    const sendVerificationEmailBtn = document.getElementById('sendVerificationEmail');
+    if (sendVerificationEmailBtn) {
+      sendVerificationEmailBtn.addEventListener('click', async function() {
+        try {
+          // Show loading state
+          sendVerificationEmailBtn.disabled = true;
+          sendVerificationEmailBtn.innerHTML = '<i class="ri-loader-4-line animate-spin me-2"></i> Sending...';
+
+          const response = await fetch('/business/request-verification');
+          const data = await response.json();
+
+          if (data.status === 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Email Sent',
+              text: 'Verification email sent successfully! Please check your inbox.',
+              confirmButtonText: 'OK'
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.message || 'Failed to send verification email.',
+              confirmButtonText: 'Try Again'
+            });
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while sending the email.',
+            confirmButtonText: 'Try Again'
+          });
+        } finally {
+          // Reset button state
+          sendVerificationEmailBtn.disabled = false;
+          sendVerificationEmailBtn.innerHTML = '<i class="ri-mail-fill fs-5 me-2"></i> Send Verification Email';
+        }
+      });
+    }
+
+    // Ensure first tab is active on page load
     document.getElementById('v-pills-bill-info-tab').click();
   });
 </script>
-
-     <!-- <script>
-       let map;
-       let marker;
-
-       function initMap() {
-         map = new google.maps.Map(document.getElementById("map"), {
-           center: {
-             lat: 30.0444,
-             lng: 31.2357
-           },
-           zoom: 8,
-         });
-
-         map.addListener("click", (e) => {
-           placeMarkerAndPanTo(e.latLng, map);
-         });
-       }
-
-       function placeMarkerAndPanTo(latLng, map) {
-         if (marker) {
-           marker.setPosition(latLng);
-         } else {
-           marker = new google.maps.Marker({
-             position: latLng,
-             map: map,
-           });
-         }
-         map.panTo(latLng);
-       }
-
-       document.getElementById("confirmLocation").addEventListener("click", () => {
-         if (marker) {
-           const position = marker.getPosition();
-           console.log(`Selected Location: Latitude: ${position.lat()}, Longitude: ${position.lng()}`);
-         }
-       });
-
-       window.initMap = initMap;
-     </script>
-     <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script> -->

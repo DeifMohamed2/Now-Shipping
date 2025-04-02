@@ -1,0 +1,1535 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/assets/rCSS/admin.css">
+<style>
+  .card {
+    border-radius: 30px !important;
+  }
+
+  .card-animate {
+    transition: all 0.4s;
+  }
+
+  .card-animate:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+  }
+
+  .dashboard-card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .big-card {
+    height: 100%;
+  }
+
+  .big-card .stat-icon {
+    width: 80px;
+    height: 80px;
+  }
+
+  .big-card .card-title {
+    font-size: 1.1rem;
+  }
+
+  .big-card .counter-value {
+    font-size: 2.5rem;
+  }
+
+  .big-card .release-date {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #405189;
+  }
+
+  .table-container {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .table thead th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-status {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-weight: 500;
+  }
+
+  .filter-section {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .btn-action {
+    padding: 5px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+    transition: all 0.3s;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn-action:active {
+    transform: translateY(0);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 12px;
+  }
+
+  .status-badge i {
+    margin-right: 5px;
+  }
+
+  .status-released {
+    background-color: #e6f7f5;
+    color: #0ab39c;
+  }
+
+  .status-scheduled {
+    background-color: #e6f3ff;
+    color: #405189;
+  }
+
+  .status-pending {
+    background-color: #fff8e6;
+    color: #f7b84b;
+  }
+
+  .status-canceled {
+    background-color: #f8ebf0;
+    color: #f06548;
+  }
+
+  .status-rescheduled {
+    background-color: #e6f3ff;
+    color: #405189;
+    border: 1px dashed #405189;
+  }
+
+  .tab-filter {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e9ebec;
+  }
+
+  .tab-filter .nav-link {
+    white-space: nowrap;
+    margin-right: 15px;
+    padding: 10px 15px;
+    font-weight: 500;
+    color: #495057;
+    border-radius: 4px;
+  }
+
+  .tab-filter .nav-link.active {
+    color: #405189;
+    background-color: rgba(64, 81, 137, 0.1);
+  }
+
+  .tab-filter .nav-link .badge {
+    margin-left: 5px;
+  }
+
+  .money-info {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+  }
+
+  .money-info.collected {
+    color: #0ab39c;
+  }
+
+  .money-info.pending {
+    color: #f7b84b;
+  }
+
+  .money-info i {
+    margin-right: 5px;
+  }
+
+  .business-name {
+    display: flex;
+    align-items: center;
+  }
+
+  .business-name img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+
+  .release-date-info {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .release-date-info i {
+    margin-right: 5px;
+  }
+
+  .release-date-info.rescheduled {
+    text-decoration: line-through;
+    opacity: 0.7;
+    margin-bottom: 4px;
+  }
+
+  .countdown-timer {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 15px;
+  }
+
+  .countdown-timer .time-section {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 10px;
+  }
+
+  .countdown-timer .time-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #405189;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+
+  .countdown-timer .time-label {
+    font-size: 0.8rem;
+    margin-top: 5px;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+</style>
+<%- contentFor('body') %>
+<!-- Page Title -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <h4 class="fw-bold mb-0">Business Payments</h4>
+        <p class="text-muted mb-0">Manage and release payments to businesses</p>
+      </div>
+      <div class="d-flex">
+        <button type="button" class="btn btn-primary">
+          <i class="ri-download-2-line align-middle me-1"></i> Export Report
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- First Row: Big Cards -->
+<div class="row">
+  <!-- Total Available Funds -->
+  <div class="col-xl-6 col-md-6">
+    <div class="card card-animate dashboard-card big-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0 card-title">Total Available Funds</h5>
+          </div>
+            <div class="stat-icon bg-soft-success">
+            <lord-icon src="https://cdn.lordicon.com/qhviklyi.json" trigger="" colors="primary:#0ab39c,secondary:#0ab39c" style="width: 40px; height: 40px;"></lord-icon>
+            </div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div>
+            <h2 class="fw-bold mb-2"><span  id="totalAvailable">287,650</span>EGP</h2>
+            <div class="d-flex align-items-center">
+              <span class="badge bg-soft-success text-success me-2"><i class="ri-arrow-up-line align-middle"></i> 8.4%</span>
+              <span class="text-muted fs-13">from last month</span>
+            </div>
+            <!-- <div class="mt-4">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted">Ready for Release</span>
+                <span class="fw-semibold">$145,320</span>
+              </div>
+              <div class="progress" style="height: 6px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 65%;" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </div> -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Next Release Date -->
+  <div class="col-xl-6 col-md-6">
+    <div class="card card-animate dashboard-card big-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0 card-title">Next Release Date</h5>
+          </div>
+            <div class="stat-icon bg-soft-info">
+            <lord-icon src="https://cdn.lordicon.com/akuwjdzh.json" trigger="" colors="primary:#405189,secondary:#405189" style="width: 40px; height: 40px;"></lord-icon>
+            </div>
+        </div>
+        <div class="d-flex flex-column justify-content-between">
+          <div>
+            <p class="release-date" id="releaseDate">April 15, 2023</p>
+            <!-- <p class="text-muted mb-3">Scheduled release for 28 businesses</p> -->
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Second Row: Stats Cards -->
+<div class="row mt-4">
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate dashboard-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center ">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0">Completed Releases</h5>
+          </div>
+          <div class="stat-icon bg-soft-success">
+            <i class="ri-checkbox-circle-line text-success fs-1"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div>
+            <h2 class="fw-bold mb-2"><span id="completeCount"></span></h2>
+            <h3 class="fw-bold mb-2"><span id="completeFund"></span></h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate dashboard-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center ">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0">Pending Releases</h5>
+          </div>
+          <div class="stat-icon bg-soft-warning">
+            <i class="ri-time-line text-warning fs-1"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div>
+            <h2 class="fw-bold mb-2"><span id="pendingCount"></span></h2>
+            <h3 class="fw-bold mb-2"><span id="pendingFund"></span></h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate dashboard-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0">Scheduled Releases</h5>
+          </div>
+          <div class="stat-icon bg-soft-info">
+            <i class="ri-calendar-line text-info fs-1"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div>
+            <h2 class="fw-bold mb-2"><span id="scheduledCount"></span></h2>
+            <h3 class="fw-bold mb-2"><span id="scheduledFund"></span></h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- <div class="col-xl-3 col-md-6">
+    <div class="card card-animate dashboard-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <h5 class="text-uppercase fw-semibold text-muted mb-0">Refunds</h5>
+          </div>
+          <div class="stat-icon bg-soft-danger">
+            <i data-feather="refresh-cw" class="text-danger"></i>
+          </div>
+        </div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div>
+            <h2 class="fw-bold mb-2"><span class="counter-value" data-target="18">18</span></h2>
+            <h3 class="fw-bold mb-2"><span>50000EGP</span></h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> -->
+</div>
+
+</div>
+
+<!-- Tab Filters -->
+<div class="row mt-4">
+  <div class="col-12">
+    <ul class="nav nav-pills tab-filter" id="pills-tab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pills-all-tab" data-bs-toggle="pill" data-bs-target="#pills-all" type="button" role="tab" onclick="fetchReleases('all');">
+          All Releases 
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-released-tab" data-bs-toggle="pill" data-bs-target="#pills-released" type="button" role="tab" onclick="fetchReleases('released');"> 
+          Released 
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-scheduled-tab" data-bs-toggle="pill" data-bs-target="#pills-scheduled" type="button" role="tab" onclick="fetchReleases('scheduled');">
+          Scheduled
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-pending-tab" data-bs-toggle="pill" data-bs-target="#pills-pending" type="button" role="tab" onclick="fetchReleases('pending');">
+          Pending 
+        </button>
+      </li>
+      <!-- <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-canceled-tab" data-bs-toggle="pill" data-bs-target="#pills-canceled" type="button" role="tab">
+          Canceled
+        </button>
+      </li> -->
+    </ul>
+  </div>
+</div>
+
+<!-- Filter Section -->
+<div class="row mt-4">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-body filter-section">
+        <form>
+          <div class="row g-3 align-items-center">
+            <div class="col-xxl-3 col-sm-4">
+              <div class="search-box">
+                <input type="text" class="form-control search" placeholder="Search for business, order ID...">
+                <i class="ri-search-line search-icon"></i>
+              </div>
+            </div>
+
+            <div class="col-xxl-3 col-sm-4">
+              <input type="text" class="form-control bg-light border-light flatpickr-input" id="datepicker-range" placeholder="Select release date range">
+            </div>
+
+            <!-- <div class="col-xxl-2 col-sm-4">
+              <div class="input-light">
+                <select class="form-control" data-choices data-choices-search-false name="choices-release-status" id="releaseStatus">
+                  <option value="">Release Status</option>
+                  <option value="all" selected>All</option>
+                  <option value="released">Released</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="pending">Pending</option>
+                  <option value="canceled">Canceled</option>
+                  <option value="rescheduled">Rescheduled</option>
+                </select>
+              </div>
+            </div> -->
+
+            <!-- <div class="col-xxl-2 col-sm-4">
+              <div class="input-light">
+                <select class="form-control" data-choices data-choices-search-false name="choices-amount-range" id="amountRange">
+                  <option value="">Amount Range</option>
+                  <option value="all" selected>All</option>
+                  <option value="0-1000">$0 - $1,000</option>
+                  <option value="1000-5000">$1,000 - $5,000</option>
+                  <option value="5000-10000">$5,000 - $10,000</option>
+                  <option value="10000+">$10,000+</option>
+                </select>
+              </div>
+            </div> -->
+
+            <div class="col-xxl-2 col-sm-4">
+              <button type="button" class="btn btn-primary w-100" onclick="SearchData();">
+                <i class="ri-equalizer-fill me-1 align-bottom"></i> Apply Filters
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Releases Table -->
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card" id="releasesList">
+      <div class="card-header border-0 bg-white">
+        <div class="d-flex align-items-center justify-content-between">
+          <h5 class="card-title mb-0">Payment Releases</h5>
+          <!-- <div>
+            <button type="button" class="btn btn-soft-primary btn-sm" id="bulkReleaseBtn">
+              <i class="ri-money-dollar-circle-line align-middle me-1"></i> Bulk Release
+            </button>
+          </div> -->
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive table-container">
+          <table class="table align-middle table-nowrap" id="releasesTable">
+            <thead>
+              <tr>
+                <th scope="col" style="width: 50px;">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="checkAll" value="option">
+                  </div>
+                </th>
+                <th class=" text-uppercase" >Release ID</th>
+                <th class=" text-uppercase" >Business</th>
+                <th class=" text-uppercase" >Amount</th>
+                <th class=" text-uppercase" >Release Date</th>
+                <th class=" text-uppercase" >Status</th>
+                <th class=" text-uppercase">Action</th>
+              </tr>
+            </thead>
+            <tbody class="list form-check-all" id="tBodyReleaseList">
+              <!-- Row 1 -->
+              <!-- <tr>
+                <td>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox">
+                  </div>
+                </td>
+                <td><a href="#" class="fw-medium link-primary">#REL-0120</a></td>
+                <td>
+                  <div class="business-name">
+                    <img src="/assets/images/companies/img-1.png" alt="Acme Corporation">
+                    <span>Acme Corporation</span>
+                  </div>
+                </td>
+                <td>$4,250.00</td>
+                <td><span class="badge bg-soft-primary text-primary">12 Orders</span></td>
+                <td>
+                  <div class="release-date-info">
+                    <i class="ri-calendar-event-line"></i> 15 Apr, 2023
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge status-scheduled">
+                    <i class="ri-calendar-check-line"></i> Scheduled
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="REL-0120">
+                      Release Now
+                    </button>
+                    <button type="button" class="btn btn-soft-secondary btn-sm btn-action" data-bs-toggle="modal" data-bs-target="#rescheduleModal" data-release-id="REL-0120">
+                      Reschedule
+                    </button>
+                  </div>
+                </td>
+              </tr> -->
+
+              <!-- Row 2
+              <tr>
+                <td>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox">
+                  </div>
+                </td>
+                <td><a href="#" class="fw-medium link-primary">#REL-0119</a></td>
+                <td>
+                  <div class="business-name">
+                    <img src="/assets/images/companies/img-2.png" alt="Global Traders">
+                    <span>Global Traders</span>
+                  </div>
+                </td>
+                <td>$3,750.00</td>
+                <td><span class="badge bg-soft-primary text-primary">8 Orders</span></td>
+                <td>
+                  <div class="release-date-info rescheduled">
+                    <i class="ri-calendar-event-line"></i> 12 Apr, 2023
+                  </div>
+                  <div class="release-date-info">
+                    <i class="ri-calendar-event-line"></i> 18 Apr, 2023
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge status-rescheduled">
+                    <i class="ri-time-line"></i> Rescheduled
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="REL-0119">
+                      Release Now
+                    </button>
+                    <button type="button" class="btn btn-soft-secondary btn-sm btn-action" data-bs-toggle="modal" data-bs-target="#rescheduleModal" data-release-id="REL-0119">
+                      Reschedule
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+            Row 3 -->
+              <!-- <tr>
+                <td>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox">
+                  </div>
+                </td>
+                <td><a href="#" class="fw-medium link-primary">#REL-0118</a></td>
+                <td>
+                  <div class="business-name">
+                    <img src="/assets/images/companies/img-3.png" alt="Tech Solutions Inc.">
+                    <span>Tech Solutions Inc.</span>
+                  </div>
+                </td>
+                <td>$6,840.00</td>
+                <td><span class="badge bg-soft-primary text-primary">15 Orders</span></td>
+                <td>
+                  <div class="release-date-info">
+                    <i class="ri-calendar-event-line"></i> 10 Apr, 2023
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge status-released">
+                    <i class="ri-checkbox-circle-line"></i> Released
+                  </span>
+                </td>
+                <td>
+                  <button type="button" class="btn btn-soft-info btn-sm btn-action" data-release-id="REL-0118">
+                    View Details
+                  </button>
+                </td>
+              </tr> -->
+
+              <!-- Row 4 -->
+              <!-- <tr>
+                <td>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox">
+                  </div>
+                </td>
+                <td><a href="#" class="fw-medium link-primary">#REL-0117</a></td>
+                <td>
+                  <div class="business-name">
+                    <img src="/assets/images/companies/img-4.png" alt="Quantum Enterprises">
+                    <span>Quantum Enterprises</span>
+                  </div>
+                </td>
+                <td>$2,150.00</td>
+                <td><span class="badge bg-soft-primary text-primary">5 Orders</span></td>
+                <td>
+                  <div class="release-date-info">
+                    <i class="ri-calendar-event-line"></i> 08 Apr, 2023
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge status-canceled">
+                    <i class="ri-close-circle-line"></i> Canceled
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-soft-info btn-sm btn-action" data-release-id="REL-0117">
+                      View Details
+                    </button>
+                    <button type="button" class="btn btn-soft-success btn-sm btn-action" data-bs-toggle="modal" data-bs-target="#rescheduleModal" data-release-id="REL-0117">
+                      Reschedule
+                    </button>
+                  </div>
+                </td>
+              </tr> -->
+
+              <!-- Row 5 -->
+              <!-- <tr>
+                <td>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox">
+                  </div>
+                </td>
+                <td><a href="#" class="fw-medium link-primary">#REL-0116</a></td>
+                <td>
+                  <div class="business-name">
+                    <img src="/assets/images/companies/img-5.png" alt="Stellar Innovations">
+                    <span>Stellar Innovations</span>
+                  </div>
+                </td>
+                <td>$5,320.00</td>
+                <td><span class="badge bg-soft-primary text-primary">11 Orders</span></td>
+                <td>
+                  <div class="release-date-info">
+                    <i class="ri-calendar-event-line"></i> Pending
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge status-pending">
+                    <i class="ri-time-line"></i> Pending
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="REL-0116">
+                      Schedule Release
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm btn-action" data-release-id="REL-0116">
+                      Cancel
+                    </button>
+                  </div>
+                </td>
+              </tr>  -->
+
+            </tbody>
+          </table>
+        </div>
+
+        <div class="noresult" style="display: none">
+          <div class="text-center py-4">
+            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
+            <h5 class="mt-2">No Results Found</h5>
+            <p class="text-muted mb-0">We couldn't find any releases matching your search criteria.</p>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-3">
+          <div class="pagination-wrap hstack gap-2">
+            <a class="page-item pagination-prev disabled" href="#">
+              <i class="ri-arrow-left-s-line"></i> Previous
+            </a>
+            <ul class="pagination listjs-pagination mb-0"></ul>
+            <a class="page-item pagination-next" href="#">
+              Next <i class="ri-arrow-right-s-line"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reschedule Modal -->
+<div class="modal fade" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="rescheduleForm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="rescheduleModalLabel">Reschedule Release</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="rescheduleReleaseId" value="" name="rescheduleReleaseId">
+        <div class="text-center mb-4">
+          <lord-icon src="https://cdn.lordicon.com/kbtmbyzy.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:100px;height:100px">
+          </lord-icon>
+          <h4 class="mb-3 mt-4">Reschedule Release</h4>
+          <p class="text-muted mb-4">You are about to reschedule release <span id="rescheduleReleaseIdShown" class="fw-semibold"></span> for <span id="rescheduleBusinessShown" class="fw-semibold"></span>.</p>
+        </div>
+     
+        <div class="mb-3">
+          <label for="newReleaseDate" class="form-label">New Release Date</label>
+          <input type="text" class="form-control flatpickr-input" id="newReleaseDate" name="newReleaseDate" placeholder="Select new date">
+        </div>
+        <div class="mb-3">
+          <label for="rescheduleReason" class="form-label">Reason for Rescheduling</label>
+          <select class="form-control" name="rescheduleReason">
+            <option value="">Select reason</option>
+            <option value="business_request">Business Request</option>
+            <option value="payment_issue">Payment Processing Issue</option>
+            <option value="verification">Additional Verification Needed</option>
+            <option value="system_delay">System Processing Delay</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="rescheduleNotes" class="form-label">Notes (Optional)</label>
+          <textarea class="form-control" id="rescheduleNotes" rows="3" placeholder="Add any notes about this rescheduling"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" id="closeRescheduleModal" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="confirmRescheduleBtn">Confirm Reschedule</button>
+      </div>
+    </div>
+    </form>
+  </div>
+</div>
+
+<!-- Release Money Modal -->
+<div class="modal fade" id="releaseMoneyModal" tabindex="-1" aria-labelledby="releaseMoneyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="releaseMoneyForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="releaseMoneyModalLabel">Confirm Fund Release</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="releaseId" value="" name="releaseId">
+          <div class="text-center mb-4">
+            <lord-icon src="https://cdn.lordicon.com/qhviklyi.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:100px;height:100px">
+            </lord-icon>
+            <h4 class="mb-3 mt-4">Confirm Fund Release</h4>
+            <p class="text-muted mb-4">Are you confirming the release of funds to <span id="releaseBusiness" class="fw-semibold"></span>?</p>
+          </div>
+          <div class="mb-3">
+            <label for="releaseAmount" class="form-label">Total Amount to Release</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="text" class="form-control" id="releaseAmount" name="releaseAmount" placeholder="Enter amount" readonly>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="releaseNotes" class="form-label">Notes (Optional)</label>
+            <textarea class="form-control" id="releaseNotes" name="releaseNotes" rows="3" placeholder="Add any notes about this release"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" id="closeReleaseModal" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="confirmReleaseBtn">Confirm Release</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<!-- Required libs -->
+<script src="/assets/libs/flatpickr/flatpickr.min.js"></script>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+<!-- Custom scripts -->
+<script>
+  // Initialize flatpickr for date inputs
+  flatpickr("#datepicker-range", {
+    mode: "range",
+    dateFormat: "Y-m-d",
+    allowInput: true,
+    onReady: function(selectedDates, dateStr, instance) {
+      instance.input.setAttribute("placeholder", "Select release date range");
+    }
+  });
+  flatpickr("#newReleaseDate", {
+    dateFormat: "Y-m-d",
+    allowInput: true,
+    onReady: function(selectedDates, dateStr, instance) {
+      instance.input.setAttribute("placeholder", "Select new date");
+    }
+  });
+
+
+    const releaseDate = document.getElementById('releaseDate');
+    const totalAvailable = document.getElementById('totalAvailable');
+    const completeCount = document.getElementById('completeCount'); 
+    const completeFund = document.getElementById('completeFund');
+    const pendingCount = document.getElementById('pendingCount');
+    const pendingFund = document.getElementById('pendingFund');
+    const scheduledCount = document.getElementById('scheduledCount');
+    const scheduledFund = document.getElementById('scheduledFund');
+     const tableBody = document.getElementById('tBodyReleaseList');
+
+
+
+
+
+    // Fetch data from API and populate the table
+    async function fetchReleases(filter) {
+      try {
+
+        // Show loading spinner
+        document.querySelector('.noresult').style.display = 'none';
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+        const response = await fetch('/admin/get-release-all-data?filter=' + filter, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        const data = await response.json();
+        console.log(data); // Log the data for debugging
+        if (data['releases'].length > 0) {
+          // Populate the total available funds and next release date
+            totalAvailable.textContent = parseFloat(data['totalFundsAvailable']).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            releaseDate.textContent = new Date(data['nextReleaseDate']).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            completeCount.textContent = data['totalPaymentsReleasedCount'];
+            completeFund.textContent = parseFloat(data['totalPaymentsReleased']).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })+ ' EGP';
+            pendingCount.textContent = data['paymentsPendingCount'];
+            pendingFund.textContent = parseFloat(data['paymentsPending']).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })+ ' EGP';
+            scheduledCount.textContent = data['scheduledReleasesCount'];
+            scheduledFund.textContent = parseFloat(data['scheduledReleases']).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })+ ' EGP';
+          populateReleases(data['releases']);
+      
+        } else {
+          tableBody.innerHTML = '';
+          document.querySelector('.noresult').style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error fetching releases:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to fetch release data. Please try again later.',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      }
+    }
+
+
+
+    // Helper function to get status icon
+    function getStatusIcon(status) {
+      switch (status.toLowerCase()) {
+        case 'released':
+          return 'checkbox-circle-line';
+        case 'scheduled':
+          return 'calendar-check-line';
+        case 'pending':
+          return 'time-line';
+        case 'canceled':
+          return 'close-circle-line';
+        default:
+          return 'question-line';
+      }
+    }
+
+    // Helper function to get action buttons
+    function getActionButtons(release) {
+      if (release.releaseStatus === 'pending') {
+        return `
+          <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="${release._id}" onclick="releaseNow('${release._id}', '${release.business.brandInfo.brandName}', '${release.amount}')">
+            Release Now
+          </button>
+          <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="${release._id}" onclick="showRescheduleModal('${release._id}', '${release.business.brandInfo.brandName}', '${release.releaseId}')">
+            Schedule Release
+          </button>
+        
+        `;
+      } else if (release.releaseStatus === 'scheduled') {
+        return `
+            <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="${release._id}" onclick="releaseNow('${release._id}', '${release.business.brandInfo.brandName}', '${release.amount}')">
+              Release Now
+            </button>
+     
+          <button type="button" class="btn btn-soft-secondary btn-sm btn-action" data-release-id="${release._id}" onclick="showRescheduleModal('${release._id}', '${release.business.brandInfo.brandName}', '${release.releaseId}')">
+           Reschedule
+          </button>
+        `;
+      } else if (release.releaseStatus === 'released') {
+        return `
+          <button type="button" class="btn btn-soft-info btn-sm btn-action" data-release-id="${release._id}">
+            View Details
+          </button>
+        `;
+      } else {
+        return `
+          <button type="button" class="btn btn-soft-info btn-sm btn-action" data-release-id="${release._id}">
+            View Details
+          </button>
+          <button type="button" class="btn btn-soft-success btn-sm btn-action" data-bs-toggle="modal" data-bs-target="#rescheduleModal" data-release-id="${release._id}">
+            Reschedule
+          </button>
+        `;
+      }
+    }
+
+
+  // Handle reschedule form submission
+  const rescheduleForm = document.getElementById('rescheduleForm')
+  rescheduleForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    const releaseId = document.getElementById('rescheduleReleaseId').value;
+    const newDate = document.querySelector('input[name="newReleaseDate"]').value;
+    const reason = document.querySelector('select[name="rescheduleReason"]').value;
+    const notes = document.getElementById('rescheduleNotes').value;
+
+    if (!newDate) {
+      Swal.fire({
+        title: 'Error',
+        text: 'Please select a new release date.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    if (!reason) {
+      Swal.fire({
+        title: 'Error',
+        text: 'Please select a reason for rescheduling.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    try {
+      Swal.fire({
+        title: 'Processing',
+        text: 'Rescheduling release...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch('/admin/reschedule-release', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          releaseId,
+          newDate,
+          reason,
+          notes
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        Swal.fire({
+          title: 'Success!',
+          text: `Release ${releaseId} has been rescheduled to ${newDate}.`,
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+
+        // Update the UI or refresh the data
+        fetchReleases();
+        rescheduleForm.reset(); // Reset the form fields
+        document.getElementById('closeRescheduleModal').click(); // Close the modal
+      } else {
+        throw new Error(result.message || 'Failed to reschedule release.');
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Error',
+        text: error.message || 'An error occurred while rescheduling the release.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  });
+
+  // Handle release money form submission
+
+  const releaseMoneyForm = document.getElementById('releaseMoneyForm')
+
+  releaseMoneyForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    const releaseId = document.getElementById('releaseId').value;
+    const releaseNotes = document.getElementById('releaseNotes').value;
+    try {
+      Swal.fire({
+        title: 'Processing',
+        text: 'Releasing funds...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch('/admin/release-funds', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          releaseId, 
+          notes : releaseNotes
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        Swal.fire({
+          title: 'Success!',
+          text: `Funds have been released to ${document.getElementById('releaseBusiness').textContent}.`,
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+
+        // Update the UI or refresh the data
+        fetchReleases();
+        releaseMoneyForm.reset(); // Reset the form fields
+        document.getElementById('closeReleaseModal').click(); // Close the modal
+      } else {
+        throw new Error(result.error || 'Failed to release funds.');
+      }
+    } catch (error) {
+      Swal.fire({
+        title: 'Error',
+        text: error.message || 'An error occurred while releasing funds.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  });
+
+
+    
+    function populateReleases(data) {
+      console.log(data)
+      tableBody.innerHTML = ''; // Clear existing rows
+
+      data.forEach(release => {
+        console.log(release)
+        const row = document.createElement('tr');
+        console.log(release.business)
+        row.innerHTML = `
+              <td>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox">
+                  </div>
+                </td>
+                <td><a href="#" class="fw-medium link-primary">#${release.releaseId}</a></td>
+                <td>
+                  <div class="business-name">
+                    <span>${release.business.brandInfo.brandName}</span>
+                  </div>
+                </td>
+                <td>$${release.amount.toFixed(2)}</td>
+                <td>
+                  <div class="release-date-info">
+                    <i class="ri-calendar-event-line"></i> ${release.scheduledReleaseDate ? new Date(release.scheduledReleaseDate).toLocaleDateString() : 'Pending'}
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge status-${release.releaseStatus.toLowerCase()}">
+                    <i class="ri-${getStatusIcon(release.releaseStatus)}"></i> ${release.releaseStatus}
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    ${getActionButtons(release)}
+                  </div>
+                </td>
+              `;
+        tableBody.appendChild(row);
+      });
+
+
+    }
+
+
+  document.addEventListener("DOMContentLoaded", function() {
+
+    // Initialize the page
+    fetchReleases('all'); // Fetch all releases on page load
+
+
+
+
+
+
+  });
+
+
+        // show modal reschedule
+  function showRescheduleModal(releaseId, businessName,shownReleaseId) {
+      const modal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
+      document.getElementById('rescheduleReleaseId').value = releaseId;
+      document.getElementById('rescheduleReleaseIdShown').textContent = shownReleaseId;
+      document.getElementById('rescheduleBusinessShown').textContent = businessName;
+      modal.show();
+  }
+
+
+  // release now function
+  function releaseNow(releaseId, businessName,releaseAmount) {
+    const modal = new bootstrap.Modal(document.getElementById('releaseMoneyModal'));
+    document.getElementById('releaseId').value = releaseId;
+    document.getElementById('releaseBusiness').textContent = businessName;
+    document.getElementById('releaseAmount').value = releaseAmount;
+    modal.show();
+  }
+
+
+
+
+</script>
+
+
+<!-- <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize flatpickr date range picker
+    flatpickr("#datepicker-range", {
+      mode: "range",
+      dateFormat: "d M, Y",
+    });
+    
+    // Initialize flatpickr for new release date
+    flatpickr("#newReleaseDate", {
+      dateFormat: "d M, Y",
+      minDate: "today",
+    });
+    
+    // Initialize choices for select dropdowns
+    const selectElements = document.querySelectorAll('[data-choices]');
+    selectElements.forEach(element => {
+      const choices = new Choices(element, {
+        searchEnabled: element.getAttribute('data-choices-search-false') !== 'true',
+        itemSelectText: '',
+      });
+    });
+    
+    // Initialize choices for reschedule reason
+    const rescheduleReason = document.getElementById('rescheduleReason');
+    if (rescheduleReason) {
+      new Choices(rescheduleReason, {
+        searchEnabled: false,
+        itemSelectText: '',
+      });
+    }
+    
+ 
+    // Initialize feather icons
+    feather.replace();
+    
+    // Initialize list.js for table
+    const options = {
+      valueNames: [
+        'release_id',
+        'business',
+        'amount',
+        'orders',
+        'release_date',
+        'status',
+      ],
+      page: 10,
+      pagination: true,
+      plugins: [
+        ListPagination({})
+      ]
+    };
+    
+    // Initialize the list
+    new List('releasesList', options);
+    
+    // Handle select all checkbox
+    document.getElementById('checkAll').addEventListener('change', function() {
+      const isChecked = this.checked;
+      document.querySelectorAll('tbody .form-check-input').forEach(checkbox => {
+        checkbox.checked = isChecked;
+      });
+      updateBulkReleaseButton();
+    });
+    
+    // Update bulk release button based on selections
+    function updateBulkReleaseButton() {
+      const selectedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+      const bulkReleaseBtn = document.getElementById('bulkReleaseBtn');
+      
+      if (selectedCount > 0) {
+        bulkReleaseBtn.textContent = `Bulk Release (${selectedCount})`;
+        bulkReleaseBtn.disabled = false;
+      } else {
+        bulkReleaseBtn.textContent = 'Bulk Release';
+        bulkReleaseBtn.disabled = true;
+      }
+    }
+    
+    // Add event listeners to all checkboxes
+    document.querySelectorAll('tbody .form-check-input').forEach(checkbox => {
+      checkbox.addEventListener('change', updateBulkReleaseButton);
+    });
+    
+    // Handle individual release buttons
+    const releaseButtons = document.querySelectorAll('.btn-action');
+    releaseButtons.forEach(button => {
+      if (button.textContent.trim() === 'Release Now') {
+        button.addEventListener('click', function() {
+          const releaseId = this.getAttribute('data-release-id');
+          const row = this.closest('tr');
+          const businessName = row.querySelector('.business-name span').textContent;
+          const amount = row.querySelector('td:nth-child(4)').textContent;
+          
+          // Set values in modal
+          document.getElementById('releaseBusiness').textContent = businessName;
+          document.getElementById('releaseAmount').value = amount.replace('$', '');
+          
+          // Show modal
+          const releaseModal = new bootstrap.Modal(document.getElementById('releaseMoneyModal'));
+          releaseModal.show();
+        });
+      }
+    });
+    
+    // Handle reschedule modal
+    document.getElementById('rescheduleModal').addEventListener('show.bs.modal', function(event) {
+      const button = event.relatedTarget;
+      const releaseId = button.getAttribute('data-release-id');
+      const row = button.closest('tr');
+      const businessName = row.querySelector('.business-name span').textContent;
+      const releaseDate = row.querySelector('.release-date-info:not(.rescheduled)').textContent.trim();
+      
+      // Set values in modal
+      document.getElementById('rescheduleReleaseId').textContent = releaseId;
+      document.getElementById('rescheduleBusiness').textContent = businessName;
+      document.getElementById('currentReleaseDate').value = releaseDate.replace('Pending', 'Not scheduled yet');
+    });
+    
+    // Handle confirm reschedule button click
+    document.getElementById('confirmRescheduleBtn').addEventListener('click', function() {
+      const releaseId = document.getElementById('rescheduleReleaseId').textContent;
+      const newDate = document.getElementById('newReleaseDate').value;
+      const reason = document.getElementById('rescheduleReason').value;
+      
+      if (!newDate) {
+        Swal.fire({
+          title: 'Error',
+          text: 'Please select a new release date',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+        return;
+      }
+      
+      if (!reason) {
+        Swal.fire({
+          title: 'Error',
+          text: 'Please select a reason for rescheduling',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+        return;
+      }
+      
+      // Close modal
+      const rescheduleModal = bootstrap.Modal.getInstance(document.getElementById('rescheduleModal'));
+      rescheduleModal.hide();
+      
+      // Show loading
+      Swal.fire({
+        title: 'Processing',
+        text: 'Rescheduling release...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      // Simulate API call
+      setTimeout(() => {
+        // Find the row with the release ID
+        const rows = document.querySelectorAll('tbody tr');
+        let targetRow;
+        
+        rows.forEach(row => {
+          const rowReleaseId = row.querySelector('td:nth-child(2) a').textContent;
+          if (rowReleaseId === releaseId) {
+            targetRow = row;
+          }
+        });
+        
+        if (targetRow) {
+          // Get the current release date
+          const releaseDateCell = targetRow.querySelector('td:nth-child(6)');
+          const currentDateInfo = releaseDateCell.querySelector('.release-date-info:not(.rescheduled)');
+          
+          // Create a new element for the old date (now rescheduled)
+          const oldDateInfo = document.createElement('div');
+          oldDateInfo.className = 'release-date-info rescheduled';
+          oldDateInfo.innerHTML = currentDateInfo.innerHTML;
+          
+          // Update the current date info with the new date
+          currentDateInfo.innerHTML = `<i class="ri-calendar-event-line"></i> ${newDate}`;
+          
+          // Insert the old date before the new date
+          releaseDateCell.insertBefore(oldDateInfo, currentDateInfo);
+          
+          // Update the status
+          const statusCell = targetRow.querySelector('td:nth-child(7)');
+          statusCell.innerHTML = `
+            <span class="status-badge status-rescheduled">
+              <i class="ri-time-line"></i> Rescheduled
+            </span>
+          `;
+          
+          // Show success message
+          Swal.fire({
+            title: 'Success!',
+            text: `Release ${releaseId} has been rescheduled to ${newDate}.`,
+            icon: 'success',
+            confirmButtonText: 'OK'
+          });
+        }
+      }, 1500);
+    });
+    
+    // Handle confirm release button click
+    document.getElementById('confirmReleaseBtn').addEventListener('click', function() {
+      const businessName = document.getElementById('releaseBusiness').textContent;
+      const amount = document.getElementById('releaseAmount').value;
+      const notes = document.getElementById('releaseNotes').value;
+      
+      // Close modal
+      const releaseModal = bootstrap.Modal.getInstance(document.getElementById('releaseMoneyModal'));
+      releaseModal.hide();
+      
+      // Show loading
+      Swal.fire({
+        title: 'Processing',
+        text: 'Releasing funds...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      // Simulate API call
+      setTimeout(() => {
+        // Find all rows with release buttons
+        const releaseButtons = document.querySelectorAll('.btn-action');
+        
+        releaseButtons.forEach(button => {
+          if (button.textContent.trim() === 'Release Now' && button.closest('tr').querySelector('.business-name span').textContent === businessName) {
+            const row = button.closest('tr');
+            
+            // Update status cell
+            const statusCell = row.querySelector('td:nth-child(7)');
+            statusCell.innerHTML = `
+              <span class="status-badge status-released">
+                <i class="ri-checkbox-circle-line"></i> Released
+              </span>
+            `;
+            
+            // Update action cell
+            const actionCell = row.querySelector('td:nth-child(8)');
+            actionCell.innerHTML = `
+              <button type="button" class="btn btn-soft-info btn-sm btn-action">
+                View Details
+              </button>
+            `;
+          }
+        });
+        
+        // Update stats (for demo purposes)
+        const pendingReleasesElement = document.querySelector('.counter-value[data-target="86"]');
+        const newPendingValue = parseInt(pendingReleasesElement.getAttribute('data-target')) - 1;
+        pendingReleasesElement.setAttribute('data-target', newPendingValue);
+        pendingReleasesElement.textContent = newPendingValue.toLocaleString();
+        
+        const completedReleasesElement = document.querySelector('.counter-value[data-target="1248"]');
+        const newCompletedValue = parseInt(completedReleasesElement.getAttribute('data-target')) + 1;
+        completedReleasesElement.setAttribute('data-target', newCompletedValue);
+        completedReleasesElement.textContent = newCompletedValue.toLocaleString();
+        
+        // Show success message
+        Swal.fire({
+          title: 'Success!',
+          text: `Funds have been successfully released to ${businessName}.`,
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+      }, 1500);
+    });
+    
+    // Countdown timer for next release
+    function updateCountdown() {
+      // Set the target date (April 15, 2023)
+      const targetDate = new Date('April 15, 2023 00:00:00').getTime();
+      const now = new Date().getTime();
+      const difference = targetDate - now;
+      
+      // Calculate days, hours, minutes, seconds
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      
+      // Update the countdown elements
+      document.getElementById('days').textContent = days < 10 ? '0' + days : days;
+      document.getElementById('hours').textContent = hours < 10 ? '0' + hours : hours;
+      document.getElementById('minutes').textContent = minutes < 10 ? '0' + minutes : minutes;
+      document.getElementById('seconds').textContent = seconds < 10 ? '0' + seconds : seconds;
+      
+      // If the countdown is over, display a message
+      if (difference < 0) {
+        clearInterval(countdownInterval);
+        document.getElementById('days').textContent = '00';
+        document.getElementById('hours').textContent = '00';
+        document.getElementById('minutes').textContent = '00';
+        document.getElementById('seconds').textContent = '00';
+      }
+    }
+    
+    // Update the countdown every second
+    updateCountdown();
+    const countdownInterval = setInterval(updateCountdown, 1000);
+  });
+  
+  // Search function
+  function SearchData() {
+    const releaseStatus = document.getElementById('releaseStatus').value;
+    const amountRange = document.getElementById('amountRange').value;
+    const dateRange = document.getElementById('datepicker-range').value;
+    
+    console.log(`Searching with filters: Release Status=${releaseStatus}, Amount Range=${amountRange}, Date=${dateRange}`);
+    
+    // Here you would typically make an API call with these filters
+    // For demo purposes, just show a success message
+    Swal.fire({
+      title: 'Filters Applied',
+      text: 'The releases list has been filtered according to your criteria',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false
+    });
+  }
+</script> -->

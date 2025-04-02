@@ -39,6 +39,7 @@ router.use(authenticateUser);
 router.get('/dashboard', businessController.getDashboardPage);
 router.post('/completionConfirm' , businessController.completionConfirm);
 
+router.get('/request-verification', businessController.requestVerification);
 
 //orders
 router.get('/orders', businessController.get_ordersPage);
@@ -77,11 +78,19 @@ router.delete('/pickup/delete-pickup/:pickupId', businessController.deletePickup
 
 
 //wallet
-router.get('/wallet/overview', businessController.get_walletOverviewPage);
 
-router.get('/wallet/get-wallet-Overview-data', businessController.get_walletOverviewData);
+// total balance
+router.get('/wallet/total-balance', businessController.get_totalBalancePage);
 
-router.get('/wallet/transactions', businessController.get_walletTransactionsPage);
+router.get('/wallet/get-all-transactions-by-date', businessController.get_allTransactionsByDate);
+
+
+
+
+// cash cycle
+router.get('/wallet/cash-cycles', businessController.get_cashCyclesPage);
+
+router.get('/wallet/get-total-cashCycle-by-data', businessController.get_totalCashCycleByDate);
 
 
 
@@ -90,6 +99,9 @@ router.get('/shop', businessController.get_shopPage);
 
 
 
+
+// tickets
+router.get('/tickets', businessController.get_ticketsPage);
 
 
 //logout

@@ -376,6 +376,13 @@ catch(err){
 }
 }
 
+
+// request for onther verification
+
+
+
+
+
 module.exports = {
   loginPage,
   adminLogin,
@@ -388,4 +395,5 @@ module.exports = {
 
   courierLogin,
   loginAsCourier,
+
 };

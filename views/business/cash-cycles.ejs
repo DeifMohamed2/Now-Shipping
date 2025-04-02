@@ -73,8 +73,8 @@
       </div>
       <div class="d-flex">
         <div class="btn-group" role="group">
-          <button type="button" class="time-filter-btn" data-period="today">Today</button>
-          <button type="button" class="time-filter-btn active" data-period="week">This Week</button>
+          <button type="button" class="time-filter-btn active" data-period="today">Today</button>
+          <button type="button" class="time-filter-btn" data-period="week">This Week</button>
           <button type="button" class="time-filter-btn" data-period="month">This Month</button>
           <button type="button" class="time-filter-btn" data-period="year">This Year</button>
           <button type="button" class="time-filter-btn" data-period="all">All Time</button>
@@ -99,7 +99,7 @@
         </div>
         <div class="d-flex align-items-end justify-content-between">
           <div>
-            <h2 class="fw-bold mb-2"><span class="counter-value" id="totalIncome">559.25</span>EGP</h2>
+            <h2 class="fw-bold mb-2"><span class="counter-value" id="totalIncome"></span>EGP</h2>
             <div class="d-flex align-items-center">
               <!-- <span class="badge bg-soft-success text-success me-2"><i class="ri-arrow-up-line align-middle"></i> 8.2%</span> -->
               <!-- <span class="text-muted fs-13">from last period</span> -->
@@ -147,24 +147,24 @@
       <div class="card-body">
         <div class="d-flex align-items-center mb-3">
           <div class="flex-grow-1">
-            <h5 class="text-uppercase fw-semibold text-muted mb-0">Pending Orders</h5>
+            <h5 class="text-uppercase fw-semibold text-muted mb-0">Net Total</h5>
           </div>
-          <div class="stat-icon bg-soft-warning">
-            <i data-feather="clock" class="text-warning"></i>
+          <div class="stat-icon bg-soft-secondary">
+            <i data-feather="bar-chart-2" class="text-secondary"></i>
           </div>
         </div>
         <div class="d-flex align-items-end justify-content-between">
           <div>
-            <h2 class="fw-bold mb-2"><span class="counter-value"  id="inProgressCount"></span></h2>
+            <h2 class="fw-bold mb-2"><span class="counter-value" id="netTotal"></span>EGP</h2>
             <div class="d-flex align-items-center">
-              <!-- <span class="badge bg-soft-danger text-danger me-2"><i class="ri-arrow-down-line align-middle"></i> 2.8%</span> -->
+              <!-- <span class="badge bg-soft-success text-success me-2"><i class="ri-arrow-up-line align-middle"></i> 10.5%</span> -->
               <!-- <span class="text-muted fs-13">from last period</span> -->
             </div>
           </div>
         </div>
         <div class="mt-3 pt-2 border-top">
-          <!-- <span class="badge bg-soft-info text-info me-1">124.32EGP</span> -->
-          <!-- <span class="text-muted">Pending value</span> -->
+          <!-- <span class="badge bg-soft-primary text-primary me-1">Net value</span> -->
+          <!-- <span class="text-muted">Calculated as Total Income - Total Fees</span> -->
         </div>
       </div>
     </div>
@@ -290,52 +290,7 @@
               <tbody class="list form-check-all" id="invoice-list-data">
                 <!-- Sample data for preview - will be populated dynamically -->
 
-                <tr>
-                  <td>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox">
-                    </div>
-                  </td>
-                  <td><a href="#" class="fw-medium link-primary">#ORD-0120</a></td>
-                  <td>Standard</td>
-                  <td><span class="badge badge-status bg-success-subtle text-success">Paid</span></td>
-                  <td>Federal</td>
-                  <td>$2,300.00</td>
-                  <td>$120.00</td>
-                  <td>15 Mar, 2023</td>
-                  <td>18 Mar, 2023</td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox">
-                    </div>
-                  </td>
-                  <td><a href="#" class="fw-medium link-primary">#ORD-0119</a></td>
-                  <td>Express</td>
-                  <td><span class="badge badge-status bg-warning-subtle text-warning">Pending</span></td>
-                  <td>State</td>
-                  <td>$1,750.00</td>
-                  <td>$87.50</td>
-                  <td>12 Mar, 2023</td>
-                  <td>-</td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox">
-                    </div>
-                  </td>
-                  <td><a href="#" class="fw-medium link-primary">#ORD-0118</a></td>
-                  <td>Premium</td>
-                  <td><span class="badge badge-status bg-danger-subtle text-danger">Cancelled</span></td>
-                  <td>Local</td>
-                  <td>$3,400.00</td>
-                  <td>$170.00</td>
-                  <td>10 Mar, 2023</td>
-                  <td>-</td>
-                </tr>
-
+  
               </tbody>
             </table>
             <div class="noresult" style="display: none">
@@ -382,7 +337,7 @@
     });
     
 
-    getOrdersAndTotals('week');
+    getOrdersAndTotals('today'); // Fetch today's data on load
 
 
 
@@ -512,7 +467,8 @@
     
     async function getOrdersAndTotals(timePeriod) {
         try {
-            const response = await fetch(`/business/wallet/get-wallet-Overview-data?timePeriod=${timePeriod}`);
+          console.log(timePeriod);
+            const response = await fetch(`/business/wallet/get-total-cashCycle-by-data?timePeriod=${timePeriod}`);
             const data = await response.json();
             
             if (!response.ok) {
@@ -524,8 +480,8 @@
             document.getElementById('totalIncome').setAttribute('data-target', data.totalIncome||0);
             document.getElementById('totalFees').innerHTML = `${data.totalFees.toFixed(2)||0}`;
             document.getElementById('totalFees').setAttribute('data-target', data.totalFees||0);
-            document.getElementById('inProgressCount').innerHTML = data.inProgressCount||0;
-            document.getElementById('inProgressCount').setAttribute('data-target', data.inProgressCount||0);
+            document.getElementById('netTotal').innerHTML = `${(data.totalIncome - data.totalFees).toFixed(2) || 0}`;
+       
             document.getElementById('completedCount').innerHTML = data.completedCount||0;
             document.getElementById('completedCount').setAttribute('data-target', data.completedCount||0);
 

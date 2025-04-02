@@ -1,0 +1,760 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/assets/rCSS/business.css">
+<style>
+  :root {
+    --primary-color: #2A3950;
+    --success-color: #10B981;
+    --danger-color: #EF4444;
+    --warning-color: #F59E0B;
+    --info-color: #3B82F6;
+    --light-bg: #F9FAFB;
+    --card-border: #E5E7EB;
+  }
+
+  .wallet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
+  }
+
+  .wallet-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  .wallet-subtitle {
+    font-size: 14px;
+    color: #6B7280;
+    margin-top: 5px;
+  }
+
+  .balance-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  @media (max-width: 992px) {
+    .balance-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .balance-card>div:last-child {
+      align-self: flex-end;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .balance-card {
+      padding: 15px;
+    }
+
+    .balance-value {
+      font-size: 28px !important;
+    }
+
+    .wallet-title {
+      font-size: 20px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .balance-card {
+      gap: 15px;
+    }
+
+    .balance-info,
+    .withdrawal-info {
+      width: 100%;
+    }
+
+    .balance-card>div:last-child {
+      align-self: flex-start;
+      width: 100%;
+    }
+
+    .balance-card>div:last-child button {
+      width: 100%;
+    }
+  }
+
+  .balance-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .balance-label {
+    font-size: 14px;
+    color: #6B7280;
+    margin-bottom: 5px;
+  }
+
+  .balance-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  .withdrawal-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .withdrawal-label {
+    font-size: 14px;
+    color: #6B7280;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+  }
+
+  .withdrawal-label i {
+    margin-right: 5px;
+    color: var(--info-color);
+  }
+
+  .withdrawal-date {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  .frequency-label {
+    font-size: 14px;
+    color: #6B7280;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+  }
+
+  .frequency-label i {
+    margin-right: 5px;
+    color: var(--warning-color);
+  }
+
+  .frequency-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  .transaction-filters {
+    background-color: var(--light-bg);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  @media (max-width: 576px) {
+    .transaction-filters {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-group {
+      width: 100%;
+    }
+
+    .date-filter,
+    .export-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .filter-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .date-filter {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 8px 15px;
+    cursor: pointer;
+  }
+
+  .date-filter i {
+    margin-right: 8px;
+    color: #6B7280;
+  }
+
+  .export-btn {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 8px 15px;
+    cursor: pointer;
+  }
+
+  .export-btn i {
+    margin-right: 8px;
+    color: #6B7280;
+  }
+
+  .transactions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .transactions-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  .table-container {
+    position: relative;
+  }
+
+  .table-responsive {
+    max-height: 600px;
+    overflow-y: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .table {
+    margin-bottom: 0;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table th {
+    position: sticky;
+    top: 0;
+    background-color: #F3F4F6;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 15px;
+    color: #4B5563;
+    z-index: 1;
+    white-space: nowrap;
+  }
+
+  .table td {
+    padding: 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #F3F4F6;
+    white-space: nowrap;
+  }
+
+  .table tbody tr:hover {
+    background-color: #F9FAFB;
+  }
+
+  .transaction-id {
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .transaction-date {
+    color: #6B7280;
+  }
+
+  .transaction-type {
+    color: #4B5563;
+    font-weight: 500;
+  }
+
+  .transaction-amount {
+    font-weight: 600;
+  }
+
+  .amount-positive {
+    color: var(--success-color);
+  }
+
+  .amount-negative {
+    color: var(--danger-color);
+  }
+
+  .transaction-balance {
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .details-btn {
+    background-color: #F3F4F6;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #4B5563;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .details-btn:hover {
+    background-color: #E5E7EB;
+  }
+
+  .transaction-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+  }
+
+  .icon-positive {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+  }
+
+  .icon-negative {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+  }
+
+  .badge-status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .pagination-wrap {
+    margin-top: 15px;
+  }
+
+  .pagination-wrap a,
+  .pagination-wrap li a {
+    padding: 8px 15px;
+    border-radius: 8px;
+    margin: 0 5px;
+    color: #4B5563;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .pagination-wrap a:hover,
+  .pagination-wrap li a:hover {
+    background-color: #F3F4F6;
+  }
+
+  .pagination-wrap li.active a {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  .noresult {
+    padding: 30px 0;
+  }
+
+  /* Custom scrollbar for webkit browsers */
+  .table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+
+  /* For Firefox */
+  .table-responsive {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+  }
+
+  @media (max-width: 576px) {
+
+    .table th,
+    .table td {
+      padding: 10px 8px;
+      font-size: 13px;
+    }
+
+    .transaction-icon {
+      width: 24px;
+      height: 24px;
+    }
+
+    .details-btn {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+  }
+</style>
+<%- contentFor('body') %>
+
+<div class="wallet-header">
+  <div>
+    <h1 class="wallet-title">My Wallet</h1>
+  </div>
+</div>
+
+<div class="balance-card">
+  <div class="balance-info">
+    <span class="balance-label">Total Balance</span>
+    <h2 class="balance-value"> <%= userData.balance %> EGP</h2>
+  </div>
+
+  <div class="withdrawal-info">
+    <div class="withdrawal-label">
+      <i data-feather="calendar"></i> Next Withdrawal Date
+    </div>
+    <div class="withdrawal-date"> <%= weeklyWithdrawDate %></div>
+  </div>
+
+  <div class="withdrawal-info">
+    <div class="frequency-label">
+      <i data-feather="repeat"></i> Withdrawal Frequency
+    </div>
+    <div class="frequency-value">Weekly</div>
+  </div>
+
+ 
+</div>
+
+<div class="transactions-header">
+  <h2 class="transactions-title">Transactions</h2>
+</div>
+
+<div class="transaction-filters">
+  <div class="filter-group">
+    <div class="date-filter">
+      <i data-feather="calendar"></i> Last 7 days
+    </div>
+  </div>
+  <div class="filter-group">
+    <div class="export-btn">
+      <i data-feather="download"></i> Export
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="table-container">
+      <div class="table-responsive">
+        <table class="table" id="invoiceTable">
+          <thead>
+            <tr>
+              <th scope="col" style="width: 50px;"></th>
+
+              <th class="text-uppercase">Transaction ID</th>
+              <th class="text-uppercase">Date</th>
+              <th class="text-uppercase">Type</th>
+              <th class="text-uppercase">Amount</th>
+              <!-- <th class="text-uppercase">Balance</th> -->
+              <th class="text-uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="list form-check-all" id="invoice-list-data">
+<!-- 
+            <tr>
+              <td>
+                <div class="transaction-icon icon-positive">
+                  <i data-feather="plus" style="width: 16px; height: 16px;"></i>
+                </div>
+              </td>
+
+              <td class="transaction-id">#TRX-0001</td>
+              <td class="transaction-date">Jan 18, 2023</td>
+              <td>
+                Account Deposit
+                <p class="text-muted">Initial account funding</p>
+              </td>
+              <td class="transaction-amount amount-positive">+$10,000.00</td>
+              <td class="transaction-balance">$12,000.00</td>
+              <td>
+                <button class="details-btn">Show Invoice</button>
+              </td>
+            </tr>
+             -->
+            <!-- <tr>
+              <td>
+                <div class="transaction-icon icon-negative">
+                  <i data-feather="minus" style="width: 16px; height: 16px;"></i>
+                </div>
+              </td>
+
+              <td class="transaction-id">#TRX-0002</td>
+              <td class="transaction-date">Jan 18, 2023</td>
+              <td>
+                Cash Withdrawal
+                <p class="text-muted">Vendor payment</p>
+              </td>
+              <td class="transaction-amount amount-negative">-$19,850.00</td>
+              <td class="transaction-balance">$2,000.00</td>
+              <td>
+                <button class="details-btn">Show Invoice</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="transaction-icon icon-negative">
+                  <i data-feather="minus" style="width: 16px; height: 16px;"></i>
+                </div>
+              </td>
+
+              <td class="transaction-id">#TRX-0003</td>
+              <td class="transaction-date">Jan 18, 2023</td>
+              <td>
+                Service Fees
+                <p class="text-muted">Monthly service fee</p>
+              </td>
+              <td class="transaction-amount amount-negative">-$2,100.00</td>
+              <td class="transaction-balance">$6,550.00</td>
+              <td>
+                <button class="details-btn">Show Details</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="transaction-icon icon-positive">
+                  <i data-feather="plus" style="width: 16px; height: 16px;"></i>
+                </div>
+              </td>
+
+              <td class="transaction-id">#TRX-0004</td>
+              <td class="transaction-date">Jan 18, 2023</td>
+              <td>
+                Refund
+                <p class="text-muted">Refund for overpayment</p>
+              </td>
+              <td class="transaction-amount amount-positive">+$1,100.00</td>
+              <td class="transaction-balance">$8,550.00</td>
+              <td>
+                <button class="details-btn">Download Receipt</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="transaction-icon icon-negative">
+                  <i data-feather="minus" style="width: 16px; height: 16px;"></i>
+                </div>
+              </td>
+
+              <td class="transaction-id">#TRX-0005</td>
+              <td class="transaction-date">Jan 18, 2023</td>
+              <td>
+                Packaging Materials
+                <p class="text-muted">Purchase of packaging supplies</p>
+              </td>
+              <td class="transaction-amount amount-negative">-$150.00</td>
+              <td class="transaction-balance">$7,550.00</td>
+              <td>
+                <button class="details-btn">Show Details</button>
+              </td>
+            </tr> -->
+
+
+          </tbody>
+        </table>
+        <div class="noresult" style="display: none">
+          <div class="text-center py-4">
+            <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#08a88a" style="width:75px;height:75px"></lord-icon>
+            <h5 class="mt-2">No Results Found</h5>
+            <p class="text-muted mb-0">We couldn't find any transactions matching your search criteria.</p>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <div class="pagination-wrap hstack gap-2">
+          <a class="page-item pagination-prev disabled" href="#">
+            <i class="ri-arrow-left-s-line"></i> Previous
+          </a>
+          <ul class="pagination listjs-pagination mb-0">
+            <li class="active"><a href="#">1</a></li>
+            <li><a href="#">2</a></li>
+            <li><a href="#">3</a></li>
+          </ul>
+          <a class="page-item pagination-next" href="#">
+            Next <i class="ri-arrow-right-s-line"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+<!-- App js -->
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Feather icons
+    if (typeof feather !== 'undefined') {
+      feather.replace();
+    }
+
+
+    function populateTransactions(data) {
+      const tableBody = document.getElementById('invoice-list-data');
+      tableBody.innerHTML = ''; // Clear existing rows
+
+      data.forEach(transaction => {
+      const isPositive = ['cashCycle', 'refund', 'deposit'].includes(transaction.transactionType);
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>
+        <div class="transaction-icon ${isPositive ? 'icon-positive' : 'icon-negative'}">
+          <i data-feather="${isPositive ? 'plus' : 'minus'}" style="width: 16px; height: 16px;"></i>
+        </div>
+        </td>
+        <td class="transaction-id">${transaction.transactionId}</td>
+        <td class="transaction-date">${new Date(transaction.createdAt).toLocaleDateString()}</td>
+        <td>
+        ${transaction.transactionType}
+        <p class="text-muted">${transaction.transactionNotes || ''}</p>
+        </td>
+        <td class="transaction-amount ">${transaction.transactionAmount} EGP</td>
+        <td><button class="details-btn">Show Details</button></td>
+      `;
+      tableBody.appendChild(row);
+      });
+
+      // Reinitialize Feather icons
+      if (typeof feather !== 'undefined') {
+      feather.replace();
+      }
+    }
+
+
+
+
+
+    // fetch all tranactions 
+    async function getTransactions(timePeriod) {
+      try { 
+        const response = await fetch(`/business/wallet/get-all-transactions-by-date?timePeriod=${timePeriod}`);
+        const data = await response.json();
+        console.log(data);
+        if(response.ok) {
+          if (data.length > 0) {
+            populateTransactions(data);
+          } else {
+            const noResultDiv = document.querySelector('.noresult');
+            noResultDiv.style.display = 'block';
+          }
+        } else {
+          console.error('Error fetching transactions:', data.message);
+        }
+        
+
+
+      } catch (error) {
+        console.error('Error in getTransactions:', error);
+      }
+    }
+    getTransactions('today');
+
+
+    // Add click handler for date filter
+    document.querySelector('.date-filter').addEventListener('click', function() {
+  Swal.fire({
+  title: 'Select Date Range',
+  html: `
+  <div class="mb-3">
+    <select class="form-select" id="dateRangeSelect">
+      <option value="today">Today</option>
+      <option value="week">This Week</option>
+      <option value="month">This Month</option>
+      <option value="year">This Year</option>
+      <option value="all">All Time</option>
+    </select>
+  </div>
+  `,
+  showCancelButton: true,
+  confirmButtonText: 'Apply',
+  confirmButtonColor: '#3B82F6'
+  }).then((result) => {
+  if (result.isConfirmed) {
+  const selectedValue = document.getElementById('dateRangeSelect').value;
+  getTransactions(selectedValue);
+  }
+  });
+  });
+
+
+
+
+
+
+
+    // Add click handler for export button
+    document.querySelector('.export-btn').addEventListener('click', function() {
+      Swal.fire({
+        title: 'Export Successful!',
+        text: 'Transaction data has been exported',
+        icon: 'success',
+        confirmButtonColor: '#3B82F6'
+      });
+    });
+
+   
+    // Add click handlers for detail buttons
+    document.querySelectorAll('.details-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const row = this.closest('tr');
+        const transactionId = row.querySelector('.transaction-id').textContent;
+        const transactionDate = row.querySelector('.transaction-date').textContent;
+        const transactionType = row.querySelector('td:nth-child(5)').textContent;
+        const transactionAmount = row.querySelector('.transaction-amount').textContent;
+        const transactionNotes = row.querySelector('td:nth-child(8)').textContent;
+
+        Swal.fire({
+          title: 'Transaction Details',
+          html: `
+            <div class="text-start">
+              <p><strong>Transaction ID:</strong> ${transactionId}</p>
+              <p><strong>Date:</strong> ${transactionDate}</p>
+              <p><strong>Type:</strong> ${transactionType}</p>
+              <p><strong>Amount:</strong> ${transactionAmount}</p>
+              <p><strong>Status:</strong> Completed</p>
+            </div>
+          `,
+          confirmButtonColor: '#3B82F6'
+        });
+      });
+    });
+
+
+  });
+</script>

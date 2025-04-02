@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
 require('dotenv').config();
-
 const express = require('express');
 const app = express();
 const path = require('path');
+
+
+
 
 // Routes
 const adminRouter = require('./routes/adminRoutes');
@@ -12,6 +14,13 @@ const courierRouter = require('./routes/courierRoutes');
 const businessRouter = require('./routes/businessRoutes');
 const manageRouter = require('./routes/manageRoutes');
 const authRouter = require('./routes/authRoutes');
+
+// Import jobs
+const dailyOrderProcessing = require('./jobs/dailyOrderProcessing');
+
+const releasesProccessing = require('./jobs/releasesProccessing');
+
+
 
 
 const expressLayouts = require('express-ejs-layouts');

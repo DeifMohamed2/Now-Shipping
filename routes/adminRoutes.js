@@ -88,9 +88,23 @@ router.post('/stock-managment/courier-received', adminController.courier_receive
 
 // wallet overview
 
-router.get('/wallet-overview', adminController.get_walletOverviewPage);
+router.get('/release-amounts', adminController.get_releaseAmountsPage);
+
+router.get('/get-release-all-data', adminController.get_releasesAllData);
+
+router.post('/reschedule-release', adminController.rescheduleRelease);
+
+router.post('/release-funds', adminController.releaseFunds);
 
 
+// businesses
+
+router.get('/businesses', adminController.get_businessesPage);
+
+
+
+// tickets
+router.get('/tickets', adminController.get_ticketsPage);
 
 //logout
 router.get('/logout', adminController.logOut);

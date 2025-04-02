@@ -1,8 +1,19 @@
 const PDFDocument = require('pdfkit');
-
+const Transaction = require('../models/transactions');
 const User = require('../models/user');
 const Order = require('../models/order');
 const Pickup = require('../models/pickup');
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: 'deifm81@gmail.com',
+    pass: 'yduu pmtg shyb kapc',
+  },
+});
+
 //================================================ Dashboard  ================================================= //
 const getDashboardPage = (req, res) => {
   
@@ -124,6 +135,50 @@ const completionConfirm = async (req, res) => {
     res.status(500).json({ error: "Internal server error. Please try again." });
   }
 };
+
+
+function sendVerificationEmail(user, token) {
+  const mailOptions = {
+    to: user.email,
+    subject: 'Email Verification',
+    html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2 style="text-align: center; color: #333;">Email Verification</h2>
+            <p style="font-size: 16px; color: #555;">Hello ${user.name},</p>
+            <p style="font-size: 16px; color: #555;">Thank you for registering. Please click the button below to verify your email address:</p>
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="http://localhost:6098/verify-email?token=${token}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">Verify Email</a>
+            </div>
+            <p style="font-size: 16px; color: #555;">If you did not create an account, no further action is required.</p>
+            <p style="font-size: 16px; color: #555;">Regards,<br>Your Company</p>
+            </div>
+        `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+}
+
+//
+const requestVerification = async (req, res) => {
+
+  const user = req.userData;
+
+
+  const verificationToken = user.generateVerificationToken();
+  sendVerificationEmail(user, verificationToken);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Verification email sent successfully',
+  });
+};
+
 
 //================================================END Dashboard  ================================================= //
 
@@ -763,16 +818,92 @@ const deletePickup  = async (req, res) => {
 //================================================END Pickup  ================================================= //
 
 
-const get_walletOverviewPage  = (req, res) => {
-  res.render('business/wallet-overview' , {
-    title: "Wallet Overview",
-    page_title: 'Wallet Overview',
+  const get_totalBalancePage  = (req, res) => {
+      const now = new Date();
+    const daysUntilWednesday = (3 - now.getDay() + 7) % 7; // Calculate days until next Wednesday
+    const nextWednesday = new Date(now.setDate(now.getDate() + daysUntilWednesday));
+    const weeklyWithdrawDate = nextWednesday.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); // Format the date to show as Wednesday with full date
+  res.render('business/total-balance' , {
+    title: "Total Balance",
+    page_title: 'Total Balance',
+    folder: 'Pages',
+    userData :req.userData,
+    weeklyWithdrawDate,
+  });
+}
+const get_allTransactionsByDate = async (req, res) => {
+  try {
+    const { timePeriod } = req.query;
+    let dateFilter = {};
+    const now = new Date();
+    console.log(now, timePeriod);
+    // Set date filter based on time period
+    switch (timePeriod) {
+      case 'today':
+        dateFilter = {
+          createdAt: {
+            $gte: new Date(now.setHours(0, 0, 0, 0)),
+            $lt: new Date(now.setHours(23, 59, 59, 999))
+          }
+        };
+        break;
+      case 'week':
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+        const weekEnd = new Date(now);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        dateFilter = {
+          createdAt: {
+            $gte: new Date(weekStart.setHours(0, 0, 0, 0)),
+            $lt: new Date(weekEnd.setHours(23, 59, 59, 999))
+          }
+        };
+        console.log(`Week from ${weekStart.toLocaleDateString()} to ${weekEnd.toLocaleDateString()}`);
+        break;
+      case 'month':
+        dateFilter = {
+          createdAt: {
+            $gte: new Date(now.getFullYear(), now.getMonth(), 1),
+            $lt: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+          }
+        };
+        break;
+      case 'year':
+        dateFilter = {
+          createdAt: {
+            $gte: new Date(now.getFullYear(), 0, 1),
+            $lt: new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+          }
+        };
+        break;
+      case 'all':
+      default:
+        dateFilter = {};
+    }
+
+    const transactions = await Transaction.find({
+      ...dateFilter,
+      business: req.userData._id,
+    })
+    console.log(transactions);
+    res.status(200).json(transactions || []);
+  } catch (error) {
+    console.error('Error in get_allTransactionsByDate:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+// ================================================= Cash Cycles ================================================= //
+
+const get_cashCyclesPage = (req, res) => {
+  res.render('business/cash-cycles' , {
+    title: "Cash Cycles",
+    page_title: 'Cash Cycles',
     folder: 'Pages'
    
   });
 }
 
-const get_walletOverviewData = async (req, res) => {
+
+const get_totalCashCycleByDate = async (req, res) => {
   try {
     const { timePeriod } = req.query;
     let dateFilter = {};
@@ -826,9 +957,10 @@ const get_walletOverviewData = async (req, res) => {
       orderStatus: 'completed',
       completedDate: dateFilter.completedDate
     });
+    console.log(orders);
     const inProgressCount = await Order.countDocuments({
       business: req.userData._id,
-      orderStatus: { $in: ['inProgress', 'headingToCustomer', 'inStock', 'headingToYou'] },
+      orderStatus: { $in: ['headingToCustomer', 'headingToYou'] },
       completedDate: dateFilter.completedDate
     });
 
@@ -845,7 +977,7 @@ const get_walletOverviewData = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in get_walletOverviewData:', error);
+    console.error('Error in get_totalBalanceData:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 }
@@ -854,15 +986,12 @@ const get_walletOverviewData = async (req, res) => {
 
 
 
-const get_walletTransactionsPage = (req, res) => {
-  res.render('business/wallet-transactions' , {
-    title: "Wallet Transaction",
-    page_title: 'Wallet Transaction',
-    folder: 'Pages'
-   
-  });
-}
+// ================================================= END Cash Cycles ================================================= //
 
+
+
+
+// ================================================= Shop ================================================= //
 
 const get_shopPage = (req, res) => {
   res.render('business/shop' , {
@@ -877,6 +1006,20 @@ const get_shopPage = (req, res) => {
 
 
 
+// ================================================= END Shop ================================================= //
+
+// ================================================= Tickets ================================================= //
+
+
+const get_ticketsPage = (req, res) => {
+  res.render('business/tickets' , {
+    title: "Tickets",
+    page_title: 'Tickets',
+    folder: 'Pages'
+   
+  });
+  
+}
 
 const logOut = (req, res) => {
   res.clearCookie('token');
@@ -887,6 +1030,7 @@ const logOut = (req, res) => {
 module.exports = {
   getDashboardPage,
   completionConfirm,
+  requestVerification,
 
   // Orders
   get_ordersPage,
@@ -908,11 +1052,17 @@ module.exports = {
   createPickup,
   deletePickup,
 
-  get_walletOverviewPage,
-  get_walletOverviewData,
+  get_totalBalancePage,
+  get_allTransactionsByDate,
 
-  get_walletTransactionsPage,
+  // Cash Cycles
+  get_cashCyclesPage,
+  get_totalCashCycleByDate,
+
   get_shopPage,
+
+  // Tickets
+  get_ticketsPage,
 
   logOut,
 };
