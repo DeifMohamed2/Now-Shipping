@@ -454,7 +454,7 @@
 <div class="transaction-filters">
   <div class="filter-group">
     <div class="date-filter">
-      <i data-feather="calendar"></i> Last 7 days
+      <i data-feather="calendar"></i> Last Month
     </div>
   </div>
   <div class="filter-group">
@@ -663,14 +663,17 @@
     // fetch all tranactions 
     async function getTransactions(timePeriod) {
       try { 
+        const noResultDiv = document.querySelector('.noresult');
         const response = await fetch(`/business/wallet/get-all-transactions-by-date?timePeriod=${timePeriod}`);
         const data = await response.json();
         console.log(data);
         if(response.ok) {
           if (data.length > 0) {
+
             populateTransactions(data);
+            noResultDiv.style.display = 'none'; // Hide the no result message
           } else {
-            const noResultDiv = document.querySelector('.noresult');
+            populateTransactions([]); // Clear the table if no transactions
             noResultDiv.style.display = 'block';
           }
         } else {
@@ -683,7 +686,7 @@
         console.error('Error in getTransactions:', error);
       }
     }
-    getTransactions('today');
+    getTransactions('all');
 
 
     // Add click handler for date filter

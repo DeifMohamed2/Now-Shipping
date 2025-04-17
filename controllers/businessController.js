@@ -29,6 +29,7 @@ const completionConfirm = async (req, res) => {
   try {
     const {
       IPAorPhoneNumber,
+      mobileWalletNumber,
       accountName,
       IBAN,
       bankName,
@@ -37,9 +38,11 @@ const completionConfirm = async (req, res) => {
       industry,
       monthlyOrders,
       sellingPoints,
+      socialLinks,
       country,
       city,
       adressDetails,
+      pickupPhone,
       nearbyLandmark,
       paymentMethod,
       nationalId,
@@ -60,10 +63,15 @@ const completionConfirm = async (req, res) => {
 
     // ✅ 2. Validate Payment Method
     let paymentDetails = {};
-    console.log(paymentMethod);
-    if (paymentMethod === "instaPay" || paymentMethod === "mobileWallet") {
+    console.log(paymentMethod, mobileWalletNumber);
+    if (paymentMethod === "instaPay" ) {
       if (!IPAorPhoneNumber) return res.status(400).json({ error: "IPA or Phone Number is required for InstaPay or Mobile Wallet." });
       paymentDetails = { IPAorPhoneNumber };
+
+    }else if(paymentMethod === "mobileWallet")  {
+      if (!mobileWalletNumber) return res.status(400).json({ error: "Mobile Wallet Number is required." });
+      paymentDetails = { mobileWalletNumber };
+    
     } else if (paymentMethod === "bankTransfer") {
       if (!accountName || !IBAN || !bankName) {
         return res.status(400).json({ error: "Account Name, IBAN, and Bank Name are required for Bank Transfer." });
@@ -93,27 +101,29 @@ const completionConfirm = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.userData._id,
       {
-      brandInfo: {
-        brandName,
-        industry,
-        monthlyOrders,
-        sellingPoints,
-      },
-      pickUpAdress: {
-        country,
-        city,
-        adressDetails,
-        nearbyLandmark: nearbyLandmark || "",
-      },
-      paymentMethod: {
-        paymentChoice: paymentMethod,
-        details: paymentDetails,
-      },
-      brandType: {
-        brandChoice: brandType,
-        brandDetails,
-      },
-      isCompleted: true,
+        brandInfo: {
+          brandName,
+          industry,
+          monthlyOrders,
+          sellingPoints,
+          socialLinks,
+        },
+        pickUpAdress: {
+          country,
+          city,
+          adressDetails,
+          nearbyLandmark: nearbyLandmark || '',
+          pickupPhone,
+        },
+        paymentMethod: {
+          paymentChoice: paymentMethod,
+          details: paymentDetails,
+        },
+        brandType: {
+          brandChoice: brandType,
+          brandDetails,
+        },
+        isCompleted: true,
       },
       { new: true } // Return the updated document
     );
@@ -138,28 +148,50 @@ const completionConfirm = async (req, res) => {
 
 
 function sendVerificationEmail(user, token) {
+  console.log('Sending verification email to:', user.email);
+
+  const verificationLink = `http://localhost:6098/verify-email?token=${token}`;
+
   const mailOptions = {
+    from: '"NowShipping" <no-reply@nowshipping.com>', // Use a real domain if possible
     to: user.email,
-    subject: 'Email Verification',
+    subject: 'Verify your NowShipping email address',
+    text: `
+Hello ${user.name},
+
+Thank you for registering with NowShipping!
+
+Please verify your email by clicking the link below:
+
+${verificationLink}
+
+If you didn’t create this account, you can safely ignore this email.
+
+Regards,  
+The NowShipping Team
+    `,
     html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-            <h2 style="text-align: center; color: #333;">Email Verification</h2>
-            <p style="font-size: 16px; color: #555;">Hello ${user.name},</p>
-            <p style="font-size: 16px; color: #555;">Thank you for registering. Please click the button below to verify your email address:</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <a href="http://localhost:6098/verify-email?token=${token}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">Verify Email</a>
-            </div>
-            <p style="font-size: 16px; color: #555;">If you did not create an account, no further action is required.</p>
-            <p style="font-size: 16px; color: #555;">Regards,<br>Your Company</p>
-            </div>
-        `,
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
+  <h2 style="color: #333;">Welcome to NowShipping, ${user.name}!</h2>
+  <p style="font-size: 16px; color: #555;">
+    Thanks for signing up. To get started, please verify your email address by clicking the button below:
+  </p>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-size: 16px;">Verify Email</a>
+  </div>
+  <p style="font-size: 14px; color: #888;">If the button above doesn’t work, copy and paste this link into your browser:</p>
+  <p style="font-size: 14px; color: #888;">${verificationLink}</p>
+  <hr style="margin: 20px 0;">
+  <p style="font-size: 12px; color: #999;">If you didn’t create an account, you can ignore this email.</p>
+</div>
+    `,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      console.log(error);
+      console.error('Email send failed:', error);
     } else {
-      console.log('Email sent: ' + info.response);
+      console.log('Verification email sent:', info.response || info);
     }
   });
 }
@@ -172,7 +204,7 @@ const requestVerification = async (req, res) => {
 
   const verificationToken = user.generateVerificationToken();
   sendVerificationEmail(user, verificationToken);
-
+  user.save();
   res.status(200).json({
     status: 'success',
     message: 'Verification email sent successfully',

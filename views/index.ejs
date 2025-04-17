@@ -1,0 +1,2143 @@
+
+
+<!-- <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOW Shipping - Fast, On Time, Every Time</title>
+  <link rel="stylesheet" href="/assets/rCSS/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head> -->
+
+<%- contentFor('HeaderCss') %>
+<%- contentFor('body') %>
+  <link rel="stylesheet" href="assets/rCSS/style.css">
+  <!-- Preloader -->
+  <!-- <div class="preloader">
+    <div class="loader">
+      <div class="loader-logo">
+        <img src="images/logo-icon.png" alt="NOW Shipping">
+      </div>
+      <div class="loader-bar">
+        <div class="loader-progress"></div>
+      </div>
+      <p class="loader-text">Loading...</p>
+    </div>
+  </div> -->
+
+  <!-- Header -->
+  <header class="header">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="container">
+        <div class="top-bar-left">
+          <div class="top-bar-item">
+            <i class="fas fa-phone"></i>
+            <span>+1 (800) NOW-SHIP</span>
+          </div>
+          <div class="top-bar-item">
+            <i class="fas fa-envelope"></i>
+            <span>support@nowshipping.com</span>
+          </div>
+          <div class="top-bar-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>123 Logistics Way, Shipping City, SC 12345</span>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <div class="social-links">
+            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          </div>
+          <div class="language-selector">
+            <select id="language">
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="main-nav">
+      <div class="container">
+        <div class="nav-wrapper">
+          <div class="logo">
+            <a href="index.html">
+              <img src="images/logo.png" alt="NOW Shipping">
+            </a>
+          </div>
+          <div class="nav-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <ul class="nav-menu">
+            <li class="nav-item"><a href="#" class="active">Home</a></li>
+            <li class="nav-item dropdown">
+              <a href="#services">Services <i class="fas fa-chevron-down"></i></a>
+              <ul class="dropdown-menu">
+                <li><a href="#express-delivery">Express Delivery</a></li>
+                <li><a href="#international-shipping">International Shipping</a></li>
+                <li><a href="#ecommerce-solutions">E-commerce Solutions</a></li>
+                <li><a href="#warehousing">Warehousing & Fulfillment</a></li>
+                <li><a href="#specialized-shipping">Specialized Shipping</a></li>
+              </ul>
+            </li>
+            <li class="nav-item"><a href="#about">About Us</a></li>
+            <li class="nav-item"><a href="#pricing">Pricing</a></li>
+            <li class="nav-item dropdown">
+              <a href="#resources">Resources <i class="fas fa-chevron-down"></i></a>
+              <ul class="dropdown-menu">
+                <li><a href="#shipping-calculator">Shipping Calculator</a></li>
+                <li><a href="#shipping-guides">Shipping Guides</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#blog">Blog</a></li>
+              </ul>
+            </li>
+            <li class="nav-item"><a href="#contact">Contact</a></li>
+          </ul>
+          <div class="nav-actions">
+            <a href="tracking.html" class="btn btn-track">
+              <i class="fas fa-search"></i> Track Package
+            </a>
+            <a href="#" class="btn btn-primary" id="getQuoteBtn">
+              <i class="fas fa-calculator"></i> Get a Quote
+            </a>
+            <a href="#" class="btn btn-outline login-btn">
+              <i class="fas fa-user"></i> Login
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-slider">
+      <div class="hero-slide active" style="background-image: url('images/hero-1.jpg')">
+        <div class="container">
+          <div class="hero-content">
+            <h1 class="animate-text">Global Shipping <span>Solutions</span> for Modern Business</h1>
+            <p class="animate-text-delay">Fast, reliable, and secure shipping services tailored to your needs. From local deliveries to international logistics.</p>
+            <div class="hero-buttons animate-text-delay-2">
+              <a href="#services" class="btn btn-primary btn-lg">Explore Services</a>
+              <a href="tracking.html" class="btn btn-outline btn-lg">Track Your Package</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-slide" style="background-image: url('images/hero-2.jpg')">
+        <div class="container">
+          <div class="hero-content">
+            <h1 class="animate-text">E-commerce <span>Fulfillment</span> That Scales With You</h1>
+            <p class="animate-text-delay">End-to-end logistics solutions designed for online retailers. Warehousing, picking, packing, and shipping.</p>
+            <div class="hero-buttons animate-text-delay-2">
+              <a href="#ecommerce-solutions" class="btn btn-primary btn-lg">E-commerce Solutions</a>
+              <a href="#contact" class="btn btn-outline btn-lg">Contact Sales</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-slide" style="background-image: url('images/hero-3.jpg')">
+        <div class="container">
+          <div class="hero-content">
+            <h1 class="animate-text">International <span>Shipping</span> Made Simple</h1>
+            <p class="animate-text-delay">Connect your business to the world with our comprehensive international shipping network and customs expertise.</p>
+            <div class="hero-buttons animate-text-delay-2">
+              <a href="#international-shipping" class="btn btn-primary btn-lg">Global Services</a>
+              <a href="#shipping-calculator" class="btn btn-outline btn-lg">Calculate Rates</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-controls">
+      <button class="hero-arrow prev" aria-label="Previous slide">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="hero-dots">
+        <span class="hero-dot active" data-slide="0"></span>
+        <span class="hero-dot" data-slide="1"></span>
+        <span class="hero-dot" data-slide="2"></span>
+      </div>
+      <button class="hero-arrow next" aria-label="Next slide">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- Tracking Widget -->
+  <section class="tracking-widget">
+    <div class="container">
+      <div class="tracking-container">
+        <div class="tracking-tabs">
+          <button class="tracking-tab active" data-tab="track">
+            <i class="fas fa-search"></i> Track
+          </button>
+          <button class="tracking-tab" data-tab="quote">
+            <i class="fas fa-calculator"></i> Quote
+          </button>
+          <button class="tracking-tab" data-tab="locations">
+            <i class="fas fa-map-marker-alt"></i> Locations
+          </button>
+        </div>
+        <div class="tracking-content">
+          <div class="tracking-panel active" id="track-panel">
+            <h3>Track Your Shipment</h3>
+            <form class="tracking-form">
+              <div class="form-group">
+                <input type="text" placeholder="Enter tracking number" required>
+                <button type="submit" class="btn btn-primary">Track Now</button>
+              </div>
+              <div class="tracking-options">
+                <span>Track by:</span>
+                <a href="#">Reference Number</a>
+                <a href="#">Order ID</a>
+                <a href="#">Email/Phone</a>
+              </div>
+            </form>
+          </div>
+          <div class="tracking-panel" id="quote-panel">
+            <h3>Get a Quick Quote</h3>
+            <form class="quote-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="from">From</label>
+                  <input type="text" id="from" placeholder="City or ZIP code" required>
+                </div>
+                <div class="form-group">
+                  <label for="to">To</label>
+                  <input type="text" id="to" placeholder="City or ZIP code" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="weight">Weight</label>
+                  <div class="input-with-select">
+                    <input type="number" id="weight" placeholder="Weight" required>
+                    <select id="weight-unit">
+                      <option value="kg">kg</option>
+                      <option value="lb">lb</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="service-type">Service</label>
+                  <select id="service-type">
+                    <option value="standard">Standard</option>
+                    <option value="express">Express</option>
+                    <option value="priority">Priority</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Calculate</button>
+            </form>
+          </div>
+          <div class="tracking-panel" id="locations-panel">
+            <h3>Find Nearby Locations</h3>
+            <form class="locations-form">
+              <div class="form-group">
+                <input type="text" placeholder="Enter ZIP code or city" required>
+                <button type="submit" class="btn btn-primary">Search</button>
+              </div>
+              <div class="location-options">
+                <label class="checkbox">
+                  <input type="checkbox" checked>
+                  <span>Drop-off Points</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" checked>
+                  <span>Service Centers</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" checked>
+                  <span>Lockers</span>
+                </label>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="services" id="services">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Our Services</span>
+        <h2 class="section-title">Comprehensive Shipping Solutions</h2>
+        <p class="section-description">We offer a wide range of shipping and logistics services tailored to meet your specific needs</p>
+      </div>
+      <div class="services-grid">
+        <div class="service-card" data-aos="fade-up">
+          <div class="service-icon">
+            <i class="fas fa-truck-fast"></i>
+          </div>
+          <h3>Express Delivery</h3>
+          <p>Same-day and next-day delivery options for time-sensitive shipments with real-time tracking.</p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Same-day delivery</li>
+            <li><i class="fas fa-check"></i> Next-day delivery</li>
+            <li><i class="fas fa-check"></i> Real-time tracking</li>
+            <li><i class="fas fa-check"></i> Delivery confirmation</li>
+          </ul>
+          <a href="#express-delivery" class="btn btn-outline btn-sm">Learn More</a>
+        </div>
+        <div class="service-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="service-icon">
+            <i class="fas fa-globe-americas"></i>
+          </div>
+          <h3>International Shipping</h3>
+          <p>Reliable worldwide shipping with customs handling and documentation included.</p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Global network</li>
+            <li><i class="fas fa-check"></i> Customs clearance</li>
+            <li><i class="fas fa-check"></i> Import/export expertise</li>
+            <li><i class="fas fa-check"></i> Duty & tax calculation</li>
+          </ul>
+          <a href="#international-shipping" class="btn btn-outline btn-sm">Learn More</a>
+        </div>
+        <div class="service-card" data-aos="fade-up" data-aos-delay="200">
+          <div class="service-icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <h3>E-commerce Solutions</h3>
+          <p>Integrated shipping solutions for online stores with API integration and fulfillment services.</p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Order fulfillment</li>
+            <li><i class="fas fa-check"></i> Platform integration</li>
+            <li><i class="fas fa-check"></i> Returns management</li>
+            <li><i class="fas fa-check"></i> Inventory management</li>
+          </ul>
+          <a href="#ecommerce-solutions" class="btn btn-outline btn-sm">Learn More</a>
+        </div>
+        <div class="service-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="service-icon">
+            <i class="fas fa-warehouse"></i>
+          </div>
+          <h3>Warehousing & Fulfillment</h3>
+          <p>Secure storage solutions with inventory management and distribution services.</p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Secure storage</li>
+            <li><i class="fas fa-check"></i> Inventory tracking</li>
+            <li><i class="fas fa-check"></i> Pick & pack services</li>
+            <li><i class="fas fa-check"></i> Distribution management</li>
+          </ul>
+          <a href="#warehousing" class="btn btn-outline btn-sm">Learn More</a>
+        </div>
+        <div class="service-card" data-aos="fade-up" data-aos-delay="400">
+          <div class="service-icon">
+            <i class="fas fa-box-open"></i>
+          </div>
+          <h3>Specialized Shipping</h3>
+          <p>Custom solutions for fragile, oversized, or temperature-sensitive items requiring special handling.</p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Fragile items</li>
+            <li><i class="fas fa-check"></i> Temperature-controlled</li>
+            <li><i class="fas fa-check"></i> Hazardous materials</li>
+            <li><i class="fas fa-check"></i> Oversized shipments</li>
+          </ul>
+          <a href="#specialized-shipping" class="btn btn-outline btn-sm">Learn More</a>
+        </div>
+        <div class="service-card" data-aos="fade-up" data-aos-delay="500">
+          <div class="service-icon">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h3>Package Protection</h3>
+          <p>Advanced packaging and insurance options for valuable items with damage protection.</p>
+          <ul class="service-features">
+            <li><i class="fas fa-check"></i> Shipping insurance</li>
+            <li><i class="fas fa-check"></i> Custom packaging</li>
+            <li><i class="fas fa-check"></i> Damage protection</li>
+            <li><i class="fas fa-check"></i> Claims assistance</li>
+          </ul>
+          <a href="#package-protection" class="btn btn-outline btn-sm">Learn More</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Choose Us Section -->
+  <section class="why-choose-us">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Why Choose Us</span>
+        <h2 class="section-title">The NOW Shipping Advantage</h2>
+        <p class="section-description">Discover what sets us apart from other shipping providers</p>
+      </div>
+      <div class="features-container">
+        <div class="features-image" data-aos="fade-right">
+          <img src="images/why-choose-us.jpg" alt="NOW Shipping Advantage">
+        </div>
+        <div class="features-content" data-aos="fade-left">
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="feature-text">
+              <h3>Reliable & On-Time</h3>
+              <p>98% on-time delivery rate across all our shipping services, ensuring your packages arrive when promised.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-globe"></i>
+            </div>
+            <div class="feature-text">
+              <h3>Global Network</h3>
+              <p>Extensive international network covering 200+ countries and territories with local expertise in each region.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="feature-text">
+              <h3>Transparent Pricing</h3>
+              <p>Clear, upfront pricing with no hidden fees or surprises. What you see is what you pay.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-headset"></i>
+            </div>
+            <div class="feature-text">
+              <h3>24/7 Customer Support</h3>
+              <p>Round-the-clock customer service available via phone, email, and live chat to assist with any questions or concerns.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-leaf"></i>
+            </div>
+            <div class="feature-text">
+              <h3>Eco-Friendly Options</h3>
+              <p>Sustainable shipping alternatives including carbon-neutral delivery options and eco-friendly packaging materials.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Process</span>
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-description">Simple steps to ship your packages with NOW Shipping</p>
+      </div>
+      <div class="process-container">
+        <div class="process-step" data-aos="fade-up">
+          <div class="step-number">1</div>
+          <div class="step-icon">
+            <i class="fas fa-edit"></i>
+          </div>
+          <h3>Book Your Shipment</h3>
+          <p>Fill out our simple online form with your shipping details or use our mobile app to create a shipment.</p>
+        </div>
+        <div class="process-arrow" data-aos="fade-up" data-aos-delay="100">
+          <i class="fas fa-long-arrow-alt-right"></i>
+        </div>
+        <div class="process-step" data-aos="fade-up" data-aos-delay="200">
+          <div class="step-number">2</div>
+          <div class="step-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <h3>Package Pickup</h3>
+          <p>Our courier will collect your package from your location at the scheduled time or drop it off at a service point.</p>
+        </div>
+        <div class="process-arrow" data-aos="fade-up" data-aos-delay="300">
+          <i class="fas fa-long-arrow-alt-right"></i>
+        </div>
+        <div class="process-step" data-aos="fade-up" data-aos-delay="400">
+          <div class="step-number">3</div>
+          <div class="step-icon">
+            <i class="fas fa-truck"></i>
+          </div>
+          <h3>Shipping & Tracking</h3>
+          <p>Your package is transported through our network while you monitor its journey with real-time tracking.</p>
+        </div>
+        <div class="process-arrow" data-aos="fade-up" data-aos-delay="500">
+          <i class="fas fa-long-arrow-alt-right"></i>
+        </div>
+        <div class="process-step" data-aos="fade-up" data-aos-delay="600">
+          <div class="step-number">4</div>
+          <div class="step-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h3>Delivery & Confirmation</h3>
+          <p>Your package is delivered to its destination with proof of delivery and confirmation notification.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Service Details Section -->
+  <section class="service-details" id="express-delivery">
+    <div class="container">
+      <div class="service-details-container">
+        <div class="service-details-image" data-aos="fade-right">
+          <img src="images/express-delivery.jpg" alt="Express Delivery">
+        </div>
+        <div class="service-details-content" data-aos="fade-left">
+          <span class="service-subtitle">Premium Service</span>
+          <h2 class="service-title">Express Delivery</h2>
+          <p class="service-description">When time is of the essence, our express delivery service ensures your packages arrive on schedule, every time.</p>
+
+          <div class="service-features-grid">
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Same-Day Delivery</h4>
+                <p>Available for local shipments within city limits, delivered within hours of pickup.</p>
+              </div>
+            </div>
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-calendar-day"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Next-Day Delivery</h4>
+                <p>Guaranteed delivery by the next business day for domestic shipments.</p>
+              </div>
+            </div>
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-map-marked-alt"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Real-Time Tracking</h4>
+                <p>Monitor your package's journey with minute-by-minute updates and notifications.</p>
+              </div>
+            </div>
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Priority Handling</h4>
+                <p>Your express packages receive special attention and priority processing at every stage.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="service-cta">
+            <a href="#shipping-calculator" class="btn btn-primary">Get a Quote</a>
+            <a href="#contact" class="btn btn-outline">Contact Sales</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="service-details alt-bg" id="international-shipping">
+    <div class="container">
+      <div class="service-details-container reverse">
+        <div class="service-details-content" data-aos="fade-right">
+          <span class="service-subtitle">Global Reach</span>
+          <h2 class="service-title">International Shipping</h2>
+          <p class="service-description">Connect your business to the world with our comprehensive international shipping solutions and customs expertise.</p>
+
+          <div class="service-features-grid">
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-file-contract"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Customs Documentation</h4>
+                <p>We handle all necessary paperwork for smooth customs clearance and compliance.</p>
+              </div>
+            </div>
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-plane"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Air Freight</h4>
+                <p>Fast international delivery via our global air freight network for time-sensitive shipments.</p>
+              </div>
+            </div>
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-ship"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Ocean Freight</h4>
+                <p>Cost-effective shipping for larger consignments by sea with full container and consolidation options.</p>
+              </div>
+            </div>
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-globe"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Global Network</h4>
+                <p>Service to over 200 countries and territories worldwide with local expertise in each region.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="service-cta">
+            <a href="#shipping-calculator" class="btn btn-primary">Get a Quote</a>
+            <a href="#contact" class="btn btn-outline">Contact Sales</a>
+          </div>
+        </div>
+        <div class="service-details-image" data-aos="fade-left">
+          <img src="images/international-shipping.jpg" alt="International Shipping">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="service-details" id="ecommerce-solutions">
+    <div class="container">
+      <div class="service-details-container">
+        <div class="service-details-image" data-aos="fade-right">
+          <img src="images/ecommerce-solutions.jpg" alt="E-commerce Solutions">
+        </div>
+        <div class="service-details-content" data-aos="fade-left">
+          <span class="service-subtitle">Online Business</span>
+          <h2 class="service-title">E-commerce Solutions</h2>
+          <p class="service-description">Streamline your online business with our integrated e-commerce shipping and fulfillment solutions.</p>
+
+          <div class="service-features-grid">
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-code"></i>
+              </div>
+              <div class="feature-content">
+                <h4>API Integration</h4>
+                <p>Seamlessly connect our shipping services with your e-commerce platform for automated order processing.</p>
+              </div>
+            </div>
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-tags"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Automated Labeling</h4>
+                <p>Generate shipping labels automatically for all your orders with batch processing capabilities.</p>
+              </div>
+            </div>
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-box-open"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Order Fulfillment</h4>
+                <p>We pick, pack, and ship your products directly to customers from our fulfillment centers.</p>
+              </div>
+            </div>
+            <div class="service-feature-item">
+              <div class="feature-icon">
+                <i class="fas fa-undo"></i>
+              </div>
+              <div class="feature-content">
+                <h4>Returns Management</h4>
+                <p>Hassle-free returns processing for your customers with automated return label generation.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="service-cta">
+            <a href="#shipping-calculator" class="btn btn-primary">Get a Quote</a>
+            <a href="#contact" class="btn btn-outline">Contact Sales</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Shipping Calculator Section -->
+  <section class="shipping-calculator" id="shipping-calculator">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Calculate</span>
+        <h2 class="section-title">Shipping Calculator</h2>
+        <p class="section-description">Get an accurate estimate for your shipment in seconds</p>
+      </div>
+      <div class="calculator-container" data-aos="fade-up">
+        <div class="calculator-form">
+          <div class="calculator-tabs">
+            <button class="calculator-tab active" data-tab="domestic">Domestic</button>
+            <button class="calculator-tab" data-tab="international">International</button>
+          </div>
+          <div class="calculator-content">
+            <div class="calculator-panel active" id="domestic-panel">
+              <form class="calculator-form-domestic">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="domestic-from">From (ZIP Code)</label>
+                    <input type="text" id="domestic-from" placeholder="Origin ZIP code">
+                  </div>
+                  <div class="form-group">
+                    <label for="domestic-to">To (ZIP Code)</label>
+                    <input type="text" id="domestic-to" placeholder="Destination ZIP code">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Package Type</label>
+                    <div class="package-options">
+                      <label class="package-option">
+                        <input type="radio" name="package-type" value="envelope" checked>
+                        <span class="package-icon">
+                          <i class="fas fa-envelope"></i>
+                          <span>Envelope</span>
+                        </span>
+                      </label>
+                      <label class="package-option">
+                        <input type="radio" name="package-type" value="small-box">
+                        <span class="package-icon">
+                          <i class="fas fa-box"></i>
+                          <span>Small Box</span>
+                        </span>
+                      </label>
+                      <label class="package-option">
+                        <input type="radio" name="package-type" value="medium-box">
+                        <span class="package-icon">
+                          <i class="fas fa-box-open"></i>
+                          <span>Medium Box</span>
+                        </span>
+                      </label>
+                      <label class="package-option">
+                        <input type="radio" name="package-type" value="large-box">
+                        <span class="package-icon">
+                          <i class="fas fa-boxes"></i>
+                          <span>Large Box</span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="domestic-weight">Weight</label>
+                    <div class="input-with-select">
+                      <input type="number" id="domestic-weight" placeholder="0.0" min="0.1" step="0.1">
+                      <select id="domestic-weight-unit">
+                        <option value="kg">kg</option>
+                        <option value="lb">lb</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="domestic-service">Service Type</label>
+                    <select id="domestic-service">
+                      <option value="standard">Standard (3-5 days)</option>
+                      <option value="express">Express (1-2 days)</option>
+                      <option value="same-day">Same Day</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Additional Services</label>
+                    <div class="checkbox-group">
+                      <label class="checkbox">
+                        <input type="checkbox" name="insurance">
+                        <span>Insurance</span>
+                      </label>
+                      <label class="checkbox">
+                        <input type="checkbox" name="signature">
+                        <span>Signature Required</span>
+                      </label>
+                      <label class="checkbox">
+                        <input type="checkbox" name="fragile">
+                        <span>Fragile Handling</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Calculate Shipping Cost</button>
+              </form>
+            </div>
+            <div class="calculator-panel" id="international-panel">
+              <form class="calculator-form-international">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="int-from-country">From Country</label>
+                    <select id="int-from-country">
+                      <option value="us">United States</option>
+                      <option value="ca">Canada</option>
+                      <option value="uk">United Kingdom</option>
+                      <option value="au">Australia</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="int-to-country">To Country</label>
+                    <select id="int-to-country">
+                      <option value="us">United States</option>
+                      <option value="ca">Canada</option>
+                      <option value="uk">United Kingdom</option>
+                      <option value="au">Australia</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="int-weight">Weight</label>
+                    <div class="input-with-select">
+                      <input type="number" id="int-weight" placeholder="0.0" min="0.1" step="0.1">
+                      <select id="int-weight-unit">
+                        <option value="kg">kg</option>
+                        <option value="lb">lb</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="int-dimensions">Dimensions (L × W × H)</label>
+                    <div class="dimensions-input">
+                      <input type="number" placeholder="L" min="1">
+                      <span>×</span>
+                      <input type="number" placeholder="W" min="1">
+                      <span>×</span>
+                      <input type="number" placeholder="H" min="1">
+                      <select>
+                        <option value="cm">cm</option>
+                        <option value="in">in</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="int-service">Service Type</label>
+                    <select id="int-service">
+                      <option value="standard">Standard (5-7 days)</option>
+                      <option value="express">Express (3-5 days)</option>
+                      <option value="priority">Priority (1-3 days)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="int-contents">Package Contents</label>
+                    <select id="int-contents">
+                      <option value="merchandise">Merchandise</option>
+                      <option value="documents">Documents</option>
+                      <option value="gift">Gift</option>
+                      <option value="sample">Sample</option>
+                      <option value="return">Return</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Additional Services</label>
+                    <div class="checkbox-group">
+                      <label class="checkbox">
+                        <input type="checkbox" name="int-insurance">
+                        <span>Insurance</span>
+                      </label>
+                      <label class="checkbox">
+                        <input type="checkbox" name="int-signature">
+                        <span>Signature Required</span>
+                      </label>
+                      <label class="checkbox">
+                        <input type="checkbox" name="int-duties">
+                        <span>Duties & Taxes Prepaid</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Calculate Shipping Cost</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="calculator-result" id="calculator-result">
+          <div class="result-header">
+            <h3>Shipping Estimate</h3>
+            <p>Based on your package details</p>
+          </div>
+          <div class="result-content">
+            <div class="result-item">
+              <span>Base Shipping Cost:</span>
+              <span id="base-cost">$0.00</span>
+            </div>
+            <div class="result-item">
+              <span>Insurance:</span>
+              <span id="insurance-cost">$0.00</span>
+            </div>
+            <div class="result-item">
+              <span>Additional Services:</span>
+              <span id="services-cost">$0.00</span>
+            </div>
+            <div class="result-item">
+              <span>Estimated Taxes:</span>
+              <span id="taxes-cost">$0.00</span>
+            </div>
+            <div class="result-divider"></div>
+            <div class="result-item total">
+              <span>Total Estimated Cost:</span>
+              <span id="total-cost">$0.00</span>
+            </div>
+            <div class="result-item delivery">
+              <span>Estimated Delivery:</span>
+              <span id="est-delivery">--</span>
+            </div>
+          </div>
+          <div class="result-actions">
+            <a href="#" class="btn btn-primary btn-block">Book This Shipment</a>
+            <a href="#" class="btn btn-outline btn-block">Save Quote</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="testimonials" id="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Testimonials</span>
+        <h2 class="section-title">What Our Customers Say</h2>
+        <p class="section-description">Trusted by businesses and individuals worldwide</p>
+      </div>
+      <div class="testimonials-slider" data-aos="fade-up">
+        <div class="testimonials-wrapper">
+          <div class="testimonial-slide active">
+            <div class="testimonial-content">
+              <div class="testimonial-rating">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+              <div class="testimonial-text">
+                <p>"NOW Shipping has transformed our logistics operations. Their express delivery service has helped us meet customer expectations consistently. The real-time tracking feature gives us complete visibility into our shipments, which has significantly reduced customer inquiries about order status."</p>
+              </div>
+              <div class="testimonial-author">
+                <div class="author-image">
+                  <img src="images/testimonial-1.jpg" alt="Sarah Johnson">
+                </div>
+                <div class="author-info">
+                  <h4>Sarah Johnson</h4>
+                  <p>E-commerce Business Owner</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-slide">
+            <div class="testimonial-content">
+              <div class="testimonial-rating">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+              <div class="testimonial-text">
+                <p>"The tracking system is phenomenal! I can see exactly where my package is at any time. As a retail manager handling multiple shipments daily, NOW's dashboard gives me a comprehensive view of all our shipments in one place. Their customer service team is also incredibly responsive whenever we have questions."</p>
+              </div>
+              <div class="testimonial-author">
+                <div class="author-image">
+                  <img src="images/testimonial-2.jpg" alt="Michael Chen">
+                </div>
+                <div class="author-info">
+                  <h4>Michael Chen</h4>
+                  <p>Retail Manager</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-slide">
+            <div class="testimonial-content">
+              <div class="testimonial-rating">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star-half-alt"></i>
+              </div>
+              <div class="testimonial-text">
+                <p>"International shipping has never been easier. NOW handles all customs paperwork and delivers faster than any other service we've used. Their customs expertise has saved us countless hours of paperwork and prevented delays at international borders. We've been able to expand our business to new markets thanks to their reliable service."</p>
+              </div>
+              <div class="testimonial-author">
+                <div class="author-image">
+                  <img src="images/testimonial-3.jpg" alt="Emma Rodriguez">
+                </div>
+                <div class="author-info">
+                  <h4>Emma Rodriguez</h4>
+                  <p>Import/Export Specialist</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-controls">
+          <button class="testimonial-arrow prev" aria-label="Previous testimonial">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="testimonial-dots">
+            <span class="testimonial-dot active" data-slide="0"></span>
+            <span class="testimonial-dot" data-slide="1"></span>
+            <span class="testimonial-dot" data-slide="2"></span>
+          </div>
+          <button class="testimonial-arrow next" aria-label="Next testimonial">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="container">
+      <div class="stats-container">
+        <div class="stat-item" data-aos="fade-up">
+          <div class="stat-icon">
+            <i class="fas fa-globe-americas"></i>
+          </div>
+          <div class="stat-number" data-count="200">0</div>
+          <div class="stat-label">Countries Served</div>
+        </div>
+        <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
+          <div class="stat-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <div class="stat-number" data-count="10">0</div>
+          <div class="stat-label">Million Packages Delivered</div>
+        </div>
+        <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-number" data-count="50000">0</div>
+          <div class="stat-label">Happy Customers</div>
+        </div>
+        <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
+          <div class="stat-icon">
+            <i class="fas fa-truck"></i>
+          </div>
+          <div class="stat-number" data-count="5000">0</div>
+          <div class="stat-label">Delivery Vehicles</div>
+        </div>
+        <div class="stat-item" data-aos="fade-up" data-aos-delay="400">
+          <div class="stat-icon">
+            <i class="fas fa-warehouse"></i>
+          </div>
+          <div class="stat-number" data-count="250">0</div>
+          <div class="stat-label">Distribution Centers</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Pricing</span>
+        <h2 class="section-title">Transparent Pricing Plans</h2>
+        <p class="section-description">Choose the right shipping plan for your needs</p>
+      </div>
+      <div class="pricing-toggle" data-aos="fade-up">
+        <span class="toggle-label active">Domestic</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pricing-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">International</span>
+      </div>
+      <div class="pricing-tables domestic active" data-aos="fade-up">
+        <div class="pricing-table">
+          <div class="pricing-header">
+            <h3>Standard</h3>
+            <div class="price">
+              <span class="currency">$</span>
+              <span class="amount">9</span>
+              <span class="period">/package</span>
+            </div>
+            <p>For occasional shippers</p>
+          </div>
+          <div class="pricing-features">
+            <ul>
+              <li><i class="fas fa-check"></i> 3-5 business days delivery</li>
+              <li><i class="fas fa-check"></i> Up to 5kg package weight</li>
+              <li><i class="fas fa-check"></i> Standard tracking</li>
+              <li><i class="fas fa-check"></i> $50 insurance included</li>
+              <li><i class="fas fa-times"></i> Priority handling</li>
+              <li><i class="fas fa-times"></i> Weekend delivery</li>
+            </ul>
+          </div>
+          <div class="pricing-footer">
+            <a href="#shipping-calculator" class="btn btn-outline">Get Started</a>
+          </div>
+        </div>
+        <div class="pricing-table featured">
+          <div class="pricing-badge">Popular</div>
+          <div class="pricing-header">
+            <h3>Express</h3>
+            <div class="price">
+              <span class="currency">$</span>
+              <span class="amount">19</span>
+              <span class="period">/package</span>
+            </div>
+            <p>For business shippers</p>
+          </div>
+          <div class="pricing-features">
+            <ul>
+              <li><i class="fas fa-check"></i> 1-2 business days delivery</li>
+              <li><i class="fas fa-check"></i> Up to 10kg package weight</li>
+              <li><i class="fas fa-check"></i> Real-time tracking</li>
+              <li><i class="fas fa-check"></i> $200 insurance included</li>
+              <li><i class="fas fa-check"></i> Priority handling</li>
+              <li><i class="fas fa-times"></i> Weekend delivery</li>
+            </ul>
+          </div>
+          <div class="pricing-footer">
+            <a href="#shipping-calculator" class="btn btn-primary">Get Started</a>
+          </div>
+        </div>
+        <div class="pricing-table">
+          <div class="pricing-header">
+            <h3>Premium</h3>
+            <div class="price">
+              <span class="currency">$</span>
+              <span class="amount">29</span>
+              <span class="period">/package</span>
+            </div>
+            <p>For priority shipments</p>
+          </div>
+          <div class="pricing-features">
+            <ul>
+              <li><i class="fas fa-check"></i> Same-day delivery</li>
+              <li><i class="fas fa-check"></i> Up to 20kg package weight</li>
+              <li><i class="fas fa-check"></i> Real-time tracking</li>
+              <li><i class="fas fa-check"></i> $500 insurance included</li>
+              <li><i class="fas fa-check"></i> Priority handling</li>
+              <li><i class="fas fa-check"></i> Weekend delivery</li>
+            </ul>
+          </div>
+          <div class="pricing-footer">
+            <a href="#shipping-calculator" class="btn btn-outline">Get Started</a>
+          </div>
+        </div>
+      </div>
+      <div class="pricing-tables international" data-aos="fade-up">
+        <div class="pricing-table">
+          <div class="pricing-header">
+            <h3>Economy</h3>
+            <div class="price">
+              <span class="currency">$</span>
+              <span class="amount">29</span>
+              <span class="period">/package</span>
+            </div>
+            <p>For cost-conscious shippers</p>
+          </div>
+          <div class="pricing-features">
+            <ul>
+              <li><i class="fas fa-check"></i> 7-10 business days delivery</li>
+              <li><i class="fas fa-check"></i> Up to 5kg package weight</li>
+              <li><i class="fas fa-check"></i> Standard tracking</li>
+              <li><i class="fas fa-check"></i> $100 insurance included</li>
+              <li><i class="fas fa-check"></i> Customs handling</li>
+              <li><i class="fas fa-times"></i> Priority customs clearance</li>
+            </ul>
+          </div>
+          <div class="pricing-footer">
+            <a href="#shipping-calculator" class="btn btn-outline">Get Started</a>
+          </div>
+        </div>
+        <div class="pricing-table featured">
+          <div class="pricing-badge">Popular</div>
+          <div class="pricing-header">
+            <h3>Standard</h3>
+            <div class="price">
+              <span class="currency">$</span>
+              <span class="amount">49</span>
+              <span class="period">/package</span>
+            </div>
+            <p>For regular international shippers</p>
+          </div>
+          <div class="pricing-features">
+            <ul>
+              <li><i class="fas fa-check"></i> 3-5 business days delivery</li>
+              <li><i class="fas fa-check"></i> Up to 10kg package weight</li>
+              <li><i class="fas fa-check"></i> Real-time tracking</li>
+              <li><i class="fas fa-check"></i> $300 insurance included</li>
+              <li><i class="fas fa-check"></i> Customs handling</li>
+              <li><i class="fas fa-times"></i> Priority customs clearance</li>
+            </ul>
+          </div>
+          <div class="pricing-footer">
+            <a href="#shipping-calculator" class="btn btn-primary">Get Started</a>
+          </div>
+        </div>
+        <div class="pricing-table">
+          <div class="pricing-header">
+            <h3>Express</h3>
+            <div class="price">
+              <span class="currency">$</span>
+              <span class="amount">79</span>
+              <span class="period">/package</span>
+            </div>
+            <p>For urgent international shipments</p>
+          </div>
+          <div class="pricing-features">
+            <ul>
+              <li><i class="fas fa-check"></i> 1-2 business days delivery</li>
+              <li><i class="fas fa-check"></i> Up to 20kg package weight</li>
+              <li><i class="fas fa-check"></i> Real-time tracking</li>
+              <li><i class="fas fa-check"></i> $500 insurance included</li>
+              <li><i class="fas fa-check"></i> Customs handling</li>
+              <li><i class="fas fa-check"></i> Priority customs clearance</li>
+            </ul>
+          </div>
+          <div class="pricing-footer">
+            <a href="#shipping-calculator" class="btn btn-outline">Get Started</a>
+          </div>
+        </div>
+      </div>
+      <div class="pricing-note" data-aos="fade-up">
+        <p>* Additional fees may apply for overweight packages, remote destinations, and special handling requirements.</p>
+        <p>* For custom enterprise pricing and volume discounts, please <a href="#contact">contact our sales team</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Partners Section -->
+  <section class="partners">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Partners</span>
+        <h2 class="section-title">Our Trusted Partners</h2>
+        <p class="section-description">Working with leading businesses worldwide</p>
+      </div>
+      <div class="partners-slider" data-aos="fade-up">
+        <div class="partners-track">
+          <div class="partner-logo">
+            <img src="images/partner-1.png" alt="Partner Logo">
+          </div>
+          <div class="partner-logo">
+            <img src="images/partner-2.png" alt="Partner Logo">
+          </div>
+          <div class="partner-logo">
+            <img src="images/partner-3.png" alt="Partner Logo">
+          </div>
+          <div class="partner-logo">
+            <img src="images/partner-4.png" alt="Partner Logo">
+          </div>
+          <div class="partner-logo">
+            <img src="images/partner-5.png" alt="Partner Logo">
+          </div>
+          <div class="partner-logo">
+            <img src="images/partner-6.png" alt="Partner Logo">
+          </div>
+          <div class="partner-logo">
+            <img src="images/partner-7.png" alt="Partner Logo">
+          </div>
+          <div class="partner-logo">
+            <img src="images/partner-8.png" alt="Partner Logo">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- App Download Section -->
+  <section class="app-download">
+    <div class="container">
+      <div class="app-container" data-aos="fade-up">
+        <div class="app-content">
+          <span class="app-subtitle">Mobile App</span>
+          <h2 class="app-title">Ship and Track on the Go</h2>
+          <p class="app-description">Download the NOW Shipping app to manage all your shipping needs from anywhere, anytime.</p>
+          <ul class="app-features">
+            <li><i class="fas fa-check-circle"></i> Book shipments in seconds</li>
+            <li><i class="fas fa-check-circle"></i> Real-time package tracking</li>
+            <li><i class="fas fa-check-circle"></i> Instant shipping quotes</li>
+            <li><i class="fas fa-check-circle">
+              </i> Manage all your shipments</li>
+            <li><i class="fas fa-check-circle"></i> Receive delivery notifications</li>
+            <li><i class="fas fa-check-circle"></i> Find nearby drop-off locations</li>
+          </ul>
+          <div class="app-buttons">
+            <a href="#" class="app-button">
+              <i class="fab fa-apple"></i>
+              <div class="app-button-text">
+                <span>Download on the</span>
+                <strong>App Store</strong>
+              </div>
+            </a>
+            <a href="#" class="app-button">
+              <i class="fab fa-google-play"></i>
+              <div class="app-button-text">
+                <span>Get it on</span>
+                <strong>Google Play</strong>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="app-image">
+          <img src="images/app-mockup.png" alt="NOW Shipping Mobile App">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq" id="faq">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">FAQ</span>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-description">Find answers to common shipping questions</p>
+      </div>
+      <div class="faq-container" data-aos="fade-up">
+        <div class="faq-tabs">
+          <button class="faq-tab active" data-tab="general">General</button>
+          <button class="faq-tab" data-tab="shipping">Shipping Process</button>
+          <button class="faq-tab" data-tab="international">International</button>
+          <button class="faq-tab" data-tab="pricing">Pricing & Payment</button>
+        </div>
+        <div class="faq-content">
+          <div class="faq-panel active" id="general-panel">
+            <div class="accordion">
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>How do I create a shipping account?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>Creating a shipping account is easy. Simply click on the "Login/Register" button in the top navigation, then select "Create Account." Fill in your details, verify your email, and you're ready to start shipping with NOW.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>What shipping services do you offer?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>We offer a wide range of shipping services including same-day delivery, next-day delivery, standard shipping, international shipping, specialized shipping for fragile or temperature-sensitive items, and e-commerce fulfillment solutions.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>How can I track my package?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>You can track your package by clicking on the "Track Package" button in the navigation and entering your tracking number. You'll see real-time updates on your package's location and estimated delivery time. You can also track packages through our mobile app or by signing into your account dashboard.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>What should I do if my package is lost or damaged?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>If your package is lost or damaged, please contact our customer support team immediately at support@nowshipping.com or call 1-800-NOW-SHIP. We'll investigate the issue and process a claim if necessary. For packages with insurance, we'll process reimbursement according to our claims policy.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="faq-panel" id="shipping-panel">
+            <div class="accordion">
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>How do I schedule a pickup?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>You can schedule a pickup through your account dashboard, our mobile app, or by calling our customer service. Select your preferred date and time window, and our courier will arrive to collect your package. For regular pickups, you can set up a recurring schedule.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>What are the size and weight limits for packages?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>Our standard service accepts packages up to 70 lbs (32 kg) and with combined dimensions (length + width + height) not exceeding 130 inches (330 cm). For larger or heavier items, please contact our customer service for our freight shipping options.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>How should I package my items for shipping?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>Use a sturdy box that's slightly larger than your item, with room for cushioning material. Wrap items individually and use packing materials like bubble wrap or packing peanuts to fill empty spaces. Seal the box securely with packing tape and apply shipping labels clearly. For fragile items, mark the package accordingly.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>Can I change the delivery address after shipping?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>Yes, you can request an address change for packages that haven't been delivered yet. Log into your account, find the shipment, and select "Change Delivery Address." Additional fees may apply, and changes are subject to verification for security purposes.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="faq-panel" id="international-panel">
+            <div class="accordion">
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>What documents do I need for international shipping?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>For international shipments, you'll need a commercial invoice, a packing list, and a customs declaration form. Depending on the destination country and the contents, you might also need certificates of origin, permits, or licenses. Our system will guide you through the required documentation during the shipping process.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>How long does international shipping take?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>International shipping times vary depending on the destination, service level, and customs processing. Economy international shipping typically takes 7-10 business days, standard shipping takes 3-5 business days, and express international shipping takes 1-2 business days. Customs clearance can add additional time.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>Are there any prohibited items for international shipping?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>Yes, prohibited items vary by country but generally include perishable foods, hazardous materials, firearms, alcohol, certain medications, and currency. Each country has specific import restrictions, so we recommend checking the destination country's customs website or contacting our customer service for guidance.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>Who pays import duties and taxes?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>Import duties and taxes are typically paid by the recipient unless you choose our Delivered Duty Paid (DDP) service, where you pay these fees upfront. The amount varies based on the item value, type, and destination country's regulations. Our shipping calculator can provide estimates of potential duties and taxes.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="faq-panel" id="pricing-panel">
+            <div class="accordion">
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>How is shipping cost calculated?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>Shipping costs are calculated based on package weight, dimensions, origin, destination, service level, and any additional services selected. For accurate pricing, use our shipping calculator or create a shipment in your account to see real-time rates.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>Do you offer shipping insurance?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>Yes, we offer shipping insurance for all packages. Basic coverage is included with most shipping services, and additional coverage can be purchased based on the declared value of your items. Insurance covers loss, damage, and theft during transit.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>What payment methods do you accept?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>We accept all major credit cards (Visa, Mastercard, American Express, Discover), PayPal, and bank transfers. Business customers can apply for a credit account with monthly invoicing. All payments are processed securely through our encrypted payment system.</p>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <div class="accordion-header">
+                  <h3>Do you offer discounts for volume shipping?</h3>
+                  <span class="accordion-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="accordion-body">
+                  <p>Yes, we offer volume discounts for businesses that ship regularly. Discounts are based on shipping volume, frequency, and service types. Contact our sales team to discuss a customized shipping plan for your business needs.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Blog Section -->
+  <section class="blog" id="blog">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Blog</span>
+        <h2 class="section-title">Shipping Insights</h2>
+        <p class="section-description">Latest news and tips from our shipping experts</p>
+      </div>
+      <div class="blog-grid" data-aos="fade-up">
+        <div class="blog-card">
+          <div class="blog-image">
+            <img src="images/blog-1.jpg" alt="Packaging Fragile Items">
+            <div class="blog-category">Shipping Tips</div>
+          </div>
+          <div class="blog-content">
+            <div class="blog-date">
+              <i class="far fa-calendar-alt"></i> April 5, 2023
+            </div>
+            <h3 class="blog-title">10 Tips for Packaging Fragile Items for Shipping</h3>
+            <p class="blog-excerpt">Learn the best practices for safely packaging and shipping fragile items to ensure they arrive intact.</p>
+            <a href="#" class="blog-link">Read More <i class="fas fa-arrow-right"></i></a>
+          </div>
+        </div>
+        <div class="blog-card">
+          <div class="blog-image">
+            <img src="images/blog-2.jpg" alt="E-commerce Shipping">
+            <div class="blog-category">E-commerce</div>
+          </div>
+          <div class="blog-content">
+            <div class="blog-date">
+              <i class="far fa-calendar-alt"></i> March 28, 2023
+            </div>
+            <h3 class="blog-title">How Shipping Affects Customer Retention in E-commerce</h3>
+            <p class="blog-excerpt">Discover how your shipping strategy can impact customer satisfaction and repeat business.</p>
+            <a href="#" class="blog-link">Read More <i class="fas fa-arrow-right"></i></a>
+          </div>
+        </div>
+        <div class="blog-card">
+          <div class="blog-image">
+            <img src="images/blog-3.jpg" alt="International Shipping Regulations">
+            <div class="blog-category">International</div>
+          </div>
+          <div class="blog-content">
+            <div class="blog-date">
+              <i class="far fa-calendar-alt"></i> March 15, 2023
+            </div>
+            <h3 class="blog-title">Navigating International Shipping Regulations in 2023</h3>
+            <p class="blog-excerpt">Stay updated on the latest changes to international shipping regulations and how they affect your business.</p>
+            <a href="#" class="blog-link">Read More <i class="fas fa-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="blog-cta" data-aos="fade-up">
+        <a href="#" class="btn btn-outline">View All Articles</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <div class="container">
+      <div class="cta-container" data-aos="fade-up">
+        <div class="cta-content">
+          <h2 class="cta-title">Ready to Ship with NOW?</h2>
+          <p class="cta-description">Experience fast, reliable shipping services tailored to your needs.</p>
+          <div class="cta-buttons">
+            <a href="#shipping-calculator" class="btn btn-primary btn-lg">Get a Quote</a>
+            <a href="#contact" class="btn btn-outline btn-lg">Contact Sales</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="contact" id="contact">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Contact</span>
+        <h2 class="section-title">Get in Touch</h2>
+        <p class="section-description">We're here to answer any questions you may have</p>
+      </div>
+      <div class="contact-container">
+        <div class="contact-info" data-aos="fade-right">
+          <div class="contact-info-header">
+            <h3>Contact Information</h3>
+            <p>Fill out the form and our team will get back to you within 24 hours</p>
+          </div>
+          <div class="contact-info-content">
+            <div class="contact-info-item">
+              <div class="contact-icon">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div class="contact-text">
+                <h4>Headquarters</h4>
+                <p>123 Logistics Way, Shipping City, SC 12345</p>
+              </div>
+            </div>
+            <div class="contact-info-item">
+              <div class="contact-icon">
+                <i class="fas fa-phone-alt"></i>
+              </div>
+              <div class="contact-text">
+                <h4>Phone</h4>
+                <p>Customer Service: +1 (800) NOW-SHIP</p>
+                <p>Business Inquiries: +1 (800) 123-4567</p>
+              </div>
+            </div>
+            <div class="contact-info-item">
+              <div class="contact-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div class="contact-text">
+                <h4>Email</h4>
+                <p>Customer Support: support@nowshipping.com</p>
+                <p>Sales: sales@nowshipping.com</p>
+              </div>
+            </div>
+            <div class="contact-info-item">
+              <div class="contact-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="contact-text">
+                <h4>Working Hours</h4>
+                <p>Monday - Friday: 8:00 AM - 8:00 PM</p>
+                <p>Saturday: 9:00 AM - 5:00 PM</p>
+                <p>Sunday: Closed</p>
+              </div>
+            </div>
+          </div>
+          <div class="contact-social">
+            <h4>Connect With Us</h4>
+            <div class="social-icons">
+              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+              <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+              <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="contact-form-container" data-aos="fade-left">
+          <form class="contact-form" id="contactForm">
+            <div class="form-header">
+              <h3>Send Us a Message</h3>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone">
+              </div>
+              <div class="form-group">
+                <label for="subject">Subject</label>
+                <input type="text" id="subject" name="subject" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" rows="5" required></textarea>
+            </div>
+            <div class="form-group">
+              <label class="checkbox">
+                <input type="checkbox" name="subscribe" checked>
+                <span>Subscribe to our newsletter for shipping tips and updates</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Map Section -->
+  <section class="map">
+    <div class="map-container">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.215573036935!2d-73.98784492426285!3d40.75798657138946!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b3117469%3A0xd134e199a405a163!2sEmpire%20State%20Building!5e0!3m2!1sen!2sus!4v1682458665044!5m2!1sen!2sus" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="container">
+        <div class="footer-widgets">
+          <div class="footer-widget">
+            <div class="footer-logo">
+              <img src="images/logo-white.png" alt="NOW Shipping">
+            </div>
+            <p class="footer-about">NOW Shipping provides fast, reliable shipping solutions for businesses and individuals worldwide. With our extensive network and cutting-edge technology, we ensure your packages arrive on time, every time.</p>
+            <div class="footer-social">
+              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+              <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+              <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            </div>
+          </div>
+          <div class="footer-widget">
+            <h3 class="footer-widget-title">Quick Links</h3>
+            <ul class="footer-links">
+              <li><a href="#">Home</a></li>
+              <li><a href="#about">About Us</a></li>
+              <li><a href="#services">Services</a></li>
+              <li><a href="#pricing">Pricing</a></li>
+              <li><a href="#contact">Contact Us</a></li>
+              <li><a href="tracking.html">Track Package</a></li>
+              <li><a href="#shipping-calculator">Get a Quote</a></li>
+              <li><a href="#faq">FAQ</a></li>
+            </ul>
+          </div>
+          <div class="footer-widget">
+            <h3 class="footer-widget-title">Our Services</h3>
+            <ul class="footer-links">
+              <li><a href="#express-delivery">Express Delivery</a></li>
+              <li><a href="#international-shipping">International Shipping</a></li>
+              <li><a href="#ecommerce-solutions">E-commerce Solutions</a></li>
+              <li><a href="#warehousing">Warehousing & Fulfillment</a></li>
+              <li><a href="#specialized-shipping">Specialized Shipping</a></li>
+              <li><a href="#package-protection">Package Protection</a></li>
+              <li><a href="#">Freight Services</a></li>
+              <li><a href="#">Customs Clearance</a></li>
+            </ul>
+          </div>
+          <div class="footer-widget">
+            <h3 class="footer-widget-title">Resources</h3>
+            <ul class="footer-links">
+              <li><a href="#blog">Blog</a></li>
+              <li><a href="#">Shipping Guides</a></li>
+              <li><a href="#">Packaging Tips</a></li>
+              <li><a href="#">Customs Information</a></li>
+              <li><a href="#">Size & Weight Guidelines</a></li>
+              <li><a href="#">Prohibited Items</a></li>
+              <li><a href="#">Shipping Calculator</a></li>
+              <li><a href="#">API Documentation</a></li>
+            </ul>
+          </div>
+          <div class="footer-widget">
+            <h3 class="footer-widget-title">Newsletter</h3>
+            <p class="footer-newsletter-text">Subscribe to our newsletter to receive updates, shipping tips, and exclusive offers.</p>
+            <form class="footer-newsletter">
+              <div class="newsletter-form">
+                <input type="email" placeholder="Your Email Address" required>
+                <button type="submit" class="btn btn-primary">Subscribe</button>
+              </div>
+            </form>
+            <div class="footer-contact">
+              <h3 class="footer-widget-title">Contact Us</h3>
+              <ul class="footer-contact-info">
+                <li><i class="fas fa-phone"></i> +1 (800) NOW-SHIP</li>
+                <li><i class="fas fa-envelope"></i> support@nowshipping.com</li>
+                <li><i class="fas fa-map-marker-alt"></i> 123 Logistics Way, Shipping City, SC 12345</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <div class="footer-bottom-content">
+          <div class="footer-copyright">
+            <p>&copy; 2023 NOW Shipping. All Rights Reserved.</p>
+          </div>
+          <div class="footer-bottom-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Shipping Policy</a>
+            <a href="#">Cookie Policy</a>
+            <a href="#">Sitemap</a>
+          </div>
+          <div class="footer-payment">
+            <span>We Accept:</span>
+            <div class="payment-icons">
+              <i class="fab fa-cc-visa"></i>
+              <i class="fab fa-cc-mastercard"></i>
+              <i class="fab fa-cc-amex"></i>
+              <i class="fab fa-cc-discover"></i>
+              <i class="fab fa-cc-paypal"></i>
+              <i class="fab fa-apple-pay"></i>
+              <i class="fab fa-google-pay"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <a href="#" class="back-to-top" aria-label="Back to top">
+    <i class="fas fa-arrow-up"></i>
+  </a>
+
+  <!-- Login Modal -->
+  <div class="modal" id="loginModal">
+    <div class="modal-overlay"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Account Access</h3>
+        <button class="modal-close" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="login">Login</button>
+        <button class="modal-tab" data-tab="register">Register</button>
+      </div>
+      <div class="modal-content">
+        <div class="modal-panel active" id="login-panel">
+          <form class="login-form">
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" required>
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <div class="password-input">
+                <input type="password" id="login-password" required>
+                <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                  <i class="fas fa-eye-slash"></i>
+                </button>
+              </div>
+            </div>
+            <div class="form-options">
+              <label class="checkbox">
+                <input type="checkbox" name="remember">
+                <span>Remember me</span>
+              </label>
+              <a href="#" class="forgot-password">Forgot Password?</a>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
+          </form>
+          <div class="social-login">
+            <p>Or login with</p>
+            <div class="social-login-buttons">
+              <button class="social-btn google">
+                <i class="fab fa-google"></i>
+                <span>Google</span>
+              </button>
+              <button class="social-btn facebook">
+                <i class="fab fa-facebook-f"></i>
+                <span>Facebook</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-panel" id="register-panel">
+          <form class="register-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="register-fname">First Name</label>
+                <input type="text" id="register-fname" required>
+              </div>
+              <div class="form-group">
+                <label for="register-lname">Last Name</label>
+                <input type="text" id="register-lname" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="register-email">Email Address</label>
+              <input type="email" id="register-email" required>
+            </div>
+            <div class="form-group">
+              <label for="register-phone">Phone Number</label>
+              <input type="tel" id="register-phone" required>
+            </div>
+            <div class="form-group">
+              <label for="register-password">Password</label>
+              <div class="password-input">
+                <input type="password" id="register-password" required>
+                <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                  <i class="fas fa-eye-slash"></i>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="register-confirm">Confirm Password</label>
+              <div class="password-input">
+                <input type="password" id="register-confirm" required>
+                <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                  <i class="fas fa-eye-slash"></i>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="checkbox">
+                <input type="checkbox" name="terms" required>
+                <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cookie Consent -->
+  <div class="cookie-consent">
+    <div class="cookie-content">
+      <div class="cookie-text">
+        <p>We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies. <a href="#">Learn more</a></p>
+      </div>
+      <div class="cookie-buttons">
+        <button class="btn btn-sm btn-outline cookie-settings">Cookie Settings</button>
+        <button class="btn btn-sm btn-primary accept-cookies">Accept All</button>
+      </div>
+    </div>
+  </div>
+
+  <%- contentFor('FooterJs') %>
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+  <script >
+    // Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Navigation menu toggle for mobile
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+        });
+    }
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                // Close mobile menu if open
+                if (navMenu.classList.contains('active')) {
+                    navMenu.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                }
+                
+                window.scrollTo({
+                    top: targetElement.offsetTop - 80,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Testimonial slider
+    const testimonialSlides = document.querySelectorAll('.testimonial-slide');
+    const dots = document.querySelectorAll('.dot');
+    const prevBtn = document.querySelector('.prev-testimonial');
+    const nextBtn = document.querySelector('.next-testimonial');
+    
+    if (testimonialSlides.length > 0) {
+        let currentSlide = 0;
+        
+        // Function to show a specific slide
+        function showSlide(index) {
+            // Hide all slides
+            testimonialSlides.forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Remove active class from all dots
+            dots.forEach(dot => {
+                dot.classList.remove('active');
+            });
+            
+            // Show the current slide and activate the corresponding dot
+            testimonialSlides[index].classList.add('active');
+            dots[index].classList.add('active');
+        }
+        
+        // Event listeners for dots
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentSlide = index;
+                showSlide(currentSlide);
+            });
+        });
+        
+        // Event listeners for prev/next buttons
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide - 1 + testimonialSlides.length) % testimonialSlides.length;
+                showSlide(currentSlide);
+            });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide + 1) % testimonialSlides.length;
+                showSlide(currentSlide);
+            });
+        }
+        
+        // Auto-advance slides every 5 seconds
+        setInterval(() => {
+            currentSlide = (currentSlide + 1) % testimonialSlides.length;
+            showSlide(currentSlide);
+        }, 5000);
+    }
+
+    // Counter animation for stats
+    const counters = document.querySelectorAll('.counter');
+    
+    if (counters.length > 0) {
+        const counterObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const counter = entry.target;
+                    const target = parseInt(counter.getAttribute('data-target'));
+                    let count = 0;
+                    const updateCounter = () => {
+                        const increment = target / 100;
+                        if (count < target) {
+                            count += increment;
+                            counter.innerText = Math.ceil(count);
+                            setTimeout(updateCounter, 20);
+                        } else {
+                            counter.innerText = target;
+                        }
+                    };
+                    updateCounter();
+                    observer.unobserve(counter);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        counters.forEach(counter => {
+            counterObserver.observe(counter);
+        });
+    }
+
+    // Animate elements on scroll
+    const animateElements = document.querySelectorAll('[data-aos]');
+    
+    if (animateElements.length > 0) {
+        const animateObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const element = entry.target;
+                    element.classList.add('animate-fade-in');
+                    animateObserver.unobserve(element);
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        animateElements.forEach(element => {
+            animateObserver.observe(element);
+        });
+    }
+
+    // Form submission handling
+    const contactForm = document.getElementById('contactForm');
+    
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Simulate form submission
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerText;
+            
+            submitButton.disabled = true;
+            submitButton.innerText = 'Sending...';
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Create success message
+                const successMessage = document.createElement('div');
+                successMessage.className = 'form-success';
+                successMessage.innerHTML = '<p>Thank you for your message! We will get back to you soon.</p>';
+                
+                // Insert success message after form
+                contactForm.parentNode.insertBefore(successMessage, contactForm.nextSibling);
+                
+                // Reset form
+                contactForm.reset();
+                
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.innerText = originalText;
+                
+                // Remove success message after 5 seconds
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 5000);
+            }, 1500);
+        });
+    }
+
+    // Newsletter form submission
+    const newsletterForms = document.querySelectorAll('.newsletter-form');
+    
+    if (newsletterForms.length > 0) {
+        newsletterForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const emailInput = this.querySelector('input[type="email"]');
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalText = submitButton.innerText;
+                
+                submitButton.disabled = true;
+                submitButton.innerText = 'Subscribing...';
+                
+                // Simulate API call
+                setTimeout(() => {
+                    // Create success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'newsletter-success';
+                    successMessage.innerHTML = '<p>Thank you for subscribing to our newsletter!</p>';
+                    
+                    // Insert success message after form
+                    form.parentNode.insertBefore(successMessage, form.nextSibling);
+                    
+                    // Reset form
+                    form.reset();
+                    
+                    // Reset button
+                    submitButton.disabled = false;
+                    submitButton.innerText = originalText;
+                    
+                    // Remove success message after 5 seconds
+                    setTimeout(() => {
+                        successMessage.remove();
+                    }, 5000);
+                }, 1500);
+            });
+        });
+    }
+
+    // Sticky navigation on scroll
+    const navbar = document.querySelector('.navbar');
+    
+    if (navbar) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                navbar.style.padding = '10px 0';
+                navbar.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
+            } else {
+                navbar.style.padding = '15px 0';
+                navbar.style.boxShadow = 'none';
+            }
+        });
+    }
+});
+
+  </script>
+
+
+
+

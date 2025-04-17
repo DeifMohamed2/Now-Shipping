@@ -11,12 +11,25 @@ const transporter = nodemailer.createTransport({
     secure: true,   
     auth: {
         user: 'deifm81@gmail.com',
-        pass: 'yduu pmtg shyb kapc'
+        pass: 'wqxm esqo vfvh bsjl'
     }
 });
 
 
+
+// index 
+const index = (req, res) => {
+  res.render('index', { title: 'Home', layout: 'layouts/layout-without-nav' });
+};
+
+
+
+
+
+
+
 function sendVerificationEmail(user, token) {
+    console.log(user.email);
   const mailOptions = {
     to: user.email,
     subject: 'Email Verification',
@@ -48,24 +61,15 @@ const verifyEmailBytoken = async (req, res) => {
     try {
         const user = await User.findOne({ verificationToken: token });
         if (!user) {
-            return res.status(400).json({
-                status: 'error',
-                message: 'Invalid or expired token'
-            });
+            return res.status(400).redirect('/business/dashboard');
         }
 
         if (user.verifyEmail(token)) {
             await user.save();
-            return res.status(200).json({
-                status: 'success',
-                message: 'Email verified successfully'
-            });
+            return res.status(200).redirect('/business/dashboard');
         }
 
-        return res.status(400).json({
-            status: 'error',
-            message: 'Invalid or expired token'
-        });
+        return res.status(400).redirect('/business/dashboard');
 
     } catch (err) {
         res.status(500).json({
@@ -102,54 +106,78 @@ const registerPage = (req, res) => {
     });
 }
 const signup = async (req, res) => {
-    const { email, fullName, password, phoneNumber, shippingOption, storageCheck, termsCheck } = req.body;
+  const { email, fullName, password, phoneNumber, storageCheck, termsCheck } =
+    req.body;
 
-    if (!email || !password || !fullName || !phoneNumber || !shippingOption || !storageCheck || !termsCheck) {
-        return res.status(400).json({
-            status: 'error',
-            message: 'Please fill all the fields'
-        });
+  if (
+    !email ||
+    !password ||
+    !fullName ||
+    !phoneNumber ||
+    !storageCheck ||
+    !termsCheck
+  ) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Please fill all the fields',
+    });
+  }
+
+  try {
+    // 🔍 Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'This email is already registered with us.',
+      });
     }
 
+    // ✅ Proceed to create new user
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = new User({
-        email,
-        password: hashedPassword,
-        name: fullName,
-        phoneNumber,
-        role: shippingOption,
-        isNeedStorage: storageCheck ? true : false,
+      email,
+      password: hashedPassword,
+      name: fullName,
+      phoneNumber,
+      role: 'Business',
+      isNeedStorage: !!storageCheck,
     });
 
     const verificationToken = user.generateVerificationToken();
-   
-    user.save().then((user) => {
-       sendVerificationEmail(user, verificationToken);
-        res.status(201).json({
-            status: 'success',
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                isNeedStorage: user.isNeedStorage
-            }
-        });
-    }).catch((err) => {
-        console.log(err);
-        let errorMessage = 'An error occurred';
-        if (err.code === 11000) {
-            errorMessage = 'This Email is already registered with us';
-        } else if (err.name === 'ValidationError') {
-            errorMessage = 'Validation error';
-        }
-        res.status(400).json({
-            status: 'error',
-            message: errorMessage
-        });
+
+    await user.save(); // ✅ only once
+
+    // 📧 Send verification email after successful save
+    sendVerificationEmail(user, verificationToken);
+
+    res.status(201).json({
+      status: 'success',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isNeedStorage: user.isNeedStorage,
+      },
     });
-}
+  } catch (error) {
+    console.error('Signup Error:', error);
+    let errorMessage = 'An error occurred';
+
+    if (error.code === 11000) {
+      errorMessage = 'This email is already registered with us.';
+    } else if (error.name === 'ValidationError') {
+      errorMessage = 'Validation error';
+    }
+
+    res.status(400).json({
+      status: 'error',
+      message: errorMessage,
+    });
+  }
+};
+
 
 
 const login = async (req, res) => {
@@ -384,6 +412,7 @@ catch(err){
 
 
 module.exports = {
+  index,
   loginPage,
   adminLogin,
   registerPage,

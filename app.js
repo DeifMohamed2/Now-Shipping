@@ -55,6 +55,8 @@ app.use((req, res, next) => {
         app.set('layout', 'layouts/courier-layout');
     } else if (req.path.startsWith('/business')) {
         app.set('layout', 'layouts/layout');
+    }else{
+        // No layout is set for paths that don't match the specified prefixes
     }
     next();
 });

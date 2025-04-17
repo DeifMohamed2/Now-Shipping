@@ -2,6 +2,13 @@ const User = require("../models/UserModel");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../utils/email")
 
+
+
+// index 
+
+
+
+
 const login = (req, res) => {
     console.log(res.locals.userLogin);
     if (res.locals.userLogin) {
@@ -154,4 +161,13 @@ const changepassword = async (req, res) => {
     return res.redirect("/login");
 
 }
-module.exports = { login, validate, logout, signup, forgotpassword, resetpswdview, changepassword }
+module.exports = {
+  index,
+  login,
+  validate,
+  logout,
+  signup,
+  forgotpassword,
+  resetpswdview,
+  changepassword,
+};

@@ -3,10 +3,22 @@
 <link rel="stylesheet" href="/assets/libs/filepond/filepond.min.css" type="text/css" />
 <link rel="stylesheet" href="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
 <style>
+  :root {
+    --primary-color: #F39720;
+    --secondary-color: #FDB614;
+    --primary-light: rgba(243, 151, 32, 0.1);
+    --primary-medium: rgba(243, 151, 32, 0.5);
+    --secondary-light: rgba(253, 182, 20, 0.1);
+    --dark-color: #333333;
+    --dark-secondary: #555555;
+    --neutral-light: #f8f9fa;
+    --neutral-medium: #e9ecef;
+  }
+
   /* Custom styles */
   .completed {
-    color: green;
-    border: 2px solid green;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
     border-radius: 50%;
   }
 
@@ -21,8 +33,8 @@
   /* Highlight selected payment and brand options */
   .payment-option.active,
   .brand-option.active {
-    border: 2px solid #405189;
-    box-shadow: 0 0 10px rgba(64, 81, 137, 0.2);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 10px rgba(243, 151, 32, 0.2);
     transform: translateY(-3px);
     transition: all 0.3s ease;
   }
@@ -39,15 +51,16 @@
     margin-bottom: 0.5rem;
     border-radius: 0.5rem;
     transition: all 0.3s ease;
+    color: var(--dark-color);
   }
 
   .nav-link:hover {
-    background-color: rgba(64, 81, 137, 0.05);
+    background-color: var(--neutral-light);
   }
 
   .nav-link.active {
-    background-color: rgba(64, 81, 137, 0.1);
-    color: #405189;
+    background-color: var(--primary-light);
+    color: var(--primary-color);
     font-weight: 600;
   }
 
@@ -66,12 +79,14 @@
   .form-label {
     font-weight: 500;
     margin-bottom: 0.5rem;
+    color: var(--dark-color);
   }
 
   .card {
     transition: all 0.3s ease;
     border-radius: 0.75rem;
     border: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: #fff;
   }
 
   .card:hover {
@@ -86,42 +101,57 @@
     transition: all 0.3s ease;
   }
 
-  .btn-success {
-    background-color: #0ab39c;
-    border-color: #0ab39c;
+  .btn-primary-custom {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
   }
 
-  .btn-success:hover {
-    background-color: #099885;
-    border-color: #099885;
+  .btn-primary-custom:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
     transform: translateY(-2px);
-    box-shadow: 0 5px 10px rgba(10, 179, 156, 0.2);
+    box-shadow: 0 5px 10px rgba(243, 151, 32, 0.2);
+  }
+
+  .btn-dark-custom {
+    background-color: var(--dark-color);
+    border-color: var(--dark-color);
+    color: #fff;
+  }
+
+  .btn-dark-custom:hover {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   }
 
   .btn-outline-secondary {
-    color: #74788d;
-    border-color: #74788d;
+    color: var(--dark-secondary);
+    border-color: #ced4da;
   }
 
   .btn-outline-secondary:hover {
-    background-color: #74788d;
-    color: #fff;
+    background-color: var(--neutral-light);
+    color: var(--dark-color);
+    border-color: var(--dark-secondary);
     transform: translateY(-2px);
-    box-shadow: 0 5px 10px rgba(116, 120, 141, 0.2);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
   }
 
   /* Upload progress styling */
   .upload-progress {
     height: 6px;
     border-radius: 3px;
-    background-color: #e9ecef;
+    background-color: var(--neutral-medium);
     margin-top: 0.5rem;
     overflow: hidden;
   }
 
   .upload-progress-bar {
     height: 100%;
-    background-color: #0ab39c;
+    background-color: var(--primary-color);
     transition: width 0.3s ease;
   }
 
@@ -134,14 +164,181 @@
     font-weight: 600;
     line-height: 1;
     color: #fff;
-    background-color: #0ab39c;
+    background-color: var(--dark-color);
     border-radius: 2rem;
   }
 
   .photo-count i {
     margin-right: 0.25rem;
   }
+
+  /* Dashboard styling */
+  .dashboard-card {
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .dashboard-card .card-header {
+    background-color: var(--neutral-light);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .dashboard-card .card-title {
+    color: var(--dark-color);
+    font-weight: 600;
+  }
+
+  .dashboard-stat-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .dashboard-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  }
+
+  .dashboard-stat-card .card-body {
+    padding: 1.5rem;
+  }
+
+  .dashboard-stat-card .avatar-title {
+    background-color: var(--neutral-light);
+    color: var(--dark-color);
+  }
+
+  .text-primary-custom {
+    color: var(--primary-color) !important;
+  }
+
+  .text-dark-custom {
+    color: var(--dark-color) !important;
+  }
+
+  .bg-primary-custom {
+    background-color: var(--primary-color) !important;
+  }
+
+  .bg-primary-light-custom {
+    background-color: var(--primary-light) !important;
+  }
+
+  .bg-dark-custom {
+    background-color: var(--dark-color) !important;
+  }
+
+  .bg-neutral-light {
+    background-color: var(--neutral-light) !important;
+  }
+
+  .border-primary-custom {
+    border-color: var(--primary-color) !important;
+  }
+
+  .order-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .order-status.delivered {
+    background-color: rgba(10, 179, 156, 0.1);
+    color: #0ab39c;
+  }
+
+  .order-status.pending {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+  }
+
+  .order-status.processing {
+    background-color: rgba(64, 81, 137, 0.1);
+    color: #405189;
+  }
+
+  .order-status.cancelled {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+  }
+
+  /* Social media link inputs */
+  .social-link-input {
+    display: none;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--neutral-light);
+  }
+
+  .social-link-input.active {
+    display: block;
+  }
+    /* Badge styles */
+    .badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    border-radius: 0.25rem;
+    }
+
+    .bg-warning-light {
+    background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .text-warning {
+    color: #ffc107 !important;
+    }
+
+    /* Card border styles */
+    .card.border-start {
+    overflow: hidden;
+    }
+
+    /* Progress bar */
+    .progress {
+    background-color: var(--neutral-medium);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    }
+
+    /* Avatar styles */
+    .avatar-sm {
+    height: 2.5rem;
+    width: 2.5rem;
+    }
+
+    .avatar-title {
+    align-items: center;
+    display: flex;
+    font-weight: 500;
+    height: 100%;
+    justify-content: center;
+    width: 100%;
+    }
+
+    .rounded-circle {
+    border-radius: 50% !important;
+    }
+
+    /* Card hover effect */
+    .card.border:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    }
 </style>
+
+
 
 <%- contentFor('body') %>
 <!-- Verifications -->
@@ -160,7 +357,7 @@
               <div class="nav flex-column custom-nav nav-pills" role="tablist" aria-orientation="vertical">
                 <button class="nav-link active" id="v-pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-bill-info" type="button" role="tab" aria-controls="v-pills-bill-info" aria-selected="true">
                   <span class="step-title me-2">
-                    <i class="ri-<%= user.isVerified ? 'check' : 'close' %>-circle-fill step-icon me-2 <%= user.isVerified ? 'text-success' : '' %>"></i> Step 1
+                    <i class="ri-<%= user.isVerified ? 'check' : 'close' %>-circle-fill step-icon me-2 <%= user.isVerified ? 'text-primary-custom' : '' %>"></i> Step 1
                   </span>
                   Email Verification
                 </button>
@@ -209,9 +406,9 @@
                       <p class="text-muted">Your email has been successfully verified.</p>
                     </div>
                     <div class="mb-4">
-                      <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>
+                      <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#F39720,secondary:#333333" style="width:120px;height:120px"></lord-icon>
                     </div>
-                    <button type="button" class="btn btn-success nexttab" data-nexttab="v-pills-brand-info-tab">
+                    <button type="button" class="btn btn-primary-custom nexttab" data-nexttab="v-pills-brand-info-tab">
                       Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                     </button>
                     <% } else { %>
@@ -219,7 +416,7 @@
                       <h4 class="fw-bold">Email Verification</h4>
                       <p class="text-muted">Click the button below to verify your email via Gmail</p>
                     </div>
-                    <button type="button" class="btn btn-outline-danger btn-lg d-flex align-items-center mx-auto shadow-sm" id="sendVerificationEmail">
+                    <button type="button" class="btn btn-dark-custom btn-lg d-flex align-items-center mx-auto shadow-sm" id="sendVerificationEmail">
                       <i class="ri-mail-fill fs-5 me-2"></i> Send Verification Email
                     </button>
                     <% } %>
@@ -267,50 +464,78 @@
                       <div class="col-md-6">
                         <div class="card p-3">
                           <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="instagram" name="sellingPoints[]" value="instagram">
+                            <input class="form-check-input channel-checkbox" type="checkbox" id="instagram" name="sellingPoints[]" value="instagram" data-channel="instagram">
                             <label class="form-check-label d-flex align-items-center" for="instagram">
                               <i class="ri-instagram-line me-2 fs-5 text-danger"></i> Instagram
                             </label>
+                            <div class="social-link-input" id="instagram-link-input">
+                              <label for="instagram-link" class="form-label">Instagram Profile URL</label>
+                              <input type="url" class="form-control" id="instagram-link" name="instagramLink" placeholder="https://instagram.com/yourbrand">
+                            </div>
                           </div>
                           <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" id="tiktok" name="sellingPoints[]" value="tiktok">
+                            <input class="form-check-input channel-checkbox" type="checkbox" id="tiktok" name="sellingPoints[]" value="tiktok" data-channel="tiktok">
                             <label class="form-check-label d-flex align-items-center" for="tiktok">
                               <i class="ri-tiktok-line me-2 fs-5 text-dark"></i> TikTok
                             </label>
+                            <div class="social-link-input" id="tiktok-link-input">
+                              <label for="tiktok-link" class="form-label">TikTok Profile URL</label>
+                              <input type="url" class="form-control" id="tiktok-link" name="tiktokLink" placeholder="https://tiktok.com/@yourbrand">
+                            </div>
                           </div>
                           <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" id="woocommerce" name="sellingPoints[]" value="woocommerce">
+                            <input class="form-check-input channel-checkbox" type="checkbox" id="woocommerce" name="sellingPoints[]" value="woocommerce" data-channel="woocommerce">
                             <label class="form-check-label d-flex align-items-center" for="woocommerce">
                               <i class="ri-store-2-line me-2 fs-5 text-primary"></i> WooCommerce
                             </label>
+                            <div class="social-link-input" id="woocommerce-link-input">
+                              <label for="woocommerce-link" class="form-label">WooCommerce Store URL</label>
+                              <input type="url" class="form-control" id="woocommerce-link" name="woocommerceLink" placeholder="https://yourstore.com">
+                            </div>
                           </div>
                           <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" id="customWebsite" name="sellingPoints[]" value="customWebsite">
+                            <input class="form-check-input channel-checkbox" type="checkbox" id="customWebsite" name="sellingPoints[]" value="customWebsite" data-channel="customWebsite">
                             <label class="form-check-label d-flex align-items-center" for="customWebsite">
                               <i class="ri-global-line me-2 fs-5 text-secondary"></i> Custom Website
                             </label>
+                            <div class="social-link-input" id="customWebsite-link-input">
+                              <label for="website-link" class="form-label">Website URL</label>
+                              <input type="url" class="form-control" id="website-link" name="websiteLink" placeholder="https://yourwebsite.com">
+                            </div>
                           </div>
                         </div>
                       </div>
                       <div class="col-md-6">
                         <div class="card p-3">
                           <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="facebookShop" name="sellingPoints[]" value="facebookShop">
+                            <input class="form-check-input channel-checkbox" type="checkbox" id="facebookShop" name="sellingPoints[]" value="facebookShop" data-channel="facebookShop">
                             <label class="form-check-label d-flex align-items-center" for="facebookShop">
                               <i class="ri-facebook-circle-line me-2 fs-5 text-primary"></i> Facebook Shop
                             </label>
+                            <div class="social-link-input" id="facebookShop-link-input">
+                              <label for="facebook-shop-link" class="form-label">Facebook Shop URL</label>
+                              <input type="url" class="form-control" id="facebook-shop-link" name="facebookShopLink" placeholder="https://facebook.com/yourbrand/shop">
+                            </div>
                           </div>
                           <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" id="facebookMessenger" name="sellingPoints[]" value="facebookMessenger">
+                            <input class="form-check-input channel-checkbox" type="checkbox" id="facebookMessenger" name="sellingPoints[]" value="facebookMessenger" data-channel="facebookMessenger">
                             <label class="form-check-label d-flex align-items-center" for="facebookMessenger">
                               <i class="ri-messenger-line me-2 fs-5 text-info"></i> Facebook Messenger
                             </label>
+                            <div class="social-link-input" id="facebookMessenger-link-input">
+                              <label for="messenger-link" class="form-label">Facebook Page URL</label>
+                              <input type="url" class="form-control" id="messenger-link" name="messengerLink" placeholder="https://facebook.com/yourbrand">
+                            </div>
                           </div>
                           <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" id="shopify" name="sellingPoints[]" value="shopify">
+                            <input class="form-check-input channel-checkbox" type="checkbox" id="shopify" name="sellingPoints[]" value="shopify" data-channel="shopify">
                             <label class="form-check-label d-flex align-items-center" for="shopify">
                               <i class="ri-shopping-cart-line me-2 fs-5 text-success"></i> Shopify
                             </label>
+                            <div class="social-link-input" id="shopify-link-input">
+                              <label for="shopify-link" class="form-label">Shopify Store URL</label>
+                              <input type="url" class="form-control" id="shopify-link" name="shopifyLink" placeholder="https://yourstore.myshopify.com">
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -319,7 +544,7 @@
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-bill-info-tab">
                         <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Email Verification
                       </button>
-                      <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-pickUp-tab">
+                      <button type="button" class="btn btn-primary-custom ms-auto nexttab" data-nexttab="v-pills-pickUp-tab">
                         Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                       </button>
                     </div>
@@ -332,7 +557,7 @@
                       <p class="text-muted">Select your preferred location for receiving orders.</p>
                     </div>
                     <div class="mb-3">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#locationModal">
+                      <button type="button" class="btn btn-dark-custom" data-bs-toggle="modal" data-bs-target="#locationModal">
                         Select Location on Map
                       </button>
                     </div>
@@ -385,8 +610,12 @@
                         <input type="text" class="form-control" name="adressDetails" id="address-details" placeholder="Street, Building, Floor, Apartment" required>
                       </div>
                       <div class="col-md-12">
-                        <label for="landmark" class="form-label">Nearby Landmark</label>
+                        <label for="landmark" class="form-label">Nearby Landmark (Optional)</label>
                         <input type="text" class="form-control" name="nearbyLandmark" id="landmark" placeholder="e.g. Near the school">
+                      </div>
+                      <div class="col-md-12">
+                        <label for="pickup-phone" class="form-label">Pickup Phone Number</label>
+                        <input type="tel" class="form-control" name="pickupPhone" id="pickup-phone" placeholder="e.g. +20 123 456 7890" required>
                       </div>
                     </div>
                     <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
@@ -401,7 +630,7 @@
                           </div>
                           <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" id="confirmLocation">Confirm Location</button>
+                            <button type="button" class="btn btn-primary-custom" id="confirmLocation">Confirm Location</button>
                           </div>
                         </div>
                       </div>
@@ -410,7 +639,7 @@
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-brand-info-tab">
                         <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Brand Info
                       </button>
-                      <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-payment-tab">
+                      <button type="button" class="btn btn-primary-custom ms-auto nexttab" data-nexttab="v-pills-payment-tab">
                         Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                       </button>
                     </div>
@@ -429,7 +658,7 @@
                         <div class="card p-3 text-center payment-option" data-value="instapay">
                           <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="instapay" value="instaPay" required>
                           <label class="form-check-label" for="instapay">
-                            <i class="ri-smartphone-line fs-2 mb-2 text-primary"></i>
+                            <i class="ri-smartphone-line fs-2 mb-2 text-primary-custom"></i>
                             <h5>InstaPay</h5>
                           </label>
                         </div>
@@ -439,7 +668,7 @@
                         <div class="card p-3 text-center payment-option" data-value="mobileWallet">
                           <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="mobileWallet" value="mobileWallet" required>
                           <label class="form-check-label" for="mobileWallet">
-                            <i class="ri-wallet-line fs-2 mb-2 text-success"></i>
+                            <i class="ri-wallet-line fs-2 mb-2 text-dark-custom"></i>
                             <h5>Mobile Wallet</h5>
                           </label>
                         </div>
@@ -449,7 +678,7 @@
                         <div class="card p-3 text-center payment-option" data-value="bankTransfer">
                           <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="bankTransfer" value="bankTransfer" required>
                           <label class="form-check-label" for="bankTransfer">
-                            <i class="ri-bank-line fs-2 mb-2 text-danger"></i>
+                            <i class="ri-bank-line fs-2 mb-2 text-dark-secondary"></i>
                             <h5>Bank Transfer</h5>
                           </label>
                         </div>
@@ -465,7 +694,7 @@
                       <!-- Mobile Wallet Input -->
                       <div id="mobileWalletDetails" class="payment-detail" style="display: none;">
                         <label for="mobileNumber" class="form-label">Enter your Mobile Number:</label>
-                        <input type="text" id="mobileNumber" name="phoneNumber" class="form-control" placeholder="Example: +201234567890">
+                        <input type="text" id="mobileNumber" name="mobileWalletNumber" class="form-control" placeholder="Example: +201234567890">
                       </div>
                       <!-- Bank Transfer Inputs -->
                       <div id="bankTransferDetails" class="payment-detail" style="display: none;">
@@ -488,7 +717,7 @@
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-pickUp-tab">
                         <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Location
                       </button>
-                      <button type="button" class="btn btn-success ms-auto nexttab" data-nexttab="v-pills-brand-type-tab">
+                      <button type="button" class="btn btn-primary-custom ms-auto nexttab" data-nexttab="v-pills-brand-type-tab">
                         Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                       </button>
                     </div>
@@ -506,7 +735,7 @@
                         <div class="card p-3 text-center brand-option" data-value="personal">
                           <input class="form-check-input d-none brand-radio" type="radio" name="brandType" id="brandType1" value="personal" required>
                           <label class="form-check-label" for="brandType1">
-                            <i class="ri-user-line fs-2 mb-2 text-primary"></i>
+                            <i class="ri-user-line fs-2 mb-2 text-primary-custom"></i>
                             <h5>Personal</h5>
                           </label>
                         </div>
@@ -516,7 +745,7 @@
                         <div class="card p-3 text-center brand-option" data-value="company">
                           <input class="form-check-input d-none brand-radio" type="radio" name="brandType" id="brandType2" value="company" required>
                           <label class="form-check-label" for="brandType2">
-                            <i class="ri-building-line fs-2 mb-2 text-success"></i>
+                            <i class="ri-building-line fs-2 mb-2 text-dark-custom"></i>
                             <h5>Company</h5>
                           </label>
                         </div>
@@ -525,7 +754,7 @@
                     <!-- Personal Fields -->
                     <div id="personalFields" class="mt-4" style="display: none;">
                       <label for="nationalIdNumber" class="form-label">Enter your National ID Number:</label>
-                      <input type="text" id="nationalIdNumber" class="form-control" name="nationalId" placeholder="Example: 29811234"  id="nationalIdNumber" class="form-control" name="nationalId" placeholder="Example: 29811234567890" required>
+                      <input type="text" id="nationalIdNumber" class="form-control" name="nationalId" placeholder="Example: 29811234567890" required>
                       <label for="nationalIdUpload" class="form-label mt-3">Upload National ID:</label>
                       <div class="col-lg-12">
                         <div class="card">
@@ -565,7 +794,7 @@
                       <span class="photo-count ms-auto me-3" id="photoCount" style="display: none;">
                         <i class="ri-image-line"></i> <span>0</span> files
                       </span>
-                      <button type="button" class="btn btn-success nexttab" data-nexttab="v-pills-finish-tab" id="submitButton">
+                      <button type="button" class="btn btn-dark-custom" id="submitButton">
                         Submit All <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                       </button>
                     </div>
@@ -575,12 +804,12 @@
                   <div class="tab-pane fade" id="v-pills-finish" role="tabpanel" aria-labelledby="v-pills-finish-tab">
                     <div class="text-center pt-4 pb-2">
                       <div class="mb-4">
-                        <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>
+                        <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#F39720,secondary:#333333" style="width:120px;height:120px"></lord-icon>
                       </div>
                       <h5>Your Account Setup is Completed!</h5>
                       <p class="text-muted">You will receive a confirmation email with details of your account setup.</p>
                       <div class="mt-4">
-                        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+                        <a href="/dashboard" class="btn btn-primary-custom">Go to Dashboard</a>
                       </div>
                     </div>
                   </div>
@@ -597,98 +826,343 @@
     <!-- end card -->
   </div>
   <% } else { %>
-  <div class="col-lg-12">
-    <div class="row">
-      <div class="col-xl-3 col-md-6">
-        <!-- card -->
-        <div class="card card-animate">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="flex-grow-1">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Earnings</p>
-              </div>
-              <div class="flex-shrink-0">
-                <h5 class="text-success fs-14 mb-0">
-                  <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +16.24 %
-                </h5>
-              </div>
-            </div>
-            <div class="d-flex align-items-end justify-content-between mt-4">
-              <div>
-                <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span class="counter-value" data-target="559.25">0</span>k</h4>
-                <a href="" class="text-decoration-underline">View net earnings</a>
-              </div>
-              <div class="avatar-sm flex-shrink-0">
-                <span class="avatar-title bg-success-subtle rounded fs-3 material-shadow">
-                  <i class="bx bx-dollar-circle text-success"></i>
-                </span>
+  <div class="col-xl-12">
+  <!-- Dashboard Overview Cards -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card dashboard-card">
+        <div class="card-header d-flex align-items-center">
+          <h4 class="card-title mb-0">Today's Overview</h4>
+          <div class="ms-auto">
+            <span class="text-muted small">Last updated at <%= new Date().toLocaleTimeString() %></span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <!-- In Progress Orders -->
+            <div class="col-md-3">
+              <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-2">
+                    <h6 class="text-muted mb-0">In Progress Orders</h6>
+                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders currently being processed"></i>
+                  </div>
+                  <h2 class="mb-0 text-dark-custom">0</h2>
+                </div>
               </div>
             </div>
-          </div><!-- end card body -->
-        </div><!-- end card -->
-      </div><!-- end col -->
 
-      <div class="col-xl-3 col-md-6">
-        <!-- card -->
-        <div class="card card-animate">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="flex-grow-1">
-                <p class="text-uppercase fw-medium text-muted mb-0">Customers</p>
-              </div>
-              <div class="flex-shrink-0">
-                <h5 class="text-success fs-14 mb-0">
-                  <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +29.08 %
-                </h5>
+            <!-- Heading to Customer -->
+            <div class="col-md-3">
+              <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-2">
+                    <h6 class="text-muted mb-0">Heading to Customer</h6>
+                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders on the way to customers"></i>
+                  </div>
+                  <h2 class="mb-0 text-dark-custom">0</h2>
+                </div>
               </div>
             </div>
-            <div class="d-flex align-items-end justify-content-between mt-4">
-              <div>
-                <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="183.35">0</span>M</h4>
-                <a href="" class="text-decoration-underline">See details</a>
-              </div>
-              <div class="avatar-sm flex-shrink-0">
-                <span class="avatar-title bg-warning-subtle rounded fs-3 material-shadow">
-                  <i class="bx bx-user-circle text-warning"></i>
-                </span>
-              </div>
-            </div>
-          </div><!-- end card body -->
-        </div><!-- end card -->
-      </div><!-- end col -->
 
-      <div class="col-xl-3 col-md-6">
-        <!-- card -->
-        <div class="card card-animate bg-info">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="flex-grow-1">
-                <p class="text-uppercase fw-medium text-white-50 mb-0">Orders</p>
-              </div>
-              <div class="flex-shrink-0">
-                <h5 class="text-warning fs-14 mb-0">
-                  <i class="ri-arrow-right-down-line fs-13 align-middle"></i> -3.57 %
-                </h5>
-              </div>
-            </div>
-            <div class="d-flex align-items-end justify-content-between mt-4">
-              <div>
-                <h4 class="fs-22 fw-semibold ff-secondary mb-4 text-white"><span class="counter-value" data-target="36894">0</span></h4>
-                <a href="" class="text-decoration-underline text-white-50">View all orders</a>
-              </div>
-              <div class="avatar-sm flex-shrink-0">
-                <span class="avatar-title bg-white bg-opacity-25 rounded fs-3 material-shadow">
-                  <i class="bx bx-shopping-bag text-white"></i>
-                </span>
+            <!-- Completed Orders -->
+            <div class="col-md-3">
+              <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-2">
+                    <h6 class="text-muted mb-0">Completed Orders</h6>
+                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Successfully delivered orders"></i>
+                  </div>
+                  <div class="d-flex align-items-baseline">
+                    <h2 class="mb-0 text-dark-custom">0</h2>
+                    <span class="text-muted ms-2">/ 0</span>
+                    <span class="badge bg-success ms-auto">0%</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div><!-- end card body -->
-        </div><!-- end card -->
-      </div><!-- end col -->
+
+            <!-- Awaiting Action -->
+            <div class="col-md-3">
+              <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-2">
+                    <h6 class="text-muted mb-0">Awaiting Action</h6>
+                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders requiring your attention"></i>
+                  </div>
+                  <h2 class="mb-0 text-primary-custom">0</h2>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heading to you -->
+            <div class="col-md-3">
+              <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-2">
+                    <h6 class="text-muted mb-0">Heading to you</h6>
+                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Returns being sent back to you"></i>
+                  </div>
+                  <h2 class="mb-0 text-dark-custom">0</h2>
+                </div>
+              </div>
+            </div>
+
+            <!-- New Orders -->
+            <div class="col-md-3">
+              <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-2">
+                    <h6 class="text-muted mb-0">New Orders</h6>
+                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Recently received orders"></i>
+                  </div>
+                  <h2 class="mb-0 text-primary-custom">1</h2>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expected Cash -->
+            <div class="col-md-3">
+              <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-2">
+                    <h6 class="text-muted mb-0">Expected Cash</h6>
+                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Pending payments from delivered orders"></i>
+                  </div>
+                  <div class="d-flex align-items-baseline">
+                    <h2 class="mb-0 text-dark-custom">0</h2>
+                    <span class="text-muted ms-2">EGP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Collected Cash -->
+            <div class="col-md-3">
+              <div class="card border shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-2">
+                    <h6 class="text-muted mb-0">Collected Cash</h6>
+                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Payments received from orders"></i>
+                  </div>
+                  <div class="d-flex align-items-baseline">
+                    <h2 class="mb-0 text-dark-custom">0</h2>
+                    <span class="text-muted ms-2">EGP</span>
+                    <span class="badge bg-success ms-auto">0%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Order Status and Promotional Cards -->
+<!-- Chart and Recent Orders Row -->
+<div class="row">
+  <!-- Chart -->
+  <div class="col-xl-8">
+    <div class="card dashboard-card">
+      <div class="card-header">
+        <h4 class="card-title mb-0">Revenue & Orders Analytics</h4>
+      </div>
+      <div class="card-body">
+        <div id="revenue-chart" style="height: 350px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="col-xl-4">
+    <div class="card dashboard-card">
+      <div class="card-header">
+        <h4 class="card-title mb-0">Recent Orders</h4>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-borderless mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>#ORD-7851</td>
+                <td>Ahmed M.</td>
+                <td><span class="order-status delivered">Delivered</span></td>
+              </tr>
+              <tr>
+                <td>#ORD-7852</td>
+                <td>Sara K.</td>
+                <td><span class="order-status pending">Pending</span></td>
+              </tr>
+              <tr>
+                <td>#ORD-7853</td>
+                <td>Mohamed A.</td>
+                <td><span class="order-status processing">Processing</span></td>
+              </tr>
+              <tr>
+                <td>#ORD-7854</td>
+                <td>Fatima H.</td>
+                <td><span class="order-status delivered">Delivered</span></td>
+              </tr>
+              <tr>
+                <td>#ORD-7855</td>
+                <td>Omar S.</td>
+                <td><span class="order-status cancelled">Cancelled</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-top-0">
+        <div class="text-center">
+          <a href="#" class="text-dark-custom">View All Orders <i class="ri-arrow-right-line align-middle"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Pickups and Performance Row -->
+<div class="row">
+  <!-- Recent Pickups -->
+  <div class="col-xl-6">
+    <div class="card dashboard-card">
+      <div class="card-header">
+        <h4 class="card-title mb-0">Recent Pickups</h4>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-borderless mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Pickup ID</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>#PK-1234</td>
+                <td>Apr 15, 2023</td>
+                <td>5</td>
+                <td><span class="order-status delivered">Completed</span></td>
+              </tr>
+              <tr>
+                <td>#PK-1235</td>
+                <td>Apr 16, 2023</td>
+                <td>3</td>
+                <td><span class="order-status pending">Scheduled</span></td>
+              </tr>
+              <tr>
+                <td>#PK-1236</td>
+                <td>Apr 17, 2023</td>
+                <td>7</td>
+                <td><span class="order-status processing">In Progress</span></td>
+              </tr>
+              <tr>
+                <td>#PK-1237</td>
+                <td>Apr 18, 2023</td>
+                <td>2</td>
+                <td><span class="order-status delivered">Completed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-transparent border-top-0">
+        <div class="text-center">
+          <a href="#" class="text-dark-custom">View All Pickups <i class="ri-arrow-right-line align-middle"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Card -->
+  <div class="col-xl-6">
+    <div class="card dashboard-card">
+      <div class="card-header">
+        <h4 class="card-title mb-0">Performance Metrics</h4>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="d-flex align-items-center mb-4">
+              <div class="flex-shrink-0 me-3">
+                <div class="avatar-sm">
+                  <span class="avatar-title bg-neutral-light rounded">
+                    <i class="ri-time-line text-primary-custom fs-4"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="fs-15 mb-1">Average Delivery Time</h5>
+                <p class="text-muted mb-0">2.3 days</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex align-items-center mb-4">
+              <div class="flex-shrink-0 me-3">
+                <div class="avatar-sm">
+                  <span class="avatar-title bg-neutral-light rounded">
+                    <i class="ri-star-line text-dark-custom fs-4"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="fs-15 mb-1">Customer Satisfaction</h5>
+                <p class="text-muted mb-0">4.8/5</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex align-items-center mb-4">
+              <div class="flex-shrink-0 me-3">
+                <div class="avatar-sm">
+                  <span class="avatar-title bg-neutral-light rounded">
+                    <i class="ri-repeat-line text-primary-custom fs-4"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="fs-15 mb-1">Return Rate</h5>
+                <p class="text-muted mb-0">2.1%</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex align-items-center mb-4">
+              <div class="flex-shrink-0 me-3">
+                <div class="avatar-sm">
+                  <span class="avatar-title bg-neutral-light rounded">
+                    <i class="ri-user-heart-line text-dark-custom fs-4"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="fs-15 mb-1">Repeat Customers</h5>
+                <p class="text-muted mb-0">68%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div id="performance-chart" style="height: 200px;"></div>
+        </div>
+    </div>
+  </div>
   </div>
   <% } %>
   <!-- end col -->
+</div>
 </div>
 
 <%- contentFor('FooterJs') %>
@@ -697,6 +1171,7 @@
 <script src="/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js"></script>
 <script src="/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js"></script>
 <script src="/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js"></script>
+<script src="/assets/libs/apexcharts/apexcharts.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -789,7 +1264,7 @@
         const icon = tabLink.querySelector('.step-icon');
         if (icon) {
           icon.classList.remove('ri-close-circle-fill');
-          icon.classList.add('ri-check-circle-fill', 'text-success');
+          icon.classList.add('ri-check-circle-fill', 'text-primary-custom');
         }
       }
     }
@@ -954,6 +1429,25 @@
           }
         });
       });
+
+      // Social Media Channel Selection
+      formSteps.querySelectorAll('.channel-checkbox').forEach((checkbox) => {
+        checkbox.addEventListener('change', function() {
+          const channelName = this.getAttribute('data-channel');
+          const linkInput = document.getElementById(`${channelName}-link-input`);
+
+          if (linkInput) {
+            if (this.checked) {
+              linkInput.classList.add('active');
+            } else {
+              linkInput.classList.remove('active');
+              // Clear the input when unchecked
+              const input = linkInput.querySelector('input');
+              if (input) input.value = '';
+            }
+          }
+        });
+      });
     });
 
     // File Upload Handling
@@ -1108,10 +1602,21 @@
 
           // Add selling points
           const sellingPoints = [];
+          const socialLinks = {};
+
           document.querySelectorAll('input[name="sellingPoints[]"]:checked').forEach((checkbox) => {
-            sellingPoints.push(checkbox.value);
+            const channel = checkbox.value;
+            sellingPoints.push(channel);
+
+            // Get the associated link if available
+            const linkInput = document.getElementById(`${channel}-link`);
+            if (linkInput && linkInput.value) {
+              socialLinks[channel] = linkInput.value;
+            }
           });
+
           formObject.sellingPoints = sellingPoints;
+          formObject.socialLinks = socialLinks;
 
           // Add uploaded photos
           formObject.photosOfBrandType = uploadedPhotos;
@@ -1221,6 +1726,93 @@
           sendVerificationEmailBtn.innerHTML = '<i class="ri-mail-fill fs-5 me-2"></i> Send Verification Email';
         }
       });
+    }
+
+    // Initialize Dashboard Charts if user is completed
+    if (document.getElementById('revenue-chart')) {
+      const revenueChartOptions = {
+        series: [{
+          name: 'Revenue',
+          type: 'column',
+          data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
+        }, {
+          name: 'Orders',
+          type: 'line',
+          data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
+        }],
+        chart: {
+          height: 350,
+          type: 'line',
+          toolbar: {
+            show: false
+          }
+        },
+        stroke: {
+          width: [0, 4],
+          curve: 'smooth'
+        },
+        colors: ['#F39720', '#333333'],
+        dataLabels: {
+          enabled: true,
+          enabledOnSeries: [1]
+        },
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+        xaxis: {
+          type: 'category'
+        },
+        yaxis: [{
+          title: {
+            text: 'Revenue ($)',
+          },
+        }, {
+          opposite: true,
+          title: {
+            text: 'Orders'
+          }
+        }]
+      };
+
+      const revenueChart = new ApexCharts(document.getElementById('revenue-chart'), revenueChartOptions);
+      revenueChart.render();
+    }
+
+    if (document.getElementById('performance-chart')) {
+      const performanceChartOptions = {
+        series: [{
+          name: 'Performance',
+          data: [75, 85, 65, 90, 82, 78]
+        }],
+        chart: {
+          type: 'radar',
+          height: 200,
+          toolbar: {
+            show: false
+          }
+        },
+        colors: ['#F39720'],
+        xaxis: {
+          categories: ['Delivery', 'Quality', 'Service', 'Value', 'Satisfaction', 'Retention']
+        },
+        yaxis: {
+          show: false
+        },
+        markers: {
+          size: 4,
+          colors: ['#333333'],
+          strokeColors: '#fff',
+          strokeWidth: 2,
+        },
+        tooltip: {
+          y: {
+            formatter: function(val) {
+              return val + '%';
+            }
+          }
+        }
+      };
+
+      const performanceChart = new ApexCharts(document.getElementById('performance-chart'), performanceChartOptions);
+      performanceChart.render();
     }
 
     // Ensure first tab is active on page load

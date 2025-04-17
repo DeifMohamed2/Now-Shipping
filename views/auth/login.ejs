@@ -1,127 +1,976 @@
 <%- contentFor('HeaderCss') %>
 <%-include("../partials/title-meta", { "title" : "Login" }) %>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --primary: #F39720;
+    --secondary: #FDB614;
+    --accent: #8FCAE5;
+    --light: #FDDE00;
+    --dark: #2B71B9;
+    --neutral: #EFEICF;
+    --white: #FFFFFF;
+    --gray-100: #F9FAFB;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-800: #1F2937;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--gray-100);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Top Navbar Styles */
+  .top-navbar {
+    background-color: var(--white);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .navbar-logo {
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar-logo svg {
+    width: 32px;
+    height: 32px;
+    fill: var(--primary);
+    margin-right: 12px;
+  }
+
+  .navbar-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: 0;
+  }
+
+  .navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-link {
+    color: var(--gray-500);
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--primary);
+    background-color: rgba(243, 151, 32, 0.05);
+  }
+
+  .nav-link.active {
+    color: var(--primary);
+    background-color: rgba(243, 151, 32, 0.1);
+  }
+
+  .navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Mobile menu */
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background-color: var(--white);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    padding: 16px;
+  }
+
+  .mobile-menu-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .mobile-menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--gray-500);
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  /* Login Container Styles */
+  .login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    margin-left: 0;
+    padding: 90px 20px 20px;
+    /* Add top padding to account for navbar */
+  }
+
+  /* Background Animation Elements */
+  .animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background-color: var(--gray-100);
+    opacity: 0.8;
+  }
+
+  /* Truck animations */
+  .truck {
+    position: absolute;
+    width: 120px;
+    height: 60px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'%3E%3Cpath fill='%232B71B9' d='M48 0C21.5 0 0 21.5 0 48V368c0 26.5 21.5 48 48 48H64c0 53 43 96 96 96s96-43 96-96H384c0 53 43 96 96 96s96-43 96-96h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V288 256 237.3c0-17-6.7-33.3-18.7-45.3L512 114.7c-12-12-28.3-18.7-45.3-18.7H416V48c0-26.5-21.5-48-48-48H48zM416 160h50.7L544 237.3V256H416V160zM112 416a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zm368-48a48 48 0 1 1 0 96 48 48 0 1 1 0-96z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.1;
+  }
+
+  .truck-1 {
+    top: 10%;
+    left: -120px;
+    animation: truckMove1 20s linear infinite;
+  }
+
+  .truck-2 {
+    top: 30%;
+    right: -120px;
+    transform: scaleX(-1);
+    animation: truckMove2 25s linear infinite;
+  }
+
+  .truck-3 {
+    bottom: 15%;
+    left: -120px;
+    animation: truckMove1 22s linear infinite 5s;
+  }
+
+  @keyframes truckMove1 {
+    0% {
+      left: -120px;
+    }
+
+    100% {
+      left: 100%;
+    }
+  }
+
+  @keyframes truckMove2 {
+    0% {
+      right: -120px;
+    }
+
+    100% {
+      right: 100%;
+    }
+  }
+
+  /* Package animations */
+  .package {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23F39720' d='M50.7 58.5L0 160H208V32H93.7C75.5 32 58.9 42.3 50.7 58.5zM240 160H448L397.3 58.5C389.1 42.3 372.5 32 354.3 32H240V160zm208 32H0V416c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V192z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.15;
+  }
+
+  .package-1 {
+    top: 20%;
+    left: 10%;
+    animation: packageFloat 10s ease-in-out infinite;
+  }
+
+  .package-2 {
+    top: 60%;
+    right: 15%;
+    animation: packageFloat 12s ease-in-out infinite 2s;
+  }
+
+  .package-3 {
+    bottom: 30%;
+    left: 30%;
+    animation: packageFloat 14s ease-in-out infinite 1s;
+  }
+
+  .package-4 {
+    top: 40%;
+    right: 40%;
+    animation: packageFloat 11s ease-in-out infinite 3s;
+  }
+
+  @keyframes packageFloat {
+
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+      transform: translateY(-20px) rotate(5deg);
+    }
+  }
+
+  /* Map route animation */
+  .map-route {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--primary), var(--primary) 10px, transparent 10px, transparent 20px);
+    opacity: 0.2;
+  }
+
+  .map-route-1 {
+    top: 25%;
+    animation: routeMove 30s linear infinite;
+  }
+
+  .map-route-2 {
+    bottom: 35%;
+    animation: routeMove 30s linear infinite reverse;
+  }
+
+  @keyframes routeMove {
+    0% {
+      background-position: 0 0;
+    }
+
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  /* Login Card Styles */
+  .login-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 420px;
+    padding: 40px;
+    position: relative;
+    z-index: 10;
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .login-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .login-logo {
+    margin-bottom: 16px;
+    display: inline-block;
+  }
+
+  .login-logo svg {
+    width: 48px;
+    height: 48px;
+    fill: var(--primary);
+  }
+
+  .login-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 8px;
+  }
+
+  .login-subtitle {
+    font-size: 14px;
+    color: var(--gray-500);
+    margin-bottom: 0;
+  }
+
+  .login-form {
+    margin-top: 24px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-800);
+    margin-bottom: 8px;
+  }
+
+  .form-control {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px;
+    font-size: 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    background-color: var(--white);
+    transition: all 0.2s ease;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.12);
+  }
+
+  .password-wrapper {
+    position: relative;
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s ease;
+  }
+
+  .password-toggle:hover {
+    color: var(--gray-800);
+  }
+
+  .form-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .form-check {
+    display: flex;
+    align-items: center;
+  }
+
+  .form-check-input {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+  }
+
+  .form-check-label {
+    font-size: 14px;
+    color: var(--gray-500);
+  }
+
+  .forgot-password {
+    font-size: 14px;
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .forgot-password:hover {
+    color: var(--secondary);
+    text-decoration: underline;
+  }
+
+  .btn-login {
+    display: block;
+    width: 100%;
+    height: 44px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-login:hover {
+    background: var(--secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(243, 151, 32, 0.2);
+  }
+
+  .btn-login:active {
+    transform: translateY(0);
+  }
+
+  .btn-login .btn-text {
+    position: relative;
+    z-index: 1;
+  }
+
+  .signup-link {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--gray-500);
+  }
+
+  .signup-link a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .signup-link a:hover {
+    color: var(--secondary);
+    text-decoration: underline;
+  }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  .alert-success {
+    background-color: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+  }
+
+  .alert-danger {
+    background-color: #FEF2F2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .form-group {
+    animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0;
+  }
+
+  .form-group:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+
+  .form-group:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .form-group:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  .form-options {
+    animation: fadeIn 0.5s ease-out forwards;
+    animation-delay: 0.4s;
+    opacity: 0;
+  }
+
+  .btn-login {
+    animation: fadeIn 0.5s ease-out forwards;
+    animation-delay: 0.5s;
+    opacity: 0;
+  }
+
+  .signup-link {
+    animation: fadeIn 0.5s ease-out forwards;
+    animation-delay: 0.6s;
+    opacity: 0;
+  }
+
+  /* Ripple effect */
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+
+  @keyframes ripple {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+  /* Responsive styles */
+  @media (max-width: 992px) {
+
+    .navbar-links,
+    .navbar-actions {
+      display: none;
+    }
+
+    .mobile-menu-btn {
+      display: block;
+    }
+
+    .mobile-menu.open {
+      display: block;
+    }
+  }
+
+  /* Form validation styles */
+  .is-invalid {
+    border-color: #dc3545 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 12 12'%3E%3Cpath fill='%23DC3545' d='M6 0a6 6 0 1 0 0 12A6 6 0 0 0 6 0zm0 9a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm1-3H5V2h2v4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+  }
+
+  .invalid-feedback {
+    display: none;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  /* Loading animation */
+  .btn-loading {
+    position: relative;
+    color: transparent;
+  }
+
+  .btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin: -10px 0 0 -10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Shake animation */
+  @keyframes shake {
+
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: translateX(-5px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translateX(5px);
+    }
+  }
+
+  .shake {
+    animation: shake 0.6s cubic-bezier(.36, .07, .19, .97) both;
+  }
+</style>
+
 <%- contentFor('body') %>
-<div class="auth-page-wrapper pt-5">
-  <!-- auth page bg -->
-  <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
-    <div class="bg-overlay"></div>
-
-    <div class="shape">
-      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1440 120">
-        <path d="M 0,36 C 144,53.6 432,123.2 720,124 C 1008,124.8 1296,56.8 1440,40L1440 140L0 140z"></path>
-      </svg>
-    </div>
-  </div>
-
-  <!-- auth page content -->
-  <div class="auth-page-content">
-    <div class="container">
-    
-      <!-- end row -->
-
-      <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6 col-xl-5">
-            <div class="card mt-4" style="border-radius: 30px; box-shadow:0 10px 11px 12px rgba(0, 0, 0, 0.1);">
-
-            <div class="card-body p-4">
-              <div class="text-center mt-2">
-              <h5 class="text-primary">Welcome Back !</h5>
-              <p class="text-muted">Sign in to continue to Now Shipping.</p>
-              </div>
-              <div class="p-2 mt-4">
-               <% if(message.length> 0) { %>
-                <div class="alert alert-success text-center mb-4 flash" role="alert">
-                <%= message %>
-                </div>
-                <% } %>
-                <% if(error.length> 0) { %>
-                <div class="alert alert-danger text-center mb-4 flash" role="alert">
-                <%= error %>
-                </div>
-                <% } %>
-                <form id="loginForm" method="post">
-
-                <div class="mb-3">
-                <label for="Email" class="form-label">Email</label>
-                <input type="text" class="form-control" id="Email" name="email" value="" placeholder="Enter Email">
-                </div>
-
-                <div class="mb-3">
-                <div class="float-end">
-                  <a href="/forgotpassword" class="text-muted">Forgot password?</a>
-                </div>
-                <label class="form-label" for="password-input">Password</label>
-                <div class="position-relative auth-pass-inputgroup mb-3">
-                  <input type="password" class="form-control pe-5 password-input" name="password" required minlength="8" value=""  placeholder="Enter password" id="password-input">
-                  <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
-                </div>
-                </div>
-
-                <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="auth-remember-check">
-                <label class="form-check-label" for="auth-remember-check">Remember me</label>
-                </div>
-
-                <div class="mt-4">
-                <button class="btn btn-success w-100" type="submit">Sign In</button>
-                </div>
-
-                <div class="mt-4 text-center">
-                    <div class="alert alert-danger" style="display: none;" id="errorMessage" role="alert">
-                   
-                    </div>
-                </div>
-
-                <!-- <div class="mt-4 text-center">
-                <div class="signin-other-title">
-                  <h5 class="fs-13 mb-4 title">Sign In with</h5>
-                </div>
-                <div>
-                  <button type="button" class="btn btn-primary btn-icon waves-effect waves-light"><i class="ri-facebook-fill fs-16"></i></button>
-                  <button type="button" class="btn btn-danger btn-icon waves-effect waves-light"><i class="ri-google-fill fs-16"></i></button>
-                  <button type="button" class="btn btn-dark btn-icon waves-effect waves-light"><i class="ri-github-fill fs-16"></i></button>
-                  <button type="button" class="btn btn-info btn-icon waves-effect waves-light"><i class="ri-twitter-fill fs-16"></i></button>
-                </div>
-                </div> -->
-              </form>
-              </div>
-            </div>
-            <!-- end card body -->
-            </div>
-          <!-- end card -->
-
-          <div class="mt-4 text-center">
-            <p class="mb-0">Don't have an account ? <a href="/register" class="fw-semibold text-primary text-decoration-underline"> Signup </a> </p>
-          </div>
-
-        </div>
+<!-- Top Navbar -->
+<nav class="top-navbar">
+  <div class="navbar-container">
+    <a href="/" class="navbar-brand">
+      <div class="navbar-logo">
+        <svg viewBox="0 0 100 100">
+          <path d="M50,15 L60,25 L75,20 L75,40 L90,50 L75,60 L75,80 L60,75 L50,85 L40,75 L25,80 L25,60 L10,50 L25,40 L25,20 L40,25 Z M50,35 C41.7,35 35,41.7 35,50 C35,58.3 41.7,65 50,65 C58.3,65 65,58.3 65,50 C65,41.7 58.3,35 50,35 Z"></path>
+        </svg>
       </div>
-      <!-- end row -->
-    </div>
-    <!-- end container -->
-  </div>
-  <!-- end auth page content -->
+      <h1 class="navbar-title">Now Shipping</h1>
+    </a>
 
-  <!-- footer -->
-  <!-- <footer class="footer">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="text-center">
-            <p class="mb-0 text-muted">&copy;
-              <script>
-                document.write(new Date().getFullYear())
-              </script> Velzon. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand
-            </p>
-          </div>
-        </div>
-      </div>
+    <div class="navbar-links">
+      <!-- <a href="#" class="nav-link active">Home</a>
+      <a href="#" class="nav-link">Services</a>
+      <a href="#" class="nav-link">Tracking</a>
+      <a href="#" class="nav-link">About Us</a>
+      <a href="#" class="nav-link">Contact</a> -->
     </div>
-  </footer> -->
-  <!-- end Footer -->
+
+    <div class="navbar-actions">
+      <a href="#" class="btn-outline">Help</a>
+      <a href="#" class="btn-primary">Get Started</a>
+    </div>
+
+    <button class="mobile-menu-btn" id="mobile-menu-toggle">
+      <i class="ri-menu-line"></i>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mobile-menu-links">
+    <!-- <a href="#" class="nav-link active">Home</a>
+    <a href="#" class="nav-link">Services</a>
+    <a href="#" class="nav-link">Tracking</a>
+    <a href="#" class="nav-link">About Us</a>
+    <a href="#" class="nav-link">Contact</a> -->
+  </div>
+  <div class="mobile-menu-actions">
+    <a href="#" class="btn-outline">Help</a>
+    <a href="#" class="btn-primary">Get Started</a>
+  </div>
 </div>
-<!-- end auth-page-wrapper -->
+
+<!-- Animated Background -->
+<div class="animated-background">
+  <!-- Truck animations -->
+  <div class="truck truck-1"></div>
+  <div class="truck truck-2"></div>
+  <div class="truck truck-3"></div>
+
+  <!-- Package animations -->
+  <div class="package package-1"></div>
+  <div class="package package-2"></div>
+  <div class="package package-3"></div>
+  <div class="package package-4"></div>
+
+  <!-- Map routes -->
+  <div class="map-route map-route-1"></div>
+  <div class="map-route map-route-2"></div>
+</div>
+
+<div class="login-container">
+  <!-- Login card -->
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">
+        <svg viewBox="0 0 100 100">
+          <path d="M50,15 L60,25 L75,20 L75,40 L90,50 L75,60 L75,80 L60,75 L50,85 L40,75 L25,80 L25,60 L10,50 L25,40 L25,20 L40,25 Z M50,35 C41.7,35 35,41.7 35,50 C35,58.3 41.7,65 50,65 C58.3,65 65,58.3 65,50 C65,41.7 58.3,35 50,35 Z"></path>
+        </svg>
+      </div>
+      <h1 class="login-title">Welcome Back</h1>
+      <p class="login-subtitle">Sign in to continue to Now Shipping</p>
+    </div>
+
+    <% if(message.length > 0) { %>
+    <div class="alert alert-success text-center" role="alert">
+      <%= message %>
+    </div>
+    <% } %>
+
+    <% if(error.length > 0) { %>
+    <div class="alert alert-danger text-center" role="alert">
+      <%= error %>
+    </div>
+    <% } %>
+
+    <form id="loginForm" method="post" class="login-form">
+      <div class="form-group">
+        <label for="Email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="Email" name="email" value="" placeholder="Enter your email">
+        <div class="invalid-feedback" id="email-feedback"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password-input">Password</label>
+        <div class="password-wrapper">
+          <input type="password" class="form-control" name="password" required minlength="8" value="" placeholder="Enter your password" id="password-input">
+          <button type="button" class="password-toggle" id="password-addon">
+            <i class="ri-eye-fill"></i>
+          </button>
+        </div>
+        <div class="invalid-feedback" id="password-feedback"></div>
+      </div>
+
+      <div class="form-options">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="" id="auth-remember-check">
+          <label class="form-check-label" for="auth-remember-check">
+            Remember me
+          </label>
+        </div>
+        <a href="/forgotpassword" class="forgot-password">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn-login">
+        <span class="btn-text">Sign In</span>
+      </button>
+
+      <div class="alert alert-danger mt-3" style="display: none;" id="errorMessage" role="alert"></div>
+    </form>
+
+    <div class="signup-link">
+      Don't have an account? <a href="/register">Sign up</a>
+    </div>
+  </div>
+</div>
+
 <%- contentFor('FooterJs') %>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script src="/assets/rJS/login.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Password visibility toggle
+    const passwordInput = document.getElementById('password-input');
+    const passwordAddon = document.getElementById('password-addon');
+
+    if (passwordAddon) {
+      passwordAddon.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.innerHTML = type === 'password' ? '<i class="ri-eye-fill"></i>' : '<i class="ri-eye-off-fill"></i>';
+      });
+    }
+
+    // Ripple effect on button
+    const loginButton = document.querySelector('.btn-login');
+
+    if (loginButton) {
+      loginButton.addEventListener('click', function(e) {
+        const x = e.clientX - e.target.getBoundingClientRect().left;
+        const y = e.clientY - e.target.getBoundingClientRect().top;
+
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple');
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+
+        this.appendChild(ripple);
+
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      });
+    }
+
+    // Form validation
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('Email');
+    const emailFeedback = document.getElementById('email-feedback');
+    const passwordFeedback = document.getElementById('password-feedback');
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', function(e) {
+        let isValid = true;
+
+        // Email validation
+        if (!validateEmail(emailInput.value)) {
+          showInputError(emailInput, emailFeedback, 'Please enter a valid email address');
+          isValid = false;
+        } else {
+          clearInputError(emailInput, emailFeedback);
+        }
+
+        // Password validation
+        if (passwordInput.value.length < 8) {
+          showInputError(passwordInput, passwordFeedback, 'Password must be at least 8 characters');
+          isValid = false;
+        } else {
+          clearInputError(passwordInput, passwordFeedback);
+        }
+
+        if (!isValid) {
+          e.preventDefault();
+          loginForm.classList.add('shake');
+          setTimeout(() => {
+            loginForm.classList.remove('shake');
+          }, 600);
+        } else {
+          // Show loading state
+          loginButton.classList.add('btn-loading');
+          loginButton.disabled = true;
+        }
+      });
+
+      // Input validation on blur
+      emailInput.addEventListener('blur', function() {
+        if (this.value && !validateEmail(this.value)) {
+          showInputError(this, emailFeedback, 'Please enter a valid email address');
+        } else {
+          clearInputError(this, emailFeedback);
+        }
+      });
+
+      passwordInput.addEventListener('blur', function() {
+        if (this.value && this.value.length < 8) {
+          showInputError(this, passwordFeedback, 'Password must be at least 8 characters');
+        } else {
+          clearInputError(this, passwordFeedback);
+        }
+      });
+    }
+
+    // Helper functions
+    function validateEmail(email) {
+      const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(String(email).toLowerCase());
+    }
+
+
+
+    function showInputError(input, feedback, message) {
+      input.classList.add('is-invalid');
+      if (feedback) {
+        feedback.textContent = message;
+        feedback.style.display = 'block';
+      }
+    }
+
+    function clearInputError(input, feedback) {
+      input.classList.remove('is-invalid');
+      if (feedback) {
+        feedback.style.display = 'none';
+      }
+    }
+
+    // Create dynamic truck animations
+    function createExtraTrucks() {
+      const background = document.querySelector('.animated-background');
+
+      // Create additional trucks with random positions and speeds
+      for (let i = 0; i < 3; i++) {
+        const truck = document.createElement('div');
+        truck.classList.add('truck');
+
+        const isLeftToRight = Math.random() > 0.5;
+        const verticalPosition = Math.random() * 70 + 15; // Between 15% and 85%
+        const animationDuration = Math.random() * 10 + 15; // Between 15s and 25s
+        const delay = Math.random() * 5; // Between 0s and 5s
+
+        truck.style.top = `${verticalPosition}%`;
+
+        if (isLeftToRight) {
+          truck.style.left = '-120px';
+          truck.style.animation = `truckMove1 ${animationDuration}s linear infinite ${delay}s`;
+        } else {
+          truck.style.right = '-120px';
+          truck.style.transform = 'scaleX(-1)';
+          truck.style.animation = `truckMove2 ${animationDuration}s linear infinite ${delay}s`;
+        }
+
+        background.appendChild(truck);
+      }
+    }
+
+    // Initialize extra trucks
+    createExtraTrucks();
+
+    // Mobile menu toggle
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (mobileMenuToggle && mobileMenu) {
+      mobileMenuToggle.addEventListener('click', function() {
+        mobileMenu.classList.toggle('open');
+        this.innerHTML = mobileMenu.classList.contains('open') ?
+          '<i class="ri-close-line"></i>' :
+          '<i class="ri-menu-line"></i>';
+      });
+
+      // Close mobile menu on window resize (if screen becomes larger)
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 992) {
+          mobileMenu.classList.remove('open');
+          mobileMenuToggle.innerHTML = '<i class="ri-menu-line"></i>';
+        }
+      });
+    }
+  });
+</script>

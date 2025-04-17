@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Order - NOW Shipping</title>
+    <link rel="stylesheet" href="/assets/rCSS/styles.css">
+    <link rel="stylesheet" href="/assets/rCSS/tracking.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Preloader -->
+    <div class="preloader">
+      <div class="loader">
+        <div class="loader-logo">
+          <img src="images/logo-icon.png" alt="NOW Shipping">
+        </div>
+        <div class="loader-bar">
+          <div class="loader-progress"></div>
+        </div>
+        <p class="loader-text">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="container">
+          <div class="top-bar-left">
+            <div class="top-bar-item">
+              <i class="fas fa-phone"></i>
+              <span>+1 (800) NOW-SHIP</span>
+            </div>
+            <div class="top-bar-item">
+              <i class="fas fa-envelope"></i>
+              <span>support@nowshipping.com</span>
+            </div>
+            <div class="top-bar-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>123 Logistics Way, Shipping City, SC 12345</span>
+            </div>
+          </div>
+          <div class="top-bar-right">
+            <div class="social-links">
+              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+              <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+            <div class="language-selector">
+              <select id="language">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Navigation -->
+      <nav class="main-nav">
+        <div class="container">
+          <div class="nav-wrapper">
+            <div class="logo">
+              <a href="index.html">
+                <img src="images/logo.png" alt="NOW Shipping">
+              </a>
+            </div>
+            <div class="nav-toggle">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <ul class="nav-menu">
+              <li class="nav-item"><a href="index.html">Home</a></li>
+              <li class="nav-item dropdown">
+                <a href="index.html#services">Services <i class="fas fa-chevron-down"></i></a>
+                <ul class="dropdown-menu">
+                  <li><a href="index.html#express-delivery">Express Delivery</a></li>
+                  <li><a href="index.html#international-shipping">International Shipping</a></li>
+                  <li><a href="index.html#ecommerce-solutions">E-commerce Solutions</a></li>
+                  <li><a href="index.html#warehousing">Warehousing & Fulfillment</a></li>
+                  <li><a href="index.html#specialized-shipping">Specialized Shipping</a></li>
+                </ul>
+              </li>
+              <li class="nav-item"><a href="index.html#about">About Us</a></li>
+              <li class="nav-item"><a href="index.html#pricing">Pricing</a></li>
+              <li class="nav-item dropdown">
+                <a href="index.html#resources">Resources <i class="fas fa-chevron-down"></i></a>
+                <ul class="dropdown-menu">
+                  <li><a href="index.html#shipping-calculator">Shipping Calculator</a></li>
+                  <li><a href="index.html#shipping-guides">Shipping Guides</a></li>
+                  <li><a href="index.html#faq">FAQ</a></li>
+                  <li><a href="index.html#blog">Blog</a></li>
+                </ul>
+              </li>
+              <li class="nav-item"><a href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+              <a href="tracking.html" class="btn btn-track active">
+                <i class="fas fa-search"></i> Track Package
+              </a>
+              <a href="index.html#shipping-calculator" class="btn btn-primary" id="getQuoteBtn">
+                <i class="fas fa-calculator"></i> Get a Quote
+              </a>
+              <a href="#" class="btn btn-outline login-btn">
+                <i class="fas fa-user"></i> Login
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Tracking Hero Section -->
+    <section class="tracking-hero">
+      <div class="container">
+        <div class="tracking-hero-content">
+          <h1>Track Your Shipment</h1>
+          <p>Enter your tracking number to get real-time updates on your package</p>
+          <div class="tracking-search-container">
+            <form class="tracking-search-form" id="trackingForm">
+              <div class="tracking-search-input">
+                <i class="fas fa-search"></i>
+                <input type="text" id="trackingNumber" placeholder="Enter tracking number, order ID, or reference number" required>
+                <button type="submit" class="btn btn-primary">Track Now</button>
+              </div>
+            </form>
+            <div class="tracking-options">
+              <span>Track by:</span>
+              <div class="tracking-option-buttons">
+                <button class="tracking-option-btn active" data-option="tracking">
+                  <i class="fas fa-barcode"></i>
+                  <span>Tracking Number</span>
+                </button>
+                <button class="tracking-option-btn" data-option="reference">
+                  <i class="fas fa-hashtag"></i>
+                  <span>Reference Number</span>
+                </button>
+                <button class="tracking-option-btn" data-option="order">
+                  <i class="fas fa-shopping-cart"></i>
+                  <span>Order Number</span>
+                </button>
+                <button class="tracking-option-btn" data-option="email">
+                  <i class="fas fa-envelope"></i>
+                  <span>Email/Phone</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tracking Results Section -->
+    <section class="tracking-results" id="trackingResults">
+      <div class="container">
+        <!-- Tracking Header -->
+        <div class="tracking-header">
+          <div class="tracking-status">
+            <div class="status-icon in-transit">
+              <i class="fas fa-truck"></i>
+            </div>
+            <div class="status-info">
+              <h2>In Transit</h2>
+              <p>Your package is on its way to the destination</p>
+            </div>
+          </div>
+          <div class="tracking-actions-top">
+            <button class="btn btn-outline btn-sm" id="notifyBtn">
+              <i class="fas fa-bell"></i> Get Updates
+            </button>
+            <button class="btn btn-outline btn-sm" id="shareBtn">
+              <i class="fas fa-share-alt"></i> Share
+            </button>
+            <button class="btn btn-outline btn-sm" id="printBtn">
+              <i class="fas fa-print"></i> Print
+            </button>
+          </div>
+        </div>
+
+        <!-- Tracking Progress -->
+        <div class="tracking-progress">
+          <div class="progress-steps">
+            <div class="progress-step completed">
+              <div class="step-icon">
+                <i class="fas fa-box"></i>
+              </div>
+              <div class="step-label">Order Confirmed</div>
+              <div class="step-date">Apr 10, 2023</div>
+            </div>
+            <div class="progress-step completed">
+              <div class="step-icon">
+                <i class="fas fa-warehouse"></i>
+              </div>
+              <div class="step-label">Package Received</div>
+              <div class="step-date">Apr 11, 2023</div>
+            </div>
+            <div class="progress-step completed">
+              <div class="step-icon">
+                <i class="fas fa-shipping-fast"></i>
+              </div>
+              <div class="step-label">In Transit</div>
+              <div class="step-date">Apr 12, 2023</div>
+            </div>
+            <div class="progress-step active">
+              <div class="step-icon">
+                <i class="fas fa-truck"></i>
+              </div>
+              <div class="step-label">Out for Delivery</div>
+              <div class="step-date">Apr 14, 2023</div>
+            </div>
+            <div class="progress-step">
+              <div class="step-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="step-label">Delivered</div>
+              <div class="step-date">Expected Apr 15</div>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-bar-fill" style="width: 75%"></div>
+          </div>
+        </div>
+
+        <!-- Tracking Details -->
+        <div class="tracking-details">
+          <div class="tracking-details-container">
+            <!-- Package Information -->
+            <div class="tracking-card">
+              <div class="tracking-card-header">
+                <h3><i class="fas fa-box"></i> Package Information</h3>
+              </div>
+              <div class="tracking-card-body">
+                <div class="details-grid">
+                  <div class="detail-item">
+                    <h4>Tracking Number</h4>
+                    <p id="displayTrackingNumber">NOW123456789</p>
+                    <button class="copy-btn" data-clipboard-text="NOW123456789" aria-label="Copy tracking number">
+                      <i class="fas fa-copy"></i>
+                    </button>
+                  </div>
+                  <div class="detail-item">
+                    <h4>Service Type</h4>
+                    <p id="serviceType">Express Delivery</p>
+                  </div>
+                  <div class="detail-item">
+                    <h4>Origin</h4>
+                    <p id="origin">New York, NY, USA</p>
+                  </div>
+                  <div class="detail-item">
+                    <h4>Destination</h4>
+                    <p id="destination">Los Angeles, CA, USA</p>
+                  </div>
+                  <div class="detail-item">
+                    <h4>Estimated Delivery</h4>
+                    <p id="estimatedDelivery">April 15, 2023 by 8:00 PM</p>
+                  </div>
+                  <div class="detail-item">
+                    <h4>Status</h4>
+                    <p id="status" class="status-in-transit">Out for Delivery</p>
+                  </div>
+                  <div class="detail-item">
+                    <h4>Package Weight</h4>
+                    <p id="packageWeight">2.5 kg (5.5 lbs)</p>
+                  </div>
+                  <div class="detail-item">
+                    <h4>Dimensions</h4>
+                    <p id="dimensions">30 × 20 × 15 cm</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Shipment Map -->
+            <div class="tracking-card">
+              <div class="tracking-card-header">
+                <h3><i class="fas fa-map-marked-alt"></i> Shipment Location</h3>
+              </div>
+              <div class="tracking-card-body">
+                <div class="tracking-map" id="map">
+                  <!-- Map will be loaded here -->
+                  <img src="images/tracking-map.jpg" alt="Package Location Map" class="tracking-map-image">
+                </div>
+                <div class="map-details">
+                  <div class="map-detail">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                      <h4>Current Location</h4>
+                      <p>Los Angeles Distribution Center</p>
+                    </div>
+                  </div>
+                  <div class="map-detail">
+                    <i class="fas fa-route"></i>
+                    <div>
+                      <h4>Distance Traveled</h4>
+                      <p>2,450 miles (3,943 km)</p>
+                    </div>
+                  </div>
+                  <div class="map-detail">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                      <h4>Estimated Time to Delivery</h4>
+                      <p>Approximately 3 hours</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipment Timeline -->
+          <div class="tracking-card">
+            <div class="tracking-card-header">
+              <h3><i class="fas fa-history"></i> Shipment History</h3>
+            </div>
+            <div class="tracking-card-body">
+              <div class="timeline">
+                <div class="timeline-item active">
+                  <div class="timeline-date">
+                    <div class="date">Apr 14, 2023</div>
+                    <div class="time">07:30 AM PDT</div>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-icon">
+                      <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="timeline-info">
+                      <h4>Out for Delivery</h4>
+                      <p>Your package is out for delivery to your address.</p>
+                      <div class="timeline-location">Los Angeles, CA, USA</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">
+                    <div class="date">Apr 13, 2023</div>
+                    <div class="time">10:45 PM PDT</div>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-icon">
+                      <i class="fas fa-building"></i>
+                    </div>
+                    <div class="timeline-info">
+                      <h4>Arrived at Destination Facility</h4>
+                      <p>Your package has arrived at the destination sorting facility.</p>
+                      <div class="timeline-location">Los Angeles, CA, USA</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">
+                    <div class="date">Apr 12, 2023</div>
+                    <div class="time">08:45 AM CDT</div>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-icon">
+                      <i class="fas fa-shipping-fast"></i>
+                    </div>
+                    <div class="timeline-info">
+                      <h4>In Transit</h4>
+                      <p>Your package is in transit to the destination.</p>
+                      <div class="timeline-location">En Route to Los Angeles, CA, USA</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">
+                    <div class="date">Apr 11, 2023</div>
+                    <div class="time">10:30 AM EDT</div>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-icon">
+                      <i class="fas fa-warehouse"></i>
+                    </div>
+                    <div class="timeline-info">
+                      <h4>Package Received</h4>
+                      <p>Your package has been received at our facility and is being processed for shipment.</p>
+                      <div class="timeline-location">New York, NY, USA</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">
+                    <div class="date">Apr 10, 2023</div>
+                    <div class="time">09:15 AM EDT</div>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-icon">
+                      <i class="fas fa-box"></i>
+                    </div>
+                    <div class="timeline-info">
+                      <h4>Order Confirmed</h4>
+                      <p>Your order has been confirmed and is being processed. Shipping label created.</p>
+                      <div class="timeline-location">New York, NY, USA</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Options -->
+        <div class="delivery-options">
+          <h3><i class="fas fa-cog"></i> Delivery Options</h3>
+          <div class="options-grid">
+            <div class="option-card">
+              <div class="option-icon">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <h4>Reschedule Delivery</h4>
+              <p>Choose a different delivery date that works better for you.</p>
+              <button class="btn btn-outline btn-sm">Reschedule</button>
+            </div>
+            <div class="option-card">
+              <div class="option-icon">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <h4>Change Delivery Address</h4>
+              <p>Redirect your package to a different address.</p>
+              <button class="btn btn-outline btn-sm">Change Address</button>
+            </div>
+            <div class="option-card">
+              <div class="option-icon">
+                <i class="fas fa-store"></i>
+              </div>
+              <h4>Pickup from Location</h4>
+              <p>Pick up your package from a nearby service point.</p>
+              <button class="btn btn-outline btn-sm">Find Locations</button>
+            </div>
+            <div class="option-card">
+              <div class="option-icon">
+                <i class="fas fa-signature"></i>
+              </div>
+              <h4>Signature Options</h4>
+              <p>Change your signature requirements for delivery.</p>
+              <button class="btn btn-outline btn-sm">Update Options</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tracking Actions -->
+        <div class="tracking-actions">
+          <button class="btn btn-secondary"><i class="fas fa-print"></i> Print Details</button>
+          <button class="btn btn-secondary"><i class="fas fa-envelope"></i> Email Updates</button>
+          <button class="btn btn-secondary"><i class="fas fa-file-pdf"></i> Download PDF</button>
+          <button class="btn btn-primary"><i class="fas fa-headset"></i> Contact Support</button>
+        </div>
+
+        <!-- Related Shipments -->
+        <div class="related-shipments">
+          <h3><i class="fas fa-boxes"></i> Your Other Shipments</h3>
+          <div class="shipments-table">
+            <div class="shipment-table-header">
+              <div class="shipment-cell">Tracking Number</div>
+              <div class="shipment-cell">Origin</div>
+              <div class="shipment-cell">Destination</div>
+              <div class="shipment-cell">Status</div>
+              <div class="shipment-cell">Est. Delivery</div>
+              <div class="shipment-cell">Actions</div>
+            </div>
+            <div class="shipment-table-row">
+              <div class="shipment-cell">NOW987654321</div>
+              <div class="shipment-cell">Chicago, IL</div>
+              <div class="shipment-cell">Miami, FL</div>
+              <div class="shipment-cell"><span class="status-badge in-transit">In Transit</span></div>
+              <div class="shipment-cell">Apr 18, 2023</div>
+              <div class="shipment-cell">
+                <button class="btn btn-sm btn-outline">Track</button>
+              </div>
+            </div>
+            <div class="shipment-table-row">
+              <div class="shipment-cell">NOW567891234</div>
+              <div class="shipment-cell">Seattle, WA</div>
+              <div class="shipment-cell">Boston, MA</div>
+              <div class="shipment-cell"><span class="status-badge processing">Processing</span></div>
+              <div class="shipment-cell">Apr 20, 2023</div>
+              <div class="shipment-cell">
+                <button class="btn btn-sm btn-outline">Track</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Similar Tracking Section -->
+    <section class="similar-tracking">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-subtitle">Need Help?</span>
+          <h2 class="section-title">Need to Ship Something?</h2>
+          <p class="section-description">Get started with our easy shipping process</p>
+        </div>
+        <div class="similar-tracking-grid">
+          <div class="similar-tracking-card">
+            <div class="similar-tracking-icon">
+              <i class="fas fa-calculator"></i>
+            </div>
+            <h3>Get a Quote</h3>
+            <p>Calculate shipping costs instantly for your next shipment.</p>
+            <a href="index.html#shipping-calculator" class="btn btn-outline">Calculate Now</a>
+          </div>
+          <div class="similar-tracking-card">
+            <div class="similar-tracking-icon">
+              <i class="fas fa-box"></i>
+            </div>
+            <h3>Ship a Package</h3>
+            <p>Create a new shipment and schedule a pickup.</p>
+            <a href="#" class="btn btn-outline">Ship Now</a>
+          </div>
+          <div class="similar-tracking-card">
+            <div class="similar-tracking-icon">
+              <i class="fas fa-headset"></i>
+            </div>
+            <h3>Need Help?</h3>
+            <p>Our shipping experts are ready to assist you.</p>
+            <a href="index.html#contact" class="btn btn-outline">Contact Us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-top">
+        <div class="container">
+          <div class="footer-widgets">
+            <div class="footer-widget">
+              <div class="footer-logo">
+                <img src="images/logo-white.png" alt="NOW Shipping">
+              </div>
+              <p class="footer-about">NOW Shipping provides fast, reliable shipping solutions for businesses and individuals worldwide. With our extensive network and cutting-edge technology, we ensure your packages arrive on time, every time.</p>
+              <div class="footer-social">
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+              </div>
+            </div>
+            <div class="footer-widget">
+              <h3 class="footer-widget-title">Quick Links</h3>
+              <ul class="footer-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#about">About Us</a></li>
+                <li><a href="index.html#services">Services</a></li>
+                <li><a href="index.html#pricing">Pricing</a></li>
+                <li><a href="index.html#contact">Contact Us</a></li>
+                <li><a href="tracking.html">Track Package</a></li>
+                <li><a href="index.html#shipping-calculator">Get a Quote</a></li>
+                <li><a href="index.html#faq">FAQ</a></li>
+              </ul>
+            </div>
+            <div class="footer-widget">
+              <h3 class="footer-widget-title">Our Services</h3>
+              <ul class="footer-links">
+                <li><a href="index.html#express-delivery">Express Delivery</a></li>
+                <li><a href="index.html#international-shipping">International Shipping</a></li>
+                <li><a href="index.html#ecommerce-solutions">E-commerce Solutions</a></li>
+                <li><a href="index.html#warehousing">Warehousing & Fulfillment</a></li>
+                <li><a href="index.html#specialized-shipping">Specialized Shipping</a></li>
+                <li><a href="index.html#package-protection">Package Protection</a></li>
+                <li><a href="#">Freight Services</a></li>
+                <li><a href="#">Customs Clearance</a></li>
+              </ul>
+            </div>
+            <div class="footer-widget">
+              <h3 class="footer-widget-title">Resources</h3>
+              <ul class="footer-links">
+                <li><a href="index.html#blog">Blog</a></li>
+                <li><a href="#">Shipping Guides</a></li>
+                <li><a href="#">Packaging Tips</a></li>
+                <li><a href="#">Customs Information</a></li>
+                <li><a href="#">Size & Weight Guidelines</a></li>
+                <li><a href="#">Prohibited Items</a></li>
+                <li><a href="index.html#shipping-calculator">Shipping Calculator</a></li>
+                <li><a href="#">API Documentation</a></li>
+              </ul>
+            </div>
+            <div class="footer-widget">
+              <h3 class="footer-widget-title">Newsletter</h3>
+              <p class="footer-newsletter-text">Subscribe to our newsletter to receive updates, shipping tips, and exclusive offers.</p>
+              <form class="footer-newsletter">
+                <div class="newsletter-form">
+                  <input type="email" placeholder="Your Email Address" required>
+                  <button type="submit" class="btn btn-primary">Subscribe</button>
+                </div>
+              </form>
+              <div class="footer-contact">
+                <h3 class="footer-widget-title">Contact Us</h3>
+                <ul class="footer-contact-info">
+                  <li><i class="fas fa-phone"></i> +1 (800) NOW-SHIP</li>
+                  <li><i class="fas fa-envelope"></i> support@nowshipping.com</li>
+                  <li><i class="fas fa-map-marker-alt"></i> 123 Logistics Way, Shipping City, SC 12345</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="container">
+          <div class="footer-bottom-content">
+            <div class="footer-copyright">
+              <p>&copy; 2023 NOW Shipping. All Rights Reserved.</p>
+            </div>
+            <div class="footer-bottom-links">
+              <a href="#">Privacy Policy</a>
+              <a href="#">Terms of Service</a>
+              <a href="#">Shipping Policy</a>
+              <a href="#">Cookie Policy</a>
+              <a href="#">Sitemap</a>
+            </div>
+            <div class="footer-payment">
+              <span>We Accept:</span>
+              <div class="payment-icons">
+                <i class="fab fa-cc-visa"></i>
+                <i class="fab fa-cc-mastercard"></i>
+                <i class="fab fa-cc-amex"></i>
+                <i class="fab fa-cc-discover"></i>
+                <i class="fab fa-cc-paypal"></i>
+                <i class="fab fa-apple-pay"></i>
+                <i class="fab fa-google-pay"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <a href="#" class="back-to-top" aria-label="Back to top">
+      <i class="fas fa-arrow-up"></i>
+    </a>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+      <div class="modal-overlay"></div>
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>Account Access</h3>
+          <button class="modal-close" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-tabs">
+          <button class="modal-tab active" data-tab="login">Login</button>
+          <button class="modal-tab" data-tab="register">Register</button>
+        </div>
+        <div class="modal-content">
+          <div class="modal-panel active" id="login-panel">
+            <form class="login-form">
+              <div class="form-group">
+                <label for="login-email">Email Address</label>
+                <input type="email" id="login-email" required>
+              </div>
+              <div class="form-group">
+                <label for="login-password">Password</label>
+                <div class="password-input">
+                  <input type="password" id="login-password" required>
+                  <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye-slash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="form-options">
+                <label class="checkbox">
+                  <input type="checkbox" name="remember">
+                  <span>Remember me</span>
+                </label>
+                <a href="#" class="forgot-password">Forgot Password?</a>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+            <div class="social-login">
+              <p>Or login with</p>
+              <div class="social-login-buttons">
+                <button class="social-btn google">
+                  <i class="fab fa-google"></i>
+                  <span>Google</span>
+                </button>
+                <button class="social-btn facebook">
+                  <i class="fab fa-facebook-f"></i>
+                  <span>Facebook</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-panel" id="register-panel">
+            <form class="register-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="register-fname">First Name</label>
+                  <input type="text" id="register-fname" required>
+                </div>
+                <div class="form-group">
+                  <label for="register-lname">Last Name</label>
+                  <input type="text" id="register-lname" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="register-email">Email Address</label>
+                <input type="email" id="register-email" required>
+              </div>
+              <div class="form-group">
+                <label for="register-phone">Phone Number</label>
+                <input type="tel" id="register-phone" required>
+              </div>
+              <div class="form-group">
+                <label for="register-password">Password</label>
+                <div class="password-input">
+                  <input type="password" id="register-password" required>
+                  <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye-slash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="register-confirm">Confirm Password</label>
+                <div class="password-input">
+                  <input type="password" id="register-confirm" required>
+                  <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye-slash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="checkbox">
+                  <input type="checkbox" name="terms" required>
+                  <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div class="modal" id="notificationModal">
+      <div class="modal-overlay"></div>
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>Get Delivery Updates</h3>
+          <button class="modal-close" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-content">
+          <form class="notification-form">
+            <div class="form-group">
+              <label for="notification-method">How would you like to receive updates?</label>
+              <select id="notification-method">
+                <option value="email">Email</option>
+                <option value="sms">SMS Text Message</option>
+                <option value="both">Both Email and SMS</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="notification-email">Email Address</label>
+              <input type="email" id="notification-email" placeholder="Enter your email address">
+            </div>
+            <div class="form-group">
+              <label for="notification-phone">Phone Number</label>
+              <input type="tel" id="notification-phone" placeholder="Enter your phone number">
+            </div>
+            <div class="form-group">
+              <label>Notification Preferences</label>
+              <div class="checkbox-group">
+                <label class="checkbox">
+                  <input type="checkbox" name="status-updates" checked>
+                  <span>Status Updates</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" name="delivery-confirmation" checked>
+                  <span>Delivery Confirmation</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" name="delivery-exceptions">
+                  <span>Delivery Exceptions</span>
+                </label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Set Up Notifications</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal" id="shareModal">
+      <div class="modal-overlay"></div>
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>Share Tracking Information</h3>
+          <button class="modal-close" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-content">
+          <div class="share-options">
+            <div class="share-link">
+              <label for="tracking-link">Tracking Link</label>
+              <div class="share-link-input">
+                <input type="text" id="tracking-link" value="https://nowshipping.com/track/NOW123456789" readonly>
+                <button class="copy-btn" data-clipboard-target="#tracking-link" aria-label="Copy link">
+                  <i class="fas fa-copy"></i>
+                </button>
+              </div>
+            </div>
+            <div class="share-social">
+              <h4>Share via Social Media</h4>
+              <div class="social-share-buttons">
+                <a href="#" class="social-share-btn facebook" aria-label="Share on Facebook">
+                  <i class="fab fa-facebook-f"></i>
+                  <span>Facebook</span>
+                </a>
+                <a href="#" class="social-share-btn twitter" aria-label="Share on Twitter">
+                  <i class="fab fa-twitter"></i>
+                  <span>Twitter</span>
+                </a>
+                <a href="#" class="social-share-btn whatsapp" aria-label="Share on WhatsApp">
+                  <i class="fab fa-whatsapp"></i>
+                  <span>WhatsApp</span>
+                </a>
+                <a href="#" class="social-share-btn email" aria-label="Share via Email">
+                  <i class="fas fa-envelope"></i>
+                  <span>Email</span>
+                </a>
+              </div>
+            </div>
+            <div class="share-email">
+              <h4>Share via Email</h4>
+              <form class="share-email-form">
+                <div class="form-group">
+                  <label for="share-email">Recipient's Email</label>
+                  <input type="email" id="share-email" placeholder="Enter email address" required>
+                </div>
+                <div class="form-group">
+                  <label for="share-message">Message (Optional)</label>
+                  <textarea id="share-message" rows="3" placeholder="Add a personal message"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Send</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cookie Consent -->
+    <div class="cookie-consent">
+      <div class="cookie-content">
+        <div class="cookie-text">
+          <p>We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies. <a href="#">Learn more</a></p>
+        </div>
+        <div class="cookie-buttons">
+          <button class="btn btn-sm btn-outline cookie-settings">Cookie Settings</button>
+          <button class="btn btn-sm btn-primary accept-cookies">Accept All</button>
+        </div>
+      </div>
+    </div>
+
+    <script ></script>
+    <script ></script>
+</body>
+</html>

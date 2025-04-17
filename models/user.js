@@ -45,6 +45,10 @@ const UserSchema = new mongoose.Schema(
         type: [String],
         required: false,
       },
+      socialLinks: {
+        type: Object,
+        required: false,
+      },
     },
     pickUpAdress: {
       pickUpPointInMaps: {
@@ -64,6 +68,10 @@ const UserSchema = new mongoose.Schema(
         required: false,
       },
       nearbyLandmark: {
+        type: String,
+        required: false,
+      },
+      pickupPhone: {
         type: String,
         required: false,
       },
@@ -88,7 +96,7 @@ const UserSchema = new mongoose.Schema(
             if (this.paymentMethod.paymentChoice === 'instaPay') {
               return value.hasOwnProperty('IPAorPhoneNumber');
             } else if (this.paymentMethod.paymentChoice === 'mobileWallet') {
-              return value.hasOwnProperty('phoneNumber');
+              return value.hasOwnProperty('mobileWalletNumber');
             } else if (this.paymentMethod.paymentChoice === 'bankTransfer') {
               return (
                 value.hasOwnProperty('bankName') &&
@@ -141,7 +149,6 @@ const UserSchema = new mongoose.Schema(
       type: [mongoose.Schema.Types.Mixed],
       default: [],
     },
-    
 
     isCompleted: {
       type: Boolean,
@@ -164,16 +171,15 @@ const UserSchema = new mongoose.Schema(
 );
 
 // Method to generate a verification token
-UserSchema.methods.generateVerificationToken = function() {
+UserSchema.methods.generateVerificationToken = function () {
   console.log('Generating verification token...');
-    const token = crypto.randomBytes(20).toString('hex');
-    this.verificationToken = token;
-    console.log('Verification token:', this.verificationToken);
-    this.verificationTokenExpires = Date.now() + 3600000; // 1 hour
-    // save the user with the new token and expiration time
-    this.save();
-    return token;
+  const token = crypto.randomBytes(20).toString('hex');
+  this.verificationToken = token;
+  this.verificationTokenExpires = Date.now() + 3600000; // 1 hour
+  console.log('Verification token:', this.verificationToken);
+  return token; // No save here!
 };
+
 
 // Method to verify the user's email
 UserSchema.methods.verifyEmail = function(token) {

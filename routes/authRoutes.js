@@ -3,6 +3,11 @@ const router = express.Router();
 
 const authController = require('../controllers/authController2.js');
 
+//index
+// router.get('/', authController.index);
+
+
+router.get('/', authController.loginPage);
 router.get('/login', authController.loginPage);
 router.get('/register', authController.registerPage);
 

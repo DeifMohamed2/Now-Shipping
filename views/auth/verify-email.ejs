@@ -1,0 +1,822 @@
+<%- contentFor('HeaderCss') %>
+<%-include("../partials/title-meta", { "title" : "Verify Email" }) %>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --primary: #F39720;
+    --secondary: #FDB614;
+    --accent: #8FCAE5;
+    --light: #FDDE00;
+    --dark: #2B71B9;
+    --neutral: #EFEICF;
+    --white: #FFFFFF;
+    --gray-100: #F9FAFB;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-800: #1F2937;
+    --success: #10B981;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--gray-100);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Top Navbar Styles */
+  .top-navbar {
+    background-color: var(--white);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .navbar-logo {
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar-logo svg {
+    width: 32px;
+    height: 32px;
+    fill: var(--primary);
+    margin-right: 12px;
+  }
+
+  .navbar-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: 0;
+  }
+
+  .navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-link {
+    color: var(--gray-500);
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--primary);
+    background-color: rgba(243, 151, 32, 0.05);
+  }
+
+  .nav-link.active {
+    color: var(--primary);
+    background-color: rgba(243, 151, 32, 0.1);
+  }
+
+  .navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Mobile menu */
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background-color: var(--white);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    padding: 16px;
+  }
+
+  .mobile-menu-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .mobile-menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--gray-500);
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  /* Verify Email Container Styles */
+  .verify-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 90px 20px 20px;
+    /* Add top padding to account for navbar */
+  }
+
+  /* Background Animation Elements */
+  .animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background-color: var(--gray-100);
+    opacity: 0.8;
+  }
+
+  /* Truck animations */
+  .truck {
+    position: absolute;
+    width: 120px;
+    height: 60px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'%3E%3Cpath fill='%232B71B9' d='M48 0C21.5 0 0 21.5 0 48V368c0 26.5 21.5 48 48 48H64c0 53 43 96 96 96s96-43 96-96H384c0 53 43 96 96 96s96-43 96-96h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V288 256 237.3c0-17-6.7-33.3-18.7-45.3L512 114.7c-12-12-28.3-18.7-45.3-18.7H416V48c0-26.5-21.5-48-48-48H48zM416 160h50.7L544 237.3V256H416V160zM112 416a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zm368-48a48 48 0 1 1 0 96 48 48 0 1 1 0-96z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.1;
+  }
+
+  .truck-1 {
+    top: 10%;
+    left: -120px;
+    animation: truckMove1 20s linear infinite;
+  }
+
+  .truck-2 {
+    top: 30%;
+    right: -120px;
+    transform: scaleX(-1);
+    animation: truckMove2 25s linear infinite;
+  }
+
+  .truck-3 {
+    bottom: 15%;
+    left: -120px;
+    animation: truckMove1 22s linear infinite 5s;
+  }
+
+  @keyframes truckMove1 {
+    0% {
+      left: -120px;
+    }
+
+    100% {
+      left: 100%;
+    }
+  }
+
+  @keyframes truckMove2 {
+    0% {
+      right: -120px;
+    }
+
+    100% {
+      right: 100%;
+    }
+  }
+
+  /* Package animations */
+  .package {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23F39720' d='M50.7 58.5L0 160H208V32H93.7C75.5 32 58.9 42.3 50.7 58.5zM240 160H448L397.3 58.5C389.1 42.3 372.5 32 354.3 32H240V160zm208 32H0V416c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V192z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.15;
+  }
+
+  .package-1 {
+    top: 20%;
+    left: 10%;
+    animation: packageFloat 10s ease-in-out infinite;
+  }
+
+  .package-2 {
+    top: 60%;
+    right: 15%;
+    animation: packageFloat 12s ease-in-out infinite 2s;
+  }
+
+  .package-3 {
+    bottom: 30%;
+    left: 30%;
+    animation: packageFloat 14s ease-in-out infinite 1s;
+  }
+
+  .package-4 {
+    top: 40%;
+    right: 40%;
+    animation: packageFloat 11s ease-in-out infinite 3s;
+  }
+
+  @keyframes packageFloat {
+
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+      transform: translateY(-20px) rotate(5deg);
+    }
+  }
+
+  /* Map route animation */
+  .map-route {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--primary), var(--primary) 10px, transparent 10px, transparent 20px);
+    opacity: 0.2;
+  }
+
+  .map-route-1 {
+    top: 25%;
+    animation: routeMove 30s linear infinite;
+  }
+
+  .map-route-2 {
+    bottom: 35%;
+    animation: routeMove 30s linear infinite reverse;
+  }
+
+  @keyframes routeMove {
+    0% {
+      background-position: 0 0;
+    }
+
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  /* Verify Card Styles */
+  .verify-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 480px;
+    padding: 40px;
+    position: relative;
+    z-index: 10;
+    animation: fadeIn 0.6s ease-out;
+    text-align: center;
+  }
+
+  .verify-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(243, 151, 32, 0.1);
+    border-radius: 50%;
+    animation: pulseIcon 2s infinite ease-in-out;
+  }
+
+  @keyframes pulseIcon {
+
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  .verify-icon svg {
+    width: 40px;
+    height: 40px;
+    fill: var(--primary);
+  }
+
+  .verify-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 16px;
+  }
+
+  .verify-subtitle {
+    font-size: 16px;
+    color: var(--gray-500);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .email-highlight {
+    font-weight: 600;
+    color: var(--gray-800);
+    background-color: var(--gray-100);
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin: 8px 0;
+  }
+
+  .verify-steps {
+    text-align: left;
+    margin: 24px 0;
+    padding: 16px;
+    background-color: var(--gray-100);
+    border-radius: 8px;
+  }
+
+  .verify-steps-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 12px;
+  }
+
+  .verify-steps-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .verify-steps-list li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: var(--gray-500);
+  }
+
+  .verify-steps-list li:last-child {
+    margin-bottom: 0;
+  }
+
+  .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .step-text {
+    padding-top: 2px;
+  }
+
+  .resend-container {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .resend-text {
+    font-size: 14px;
+    color: var(--gray-500);
+  }
+
+  .resend-timer {
+    font-weight: 600;
+    color: var(--gray-800);
+  }
+
+  .btn-resend {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--white);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-resend:hover {
+    background-color: rgba(243, 151, 32, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .btn-resend:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-login {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 10px 20px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-login:hover {
+    background-color: var(--secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(243, 151, 32, 0.2);
+  }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 20px 0;
+    font-size: 14px;
+    animation: slideDown 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .alert-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+
+  .alert-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: var(--success);
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+  }
+
+  .alert-icon i {
+    font-size: 14px;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Responsive styles */
+  @media (max-width: 992px) {
+
+    .navbar-links,
+    .navbar-actions {
+      display: none;
+    }
+
+    .mobile-menu-btn {
+      display: block;
+    }
+
+    .mobile-menu.open {
+      display: block;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .verify-card {
+      padding: 30px 20px;
+    }
+  }
+</style>
+
+<%- contentFor('body') %>
+<!-- Top Navbar -->
+<nav class="top-navbar">
+  <div class="navbar-container">
+    <a href="/" class="navbar-brand">
+      <div class="navbar-logo">
+        <svg viewBox="0 0 100 100">
+          <path d="M50,15 L60,25 L75,20 L75,40 L90,50 L75,60 L75,80 L60,75 L50,85 L40,75 L25,80 L25,60 L10,50 L25,40 L25,20 L40,25 Z M50,35 C41.7,35 35,41.7 35,50 C35,58.3 41.7,65 50,65 C58.3,65 65,58.3 65,50 C65,41.7 58.3,35 50,35 Z"></path>
+        </svg>
+      </div>
+      <h1 class="navbar-title">Now Shipping</h1>
+    </a>
+
+    <div class="navbar-links">
+      <!-- <a href="#" class="nav-link">Home</a>
+      <a href="#" class="nav-link">Services</a>
+      <a href="#" class="nav-link">Tracking</a>
+      <a href="#" class="nav-link">About Us</a>
+      <a href="#" class="nav-link">Contact</a> -->
+    </div>
+
+    <div class="navbar-actions">
+      <a href="#" class="btn-outline">Help</a>
+      <a href="#" class="btn-primary">Get Started</a>
+    </div>
+
+    <button class="mobile-menu-btn" id="mobile-menu-toggle">
+      <i class="ri-menu-line"></i>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mobile-menu-links">
+    <!-- <a href="#" class="nav-link">Home</a>
+    <a href="#" class="nav-link">Services</a>
+    <a href="#" class="nav-link">Tracking</a>
+    <a href="#" class="nav-link">About Us</a>
+    <a href="#" class="nav-link">Contact</a> -->
+  </div>
+  <div class="mobile-menu-actions">
+    <a href="#" class="btn-outline">Help</a>
+    <a href="#" class="btn-primary">Get Started</a>
+  </div>
+</div>
+
+<!-- Animated Background -->
+<div class="animated-background">
+  <!-- Truck animations -->
+  <div class="truck truck-1"></div>
+  <div class="truck truck-2"></div>
+  <div class="truck truck-3"></div>
+
+  <!-- Package animations -->
+  <div class="package package-1"></div>
+  <div class="package package-2"></div>
+  <div class="package package-3"></div>
+  <div class="package package-4"></div>
+
+  <!-- Map routes -->
+  <div class="map-route map-route-1"></div>
+  <div class="map-route map-route-2"></div>
+</div>
+
+<div class="verify-container">
+  <!-- Verify card -->
+  <div class="verify-card">
+    <div class="verify-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6ZM20 6L12 11L4 6H20ZM20 18H4V8L12 13L20 8V18Z" />
+      </svg>
+    </div>
+
+    <h1 class="verify-title">Verify Your Email</h1>
+    <p class="verify-subtitle">
+      We've sent a verification link to your email address:
+      <span class="email-highlight" id="userEmail">user@example.com</span>
+      <br>
+      Please check your inbox and click the link to verify your account.
+    </p>
+
+    <div class="verify-steps">
+      <h2 class="verify-steps-title">Next Steps:</h2>
+      <ul class="verify-steps-list">
+        <li>
+          <span class="step-number">1</span>
+          <span class="step-text">Check your email inbox (and spam folder)</span>
+        </li>
+        <li>
+          <span class="step-number">2</span>
+          <span class="step-text">Click the verification link in the email</span>
+        </li>
+        <li>
+          <span class="step-number">3</span>
+          <span class="step-text">Once verified, you can log in to your account</span>
+        </li>
+      </ul>
+    </div>
+
+    <div id="successAlert" class="alert alert-success" style="display: none;">
+      <div class="alert-icon">
+        <i class="ri-check-line"></i>
+      </div>
+      <div>Verification email sent successfully!</div>
+    </div>
+
+    <div class="resend-container">
+      <p class="resend-text">
+        Didn't receive the email?
+        <span id="resendTimer" class="resend-timer" style="display: none;">
+          Resend in <span id="timerCount">60</span>s
+        </span>
+      </p>
+      <button id="resendBtn" class="btn-resend">
+        Resend Verification Email
+      </button>
+    </div>
+
+    <a href="/login" class="btn-login">Back to Login</a>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu toggle
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (mobileMenuToggle && mobileMenu) {
+      mobileMenuToggle.addEventListener('click', function() {
+        mobileMenu.classList.toggle('open');
+        this.innerHTML = mobileMenu.classList.contains('open') ?
+          '<i class="ri-close-line"></i>' :
+          '<i class="ri-menu-line"></i>';
+      });
+
+      // Close mobile menu on window resize (if screen becomes larger)
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 992) {
+          mobileMenu.classList.remove('open');
+          mobileMenuToggle.innerHTML = '<i class="ri-menu-line"></i>';
+        }
+      });
+    }
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+
+    // Set email in the UI
+    const userEmailElement = document.getElementById('userEmail');
+    if (userEmailElement && email) {
+      userEmailElement.textContent = email;
+    }
+
+    // Resend email functionality
+    const resendBtn = document.getElementById('resendBtn');
+    const resendTimer = document.getElementById('resendTimer');
+    const timerCount = document.getElementById('timerCount');
+    const successAlert = document.getElementById('successAlert');
+
+    let countdown = 60;
+    let countdownInterval;
+
+    function startCountdown() {
+      resendBtn.disabled = true;
+      resendTimer.style.display = 'inline';
+      timerCount.textContent = countdown;
+
+      countdownInterval = setInterval(function() {
+        countdown--;
+        timerCount.textContent = countdown;
+
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          resendBtn.disabled = false;
+          resendTimer.style.display = 'none';
+          countdown = 60;
+        }
+      }, 1000);
+    }
+
+    if (resendBtn) {
+      resendBtn.addEventListener('click', function() {
+        // Show success message
+        successAlert.style.display = 'flex';
+
+        // Hide success message after 5 seconds
+        setTimeout(function() {
+          successAlert.style.display = 'none';
+        }, 5000);
+
+        // Start countdown
+        startCountdown();
+
+        // Here you would typically make an API call to resend the verification email
+        // For example:
+        // fetch('/api/resend-verification', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify({ email: userEmailElement.textContent }),
+        // })
+        // .then(response => response.json())
+        // .then(data => {
+        //   if (data.success) {
+        //     successAlert.style.display = 'flex';
+        //     setTimeout(() => {
+        //       successAlert.style.display = 'none';
+        //     }, 5000);
+        //   }
+        // });
+      });
+    }
+
+    // Create dynamic truck animations
+    function createExtraTrucks() {
+      const background = document.querySelector('.animated-background');
+
+      // Create additional trucks with random positions and speeds
+      for (let i = 0; i < 3; i++) {
+        const truck = document.createElement('div');
+        truck.classList.add('truck');
+
+        const isLeftToRight = Math.random() > 0.5;
+        const verticalPosition = Math.random() * 70 + 15; // Between 15% and 85%
+        const animationDuration = Math.random() * 10 + 15; // Between 15s and 25s
+        const delay = Math.random() * 5; // Between 0s and 5s
+
+        truck.style.top = `${verticalPosition}%`;
+
+        if (isLeftToRight) {
+          truck.style.left = '-120px';
+          truck.style.animation = `truckMove1 ${animationDuration}s linear infinite ${delay}s`;
+        } else {
+          truck.style.right = '-120px';
+          truck.style.transform = 'scaleX(-1)';
+          truck.style.animation = `truckMove2 ${animationDuration}s linear infinite ${delay}s`;
+        }
+
+        background.appendChild(truck);
+      }
+    }
+
+    // Initialize extra trucks
+    createExtraTrucks();
+  });
+</script>
