@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const Admin = require('../models/admin');
-const Courier = require('../models/Courier');
+const Courier = require('../models/courier');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const Courier = require('../models/Courier');
+const Courier = require('../models/courier');
 const jwtSecret = process.env.JWT_SECRET;
 
 const courierController = require('../controllers/courierController.js');
