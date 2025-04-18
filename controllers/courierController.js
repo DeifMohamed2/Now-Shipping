@@ -1,5 +1,5 @@
 const Order = require('../models/order');
-const Courier = require('../models/Courier');
+const Courier = require('../models/courier');
 const Pickup = require('../models/pickup');
 const User = require('../models/user');
 
