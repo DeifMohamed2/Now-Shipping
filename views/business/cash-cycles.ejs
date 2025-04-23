@@ -73,8 +73,8 @@
       </div>
       <div class="d-flex">
         <div class="btn-group" role="group">
-          <button type="button" class="time-filter-btn active" data-period="today">Today</button>
-          <button type="button" class="time-filter-btn" data-period="week">This Week</button>
+          <button type="button" class="time-filter-btn" data-period="today">Today</button>
+          <button type="button" class="time-filter-btn active" data-period="week">This Week</button>
           <button type="button" class="time-filter-btn" data-period="month">This Month</button>
           <button type="button" class="time-filter-btn" data-period="year">This Year</button>
           <button type="button" class="time-filter-btn" data-period="all">All Time</button>
@@ -337,7 +337,7 @@
     });
     
 
-    getOrdersAndTotals('today'); // Fetch today's data on load
+    getOrdersAndTotals('week'); // Fetch today's data on load
 
 
 
@@ -517,7 +517,7 @@
                         <input class="form-check-input" type="checkbox">
                     </div>
                 </td>
-                <td><a href="/business/orders/${order.orderNumber}" class="fw-medium link-primary">#${order.orderNumber}</a></td>
+                <td><a href="/business/order-details/${order.orderNumber}" class="fw-medium link-primary">#${order.orderNumber}</a></td>
                 <td>${order.orderShipping.orderType}</td>
                 <td><span class="badge badge-status bg-${getStatusColor(order.orderStatus)}-subtle text-${getStatusColor(order.orderStatus)}">${order.orderStatus}</span></td>
                 <td>${new Date(order.orderDate).toLocaleDateString('en-US', {day: 'numeric', month: 'short', year: 'numeric'})}</td>

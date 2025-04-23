@@ -153,25 +153,21 @@ const orderSchema = new mongoose.Schema({
     ref: 'users',
     required: true,
   },
-
   orderFullyCompleted: {
     type: Boolean,
     required: true,
     default: false,
   },
-
-
-
   completedDate: {
     type: Date,
     required: false,
   },
-
   moneyReleaseDate: {
     type: Date,
     required: false,
   },
-
+}, {
+  timestamps: true
 });
 
 

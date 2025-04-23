@@ -158,6 +158,12 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    verificationOTP:{
+      type: String,
+    },
+    verificationOTPExpires:{
+      type: String,
+    },
     verificationToken: {
       type: String,
     },
@@ -178,6 +184,14 @@ UserSchema.methods.generateVerificationToken = function () {
   this.verificationTokenExpires = Date.now() + 3600000; // 1 hour
   console.log('Verification token:', this.verificationToken);
   return token; // No save here!
+};
+
+// Method to generate a OTP Code
+UserSchema.methods.generateOTP = function () {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    this.verificationOTP = otp;
+    this.verificationOTPExpires = Date.now() + 300000; // 5 minutes
+    return otp; // No save here!
 };
 
 

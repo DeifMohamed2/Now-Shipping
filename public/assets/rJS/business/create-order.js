@@ -269,11 +269,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (response.ok) {
                 document.getElementById('orderNmber').textContent = data.order.orderNumber;
+                document.querySelector('[data-bs-target="#pills-finish"]').classList.remove('disabled')
                 document.querySelector('[data-bs-target="#pills-finish"]').click();
                 form.reset();
-                document.querySelectorAll('.nav-link').forEach(function(tab) {
+                document
+                  .querySelectorAll('.nav-create')
+                  .forEach(function (tab) {
                     tab.classList.add('disabled');
-                });
+                  });
             } else {
                 Swal.fire({
                     icon: 'error',

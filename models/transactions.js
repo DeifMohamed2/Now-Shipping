@@ -20,6 +20,10 @@ const transactionSchema = new Schema(
         'withdrawal',
       ],
     },
+    ordersDetails: {
+      type: Object,
+      required: true,
+    },
     transactionAmount: {
       type: Number,
     },

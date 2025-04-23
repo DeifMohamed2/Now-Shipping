@@ -15,14 +15,185 @@ const transporter = nodemailer.createTransport({
 });
 
 //================================================ Dashboard  ================================================= //
-const getDashboardPage = (req, res) => {
-  
-  res.render('business/dashboard' , {
-    title: "Dashboard",
-    page_title: 'Overview',
-    folder: 'Pages',
-    user: req.userData
-  });
+const getDashboardPage = async (req, res) => {
+  try {
+    // Only load data if user has completed account setup
+    let dashboardData = {};
+
+    if (req.userData.isCompleted) {
+      // Get today's date range
+      const today = new Date();
+      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+      // Get order statistics
+      const inProgressCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'processing',
+      });
+
+      const headingToCustomerCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'headingToCustomer',
+      });
+
+      const completedCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'completed',
+      });
+
+      const totalOrders = await Order.countDocuments({
+        business: req.userData._id,
+      });
+
+      const awaitingActionCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'awaitingAction',
+      });
+
+      const headingToYouCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'headingToYou',
+      });
+
+      const newOrdersCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'new',
+      });
+
+      // Financial statistics
+      const ordersWithCOD = await Order.find({
+        business: req.userData._id,
+        'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] },
+        orderStatus: { $in: ['headingToCustomer', 'processing'] },
+      });
+
+      const expectedCash = ordersWithCOD.reduce((total, order) => {
+        return total + (order.orderShipping.amount || 0);
+      }, 0);
+
+      const collectedOrders = await Order.find({
+        business: req.userData._id,
+        'orderShipping.amountType': 'COD',
+        orderStatus: 'completed',
+        completedDate: { $gte: startOfDay, $lte: endOfDay },
+      });
+
+      const collectedCash = collectedOrders.reduce((total, order) => {
+        return total + (order.orderShipping.amount || 0);
+      }, 0);
+
+      // Get recent orders and pickups
+      const recentOrders = await Order.find({
+        business: req.userData._id,
+      })
+        .sort({ orderDate: -1 })
+        .limit(5);
+
+      const recentPickups = await Pickup.find({
+        business: req.userData._id,
+      })
+        .sort({ pickupDate: -1 })
+        .limit(4);
+
+      // Calculate completion rate
+      const completionRate =
+        totalOrders > 0 ? Math.round((completedCount / totalOrders) * 100) : 0;
+
+      const collectionRate =
+        expectedCash > 0 ? Math.round((collectedCash / expectedCash) * 100) : 0;
+
+      // Monthly data for charts (last 9 months)
+      const monthlyData = [];
+      const monthlyLabels = [];
+      const monthlyOrderCounts = [];
+
+      for (let i = 8; i >= 0; i--) {
+        const monthDate = new Date();
+        monthDate.setMonth(monthDate.getMonth() - i);
+        const monthName = monthDate.toLocaleString('default', {
+          month: 'short',
+        });
+
+        const firstDay = new Date(
+          monthDate.getFullYear(),
+          monthDate.getMonth(),
+          1
+        );
+        const lastDay = new Date(
+          monthDate.getFullYear(),
+          monthDate.getMonth() + 1,
+          0
+        );
+
+        const monthlyCompleted = await Order.find({
+          business: req.userData._id,
+          orderStatus: 'completed',
+          completedDate: { $gte: firstDay, $lte: lastDay },
+        });
+
+        const monthlyRevenue = monthlyCompleted.reduce((total, order) => {
+          return total + (order.orderShipping.amount || 0);
+        }, 0);
+
+        const monthlyOrderCount = await Order.countDocuments({
+          business: req.userData._id,
+          orderDate: { $gte: firstDay, $lte: lastDay },
+        });
+
+        monthlyData.push(monthlyRevenue);
+        monthlyOrderCounts.push(monthlyOrderCount);
+        monthlyLabels.push(monthName);
+      }
+
+      // Compile all dashboard data
+      dashboardData = {
+        orderStats: {
+          inProgressCount,
+          headingToCustomerCount,
+          completedCount,
+          awaitingActionCount,
+          headingToYouCount,
+          newOrdersCount,
+          totalOrders,
+          completionRate,
+        },
+        financialStats: {
+          expectedCash,
+          collectedCash,
+          collectionRate,
+        },
+        recentData: {
+          recentOrders,
+          recentPickups,
+        },
+        chartData: {
+          monthlyLabels,
+          monthlyRevenue: monthlyData,
+          monthlyOrderCounts,
+        },
+      };
+    }
+
+
+    console.log(dashboardData);
+    res.render('business/dashboard', {
+      title: 'Dashboard',
+      page_title: 'Overview',
+      folder: 'Pages',
+      user: req.userData,
+      dashboardData,
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    res.render('business/dashboard', {
+      title: 'Dashboard',
+      page_title: 'Overview',
+      folder: 'Pages',
+      user: req.userData,
+      error: 'Failed to load dashboard data',
+    });
+  }
 };
 
 const completionConfirm = async (req, res) => {
@@ -234,9 +405,10 @@ const get_orders = async (req, res) => {
        orders = await Order.find({
         business: req.userData._id,
         'orderShipping.orderType': orderType,
-      });
+        
+      }).sort({ orderDate: -1 ,createdAt: -1});
   }else if(orderType=='All'){
-       orders = await Order.find({ business: req.userData._id });
+       orders = await Order.find({ business: req.userData._id }).sort({ orderDate: -1 ,createdAt: -1});
     }
     res.status(200).json(orders || []);
   } catch (error) {
@@ -680,52 +852,30 @@ const get_pickupPage = (req, res) => {
   
 }
 
-const get_pickupDetailsPage = async(req, res) => {
-  const { pickupNumber } = req.params;  
-
-  const pickup = await Pickup.findOne({ pickupNumber }).populate('business');
-
-  if (!pickup) {
-    res.render('business/pickup-details', {
-      title: 'Pickup Details',
-      page_title: 'Pickup Details',
-      folder: 'Pages',
-      pickup: null,
-    });
-    return;
-  }
-
-  res.render('business/pickup-details', {
-    title: 'Pickup Details',
-    page_title: 'Pickup Details',
-    folder: 'Pages',
-    pickup,
-  });
-};
-
-
-const get_pickedupOrders = async (req, res) => {
-  const { pickupNumber } = req.params;
-  const {search} = req.query;
+const get_pickups = async (req, res) => {
   try {
-    const pickedUpOrders = await Pickup.findOne(
-      { pickupNumber },
-      { 'ordersPickedUp': 1 }
-    )
-      .populate({
-      path: 'ordersPickedUp',
-      match: search ? { orderNumber: search } : {}
-      });
-
-    if (!pickedUpOrders) {
-      return res.status(404).json({ error: 'Pickup not found' });
+    const { pickupType } = req.query;
+    let pickups = [];
+    if (pickupType === 'Upcoming') {
+      pickups = await Pickup.find({
+        business: req.userData._id,
+        picikupStatus: { $ne: 'Completed' },
+      })
+        .sort({ createdAt: -1 })
+        .populate('business')
+        .populate('assignedDriver');
+    } else if (pickupType === 'Completed') {
+      pickups = await Pickup.find({
+        business: req.userData._id,
+        picikupStatus: 'Completed',
+      }).sort({createdAt:-1})
+        .populate('business')
+        .populate('assignedDriver');
     }
 
-    console.log(pickedUpOrders);
-    res.status(200).json(pickedUpOrders || []);
-
+    res.status(200).json(pickups || []);
   } catch (error) {
-    console.error('Error in get_pickedupOrders:', error);
+    console.error('Error in pickups:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 };
@@ -738,13 +888,15 @@ const createPickup = async (req, res) => {
     isFragileItems,
     isLargeItems,
     pickupNotes,
+    pickupLocation
   } = req.body;
 
   try {
-
     // ✅ 1. Validate required fields
     if (!numberOfOrders || !pickupDate || !phoneNumber) {
-      return res.status(400).json({ error: 'All pickup info fields are required.' });
+      return res
+        .status(400)
+        .json({ error: 'All pickup info fields are required.' });
     }
     console.log(req.body);
     // ✅ 2. Create Pickup
@@ -768,41 +920,66 @@ const createPickup = async (req, res) => {
       stageNotes: [{ text: 'Pickup has been created.', date: new Date() }],
     });
 
-
     const savedPickup = await newPickup.save();
-    res.status(201).json({ message: 'Pickup created successfully.', pickup: savedPickup });
+    res
+      .status(201)
+      .json({ message: 'Pickup created successfully.', pickup: savedPickup });
   } catch (error) {
     console.error('Error in createPickup:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
+};
 
-const get_pickups = async (req, res) => {
+
+const get_pickupDetailsPage = async(req, res) => {
+  const { pickupNumber } = req.params;  
+
+  const pickup = await Pickup.findOne({ pickupNumber }).populate('business').populate('assignedDriver');
+  console.log(pickup);  
+  if (!pickup) {
+    res.render('business/pickup-details', {
+      title: 'Pickup Details',
+      page_title: 'Pickup Details',
+      folder: 'Pages',
+      pickup: null,
+    });
+    return;
+  }
+
+  res.render('business/pickup-details', {
+    title: 'Pickup Details',
+    page_title: 'Pickup Details',
+    folder: 'Pages',
+    pickup,
+  });
+};
+
+const get_pickedupOrders = async (req, res) => {
+  const { pickupNumber } = req.params;
+  const { search } = req.query;
   try {
-    const { pickupType } = req.query;
-    let pickups = [];
-    if (pickupType === 'Upcoming') {
-      pickups = await Pickup.find({
-        business: req.userData._id,
-        picikupStatus: { $ne: 'Completed' },
-      })
-        .populate('business')
-        .populate('assignedDriver');
-      
-    } else if (pickupType === 'Completed') {
-      pickups = await Pickup.find({
-        business: req.userData._id,
-        picikupStatus: 'Completed',
-      }).populate('business')
-       .populate('assignedDriver');
+    const pickedUpOrders = await Pickup.findOne(
+      { pickupNumber },
+      { ordersPickedUp: 1 }
+    )
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'ordersPickedUp',
+        match: search ? { orderNumber: search } : {},
+      });
+
+    if (!pickedUpOrders) {
+      return res.status(404).json({ error: 'Pickup not found' });
     }
- 
-    res.status(200).json(pickups || []);
+
+    console.log(pickedUpOrders);
+    res.status(200).json(pickedUpOrders || []);
   } catch (error) {
-    console.error('Error in pickups:', error);
+    console.error('Error in get_pickedupOrders:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
+};
+
 
 const ratePickup = async (req, res) => {
   const { pickupNumber } = req.params;
@@ -868,6 +1045,7 @@ const get_allTransactionsByDate = async (req, res) => {
     const { timePeriod } = req.query;
     let dateFilter = {};
     const now = new Date();
+    console.log('Time Period:', timePeriod);
     console.log(now, timePeriod);
     // Set date filter based on time period
     switch (timePeriod) {
@@ -889,7 +1067,7 @@ const get_allTransactionsByDate = async (req, res) => {
             $lt: new Date(weekEnd.setHours(23, 59, 59, 999))
           }
         };
-        console.log(`Week from ${weekStart.toLocaleDateString()} to ${weekEnd.toLocaleDateString()}`);
+        // console.log(`Week from ${weekStart.toLocaleDateString()} to ${weekEnd.toLocaleDateString()}`);
         break;
       case 'month':
         dateFilter = {
@@ -908,6 +1086,13 @@ const get_allTransactionsByDate = async (req, res) => {
         };
         break;
       case 'all':
+        dateFilter = {
+          createdAt: {
+            $gte: new Date(0), // Start of time
+            $lt: new Date() // Current date
+          }
+        };
+        break;
       default:
         dateFilter = {};
     }
@@ -980,6 +1165,13 @@ const get_totalCashCycleByDate = async (req, res) => {
         };
         break;
       case 'all':
+        dateFilter = {
+          completedDate: {
+            $gte: new Date(0), // Start of time
+            $lt: new Date() // Current date
+          }
+        };
+        break;
       default:
         dateFilter = {};
     }

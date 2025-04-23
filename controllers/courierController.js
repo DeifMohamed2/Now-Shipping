@@ -122,6 +122,7 @@ const get_pickups = async(req, res) => {
     const { courierId } = req
     try {
         const pickups = await Pickup.find({ assignedDriver: courierId })
+           .sort({createdAt:-1})
           .populate('assignedDriver')
           .populate('business')
           .exec();

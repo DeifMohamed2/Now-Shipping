@@ -79,6 +79,7 @@ async function dailyOrderProcessing() {
         transactionType: 'fees',
         transactionAmount: -fees, // Fees are deducted, so the amount is negative
         transactionNotes: `Fees for ${orders.length} completed orders.`,
+        ordersDetails: orders,
         business: businessId,
       });
 
@@ -87,39 +88,38 @@ async function dailyOrderProcessing() {
         `Fees transaction created for business ${businessId}:`,
         feesTransaction
       );
-
+      console.log(orders);
       // Create and save the cash cycle transaction
-      const transaction = new Transaction({
-        transactionId: `${Math.floor(100000 + Math.random() * 900000)}`,
-        transactionType: 'cashCycle',
-        transactionAmount: businessNetValue,
-        transactionNotes: `Daily settlement for ${orders.length} completed orders.`,
-        business: businessId,
-        totalCashCycleOrders: {
-          orderCount: orders.length,
-          dateOfCashCycle: new Date(),
-        },
-      });
+      // const transaction = new Transaction({
+      //   transactionId: `${Math.floor(100000 + Math.random() * 900000)}`,
+      //   transactionType: 'cashCycle',
+      //   transactionAmount: businessNetValue,
+      //   transactionNotes: `Daily settlement for ${orders.length} completed orders.`,
+      //   ordersDetails: orders,
+      //   business: businessId,
+      //   totalCashCycleOrders: {
+      //     orderCount: orders.length,
+      //     dateOfCashCycle: new Date(),
+      //   },
+      // });
 
- 
-
-      await transaction.save();
+      // await transaction.save();
       console.log(
         `Transaction created for business ${businessId}:`,
         transaction
       );
     }
 
-    // update the job log
-    const jobLog = new DailyJobLog({
-      jobName: 'dailyOrderProcessing',
-      date: today,
-    });
-    await jobLog.save().then(() => {
-      console.log('Daily job log updated.');    
-    }).catch((err) => {
-      console.log('Error updating daily job log:', err);
-    });
+    // // update the job log
+    // const jobLog = new DailyJobLog({
+    //   jobName: 'dailyOrderProcessing',
+    //   date: today,
+    // });
+    // await jobLog.save().then(() => {
+    //   console.log('Daily job log updated.');    
+    // }).catch((err) => {
+    //   console.log('Error updating daily job log:', err);
+    // });
 
     
   } catch (error) {

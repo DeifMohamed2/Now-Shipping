@@ -127,6 +127,13 @@
   .paper-size-option p {
     margin-top: 10px;
   }
+
+  .table-warining2{
+    background-color: #fff3cde0;
+    /* color: #664d03; */
+    border-color: #ffecb5;
+  }
+
 </style>
 
 <div class="row">
@@ -380,128 +387,134 @@
       const totalPickupsInZone = Object.values(businesses).flat().length;
 
       html += `
-        <div class="zone-card">
-          <div class="zone-header">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">
-                <i class="ri-map-pin-line me-1"></i> ${zone}
-                <span class="badge bg-primary badge-count ms-2">${totalPickupsInZone} pickups</span>
-              </h5>
-              <button class="btn btn-sm btn-outline-primary" onclick="toggleZone('zone-${zone.replace(/\s+/g, '-')}')">
-                <i class="ri-arrow-down-s-line"></i>
-              </button>
-            </div>
-          </div>
-          <div class="zone-content" id="zone-${zone.replace(/\s+/g, '-')}">
+      <div class="zone-card">
+        <div class="zone-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+          <i class="ri-map-pin-line me-1"></i> ${zone}
+          <span class="badge bg-primary badge-count ms-2">${totalPickupsInZone} pickups</span>
+          </h5>
+          <button class="btn btn-sm btn-outline-primary" onclick="toggleZone('zone-${zone.replace(/\s+/g, '-')}')">
+          <i class="ri-arrow-down-s-line"></i>
+          </button>
+        </div>
+        </div>
+        <div class="zone-content" id="zone-${zone.replace(/\s+/g, '-')}">
       `;
 
       // For each business in this zone
       Object.keys(businesses).sort().forEach(businessName => {
-        const businessPickups = businesses[businessName];
+      const businessPickups = businesses[businessName];
+
+      html += `
+        <div class="business-card">
+        <div class="business-header">
+          <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            <i class="ri-store-2-line me-1"></i> ${businessName}
+            <span class="badge bg-info badge-count ms-2">${businessPickups.length} pickups</span>
+          </h6>
+          <div>
+            <!-- <button class="btn btn-sm btn-danger me-2" onclick="rejectAllBusinessPickups('${businessName}', '${zone}')">
+            <i class="ri-close-circle-line me-1"></i> Reject All
+            </button> -->
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggleBusiness('business-${businessName.replace(/\s+/g, '-')}-${zone.replace(/\s+/g, '-')}')">
+            <i class="ri-arrow-down-s-line"></i>
+            </button>
+          </div>
+          </div>
+        </div>
+        <div class="business-pickups" id="business-${businessName.replace(/\s+/g, '-')}-${zone.replace(/\s+/g, '-')}">
+      `;
+
+      // For each pickup in this business
+      businessPickups.forEach(pickup => {
+        const statusDetails = getPickupStatusDetails(pickup.picikupStatus);
+          
+        // Add table-warning class for assigned pickups, similar to orders.js
+        const rowClass = pickup.picikupStatus && pickup.picikupStatus.toLowerCase() === 'driverassigned' ? 'table-warining2' : '';
+        // Add table-danger class for rejected/returned pickups
+        const isDanger = pickup.picikupStatus && ['rejected', 'returned'].includes(pickup.picikupStatus.toLowerCase());
+        const rowDangerClass = isDanger ? 'table-danger' : '';
 
         html += `
-          <div class="business-card">
-            <div class="business-header">
-              <div class="d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">
-                  <i class="ri-store-2-line me-1"></i> ${businessName}
-                  <span class="badge bg-info badge-count ms-2">${businessPickups.length} pickups</span>
-                </h6>
-                <div>
-                  <!-- <button class="btn btn-sm btn-danger me-2" onclick="rejectAllBusinessPickups('${businessName}', '${zone}')">
-                    <i class="ri-close-circle-line me-1"></i> Reject All
-                  </button> -->
-                  <button class="btn btn-sm btn-outline-secondary" onclick="toggleBusiness('business-${businessName.replace(/\s+/g, '-')}-${zone.replace(/\s+/g, '-')}')">
-                    <i class="ri-arrow-down-s-line"></i>
-                  </button>
-                </div>
-              </div>
+        <div class="pickup-item ${rowClass} ${rowDangerClass}" data-pickup-id="${pickup.pickupNumber}">
+          <div class="row align-items-center">
+          <div class="col-md-2 col-sm-6">
+            <div class="d-flex align-items-center">
+            <div class="form-check me-2">
+              <input class="form-check-input" type="checkbox" value="${pickup.pickupNumber}" name="pickupCheckbox">
             </div>
-            <div class="business-pickups" id="business-${businessName.replace(/\s+/g, '-')}-${zone.replace(/\s+/g, '-')}">
-        `;
-
-        // For each pickup in this business
-        businessPickups.forEach(pickup => {
-          const statusDetails = getPickupStatusDetails(pickup.picikupStatus);
-
-          html += `
-            <div class="pickup-item" data-pickup-id="${pickup.pickupNumber}">
-              <div class="row align-items-center">
-                <div class="col-md-2 col-sm-6">
-                  <div class="d-flex align-items-center">
-                    <div class="form-check me-2">
-                      <input class="form-check-input" type="checkbox" value="${pickup.pickupNumber}" name="pickupCheckbox">
-                    </div>
-                    <div>
-                      <a href="/courier/pickup-details/${pickup.pickupNumber}" class="fw-medium link-primary">#${pickup.pickupNumber}</a>
-                      <div class="text-muted small">${new Date(pickup.pickupDate).toLocaleDateString()}</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-3 col-xs-6">
-                  <div>
-                    <div class="fw-medium">${pickup.business?.pickUpAdress?.adressDetails || 'No address'}</div>
-                    <div class="text-muted small">${pickup.phoneNumber || 'No phone'}</div>
-                  </div>
-                </div>
-                <div class="col-md-2 col-sm-6">
-                  <div>
-                    <span class="badge ${statusDetails.badgeClass} pickup-status">${statusDetails.statusText}</span>
-                  </div>
-                </div>
-                <div class="col-md-1 col-sm-6">
-                  <div class="">Expected:<br><strong>${pickup.numberOfOrders || 0}</strong> orders</div>
-                </div>
-                <div class="col-md-1 col-sm-6">
-                  <div class="">Picked up:<br><strong>${pickup.ordersPickedUp.length || 0}</strong> orders</div>
-                </div>
-                <div class="col-md-2 col-sm-6">
-                  <div class="fw-medium">${new Date(pickup.pickupDate).toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                  <div class="text-muted small">${new Date(pickup.pickupDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
-                </div>
-                ${pickup.picikupStatus !== 'completed' && pickup.picikupStatus !== 'inStock' && pickup.picikupStatus !== 'canceled' && pickup.picikupStatus !== 'rejected' && pickup.picikupStatus !== 'returned' && pickup.picikupStatus !== 'terminated' ? `        
-                <div class="col-md-1 col-sm-12">
-                  <div class="d-flex gap-2 justify-content-end">
-              
-                    <div class="dropdown dropdown-fix">
-                      <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ri-more-2-fill"></i>
-                      </button>
-                      <ul class="dropdown-menu">
-                        <li>
-                          <button class="dropdown-item" onclick="showPickupActions('${pickup._id}', '${pickup.pickupNumber}', 'business_closed')">
-                            <i class="ri-close-circle-line me-2 text-danger"></i> Reject Pickup
-                          </button>
-                        </li>
-                        <li>
-                          <a class="dropdown-item" href="/courier/pickup-details/${pickup.pickupNumber}">
-                            <i class="ri-information-line me-2 text-info"></i> View Details
-                          </a>
-                        </li>
-                        <li>
-                          <a class="dropdown-item" href="https://maps.google.com/?q=${encodeURIComponent(pickup.business?.pickUpAdress?.adressDetails || '')}" target="_blank">
-                            <i class="ri-map-pin-line me-2 text-success"></i> Navigate
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                ` : ''}
-              </div>
+            <div>
+              <a href="/courier/pickup-details/${pickup.pickupNumber}" class="fw-medium link-primary">#${pickup.pickupNumber}</a>
+              <div class="text-muted small">${new Date(pickup.pickupDate).toLocaleDateString()}</div>
             </div>
-          `;
-        });
-
-        html += `
             </div>
           </div>
+          <div class="col-md-3 col-xs-6">
+            <div>
+            <div class="fw-medium">${pickup.business?.pickUpAdress?.adressDetails || 'No address'}</div>
+            <div class="text-muted small">${pickup.phoneNumber || 'No phone'}</div>
+            </div>
+          </div>
+          <div class="col-md-2 col-sm-6">
+            <div>
+            <span class="badge ${statusDetails.badgeClass} pickup-status">${statusDetails.statusText}</span>
+            </div>
+          </div>
+          <div class="col-md-1 col-sm-6">
+            <div class="">Expected:<br><strong>${pickup.numberOfOrders || 0}</strong> orders</div>
+          </div>
+          <div class="col-md-1 col-sm-6">
+            <div class="">Picked up:<br><strong>${pickup.ordersPickedUp.length || 0}</strong> orders</div>
+          </div>
+          <div class="col-md-2 col-sm-6">
+            <div class="fw-medium">${new Date(pickup.pickupDate).toLocaleDateString('en-US', { weekday: 'short' })}</div>
+            <div class="text-muted small">${new Date(pickup.pickupDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
+          ${pickup.picikupStatus !== 'completed' && pickup.picikupStatus !== 'inStock' && pickup.picikupStatus !== 'canceled' && pickup.picikupStatus !== 'rejected' && pickup.picikupStatus !== 'returned' && pickup.picikupStatus !== 'terminated' ? `        
+          <div class="col-md-1 col-sm-12">
+            <div class="d-flex gap-2 justify-content-end">
+          
+            <div class="dropdown dropdown-fix">
+              <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="ri-more-2-fill"></i>
+              </button>
+              <ul class="dropdown-menu">
+              <li>
+                <button class="dropdown-item" onclick="showPickupActions('${pickup._id}', '${pickup.pickupNumber}', 'business_closed')">
+                <i class="ri-close-circle-line me-2 text-danger"></i> Reject Pickup
+                </button>
+              </li>
+              <li>
+                <a class="dropdown-item" href="/courier/pickup-details/${pickup.pickupNumber}">
+                <i class="ri-information-line me-2 text-info"></i> View Details
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="https://maps.google.com/?q=${encodeURIComponent(pickup.business?.pickUpAdress?.adressDetails || '')}" target="_blank">
+                <i class="ri-map-pin-line me-2 text-success"></i> Navigate
+                </a>
+              </li>
+              </ul>
+            </div>
+            </div>
+          </div>
+          ` : ''}
+          </div>
+        </div>
         `;
       });
 
       html += `
-          </div>
         </div>
+        </div>
+      `;
+      });
+
+      html += `
+        </div>
+      </div>
       `;
     });
 

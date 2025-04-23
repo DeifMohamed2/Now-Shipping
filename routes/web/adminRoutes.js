@@ -1,33 +1,33 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const Admin = require('../models/admin');
+const Admin = require('../../models/admin.js');
 
-const adminController = require('../controllers/adminController.js');
+const adminController = require('../../controllers/adminController.js');
 
 const jwtSecret = process.env.JWT_SECRET;
 
 async function authenticateAdmin(req, res, next) {
-    const token = req.cookies.token;
-    if (!token) {
-        console.log('Token not found');
-        return res.status(401).redirect('/admin-login');
-    }
+  const token = req.cookies.token;
+  if (!token) {
+    console.log('Token not found');
+    return res.status(401).redirect('/admin-login');
+  }
 
-    try {
-        const decode = jwt.verify(token, jwtSecret);
-        req.adminId = decode.adminId;
-        const admin = await Admin.findOne({ _id: decode.adminId });
-        if (!admin) {
-            res.clearCookie('token');
-            return res.status(401).redirect('/admin-login');
-        }
-        req.adminData = admin; // Attach admin data to request object
-        next(); // Move to the next middleware
-    } catch (error) {
-        res.clearCookie('token');
-        return res.status(401).redirect('/admin-login');
+  try {
+    const decode = jwt.verify(token, jwtSecret);
+    req.adminId = decode.adminId;
+    const admin = await Admin.findOne({ _id: decode.adminId });
+    if (!admin) {
+      res.clearCookie('token');
+      return res.status(401).redirect('/admin-login');
     }
+    req.adminData = admin; // Attach admin data to request object
+    next(); // Move to the next middleware
+  } catch (error) {
+    res.clearCookie('token');
+    return res.status(401).redirect('/admin-login');
+  }
 }
 
 router.use(authenticateAdmin);
@@ -39,8 +39,7 @@ router.get('/orders', adminController.get_ordersPage);
 router.get('/get-orders', adminController.get_orders);
 router.get('/order-details/:orderNumber', adminController.get_orderDetailsPage);
 
-
-// couriers 
+// couriers
 
 router.get('/couriers', adminController.get_couriersPage);
 
@@ -53,9 +52,15 @@ router.get('/pickups', adminController.get_pickupsPage);
 
 router.get('/get-pickups', adminController.get_pickups);
 
-router.get('/pickup-details/:pickupNumber', adminController.get_pickupDetailsPage);
+router.get(
+  '/pickup-details/:pickupNumber',
+  adminController.get_pickupDetailsPage
+);
 
-router.get('/pickup-details/:pickupNumber/get-pickedup-orders', adminController.get_pickedupOrders);
+router.get(
+  '/pickup-details/:pickupNumber/get-pickedup-orders',
+  adminController.get_pickedupOrders
+);
 
 router.put('/cancel-pickup/:pickupId', adminController.cancelPickup);
 
@@ -64,8 +69,6 @@ router.delete('/delete-pickup/:pickupId', adminController.deletePickup);
 router.get('/get-pickup-men', adminController.get_pickupMenByZone);
 
 router.post('/assign-pickup-man', adminController.assignPickupMan);
-
-
 
 // stock managment
 
@@ -77,14 +80,17 @@ router.post('/add-to-stock', adminController.add_to_stock);
 
 router.get('/get-couriers-by-zone', adminController.get_couriers_by_zone);
 
-router.post('/stock-managment/assign-courier', adminController.assignCourierToStock);
+router.post(
+  '/stock-managment/assign-courier',
+  adminController.assignCourierToStock
+);
 
-router.post('/stock-managment/courier-received', adminController.courier_received);
-
+router.post(
+  '/stock-managment/courier-received',
+  adminController.courier_received
+);
 
 // router.get('/get-stock-managment', adminController.get_stockManagment);
-
-
 
 // wallet overview
 
@@ -96,12 +102,9 @@ router.post('/reschedule-release', adminController.rescheduleRelease);
 
 router.post('/release-funds', adminController.releaseFunds);
 
-
 // businesses
 
 router.get('/businesses', adminController.get_businessesPage);
-
-
 
 // tickets
 router.get('/tickets', adminController.get_ticketsPage);

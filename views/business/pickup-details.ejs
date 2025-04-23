@@ -448,10 +448,11 @@
                     <h6 class="fs-14 mb-1 text-muted">Driver Name</h6>
                     <p class="mb-0"><%= pickup.assignedDriver ? pickup.assignedDriver.name : 'N/A' %></p>
                   </td>
-                  <td>
-                    <h6 class="fs-14 mb-1 text-muted">Vehicle Type</h6>
-                    <p class="mb-0">Delivery Van</p>
-                  </td>
+                    <td>
+                    <h6 class="fs-14 mb-1 text-muted">Vehicle Details</h6>
+                    <p class="mb-0"><strong>Type:</strong> <%= pickup.assignedDriver ? pickup.assignedDriver.vehicleType : 'N/A' %></p>
+                    <p class="mb-0"><strong>Plate:</strong> <%= pickup.assignedDriver ? pickup.assignedDriver.vehiclePlateNumber : 'N/A' %></p>
+                    </td>
                 </tr>
                 <tr>
                   <td>

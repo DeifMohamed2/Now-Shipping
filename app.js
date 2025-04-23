@@ -8,12 +8,16 @@ const path = require('path');
 
 
 
-// Routes
-const adminRouter = require('./routes/adminRoutes');
-const courierRouter = require('./routes/courierRoutes');
-const businessRouter = require('./routes/businessRoutes');
-const manageRouter = require('./routes/manageRoutes');
-const authRouter = require('./routes/authRoutes');
+// Web Routes
+const adminRouter = require('./routes/web/adminRoutes');
+const courierRouter = require('./routes/web/courierRoutes');
+const businessRouter = require('./routes/web/businessRoutes');
+const manageRouter = require('./routes/web/manageRoutes');
+const authRouter = require('./routes/web/authRoutes');
+
+// Mobile Routes
+const AuthRouterApi = require('./routes/api/v1/auth');
+const businessRouterApi = require('./routes/api/v1/business');
 
 // Import jobs
 const dailyOrderProcessing = require('./jobs/dailyOrderProcessing');
@@ -104,6 +108,12 @@ app.use('/admin', adminRouter);
 app.use('/business', businessRouter);
 app.use('/manage', manageRouter);
 app.use('/courier', courierRouter);
+
+// Mobile app routes V1
+app.use('/api/v1/auth', AuthRouterApi);
+app.use('/api/v1/business', businessRouterApi);
+
+
 
 app.all("*", function (req, res) {
     res.locals = {

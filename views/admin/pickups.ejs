@@ -357,7 +357,12 @@
     pickups.forEach(group => {
       group.pickups.forEach(pickup => {
         const row = document.createElement("tr");
-
+          // Add highlighting for different important statuses
+        if (pickup.picikupStatus === 'new') {
+          row.classList.add('table-warning'); // Yellow highlight for new orders
+        } else if (pickup.picikupStatus === 'rejected' || pickup.picikupStatus === 'returned') {
+          row.classList.add('table-danger'); // Red highlight for problem orders
+        }
         row.innerHTML = `
           <th scope="row">
             <div class="form-check">

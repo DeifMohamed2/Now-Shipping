@@ -42,7 +42,7 @@ const get_orders = async (req, res) => {
     }
 
     console.log(query);
-    orders = await Order.find(query).populate('business', 'brandInfo').populate('deliveryMan');
+    orders = await Order.find(query).populate('business', 'brandInfo').sort({orderDate:-1,createdAt:-1}).populate('deliveryMan');
     res.status(200).json(orders || []);
   } catch (error) {
     console.error('Error in orders:', error);
@@ -299,29 +299,31 @@ const get_pickups = async (req, res) => {
       { $match: match },
       {
       $lookup: {
-        from: 'users',
-        localField: 'business',
-        foreignField: '_id',
-        as: 'business',
+      from: 'users',
+      localField: 'business',
+      foreignField: '_id',
+      as: 'business',
       },
       },
       { $unwind: '$business' },
       {
       $lookup: {
-        from: 'couriers',
-        localField: 'assignedDriver',
-        foreignField: '_id',
-        as: 'assignedDriver',
+      from: 'couriers',
+      localField: 'assignedDriver',
+      foreignField: '_id',
+      as: 'assignedDriver',
       },
       },
       { $unwind: { path: '$assignedDriver', preserveNullAndEmptyArrays: true } },
       {
+      $sort: { pickupTime: -1, pickupDate: -1, createdAt: -1 }
+      },
+      {
       $group: {
-        _id: '$business.pickUpAdress.city',
-        pickups: { $push: '$$ROOT' },
+      _id: '$business.pickUpAdress.city',
+      pickups: { $push: '$$ROOT' },
       },
-      },
-      { $sort: { 'pickups.pickupDate': 1 } },
+      }
     ]);
     res.status(200).json(pickups || []);
   } catch (error) {

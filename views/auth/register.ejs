@@ -1,5 +1,4 @@
 <%- contentFor('HeaderCss') %>
-<%-include("../partials/title-meta", { "title" : "Register" }) %>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -613,6 +612,81 @@
     box-shadow: 0 4px 12px rgba(243, 151, 32, 0.2);
   }
 
+  /* Phone verification styles */
+  .phone-input {
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+  }
+
+  .verify-btn {
+    height: 44px;
+    padding: 0 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .verify-btn:hover {
+    background: var(--secondary);
+  }
+
+  .verify-btn:disabled {
+    background: var(--gray-300);
+    cursor: not-allowed;
+  }
+
+  /* OTP styles */
+  .otp-container {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .otp-input-wrapper {
+    position: relative;
+  }
+
+  .timer-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    gap: 10px;
+  }
+
+  #timer {
+    font-size: 14px;
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+
+  .resend-btn {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+  }
+
+  .resend-btn:hover:not(:disabled) {
+    color: var(--secondary);
+    text-decoration: underline;
+  }
+
+  .resend-btn:disabled {
+    color: var(--gray-400);
+    cursor: not-allowed;
+  }
+
   /* Animations */
   @keyframes fadeIn {
     from {
@@ -823,9 +897,7 @@
   <div class="register-card">
     <div class="register-header">
       <div class="register-logo">
-        <svg viewBox="0 0 100 100">
-          <path d="M50,15 L60,25 L75,20 L75,40 L90,50 L75,60 L75,80 L60,75 L50,85 L40,75 L25,80 L25,60 L10,50 L25,40 L25,20 L40,25 Z M50,35 C41.7,35 35,41.7 35,50 C35,58.3 41.7,65 50,65 C58.3,65 65,58.3 65,50 C65,41.7 58.3,35 50,35 Z"></path>
-        </svg>
+        <img src="/assets/rimages/logo.png" alt="Now Shipping Logo" height="65">
       </div>
       <h1 class="register-title">Create Account</h1>
       <p class="register-subtitle">Sign up to start using Now Shipping</p>
@@ -846,9 +918,27 @@
             <span>+20</span>
           </div>
           <input type="text" class="form-control phone-input" id="phoneNumber" name="phoneNumber" placeholder="01155244145" required>
+          <button type="button" class="verify-btn" id="verifyBtn">Verify</button>
         </div>
         <div class="invalid-feedback" id="phoneNumber-feedback"></div>
       </div>
+
+      <!-- OTP Input (Hidden by default) -->
+      <div class="form-group otp-container" id="otpContainer" style="display: none;">
+        <label for="otpInput" class="form-label">Enter OTP</label>
+        <div class="otp-input-wrapper">
+          <input type="text" class="form-control" id="otpInput" name="otp" maxlength="6" placeholder="Enter 6-digit code" autocomplete="off">
+          <div class="timer-container">
+            <span id="timer">40s</span>
+            <button type="button" class="resend-btn" id="resendBtn" disabled>Resend</button>
+          </div>
+        </div>
+        <div class="invalid-feedback" id="otp-feedback"></div>
+      </div>
+
+
+
+
 
       <div class="form-group">
         <label for="email" class="form-label">Email</label>
@@ -926,7 +1016,7 @@
       <i class="ri-error-warning-line"></i>
     </div>
     <h2 class="success-title">Registration Failed!</h2>
-    <p class="success-message">Email Already In Use.</p>
+    <p class="success-message" id="errorMessage"></p>
     <button class="success-btn" onclick="document.getElementById('faildModal').classList.remove('show')">Ok</button>
   </div>
 </div>
@@ -936,6 +1026,110 @@
 <%- contentFor('FooterJs') %>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- <script src="/assets/rJS/register.js"></script> -->
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const verifyBtn = document.getElementById('verifyBtn');
+    const phoneNumberInput = document.getElementById('phoneNumber');
+    const otpContainer = document.getElementById('otpContainer');
+    const otpInput = document.getElementById('otpInput');
+    const timerElement = document.getElementById('timer');
+    const resendBtn = document.getElementById('resendBtn');
+
+    let countdown;
+
+    // Function to start countdown timer
+    function startCountdown(seconds) {
+      clearInterval(countdown);
+      let secondsLeft = seconds;
+
+      resendBtn.disabled = true;
+      timerElement.textContent = `${secondsLeft}s`;
+
+      countdown = setInterval(() => {
+        secondsLeft--;
+        timerElement.textContent = `${secondsLeft}s`;
+
+        if (secondsLeft <= 0) {
+          clearInterval(countdown);
+          resendBtn.disabled = false;
+          timerElement.textContent = 'Expired';
+        }
+      }, 1000);
+    }
+
+    // Handle verify button click
+    async function sendOTP() {
+      if (phoneNumberInput.value.trim() === '' || !/^\d{11}$/.test(phoneNumberInput.value.trim())) {
+        const feedback = document.getElementById('phoneNumber-feedback');
+        feedback.textContent = 'Please enter a valid 11-digit phone number';
+        feedback.style.display = 'block';
+        phoneNumberInput.classList.add('is-invalid');
+        return;
+      }
+
+      // api request
+      try {
+        // Show loading state
+        verifyBtn.innerHTML = 'Sending... <i class="ri-loader-2-line ri-spin"></i>';
+        verifyBtn.disabled = true;
+        
+        // API request
+        const response = await fetch('/send-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phoneNumber: phoneNumberInput.value
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send OTP');
+        }
+
+        const data = await response.json();
+        console.log(data);
+        // Show OTP container
+        otpContainer.style.display = 'block';
+
+        // Change button text
+        verifyBtn.textContent = 'Sent';
+        verifyBtn.disabled = true;
+
+        // Start countdown
+        startCountdown(40);
+
+      } catch (err) {
+        // Display error with SweetAlert2
+        Swal.fire({
+          icon: 'error',
+          title: 'OTP Error',
+          text: 'Failed to send verification code. Please try again.',
+          confirmButtonColor: '#F39720'
+        });
+        console.error('Error sending OTP:', err);
+      }
+
+    }
+
+    // Handle verify button click
+    verifyBtn.addEventListener('click', sendOTP)
+
+    // Handle resend button click
+    resendBtn.addEventListener('click', function() {
+      // Reset OTP input
+      otpInput.value = '';
+      sendOTP()
+    
+
+      // In a real application, you would send an API request to resend the OTP
+      console.log('Resending OTP to:', phoneNumberInput.value);
+    });
+  });
+</script>
+
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -996,9 +1190,9 @@
     const emailFeedback = document.getElementById('email-feedback');
     const passwordFeedback = document.getElementById('password-feedback');
     const termsFeedback = document.getElementById('terms-feedback');
-
+    const errorMessage = document.getElementById('errorMessage');
     if (registerForm) {
-      registerForm.addEventListener('submit',async function(e) {
+      registerForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         let isValid = true;
 
@@ -1058,58 +1252,58 @@
           // Simulate form submission (replace with actual API call)
 
 
-        try {
+          try {
             const formData = new FormData(registerForm);
             const formObject = Object.fromEntries(formData.entries());
             console.log(formObject);
 
             const response = await fetch('/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formObject),
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(formObject),
             });
 
             const data = await response.json();
             console.log(data);
             if (response.ok) {
-                // Show success modal
-                document.getElementById('successModal').classList.add('show');
+              // Show success modal
+              document.getElementById('successModal').classList.add('show');
 
-                // Reset form
-                registerForm.reset();
-                submitBtn.classList.remove('btn-loading');
-                submitBtn.disabled = false;
+              // Reset form
+              registerForm.reset();
+              submitBtn.classList.remove('btn-loading');
+              submitBtn.disabled = false;
 
             } else {
               console.log(data);
+
+              errorMessage.innerHTML=data.message;
               // Show error modal
               document.getElementById('faildModal').classList.add('show');
 
               // Reset form
-              registerForm.reset();
               submitBtn.classList.remove('btn-loading');
               submitBtn.disabled = false;
 
             }
-        } catch (err) {
-          console.log(err)
-              // Show error modal
-              document.getElementById('faildModal').classList.add('show');
+          } catch (err) {
+            console.log(err)
+             errorMessage.innerHTML=data.message;
+            // Show error modal
+            document.getElementById('faildModal').classList.add('show');
 
-              // Reset form
-              registerForm.reset();
-              submitBtn.classList.remove('btn-loading');
-              submitBtn.disabled = false;
-      
-        }finally{
-          // Reset form
-          registerForm.reset();
-          submitBtn.classList.remove('btn-loading');
-          submitBtn.disabled = false;
-            
-        }
+            // Reset form
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.disabled = false;
+
+          } finally {
+            // Reset form
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.disabled = false;
+
+          }
 
 
 

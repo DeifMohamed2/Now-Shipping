@@ -2,134 +2,350 @@
 <div class="app-menu navbar-menu">
   <!-- LOGO -->
   <div class="navbar-brand-box">
-    <!-- Dark Logo-->
-    <a href="/index" class="logo logo-dark">
-      <span class="logo-sm">
-        <img src="/assets/images/logo-sm.png" alt="" height="22">
-      </span>
-      <span class="logo-lg">
-        <img src="/assets/images/logo-dark.png" alt="" height="17">
-      </span>
+    <!-- Logo -->
+    <a href="/index" class="logo">
+      <div class="logo-container">
+        <img src="/assets/rimages/logo.png" alt="Now Logo" class="logo-img">
+      </div>
     </a>
-    <!-- Light Logo-->
-    <a href="/index" class="logo logo-light">
-      <span class="logo-sm">
-        <img src="/assets/images/logo-sm.png" alt="" height="22">
-      </span>
-      <span class="logo-lg">
-        <img src="/assets/images/logo-light.png" alt="" height="17">
-      </span>
-    </a>
-    <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
-      <i class="ri-record-circle-line"></i>
-    </button>
   </div>
-  <div class="dropdown sidebar-user m-1 rounded">
-    <button type="button" class="btn material-shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown"
-      aria-haspopup="true" aria-expanded="false">
+  <div class="dropdown sidebar-user m-2 rounded shadow-sm">
+    <button type="button" class="btn w-100 d-flex justify-content-between align-items-center" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       <span class="d-flex align-items-center gap-2">
-        <img class="rounded header-profile-user" src="assets/images/users/avatar-1.jpg" alt="Header Avatar">
+        <img class="rounded-circle header-profile-user" src="assets/images/users/avatar-1.jpg" alt="Header Avatar">
         <span class="text-start">
-          <span class="d-block fw-medium sidebar-user-name-text">Anna Adame</span>
-          <span class="d-block fs-14 sidebar-user-name-sub-text"><i
-              class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span
-              class="align-middle">Online</span></span>
+          <span class="d-block fw-semibold sidebar-user-name-text" style="color: #212529; font-size: 14px;">Anna Adame</span>
+          <span class="d-block fs-12 sidebar-user-name-sub-text" style="color: #6c757d;"><i class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span class="align-middle">Online</span>
         </span>
       </span>
+      <i class="ri-chevron-down-line fs-16" style="color: #6c757d;"></i>
     </button>
+    <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg py-2">
+      <!-- dropdown items can be added here if needed -->
+    </div>
   </div>
   <div id="scrollbar">
     <div class="container-fluid">
-
       <div id="two-column-menu">
       </div>
       <ul class="navbar-nav" id="navbar-nav">
-        <li class="menu-title"><span >Dashboard</span></li>
+        <li class="menu-title"><span style="color: #212529; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">Dashboard</span></li>
         <li class="nav-item">
-          <a class="nav-link menu-link" href="/admin/dashboard" role="button"
-            aria-expanded="false" aria-controls="sidebarDashboards">
-            <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Dashboard</span>
+          <a class="nav-link menu-link" href="/admin/dashboard" role="button" aria-expanded="false" aria-controls="sidebarDashboards">
+            <i class="ri-dashboard-2-line" style="color: #F39720;"></i>
+            <span data-key="t-dashboards" style="color: #212529; font-size: 15px;">Dashboard</span>
           </a>
-        </li> 
-        <li class="nav-item">
-          <a class="nav-link menu-link" href="/admin/orders" role="button"
-           >
-            <i class="ri-shopping-cart-line"></i> <span data-key="">Orders</span>
+        </li>
+        <li class="nav-item"></li>
+          <a class="nav-link menu-link" href="/admin/orders" role="button">
+            <i class="ri-shopping-cart-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Orders</span>
           </a>
-        </li> 
+        </li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/pickups" role="button">
-            <i class="ri-truck-line"></i> <span data-key="">Pickups</span>
+            <i class="ri-truck-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Pickups</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/couriers" role="button">
-            <i class="ri-user-line"></i> <span data-key="">Couriers</span>
+            <i class="ri-user-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Couriers</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/stock-managment" role="button">
-            <i class="ri-store-line"></i> <span data-key="">Stock Managment</span>
+            <i class="ri-store-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Stock Managment</span>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link menu-link" href="#sidebarWallet" data-bs-toggle="collapse" role="button"
-            aria-expanded="false" aria-controls="sidebarWallet">
-            <i class="ri-wallet-line"></i> <span data-key="t-wallet">Wallet Management</span>
+          <a class="nav-link menu-link" href="#sidebarWallet" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarWallet">
+            <i class="ri-wallet-line" style="color: #F39720;"></i>
+            <span data-key="t-wallet" style="color: #212529; font-size: 15px;">Wallet Management</span>
           </a>
           <div class="collapse ms-3" id="sidebarWallet">
             <ul class="nav flex-column">
               <li class="nav-item">
-          <a class="nav-link" href="/admin/release-amounts">
-            <i class="ri-file-list-3-line"></i> <span data-key="t-overview">Release Amounts</span>
-          </a>
+                <a class="nav-link" href="/admin/release-amounts">
+                  <i class="ri-file-list-3-line" style="color: #F39720;"></i>
+                  <span data-key="t-overview" style="color: #212529; font-size: 14px;">Release Amounts</span>
+                </a>
               </li>
               <li class="nav-item">
-          <a class="nav-link" href="/admin/release-amounts">
-            <i class="ri-exchange-dollar-line"></i> <span data-key="t-transactions">Orders</span>
-          </a>
+                <a class="nav-link" href="/admin/release-amounts">
+                  <i class="ri-exchange-dollar-line" style="color: #F39720;"></i>
+                  <span data-key="t-transactions" style="color: #212529; font-size: 14px;">Orders</span>
+                </a>
               </li>
               <li class="nav-item">
-          <a class="nav-link" href="/admin/release-amounts">
-            <i class="ri-money-dollar-box-line"></i> <span data-key="t-deposits">Deposits</span>
-          </a>
+                <a class="nav-link" href="/admin/release-amounts">
+                  <i class="ri-money-dollar-box-line" style="color: #F39720;"></i>
+                  <span data-key="t-deposits" style="color: #212529; font-size: 14px;">Deposits</span>
+                </a>
               </li>
             </ul>
           </div>
         </li>
-
         <li class="nav-item">
           <a class="nav-link menu-link" href="/business/shop" role="button">
-            <i class="ri-store-line"></i> <span data-key="t-shop">Shop</span>
+            <i class="ri-store-line" style="color: #F39720;"></i>
+            <span data-key="t-shop" style="color: #212529; font-size: 15px;">Shop</span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/businesses" role="button">
-            <i class="ri-building-line"></i> <span data-key="t-businesses">Businesses</span>
+            <i class="ri-building-line" style="color: #F39720;"></i>
+            <span data-key="t-businesses" style="color: #212529; font-size: 15px;">Businesses</span>
           </a>
         </li>
-
         <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/tickets" role="button">
-            <i class="ri-ticket-line"></i> <span data-key="">Tickets</span>
+            <i class="ri-ticket-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Tickets</span>
           </a>
         </li>
-
         <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/logout" role="button">
-            <i class="ri-logout-box-line"></i> <span data-key="t-logout">Log Out</span>
+            <i class="ri-logout-box-line" style="color: #F39720;"></i>
+            <span data-key="t-logout" style="color: #212529; font-size: 15px;">Log Out</span>
           </a>
         </li>
-    
-        <!-- end Dashboard Menu -->
-
       </ul>
     </div>
     <!-- Sidebar -->
   </div>
-
-
 </div>
 <!-- Left Sidebar End -->
 <!-- Vertical Overlay-->
 <div class="vertical-overlay"></div>
+
+<style>
+  /* Main sidebar styling */
+  .app-menu {
+    background-color: #ffffff;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    border-right: 1px solid #f0f0f0;
+    border: 1px solid #f0f0f0;
+  }
+
+  /* Brand box styling */
+  .navbar-brand-box {
+    background-color: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+  }
+
+  /* Logo styling */
+  .logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .logo-img {
+    height: 90px;
+    width: auto;
+    max-width: 80%;
+    object-fit: contain;
+  }
+
+  /* Menu title styling */
+  .menu-title {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding-left: 18px;
+  }
+
+  .menu-title span {
+    color: #212529;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  /* Navigation item styling */
+  .nav-item {
+    margin: 4px 0;
+  }
+
+  .nav-link {
+    color: #212529;
+    font-weight: 500;
+    padding: 10px 18px;
+    border-radius: 6px;
+    margin: 0 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-link i {
+    font-size: 18px;
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+  }
+
+  .nav-link:hover {
+    background-color: rgba(243, 151, 32, 0.08);
+    color: #212529;
+  }
+
+  .nav-link:hover i {
+    color: #F39720;
+  }
+
+  .nav-link.active {
+    background-color: rgba(243, 151, 32, 0.1);
+    color: #212529;
+    font-weight: 600;
+  }
+
+  .nav-link.active i {
+    color: #F39720;
+  }
+
+  /* Menu arrow */
+  .menu-arrow {
+    transition: transform 0.3s ease;
+  }
+
+  [aria-expanded="true"] .menu-arrow {
+    transform: rotate(180deg);
+  }
+
+  /* User profile styling */
+  .sidebar-user {
+    background-color: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #f0f0f0;
+  }
+
+  .sidebar-user-name-text {
+    color: #212529;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .sidebar-user-name-sub-text {
+    color: #6c757d;
+  }
+
+  .header-profile-user {
+    width: 38px;
+    height: 38px;
+    object-fit: cover;
+    border: 2px solid #f8f9fa;
+  }
+
+  /* Dropdown menu styling */
+  .dropdown-menu {
+    border-radius: 8px;
+    padding: 8px 0;
+    min-width: 220px;
+  }
+
+  .dropdown-header {
+    color: #212529;
+    font-weight: 600;
+    padding: 10px 15px;
+  }
+
+  .dropdown-item {
+    padding: 8px 15px;
+    color: #212529;
+    transition: all 0.2s ease;
+    font-size: 14px;
+  }
+
+  .dropdown-item:hover {
+    background-color: rgba(243, 151, 32, 0.08);
+    color: #212529;
+  }
+
+  .dropdown-item:hover i {
+    color: #F39720;
+  }
+
+  .dropdown-divider {
+    border-top: 1px solid #f0f0f0;
+    margin: 8px 0;
+  }
+
+  /* Submenu styling */
+  .collapse .nav-link {
+    padding: 8px 12px 8px 15px;
+    font-size: 14px;
+    margin-left: 10px;
+    border-left: 1px solid #f0f0f0;
+  }
+
+  /* Active state indicator */
+  .nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: 3px;
+    background-color: #F39720;
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 992px) {
+    .navbar-brand-box {
+      height: 70px;
+    }
+
+    .logo-img {
+      height: 50px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .navbar-brand-box {
+      height: 60px;
+    }
+
+    .logo-img {
+      height: 45px;
+    }
+
+    .nav-link {
+      padding: 8px 15px;
+    }
+  }
+
+  /* For very small screens */
+  @media (max-width: 480px) {
+    .navbar-brand-box {
+      height: 50px;
+    }
+
+    .logo-img {
+      height: 40px;
+    }
+  }
+
+  /* For sidebar collapsed state */
+  .app-menu.sidebar-collapsed .navbar-brand-box {
+    padding: 15px 0;
+  }
+
+  .app-menu.sidebar-collapsed .logo-img {
+    height: 40px;
+  }
+</style>

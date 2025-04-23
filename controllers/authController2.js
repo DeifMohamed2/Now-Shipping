@@ -1,7 +1,10 @@
 const bcrypt = require('bcrypt');
+const axios = require('axios');
 const User = require('../models/user');
 const Admin = require('../models/admin');
 const Courier = require('../models/courier');
+const crypto = require('crypto');
+const OtpVerification = require('../models/OtpVerification');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
@@ -106,7 +109,7 @@ const registerPage = (req, res) => {
     });
 }
 const signup = async (req, res) => {
-  const { email, fullName, password, phoneNumber, storageCheck, termsCheck } =
+  const { email, fullName, password, phoneNumber, storageCheck, termsCheck ,otp } =
     req.body;
 
   if (
@@ -123,60 +126,148 @@ const signup = async (req, res) => {
     });
   }
 
-  try {
-    // 🔍 Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
+  const isOTPVerified = await verifyOTP(phoneNumber, otp);
+  console.log('isOTPVerified:', isOTPVerified);
+  if (!isOTPVerified){
+     return res.status(400).json({
+       status: 'error',
+       message: 'OTP is incorrect or expired',
+     });
+  }
+
+
+    try {
+      // 🔍 Check if user already exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'This email is already registered with us.',
+        });
+      }
+
+      // ✅ Proceed to create new user
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = new User({
+        email,
+        password: hashedPassword,
+        name: fullName,
+        phoneNumber,
+        role: 'Business',
+        isNeedStorage: !!storageCheck,
+      });
+
+      const verificationToken = user.generateVerificationToken();
+
+      await user.save(); // ✅ only once
+
+      // 📧 Send verification email after successful save
+      sendVerificationEmail(user, verificationToken);
+
+      res.status(201).json({
+        status: 'success',
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isNeedStorage: user.isNeedStorage,
+        },
+      });
+    } catch (error) {
+      console.error('Signup Error:', error);
+      let errorMessage = 'An error occurred';
+
+      if (error.code === 11000) {
+        errorMessage = 'This email is already registered with us.';
+      } else if (error.name === 'ValidationError') {
+        errorMessage = 'Validation error';
+      }
+
+      res.status(400).json({
         status: 'error',
-        message: 'This email is already registered with us.',
+        message: errorMessage,
       });
     }
+};
 
-    // ✅ Proceed to create new user
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({
-      email,
-      password: hashedPassword,
-      name: fullName,
-      phoneNumber,
-      role: 'Business',
-      isNeedStorage: !!storageCheck,
-    });
+const sendOTP = async (req, res) => {
+  const { phoneNumber } = req.body;
 
-    const verificationToken = user.generateVerificationToken();
+  if (!phoneNumber || !/^\d{11}$/.test(phoneNumber)) {
+    return res.status(400).json({ message: 'Invalid phone number' });
+  }
 
-    await user.save(); // ✅ only once
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
 
-    // 📧 Send verification email after successful save
-    sendVerificationEmail(user, verificationToken);
+  // Clear old OTPs
+  await OtpVerification.deleteMany({ phoneNumber });
 
-    res.status(201).json({
-      status: 'success',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isNeedStorage: user.isNeedStorage,
+  // Save hashed OTP
+  await OtpVerification.create({ phoneNumber, otpHash });
+
+  // Format phone number to international
+  const internationalNumber = `20${phoneNumber.slice(1)}`; // Eg. "01123456789" -> "201123456789"
+
+  const smsMessage = `Your NowShipping verification code is: ${otp}`;
+
+  try {
+    const response = await axios.post(
+      'https://bulk.whysms.com/api/v3/sms/send',
+      {
+        recipient: internationalNumber,
+        sender_id: 'WhySMS Test', 
+        type: 'plain',
+        message: smsMessage,
       },
-    });
-  } catch (error) {
-    console.error('Signup Error:', error);
-    let errorMessage = 'An error occurred';
+      {
+        headers: {
+          Authorization:
+            'Bearer 555|eouTObaho6DFjDs5S9mLojMI4lNi7VDmqMLMRcrKe5373dd8',
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      }
+    );
 
-    if (error.code === 11000) {
-      errorMessage = 'This email is already registered with us.';
-    } else if (error.name === 'ValidationError') {
-      errorMessage = 'Validation error';
+    const data = response.data;
+
+    if (data.status !== 'success') {
+      console.error('WhySMS API error:', data);
+      return res.status(500).json({ message: 'Failed to send OTP via SMS' });
     }
 
-    res.status(400).json({
-      status: 'error',
-      message: errorMessage,
-    });
+    return res.status(200).json({ message: 'OTP sent successfully' });
+  } catch (err) {
+    console.error('SMS error:', err.response?.data || err.message);
+    return res.status(500).json({ message: 'SMS service error' });
   }
 };
+
+const verifyOTP = async (phoneNumber, otp) => { 
+
+  if (!phoneNumber || !otp) {
+    return false
+  }
+
+  const record = await OtpVerification.findOne({ phoneNumber });
+  if (!record) {
+    return false
+  }
+
+  const hash = crypto.createHash('sha256').update(otp).digest('hex');
+  if (hash !== record.otpHash) {
+    return false
+  }
+
+  await OtpVerification.deleteOne({ _id: record._id });
+
+
+  return true
+};
+
+
 
 
 
@@ -219,6 +310,7 @@ try{
 
     res.status(200).json({
         status: 'success',
+        token,
         user: {
             id: user._id,
             name: user.name,
@@ -419,6 +511,7 @@ module.exports = {
   signup,
   login,
   verifyEmailBytoken,
+  sendOTP,
   createAdminAccount,
   loginAsAdmin,
 

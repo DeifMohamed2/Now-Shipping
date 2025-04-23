@@ -112,7 +112,10 @@ const pickupSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'courier',
     },
+    pickupLocation: {
+      type:String
 
+    }
 
     
   },

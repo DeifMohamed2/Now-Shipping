@@ -827,139 +827,140 @@
   </div>
   <% } else { %>
   <div class="col-xl-12">
-  <!-- Dashboard Overview Cards -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card dashboard-card">
-        <div class="card-header d-flex align-items-center">
-          <h4 class="card-title mb-0">Today's Overview</h4>
-          <div class="ms-auto">
-            <span class="text-muted small">Last updated at <%= new Date().toLocaleTimeString() %></span>
-          </div>
+<!-- Dashboard Overview Cards -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card dashboard-card">
+      <div class="card-header d-flex align-items-center">
+        <h4 class="card-title mb-0">Today's Overview</h4>
+        <div class="ms-auto">
+          <span class="text-muted small">Last updated at <%= new Date().toLocaleTimeString() %></span>
         </div>
-        <div class="card-body">
-          <div class="row g-3">
-            <!-- In Progress Orders -->
-            <div class="col-md-3">
-              <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                  <div class="d-flex align-items-center mb-2">
-                    <h6 class="text-muted mb-0">In Progress Orders</h6>
-                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders currently being processed"></i>
-                  </div>
-                  <h2 class="mb-0 text-dark-custom">0</h2>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <!-- In Progress Orders -->
+          <div class="col-md-3">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                  <h6 class="text-muted mb-0">In Progress Orders</h6>
+                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders currently being processed"></i>
                 </div>
+                <h2 class="mb-0 text-dark-custom"><%= dashboardData?.orderStats?.inProgressCount || 0 %></h2>
               </div>
             </div>
+          </div>
 
-            <!-- Heading to Customer -->
-            <div class="col-md-3">
-              <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                  <div class="d-flex align-items-center mb-2">
-                    <h6 class="text-muted mb-0">Heading to Customer</h6>
-                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders on the way to customers"></i>
-                  </div>
-                  <h2 class="mb-0 text-dark-custom">0</h2>
+          <!-- Heading to Customer -->
+          <div class="col-md-3">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                  <h6 class="text-muted mb-0">Heading to Customer</h6>
+                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders on the way to customers"></i>
                 </div>
+                <h2 class="mb-0 text-dark-custom"><%= dashboardData?.orderStats?.headingToCustomerCount || 0 %></h2>
               </div>
             </div>
+          </div>
 
-            <!-- Completed Orders -->
-            <div class="col-md-3">
-              <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                  <div class="d-flex align-items-center mb-2">
-                    <h6 class="text-muted mb-0">Completed Orders</h6>
-                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Successfully delivered orders"></i>
-                  </div>
-                  <div class="d-flex align-items-baseline">
-                    <h2 class="mb-0 text-dark-custom">0</h2>
-                    <span class="text-muted ms-2">/ 0</span>
-                    <span class="badge bg-success ms-auto">0%</span>
-                  </div>
+          <!-- Completed Orders -->
+          <div class="col-md-3">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                  <h6 class="text-muted mb-0">Completed Orders</h6>
+                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Successfully delivered orders"></i>
                 </div>
-              </div>
-            </div>
-
-            <!-- Awaiting Action -->
-            <div class="col-md-3">
-              <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                  <div class="d-flex align-items-center mb-2">
-                    <h6 class="text-muted mb-0">Awaiting Action</h6>
-                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders requiring your attention"></i>
-                  </div>
-                  <h2 class="mb-0 text-primary-custom">0</h2>
-                </div>
-              </div>
-            </div>
-
-            <!-- Heading to you -->
-            <div class="col-md-3">
-              <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                  <div class="d-flex align-items-center mb-2">
-                    <h6 class="text-muted mb-0">Heading to you</h6>
-                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Returns being sent back to you"></i>
-                  </div>
-                  <h2 class="mb-0 text-dark-custom">0</h2>
-                </div>
-              </div>
-            </div>
-
-            <!-- New Orders -->
-            <div class="col-md-3">
-              <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                  <div class="d-flex align-items-center mb-2">
-                    <h6 class="text-muted mb-0">New Orders</h6>
-                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Recently received orders"></i>
-                  </div>
-                  <h2 class="mb-0 text-primary-custom">1</h2>
-                </div>
-              </div>
-            </div>
-
-            <!-- Expected Cash -->
-            <div class="col-md-3">
-              <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                  <div class="d-flex align-items-center mb-2">
-                    <h6 class="text-muted mb-0">Expected Cash</h6>
-                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Pending payments from delivered orders"></i>
-                  </div>
-                  <div class="d-flex align-items-baseline">
-                    <h2 class="mb-0 text-dark-custom">0</h2>
-                    <span class="text-muted ms-2">EGP</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Collected Cash -->
-            <div class="col-md-3">
-              <div class="card border shadow-sm h-100">
-                <div class="card-body">
-                  <div class="d-flex align-items-center mb-2">
-                    <h6 class="text-muted mb-0">Collected Cash</h6>
-                    <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Payments received from orders"></i>
-                  </div>
-                  <div class="d-flex align-items-baseline">
-                    <h2 class="mb-0 text-dark-custom">0</h2>
-                    <span class="text-muted ms-2">EGP</span>
-                    <span class="badge bg-success ms-auto">0%</span>
-                  </div>
+                <div class="d-flex align-items-baseline">
+                    <h2 class="mb-0 text-success"><%= dashboardData?.orderStats?.completedCount || 0 %></h2>
+                  <span class="text-muted ms-2">/ <%= dashboardData?.orderStats?.totalOrders|| 0 %></span>
+                  <span class="badge bg-success ms-auto"><%= dashboardData?.orderStats?.completionRate || 0 %>%</span>
                 </div>
               </div>
             </div>
           </div>
+
+          <!-- Awaiting Action -->
+          <div class="col-md-3">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                  <h6 class="text-muted mb-0">Awaiting Action</h6>
+                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders requiring your attention"></i>
+                </div>
+                <h2 class="mb-0 text-primary-custom"><%= dashboardData?.orderStats?.awaitingActionCount || 0 %></h2>
+              </div>
+            </div>
+          </div>
+
+          <!-- Heading to you -->
+          <div class="col-md-3">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                  <h6 class="text-muted mb-0">Heading to you</h6>
+                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Returns being sent back to you"></i>
+                </div>
+                <h2 class="mb-0 text-dark-custom"><%= dashboardData?.orderStats?.headingToYouCount || 0 %></h2>
+              </div>
+            </div>
+          </div>
+
+          <!-- New Orders -->
+          <div class="col-md-3">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                  <h6 class="text-muted mb-0">New Orders</h6>
+                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Recently received orders"></i>
+                </div>
+                <h2 class="mb-0 text-primary-custom"><%= dashboardData?.orderStats?.newOrdersCount || 0 %></h2>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expected Cash -->
+          <!-- <div class="col-md-3">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                  <h6 class="text-muted mb-0">Expected Cash</h6>
+                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Pending payments from delivered orders"></i>
+                </div>
+                <div class="d-flex align-items-baseline">
+                  <h2 class="mb-0 text-dark-custom"><%= dashboardData?.financialStats?.expectedCash || 0 %></h2>
+                  <span class="text-muted ms-2">EGP</span>
+                </div>
+              </div>
+            </div>
+          </div> -->
+
+          <!-- Collected Cash -->
+          <!-- <div class="col-md-3">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                  <h6 class="text-muted mb-0">Collected Cash</h6>
+                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Payments received from orders"></i>
+                </div>
+                <div class="d-flex align-items-baseline">
+                  <h2 class="mb-0 text-dark-custom"><%= dashboardData?.financialStats?.collectedCash || 0 %></h2>
+                  <span class="text-muted ms-2">EGP</span>
+                  <span class="badge bg-success ms-auto"><%= dashboardData?.financialStats?.collectionRate || 0 %>%</span>
+                </div>
+              </div>
+            </div>
+          </div> -->
+
+
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Order Status and Promotional Cards -->
 <!-- Chart and Recent Orders Row -->
 <div class="row">
   <!-- Chart -->
@@ -991,45 +992,43 @@
               </tr>
             </thead>
             <tbody>
+              <% if (dashboardData?.recentData?.recentOrders?.length > 0) { %>
+              <% dashboardData.recentData.recentOrders.forEach(order => { %>
               <tr>
-                <td>#ORD-7851</td>
-                <td>Ahmed M.</td>
-                <td><span class="order-status delivered">Delivered</span></td>
+                <td>#<%= order.orderNumber %></td>
+                <td><%= order.orderCustomer?.fullName || 'N/A' %></td>
+                <td>
+                  <% let statusClass = ''; 
+                         switch(order.orderStatus) {
+                           case 'completed': statusClass = 'delivered'; break;
+                           case 'new': statusClass = 'pending'; break;
+                           case 'processing': case 'headingToCustomer': statusClass = 'processing'; break;
+                           case 'cancelled': statusClass = 'cancelled'; break;
+                           default: statusClass = 'pending';
+                         } 
+                      %>
+                  <span class="order-status <%= statusClass %>"><%= order.orderStatus %></span>
+                </td>
               </tr>
+              <% }) %>
+              <% } else { %>
               <tr>
-                <td>#ORD-7852</td>
-                <td>Sara K.</td>
-                <td><span class="order-status pending">Pending</span></td>
+                <td colspan="3" class="text-center py-3">No recent orders</td>
               </tr>
-              <tr>
-                <td>#ORD-7853</td>
-                <td>Mohamed A.</td>
-                <td><span class="order-status processing">Processing</span></td>
-              </tr>
-              <tr>
-                <td>#ORD-7854</td>
-                <td>Fatima H.</td>
-                <td><span class="order-status delivered">Delivered</span></td>
-              </tr>
-              <tr>
-                <td>#ORD-7855</td>
-                <td>Omar S.</td>
-                <td><span class="order-status cancelled">Cancelled</span></td>
-              </tr>
+              <% } %>
             </tbody>
           </table>
         </div>
       </div>
       <div class="card-footer bg-transparent border-top-0">
         <div class="text-center">
-          <a href="#" class="text-dark-custom">View All Orders <i class="ri-arrow-right-line align-middle"></i></a>
+          <a href="/business/orders" class="text-dark-custom">View All Orders <i class="ri-arrow-right-line align-middle"></i></a>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Recent Pickups and Performance Row -->
 <div class="row">
   <!-- Recent Pickups -->
   <div class="col-xl-6">
@@ -1049,37 +1048,37 @@
               </tr>
             </thead>
             <tbody>
+              <% if (dashboardData?.recentData?.recentPickups?.length > 0) { %>
+              <% dashboardData.recentData.recentPickups.forEach(pickup => { %>
               <tr>
-                <td>#PK-1234</td>
-                <td>Apr 15, 2023</td>
-                <td>5</td>
-                <td><span class="order-status delivered">Completed</span></td>
+                <td>#<%= pickup.pickupNumber %></td>
+                <td><%= new Date(pickup.pickupDate).toLocaleDateString() %></td>
+                <td><%= pickup.numberOfOrders %></td>
+                <td>
+                  <% let statusClass = ''; 
+                         switch(pickup.picikupStatus) {
+                           case 'Completed': statusClass = 'delivered'; break;
+                           case 'new': statusClass = 'pending'; break;
+                           case 'In Progress': statusClass = 'processing'; break;
+                           default: statusClass = 'pending';
+                         }
+                      %>
+                  <span class="order-status <%= statusClass %>"><%= pickup.picikupStatus %></span>
+                </td>
               </tr>
+              <% }) %>
+              <% } else { %>
               <tr>
-                <td>#PK-1235</td>
-                <td>Apr 16, 2023</td>
-                <td>3</td>
-                <td><span class="order-status pending">Scheduled</span></td>
+                <td colspan="4" class="text-center py-3">No recent pickups</td>
               </tr>
-              <tr>
-                <td>#PK-1236</td>
-                <td>Apr 17, 2023</td>
-                <td>7</td>
-                <td><span class="order-status processing">In Progress</span></td>
-              </tr>
-              <tr>
-                <td>#PK-1237</td>
-                <td>Apr 18, 2023</td>
-                <td>2</td>
-                <td><span class="order-status delivered">Completed</span></td>
-              </tr>
+              <% } %>
             </tbody>
           </table>
         </div>
       </div>
       <div class="card-footer bg-transparent border-top-0">
         <div class="text-center">
-          <a href="#" class="text-dark-custom">View All Pickups <i class="ri-arrow-right-line align-middle"></i></a>
+          <a href="/business/pickup" class="text-dark-custom">View All Pickups <i class="ri-arrow-right-line align-middle"></i></a>
         </div>
       </div>
     </div>
@@ -1157,13 +1156,14 @@
         <div class="mt-3">
           <div id="performance-chart" style="height: 200px;"></div>
         </div>
+      </div>
     </div>
   </div>
-  </div>
-  <% } %>
-  <!-- end col -->
 </div>
+
 </div>
+<% } %>
+
 
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/filepond/filepond.min.js"></script>
@@ -1179,6 +1179,60 @@
 <script src="/assets/rJS/business/main.js"></script>
 
 <script>
+// Add this to the existing script tag at the bottom, replacing the current chart initialization:
+
+// Initialize Dashboard Charts if user is completed
+if (document.getElementById('revenue-chart')) {
+  const chartLabels = <%- JSON.stringify(dashboardData?.chartData?.monthlyLabels || []) %>;
+  const revenueData = <%- JSON.stringify(dashboardData?.chartData?.monthlyRevenue || []) %>;
+  const orderCountData = <%- JSON.stringify(dashboardData?.chartData?.monthlyOrderCounts || []) %>;
+  
+  const revenueChartOptions = {
+    series: [{
+      name: 'Revenue',
+      type: 'column',
+      data: revenueData
+    }, {
+      name: 'Orders',
+      type: 'line',
+      data: orderCountData
+    }],
+    chart: {
+      height: 350,
+      type: 'line',
+      toolbar: {
+        show: false
+      }
+    },
+    stroke: {
+      width: [0, 4],
+      curve: 'smooth'
+    },
+    colors: ['#F39720', '#333333'],
+    dataLabels: {
+      enabled: true,
+      enabledOnSeries: [1]
+    },
+    labels: chartLabels,
+    xaxis: {
+      type: 'category'
+    },
+    yaxis: [{
+      title: {
+        text: 'Revenue (EGP)',
+      },
+    }, {
+      opposite: true,
+      title: {
+        text: 'Orders'
+      }
+    }]
+  };
+
+  const revenueChart = new ApexCharts(document.getElementById('revenue-chart'), revenueChartOptions);
+  revenueChart.render();
+}
+
   document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap components
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

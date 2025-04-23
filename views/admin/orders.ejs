@@ -394,7 +394,12 @@
     tableBody.innerHTML = ""; // Clear existing rows
     orders.forEach(order => {
       const row = document.createElement("tr");
-
+        // Add highlighting for different important statuses
+        if (order.orderStatus === 'new') {
+        row.classList.add('table-warning'); // Yellow highlight for new orders
+        } else if (order.orderStatus === 'rejected' || order.orderStatus === 'returned') {
+        row.classList.add('table-danger'); // Red highlight for problem orders
+        }
       row.innerHTML = `
         <th scope="row">
           <div class="form-check">
