@@ -1,0 +1,1980 @@
+<%- contentFor('HeaderCss') %>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Reset and Base Styles */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --primary: #F39720;
+    --secondary: #FDB614;
+    --accent: #8FCAES;
+    --accent-dark: #3D9BC5;
+    --accent-light: #C5E8F7;
+    --dark: #1E293B;
+    --dark-secondary: #334155;
+    --light: #F8FAFC;
+    --light-secondary: #F1F5F9;
+    --gray: #64748B;
+    --light-gray: #E2E8F0;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --info: #3B82F6;
+    --font-primary: 'Poppins', sans-serif;
+    --font-secondary: 'Montserrat', sans-serif;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --transition: all 0.3s ease;
+    --border-radius-sm: 0.25rem;
+    --border-radius: 0.5rem;
+    --border-radius-md: 0.75rem;
+    --border-radius-lg: 1rem;
+    --border-radius-xl: 1.5rem;
+    --border-radius-2xl: 2rem;
+    --border-radius-full: 9999px;
+  }
+
+  body {
+    overflow-x: hidden;
+    background-color: var(--light);
+    color: var(--dark);
+    font-family: var(--font-primary);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-secondary);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: var(--dark);
+  }
+
+  h1 {
+    font-size: 3.5rem;
+  }
+
+  h2 {
+    font-size: 2.5rem;
+  }
+
+  h3 {
+    font-size: 1.75rem;
+  }
+
+  h4 {
+    font-size: 1.5rem;
+  }
+
+  h5 {
+    font-size: 1.25rem;
+  }
+
+  h6 {
+    font-size: 1rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: var(--gray);
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--primary);
+    transition: var(--transition);
+  }
+
+  a:hover {
+    color: var(--secondary);
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .text-left {
+    text-align: left;
+  }
+
+  .flex {
+    display: flex;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .items-center {
+    align-items: center;
+  }
+
+  .justify-center {
+    justify-content: center;
+  }
+
+  .justify-between {
+    justify-content: space-between;
+  }
+
+  .justify-around {
+    justify-content: space-around;
+  }
+
+  .justify-evenly {
+    justify-content: space-evenly;
+  }
+
+  .gap-1 {
+    gap: 0.25rem;
+  }
+
+  .gap-2 {
+    gap: 0.5rem;
+  }
+
+  .gap-3 {
+    gap: 0.75rem;
+  }
+
+  .gap-4 {
+    gap: 1rem;
+  }
+
+  .gap-5 {
+    gap: 1.25rem;
+  }
+
+  .gap-6 {
+    gap: 1.5rem;
+  }
+
+  .gap-8 {
+    gap: 2rem;
+  }
+
+  .gap-10 {
+    gap: 2.5rem;
+  }
+
+  .gap-12 {
+    gap: 3rem;
+  }
+
+  .w-full {
+    width: 100%;
+  }
+
+  .h-full {
+    height: 100%;
+  }
+
+  .relative {
+    position: relative;
+  }
+
+  .absolute {
+    position: absolute;
+  }
+
+  .z-10 {
+    z-index: 10;
+  }
+
+  .z-20 {
+    z-index: 20;
+  }
+
+  .z-30 {
+    z-index: 30;
+  }
+
+  .z-40 {
+    z-index: 40;
+  }
+
+  .z-50 {
+    z-index: 50;
+  }
+
+  .overflow-hidden {
+    overflow: hidden;
+  }
+
+  .rounded-sm {
+    border-radius: var(--border-radius-sm);
+  }
+
+  .rounded {
+    border-radius: var(--border-radius);
+  }
+
+  .rounded-md {
+    border-radius: var(--border-radius-md);
+  }
+
+  .rounded-lg {
+    border-radius: var(--border-radius-lg);
+  }
+
+  .rounded-xl {
+    border-radius: var(--border-radius-xl);
+  }
+
+  .rounded-2xl {
+    border-radius: var(--border-radius-2xl);
+  }
+
+  .rounded-full {
+    border-radius: var(--border-radius-full);
+  }
+
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow {
+    box-shadow: var(--shadow);
+  }
+
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .transition {
+    transition: var(--transition);
+  }
+
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Animation Canvas */
+  #animationCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.05;
+  }
+
+  /* Header Styles */
+  header {
+    background-color: white;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0.75rem 0;
+  }
+
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    color: var(--primary);
+    font-size: 2rem;
+    margin-right: 0.75rem;
+  }
+
+  /* Enhanced Navigation */
+  .nav-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  nav {
+    margin-right: 1rem;
+  }
+
+  nav ul {
+    display: flex;
+    list-style: none;
+    gap: 0.5rem;
+  }
+
+  nav ul li {
+    position: relative;
+  }
+
+  nav ul li a {
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+
+  nav ul li a i {
+    font-size: 1.1rem;
+    color: var(--primary);
+  }
+
+  nav ul li a:hover {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+  }
+
+  nav ul li.active a {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* Dropdown Menu */
+  .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+
+  .dropdown-toggle i:first-child {
+    font-size: 1.1rem;
+    color: var(--primary);
+  }
+
+  .dropdown-toggle i.dropdown-arrow {
+    margin-left: 0.3rem;
+    font-size: 0.8rem;
+    transition: transform 0.3s;
+    color: var(--gray);
+  }
+
+  .dropdown-toggle:hover {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    box-shadow: var(--shadow-md);
+    border-radius: var(--border-radius);
+    min-width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 101;
+    padding: 0.5rem 0;
+    border: 1px solid var(--light-gray);
+  }
+
+  .dropdown-menu li {
+    margin: 0;
+  }
+
+  .dropdown-menu a {
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 0;
+    border-bottom: 1px solid var(--light-gray);
+    transition: var(--transition);
+  }
+
+  .dropdown-menu a:hover {
+    background-color: var(--light-secondary);
+    padding-left: 1.5rem;
+  }
+
+  .dropdown-menu a i {
+    font-size: 1rem;
+    color: var(--primary);
+    width: 20px;
+    text-align: center;
+  }
+
+  .dropdown-menu li:last-child a {
+    border-bottom: none;
+  }
+
+  nav ul li:hover .dropdown-toggle i.dropdown-arrow {
+    transform: rotate(180deg);
+  }
+
+  nav ul li:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  /* Auth Buttons */
+  .auth-buttons {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-full);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-align: center;
+    font-size: 0.95rem;
+    border: none;
+    outline: none;
+  }
+
+  .btn i {
+    font-size: 1rem;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+  }
+
+  .btn-outline {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+  }
+
+  .btn-outline:hover {
+    background-color: var(--primary);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: 2px solid var(--primary);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-secondary {
+    background-color: var(--accent);
+    color: white;
+    border: 2px solid var(--accent);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--accent-dark);
+    border-color: var(--accent-dark);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-light {
+    background-color: white;
+    color: var(--primary);
+    border: 2px solid white;
+  }
+
+  .btn-light:hover {
+    background-color: transparent;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-dark {
+    background-color: var(--dark);
+    color: white;
+    border: 2px solid var(--dark);
+  }
+
+  .btn-dark:hover {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-secondary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .mobile-menu-btn {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--dark);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+
+  .mobile-menu-btn:hover {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+  }
+
+  /* Top Bar */
+  .top-bar {
+    background-color: var(--dark);
+    color: white;
+    padding: 0.5rem 0;
+    font-size: 0.85rem;
+  }
+
+  .top-bar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .top-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .top-bar-item i {
+    color: var(--primary);
+    font-size: 0.9rem;
+  }
+
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .top-bar-social {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .top-bar-social a {
+    color: white;
+    font-size: 0.9rem;
+    transition: var(--transition);
+  }
+
+  .top-bar-social a:hover {
+    color: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  /* Section Styles */
+  section {
+    padding: 6rem 0;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+    text-align: center;
+    position: relative;
+    padding-bottom: 1rem;
+  }
+
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background-color: var(--primary);
+    border-radius: var(--border-radius-full);
+  }
+
+  .section-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 4rem;
+    color: var(--gray);
+    text-align: center;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section-header {
+    margin-bottom: 4rem;
+  }
+
+  /* FAQ Hero Section */
+  .faq-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 6rem 0;
+    background-color: var(--light);
+  }
+
+  .faq-hero-bg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background-color: var(--accent-light);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 20% 100%);
+    z-index: 0;
+  }
+
+  .faq-hero-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .faq-hero-content h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+  }
+
+  .faq-hero-content p {
+    font-size: 1.2rem;
+    color: var(--gray);
+    margin-bottom: 2rem;
+  }
+
+  .search-container {
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    padding-right: 4rem;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--border-radius-full);
+    font-size: 1.1rem;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.2);
+  }
+
+  .search-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .search-btn:hover {
+    background-color: var(--secondary);
+  }
+
+  /* FAQ Categories */
+  .faq-categories {
+    background-color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .faq-categories::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background-color: rgba(143, 202, 232, 0.1);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .category-card {
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-bottom: 4px solid transparent;
+  }
+
+  .category-card:hover {
+    transform: translateY(-15px);
+    box-shadow: var(--shadow-lg);
+    border-bottom: 4px solid var(--primary);
+  }
+
+  .category-icon {
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background-color: rgba(243, 151, 32, 0.1);
+  }
+
+  .category-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+  }
+
+  .category-description {
+    color: var(--gray);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  /* FAQ Accordion Section */
+  .faq-accordion {
+    background-color: var(--light);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .faq-accordion::before {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: -100px;
+    width: 300px;
+    height: 300px;
+    background-color: rgba(243, 151, 32, 0.1);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .faq-container {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .accordion {
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background-color: white;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .accordion:hover {
+    box-shadow: var(--shadow);
+  }
+
+  .accordion-header {
+    background-color: white;
+    padding: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s;
+    border-bottom: 1px solid transparent;
+  }
+
+  .accordion-header:hover {
+    background-color: var(--light-secondary);
+  }
+
+  .accordion.active .accordion-header {
+    border-bottom: 1px solid var(--light-gray);
+    background-color: var(--light-secondary);
+  }
+
+  .accordion-title {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 1.1rem;
+  }
+
+  .accordion-icon {
+    color: var(--primary);
+    transition: transform 0.3s;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(243, 151, 32, 0.1);
+    border-radius: 50%;
+  }
+
+  .accordion.active .accordion-icon {
+    transform: rotate(180deg);
+    background-color: var(--primary);
+    color: white;
+  }
+
+  .accordion-content {
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background-color: white;
+  }
+
+  .accordion.active .accordion-content {
+    padding: 1.5rem;
+    max-height: 500px;
+  }
+
+  .accordion-body {
+    color: var(--gray);
+    line-height: 1.6;
+  }
+
+  /* Contact CTA Section */
+  .contact-cta {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    padding: 6rem 0;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contact-cta::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+
+  .contact-cta::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+
+  .contact-cta-container {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .contact-cta h2 {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    font-weight: 800;
+    color: white;
+  }
+
+  .contact-cta p {
+    font-size: 1.25rem;
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+    color: white;
+  }
+
+  .contact-cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  /* Footer */
+  footer {
+    background-color: var(--dark);
+    color: white;
+    padding: 5rem 0 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+  }
+
+  .footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 3rem;
+    margin-bottom: 4rem;
+  }
+
+  .footer-column {
+    flex: 1;
+    min-width: 240px;
+  }
+
+  .footer-column h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 1rem;
+    color: white;
+  }
+
+  .footer-column h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: var(--border-radius-full);
+  }
+
+  .footer-column ul {
+    list-style: none;
+  }
+
+  .footer-column ul li {
+    margin-bottom: 1rem;
+  }
+
+  .footer-column ul li a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .footer-column ul li a i {
+    color: var(--primary);
+    font-size: 0.9rem;
+  }
+
+  .footer-column ul li a:hover {
+    color: var(--primary);
+    transform: translateX(5px);
+  }
+
+  .social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+  }
+
+  .social-icon:hover {
+    background-color: var(--primary);
+    transform: translateY(-5px);
+  }
+
+  .footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+  }
+
+  /* Responsive Styles */
+  @media (max-width: 1280px) {
+    .container {
+      padding: 0 3rem;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    html {
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 2rem;
+    }
+
+    .header-container {
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 80%;
+      height: 100vh;
+      background-color: white;
+      flex-direction: column;
+      padding: 5rem 2rem;
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+      transition: right 0.3s ease;
+      z-index: 101;
+      overflow-y: auto;
+    }
+
+    .nav-container.active {
+      right: 0;
+    }
+
+    nav {
+      margin-right: 0;
+      margin-bottom: 2rem;
+      width: 100%;
+    }
+
+    nav ul {
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    nav ul li {
+      margin: 0.5rem 0;
+      width: 100%;
+    }
+
+    nav ul li a,
+    .dropdown-toggle {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .dropdown-menu {
+      position: static;
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      box-shadow: none;
+      display: none;
+      padding-left: 1rem;
+      width: 100%;
+      border: none;
+    }
+
+    .dropdown-menu.active {
+      display: block;
+    }
+
+    .dropdown-menu a {
+      border-bottom: none;
+      padding: 0.75rem 1rem;
+    }
+
+    .mobile-menu-btn {
+      display: flex;
+      z-index: 102;
+    }
+
+    .auth-buttons {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .section-title {
+      font-size: 2rem;
+    }
+
+    .contact-cta-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 0 1.5rem;
+    }
+
+    .faq-hero-content h1 {
+      font-size: 2.5rem;
+    }
+
+    .btn {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    .auth-buttons {
+      flex-direction: column;
+    }
+  }
+</style>
+<%- contentFor('body') %>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="container top-bar-container">
+    <div class="top-bar-left">
+      <div class="top-bar-item">
+        <i class="fas fa-phone"></i>
+        <span>+1 (555) 123-4567</span>
+      </div>
+      <div class="top-bar-item">
+        <i class="fas fa-envelope"></i>
+        <span>info@shipfast.com</span>
+      </div>
+      <div class="top-bar-item">
+        <i class="fas fa-clock"></i>
+        <span>Mon-Fri: 8:00 AM - 8:00 PM</span>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <div class="top-bar-social">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Animation Canvas for Moving Trucks -->
+<canvas id="animationCanvas"></canvas>
+
+<!-- Header -->
+<header>
+  <div class="container header-container">
+    <a href="#" class="logo">
+      <i class="fas fa-truck-fast logo-icon"></i>
+      <span>ShipFast</span>
+    </a>
+
+    <div class="mobile-menu-btn">
+      <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="nav-container">
+      <nav>
+        <ul>
+          <li>
+            <a href="index.html">
+              <i class="fas fa-home"></i>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="about-us.html">
+              <i class="fas fa-info-circle"></i>
+              <span>About Us</span>
+            </a>
+          </li>
+          <li>
+            <div class="dropdown-toggle">
+              <i class="fas fa-box"></i>
+              <span>Services</span>
+              <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </div>
+            <ul class="dropdown-menu">
+              <li><a href="#"><i class="fas fa-truck-fast"></i> Express Delivery</a></li>
+              <li><a href="#"><i class="fas fa-clock"></i> Same Day Delivery</a></li>
+              <li><a href="#"><i class="fas fa-globe"></i> International Shipping</a></li>
+              <li><a href="#"><i class="fas fa-warehouse"></i> Warehousing</a></li>
+              <li><a href="#"><i class="fas fa-boxes-stacked"></i> Fulfillment</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="mobile-app.html">
+              <i class="fas fa-mobile-alt"></i>
+              <span>Mobile App</span>
+            </a>
+          </li>
+          <li>
+            <a href="pricing.html">
+              <i class="fas fa-tag"></i>
+              <span>Pricing</span>
+            </a>
+          </li>
+          <li class="active">
+            <a href="faq.html">
+              <i class="fas fa-question-circle"></i>
+              <span>FAQ</span>
+            </a>
+          </li>
+          <li>
+            <a href="about-us.html#contact">
+              <i class="fas fa-headset"></i>
+              <span>Contact</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="auth-buttons">
+        <a href="#" class="btn btn-outline">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Sign In</span>
+        </a>
+        <a href="#" class="btn btn-primary">
+          <i class="fas fa-user-plus"></i>
+          <span>Sign Up</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- FAQ Hero Section -->
+<!-- <section class="faq-hero">
+  <div class="faq-hero-bg"></div>
+  <div class="container">
+    <div class="faq-hero-content">
+      <h1>Frequently Asked Questions</h1>
+      <p>Find answers to common questions about our services, shipping process, and more. If you can't find what you're looking for, feel free to contact our support team.</p>
+      <div class="search-container">
+        <input type="text" class="search-input" placeholder="Search for answers...">
+        <button class="search-btn">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- FAQ Categories Section -->
+<!-- <section class="faq-categories">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Browse by Category</h2>
+      <p class="section-subtitle">Find answers based on the topic you're interested in</p>
+    </div>
+
+    <div class="categories-grid">
+      <div class="category-card">
+        <div class="category-icon">
+          <i class="fas fa-truck-fast"></i>
+        </div>
+        <h3 class="category-title">Shipping & Delivery</h3>
+        <p class="category-description">Questions about delivery times, tracking, and shipping options.</p>
+        <a href="#shipping" class="btn btn-outline">View Questions</a>
+      </div>
+
+      <div class="category-card">
+        <div class="category-icon">
+          <i class="fas fa-credit-card"></i>
+        </div>
+        <h3 class="category-title">Payments & Pricing</h3>
+        <p class="category-description">Information about payment methods, pricing, and billing.</p>
+        <a href="#payments" class="btn btn-outline">View Questions</a>
+      </div>
+
+      <div class="category-card">
+        <div class="category-icon">
+          <i class="fas fa-box-open"></i>
+        </div>
+        <h3 class="category-title">Packaging & Handling</h3>
+        <p class="category-description">Guidelines for packaging, weight limits, and special handling.</p>
+        <a href="#packaging" class="btn btn-outline">View Questions</a>
+      </div>
+
+      <div class="category-card">
+        <div class="category-icon">
+          <i class="fas fa-globe"></i>
+        </div>
+        <h3 class="category-title">International Shipping</h3>
+        <p class="category-description">Information about customs, duties, and international delivery.</p>
+        <a href="#international" class="btn btn-outline">View Questions</a>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- FAQ Accordion Section - Shipping & Delivery -->
+<section class="faq-accordion" id="shipping">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Shipping & Delivery</h2>
+      <p class="section-subtitle">Common questions about our shipping and delivery services</p>
+    </div>
+
+    <div class="faq-container">
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">How do I track my shipment?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            You can track your shipment by entering your tracking number in the tracking form on our website or mobile app. Alternatively, you can log in to your account to view all your shipments and their current status. We also send automated email and SMS notifications at key stages of the delivery process.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">What are your delivery hours?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            Our standard delivery hours are from 9:00 AM to 6:00 PM, Monday through Friday, and 10:00 AM to 4:00 PM on Saturdays. For businesses with special requirements, we offer flexible delivery windows that can be arranged in advance.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">How do I schedule a pickup?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            You can schedule a pickup through our website or mobile app. Simply log in to your account, enter the shipment details, and select a convenient pickup time. You can also call our customer service to arrange a pickup. For regular pickups, we offer scheduled pickup services that can be customized to your business needs.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">What is the estimated delivery time for domestic shipments?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            Delivery times for domestic shipments vary based on the service selected and the distance between the origin and destination. Our Express service typically delivers within 1-2 business days, while our Standard service delivers within 2-5 business days. Same-day delivery is available in select cities for orders placed before 11:00 AM.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">What happens if I'm not available to receive my package?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            If you're not available to receive your package, our courier will leave a delivery attempt notice with instructions on how to reschedule the delivery or pick up the package from a nearby location. You can also use our mobile app to provide delivery instructions or authorize a signature-free delivery if appropriate.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Accordion Section - Payments & Pricing -->
+<section class="faq-accordion" id="payments">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Payments & Pricing</h2>
+      <p class="section-subtitle">Common questions about payments, pricing, and billing</p>
+    </div>
+
+    <div class="faq-container">
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">What payment methods do you accept?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            We accept all major credit cards (Visa, MasterCard, American Express, Discover), PayPal, and bank transfers. Business customers can also apply for a credit account with monthly invoicing.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">How is shipping cost calculated?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            Shipping costs are calculated based on several factors, including package dimensions, weight, distance, delivery speed, and any additional services requested. You can get an instant quote using our shipping calculator on the website or mobile app.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">Do you offer volume discounts?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            Yes, we offer volume discounts for businesses that ship regularly. The discount rates depend on your monthly shipping volume and the services used. Contact our sales team for a customized quote based on your specific shipping needs.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">What is your refund policy?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            We offer a money-back guarantee for shipments that are not delivered within the promised timeframe. If your shipment is delayed beyond the guaranteed delivery time, you may be eligible for a full or partial refund, depending on the service selected. Please contact our customer service within 7 days of the delivery date to process your refund request.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">Are there any hidden fees?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            We pride ourselves on transparent pricing. The quote you receive includes all standard shipping costs. Additional fees may apply for special services such as weekend delivery, signature confirmation, or insurance. These optional services and their associated costs will be clearly displayed before you confirm your shipment.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Accordion Section - Packaging & Handling -->
+<section class="faq-accordion" id="packaging">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Packaging & Handling</h2>
+      <p class="section-subtitle">Common questions about packaging requirements and handling</p>
+    </div>
+
+    <div class="faq-container">
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">What are the packaging requirements for shipments?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            All items should be packaged in a sturdy box with appropriate cushioning material to protect the contents. The box should be sealed securely with packing tape on all seams. For fragile items, we recommend double-boxing with additional padding. Proper packaging is essential to ensure your items arrive safely.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">Do you provide packaging materials?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            Yes, we offer a range of packaging materials including boxes, envelopes, bubble wrap, and packing tape. These can be purchased at our shipping centers or ordered online. Business customers with regular shipping needs can request a supply of our branded packaging materials at discounted rates.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">What is the maximum weight and size for packages?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            For standard shipping, the maximum weight per package is 150 lbs (68 kg), and the maximum size is 165 inches (419 cm) in length and girth combined. For oversized or heavier items, we offer special freight services. Please contact our customer service for more information on shipping large or heavy items.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">How should I package fragile items?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            Fragile items require special attention. We recommend wrapping each item individually in bubble wrap or packing paper, then placing them in a box with at least 2 inches of cushioning material (such as packing peanuts or crumpled paper) on all sides. For extra protection, place this box inside a larger box with additional cushioning. Clearly mark the package as "FRAGILE" on all sides.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">Are there any items that cannot be shipped?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            Yes, there are restrictions on certain items for safety and legal reasons. Prohibited items include hazardous materials, flammable liquids, explosives, firearms, illegal substances, and perishable goods without proper arrangements. Please refer to our complete list of prohibited items on our website or contact customer service if you're unsure about a specific item.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Accordion Section - International Shipping -->
+<!-- <section class="faq-accordion" id="international">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">International Shipping</h2>
+      <p class="section-subtitle">Common questions about international shipping services</p>
+    </div>
+
+    <div class="faq-container">
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">Which countries do you ship to?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            We ship to over 200 countries and territories worldwide. However, shipping services and transit times may vary by destination. Some countries may have restrictions on certain types of goods. You can check service availability for your specific destination on our website or by contacting customer service.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">How long does international shipping take?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            International shipping times vary depending on the destination country, customs clearance processes, and the service level selected. Our Express International service typically delivers within 2-5 business days to major global cities, while our Standard International service delivers within 5-10 business days. Remote locations may require additional transit time.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">Do I need to pay customs duties and taxes?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            Yes, international shipments may be subject to customs duties, taxes, and fees imposed by the destination country. These charges are the responsibility of the recipient and are typically collected at the time of delivery or before the package is released. We offer a Duties and Taxes Paid (DTP) service where the sender can choose to pay these charges in advance.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">What documentation is required for international shipping?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            International shipments require a commercial invoice that includes a detailed description of the items, their value, country of origin, and the reason for export. Depending on the destination country and the nature of the goods, additional documentation such as certificates of origin, permits, or licenses may be required. Our system will guide you through the necessary documentation during the shipping process.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">
+          <div class="accordion-title">Can I track my international shipment?</div>
+          <div class="accordion-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="accordion-content">
+          <div class="accordion-body">
+            Yes, all our international shipments include end-to-end tracking. You can track your package on our website or mobile app using the tracking number provided. Our tracking system provides updates at key milestones, including customs clearance status. For business customers, we offer detailed reporting and analytics for all international shipments.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- Contact CTA Section -->
+<section class="contact-cta">
+  <div class="container contact-cta-container">
+    <h2>Still have questions?</h2>
+    <p>Our customer support team is here to help you with any questions or concerns you may have about our services.</p>
+    <div class="contact-cta-buttons">
+      <a href="about-us.html#contact" class="btn btn-light btn-lg">
+        <i class="fas fa-headset"></i>
+        <span>Contact Support</span>
+      </a>
+      <a href="#" class="btn btn-outline btn-lg" style="color: white; border-color: white;">
+        <i class="fas fa-comments"></i>
+        <span>Live Chat</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-column">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="about-us.html"><i class="fas fa-angle-right"></i> About Us</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Careers</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Press</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Blog</a></li>
+          <li><a href="about-us.html#contact"><i class="fas fa-angle-right"></i> Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Services</h3>
+        <ul>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Express Delivery</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> International Shipping</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Warehousing</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Supply Chain Solutions</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> E-commerce Fulfillment</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Resources</h3>
+        <ul>
+          <li><a href="faq.html"><i class="fas fa-angle-right"></i> Help Center</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> API Documentation</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Shipping Calculator</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Track Your Package</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Terms & Conditions</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Connect With Us</h3>
+        <p>Follow us on social media for updates and promotions</p>
+        <div class="social-icons">
+          <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2023 ShipFast. All rights reserved. | Designed with <i class="fas fa-heart" style="color: var(--primary);"></i> by ShipFast Team</p>
+    </div>
+  </div>
+</footer>
+<%- contentFor('FooterJs') %>
+
+<!-- JavaScript -->
+<script>
+  // Mobile Menu Toggle
+  const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+  const navContainer = document.querySelector('.nav-container');
+
+  mobileMenuBtn.addEventListener('click', () => {
+    navContainer.classList.toggle('active');
+
+    // Toggle icon between bars and times
+    const icon = mobileMenuBtn.querySelector('i');
+    if (icon.classList.contains('fa-bars')) {
+      icon.classList.remove('fa-bars');
+      icon.classList.add('fa-times');
+    } else {
+      icon.classList.remove('fa-times');
+      icon.classList.add('fa-bars');
+    }
+  });
+
+  // Mobile Dropdown Toggle
+  if (window.innerWidth <= 768) {
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+
+    dropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const dropdownMenu = toggle.nextElementSibling;
+        dropdownMenu.classList.toggle('active');
+
+        const icon = toggle.querySelector('.dropdown-arrow');
+        if (icon.style.transform === 'rotate(180deg)') {
+          icon.style.transform = 'rotate(0deg)';
+        } else {
+          icon.style.transform = 'rotate(180deg)';
+        }
+      });
+    });
+  }
+
+  // Animated Trucks Background
+  const canvas = document.getElementById('animationCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Set canvas size to match window
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Truck class
+  class Truck {
+    constructor() {
+      this.width = 100;
+      this.height = 50;
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.speed = 0.3 + Math.random() * 0.7; // Slower speed
+      this.direction = Math.random() * Math.PI * 2; // Random direction in radians
+      this.color = Math.random() > 0.5 ? '#F39720' : '#FDB614';
+    }
+
+    update() {
+      // Move truck
+      this.x += Math.cos(this.direction) * this.speed;
+      this.y += Math.sin(this.direction) * this.speed;
+
+      // Bounce off edges
+      if (this.x < 0 || this.x > canvas.width - this.width) {
+        this.direction = Math.PI - this.direction;
+      }
+
+      if (this.y < 0 || this.y > canvas.height - this.height) {
+        this.direction = -this.direction;
+      }
+    }
+
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.direction);
+
+      // Draw truck body
+      ctx.fillStyle = this.color;
+      ctx.fillRect(-this.width / 2, -this.height / 2, this.width * 0.7, this.height);
+
+      // Draw truck cabin
+      ctx.fillStyle = this.color === '#F39720' ? '#FDB614' : '#F39720';
+      ctx.fillRect(-this.width / 2 + this.width * 0.7, -this.height / 2, this.width * 0.3, this.height * 0.8);
+
+      // Draw wheels
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(-this.width / 2 + this.width * 0.2, this.height / 2, this.height * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(-this.width / 2 + this.width * 0.8, this.height / 2, this.height * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+  }
+
+  // Create only 2 trucks for better performance
+  const trucks = [];
+  for (let i = 0; i < 2; i++) {
+    trucks.push(new Truck());
+  }
+
+  // Animation loop
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    trucks.forEach(truck => {
+      truck.update();
+      truck.draw();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  // FAQ Accordion
+  const accordions = document.querySelectorAll('.accordion');
+
+  accordions.forEach(accordion => {
+    const header = accordion.querySelector('.accordion-header');
+
+    header.addEventListener('click', () => {
+      // Close all other accordions
+      accordions.forEach(a => {
+        if (a !== accordion && a.classList.contains('active')) {
+          a.classList.remove('active');
+        }
+      });
+
+      // Toggle current accordion
+      accordion.classList.toggle('active');
+    });
+  });
+
+  // Search functionality
+  const searchInput = document.querySelector('.search-input');
+  const searchBtn = document.querySelector('.search-btn');
+
+  searchBtn.addEventListener('click', performSearch);
+  searchInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  });
+
+  function performSearch() {
+    const searchTerm = searchInput.value.toLowerCase();
+    if (searchTerm.trim() === '') return;
+
+    // Close all accordions
+    accordions.forEach(accordion => {
+      accordion.classList.remove('active');
+    });
+
+    // Search through accordion titles and content
+    let found = false;
+    accordions.forEach(accordion => {
+      const title = accordion.querySelector('.accordion-title').textContent.toLowerCase();
+      const content = accordion.querySelector('.accordion-body').textContent.toLowerCase();
+
+      if (title.includes(searchTerm) || content.includes(searchTerm)) {
+        accordion.classList.add('active');
+        accordion.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+        found = true;
+      }
+    });
+
+    if (!found) {
+      alert('No results found for "' + searchTerm + '". Please try a different search term.');
+    }
+  }
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+
+      const targetId = this.getAttribute('href');
+      if (targetId === '#') return;
+
+      const targetElement = document.querySelector(targetId);
+      if (targetElement) {
+        window.scrollTo({
+          top: targetElement.offsetTop - 100,
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
+</script>

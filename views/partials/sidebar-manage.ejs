@@ -16,9 +16,9 @@
         <span class="text-start">
           <span class="d-block fw-semibold sidebar-user-name-text" style="color: #212529; font-size: 14px;">Anna Adame</span>
           <span class="d-block fs-12 sidebar-user-name-sub-text" style="color: #6c757d;"><i class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span class="align-middle">Online</span>
+          </span>
         </span>
-      </span>
-      <i class="ri-chevron-down-line fs-16" style="color: #6c757d;"></i>
+        <i class="ri-chevron-down-line fs-16" style="color: #6c757d;"></i>
     </button>
     <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg py-2">
       <!-- dropdown items can be added here if needed -->
@@ -37,10 +37,10 @@
           </a>
         </li>
         <li class="nav-item"></li>
-          <a class="nav-link menu-link" href="/admin/orders" role="button">
-            <i class="ri-shopping-cart-line" style="color: #F39720;"></i>
-            <span data-key="" style="color: #212529; font-size: 15px;">Orders</span>
-          </a>
+        <a class="nav-link menu-link" href="/admin/orders" role="button">
+          <i class="ri-shopping-cart-line" style="color: #F39720;"></i>
+          <span data-key="" style="color: #212529; font-size: 15px;">Orders</span>
+        </a>
         </li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/pickups" role="button">
@@ -55,10 +55,38 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link menu-link" href="/admin/stock-managment" role="button">
-            <i class="ri-store-line" style="color: #F39720;"></i>
-            <span data-key="" style="color: #212529; font-size: 15px;">Stock Managment</span>
+          <a class="nav-link menu-link" href="/admin/couriers-follow-up" role="button">
+            <i class="ri-user-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Couriers Follow-Up</span>
           </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarStockManagement" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarStockManagement">
+            <i class="ri-store-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Stock Management</span>
+          </a>
+          <div class="collapse ms-3" id="sidebarStockManagement">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link" href="/admin/stock-management/pickups">
+                  <i class="ri-truck-line" style="color: #F39720;"></i>
+                  <span data-key="" style="color: #212529; font-size: 14px;">From Pickups</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/admin/stock-management/returns">
+                  <i class="ri-arrow-go-back-line" style="color: #F39720;"></i>
+                  <span data-key="" style="color: #212529; font-size: 14px;">From Returns</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/admin/stock-management/storages">
+                  <i class="ri-archive-line" style="color: #F39720;"></i>
+                  <span data-key="" style="color: #212529; font-size: 14px;">Storages</span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="#sidebarWallet" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarWallet">

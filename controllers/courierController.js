@@ -30,7 +30,7 @@ const get_ordersPage = (req, res) => {
 const get_orders = async(req, res) => {
     const { courierId } = req
     try {
-        const orders = await Order.find({ deliveryMan: courierId })
+        const orders = await Order.find({ deliveryMan: courierId  })
         .populate('deliveryMan')
         .populate('business')
         .exec();
@@ -67,6 +67,56 @@ const get_orderDetailsPage = async(req, res) => {
 
 }
 
+const updateOrderStatus = async (req, res) => {
+    const { orderNumber } = req.params;
+    const { status, reason } = req.body;
+    const { courierId } = req;
+    try {
+        const order = await Order.findOne({ orderNumber: orderNumber, deliveryMan: courierId })
+            .populate('deliveryMan')
+            .populate('business')
+            .exec();
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        if (['completed', 'canceled', 'rejected', 'returned', 'terminated','waitingAction'].includes(order.orderStatus)) {
+            return res.status(400).json({ message: `Order is ${order.orderStatus === 'completed' ? 'already delivered' : order.orderStatus}` });
+        }
+        if (['inStock'].includes(order.orderStatus)) {
+            return res.status(400).json({ message: `Order status ${order.orderStatus} is not valid for update` });
+        }
+        if (status==="Unavailable" && reason) {
+            order.Attemps += 1;
+            order.UnavailableReason.push(reason);
+            order.orderStatus = 'waitingAction';
+            order.orderStatusHistory.push({
+              status: 'waitingAction',
+              date: new Date(),
+            });
+            order.orderStages = order.orderStages.filter(
+                (stage) => stage.stageName !== 'headingToCustomer'
+            );
+            await order.save();
+        }else if (status === 'rejected') {
+            order.Attemps += 1;
+            order.orderStatus = 'rejected';
+            order.orderStatusHistory.push({
+                status: 'rejected',
+                date: new Date(),
+            });
+            order.orderStages = [];
+            await order.save();
+        }
+
+
+        res.status(200).json({ message: 'Order status updated successfully' });
+    } catch (error) {   
+        console.log(error.message);
+        res.status(500).json({ message: error.message });
+    }
+
+}
+
 
 const completeOrder = async (req, res) => {
     const { orderNumber } = req.params;
@@ -81,7 +131,7 @@ const completeOrder = async (req, res) => {
             return res.status(400).json({ message: `Order is ${order.orderStatus === 'completed' ? 'already delivered' : order.orderStatus}` });
         }
 
-        if (!['inStock','headingToCustomer','headingToYou'].includes(order.orderStatus)) {
+        if (!['inStock','headingToCustomer','headingToYou','inReturnStock'].includes(order.orderStatus)) {
             return res.status(400).json({ message: `Order status ${order.orderStatus} is not valid for completion` });
         }
         order.orderStatus = 'completed';
@@ -103,6 +153,8 @@ const completeOrder = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+
 
 
 //=============================================== PickUps =============================================== //
@@ -399,6 +451,7 @@ module.exports = {
   getAndSet_orderDetails,
   get_picked_up_orders,
   removePickedUpOrder,
+  updateOrderStatus,
   completePickup,
   logOut,
 };

@@ -73,6 +73,10 @@ const courierSchema = new Schema(
       type: String,
       required: true,
     },
+    allPapers: {
+      type: [String],
+      required: true,
+    },
     assignedZones: {
       type: [String],
       required: true,

@@ -488,7 +488,7 @@
       statusText = 'Heading To Customer';
     } else if (status === 'headingToYou') {
       badgeClass = 'bg-success-subtle text-success';
-      statusText = 'Heading To You';
+      statusText = 'Heading To Business';
     } else if (status === 'completed') {
       badgeClass = 'bg-success-subtle text-success';
       statusText = 'Completed';
@@ -504,9 +504,14 @@
     } else if (status === 'terminated') {
       badgeClass = 'bg-danger-subtle text-danger';
       statusText = 'Terminated';
-    }else{
-      statusText = 'Terminated';
+    }else if(status === 'waitingAction'){
+      statusText = 'Wating Action';
+      badgeClass = 'bg-danger-subtle text-danger';
+    }else if(status === 'inReturnStock'){
+      statusText = 'In Return Stock';
+      badgeClass = 'bg-danger-warning text-warning';
     }
+
 
     return { badgeClass, statusText };
   }

@@ -25,150 +25,169 @@ const stageSchema = new mongoose.Schema({
     }]
 });
 
-const orderSchema = new mongoose.Schema({
-  orderNumber: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  orderDate: {
-    type: Date,
-    required: true,
-  },
-  orderFees: {
-    type: Number,
-    required: true,
-  },
-  orderStatus: {
-    type: String,
-    required: true,
-    enum: [
-      'new',
-      'pickedUp',
-      'inStock',
-      'inProgress',
-      'headingToCustomer',
-      'headingToYou',
-      'completed',
-      'canceled',
-      'rejected',
-      'returned',
-      'terminated',
-    ],
-  },
-  orderStatusHistory: [{
-    status: {
+const orderSchema = new mongoose.Schema(
+  {
+    orderNumber: {
       type: String,
       required: true,
+      unique: true,
     },
-    date: { 
+    orderDate: {
       type: Date,
       required: true,
-      default: Date.now
     },
-  }],
-  orderCustomer: {
-    fullName: {
-      type: String,
-      required: true,
-    },
-    phoneNumber: {
-      type: String,
-      required: true,
-    },
-    address: {
-      type: String,
-      required: true,
-    },
-    government: {
-      type: String,
-      required: true,
-    },
-    zone: {
-      type: String,
-      required: true,
-    },
-  },
-  // orderPayment: {
-  //     type: Object,
-  //     required: true
-  // },
-  orderShipping: {
-    productDescription: {
-      // for the product will be send or product with the client
-      type: String,
-      required: false,
-    },
-    numberOfItems: {
+    orderFees: {
       type: Number,
-      required: false,
+      required: true,
     },
-    productDescriptionReplacement: {
-      // for the new product will be replaced
-      type: String,
-      required: false,
-    },
-    numberOfItemsReplacement: {
-      type: Number,
-      required: false,
-    },
-    orderType: {
+    orderStatus: {
       type: String,
       required: true,
-      enum: ['Deliver', 'Return', 'Exchange', 'CashCollection'],
+      enum: [
+        'new',
+        'pickedUp',
+        'inStock',
+        'inReturnStock',
+        'inProgress',
+        'headingToCustomer',
+        'returnToWarehouse',
+        'headingToYou',
+        'rescheduled',
+        'waitingAction',
+        'completed',
+        'canceled',
+        'rejected',
+        'returned',
+        'terminated',
+      ],
     },
-    amountType: {
-      type: String,
-      required: true,
-      enum: ['COD', 'CD', 'CC', 'NA'], // COD for Cash On Delvirt and CD for Cash Differnce and CC for Cash Collection
-    },
-    amount: {
+    Attemps: {
       type: Number,
+      required: true,
+      default: 0,
+    },
+    UnavailableReason: {
+      type: [String],
+      required: false,
+    },
+    orderStatusHistory: [
+      {
+        status: {
+          type: String,
+          required: true,
+        },
+        date: {
+          type: Date,
+          required: true,
+          default: Date.now,
+        },
+      },
+    ],
+    orderCustomer: {
+      fullName: {
+        type: String,
+        required: true,
+      },
+      phoneNumber: {
+        type: String,
+        required: true,
+      },
+      address: {
+        type: String,
+        required: true,
+      },
+      government: {
+        type: String,
+        required: true,
+      },
+      zone: {
+        type: String,
+        required: true,
+      },
+    },
+    
+    // orderPayment: {
+    //     type: Object,
+    //     required: true
+    // },
+    orderShipping: {
+      productDescription: {
+        // for the product will be send or product with the client
+        type: String,
+        required: false,
+      },
+      numberOfItems: {
+        type: Number,
+        required: false,
+      },
+      productDescriptionReplacement: {
+        // for the new product will be replaced
+        type: String,
+        required: false,
+      },
+      numberOfItemsReplacement: {
+        type: Number,
+        required: false,
+      },
+      orderType: {
+        type: String,
+        required: true,
+        enum: ['Deliver', 'Return', 'Exchange', 'CashCollection'],
+      },
+      amountType: {
+        type: String,
+        required: true,
+        enum: ['COD', 'CD', 'CC', 'NA'], // COD for Cash On Delvirt and CD for Cash Differnce and CC for Cash Collection
+      },
+      amount: {
+        type: Number,
+        required: false,
+      },
+    },
+    referralNumber: {
+      type: String,
+      required: false,
+    },
+    isOrderAvailableForPreview: {
+      type: Boolean,
+      required: true,
+    },
+    orderNotes: {
+      type: String,
+      required: false,
+    },
+    orderStages: {
+      type: [stageSchema],
+      required: true,
+    },
+    deliveryMan: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'courier',
+      required: false,
+    },
+    business: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'users',
+      required: true,
+    },
+    isMoneyRecivedFromCourier: { // this is the status of the money that is recived from the courier
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    completedDate: {
+      type: Date,
+      required: false,
+    },
+    moneyReleaseDate: {
+      type: Date,
       required: false,
     },
   },
-  referralNumber: {
-    type: String,
-    required: false,
-  },
-  isOrderAvailableForPreview: {
-    type: Boolean,
-    required: true,
-  },
-  orderNotes: {
-    type: String,
-    required: false,
-  },
-  orderStages: {
-    type: [stageSchema],
-    required: true,
-  },
-  deliveryMan: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'courier',
-    required: false,
-  },
-  business: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'users',
-    required: true,
-  },
-  orderFullyCompleted: {
-    type: Boolean,
-    required: true,
-    default: false,
-  },
-  completedDate: {
-    type: Date,
-    required: false,
-  },
-  moneyReleaseDate: {
-    type: Date,
-    required: false,
-  },
-}, {
-  timestamps: true
-});
+  {
+    timestamps: true,
+  }
+);
 
 
 

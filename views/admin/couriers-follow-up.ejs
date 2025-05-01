@@ -1,0 +1,364 @@
+<%- contentFor('HeaderCss') %>
+<!-- jsvectormap css -->
+<link href="/assets/libs/jsvectormap/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+<!--Swiper slider css-->
+<link href="/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+<%- contentFor('body') %>
+
+<!-- Custom CSS -->
+<style>
+  .courier-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 100%;
+    border: 1px solid #e9ecef;
+  }
+
+  .courier-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .courier-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .stats-card {
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+  }
+
+  .stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .stats-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+  }
+
+  .stats-icon-primary {
+    background-color: rgba(243, 151, 32, 0.1);
+    color: #F39720;
+  }
+
+  .stats-icon-success {
+    background-color: rgba(10, 179, 156, 0.1);
+    color: #0ab39c;
+  }
+
+  .stats-icon-danger {
+    background-color: rgba(240, 101, 72, 0.1);
+    color: #f06548;
+  }
+
+  .stats-icon-info {
+    background-color: rgba(64, 81, 137, 0.1);
+    color: #405189;
+  }
+
+  .progress-bar {
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  .money-badge {
+    background-color: #0ab39c;
+    color: white;
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .return-badge {
+    background-color: #f06548;
+    color: white;
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .orders-badge {
+    background-color: #405189;
+    color: white;
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .zone-badge {
+    display: inline-block;
+    margin: 2px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    color: #495057;
+    font-size: 0.75rem;
+  }
+
+  .filter-card {
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+  }
+
+  .filter-header {
+    background-color: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+    padding: 15px;
+  }
+
+  .btn-brand {
+    background-color: #F39720;
+    border-color: #F39720;
+    color: white;
+  }
+
+  .btn-brand:hover {
+    background-color: #e08a1b;
+    border-color: #e08a1b;
+    color: white;
+  }
+
+  .btn-outline-brand {
+    color: #F39720;
+    border-color: #F39720;
+  }
+
+  .btn-outline-brand:hover {
+    background-color: #F39720;
+    border-color: #F39720;
+    color: white;
+  }
+
+  .courier-name {
+    color: #495057;
+    font-weight: 600;
+  }
+
+  .courier-id {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  .card-header-light {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+  }
+</style>
+
+<div class="container-fluid">
+
+  <!-- Stats Cards -->
+  <div class="row">
+    <div class="col-xl-3 col-md-6">
+      <div class="card stats-card mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 me-3 stats-icon stats-icon-primary">
+              <i class="ri-team-line fs-1"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h5 class="mb-0"><%= summaryStats.activeCouriersCount %></h5>
+              <p class="text-muted mb-0">Active Couriers</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card stats-card mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 me-3 stats-icon stats-icon-success">
+              <i class="ri-money-dollar-circle-line fs-1"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h5 class="mb-0">$<%= summaryStats.totalMoneyWithCouriers.toLocaleString() %></h5>
+              <p class="text-muted mb-0">Total Money with Couriers</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card stats-card mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 me-3 stats-icon stats-icon-danger">
+              <i class="ri-arrow-go-back-line fs-1"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h5 class="mb-0"><%= summaryStats.totalOrdersToReturn %></h5>
+              <p class="text-muted mb-0">Orders to Return</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card stats-card mb-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 me-3 stats-icon stats-icon-info">
+              <i class="ri-truck-line fs-1"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h5 class="mb-0"><%= summaryStats.totalActiveDeliveries %></h5>
+              <p class="text-muted mb-0">Active Deliveries</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Courier Cards -->
+  <div class="row">
+    <% if (couriers && couriers.length > 0) { %>
+      <% couriers.forEach(courier => { %>
+        <!-- Courier Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card courier-card">
+            <div class="card-header card-header-light">
+              <div class="d-flex align-items-center">
+                <img src="<%= courier.photo %>" class="courier-avatar me-3" alt="Courier">
+                <div>
+                  <h5 class="mb-1 courier-name"><%= courier.name %></h5>
+                  <p class="mb-0 courier-id">ID: <%= courier.courierId %></p>
+                  <span class="badge <%= courier.statusBadge || 'bg-secondary' %>"><%= courier.status %></span>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 text-muted">Money with Courier:</h6>
+                <span class="money-badge"><%= courier.moneyWithCourier.toLocaleString() %> EGP</span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 text-muted">Orders to Return:</h6>
+                <span class="return-badge"><%= courier.ordersToReturn %></span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 text-muted">Active Orders:</h6>
+                <span class="orders-badge"><%= courier.activeOrders %></span>
+              </div>
+
+              <div class="mb-3">
+                <h6 class="mb-2 text-muted">Zones:</h6>
+                <div>
+                  <% if (courier.zones && courier.zones.length > 0) { %>
+                    <% courier.zones.forEach(zone => { %>
+                      <span class="zone-badge"><%= zone %></span>
+                    <% }); %>
+                  <% } else { %>
+                    <span class="text-muted">No zones assigned</span>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <h6 class="mb-2 text-muted">Today's Performance:</h6>
+                <div class="progress mb-2">
+                  <% 
+                    let progressClass = 'bg-success';
+                    if (courier.performance < 50) progressClass = 'bg-danger';
+                    else if (courier.performance < 75) progressClass = 'bg-warning';
+                  %>
+                  <div class="progress-bar <%= progressClass %>" role="progressbar" style="width: <%= courier.performance || 0 %>%" aria-valuenow="<%= courier.performance || 0 %>" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <small class="text-muted"><%= courier.performance %>% of daily target completed</small>
+              </div>
+
+              <div class="d-flex gap-2">
+                <a href="/admin/courier-details/<%= courier.courierId %>" class="btn btn-sm btn-brand flex-grow-1">
+                  <i class="ri-eye-line me-1"></i> View Details
+                </a>
+                <button class="btn btn-sm btn-light">
+                  <i class="ri-phone-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    <% } else { %>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <h5 class="mb-3">No couriers found</h5>
+            <p class="text-muted">There are no couriers to display at the moment.</p>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script>
+  
+  document.addEventListener('DOMContentLoaded', function() {
+
+    // Call courier functionality
+    const callButtons = document.querySelectorAll('.btn-light');
+    callButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const courierName = this.closest('.courier-card').querySelector('.courier-name').textContent;
+        alert(`Calling ${courierName}...`);
+      });
+    });
+
+
+    async function fetchCouriers() {
+      try {
+        const response = await fetch('/admin/get-couriers-follow-up');
+        
+        // Check if the response is ok before parsing JSON
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Check content type to ensure it's JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const couriers = await response.json();
+          console.log(couriers);
+          // TODO: Update UI with couriers data
+        } else {
+          throw new Error('Response is not JSON format');
+        }
+      } catch (error) {
+        console.error('Error fetching couriers:', error);
+        // TODO: Show error message to user
+      }
+    }
+
+
+    // Call the function to fetch couriers
+    fetchCouriers();
+
+
+  });
+
+  
+</script>

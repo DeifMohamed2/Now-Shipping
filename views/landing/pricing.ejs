@@ -1,0 +1,1522 @@
+<%- contentFor('HeaderCss') %>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Reset and Base Styles */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --primary: #F39720;
+    --secondary: #FDB614;
+    --accent: #8FCAES;
+    --accent-dark: #3D9BC5;
+    --accent-light: #C5E8F7;
+    --dark: #1E293B;
+    --dark-secondary: #334155;
+    --light: #F8FAFC;
+    --light-secondary: #F1F5F9;
+    --gray: #64748B;
+    --light-gray: #E2E8F0;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --info: #3B82F6;
+    --font-primary: 'Poppins', sans-serif;
+    --font-secondary: 'Montserrat', sans-serif;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --transition: all 0.3s ease;
+    --border-radius-sm: 0.25rem;
+    --border-radius: 0.5rem;
+    --border-radius-md: 0.75rem;
+    --border-radius-lg: 1rem;
+    --border-radius-xl: 1.5rem;
+    --border-radius-2xl: 2rem;
+    --border-radius-full: 9999px;
+  }
+
+  body {
+    overflow-x: hidden;
+    background-color: var(--light);
+    color: var(--dark);
+    font-family: var(--font-primary);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-secondary);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: var(--dark);
+  }
+
+  h1 {
+    font-size: 3.5rem;
+  }
+
+  h2 {
+    font-size: 2.5rem;
+  }
+
+  h3 {
+    font-size: 1.75rem;
+  }
+
+  h4 {
+    font-size: 1.5rem;
+  }
+
+  h5 {
+    font-size: 1.25rem;
+  }
+
+  h6 {
+    font-size: 1rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: var(--gray);
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--primary);
+    transition: var(--transition);
+  }
+
+  a:hover {
+    color: var(--secondary);
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .text-left {
+    text-align: left;
+  }
+
+  .flex {
+    display: flex;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .items-center {
+    align-items: center;
+  }
+
+  .justify-center {
+    justify-content: center;
+  }
+
+  .justify-between {
+    justify-content: space-between;
+  }
+
+  .justify-around {
+    justify-content: space-around;
+  }
+
+  .justify-evenly {
+    justify-content: space-evenly;
+  }
+
+  .gap-1 {
+    gap: 0.25rem;
+  }
+
+  .gap-2 {
+    gap: 0.5rem;
+  }
+
+  .gap-3 {
+    gap: 0.75rem;
+  }
+
+  .gap-4 {
+    gap: 1rem;
+  }
+
+  .gap-5 {
+    gap: 1.25rem;
+  }
+
+  .gap-6 {
+    gap: 1.5rem;
+  }
+
+  .gap-8 {
+    gap: 2rem;
+  }
+
+  .gap-10 {
+    gap: 2.5rem;
+  }
+
+  .gap-12 {
+    gap: 3rem;
+  }
+
+  .w-full {
+    width: 100%;
+  }
+
+  .h-full {
+    height: 100%;
+  }
+
+  .relative {
+    position: relative;
+  }
+
+  .absolute {
+    position: absolute;
+  }
+
+  .z-10 {
+    z-index: 10;
+  }
+
+  .z-20 {
+    z-index: 20;
+  }
+
+  .z-30 {
+    z-index: 30;
+  }
+
+  .z-40 {
+    z-index: 40;
+  }
+
+  .z-50 {
+    z-index: 50;
+  }
+
+  .overflow-hidden {
+    overflow: hidden;
+  }
+
+  .rounded-sm {
+    border-radius: var(--border-radius-sm);
+  }
+
+  .rounded {
+    border-radius: var(--border-radius);
+  }
+
+  .rounded-md {
+    border-radius: var(--border-radius-md);
+  }
+
+  .rounded-lg {
+    border-radius: var(--border-radius-lg);
+  }
+
+  .rounded-xl {
+    border-radius: var(--border-radius-xl);
+  }
+
+  .rounded-2xl {
+    border-radius: var(--border-radius-2xl);
+  }
+
+  .rounded-full {
+    border-radius: var(--border-radius-full);
+  }
+
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow {
+    box-shadow: var(--shadow);
+  }
+
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .transition {
+    transition: var(--transition);
+  }
+
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Animation Canvas */
+  #animationCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.05;
+  }
+
+  /* Header Styles */
+  header {
+    background-color: white;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0.75rem 0;
+  }
+
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    color: var(--primary);
+    font-size: 2rem;
+    margin-right: 0.75rem;
+  }
+
+  /* Enhanced Navigation */
+  .nav-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  nav {
+    margin-right: 1rem;
+  }
+
+  nav ul {
+    display: flex;
+    list-style: none;
+    gap: 0.5rem;
+  }
+
+  nav ul li {
+    position: relative;
+  }
+
+  nav ul li a {
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+
+  nav ul li a i {
+    font-size: 1.1rem;
+    color: var(--primary);
+  }
+
+  nav ul li a:hover {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+  }
+
+  nav ul li.active a {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* Dropdown Menu */
+  .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+
+  .dropdown-toggle i:first-child {
+    font-size: 1.1rem;
+    color: var(--primary);
+  }
+
+  .dropdown-toggle i.dropdown-arrow {
+    margin-left: 0.3rem;
+    font-size: 0.8rem;
+    transition: transform 0.3s;
+    color: var(--gray);
+  }
+
+  .dropdown-toggle:hover {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    box-shadow: var(--shadow-md);
+    border-radius: var(--border-radius);
+    min-width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 101;
+    padding: 0.5rem 0;
+    border: 1px solid var(--light-gray);
+  }
+
+  .dropdown-menu li {
+    margin: 0;
+  }
+
+  .dropdown-menu a {
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 0;
+    border-bottom: 1px solid var(--light-gray);
+    transition: var(--transition);
+  }
+
+  .dropdown-menu a:hover {
+    background-color: var(--light-secondary);
+    padding-left: 1.5rem;
+  }
+
+  .dropdown-menu a i {
+    font-size: 1rem;
+    color: var(--primary);
+    width: 20px;
+    text-align: center;
+  }
+
+  .dropdown-menu li:last-child a {
+    border-bottom: none;
+  }
+
+  nav ul li:hover .dropdown-toggle i.dropdown-arrow {
+    transform: rotate(180deg);
+  }
+
+  nav ul li:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  /* Auth Buttons */
+  .auth-buttons {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-full);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-align: center;
+    font-size: 0.95rem;
+    border: none;
+    outline: none;
+  }
+
+  .btn i {
+    font-size: 1rem;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+  }
+
+  .btn-outline {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+  }
+
+  .btn-outline:hover {
+    background-color: var(--primary);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: 2px solid var(--primary);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-secondary {
+    background-color: var(--accent);
+    color: white;
+    border: 2px solid var(--accent);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--accent-dark);
+    border-color: var(--accent-dark);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-light {
+    background-color: white;
+    color: var(--primary);
+    border: 2px solid white;
+  }
+
+  .btn-light:hover {
+    background-color: transparent;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-dark {
+    background-color: var(--dark);
+    color: white;
+    border: 2px solid var(--dark);
+  }
+
+  .btn-dark:hover {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-secondary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .mobile-menu-btn {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--dark);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+
+  .mobile-menu-btn:hover {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+  }
+
+  /* Top Bar */
+  .top-bar {
+    background-color: var(--dark);
+    color: white;
+    padding: 0.5rem 0;
+    font-size: 0.85rem;
+  }
+
+  .top-bar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .top-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .top-bar-item i {
+    color: var(--primary);
+    font-size: 0.9rem;
+  }
+
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .top-bar-social {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .top-bar-social a {
+    color: white;
+    font-size: 0.9rem;
+    transition: var(--transition);
+  }
+
+  .top-bar-social a:hover {
+    color: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  /* Section Styles */
+  section {
+    padding: 6rem 0;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+    text-align: center;
+    position: relative;
+    padding-bottom: 1rem;
+  }
+
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background-color: var(--primary);
+    border-radius: var(--border-radius-full);
+  }
+
+  .section-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 4rem;
+    color: var(--gray);
+    text-align: center;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section-header {
+    margin-bottom: 4rem;
+  }
+
+  /* Footer */
+  footer {
+    background-color: var(--dark);
+    color: white;
+    padding: 5rem 0 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+  }
+
+  .footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 3rem;
+    margin-bottom: 4rem;
+  }
+
+  .footer-column {
+    flex: 1;
+    min-width: 240px;
+  }
+
+  .footer-column h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 1rem;
+    color: white;
+  }
+
+  .footer-column h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: var(--border-radius-full);
+  }
+
+  .footer-column ul {
+    list-style: none;
+  }
+
+  .footer-column ul li {
+    margin-bottom: 1rem;
+  }
+
+  .footer-column ul li a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .footer-column ul li a i {
+    color: var(--primary);
+    font-size: 0.9rem;
+  }
+
+  .footer-column ul li a:hover {
+    color: var(--primary);
+    transform: translateX(5px);
+  }
+
+  .social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+  }
+
+  .social-icon:hover {
+    background-color: var(--primary);
+    transform: translateY(-5px);
+  }
+
+  .footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+  }
+
+  /* Pricing Specific Styles */
+  .pricing-hero {
+    background-color: var(--light);
+    padding: 6rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pricing-hero-bg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background-color: var(--accent-light);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 20% 100%);
+    z-index: 0;
+  }
+
+  .pricing-hero-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .pricing-hero-title {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+  }
+
+  .pricing-hero-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: var(--gray);
+  }
+
+  .pricing-section {
+    background-color: white;
+    padding: 6rem 0;
+  }
+
+  .pricing-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .pricing-table-container {
+    overflow-x: auto;
+    margin-top: 3rem;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    overflow: hidden;
+  }
+
+  .pricing-table th,
+  .pricing-table td {
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--light-gray);
+  }
+
+  .pricing-table th {
+    background-color: var(--dark);
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 1rem;
+  }
+
+  .pricing-table th:first-child {
+    text-align: left;
+    border-top-left-radius: var(--border-radius-lg);
+  }
+
+  .pricing-table th:last-child {
+    border-top-right-radius: var(--border-radius-lg);
+  }
+
+  .pricing-table tr:last-child td:first-child {
+    border-bottom-left-radius: var(--border-radius-lg);
+  }
+
+  .pricing-table tr:last-child td:last-child {
+    border-bottom-right-radius: var(--border-radius-lg);
+  }
+
+  .pricing-table tr:nth-child(even) {
+    background-color: var(--light-secondary);
+  }
+
+  .pricing-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--dark);
+  }
+
+  .pricing-table tr:hover {
+    background-color: rgba(143, 202, 232, 0.1);
+  }
+
+  .pricing-table tr.highlighted {
+    background-color: rgba(243, 151, 32, 0.1);
+  }
+
+  .pricing-table tr.highlighted td {
+    border-bottom: 1px solid rgba(243, 151, 32, 0.2);
+  }
+
+  .pricing-note {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background-color: var(--light-secondary);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--border-radius);
+  }
+
+  .pricing-note p {
+    margin-bottom: 0;
+    color: var(--dark);
+    font-size: 0.95rem;
+  }
+
+  .pricing-cta {
+    margin-top: 4rem;
+    text-align: center;
+  }
+
+  .pricing-cta-title {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+  }
+
+  .pricing-cta-text {
+    margin-bottom: 2rem;
+    color: var(--gray);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Responsive Styles */
+  @media (max-width: 1280px) {
+    .container {
+      padding: 0 3rem;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    html {
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 2rem;
+    }
+
+    .header-container {
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 80%;
+      height: 100vh;
+      background-color: white;
+      flex-direction: column;
+      padding: 5rem 2rem;
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+      transition: right 0.3s ease;
+      z-index: 101;
+      overflow-y: auto;
+    }
+
+    .nav-container.active {
+      right: 0;
+    }
+
+    nav {
+      margin-right: 0;
+      margin-bottom: 2rem;
+      width: 100%;
+    }
+
+    nav ul {
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    nav ul li {
+      margin: 0.5rem 0;
+      width: 100%;
+    }
+
+    nav ul li a,
+    .dropdown-toggle {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .dropdown-menu {
+      position: static;
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      box-shadow: none;
+      display: none;
+      padding-left: 1rem;
+      width: 100%;
+      border: none;
+    }
+
+    .dropdown-menu.active {
+      display: block;
+    }
+
+    .dropdown-menu a {
+      border-bottom: none;
+      padding: 0.75rem 1rem;
+    }
+
+    .mobile-menu-btn {
+      display: flex;
+      z-index: 102;
+    }
+
+    .auth-buttons {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .section-title {
+      font-size: 2rem;
+    }
+
+    .pricing-table th,
+    .pricing-table td {
+      padding: 1rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 0 1.5rem;
+    }
+
+    .btn {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    .auth-buttons {
+      flex-direction: column;
+    }
+
+    .pricing-hero-title {
+      font-size: 2.5rem;
+    }
+
+    .pricing-table th,
+    .pricing-table td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.8rem;
+    }
+  }
+</style>
+<%- contentFor('body') %>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="container top-bar-container">
+    <div class="top-bar-left">
+      <div class="top-bar-item">
+        <i class="fas fa-phone"></i>
+        <span>+1 (555) 123-4567</span>
+      </div>
+      <div class="top-bar-item">
+        <i class="fas fa-envelope"></i>
+        <span>info@shipfast.com</span>
+      </div>
+      <div class="top-bar-item">
+        <i class="fas fa-clock"></i>
+        <span>Mon-Fri: 8:00 AM - 8:00 PM</span>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <div class="top-bar-social">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Animation Canvas for Moving Trucks -->
+<canvas id="animationCanvas"></canvas>
+
+<!-- Header -->
+<header>
+  <div class="container header-container">
+    <a href="#" class="logo">
+      <i class="fas fa-truck-fast logo-icon"></i>
+      <span>ShipFast</span>
+    </a>
+
+    <div class="mobile-menu-btn">
+      <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="nav-container">
+      <nav>
+        <ul>
+          <li>
+            <a href="index.html">
+              <i class="fas fa-home"></i>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="about-us.html">
+              <i class="fas fa-info-circle"></i>
+              <span>About Us</span>
+            </a>
+          </li>
+          <li>
+            <div class="dropdown-toggle">
+              <i class="fas fa-box"></i>
+              <span>Services</span>
+              <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </div>
+            <ul class="dropdown-menu">
+              <li><a href="#"><i class="fas fa-truck-fast"></i> Express Delivery</a></li>
+              <li><a href="#"><i class="fas fa-clock"></i> Same Day Delivery</a></li>
+              <li><a href="#"><i class="fas fa-globe"></i> International Shipping</a></li>
+              <li><a href="#"><i class="fas fa-warehouse"></i> Warehousing</a></li>
+              <li><a href="#"><i class="fas fa-boxes-stacked"></i> Fulfillment</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="mobile-app.html">
+              <i class="fas fa-mobile-alt"></i>
+              <span>Mobile App</span>
+            </a>
+          </li>
+          <li class="active">
+            <a href="pricing.html">
+              <i class="fas fa-tag"></i>
+              <span>Pricing</span>
+            </a>
+          </li>
+          <li>
+            <a href="faq.html">
+              <i class="fas fa-question-circle"></i>
+              <span>FAQ</span>
+            </a>
+          </li>
+          <li>
+            <a href="#contact">
+              <i class="fas fa-headset"></i>
+              <span>Contact</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="auth-buttons">
+        <a href="#" class="btn btn-outline">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Sign In</span>
+        </a>
+        <a href="#" class="btn btn-primary">
+          <i class="fas fa-user-plus"></i>
+          <span>Sign Up</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Pricing Hero Section -->
+<section class="pricing-hero">
+  <div class="pricing-hero-bg"></div>
+  <div class="container">
+    <div class="pricing-hero-content">
+      <h1 class="pricing-hero-title">Transparent Pricing</h1>
+      <p class="pricing-hero-subtitle">Our straightforward pricing structure ensures you know exactly what you're paying for with no hidden fees or surprises.</p>
+      <!-- <a href="#pricing-plans" class="btn btn-primary">
+        <i class="fas fa-tag"></i>
+        <span>View Pricing Plans</span>
+      </a> -->
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Section -->
+<section class="pricing-section" id="pricing-plans">
+  <div class="container pricing-container">
+    <div class="section-header">
+      <h2 class="section-title">Pricing Plan</h2>
+      <p class="section-subtitle">Prices vary from order type, location, package size, order volume.</p>
+    </div>
+
+    <div class="pricing-table-container">
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th>Service (before VAT)</th>
+            <th>Cairo</th>
+            <th>Alex</th>
+            <th>Delta-Canal</th>
+            <th>Upper-RedSea</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Delivery (Small & Medium)</td>
+            <td>80</td>
+            <td>85</td>
+            <td>91</td>
+            <td>116</td>
+          </tr>
+          <tr>
+            <td>RTO/Cash Collection</td>
+            <td>70</td>
+            <td>75</td>
+            <td>81</td>
+            <td>106</td>
+          </tr>
+          <tr>
+            <td>CRP</td>
+            <td>90</td>
+            <td>95</td>
+            <td>101</td>
+            <td>126</td>
+          </tr>
+          <tr>
+            <td>Exchange</td>
+            <td>95</td>
+            <td>100</td>
+            <td>106</td>
+            <td>131</td>
+          </tr>
+          <tr class="highlighted">
+            <td>Light Bulky</td>
+            <td>180</td>
+            <td>185</td>
+            <td>191</td>
+            <td>216</td>
+          </tr>
+          <tr class="highlighted">
+            <td>Heavy Bulky</td>
+            <td>430</td>
+            <td>480</td>
+            <td>540</td>
+            <td>790</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pricing-note">
+      <p><strong>Note:</strong> All prices are listed in local currency and exclude VAT. For custom shipping solutions or volume discounts, please contact our sales team.</p>
+    </div>
+
+    <!-- <div class="pricing-cta">
+      <h3 class="pricing-cta-title">Need a Custom Solution?</h3>
+      <p class="pricing-cta-text">Our team can create a tailored shipping plan that meets your specific business needs and volume requirements.</p>
+      <a href="#contact" class="btn btn-primary">
+        <i class="fas fa-headset"></i>
+        <span>Contact Sales</span>
+      </a>
+    </div> -->
+  </div>
+</section>
+
+
+
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-column">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#"><i class="fas fa-angle-right"></i> About Us</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Careers</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Press</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Blog</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Services</h3>
+        <ul>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Express Delivery</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> International Shipping</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Warehousing</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Supply Chain Solutions</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> E-commerce Fulfillment</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Resources</h3>
+        <ul>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Help Center</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> API Documentation</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Shipping Calculator</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Track Your Package</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Terms & Conditions</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Connect With Us</h3>
+        <p>Follow us on social media for updates and promotions</p>
+        <div class="social-icons">
+          <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2023 ShipFast. All rights reserved. | Designed with <i class="fas fa-heart" style="color: var(--primary);"></i> by ShipFast Team</p>
+    </div>
+  </div>
+</footer>
+<%- contentFor('FooterJs') %>
+
+<!-- JavaScript -->
+<script>
+  // Mobile Menu Toggle
+  const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+  const navContainer = document.querySelector('.nav-container');
+
+  mobileMenuBtn.addEventListener('click', () => {
+    navContainer.classList.toggle('active');
+
+    // Toggle icon between bars and times
+    const icon = mobileMenuBtn.querySelector('i');
+    if (icon.classList.contains('fa-bars')) {
+      icon.classList.remove('fa-bars');
+      icon.classList.add('fa-times');
+    } else {
+      icon.classList.remove('fa-times');
+      icon.classList.add('fa-bars');
+    }
+  });
+
+  // Mobile Dropdown Toggle
+  if (window.innerWidth <= 768) {
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+
+    dropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const dropdownMenu = toggle.nextElementSibling;
+        dropdownMenu.classList.toggle('active');
+
+        const icon = toggle.querySelector('.dropdown-arrow');
+        if (icon.style.transform === 'rotate(180deg)') {
+          icon.style.transform = 'rotate(0deg)';
+        } else {
+          icon.style.transform = 'rotate(180deg)';
+        }
+      });
+    });
+  }
+
+  // Animated Trucks Background
+  const canvas = document.getElementById('animationCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Set canvas size to match window
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Truck class
+  class Truck {
+    constructor() {
+      this.width = 100;
+      this.height = 50;
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.speed = 0.3 + Math.random() * 0.7; // Slower speed
+      this.direction = Math.random() * Math.PI * 2; // Random direction in radians
+      this.color = Math.random() > 0.5 ? '#F39720' : '#FDB614';
+    }
+
+    update() {
+      // Move truck
+      this.x += Math.cos(this.direction) * this.speed;
+      this.y += Math.sin(this.direction) * this.speed;
+
+      // Bounce off edges
+      if (this.x < 0 || this.x > canvas.width - this.width) {
+        this.direction = Math.PI - this.direction;
+      }
+
+      if (this.y < 0 || this.y > canvas.height - this.height) {
+        this.direction = -this.direction;
+      }
+    }
+
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.direction);
+
+      // Draw truck body
+      ctx.fillStyle = this.color;
+      ctx.fillRect(-this.width / 2, -this.height / 2, this.width * 0.7, this.height);
+
+      // Draw truck cabin
+      ctx.fillStyle = this.color === '#F39720' ? '#FDB614' : '#F39720';
+      ctx.fillRect(-this.width / 2 + this.width * 0.7, -this.height / 2, this.width * 0.3, this.height * 0.8);
+
+      // Draw wheels
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(-this.width / 2 + this.width * 0.2, this.height / 2, this.height * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(-this.width / 2 + this.width * 0.8, this.height / 2, this.height * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+  }
+
+  // Create only 2 trucks for better performance
+  const trucks = [];
+  for (let i = 0; i < 2; i++) {
+    trucks.push(new Truck());
+  }
+
+  // Animation loop
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    trucks.forEach(truck => {
+      truck.update();
+      truck.draw();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  // FAQ Accordion
+  const faqQuestions = document.querySelectorAll('.faq-question');
+
+  faqQuestions.forEach(question => {
+    question.addEventListener('click', () => {
+      const answer = question.nextElementSibling;
+      const icon = question.querySelector('i');
+
+      // Toggle active class
+      question.parentElement.classList.toggle('active');
+
+      // Toggle icon
+      if (icon.classList.contains('fa-chevron-down')) {
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+      } else {
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+      }
+
+      // Toggle answer visibility
+      if (answer.style.maxHeight) {
+        answer.style.maxHeight = null;
+      } else {
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+      }
+    });
+  });
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+
+      const targetId = this.getAttribute('href');
+      if (targetId === '#') return;
+
+      const targetElement = document.querySelector(targetId);
+      if (targetElement) {
+        window.scrollTo({
+          top: targetElement.offsetTop - 100,
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
+</script>

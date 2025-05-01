@@ -1,0 +1,2226 @@
+<%- contentFor('HeaderCss') %>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Reset and Base Styles */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  :root {
+    --primary: #F39720;
+    --secondary: #FDB614;
+    --accent: #8FCAES;
+    --accent-dark: #3D9BC5;
+    --accent-light: #C5E8F7;
+    --dark: #1E293B;
+    --dark-secondary: #334155;
+    --light: #F8FAFC;
+    --light-secondary: #F1F5F9;
+    --gray: #64748B;
+    --light-gray: #E2E8F0;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --info: #3B82F6;
+    --font-primary: 'Poppins', sans-serif;
+    --font-secondary: 'Montserrat', sans-serif;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --transition: all 0.3s ease;
+    --border-radius-sm: 0.25rem;
+    --border-radius: 0.5rem;
+    --border-radius-md: 0.75rem;
+    --border-radius-lg: 1rem;
+    --border-radius-xl: 1.5rem;
+    --border-radius-2xl: 2rem;
+    --border-radius-full: 9999px;
+  }
+
+  body {
+    overflow-x: hidden;
+    background-color: var(--light);
+    color: var(--dark);
+    font-family: var(--font-primary);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-secondary);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: var(--dark);
+  }
+
+  h1 {
+    font-size: 3.5rem;
+  }
+
+  h2 {
+    font-size: 2.5rem;
+  }
+
+  h3 {
+    font-size: 1.75rem;
+  }
+
+  h4 {
+    font-size: 1.5rem;
+  }
+
+  h5 {
+    font-size: 1.25rem;
+  }
+
+  h6 {
+    font-size: 1rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: var(--gray);
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--primary);
+    transition: var(--transition);
+  }
+
+  a:hover {
+    color: var(--secondary);
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .text-left {
+    text-align: left;
+  }
+
+  .flex {
+    display: flex;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .items-center {
+    align-items: center;
+  }
+
+  .justify-center {
+    justify-content: center;
+  }
+
+  .justify-between {
+    justify-content: space-between;
+  }
+
+  .justify-around {
+    justify-content: space-around;
+  }
+
+  .justify-evenly {
+    justify-content: space-evenly;
+  }
+
+  .gap-1 {
+    gap: 0.25rem;
+  }
+
+  .gap-2 {
+    gap: 0.5rem;
+  }
+
+  .gap-3 {
+    gap: 0.75rem;
+  }
+
+  .gap-4 {
+    gap: 1rem;
+  }
+
+  .gap-5 {
+    gap: 1.25rem;
+  }
+
+  .gap-6 {
+    gap: 1.5rem;
+  }
+
+  .gap-8 {
+    gap: 2rem;
+  }
+
+  .gap-10 {
+    gap: 2.5rem;
+  }
+
+  .gap-12 {
+    gap: 3rem;
+  }
+
+  .w-full {
+    width: 100%;
+  }
+
+  .h-full {
+    height: 100%;
+  }
+
+  .relative {
+    position: relative;
+  }
+
+  .absolute {
+    position: absolute;
+  }
+
+  .z-10 {
+    z-index: 10;
+  }
+
+  .z-20 {
+    z-index: 20;
+  }
+
+  .z-30 {
+    z-index: 30;
+  }
+
+  .z-40 {
+    z-index: 40;
+  }
+
+  .z-50 {
+    z-index: 50;
+  }
+
+  .overflow-hidden {
+    overflow: hidden;
+  }
+
+  .rounded-sm {
+    border-radius: var(--border-radius-sm);
+  }
+
+  .rounded {
+    border-radius: var(--border-radius);
+  }
+
+  .rounded-md {
+    border-radius: var(--border-radius-md);
+  }
+
+  .rounded-lg {
+    border-radius: var(--border-radius-lg);
+  }
+
+  .rounded-xl {
+    border-radius: var(--border-radius-xl);
+  }
+
+  .rounded-2xl {
+    border-radius: var(--border-radius-2xl);
+  }
+
+  .rounded-full {
+    border-radius: var(--border-radius-full);
+  }
+
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow {
+    box-shadow: var(--shadow);
+  }
+
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .transition {
+    transition: var(--transition);
+  }
+
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Animation Canvas */
+  #animationCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.05;
+  }
+
+  /* Header Styles */
+  header {
+    background-color: white;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0.75rem 0;
+  }
+
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    color: var(--primary);
+    font-size: 2rem;
+    margin-right: 0.75rem;
+  }
+
+  /* Enhanced Navigation */
+  .nav-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  nav {
+    margin-right: 1rem;
+  }
+
+  nav ul {
+    display: flex;
+    list-style: none;
+    gap: 0.5rem;
+  }
+
+  nav ul li {
+    position: relative;
+  }
+
+  nav ul li a {
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+
+  nav ul li a i {
+    font-size: 1.1rem;
+    color: var(--primary);
+  }
+
+  nav ul li a:hover {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+  }
+
+  nav ul li.active a {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* Dropdown Menu */
+  .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+
+  .dropdown-toggle i:first-child {
+    font-size: 1.1rem;
+    color: var(--primary);
+  }
+
+  .dropdown-toggle i.dropdown-arrow {
+    margin-left: 0.3rem;
+    font-size: 0.8rem;
+    transition: transform 0.3s;
+    color: var(--gray);
+  }
+
+  .dropdown-toggle:hover {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    box-shadow: var(--shadow-md);
+    border-radius: var(--border-radius);
+    min-width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 101;
+    padding: 0.5rem 0;
+    border: 1px solid var(--light-gray);
+  }
+
+  .dropdown-menu li {
+    margin: 0;
+  }
+
+  .dropdown-menu a {
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 0;
+    border-bottom: 1px solid var(--light-gray);
+    transition: var(--transition);
+  }
+
+  .dropdown-menu a:hover {
+    background-color: var(--light-secondary);
+    padding-left: 1.5rem;
+  }
+
+  .dropdown-menu a i {
+    font-size: 1rem;
+    color: var(--primary);
+    width: 20px;
+    text-align: center;
+  }
+
+  .dropdown-menu li:last-child a {
+    border-bottom: none;
+  }
+
+  nav ul li:hover .dropdown-toggle i.dropdown-arrow {
+    transform: rotate(180deg);
+  }
+
+  nav ul li:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  /* Auth Buttons */
+  .auth-buttons {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-full);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-align: center;
+    font-size: 0.95rem;
+    border: none;
+    outline: none;
+  }
+
+  .btn i {
+    font-size: 1rem;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+  }
+
+  .btn-outline {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+  }
+
+  .btn-outline:hover {
+    background-color: var(--primary);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: white;
+    border: 2px solid var(--primary);
+  }
+
+  .btn-primary:hover {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-secondary {
+    background-color: var(--accent);
+    color: white;
+    border: 2px solid var(--accent);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--accent-dark);
+    border-color: var(--accent-dark);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-light {
+    background-color: white;
+    color: var(--primary);
+    border: 2px solid white;
+  }
+
+  .btn-light:hover {
+    background-color: transparent;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-dark {
+    background-color: var(--dark);
+    color: white;
+    border: 2px solid var(--dark);
+  }
+
+  .btn-dark:hover {
+    background-color: var(--dark-secondary);
+    border-color: var(--dark-secondary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+
+  .mobile-menu-btn {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--dark);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+
+  .mobile-menu-btn:hover {
+    background-color: var(--light-secondary);
+    color: var(--primary);
+  }
+
+  /* Top Bar */
+  .top-bar {
+    background-color: var(--dark);
+    color: white;
+    padding: 0.5rem 0;
+    font-size: 0.85rem;
+  }
+
+  .top-bar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .top-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .top-bar-item i {
+    color: var(--primary);
+    font-size: 0.9rem;
+  }
+
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .top-bar-social {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .top-bar-social a {
+    color: white;
+    font-size: 0.9rem;
+    transition: var(--transition);
+  }
+
+  .top-bar-social a:hover {
+    color: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  /* Section Styles */
+  section {
+    padding: 6rem 0;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+    text-align: center;
+    position: relative;
+    padding-bottom: 1rem;
+  }
+
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background-color: var(--primary);
+    border-radius: var(--border-radius-full);
+  }
+
+  .section-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 4rem;
+    color: var(--gray);
+    text-align: center;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section-header {
+    margin-bottom: 4rem;
+  }
+
+  /* About Us Hero Section */
+  .about-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 6rem 0;
+    background-color: var(--light);
+  }
+
+  .about-hero-bg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background-color: var(--accent-light);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 20% 100%);
+    z-index: 0;
+  }
+
+  .about-hero-content {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .about-hero-text {
+    flex: 1;
+  }
+
+  .about-hero-text h1 {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+    position: relative;
+    padding-bottom: 1rem;
+  }
+
+  .about-hero-text h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 80px;
+    height: 4px;
+    background-color: var(--primary);
+    border-radius: var(--border-radius-full);
+  }
+
+  .about-hero-text p {
+    color: var(--gray);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
+
+  .about-hero-image {
+    flex: 1;
+    text-align: center;
+  }
+
+  .about-hero-image img {
+    max-width: 100%;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    transition: transform 0.3s ease;
+  }
+
+  .about-hero-image img:hover {
+    transform: scale(1.05);
+  }
+
+  /* About Features Section */
+  .about-features {
+    background-color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .about-features::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background-color: rgba(143, 202, 232, 0.1);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .about-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .about-feature {
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-bottom: 4px solid transparent;
+  }
+
+  .about-feature:hover {
+    transform: translateY(-15px);
+    box-shadow: var(--shadow-lg);
+    border-bottom: 4px solid var(--primary);
+  }
+
+  .about-feature-icon {
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background-color: rgba(243, 151, 32, 0.1);
+  }
+
+  .about-feature-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+  }
+
+  .about-feature-description {
+    color: var(--gray);
+    line-height: 1.6;
+  }
+
+  /* Our Story Section */
+  .our-story {
+    background-color: var(--light);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .our-story-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background-color: var(--accent-light);
+    clip-path: polygon(0 0, 80% 0, 100% 100%, 0 100%);
+    opacity: 0.5;
+    z-index: 0;
+  }
+
+  .our-story-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .story-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 2rem;
+    position: relative;
+  }
+
+  .timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: 3rem;
+    left: 2.5rem;
+    width: 2px;
+    height: calc(100% + 2rem);
+    background-color: var(--primary);
+    z-index: 0;
+  }
+
+  .timeline-year {
+    flex-shrink: 0;
+    width: 5rem;
+    height: 5rem;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.25rem;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 10px 20px rgba(243, 151, 32, 0.3);
+  }
+
+  .timeline-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
+    flex: 1;
+    transition: transform 0.3s ease;
+  }
+
+  .timeline-content:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .timeline-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+  }
+
+  .timeline-description {
+    color: var(--gray);
+    line-height: 1.6;
+  }
+
+  /* Team Section */
+  .team {
+    background-color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .team::before {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background-color: rgba(143, 202, 232, 0.1);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .team-member {
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .team-member:hover {
+    transform: translateY(-15px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .team-member-image {
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+  }
+
+  .team-member-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+  }
+
+  .team-member:hover .team-member-image img {
+    transform: scale(1.1);
+  }
+
+  .team-member-content {
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .team-member-name {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+  }
+
+  .team-member-position {
+    color: var(--primary);
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+
+  .team-member-bio {
+    color: var(--gray);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .team-member-social {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .team-social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--light-secondary);
+    color: var(--primary);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+  }
+
+  .team-social-icon:hover {
+    background-color: var(--primary);
+    color: white;
+    transform: translateY(-5px);
+  }
+
+  /* Testimonials Section */
+  .testimonials {
+    background-color: var(--light);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .testimonials::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background-color: rgba(143, 202, 232, 0.1);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .testimonial-slider {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .testimonial {
+    text-align: center;
+    padding: 3rem 2rem;
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
+    margin: 1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .testimonial:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .testimonial-content {
+    font-size: 1.25rem;
+    color: var(--gray);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+    position: relative;
+    font-style: italic;
+  }
+
+  .testimonial-content::before,
+  .testimonial-content::after {
+    content: '"';
+    font-size: 4rem;
+    color: var(--accent);
+    opacity: 0.3;
+    position: absolute;
+    font-family: Georgia, serif;
+    line-height: 1;
+  }
+
+  .testimonial-content::before {
+    top: -2rem;
+    left: -1rem;
+  }
+
+  .testimonial-content::after {
+    bottom: -4rem;
+    right: -1rem;
+  }
+
+  .testimonial-author {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .author-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 5px solid var(--primary);
+    box-shadow: 0 10px 20px rgba(243, 151, 32, 0.3);
+  }
+
+  .author-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .author-name {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--dark);
+    margin-bottom: 0.3rem;
+  }
+
+  .author-position {
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .testimonial-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    gap: 0.75rem;
+  }
+
+  .testimonial-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--light-gray);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .testimonial-dot.active {
+    background-color: var(--primary);
+    transform: scale(1.2);
+  }
+
+  /* Contact Section */
+  .contact {
+    background-color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contact::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: -100px;
+    width: 300px;
+    height: 300px;
+    background-color: rgba(143, 202, 232, 0.1);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .contact-container {
+    display: flex;
+    gap: 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .contact-info {
+    flex: 1;
+  }
+
+  .contact-info h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+    position: relative;
+    padding-bottom: 1rem;
+  }
+
+  .contact-info h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 80px;
+    height: 4px;
+    background-color: var(--primary);
+    border-radius: var(--border-radius-full);
+  }
+
+  .contact-info p {
+    color: var(--gray);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .contact-details {
+    margin-bottom: 2rem;
+  }
+
+  .contact-detail {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    background-color: var(--light);
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease;
+  }
+
+  .contact-detail:hover {
+    transform: translateX(10px);
+    box-shadow: var(--shadow);
+  }
+
+  .contact-detail i {
+    color: var(--primary);
+    font-size: 1.25rem;
+    margin-right: 1rem;
+    width: 24px;
+    text-align: center;
+  }
+
+  .contact-form {
+    flex: 1;
+    background-color: var(--light);
+    padding: 2.5rem;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .contact-form:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group {
+    flex: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+    font-weight: 500;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--border-radius);
+    font-family: var(--font-primary);
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.2);
+    outline: none;
+  }
+
+  .form-group textarea {
+    height: 150px;
+    resize: vertical;
+  }
+
+  /* Map Section */
+  .map-section {
+    height: 400px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .map-container {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Footer */
+  footer {
+    background-color: var(--dark);
+    color: white;
+    padding: 5rem 0 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+  }
+
+  .footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 3rem;
+    margin-bottom: 4rem;
+  }
+
+  .footer-column {
+    flex: 1;
+    min-width: 240px;
+  }
+
+  .footer-column h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 1rem;
+    color: white;
+  }
+
+  .footer-column h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: var(--border-radius-full);
+  }
+
+  .footer-column ul {
+    list-style: none;
+  }
+
+  .footer-column ul li {
+    margin-bottom: 1rem;
+  }
+
+  .footer-column ul li a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .footer-column ul li a i {
+    color: var(--primary);
+    font-size: 0.9rem;
+  }
+
+  .footer-column ul li a:hover {
+    color: var(--primary);
+    transform: translateX(5px);
+  }
+
+  .social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+  }
+
+  .social-icon:hover {
+    background-color: var(--primary);
+    transform: translateY(-5px);
+  }
+
+  .footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+  }
+
+  /* Responsive Styles */
+  @media (max-width: 1280px) {
+    .container {
+      padding: 0 3rem;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    html {
+      font-size: 14px;
+    }
+
+    .about-hero-content,
+    .contact-container {
+      flex-direction: column;
+      gap: 3rem;
+    }
+
+    .timeline-item:not(:last-child)::before {
+      left: 2rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 2rem;
+    }
+
+    .header-container {
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 80%;
+      height: 100vh;
+      background-color: white;
+      flex-direction: column;
+      padding: 5rem 2rem;
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+      transition: right 0.3s ease;
+      z-index: 101;
+      overflow-y: auto;
+    }
+
+    .nav-container.active {
+      right: 0;
+    }
+
+    nav {
+      margin-right: 0;
+      margin-bottom: 2rem;
+      width: 100%;
+    }
+
+    nav ul {
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    nav ul li {
+      margin: 0.5rem 0;
+      width: 100%;
+    }
+
+    nav ul li a,
+    .dropdown-toggle {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .dropdown-menu {
+      position: static;
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      box-shadow: none;
+      display: none;
+      padding-left: 1rem;
+      width: 100%;
+      border: none;
+    }
+
+    .dropdown-menu.active {
+      display: block;
+    }
+
+    .dropdown-menu a {
+      border-bottom: none;
+      padding: 0.75rem 1rem;
+    }
+
+    .mobile-menu-btn {
+      display: flex;
+      z-index: 102;
+    }
+
+    .auth-buttons {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .section-title {
+      font-size: 2rem;
+    }
+
+    .form-row {
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 0 1.5rem;
+    }
+
+    .btn {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    .auth-buttons {
+      flex-direction: column;
+    }
+
+    .timeline-item {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .timeline-item:not(:last-child)::before {
+      display: none;
+    }
+
+    .timeline-year {
+      margin: 0 auto;
+    }
+  }
+</style>
+<%- contentFor('body') %>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="container top-bar-container">
+    <div class="top-bar-left">
+      <div class="top-bar-item">
+        <i class="fas fa-phone"></i>
+        <span>+1 (555) 123-4567</span>
+      </div>
+      <div class="top-bar-item">
+        <i class="fas fa-envelope"></i>
+        <span>info@shipfast.com</span>
+      </div>
+      <div class="top-bar-item">
+        <i class="fas fa-clock"></i>
+        <span>Mon-Fri: 8:00 AM - 8:00 PM</span>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <div class="top-bar-social">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Animation Canvas for Moving Trucks -->
+<canvas id="animationCanvas"></canvas>
+
+<!-- Header -->
+<header>
+  <div class="container header-container">
+    <a href="#" class="logo">
+      <i class="fas fa-truck-fast logo-icon"></i>
+      <span>ShipFast</span>
+    </a>
+
+    <div class="mobile-menu-btn">
+      <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="nav-container">
+      <nav>
+        <ul>
+          <li>
+            <a href="index.html">
+              <i class="fas fa-home"></i>
+              <span>Home</span>
+            </a>
+          </li>
+          <li class="active">
+            <a href="about-us.html">
+              <i class="fas fa-info-circle"></i>
+              <span>About Us</span>
+            </a>
+          </li>
+          <li>
+            <div class="dropdown-toggle">
+              <i class="fas fa-box"></i>
+              <span>Services</span>
+              <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </div>
+            <ul class="dropdown-menu">
+              <li><a href="#"><i class="fas fa-truck-fast"></i> Express Delivery</a></li>
+              <li><a href="#"><i class="fas fa-clock"></i> Same Day Delivery</a></li>
+              <li><a href="#"><i class="fas fa-globe"></i> International Shipping</a></li>
+              <li><a href="#"><i class="fas fa-warehouse"></i> Warehousing</a></li>
+              <li><a href="#"><i class="fas fa-boxes-stacked"></i> Fulfillment</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="mobile-app.html">
+              <i class="fas fa-mobile-alt"></i>
+              <span>Mobile App</span>
+            </a>
+          </li>
+          <li>
+            <a href="pricing.html">
+              <i class="fas fa-tag"></i>
+              <span>Pricing</span>
+            </a>
+          </li>
+          <li>
+            <a href="faq.html">
+              <i class="fas fa-question-circle"></i>
+              <span>FAQ</span>
+            </a>
+          </li>
+          <li>
+            <a href="#contact">
+              <i class="fas fa-headset"></i>
+              <span>Contact</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="auth-buttons">
+        <a href="#" class="btn btn-outline">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Sign In</span>
+        </a>
+        <a href="#" class="btn btn-primary">
+          <i class="fas fa-user-plus"></i>
+          <span>Sign Up</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- About Hero Section -->
+<section class="about-hero">
+  <div class="about-hero-bg"></div>
+  <div class="container">
+    <div class="about-hero-content">
+      <div class="about-hero-text">
+        <h1>About ShipFast</h1>
+        <p>ShipFast is a leading logistics and shipping company dedicated to providing fast, reliable, and cost-effective shipping solutions for businesses of all sizes. With our innovative technology and extensive network, we're transforming the logistics industry.</p>
+        <p>Founded in 2015, we've grown from a small local courier service to a nationwide logistics provider, serving thousands of businesses across the country. Our mission is to simplify shipping and logistics for our clients, allowing them to focus on growing their business.</p>
+        <a href="#contact" class="btn btn-primary">
+          <i class="fas fa-headset"></i>
+          <span>Contact Us</span>
+        </a>
+      </div>
+      <div class="about-hero-image">
+        <img src="/placeholder.svg?height=500&width=600" alt="ShipFast Team">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Features Section -->
+<section class="about-features">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Why Choose Us</h2>
+      <p class="section-subtitle">What sets ShipFast apart from other logistics providers</p>
+    </div>
+
+    <div class="about-features-grid">
+      <div class="about-feature">
+        <div class="about-feature-icon">
+          <i class="fas fa-rocket"></i>
+        </div>
+        <h3 class="about-feature-title">Speed & Efficiency</h3>
+        <p class="about-feature-description">Our advanced routing algorithms and extensive network enable us to deliver packages faster than traditional carriers, with a 98% on-time delivery rate.</p>
+      </div>
+
+      <div class="about-feature">
+        <div class="about-feature-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h3 class="about-feature-title">Reliability & Security</h3>
+        <p class="about-feature-description">Your shipments are in safe hands with our secure handling procedures and real-time tracking technology that monitors every package from pickup to delivery.</p>
+      </div>
+
+      <div class="about-feature">
+        <div class="about-feature-icon">
+          <i class="fas fa-hand-holding-usd"></i>
+        </div>
+        <h3 class="about-feature-title">Cost-Effective Solutions</h3>
+        <p class="about-feature-description">Our optimized operations and volume-based pricing allow us to offer competitive rates without compromising on service quality or delivery speed.</p>
+      </div>
+
+      <div class="about-feature">
+        <div class="about-feature-icon">
+          <i class="fas fa-headset"></i>
+        </div>
+        <h3 class="about-feature-title">Exceptional Support</h3>
+        <p class="about-feature-description">Our dedicated customer service team is available 7 days a week to assist with any questions or concerns, ensuring a smooth shipping experience.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Our Story Section -->
+<!-- <section class="our-story">
+  <div class="our-story-bg"></div>
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Our Journey</h2>
+      <p class="section-subtitle">The story of how ShipFast became a leader in the logistics industry</p>
+    </div>
+
+    <div class="our-story-content">
+      <div class="story-timeline">
+        <div class="timeline-item">
+          <div class="timeline-year">2015</div>
+          <div class="timeline-content">
+            <h3 class="timeline-title">The Beginning</h3>
+            <p class="timeline-description">ShipFast was founded with just 5 vehicles and a small team of 10 dedicated employees, focusing on local deliveries in a single city.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-year">2017</div>
+          <div class="timeline-content">
+            <h3 class="timeline-title">Regional Expansion</h3>
+            <p class="timeline-description">After securing our first round of funding, we expanded our operations to cover 5 major cities and introduced our proprietary tracking technology.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-year">2019</div>
+          <div class="timeline-content">
+            <h3 class="timeline-title">Technological Innovation</h3>
+            <p class="timeline-description">Launched our mobile app and AI-powered routing system, reducing delivery times by 30% and significantly improving customer satisfaction.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-year">2021</div>
+          <div class="timeline-content">
+            <h3 class="timeline-title">Nationwide Coverage</h3>
+            <p class="timeline-description">Achieved nationwide coverage with a fleet of over 500 vehicles and a network of strategic partnerships, serving more than 10,000 businesses.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-year">2023</div>
+          <div class="timeline-content">
+            <h3 class="timeline-title">Today & Beyond</h3>
+            <p class="timeline-description">Now serving over 25,000 businesses with a team of 1,000+ employees, we continue to innovate and expand our services to meet the evolving needs of our clients.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- Team Section -->
+<!-- <section class="team">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Meet Our Leadership</h2>
+      <p class="section-subtitle">The talented individuals behind ShipFast's success</p>
+    </div>
+
+    <div class="team-grid">
+      <div class="team-member">
+        <div class="team-member-image">
+          <img src="/placeholder.svg?height=300&width=300" alt="John Smith">
+        </div>
+        <div class="team-member-content">
+          <h3 class="team-member-name">John Smith</h3>
+          <div class="team-member-position">CEO & Founder</div>
+          <p class="team-member-bio">With over 20 years of experience in logistics and supply chain management, John founded ShipFast with a vision to revolutionize the shipping industry.</p>
+          <div class="team-member-social">
+            <a href="#" class="team-social-icon"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="team-social-icon"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="team-member">
+        <div class="team-member-image">
+          <img src="/placeholder.svg?height=300&width=300" alt="Sarah Johnson">
+        </div>
+        <div class="team-member-content">
+          <h3 class="team-member-name">Sarah Johnson</h3>
+          <div class="team-member-position">Chief Operations Officer</div>
+          <p class="team-member-bio">Sarah oversees all operational aspects of ShipFast, ensuring efficient processes and exceptional service delivery across our nationwide network.</p>
+          <div class="team-member-social">
+            <a href="#" class="team-social-icon"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="team-social-icon"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="team-member">
+        <div class="team-member-image">
+          <img src="/placeholder.svg?height=300&width=300" alt="Michael Chen">
+        </div>
+        <div class="team-member-content">
+          <h3 class="team-member-name">Michael Chen</h3>
+          <div class="team-member-position">Chief Technology Officer</div>
+          <p class="team-member-bio">Michael leads our technology initiatives, developing innovative solutions that keep ShipFast at the forefront of logistics technology.</p>
+          <div class="team-member-social">
+            <a href="#" class="team-social-icon"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="team-social-icon"><i class="fab fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="team-member">
+        <div class="team-member-image">
+          <img src="/placeholder.svg?height=300&width=300" alt="Emily Rodriguez">
+        </div>
+        <div class="team-member-content">
+          <h3 class="team-member-name">Emily Rodriguez</h3>
+          <div class="team-member-position">VP of Customer Success</div>
+          <p class="team-member-bio">Emily ensures that our customers receive exceptional support and that their shipping needs are met with the highest level of service.</p>
+          <div class="team-member-social">
+            <a href="#" class="team-social-icon"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="team-social-icon"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- Testimonials Section -->
+<!-- <section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">What Our Clients Say</h2>
+      <p class="section-subtitle">Hear from businesses that have transformed their logistics with ShipFast</p>
+    </div>
+
+    <div class="testimonial-slider">
+      <div class="testimonial">
+        <div class="testimonial-content">
+          ShipFast has completely transformed our e-commerce business. Their overnight delivery service has helped us improve customer satisfaction by 40%. The real-time tracking feature gives us and our customers peace of mind, and their API integration with our store was seamless.
+        </div>
+        <div class="testimonial-author">
+          <div class="author-image">
+            <img src="/placeholder.svg?height=100&width=100" alt="Robert Williams">
+          </div>
+          <div class="author-name">Robert Williams</div>
+          <div class="author-position">CEO, TechGadgets</div>
+        </div>
+      </div>
+
+      <div class="testimonial-nav">
+        <div class="testimonial-dot active"></div>
+        <div class="testimonial-dot"></div>
+        <div class="testimonial-dot"></div>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- Contact Section -->
+<section class="contact" id="contact">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Contact Us</h2>
+      <p class="section-subtitle">We're here to help with all your shipping needs</p>
+    </div>
+
+    <div class="contact-container">
+      <div class="contact-info">
+        <h2>Get in Touch</h2>
+        <p>Have questions about our services? Our team is ready to assist you. Reach out to us through any of the channels below or fill out the contact form.</p>
+
+        <div class="contact-details">
+          <div class="contact-detail">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>123 Logistics Avenue, Business District, City</span>
+          </div>
+          <div class="contact-detail">
+            <i class="fas fa-phone"></i>
+            <span>+1 (555) 123-4567</span>
+          </div>
+          <div class="contact-detail">
+            <i class="fas fa-envelope"></i>
+            <span>info@shipfast.com</span>
+          </div>
+          <div class="contact-detail">
+            <i class="fas fa-clock"></i>
+            <span>Monday - Friday: 8:00 AM - 8:00 PM</span>
+          </div>
+        </div>
+
+        <div class="social-icons">
+          <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+
+      <form class="contact-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" placeholder="Your Name">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="Your Email">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" placeholder="Subject">
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" placeholder="Your Message"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-paper-plane"></i>
+          <span>Send Message</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- Map Section -->
+<section class="map-section">
+  <div class="map-container">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.2219901290355!2d-74.00369368400567!3d40.71312937933185!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25a23e28c1191%3A0x49f75d3281df052a!2s150%20Park%20Row%2C%20New%20York%2C%20NY%2010007%2C%20USA!5e0!3m2!1sen!2s!4v1588137348767!5m2!1sen!2s" width="100%" height="100%" frameborder="0" style="border:0;" allowfullscreen="" aria-hidden="false" tabindex="0"></iframe>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-column">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#"><i class="fas fa-angle-right"></i> About Us</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Careers</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Press</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Blog</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Services</h3>
+        <ul>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Express Delivery</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> International Shipping</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Warehousing</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Supply Chain Solutions</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> E-commerce Fulfillment</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Resources</h3>
+        <ul>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Help Center</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> API Documentation</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Shipping Calculator</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Track Your Package</a></li>
+          <li><a href="#"><i class="fas fa-angle-right"></i> Terms & Conditions</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3>Connect With Us</h3>
+        <p>Follow us on social media for updates and promotions</p>
+        <div class="social-icons">
+          <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2023 ShipFast. All rights reserved. | Designed with <i class="fas fa-heart" style="color: var(--primary);"></i> by ShipFast Team</p>
+    </div>
+  </div>
+</footer>
+<%- contentFor('FooterJs') %>
+
+<!-- JavaScript -->
+<script>
+  // Mobile Menu Toggle
+  const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+  const navContainer = document.querySelector('.nav-container');
+
+  mobileMenuBtn.addEventListener('click', () => {
+    navContainer.classList.toggle('active');
+
+    // Toggle icon between bars and times
+    const icon = mobileMenuBtn.querySelector('i');
+    if (icon.classList.contains('fa-bars')) {
+      icon.classList.remove('fa-bars');
+      icon.classList.add('fa-times');
+    } else {
+      icon.classList.remove('fa-times');
+      icon.classList.add('fa-bars');
+    }
+  });
+
+  // Mobile Dropdown Toggle
+  if (window.innerWidth <= 768) {
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+
+    dropdownToggles.forEach(toggle => {
+      toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const dropdownMenu = toggle.nextElementSibling;
+        dropdownMenu.classList.toggle('active');
+
+        const icon = toggle.querySelector('.dropdown-arrow');
+        if (icon.style.transform === 'rotate(180deg)') {
+          icon.style.transform = 'rotate(0deg)';
+        } else {
+          icon.style.transform = 'rotate(180deg)';
+        }
+      });
+    });
+  }
+
+  // Animated Trucks Background
+  const canvas = document.getElementById('animationCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Set canvas size to match window
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Truck class
+  class Truck {
+    constructor() {
+      this.width = 100;
+      this.height = 50;
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.speed = 0.3 + Math.random() * 0.7; // Slower speed
+      this.direction = Math.random() * Math.PI * 2; // Random direction in radians
+      this.color = Math.random() > 0.5 ? '#F39720' : '#FDB614';
+    }
+
+    update() {
+      // Move truck
+      this.x += Math.cos(this.direction) * this.speed;
+      this.y += Math.sin(this.direction) * this.speed;
+
+      // Bounce off edges
+      if (this.x < 0 || this.x > canvas.width - this.width) {
+        this.direction = Math.PI - this.direction;
+      }
+
+      if (this.y < 0 || this.y > canvas.height - this.height) {
+        this.direction = -this.direction;
+      }
+    }
+
+    draw() {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.direction);
+
+      // Draw truck body
+      ctx.fillStyle = this.color;
+      ctx.fillRect(-this.width / 2, -this.height / 2, this.width * 0.7, this.height);
+
+      // Draw truck cabin
+      ctx.fillStyle = this.color === '#F39720' ? '#FDB614' : '#F39720';
+      ctx.fillRect(-this.width / 2 + this.width * 0.7, -this.height / 2, this.width * 0.3, this.height * 0.8);
+
+      // Draw wheels
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(-this.width / 2 + this.width * 0.2, this.height / 2, this.height * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(-this.width / 2 + this.width * 0.8, this.height / 2, this.height * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+  }
+
+  // Create only 2 trucks for better performance
+  const trucks = [];
+  for (let i = 0; i < 2; i++) {
+    trucks.push(new Truck());
+  }
+
+  // Animation loop
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    trucks.forEach(truck => {
+      truck.update();
+      truck.draw();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  // Testimonial Slider
+  const dots = document.querySelectorAll('.testimonial-dot');
+  const testimonials = [{
+      content: "ShipFast has completely transformed our e-commerce business. Their overnight delivery service has helped us improve customer satisfaction by 40%. The real-time tracking feature gives us and our customers peace of mind, and their API integration with our store was seamless.",
+      author: "Robert Williams",
+      position: "CEO, TechGadgets",
+      image: "/placeholder.svg?height=100&width=100"
+    },
+    {
+      content: "We've been using ShipFast for over two years now, and they've consistently exceeded our expectations. Their customer service is exceptional, and their delivery times are unmatched. Our business has grown by 30% since partnering with them.",
+      author: "Jennifer Lee",
+      position: "Operations Manager, FashionHub",
+      image: "/placeholder.svg?height=100&width=100"
+    },
+    {
+      content: "As a small business owner, finding a reliable shipping partner was crucial. ShipFast not only provided affordable rates but also helped us streamline our entire fulfillment process. Their warehouse solution saved us time and money.",
+      author: "David Martinez",
+      position: "Founder, Artisan Crafts",
+      image: "/placeholder.svg?height=100&width=100"
+    }
+  ];
+
+  const testimonialContent = document.querySelector('.testimonial-content');
+  const authorName = document.querySelector('.author-name');
+  const authorPosition = document.querySelector('.author-position');
+  const authorImage = document.querySelector('.author-image img');
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+      // Remove active class from all dots
+      dots.forEach(d => d.classList.remove('active'));
+
+      // Add active class to clicked dot
+      dot.classList.add('active');
+
+      // Update testimonial content
+      testimonialContent.textContent = testimonials[index].content;
+      authorName.textContent = testimonials[index].author;
+      authorPosition.textContent = testimonials[index].position;
+      authorImage.src = testimonials[index].image;
+
+      // Add fade animation
+      testimonialContent.style.opacity = 0;
+      setTimeout(() => {
+        testimonialContent.style.opacity = 1;
+      }, 300);
+    });
+  });
+
+  // Auto rotate testimonials every 5 seconds
+  let currentTestimonial = 0;
+  setInterval(() => {
+    currentTestimonial = (currentTestimonial + 1) % testimonials.length;
+    dots[currentTestimonial].click();
+  }, 5000);
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+
+      const targetId = this.getAttribute('href');
+      if (targetId === '#') return;
+
+      const targetElement = document.querySelector(targetId);
+      if (targetElement) {
+        window.scrollTo({
+          top: targetElement.offsetTop - 100,
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
+</script>

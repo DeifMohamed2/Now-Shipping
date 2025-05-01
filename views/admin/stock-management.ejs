@@ -1,0 +1,1792 @@
+<%- contentFor('HeaderCss') %>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+<%- contentFor('body') %>
+<style>
+  /* Fix for dropdown menus in tables */
+  .dropdown-fix .dropdown-menu {
+    position: fixed !important;
+    z-index: 1050 !important;
+  }
+
+    /* Fix for dropdown menus in tables */
+    .table-responsive {
+    overflow: visible !important;
+    /* Prevent clipping inside table container */
+    }
+  /* Ensure the table doesn't constrain the dropdown */
+  #stockTable {
+    overflow: visible !important;
+  }
+  
+  /* Make sure parent containers don't clip the dropdown */
+  .card-body,
+  .card {
+    overflow: visible !important;
+  }
+
+  .stats-card {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  
+  .stats-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  
+  .quick-add-form {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  
+  .status-badge {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.85rem;
+  }
+  
+  .stock-action-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    margin-right: 5px;
+  }
+  
+  .nav-tabs-custom .nav-link.active {
+    color: #fff;
+    background-color: #405189;
+    border-radius: 30px;
+  }
+  
+  .nav-tabs-custom .nav-link {
+    border-radius: 30px;
+    padding: 5px 15px;
+  }
+  
+  .zone-header {
+    background-color: #f8f9fa;
+    border-left: 4px solid #405189;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border-radius: 0 4px 4px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .zone-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+  }
+  
+  .zone-badge {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 50px;
+    margin-left: 10px;
+  }
+  
+  .zone-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .zone-container {
+    margin-bottom: 30px;
+  }
+  
+  .zone-container:last-child {
+    margin-bottom: 0;
+  }
+  
+  .bulk-actions {
+    display: none;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .bulk-actions.show {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .bulk-actions-title {
+    font-weight: 500;
+    margin-bottom: 0;
+  }
+  
+  .bulk-actions-buttons {
+    display: flex;
+    gap: 8px;
+  }
+</style>
+<style>
+  .custom-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .custom-dropdown-toggle {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .custom-dropdown-toggle:hover {
+    background-color: #e5e5e5;
+  }
+
+  .custom-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: auto;
+    right: 0;
+    z-index: 1050;
+    display: none;
+    min-width: 200px;
+    padding: 8px 0;
+    margin: 0;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  }
+
+  .custom-dropdown-menu.show {
+    display: block;
+  }
+
+  .custom-dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    font-weight: 400;
+    color: #212529;
+    text-align: left;
+    background-color: transparent;
+    border: 0;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .custom-dropdown-item:hover {
+    background-color: #f8f9fa;
+  }
+
+  .custom-dropdown-item i {
+    margin-right: 8px;
+    font-size: 14px;
+  }
+</style>
+
+<div class="row">
+  <!-- Stats Cards Row -->
+  <div class="col-lg-12">
+    <div class="row g-3 mb-4">
+      <!-- Total Orders in Stock -->
+      <div class="col-md-3">
+        <div class="card stats-card border-0">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-primary-subtle text-primary">
+                <i class="ri-store-2-line fs-4"></i>
+              </div>
+              <div class="ms-3">
+                <h6 class="mb-0 text-muted">Total in Stock</h6>
+                <h4 class="mt-2 mb-0 fw-semibold" id="totalInStock">128</h4>
+              </div>
+            </div>
+            <div class="mt-3">
+              <span class="badge bg-success-subtle text-success">
+                <i class="ri-arrow-up-line"></i> 8.2%
+              </span>
+              <span class="text-muted ms-1">from last week</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pending Arrivals -->
+      <div class="col-md-3">
+        <div class="card stats-card border-0">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-warning-subtle text-warning">
+                <i class="ri-truck-line fs-4"></i>
+              </div>
+              <div class="ms-3">
+                <h6 class="mb-0 text-muted">Pending Arrivals</h6>
+                <h4 class="mt-2 mb-0 fw-semibold" id="pendingArrivals">42</h4>
+              </div>
+            </div>
+            <div class="mt-3">
+              <span class="badge bg-danger-subtle text-danger">
+                <i class="ri-arrow-down-line"></i> 3.1%
+              </span>
+              <span class="text-muted ms-1">from last week</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Ready for Dispatch -->
+      <div class="col-md-3">
+        <div class="card stats-card border-0">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-success-subtle text-success">
+                <i class="ri-takeaway-line fs-4"></i>
+              </div>
+              <div class="ms-3">
+                <h6 class="mb-0 text-muted">Ready for Dispatch</h6>
+                <h4 class="mt-2 mb-0 fw-semibold" id="readyForDispatch">56</h4>
+              </div>
+            </div>
+            <div class="mt-3">
+              <span class="badge bg-success-subtle text-success">
+                <i class="ri-arrow-up-line"></i> 12.3%
+              </span>
+              <span class="text-muted ms-1">from last week</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Processing Orders -->
+      <div class="col-md-3">
+        <div class="card stats-card border-0">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-info-subtle text-info">
+                <i class="ri-loader-4-line fs-4"></i>
+              </div>
+              <div class="ms-3">
+                <h6 class="mb-0 text-muted">Processing</h6>
+                <h4 class="mt-2 mb-0 fw-semibold" id="processingOrders">30</h4>
+              </div>
+            </div>
+            <div class="mt-3">
+              <span class="badge bg-success-subtle text-success">
+                <i class="ri-arrow-up-line"></i> 5.7%
+              </span>
+              <span class="text-muted ms-1">from last week</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Quick Add Order to Stock -->
+  <div class="col-lg-6 mb-4">
+    <div class="card">
+      <div class="card-header border-0 bg-light">
+        <h5 class="card-title mb-0">Quick Add to Stock</h5>
+      </div>
+      <div class="card-body">
+        <form id="quickAddForm" class="quick-add-form">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+              <label for="orderNumber" class="form-label">Order Number</label>
+              <div class="input-group">
+                <span class="input-group-text">#</span>
+                <input type="text" class="form-control" id="orderNumber" placeholder="Enter order number" required>
+              </div>
+            </div>
+            <!-- <div class="col-md-3">
+              <label for="stockStatus" class="form-label">Stock Status</label>
+              <select class="form-select" id="stockStatus" required>
+                <option value="">Select status</option>
+                <option value="inStock">In Stock</option>
+                <option value="processing">Processing</option>
+                <option value="readyForDispatch">Ready for Dispatch</option>
+                <option value="damaged">Damaged</option>
+              </select>
+            </div> -->
+            <!-- <div class="col-md-4">
+              <label for="stockNotes" class="form-label">Notes</label>
+              <input type="text" class="form-control" id="stockNotes" placeholder="Add notes (optional)">
+            </div> -->
+            <div class="col-md-6">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="ri-add-line me-1"></i> Add to Stock
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  
+  <!-- Main Stock Management Card -->
+  <div class="col-lg-12">
+    <div class="card" id="stockList">
+      <div class="card-header border-0">
+        <div class="row align-items-center gy-3">
+          <div class="col-sm">
+            <h5 class="card-title mb-0">Stock Management</h5>
+          </div>
+          <div class="col-sm-auto">
+            <div class="d-flex gap-1 flex-wrap">
+              <button type="button" class="btn btn-info" id="exportStockBtn">
+                <i class="ri-file-download-line align-bottom me-1"></i> Export
+              </button>
+              <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()">
+                <i class="ri-delete-bin-2-line"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Search and Filter Section -->
+      <div class="card-body border border-dashed border-end-0 border-start-0">
+        <form id="stockSearchForm">
+          <div class="row g-3">
+            <div class="col-xxl-5 col-sm-6">
+              <div class="search-box">
+                <input type="text" class="form-control search" id="stockSearch" placeholder="Search for order ID, product, status or something...">
+                <i class="ri-search-line search-icon"></i>
+              </div>
+            </div>
+            <div class="col-xxl-2 col-sm-6">
+              <div>
+                <input type="text" class="form-control" data-provider="flatpickr" data-date-format="d M, Y" data-range-date="true" id="stockDateRange" placeholder="Select date range">
+              </div>
+            </div>
+            <div class="col-xxl-2 col-sm-4">
+              <div>
+                <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="stockStatusFilter">
+                  <option value="">Status</option>
+                  <option value="all" selected>All</option>
+                  <option value="inStock">In Stock</option>
+                  <option value="pendingArrival">Pending Arrival</option>
+                  <option value="processing">Processing</option>
+                  <option value="readyForDispatch">Ready for Dispatch</option>
+                  <option value="dispatched">Dispatched</option>
+                  <option value="damaged">Damaged</option>
+                  <option value="returned">Returned</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-xxl-2 col-sm-4">
+              <div>
+                <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="zoneFilter">
+                  <option value="">Zone</option>
+                  <option value="all" selected>All Zones</option>
+                  <option value="Nasr City">Nasr City</option>
+                  <option value="Maadi">Maadi</option>
+                  <option value="Heliopolis">Heliopolis</option>
+                  <option value="Downtown">Downtown</option>
+                  <option value="New Cairo">New Cairo</option>
+                  <option value="6th October">6th October</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-xxl-1 col-sm-4">
+              <div>
+                <button type="button" class="btn btn-primary w-100" onclick="searchStock()">
+                  <i class="ri-equalizer-fill me-1 align-bottom"></i> Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Stock Table Section -->
+      <div class="card-body pt-0">
+        <div>
+          <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
+            <li class="nav-item">
+              <button class="btn stockFilter btn-link nav-link active All py-2 px-3" data-bs-toggle="tab" id="All" role="tab" aria-selected="true" onClick="filterStock('all')">
+                <i class="ri-store-2-fill me-1 align-bottom"></i> All Items
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn stockFilter btn-link nav-link py-2 px-3 ReadyForDispatch" data-bs-toggle="tab" id="ReadyForDispatch" role="tab" aria-selected="false" onClick="filterStock('readyForDispatch')">
+                <i class="ri-takeaway-line me-1 align-bottom"></i> Ready for Dispatch
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn stockFilter btn-link nav-link py-2 px-3 InStock" data-bs-toggle="tab" id="InStock" role="tab" aria-selected="false" onClick="filterStock('inStock')">
+                <i class="ri-archive-line me-1 align-bottom"></i> In Stock
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn stockFilter btn-link nav-link py-2 px-3 PendingArrival" data-bs-toggle="tab" id="PendingArrival" role="tab" aria-selected="false" onClick="filterStock('pendingArrival')">
+                <i class="ri-truck-line me-1 align-bottom"></i> Pending Arrival
+              </button>
+            </li>
+            <!-- <li class="nav-item">
+              <button class="btn stockFilter btn-link nav-link py-2 px-3 Processing" data-bs-toggle="tab" id="Processing" role="tab" aria-selected="false" onClick="filterStock('processing')">
+                <i class="ri-loader-4-line me-1 align-bottom"></i> Processing
+              </button>
+            </li> -->
+            <!-- <li class="nav-item">
+              <button class="btn stockFilter btn-link nav-link py-2 px-3 Damaged" data-bs-toggle="tab" id="Damaged" role="tab" aria-selected="false" onClick="filterStock('damaged')">
+                <i class="ri-error-warning-line me-1 align-bottom"></i> Damaged
+              </button>
+            </li> -->
+          </ul>
+
+          <!-- Bulk Actions Bar (Initially Hidden) -->
+          <div id="bulkActionsBar" class="bulk-actions mb-3">
+            <div class="bulk-actions-title">
+              <span id="selectedItemsCount">0</span> items selected
+            </div>
+            <div class="bulk-actions-buttons">
+              <button class="btn btn-sm btn-success" onclick="assignMultipleOrders()">
+                <i class="ri-user-add-line me-1"></i> Assign to Courier
+              </button>
+              <button class="btn btn-sm btn-info" onclick="printMultipleLabels()">
+                <i class="ri-printer-line me-1"></i> Print Labels
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteMultiple()">
+                <i class="ri-delete-bin-2-line me-1"></i> Remove
+              </button>
+              <button class="btn btn-sm btn-light" onclick="clearSelection()">
+                <i class="ri-close-line me-1"></i> Clear Selection
+              </button>
+            </div>
+          </div>
+
+          <!-- Stock Items Grouped by Zone -->
+          <div id="stockItemsByZone">
+            <!-- Zone groups will be inserted here dynamically -->
+          </div>
+
+          <div class="noresult" id="NoResult" style="display: none">
+            <div class="text-center">
+              <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+              <h5 class="mt-2">Sorry! No Result Found</h5>
+            </div>
+          </div>
+          
+          <!-- Pagination -->
+          <div class="d-flex justify-content-end mt-3">
+            <div class="pagination-wrap hstack gap-2">
+              <a class="page-item pagination-prev disabled" href="javascript:void(0);">
+                Previous
+              </a>
+              <ul class="pagination listjs-pagination mb-0"></ul>
+              <a class="page-item pagination-next" href="javascript:void(0);">
+                Next
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+    <!-- Orders in Progress Cards -->
+  <div class="col-lg-12 mb-4">
+    <div class="card">
+      <div class="card-header border-0 bg-light">
+        <h5 class="card-title mb-0">Orders in Progress</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3" id="inProgressOrdersCards">
+          <!-- Cards will be populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<!-- Update Stock Status Modal -->
+<div class="modal fade" id="updateStockStatusModal" tabindex="-1" aria-labelledby="updateStockStatusModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updateStockStatusModalLabel">Update Stock Status</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="updateStockStatusForm">
+          <input type="hidden" id="updateOrderId" name="updateOrderId" value="">
+          <div class="mb-3">
+            <label for="newStockStatus" class="form-label">Stock Status</label>
+            <select class="form-select" id="newStockStatus" name="newStockStatus" required>
+              <option value="">Select new status</option>
+              <option value="inStock">In Stock</option>
+              <option value="processing">Processing</option>
+              <option value="readyForDispatch">Ready for Dispatch</option>
+              <option value="dispatched">Dispatched</option>
+              <option value="damaged">Damaged</option>
+              <option value="returned">Returned</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="statusNotes" class="form-label">Notes</label>
+            <textarea class="form-control" id="statusNotes" name="statusNotes" rows="3" placeholder="Add notes about this status change"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="stockLocation" class="form-label">Stock Location</label>
+            <input type="text" class="form-control" id="stockLocation" name="stockLocation" placeholder="e.g., Shelf A-12, Zone B">
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update Status</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assign to Courier Modal -->
+<div class="modal fade" id="assignToCourierModal" tabindex="-1" aria-labelledby="assignToCourierModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="assignToCourierModalLabel">Assign to Courier</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="courierLoader" class="text-center" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <form id="assignToCourierForm">
+          <input type="hidden" id="courierOrderIds" name="courierOrderIds" value="">
+          <input type="hidden" id="courierZone" name="courierZone" value="">
+          <div class="mb-3">
+            <label for="courierSelect" class="form-label">Select Courier</label>
+            <select class="form-select" id="courierSelect" name="courierSelect" required>
+              <option value="">Select a courier</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="dispatchNotes" class="form-label">Dispatch Notes</label>
+            <textarea class="form-control" id="dispatchNotes" name="dispatchNotes" rows="2" placeholder="Add notes for the courier"></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Assign & Dispatch</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Print Label Modal -->
+<div class="modal fade" id="printLabelModal" tabindex="-1" aria-labelledby="printLabelModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="printLabelModalLabel">Print Stock Label</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Select the label size for printing:</p>
+        <form id="printLabelForm">
+          <input type="hidden" id="labelOrderId" name="labelOrderId" value="">
+          <div class="d-flex justify-content-around mb-4">
+            <div class="paper-size-option" onclick="selectLabelSize('small')">
+              <div class="border p-3 text-center rounded" style="width: 100px; height: 70px;">
+                <i class="ri-file-list-3-line fs-3"></i>
+                <p class="mb-0 mt-1">Small</p>
+              </div>
+            </div>
+            <div class="paper-size-option" onclick="selectLabelSize('medium')">
+              <div class="border p-3 text-center rounded" style="width: 120px; height: 90px;">
+                <i class="ri-file-list-3-line fs-2"></i>
+                <p class="mb-0 mt-1">Medium</p>
+              </div>
+            </div>
+            <div class="paper-size-option" onclick="selectLabelSize('large')">
+              <div class="border p-3 text-center rounded" style="width: 140px; height: 110px;">
+                <i class="ri-file-list-3-line fs-1"></i>
+                <p class="mb-0 mt-1">Large</p>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="labelSize" name="labelSize" value="">
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="includeBarcode" checked>
+            <label class="form-check-label" for="includeBarcode">
+              Include barcode
+            </label>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="includeQRCode" checked>
+            <label class="form-check-label" for="includeQRCode">
+              Include QR code
+            </label>
+          </div>
+          <div class="d-flex justify-content-end mt-3">
+            <button type="button" class="btn btn-primary" onclick="printLabel()">Print Label</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Zone to Courier Modal -->
+<div class="modal fade" id="assignZoneToCourierModal" tabindex="-1" aria-labelledby="assignZoneToCourierModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="assignZoneToCourierModalLabel">Assign Zone to Courier</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="zoneLoader" class="text-center" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <form id="assignZoneToCourierForm">
+          <input type="hidden" id="assignZoneName" name="assignZoneName" value="">
+          <div class="mb-3">
+            <label for="zoneOrderStatus" class="form-label">Order Status</label>
+            <select class="form-select" id="zoneOrderStatus" name="zoneOrderStatus" required>
+              <option value="all">All Orders in Zone</option>
+              <option value="readyForDispatch" selected>Only Ready for Dispatch</option>
+              <option value="inStock">Only In Stock</option>
+              <option value="processing">Only Processing</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="zoneCourierSelect" class="form-label">Select Courier</label>
+            <select class="form-select" id="zoneCourierSelect" name="zoneCourierSelect" required>
+              <option value="">Select a courier</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="zoneDispatchNotes" class="form-label">Dispatch Notes</label>
+            <textarea class="form-control" id="zoneDispatchNotes" name="zoneDispatchNotes" rows="2" placeholder="Add notes for the courier"></textarea>
+          </div>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Assign Zone & Dispatch</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/list.js/list.min.js"></script>
+<script src="/assets/libs/list.pagination.js/list.pagination.min.js"></script>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+<script>
+  const stockItemsByZone = document.getElementById("stockItemsByZone");
+  const NoResult = document.getElementById("NoResult");
+  const checkAll = document.getElementById("checkAll");
+  const bulkActionsBar = document.getElementById("bulkActionsBar");
+  const selectedItemsCount = document.getElementById("selectedItemsCount");
+  let selectedItems = [];
+
+  // Handle "check all" checkbox
+  if (checkAll) {
+    checkAll.addEventListener("change", function() {
+      const checkboxes = document.querySelectorAll("input[name='checkAll[]']");
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = checkAll.checked;
+        handleCheckboxChange(checkbox);
+      });
+    });
+  }
+
+  // Quick Add Form Submission
+  document.getElementById("quickAddForm").addEventListener("submit",async function(e) {
+    e.preventDefault();
+    
+    const orderNumber = document.getElementById("orderNumber").value.trim();
+    // const stockStatus = document.getElementById("stockStatus").value;
+    // const stockNotes = document.getElementById("stockNotes").value;
+    
+    // Show loading indicator
+    Swal.fire({
+      title: 'Processing...',
+      text: 'Adding order to stock',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    try {
+      // post request to add order to stock
+      const response = await fetch('/admin/add-to-stock', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({orderNumber})
+    });
+    const data = await response.json();
+    console.log(data);
+
+    if(response.ok){
+      Swal.fire({
+        icon: 'success',
+        title: 'Added to Stock',
+        text: `Order #${orderNumber} has been added to stock `,
+        timer: 2000
+      }).then(() => {
+        // Reset form and refresh stock data
+        document.getElementById("quickAddForm").reset();
+        // foucs on order number input
+        document.getElementById("orderNumber").focus();
+        fetchStockItems();
+      });
+    }else{
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: `Order #${orderNumber} ${data.error} `,
+      })
+    }
+    } catch (error) {
+      console.error("Error adding order to stock:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: `Error adding order to stock: ${error.message || 'Unknown error'}`,
+      });
+    }
+
+  });
+
+  // Fetch stock items from server
+  async function fetchStockItems(status = "all") {
+    try {
+      // Show loading spinner
+      stockItemsByZone.innerHTML = `
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2">Loading stock items...</p>
+        </div>
+      `;
+
+      // In a real implementation, you would fetch from your API
+      const response = await fetch(`/admin/get-stock-orders?status=${status}`);
+      const stockItems = await response.json();
+      console.log('stockItems' , stockItems); 
+      // For demo purposes, we'll use mock data
+    //   const stockItems = getMockStockData();
+      
+      // Update stats cards
+      updateStatsCards(stockItems);
+      
+      // Group items by zone
+      const itemsByZone = groupItemsByZone(stockItems);
+      
+      // Populate zones
+      stockItemsByZone.innerHTML = ""; // Clear existing content
+      NoResult.style.display = "none";
+      
+      if (stockItems.length === 0) {
+        NoResult.style.display = "block";
+        return;
+      }
+      
+      populateZoneGroups(itemsByZone);
+      InProgressOrders(stockItems.filter(item => item.orderStatus === 'inProgress'));
+    } catch (error) {
+      console.error("Error fetching stock items:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: `Error fetching stock items: ${error.message || 'Unknown error'}`,
+      });
+    }
+  }
+
+
+  // Group items by zone
+  function groupItemsByZone(items) {
+    const zones = {};
+    
+    items.forEach(item => {
+      const zone = item.orderCustomer.zone || 'Unassigned';
+      if (!zones[zone]) {
+        zones[zone] = [];
+      }
+      zones[zone].push(item);
+    });
+    
+    return zones;
+  }
+
+  // Populate zone groups
+  function populateZoneGroups(itemsByZone) {
+    // Sort zones alphabetically
+    const sortedZones = Object.keys(itemsByZone).sort();
+    
+    sortedZones.forEach(zone => {
+      const items = itemsByZone[zone];
+      const zoneContainer = document.createElement('div');
+      zoneContainer.className = 'zone-container';
+      
+      // Create zone header
+      const zoneHeader = document.createElement('div');
+      zoneHeader.className = 'zone-header';
+      zoneHeader.innerHTML = `
+        <div class="zone-title">
+          <i class="ri-map-pin-line me-2"></i>
+          ${zone}
+          <span class="badge bg-primary-subtle text-primary zone-badge">${items.length} orders</span>
+        </div>
+        <div class="zone-actions">
+      
+        </div>
+      `;
+      
+      zoneContainer.appendChild(zoneHeader);
+      
+      // Create zone table
+      const tableContainer = document.createElement('div');
+      tableContainer.className = 'table-responsive table-card mb-3';
+      
+      const table = document.createElement('table');
+      table.className = 'table table-nowrap align-middle';
+      
+      // Table header
+      const thead = document.createElement('thead');
+      thead.className = 'text-muted table-light';
+      thead.innerHTML = `
+        <tr class="text-uppercase">
+          <th scope="col" style="width: 25px;">
+            <div class="form-check">
+              <input class="form-check-input zone-check-all" type="checkbox" data-zone="${zone}" value="option">
+            </div>
+          </th>
+          <th>Order ID</th>
+          <th>Product</th>
+          <th>Customer & Location</th>
+          <th>Order Details</th>
+          <th>Stock Status</th>
+          <th>Amount Details</th>
+          <th>Arrival Date</th>
+          <th>Days in Stock</th>
+          <th>Action</th>
+        </tr>
+      `;
+      
+      // Table body
+      const tbody = document.createElement('tbody');
+      tbody.className = 'list form-check-all';
+      
+      items.forEach(item => {
+        const row = document.createElement('tr');
+        
+        // Calculate days in stock
+        const arrivalDate = new Date(item.orderStages.find(stage => stage.stageName === 'inStock')?.stageDate);
+        const today = new Date();
+        const daysInStock = Math.floor((today - arrivalDate) / (1000 * 60 * 60 * 24));
+        
+        // Get status badge class
+        const statusDetails = getStockStatusDetails(item.orderStatus);
+
+        // Handle product description
+        const productDesc = item.orderShipping.productDescription;
+        const shouldShowMoreProduct = productDesc && productDesc.length > 30;
+        const truncatedDesc = shouldShowMoreProduct ? productDesc.substring(0, 30) + '...' : productDesc || '';
+        const showMoreProductBtn = shouldShowMoreProduct ? 
+          `<button class="btn btn-link btn-sm p-0" onclick="showFullDescription('${productDesc}')">Show More</button>` : '';
+
+        // Handle replacement product description for exchange orders
+        let replacementDesc = '';
+        if (item.orderShipping.orderType === 'Exchange' && item.orderShipping.productDescriptionReplacement) {
+          const replDesc = item.orderShipping.productDescriptionReplacement;
+          const shouldShowMoreRepl = replDesc.length > 30;
+          const truncatedRepl = shouldShowMoreRepl ? replDesc.substring(0, 30) + '...' : replDesc;
+          const showMoreReplBtn = shouldShowMoreRepl ?
+            `<button class="btn btn-link btn-sm p-0" onclick="showFullDescription('${replDesc}')">Show More</button>` : '';
+          replacementDesc = `
+            <div class="mt-2">
+              <small class="text-muted">Replacement:</small><br>
+              ${truncatedRepl}
+              ${showMoreReplBtn}
+            </div>
+          `;
+        }
+
+        // Handle location
+        const address = item.orderCustomer.address;
+        const shouldShowMoreAddress = address && address.length > 20;
+        const truncatedLocation = shouldShowMoreAddress ? address.substring(0, 20) + '...' : address || '';
+        const showMoreAddressBtn = shouldShowMoreAddress ?
+          `<button class="btn btn-link btn-sm p-0" onclick="showFullAddress('${address}')">Show More</button>` : '';
+
+        // Get order details based on type
+        let orderDetails = `<div><strong>Type:</strong> ${item.orderShipping.orderType}</div>`;
+        if (item.orderShipping.orderType === 'Exchange') {
+          orderDetails += `
+            <div><strong>Items to Return:</strong> ${item.orderShipping.numberOfItems}</div>
+            <div><strong>Items to Replace:</strong> ${item.orderShipping.numberOfItemsReplacement}</div>
+          `;
+        } else {
+          orderDetails += `<div><strong>Items:</strong> ${item.orderShipping.numberOfItems}</div>`;
+        }
+        
+        row.innerHTML = `
+          <th scope="row">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="checkAll[]" data-order-id="${item.orderNumber}" data-zone="${zone}" value="${item.orderNumber}">
+            </div>
+          </th>
+          <td class="id"><a href="/admin/order-details/${item.orderNumber}" class="fw-medium link-primary">${item.orderNumber}</a></td>
+          <td class="product_desc">
+            ${truncatedDesc}
+            ${showMoreProductBtn}
+            ${replacementDesc}
+          </td>
+          <td class="customer_details">
+            <div>${item.orderCustomer.fullName}</div>
+            <small class="text-muted">
+              ${truncatedLocation}
+              ${showMoreAddressBtn}
+            </small>
+          </td>
+          <td class="order_details">${orderDetails}</td>
+          <td class="stock_status">
+            <span class="badge ${statusDetails.badgeClass} status-badge">
+              ${statusDetails.statusText}
+            </span>
+          </td>
+          <td class="amount_details">
+            <div><strong>${item.orderShipping.amountType}:</strong> ${item.orderShipping.amount} EGP</div>
+          </td>
+          <td class="arrival_date">${arrivalDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+          <td class="days_in_stock">
+            <span class="${daysInStock > 7 ? 'text-danger fw-medium' : ''}">${daysInStock} days</span>
+          </td>
+          <td>
+            <div class="custom-dropdown">
+              <button class="custom-dropdown-toggle btn btn-soft-secondary btn-sm" onclick="toggleDropdown('dropdown-menu-${item.orderNumber}', event)">
+                <i class="ri-more-fill align-middle"></i>
+              </button>
+              <div id="dropdown-menu-${item.orderNumber}" class="custom-dropdown-menu">
+                <button class="custom-dropdown-item" onclick="updateStockStatus('${item.orderNumber}')">
+                  <i class="ri-edit-2-fill text-warning"></i> <span>Update Status</span>
+                </button>
+                <button class="custom-dropdown-item" onclick="getCouriers('${item.orderNumber}', '${zone}')">
+                  <i class="ri-user-add-line text-success"></i> <span>Assign to Courier</span>
+                </button>
+         
+                <button class="custom-dropdown-item" onclick="removeFromStock('${item.orderNumber}')">
+                  <i class="ri-delete-bin-6-fill text-danger"></i> <span>Remove from Stock</span>
+                </button>
+              </div>
+            </div>
+          </td>
+        `;
+       
+        tbody.appendChild(row);
+      });
+      
+      table.appendChild(thead);
+      table.appendChild(tbody);
+      tableContainer.appendChild(table);
+      zoneContainer.appendChild(tableContainer);
+      
+      stockItemsByZone.appendChild(zoneContainer);
+    });
+    
+    // Add event listeners for checkboxes
+    addCheckboxEventListeners();
+  }
+
+  // fetch in progress orders
+    
+  function InProgressOrders(inProgressOrders) {
+        try {
+            // Group orders by courier
+            const ordersByCourier = {};
+            inProgressOrders.forEach(order => {
+            if (order.deliveryMan && order.orderStatus === 'inProgress') {
+                if (!ordersByCourier[order.deliveryMan._id]) {
+                ordersByCourier[order.deliveryMan._id] = {
+                    courier: order.deliveryMan,
+                    orders: []
+                };
+                }
+                ordersByCourier[order.deliveryMan._id].orders.push(order);
+            }
+            });
+
+            const cardsContainer = document.getElementById('inProgressOrdersCards');
+            cardsContainer.innerHTML = '';
+
+            // Create card for each courier and their orders
+            Object.values(ordersByCourier).forEach(({ courier, orders }) => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'col-md-6 col-xl-4';
+            cardDiv.innerHTML = `
+                <div class="card border-0 shadow-sm hover-shadow">
+                <div class="card-header bg-primary bg-opacity-10 border-0">
+                    <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                        <div class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle fs-3">
+                            <i class="ri-user-3-line"></i>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="card-title mb-1">${courier.name}</h5>
+                        <p class="text-muted mb-0">
+                        </p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <span class="badge bg-primary-subtle text-primary fs-12 fw-medium">
+                        ${orders.length} Orders
+                        </span>
+                    </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                    <h6 class="card-subtitle mb-0">Orders Details</h6>
+                  
+                    </div>
+
+                    <div class="order-list mb-3" style="max-height: 150px; overflow-y: auto;">
+                    ${orders.map(order => `
+                        <div class="d-flex align-items-center p-2 rounded-2 bg-light bg-opacity-50 mb-2">
+                        <div class="flex-grow-1">
+                            <span class="badge bg-info-subtle text-info fw-medium">#${order.orderNumber}</span>
+                            <small class="d-block text-muted mt-1">
+                            ${order.orderCustomer?.fullName || 'N/A'}
+                            </small>
+                            <small class="d-block text-muted">
+                            <i class="ri-map-pin-line me-1"></i>${order.orderCustomer?.zone || 'No Zone'}
+                            </small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="badge ${order.orderShipping.orderType === 'Exchange' ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success'}">
+                            ${order.orderShipping.orderType || 'Regular'}
+                            </span>
+                        </div>
+                        </div>
+                    `).join('')}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                    <button class="btn btn-success flex-grow-1" onclick="markOrdersAsReceived('${courier._id}')">
+                        <i class="ri-check-double-line me-1"></i> Mark as Received
+                    </button>
+               
+                    </div>
+                </div>
+
+                
+                </div>
+            `;
+            cardsContainer.appendChild(cardDiv);
+            });
+
+        } catch (error) {
+            console.error('Error processing in-progress orders:', error);
+            // Show error toast
+            Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to process in-progress orders',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+            });
+        }
+  }
+
+  // Mark orders as received by courier
+  async function markOrdersAsReceived(courierId) {
+    try {
+      // Show confirmation dialog first
+      const confirmResult = await Swal.fire({
+        title: 'Confirm Action',
+        text: 'Are you sure you want to mark these orders as received by the courier?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark as received',
+        cancelButtonText: 'Cancel',
+        confirmButtonClass: 'btn btn-success',
+        cancelButtonClass: 'btn btn-danger',
+        buttonsStyling: true
+      });
+
+      if (!confirmResult.isConfirmed) {
+        return;
+      }
+
+      // Show loading state
+      Swal.fire({
+        title: 'Processing...',
+        html: 'Please wait while we update the orders...',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch('/admin/stock-managment/courier-received', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          courierId
+        })
+      });
+
+      if (response.ok) {
+        // Refresh both the orders list and in-progress table
+        await Promise.all([
+          fetchStockItems(),
+          InProgressOrders()
+        ]);
+
+        // Update the in-progress orders table
+        const inProgressTable = document.querySelector('#inProgressTable tbody');
+        if (inProgressTable) {
+          const rows = inProgressTable.querySelectorAll(`tr[data-courier-id="${courierId}"]`);
+          rows.forEach(row => row.remove());
+        }
+
+        // Show success message
+        Swal.fire({
+          title: 'Success!',
+          text: 'Orders marked as received by courier',
+          icon: 'success',
+          confirmButtonClass: 'btn btn-primary w-xs mt-2',
+          buttonsStyling: true
+        });
+      } else {
+        throw new Error('Failed to update orders');
+      }
+    } catch (error) {
+      console.error('Error updating orders:', error);
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to update orders',
+        icon: 'error',
+        confirmButtonClass: 'btn btn-primary w-xs mt-2',
+        buttonsStyling: true
+      });
+    }
+  }
+
+
+  // Show full description
+  function showFullDescription(description) {
+    Swal.fire({
+      title: 'Full Description',
+      text: description,
+      showCloseButton: true,
+      showCancelButton: true,
+      confirmButtonText: 'Close',
+      cancelButtonText: 'Copy',
+      showLoaderOnConfirm: true,
+      preConfirm: () => {
+        navigator.clipboard.writeText(description);
+        return true;
+      }
+    });
+  }
+      
+  // Show full address
+  function showFullAddress(address){
+    Swal.fire({
+      title:'FullAddress',
+      text:address,
+      showCloseButton:true,
+      showCancelButton:true,
+      confirmButtonText:'Close',
+      cancelButtonText:'Copy',
+      showLoaderOnConfirm:true,
+      preConfirm:()=>{
+        navigator.clipboard.writeText(address);
+        return true;
+      }
+    });
+  }
+  // Add event listeners for checkboxes
+  function addCheckboxEventListeners() {
+    // Zone check all checkboxes
+    document.querySelectorAll('.zone-check-all').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const zone = this.getAttribute('data-zone');
+        const zoneCheckboxes = document.querySelectorAll(`input[name="checkAll[]"][data-zone="${zone}"]`);
+        
+        zoneCheckboxes.forEach(cb => {
+          cb.checked = this.checked;
+          handleCheckboxChange(cb);
+        });
+      });
+    });
+    
+    // Individual checkboxes
+    document.querySelectorAll('input[name="checkAll[]"]').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        handleCheckboxChange(this);
+      });
+    });
+  }
+
+  // Handle checkbox change
+  function handleCheckboxChange(checkbox) {
+    const orderId = checkbox.getAttribute('data-order-id');
+    
+    if (checkbox.checked) {
+      if (!selectedItems.includes(orderId)) {
+        selectedItems.push(orderId);
+      }
+    } else {
+      const index = selectedItems.indexOf(orderId);
+      if (index > -1) {
+        selectedItems.splice(index, 1);
+      }
+    }
+    
+    // Update selected items count
+    selectedItemsCount.textContent = selectedItems.length;
+    
+    // Show/hide bulk actions bar
+    if (selectedItems.length > 0) {
+      bulkActionsBar.classList.add('show');
+    } else {
+      bulkActionsBar.classList.remove('show');
+    }
+  }
+
+  // Clear selection
+  function clearSelection() {
+    document.querySelectorAll('input[name="checkAll[]"]').forEach(checkbox => {
+      checkbox.checked = false;
+    });
+    
+    document.querySelectorAll('.zone-check-all').forEach(checkbox => {
+      checkbox.checked = false;
+    });
+    
+    if (checkAll) {
+      checkAll.checked = false;
+    }
+    
+    selectedItems = [];
+    selectedItemsCount.textContent = '0';
+    bulkActionsBar.classList.remove('show');
+  }
+
+  // Filter stock items by status
+  function filterStock(status) {
+    console.log("Filtering stock by status:", status);
+    fetchStockItems(status);
+  }
+
+  // Search stock items
+  function searchStock() {
+    const searchTerm = document.getElementById('stockSearch').value;
+    const statusFilter = document.getElementById('stockStatusFilter').value;
+    const zoneFilter = document.getElementById('zoneFilter').value;
+    const dateRange = document.getElementById('stockDateRange').value;
+    
+    console.log("Searching stock with filters:", { searchTerm, statusFilter, zoneFilter, dateRange });
+    
+    // In a real implementation, you would call your API with these filters
+    // For demo, we'll just show a success message
+    Swal.fire({
+      icon: 'info',
+      title: 'Search Applied',
+      text: 'Search filters have been applied',
+      timer: 1500
+    });
+    
+    // Then refresh the data
+    fetchStockItems(statusFilter !== 'all' ? statusFilter : 'all');
+  }
+
+  // Update stock status
+  function updateStockStatus(orderNumber) {
+    document.getElementById('updateOrderId').value = orderNumber;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('updateStockStatusModal'));
+    modal.show();
+  }
+
+  // Assign to courier
+ async function getCouriers(orderNumber, zone) {
+    document.getElementById('courierOrderIds').value = orderNumber;
+    document.getElementById('courierZone').value = zone || '';
+    document.getElementById('courierLoader').style.display = 'block';
+    
+    // Fetch available couriers from API
+    await fetch(`/admin/get-couriers-by-zone?zone=${zone || ''}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json()) 
+    .then(couriers => {
+      const courierSelect = document.getElementById('courierSelect');
+      courierSelect.innerHTML = '<option value="">Select a courier</option>';
+      
+      couriers.forEach(courier => {
+        const option = document.createElement('option');
+        option.value = courier._id;
+        option.textContent = courier.name;
+        courierSelect.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching couriers:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error', 
+        text: 'Failed to load available couriers. Please try again.'
+      });
+    })
+    .finally(() => {
+      document.getElementById('courierLoader').style.display = 'none';
+    });
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('assignToCourierModal'));
+    modal.show();
+  }
+
+  // Assign multiple orders
+  async function assignMultipleOrders() {
+    if (selectedItems.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Items Selected',
+        text: 'Please select items to assign'
+      });
+      return;
+    }   
+    console.log(selectedItems); 
+
+    document.getElementById('courierOrderIds').value = selectedItems.join(',');
+    document.getElementById('courierLoader').style.display = 'block';
+    console.log(selectedItems[0]);
+    // Get zone of first selected item
+    const firstItemZone = document.querySelector(`input[data-order-id="${selectedItems[0]}"]`)?.getAttribute('data-zone');
+    
+    document.getElementById('courierZone').value = firstItemZone || '';
+    console.log(firstItemZone);
+    try {
+      // Fetch available couriers from API
+      const response = await fetch(`/admin/get-couriers-by-zone?zone=${firstItemZone || ''}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const couriers = await response.json();
+      console.log(couriers);    
+      const courierSelect = document.getElementById('courierSelect');
+      courierSelect.innerHTML = '<option value="">Select a courier</option>';
+      
+      couriers.forEach(courier => {
+        const option = document.createElement('option');
+        option.value = courier._id;
+        option.textContent = courier.name;
+        courierSelect.appendChild(option);
+      });
+
+    } catch (error) {
+      console.error('Error fetching couriers:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load available couriers. Please try again.'
+      });
+    } finally {
+      document.getElementById('courierLoader').style.display = 'none';
+    }
+
+    // Update modal title to reflect multiple orders
+    document.getElementById('assignToCourierModalLabel').textContent = `Assign ${selectedItems.length} Orders to Courier`;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('assignToCourierModal'));
+    modal.show();
+  }
+
+  
+  // Print stock label
+  function printStockLabel(orderNumber) {
+    document.getElementById('labelOrderId').value = orderNumber;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('printLabelModal'));
+    modal.show();
+  }
+
+  // Print multiple labels
+  function printMultipleLabels() {
+    if (selectedItems.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Items Selected',
+        text: 'Please select items to print labels for'
+      });
+      return;
+    }
+    
+    document.getElementById('labelOrderId').value = selectedItems.join(',');
+    
+    // Update modal title to reflect multiple labels
+    document.getElementById('printLabelModalLabel').textContent = `Print ${selectedItems.length} Stock Labels`;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('printLabelModal'));
+    modal.show();
+  }
+
+  // Print zone labels
+  function printZoneLabels(zone) {
+    Swal.fire({
+      title: `Print All Labels for Zone "${zone}"`,
+      text: 'Select the label size for printing:',
+      icon: 'question',
+      input: 'radio',
+      inputOptions: {
+        'small': 'Small',
+        'medium': 'Medium',
+        'large': 'Large'
+      },
+      inputValue: 'medium',
+      showCancelButton: true,
+      confirmButtonText: 'Print',
+      showLoaderOnConfirm: true,
+      preConfirm: (size) => {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(size);
+          }, 1000);
+        });
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Labels Printed',
+          text: `All labels for zone "${zone}" have been sent to printer`,
+          timer: 2000
+        });
+      }
+    });
+  }
+
+  // Select label size
+  function selectLabelSize(size) {
+    document.getElementById('labelSize').value = size;
+    
+    // Highlight selected size
+    document.querySelectorAll('.paper-size-option div').forEach(el => {
+      el.classList.remove('border-primary');
+    });
+    
+    event.currentTarget.querySelector('div').classList.add('border-primary');
+  }
+
+  // Print label
+  function printLabel() {
+    const orderIds = document.getElementById('labelOrderId').value;
+    const labelSize = document.getElementById('labelSize').value;
+    const includeBarcode = document.getElementById('includeBarcode').checked;
+    const includeQRCode = document.getElementById('includeQRCode').checked;
+    
+    if (!labelSize) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Select Size',
+        text: 'Please select a label size'
+      });
+      return;
+    }
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('printLabelModal'));
+    modal.hide();
+    
+    // Show success message
+    const isMultiple = orderIds.includes(',');
+    Swal.fire({
+      icon: 'success',
+      title: 'Labels Printed',
+      text: isMultiple 
+        ? `${orderIds.split(',').length} labels have been sent to printer` 
+        : `Label for order #${orderIds} has been sent to printer`,
+      timer: 2000
+    });
+  }
+
+  // View stock history
+  function viewStockHistory(orderNumber) {
+    // In a real implementation, you would redirect to a history page or show a modal
+    Swal.fire({
+      icon: 'info',
+      title: 'Stock History',
+      text: `Viewing history for order #${orderNumber}`,
+      timer: 1500
+    }).then(() => {
+      window.location.href = `/admin/stock-history/${orderNumber}`;
+    });
+  }
+
+ 
+  // Update stats cards
+  function updateStatsCards(stockItems) {
+    // Calculate stats based on order statuses from order.js model
+    document.getElementById('totalInStock').textContent = stockItems.length;
+    document.getElementById('pendingArrivals').textContent = stockItems.filter(item => item.orderStatus === 'pickedUp').length;
+    document.getElementById('readyForDispatch').textContent = stockItems.filter(item => item.orderStatus === 'inStock').length;
+    document.getElementById('processingOrders').textContent = stockItems.filter(item => item.orderStatus === 'inProgress').length;
+  }
+
+  // Get stock status details (badge class and text)
+  function getStockStatusDetails(status) {
+    let badgeClass = '';
+    let statusText = '';
+
+    if (status === 'inStock') {
+      badgeClass = 'bg-primary-subtle text-primary';
+      statusText = 'In Stock';
+    } else if (status === 'inProgress') {
+      badgeClass = 'bg-warning-subtle text-warning';
+      statusText = 'In Progress';
+    } else if (status === 'processing') {
+      badgeClass = 'bg-info-subtle text-info';
+      statusText = 'Processing';
+    } else if (status === 'readyForDispatch') {
+      badgeClass = 'bg-success-subtle text-success';
+      statusText = 'Ready for Dispatch';
+    } else if (status === 'dispatched') {
+      badgeClass = 'bg-secondary-subtle text-secondary';
+      statusText = 'Dispatched';
+    } else if (status === 'damaged') {
+      badgeClass = 'bg-danger-subtle text-danger';
+      statusText = 'Damaged';
+    } else if (status === 'returned') {
+      badgeClass = 'bg-danger-subtle text-danger';
+      statusText = 'Returned';
+    } else {
+      badgeClass = 'bg-secondary-subtle text-secondary';
+      statusText = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    return { badgeClass, statusText };
+  }
+
+ 
+ 
+
+
+  // Handle form submissions
+  document.getElementById('updateStockStatusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const orderId = document.getElementById('updateOrderId').value;
+    const newStatus = document.getElementById('newStockStatus').value;
+    const notes = document.getElementById('statusNotes').value;
+    const location = document.getElementById('stockLocation').value;
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('updateStockStatusModal'));
+    modal.hide();
+    
+    // Show success message
+    Swal.fire({
+      icon: 'success',
+      title: 'Status Updated',
+      text: `Order #${orderId} status updated to ${newStatus}`,
+      timer: 2000
+    }).then(() => {
+      fetchStockItems();
+    });
+  });
+
+  document.getElementById('assignToCourierForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const orderIds = document.getElementById('courierOrderIds').value;
+    const courierId = document.getElementById('courierSelect').value;
+    const notes = document.getElementById('dispatchNotes').value;
+    const zone = document.getElementById('courierZone').value;
+    
+    if (!courierId) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Select Courier',
+        text: 'Please select a courier'
+      });
+      return;
+    }
+
+    try {
+        console.log(orderIds,courierId,notes,zone);
+      const response = await fetch('/admin/stock-managment/assign-courier', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderNumbers: orderIds.split(','),
+          courierId,
+          notes,
+          zone
+        })
+      });
+
+      const data = await response.json();
+      
+
+      if (!response.ok) {
+        throw new Error('Failed to assign courier '+data.error);
+      }
+
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('assignToCourierModal'));
+      modal.hide();
+
+      // Show success message
+      const isMultiple = orderIds.includes(',');
+      Swal.fire({
+        icon: 'success',
+        title: 'Assigned to Courier',
+        text: isMultiple 
+          ? `${orderIds.split(',').length} orders have been assigned to courier and marked for dispatch` 
+          : `Order #${orderIds} has been assigned to courier and marked for dispatch`,
+        timer: 2000
+      }).then(() => {
+        clearSelection();
+        fetchStockItems();
+      });
+
+    } catch (error) {
+        console.log(error.message);
+      console.error('Error assigning courier:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to assign courier. Please try again.'
+      });
+    }
+  });
+
+
+  // Export stock data
+  document.getElementById('exportStockBtn').addEventListener('click', function() {
+    Swal.fire({
+      title: 'Export Stock Data',
+      text: 'Select export format',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Excel',
+      cancelButtonText: 'PDF',
+      showDenyButton: true,
+      denyButtonText: 'CSV'
+    }).then((result) => {
+      let format = '';
+      if (result.isConfirmed) {
+        format = 'Excel';
+      } else if (result.isDenied) {
+        format = 'CSV';
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        format = 'PDF';
+      } else {
+        return;
+      }
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Exported!',
+        text: `Stock data has been exported as ${format}`,
+        timer: 2000
+      });
+    });
+  });
+
+  // Fetch stock items on page load
+  document.addEventListener("DOMContentLoaded", () => fetchStockItems());
+</script>
+<script>
+  // Toggle custom dropdown
+  function toggleDropdown(dropdownId, event) {
+    const dropdown = document.getElementById(dropdownId);
+
+    // Close all other dropdowns first
+    document.querySelectorAll('.custom-dropdown-menu.show').forEach(menu => {
+      if (menu.id !== dropdownId) {
+        menu.classList.remove('show');
+      }
+    });
+
+    // Toggle this dropdown
+    dropdown.classList.toggle('show');
+
+    // Prevent event from bubbling up
+    event.stopPropagation();
+  }
+
+  // Close all dropdowns when clicking outside
+  document.addEventListener('click', function(event) {
+    const dropdowns = document.querySelectorAll('.custom-dropdown-menu.show');
+    dropdowns.forEach(dropdown => {
+      if (!dropdown.parentElement.contains(event.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
+  });
+</script>

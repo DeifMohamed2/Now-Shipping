@@ -4,7 +4,45 @@
 <% if (order) { %>
 
 <div class="row">
+
   <div class="col-xl-9">
+      <div class="col-xl-12">
+<% if (order.orderStatus === 'waitingAction') { %>
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body bg-warning-subtle rounded">
+    <div class="d-flex align-items-center">
+      <div class="flex-shrink-0 me-3">
+        <i class="ri-alert-line fs-3 text-warning"></i>
+      </div>
+      <div class="flex-grow-1">
+        <h5 class="card-title mb-2 text-dark">Action Required</h5>
+        <div class="d-flex align-items-center mb-1">
+        </div>
+        <% if (order.UnavailableReason) { %>
+        <div class="alert alert-light border-0 py-2 px-3 mt-2 mb-0">
+          <p class="card-text mb-0 text-dark"><strong>Additional Information:</strong></p>
+          <ul class="mb-0">
+            <% if (order.UnavailableReason.includes('customer_not_available')) { %>
+              <li class="text-dark">
+              <strong>Customer Not Available:</strong> Please call the customer to confirm availability. <span>Attemp : <span><%= order.Attemps %></span></span>
+              </li>
+            <% } %>
+            <% order.UnavailableReason.forEach(function(reason) { %>
+              <% if (reason !== 'customer_not_available') { %>
+              <li class="text-dark"><%= reason %></li>
+              <% } %>
+            <% }); %>
+          </ul>
+        </div>
+        <% } else { %>
+           <p class="card-text mb-0 text-muted fst-italic">No additional notes provided for this order.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+      </div>
     <div class="card">
       <div class="card-header">
         <div class="d-sm-flex align-items-center">
@@ -346,7 +384,8 @@
         </div>
       </div>
       <div class="card-body">
-        <div class="text-center">
+        <% if (order.orderStatus!='completed') { %>
+          <div class="text-center">
           <% if (order.orderStages[3]) { %>
           <lord-icon src="https://cdn.lordicon.com/uetqnvvg.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2">Out For Delivery </h5>
@@ -359,12 +398,19 @@
           <lord-icon src="https://cdn.lordicon.com/ndydpcaq.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2">Packed</h5>
           <p class="text-muted mb-0">ID: MFDS1400457854</p>
-          <% } else { %>
+          <% }else if(order.orderStatus=='completed') { %>
+          <lord-icon src="https://cdn.lordicon.com/tkkkkkdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
+          <h5 class="fs-16 mt-2">Order Delivered</h5>
+          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+       
+          <%} else { %>
           <lord-icon src="https://cdn.lordicon.com/tdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2">Order Placed</h5>
           <p class="text-muted mb-0">ID: MFDS1400457854</p>
           <% } %>
         </div>
+        <% } %>
+       
       </div>
     </div>
 

@@ -20,16 +20,30 @@ const transporter = nodemailer.createTransport({
 
 
 
-// index 
+//================================================= Landing Page =========================================================
 const index = (req, res) => {
-  res.render('index', { title: 'Home', layout: 'layouts/layout-without-nav' });
+  res.render('landing/index', { title: 'Home', layout: 'layouts/layout-without-nav' });
 };
 
 
+const mobileAppPage = (req, res) => {
+  res.render('landing/mobileApp', { title: 'Home', layout: 'layouts/layout-without-nav' });
+};
+
+const pricingPage = (req, res) => {
+  res.render('landing/pricing', { title: 'Home', layout: 'layouts/layout-without-nav' });
+};
+
+const aboutusPage = (req, res) => {
+  res.render('landing/aboutus', { title: 'Home', layout: 'layouts/layout-without-nav' });
+};
+
+const faqPage = (req, res) => {
+  res.render('landing/faq', { title: 'Home', layout: 'layouts/layout-without-nav' });
+};
 
 
-
-
+//================================================= Authentication =========================================================
 
 function sendVerificationEmail(user, token) {
     console.log(user.email);
@@ -268,9 +282,6 @@ const verifyOTP = async (phoneNumber, otp) => {
 };
 
 
-
-
-
 const login = async (req, res) => {
     const { email, password } = req.body;
 try{
@@ -316,6 +327,7 @@ try{
             name: user.name,
             email: user.email,
             role: user.role,
+            isCompleted : user.isCompleted,
             isNeedStorage: user.isNeedStorage
         }
     });
@@ -504,7 +516,14 @@ catch(err){
 
 
 module.exports = {
+  //Landing Page
   index,
+  mobileAppPage,
+  pricingPage,
+  aboutusPage,
+  faqPage,
+
+  //Auth
   loginPage,
   adminLogin,
   registerPage,

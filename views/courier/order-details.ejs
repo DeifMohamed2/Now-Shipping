@@ -18,6 +18,7 @@
   }
 
   .order-status {
+    background-color: #f8f9fa;
     display: inline-flex;
     align-items: center;
     padding: 6px 12px;
@@ -250,6 +251,7 @@
   }
 </style>
 
+<% if (order.orderShipping.orderType=="Deliver") { %>
 <div class="row">
   <div class="col-lg-12">
     <div class="card order-card">
@@ -303,10 +305,10 @@
                       <div class="info-label">Customer Name:</div>
                       <div class="info-value"><%= order.orderCustomer.fullName %></div>
                     </div>
-                    <!-- <div class="info-item">
+                    <div class="info-item">
                       <div class="info-label">Phone Number:</div>
                       <div class="info-value"><%= order.orderCustomer.phoneNumber %></div>
-                    </div> -->
+                    </div>
                     <div class="info-item">
                       <div class="info-label">Order Date:</div>
                       <div class="info-value"><%= new Date(order.orderDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
@@ -452,29 +454,29 @@
             </div>
 
             <!-- Order Actions -->
-            <% if (order.orderStatus !== 'completed' && order.orderStatus !== 'canceled' && order.orderStatus !== 'rejected' && order.orderStatus !== 'returned' && order.orderStatus !== 'terminated') { %>
-              <div class="info-section">
-                <div class="info-header">
-                  <i class="ri-settings-4-line text-primary"></i>
-                  <h6 class="mb-0">Order Actions</h6>
-                </div>
-                <div class="info-body">
-                  <div class="action-buttons">
-                    <button class="btn btn-success" id="completeOrderBtn" onclick="completeOrder('<%= order.orderNumber %>')">
-                      <i class="ri-check-double-line"></i> Complete Delivery
-                    </button>
-                    <button class="btn btn-warning" id="customerUnavailableBtn" onclick="showOrderActions('<%= order._id %>', 'rejected', 'customer_not_available')">
-                      <i class="ri-user-unfollow-line"></i> Customer Unavailable
-                    </button>
-                    <button class="btn btn-danger" id="rejectOrderBtn" onclick="showOrderActions('<%= order._id %>', 'rejected')">
-                      <i class="ri-close-circle-line"></i> Reject Delivery
-                    </button>
-                  </div>
+            <% if (order.orderStatus !== 'completed' && order.orderStatus !== 'canceled' && order.orderStatus !== 'rejected' && order.orderStatus !== 'returned' && order.orderStatus !== 'terminated' ) { %>
+            <div class="info-section">
+              <div class="info-header">
+                <i class="ri-settings-4-line text-primary"></i>
+                <h6 class="mb-0">Order Actions</h6>
+              </div>
+              <div class="info-body">
+                <div class="action-buttons">
+                  <button class="btn btn-success" id="completeOrderBtn" onclick="completeOrder('<%= order.orderNumber %>')">
+                    <i class="ri-check-double-line"></i> Complete Delivery
+                  </button>
+                  <button class="btn btn-warning" id="customerUnavailableBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'Unavailable', 'customer_not_available')">
+                    <i class="ri-user-unfollow-line"></i> Customer Unavailable
+                  </button>
+                  <button class="btn btn-danger" id="rejectOrderBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'rejected')">
+                    <i class="ri-close-circle-line"></i> Reject Delivery
+                  </button>
                 </div>
               </div>
-           <% } %>
+            </div>
+            <% } %>
             <!-- QR Code for Verification (Optional) -->
-        
+
           </div>
         </div>
         <% } else { %>
@@ -489,6 +491,238 @@
     </div>
   </div>
 </div>
+
+<% } else if(order.orderShipping.orderType=="Return"){%>
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card order-card">
+      <div class="card-header order-header d-flex align-items-center justify-content-between">
+        <div>
+          <h5 class="card-title mb-0">Order Details</h5>
+          <p class="text-muted mb-0 mt-1">Order #<%= order?.orderNumber %></p>
+        </div>
+        <div class="d-flex gap-2">
+          <% if (order) { %>
+          <span class="order-status status-<%= order.orderStatus %>">
+            <% 
+                let statusText = order.orderStatus;
+                if (statusText === 'new') statusText = 'New Order';
+                else if (statusText === 'pickedUp') statusText = 'Picked Up';
+                else if (statusText === 'inStock') statusText = 'In Stock';
+                else if (statusText === 'inProgress') statusText = 'In Progress';
+                else if (statusText === 'headingToCustomer') statusText = 'Heading To Customer';
+                else if (statusText === 'headingToYou') statusText = 'Heading To You';
+                else if (statusText === 'completed') statusText = 'Completed';
+                else if (statusText === 'canceled') statusText = 'Canceled';
+                else if (statusText === 'rejected') statusText = 'Rejected';
+                else if (statusText === 'returned') statusText = 'Returned';
+                else if (statusText === 'terminated') statusText = 'Terminated';
+                else statusText = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+              %>
+            <%= statusText %>
+          </span>
+          <% } %>
+          <a href="/courier/orders" class="btn btn-outline-primary btn-sm">
+            <i class="ri-arrow-left-line me-1"></i> Back to Orders
+          </a>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <% if (order) { %>
+        <div class="row g-4">
+          <!-- Left Column -->
+          <div class="col-lg-8">
+            <!-- Customer & Order Information -->
+            <div class="info-section">
+              <div class="info-header">
+              <i class="ri-building-line text-primary"></i>
+              <h6 class="mb-0">Business Information</h6>
+              </div>
+              <div class="info-body">
+              <div class="row">
+                <div class="col-md-6">
+                <div class="info-item">
+                  <div class="info-label">Business Name:</div>
+                  <div class="info-value"><%= order.business?.name %></div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Business Email:</div>
+                  <div class="info-value"><%= order.business?.email %></div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Phone Number:</div>
+                  <div class="info-value"><%= order.business?.phoneNumber %></div>
+                </div>
+                </div>
+                <div class="col-md-6">
+                <div class="address-box">
+                  <h6 class="mb-2"><i class="ri-map-pin-line me-2 text-primary"></i>Pickup Address</h6>
+                  <p class="mb-2"><%= order.business?.pickUpAdress?.adressDetails %></p>
+                  <p class="mb-2"><%= order.business?.pickUpAdress?.city %>, <%= order.business?.pickUpAdress?.country %></p>
+                  <a href="https://maps.google.com/?q=<%= encodeURIComponent(order.business?.pickUpAdress?.adressDetails + ', ' + order.business?.pickUpAdress?.city + ', ' + order.business?.pickUpAdress?.country) %>" target="_blank" class="btn btn-sm btn-primary">
+                  <i class="ri-map-pin-line me-1"></i> Navigate to Address
+                  </a>
+                </div>
+                <% if (order.business?.pickUpAdress?.nearbyLandmark) { %>
+                <div class="info-item">
+                  <div class="info-label">Nearby Landmark:</div>
+                  <div class="info-value"><%= order.business?.pickUpAdress?.nearbyLandmark %></div>
+                </div>
+                <% } %>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="info-section">
+              <div class="info-header">
+                <i class="ri-shopping-bag-3-line text-primary"></i>
+                <h6 class="mb-0">Order Items</h6>
+              </div>
+              <div class="info-body">
+                <div class="product-box">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="ri-shopping-bag-line me-2 text-primary"></i>
+                    <h6 class="mb-0">Items to Deliver</h6>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-8">
+                      <p class="text-muted small mb-1">Product Description:</p>
+                      <p class="mb-0 fw-semibold"><%= order.orderShipping.productDescription %></p>
+                    </div>
+                    <div class="col-md-4">
+                      <p class="text-muted small mb-1">Number of Items:</p>
+                      <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                        <%= order.orderShipping.numberOfItems %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <% if (order.orderShipping.productDescriptionReplacement) { %>
+                <div class="product-box replacement">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="ri-exchange-line me-2 text-primary"></i>
+                    <h6 class="mb-0">Replacement Items</h6>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-8">
+                      <p class="text-muted small mb-1">Replacement Product Description:</p>
+                      <p class="mb-0 fw-semibold"><%= order.orderShipping.productDescriptionReplacement %></p>
+                    </div>
+                    <div class="col-md-4">
+                      <p class="text-muted small mb-1">Number of Replacement Items:</p>
+                      <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                        <%= order.orderShipping.numberOfItemsReplacement %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <% } %>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column -->
+          <div class="col-lg-4">
+            <!-- Payment Information -->
+            <div class="info-section">
+              <div class="info-header">
+                <i class="ri-money-dollar-circle-line text-warning"></i>
+                <h6 class="mb-0">Payment Information</h6>
+              </div>
+              <div class="info-body">
+                <div class="mb-4">
+                  <p class="text-muted mb-2">Payment Type:</p>
+                  <div class="payment-badge">
+                    <% if (order.orderShipping.amountType === 'COD') { %>
+                    <i class="ri-cash-line me-1"></i> Cash on Delivery
+                    <% } else if (order.orderShipping.amountType === 'CD') { %>
+                    <i class="ri-exchange-dollar-line me-1"></i> Cash Difference
+                    <% } else if (order.orderShipping.amountType === 'CC') { %>
+                    <i class="ri-money-dollar-box-line me-1"></i> Cash Collection
+                    <% } else { %>
+                    <i class="ri-bank-card-line me-1"></i> <%= order.orderShipping.amountType %>
+                    <% } %>
+                  </div>
+                </div>
+
+                <% if (order.orderShipping.amount) { %>
+                <div class="mb-4">
+                  <p class="text-muted mb-2">
+                    <% if (order.orderShipping.amountType === 'COD') { %>
+                    Amount to Collect:
+                    <% } else if (order.orderShipping.amountType === 'CD') { %>
+                    Cash Difference:
+                    <% } else if (order.orderShipping.amountType === 'CC') { %>
+                    Cash Collection:
+                    <% } else { %>
+                    Amount:
+                    <% } %>
+                  </p>
+                  <div class="amount-display">
+                    <%= order.orderShipping.amount %> EGP
+                  </div>
+                </div>
+                <% } %>
+
+                <div>
+                  <p class="text-muted mb-2">Order Type:</p>
+                  <div class="payment-badge">
+                    <% if (order.orderShipping.orderType === 'Deliver') { %>
+                    <i class="ri-truck-line me-1"></i> Delivery
+                    <% } else if (order.orderShipping.orderType === 'Return') { %>
+                    <i class="ri-arrow-go-back-line me-1"></i> Return
+                    <% } else if (order.orderShipping.orderType === 'Exchange') { %>
+                    <i class="ri-exchange-line me-1"></i> Exchange
+                    <% } else if (order.orderShipping.orderType === 'CashCollection') { %>
+                    <i class="ri-money-dollar-box-line me-1"></i> Cash Collection
+                    <% } else { %>
+                    <i class="ri-shopping-bag-line me-1"></i> <%= order.orderShipping.orderType %>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order Actions -->
+            <% if (order.orderStatus !== 'completed' && order.orderStatus !== 'canceled' && order.orderStatus !== 'rejected' && order.orderStatus !== 'returned' && order.orderStatus !== 'terminated') { %>
+            <div class="info-section">
+              <div class="info-header">
+                <i class="ri-settings-4-line text-primary"></i>
+                <h6 class="mb-0">Order Actions</h6>
+              </div>
+              <div class="info-body">
+                <div class="action-buttons">
+                  <button class="btn btn-success" id="completeOrderBtn" onclick="completeOrder('<%= order.orderNumber %>')">
+                    <i class="ri-check-double-line"></i> Complete Return
+                  </button>
+      
+              
+                </div>
+              </div>
+            </div>
+            <% } %>
+            <!-- QR Code for Verification (Optional) -->
+
+          </div>
+        </div>
+        <% } else { %>
+        <!-- No Order Found -->
+        <div class="text-center py-5">
+          <img src="/assets/images/empty.svg" alt="" class="img-fluid" style="max-width: 220px;">
+          <h4 class="mt-4">No Order Found</h4>
+          <p class="text-muted mb-0">We couldn't find the order you are looking for.</p>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<% }  %>
 
 <!-- Order Actions Modal -->
 <div class="modal fade" id="orderActionsModal" tabindex="-1" aria-labelledby="orderActionsModalLabel" aria-hidden="true">
@@ -507,7 +741,6 @@
             <select class="form-select" id="actionReason" name="actionReason">
               <option value="">Select a reason</option>
               <option value="customer_not_available">Customer not available</option>
-              <option value="customer_rejected">Customer rejected delivery</option>
               <option value="wrong_address">Wrong address</option>
               <option value="damaged_package">Package damaged</option>
               <option value="other">Other</option>
@@ -546,14 +779,14 @@
   // Complete order
   function completeOrder(orderNumber) {
     Swal.fire({
-      title: 'Complete Delivery', 
-      text: 'Mark this order# as completed?',
+      title: 'Complete Delivery',
+      text: `Mark this order #${orderNumber} as completed`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#28a745',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Yes, complete it!'
-    }).then(async(result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
         try {
           // Show loading
@@ -575,7 +808,7 @@
           });
 
           const data = await response.json();
-          
+
           Swal.close();
 
           if (response.ok) {
@@ -589,7 +822,7 @@
             });
           } else {
             Swal.fire({
-              icon: 'error', 
+              icon: 'error',
               title: 'Error',
               text: data.message || 'Failed to complete delivery. Please try again.'
             });
@@ -599,7 +832,7 @@
           console.error('Error completing order:', error);
           Swal.fire({
             icon: 'error',
-            title: 'Error', 
+            title: 'Error',
             text: 'An unexpected error occurred. Please try again.'
           });
         }
@@ -629,7 +862,7 @@
   }
 
   // Process order action
-  function processOrderAction() {
+  async function processOrderAction() {
     const orderId = document.getElementById('actionOrderId').value;
     const actionType = document.getElementById('actionType').value;
     const reason = document.getElementById('actionReason').value;
@@ -668,7 +901,8 @@
     });
 
     // Make API call to update order status
-    fetch(`/courier/update-order-status/${orderId}`, {
+    try {
+      const response = await fetch(`/courier/update-order-status/${orderId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -678,33 +912,34 @@
           reason: reason === 'other' ? otherReason : reason
         })
       })
-      .then(response => response.json())
-      .then(data => {
-        Swal.close();
-        if (data.success) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Status Updated',
-            text: 'Order status has been updated successfully.',
-            timer: 2000
-          }).then(() => {
-            window.location.reload();
-          });
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: data.message || 'Failed to update order status. Please try again.'
-          });
-        }
-      })
-      .catch(error => {
-        console.error('Error updating order status:', error);
+      const data = await response.json();
+
+      Swal.close();
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated',
+          text: 'Order status has been updated successfully.',
+          timer: 2000
+        }).then(() => {
+          window.location.reload();
+        });
+      } else {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'An unexpected error occurred. Please try again.'
+          text: data.message || 'Failed to update order status. Please try again.'
         });
+      }
+
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'An unexpected error occurred. Please try again.'
       });
+    }
+
   }
 </script>

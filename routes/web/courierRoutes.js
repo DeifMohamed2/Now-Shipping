@@ -48,6 +48,8 @@ router.get(
   courierController.get_orderDetailsPage
 );
 
+router.put('/update-order-status/:orderNumber', courierController.updateOrderStatus);
+
 router.put('/complete-order/:orderNumber', courierController.completeOrder);
 
 // Pickups

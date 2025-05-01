@@ -47,6 +47,15 @@ router.get('/get-couriers', adminController.get_couriers);
 
 router.post('/couriers/create-courier', adminController.createCourier);
 
+// couriers-follow-up
+
+router.get('/couriers-follow-up', adminController.get_couriersFollowUp);
+
+// router.get('/get-couriers-follow-up', adminController.get_couriersFollowUp);
+
+router.get('/courier-details/:courierId', adminController.get_courierDetailsPage);
+
+
 // pickups
 router.get('/pickups', adminController.get_pickupsPage);
 
@@ -70,9 +79,11 @@ router.get('/get-pickup-men', adminController.get_pickupMenByZone);
 
 router.post('/assign-pickup-man', adminController.assignPickupMan);
 
-// stock managment
+//======= stock management ==========//
 
-router.get('/stock-managment', adminController.get_stockManagmentPage);
+// stock Managment Pickup 
+
+router.get('/stock-management/pickups', adminController.get_stockManagementPage);
 
 router.get('/get-stock-orders', adminController.get_stock_orders);
 
@@ -89,6 +100,19 @@ router.post(
   '/stock-managment/courier-received',
   adminController.courier_received
 );
+
+
+// stock Managment Returns
+
+router.get('/stock-management/returns', adminController.get_stockReturnsPage);
+
+router.get('/get-return-orders', adminController.getReturnedOrders);
+
+router.post('/add-return-to-stock', adminController.add_return_to_stock);
+
+router.post('/return-assign-courier', adminController.assignCourierToReturn);
+
+router.post('/return-courier-received', adminController.return_courier_received);
 
 // router.get('/get-stock-managment', adminController.get_stockManagment);
 

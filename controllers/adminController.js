@@ -268,6 +268,251 @@ try {
 
 
 
+// ========================================= Couriers Follow Up Page ======================================== //
+
+
+const get_couriersFollowUp = async(req, res) => {
+    try {
+
+    // Get all couriers
+    const couriers = await Courier.find({});
+    
+    // Prepare courier statistics
+    const courierStats = await Promise.all(couriers.map(async courier => {
+      // Get money with courier
+      const moneyWithCourier = await Order.aggregate([
+        {
+          $match: {
+            deliveryMan: courier._id,
+            isMoneyRecivedFromCourier: false,
+            orderStatus: { $in: ['completed', 'headingToCustomer'] },
+            'orderShipping.orderType': { $ne: 'Return' },
+            'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] }, // Cash on Delivery, Cash Difference, Cash Collection
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$orderShipping.amount' },
+          },
+        },
+      ]);
+      
+      // Get orders to return count
+      const ordersToReturn = await Order.countDocuments({
+        deliveryMan: courier._id,
+        orderStatus: { $in: ['returnToWarehouse', 'waitingAction'] }
+      });
+      
+      // Get active orders count
+      const activeOrders = await Order.countDocuments({
+        deliveryMan: courier._id,
+        orderStatus: { $in: ['headingToCustomer', 'headingToYou', 'inProgress'] }
+      });
+      
+      // Calculate performance based on completed orders today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const completedToday = await Order.countDocuments({
+        deliveryMan: courier._id,
+        orderStatus: 'completed',
+        completedDate: { $gte: today }
+      });
+      
+      // Assuming each courier has a daily target of 10 orders
+      const dailyTarget = 10;
+      const performance = Math.min(100, (completedToday / dailyTarget) * 100);
+      
+      // Get assigned zones
+      const zones = courier.assignedZones || [];
+      
+      // Determine courier status badge
+      let statusBadge = 'bg-success-subtle text-success';
+      let statusText = 'Active';
+      
+      if (!courier.isAvailable) {
+        statusBadge = 'bg-danger-subtle text-danger';
+        statusText = 'Inactive';
+      } else if (courier.onLeave) {
+        statusBadge = 'bg-warning-subtle text-warning';
+        statusText = 'On Leave';
+      }
+      
+      return {
+        id: courier._id,
+        courierId: courier.courierID,
+        name: courier.name,
+        photo: courier.personalPhoto || '/placeholder.svg?height=70&width=70',
+        status: statusText,
+        statusBadge: statusBadge,
+        moneyWithCourier: (moneyWithCourier[0]?.total || 0),
+        ordersToReturn: ordersToReturn,
+        activeOrders: activeOrders,
+        zones: zones,
+        performance: performance,
+      };
+    }));
+    
+    // Calculate summary statistics
+    const activeCouriersCount = couriers.filter(c => c.isAvailable && !c.onLeave).length;
+    const totalMoneyWithCouriers = courierStats.reduce((sum, courier) => sum + courier.moneyWithCourier, 0);
+    const totalOrdersToReturn = courierStats.reduce((sum, courier) => sum + courier.ordersToReturn, 0);
+    const totalActiveDeliveries = courierStats.reduce((sum, courier) => sum + courier.activeOrders, 0);
+    
+
+
+    console.log('active couriers count:', activeCouriersCount);
+    console.log('total money with couriers:', totalMoneyWithCouriers);
+    console.log('total orders to return:', totalOrdersToReturn);
+    console.log('total active deliveries:', totalActiveDeliveries);
+
+    console.log('courier stats:', courierStats);
+
+
+    res.render('admin/couriers-follow-up', {  
+    title: 'Couriers Follow Up',
+    page_title: 'Couriers Follow Up',
+    folder: 'Pages',
+       summaryStats: {
+        activeCouriersCount,
+        totalMoneyWithCouriers,
+        totalOrdersToReturn,
+        totalActiveDeliveries
+      },
+      couriers: courierStats
+    
+  })
+  } catch (error) {
+    console.error('Error in get_couriersFollowUp:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+
+};
+
+const get_courierDetailsPage = async (req, res) => {
+  const { courierId } = req.params;
+  try {
+    const courier = await Courier.findOne({ courierID: courierId });
+
+    if (!courier) {
+      return res.render('admin/courier-details', {
+        title: 'Courier Details',
+        page_title: 'Courier Details',
+        folder: 'Pages',
+        courier: null,
+      });
+    }
+
+    // Fetch additional stats for the courier
+    const moneyWithCourier = await Order.aggregate([
+      {
+        $match: {
+          deliveryMan: courier._id,
+          isMoneyRecivedFromCourier: false,
+
+          orderStatus: { $in: ['completed', 'headingToCustomer'] },
+          'orderShipping.orderType': { $ne: 'Return' },
+
+          'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$orderShipping.amount' },
+        },
+      },
+    ]);
+
+    const ordersToReturn = await Order.countDocuments({
+      deliveryMan: courier._id,
+      orderStatus: { $in: ['returnToWarehouse', 'waitingAction'] },
+    });
+
+    const activeOrders = await Order.countDocuments({
+      deliveryMan: courier._id,
+      orderStatus: { $in: ['headingToCustomer', 'headingToYou', 'inProgress'] },
+    });
+
+    const totalDeliveries = await Order.countDocuments({
+      deliveryMan: courier._id,
+    });
+
+    const completedOrders = await Order.countDocuments({
+      deliveryMan: courier._id,
+      orderStatus: 'completed',
+    });
+
+    const totalPickups = await Pickup.countDocuments({
+      assignedDriver: courier._id,
+      picikupStatus: 'completed',
+    });
+
+    const cancelledOrders = await Order.countDocuments({
+      deliveryMan: courier._id,
+      orderStatus: { $in: ['canceled', 'rejected'] },
+    });
+
+    const successRate =
+      totalDeliveries > 0
+        ? Math.round((completedOrders / totalDeliveries) * 100)
+        : 0;
+
+    const customerRating = 4.8; // Placeholder for customer rating
+
+    const deliveryHistory = await Order.find({
+      deliveryMan: courier._id,
+    })
+      .sort({ updatedAt: -1 })
+      .populate('business');
+
+    const pickupHistory = await Pickup.find({
+      assignedDriver: courier._id,
+    })
+      .sort({ updatedAt: -1 })
+      .populate('business');
+
+    res.render('admin/courier-details', {
+      title: 'Courier Details',
+      page_title: 'Courier Details',
+      folder: 'Pages',
+      courier: {
+        id: courier._id,
+        courierId: courier.courierID,
+        name: courier.name,
+        nationalId: courier.nationalId,
+        dateOfBirth: courier.dateOfBirth,
+        allPapers: courier.allPapers,
+        zones: courier.assignedZones,
+        photo: courier.personalPhoto || '/placeholder.svg?height=100&width=100',
+        status: courier.isAvailable ? 'Active' : 'Inactive',
+        statusBadge: courier.isAvailable
+          ? 'bg-success-subtle text-success'
+          : 'bg-danger-subtle text-danger',
+        moneyWithCourier: moneyWithCourier[0]?.total || 0,
+        ordersToReturn,
+        activeOrders,
+        totalDeliveries,
+        totalPickups,
+        successRate,
+        customerRating,
+        assignedZones: courier.assignedZones || [],
+        phone: courier.phoneNumber,
+        email: courier.personalEmail,
+        address: courier.address,
+        vehicle: `${courier.vehicleType} (${courier.vehiclePlateNumber})`,
+        joinedDate: courier.createdAt,
+      },
+      deliveryHistory,
+      pickupHistory,
+    });
+  } catch (error) {
+    console.error('Error in get_courierDetailsPage:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
 // ======================================== Pickups Page ======================================== //
 
 
@@ -492,8 +737,8 @@ const deletePickup  = async (req, res) => {
 
 // ======================================== Stock Managment ======================================== //
 
-const get_stockManagmentPage = (req, res) => {
-  res.render('admin/stock-managment', {
+const get_stockManagementPage = (req, res) => {
+  res.render('admin/stock-management', {
     title: 'Stock Managment',
     page_title: 'Stock Managment',
     folder: 'Pages',
@@ -529,14 +774,15 @@ const add_to_stock = async (req, res) => {
     }
 
 
-    if(order.orderStatus !== 'pickedUp'){
-        return res.status(400).json({ error: 'Order is not picked up' });
-    }
 
     if(order.orderStatus === 'inProgress'){
       return res.status(400).json({ error: 'Order is already in progress' });
     }
 
+    if(order.Attemps==2){
+      return res.status(400).json({ error: 'Order has exceeded its attempts.' });
+
+    }
 
     if(order.orderStatus === 'pickedUp'){
       order.orderStatus = 'inStock';
@@ -549,10 +795,17 @@ const add_to_stock = async (req, res) => {
         ],
       });
       }
-      await order.save();
-    }
     
-    res.status(200).json({ message: 'Order added to stock successfully' });
+    }else if (order.orderStatus === 'waitingAction') {
+      order.orderStatus = 'inStock';
+    }else{
+      return res.status(400).json({error: 'Order can\'t be added to stock'});
+
+    }
+
+      
+      await order.save();
+      res.status(200).json({ message: 'Order added to stock successfully' });
   } catch (error) {
     console.error('Error in add_to_stock:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -652,7 +905,155 @@ const courier_received = async (req, res) => {
 
 
 
+// ================ Stock Returns =================== //  
 
+const get_stockReturnsPage = (req, res) => {
+  res.render('admin/stock-returns', {
+    title: 'Stock Returns',
+    page_title: 'Stock Returns',
+    folder: 'Pages',
+  });
+
+}
+
+
+const getReturnedOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ orderStatus: { $in: ['inReturnStock'] } })
+      .populate('business', 'brandInfo')
+      .populate('deliveryMan')
+      .sort({ orderDate: -1, createdAt: -1 });
+      
+    console.log(orders);    
+    res.status(200).json(orders || []);
+  }
+  catch (error) {
+    console.error('Error in getReturnedOrders:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+
+const add_return_to_stock = async (req, res) => {
+  const { orderNumber } = req.body;
+
+  try {
+    const order = await Order.findOne({ orderNumber });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    if (order.orderStatus === 'inStock'|| order.orderStatus=="inReturnStock") {
+      return res.status(400).json({ error: 'Order is already in stock' });
+    }
+
+    if (order.orderStatus == 'inProgress') {
+      return res.status(400).json({ error: 'Order is in progress' });
+    }
+
+    // ensure order not heading to customer
+    if (order.orderStatus === 'headingToCustomer' || order.orderStatus === 'headingToYou') {
+      return res.status(400).json({ error: 'Order is on the way to customer' });
+    }
+
+    if(order.orderStatus === 'waitingAction' || order.orderStatus=="returnToWarehouse"||order.orderStatus=="rejected"){ 
+        order.orderStatus = 'inReturnStock';
+        order.orderShipping.orderType = 'Return';
+    }
+
+    // if(order.orderStatus=="rejected"){
+    //     order.orderStatus = 'inReturnStock';
+    //     order.orderShipping.orderType = 'Return';
+    // }
+
+
+   await order.save();
+
+
+    res.status(200).json({ message: 'Order added to return stock successfully' });
+
+  } catch (error) {
+    console.error('Error in add_return_to_stock:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+    
+    
+const assignCourierToReturn = async (req, res) => {
+  const { orderNumbers, courierId } = req.body;
+
+  try {
+    const courier = await Courier.findById(courierId);
+    if (!courier) {
+      return res.status(404).json({ error: 'Courier not found' });
+    }
+
+    const orderIds = orderNumbers
+    const orders = await Order.find({ orderNumber: { $in: orderIds } });
+
+    if (orders.length !== orderIds.length) {
+      return res.status(404).json({ error: 'Some orders not found' });
+    }
+
+    for (const order of orders) {
+      if (order.orderStatus !== 'inReturnStock') {
+        return res.status(400).json({ error: `Order ${order.orderNumber} is not in return stock` });
+      }
+
+      if (order.orderStatus === 'headingToCustomer' || order.orderStatus === 'headingToYou') {
+        return res.status(400).json({ error: `Order ${order.orderNumber} is on the way to customer or you` });
+      }
+
+      order.deliveryMan = courierId;
+    }
+
+    await Promise.all(orders.map(order => order.save()));
+
+    res.status(200).json({ message: 'Courier assigned to return orders successfully' });
+
+  } catch (error) {
+    console.error('Error in assignCourierToReturn:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
+
+const return_courier_received = async (req, res) => {
+  const { courierId } = req.body;
+  try {
+    const courier = await Courier.findById(courierId);
+    if (!courier) {
+      return res.status(404).json({ error: 'Courier not found' });
+    }
+
+    const orders = await Order.find({ deliveryMan: courierId, orderStatus: 'inReturnStock' });
+    if (!orders.length) {
+      return res.status(404).json({ error: 'No orders found for this courier' });
+    }
+    const updatePromises = orders.map(order => {
+      order.orderStatus = 'headingToYou';
+      if (order.orderStages.length === 3) {
+        order.orderStages.push({
+          stageName: 'headingToYou',
+          stageDate: new Date(),
+          stageNotes: [
+            { text: `Order assigned to courier ${courier.name}`, date: new Date() },
+          ],
+        });
+      }
+      return order.save();
+    }
+
+    );
+    await Promise.all(updatePromises);
+    res.status(200).json({ message: 'Orders marked as received by courier successfully' });
+  } catch (error) {
+    console.error('Error in return_courier_received:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+
+}
 
 // ======================================== Wallet Overview ======================================== //
 
@@ -843,6 +1244,9 @@ module.exports = {
   get_couriers,
   createCourier,
 
+  get_couriersFollowUp,
+  get_courierDetailsPage,
+
   get_pickupsPage,
   get_pickups,
   get_pickupMenByZone,
@@ -852,14 +1256,20 @@ module.exports = {
   deletePickup,
   get_pickedupOrders,
 
-
-  // Stock Managment
-  get_stockManagmentPage,
-  add_to_stock, 
+  // Stock Managment from Pickups
+  get_stockManagementPage,
+  add_to_stock,
   get_stock_orders,
   get_couriers_by_zone,
   assignCourierToStock,
   courier_received,
+
+  // Stock Managment from Returns
+  get_stockReturnsPage,
+  getReturnedOrders,
+  add_return_to_stock,
+  assignCourierToReturn,
+  return_courier_received,
 
   // Wallet Overview
   get_releaseAmountsPage,
@@ -868,7 +1278,6 @@ module.exports = {
   releaseFunds,
 
   get_businessesPage,
-
 
   // Tickets
   get_ticketsPage,

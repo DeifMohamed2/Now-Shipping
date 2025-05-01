@@ -3,10 +3,20 @@ const router = express.Router();
 
 const authController = require('../../controllers/authController2.js');
 
-//index
-// router.get('/', authController.index);
 
+// Landing page route
 router.get('/', authController.index);
+
+router.get('/mobileApp', authController.mobileAppPage);
+
+router.get('/pricing', authController.pricingPage);
+
+router.get('/aboutus', authController.aboutusPage);
+
+router.get('/faq', authController.faqPage);
+
+// Authentication routes
+
 router.get('/login', authController.loginPage);
 router.get('/register', authController.registerPage);
 

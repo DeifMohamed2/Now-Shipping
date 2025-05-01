@@ -78,16 +78,22 @@ function populateOrdersTable(orders) {
     } else if (order.orderStatus === 'rejected' || order.orderStatus === 'returned') {
       row.classList.add('table-danger'); // Red highlight for problem orders
     } 
-    
-    row.innerHTML = `
+      row.innerHTML = `
       <th scope="row">
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="checkAll[]" value="${order.orderNumber}">
+          <input class="form-check-input" type="checkbox" name="checkAll[]" value="${
+            order.orderNumber
+          }">
         </div>
       </th>
-      <td class="id"><a href="/business/order-details/${order.orderNumber}" class="fw-medium link-primary">${order.orderNumber}</a></td>
+      <td class="id"><a href="/business/order-details/${
+        order.orderNumber
+      }" class="fw-medium link-primary">${order.orderNumber}</a></td>
       <td class="customer_name">${order.orderCustomer.fullName}</td>
-      <td class="product_name">${order.orderShipping.orderType}</td>
+   <td class="product_name" style="font-size:15px !important;" >
+          ${ order.orderShipping.orderType}
+  
+      </td>
       <td class="location">
         <div>${order.orderCustomer.government}</div>
         <div class="text-muted">${order.orderCustomer.zone}</div>
@@ -97,24 +103,44 @@ function populateOrdersTable(orders) {
         <div class="text-muted">${order.orderShipping.amountType}</div>
       </td>
       <td class="status">
-        <span class="badge ${getStatusDetails(order.orderStatus).badgeClass} text-uppercase fs-6">${getStatusDetails(order.orderStatus).statusText}</span>
+        <span class="badge ${
+          getStatusDetails(order.orderStatus).badgeClass
+        } text-uppercase fs-6">${
+        getStatusDetails(order.orderStatus).statusText
+      }</span>
       </td>
-      <td class="date">${new Date(order.orderDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
+      <td class="tries">
+        <div>${order.Attemps || 0}/2</div>
+      </td>
+      <td class="date">${new Date(order.orderDate).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })}</td>
       <td>
         <div class="dropdown dropdown-fix">
           <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="ri-more-fill align-middle"></i>
           </button>
           <ul class="dropdown-menu">
-            <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#printPolicyModal" onclick="setOrderId('${order.orderNumber}')">
+            <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#printPolicyModal" onclick="setOrderId('${
+              order.orderNumber
+            }')">
               <i class="ri-printer-fill align-bottom me-2 text-primary"></i> <span class="fs-6">Print Delivery Policy</span>
             </button></li>
             <li><button class="dropdown-item"><i class="ri-barcode-fill align-bottom me-2 text-success"></i> <span class="fs-6">Smart Sticker Scan</span></button></li>
-            <li><a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
+            <li><a class="dropdown-item" href="/business/edit-order/${
+              order.orderNumber
+            }">
               <i class="ri-edit-2-fill align-bottom me-2 text-warning"></i> <span class="fs-6">Edit Order</span>
             </a></li>
-            <li><button class="dropdown-item" onclick="cancelOrder('${order._id}')"><i class="ri-delete-bin-6-fill align-bottom me-2 text-danger"></i> <span class="fs-6">Delete Order</span></button></li>
-            <li><a class="dropdown-item" href="/business/order-details/${order.orderNumber}"><i class="ri-truck-line align-bottom me-2 text-info"></i> <span class="fs-6">Track Order</span></a></li>
+            <li><button class="dropdown-item" onclick="cancelOrder('${
+              order._id
+            }')"><i class="ri-delete-bin-6-fill align-bottom me-2 text-danger"></i> <span class="fs-6">Delete Order</span></button></li>
+            <li><a class="dropdown-item" href="/business/order-details/${
+              order.orderNumber
+            }"><i class="ri-truck-line align-bottom me-2 text-info"></i> <span class="fs-6">Track Order</span></a></li>
           </ul>
         </div>
       </td>
@@ -134,7 +160,7 @@ function getStatusDetails(status) {
   } else if (status === 'pickedUp') {
     badgeClass = 'bg-secondary-subtle text-secondary';
     statusText = 'Picked Up';
-  } else if (status === 'inStock') {
+  } else if (status === 'inStock' || status=="inReturnStock") {
     badgeClass = 'bg-info-subtle text-info';
     statusText = 'In Stock';
   } else if (status === 'inProgress') {
@@ -161,9 +187,13 @@ function getStatusDetails(status) {
   } else if (status === 'terminated') {
     badgeClass = 'bg-danger-subtle text-danger';
     statusText = 'Terminated';
-  } else {
-    badgeClass = 'bg-danger-subtle text-danger';
-    statusText = 'Terminated';
+  } else if(status === 'waitingAction') {
+    badgeClass = 'bg-warning-subtle text-warning';
+    statusText = 'Waiting Action';
+   
+  }else{
+    badgeClass = 'bg-secondary-subtle text-secondary';
+    statusText = 'Unknown';
   }
 
   return { badgeClass, statusText };

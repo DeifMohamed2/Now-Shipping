@@ -1,0 +1,772 @@
+<%- contentFor('HeaderCss') %>
+<!-- Remix Icon CSS -->
+<link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet" type="text/css" />
+
+<!-- jsvectormap css -->
+<link href="/assets/libs/jsvectormap/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
+<!--Swiper slider css-->
+<link href="/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+<%- contentFor('body') %>
+
+<!-- Custom CSS -->
+<style>
+  .profile-header {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #e9ecef;
+  }
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-card {
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    border: 1px solid #e9ecef;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+  }
+
+  .stat-icon-primary {
+    background-color: rgba(243, 151, 32, 1);
+    color: #ffffff;
+  }
+
+  .stat-icon-success {
+    background-color: rgba(10, 179, 156, 0.1);
+    color: #0ab39c;
+  }
+
+  .stat-icon-danger {
+    background-color: rgba(240, 101, 72, 0.1);
+    color: #f06548;
+  }
+
+  .stat-icon-info {
+    background-color: rgba(64, 81, 137, 0.1);
+    color: #405189;
+  }
+
+  .order-card {
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+    margin-bottom: 15px;
+    border-left: 3px solid #F39720;
+    border: 1px solid #e9ecef;
+  }
+
+  .order-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  }
+  .nav-link2 {
+    display: block;
+    padding: 0.75rem 1.25rem;
+    color: #495057;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-weight: 500;
+    border: 1px solid transparent;
+    margin-bottom: 0.5rem;
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-link2:before {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 0;
+    left: 0;
+    top: 0;
+    background-color: #F39720;
+    transition: height 0.2s ease-in-out;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .nav-link2:hover:before {
+    height: 100%;
+  }
+
+  .nav-link2:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+
+  .nav-link2.active:before {
+    height: 100%;
+  }
+
+  .nav-pills .nav-link2.active {
+    background-color: #F39720;
+  }
+
+  .nav-pills .nav-link2 {
+    color: #495057;
+  }
+
+  .nav-pills .nav-link2:hover:not(.active) {
+    background-color: rgba(243, 151, 32, 0.1);
+  }
+
+  .zone-badge {
+    display: inline-block;
+    margin: 2px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    color: #495057;
+    font-size: 0.75rem;
+  }
+
+  .contact-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    color: #495057;
+    border-radius: 8px;
+  }
+
+  .btn-brand {
+    background-color: #F39720;
+    border-color: #F39720;
+    color: white;
+  }
+
+  .btn-brand:hover {
+    background-color: #e08a1b;
+    border-color: #e08a1b;
+    color: white;
+  }
+
+  .btn-outline-brand {
+    color: #F39720;
+    border-color: #F39720;
+  }
+
+  .btn-outline-brand:hover {
+    background-color: #F39720;
+    border-color: #F39720;
+    color: white;
+  }
+
+  .card-header-light {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .courier-name {
+    color: #495057;
+    font-weight: 600;
+  }
+
+  .courier-id {
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  .money-badge {
+    background-color: #0ab39c;
+    color: white;
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .return-badge {
+    background-color: #f06548;
+    color: white;
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .orders-badge {
+    background-color: #405189;
+    color: white;
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .info-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .info-badge {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .vertical-tabs .nav-link2 {
+    text-align: left;
+    padding: 12px 15px;
+    margin-bottom: 5px;
+    border-radius: 6px;
+  }
+
+  .vertical-tabs .nav-link2.active {
+    background-color: #F39720;
+    color: white;
+  }
+
+  .vertical-tabs .nav-link2:hover:not(.active) {
+    background-color: rgba(243, 151, 32, 0.1);
+  }
+
+  .swiper-slide{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+</style>
+<!-- Profile Header with Key Info -->
+<div class="card profile-header">
+  <div class="row align-items-center">
+    <div class="col-auto">
+      <img src="<%= courier.photo %>" class="profile-avatar" alt="Courier">
+    </div>
+    <div class="col">
+      <h3 class="courier-name mb-1"><%= courier.name %></h3>
+      <p class="courier-id mb-2">ID: <%= courier.courierId %> | <span class="badge <%= courier.statusBadge %>"><%= courier.status %></span></p>
+
+      <!-- Grouped Key Information -->
+      <div class="info-group">
+        <span class="info-badge money-badge">
+          <i class="ri-money-dollar-circle-line"></i> $<%= courier.moneyWithCourier %> with courier
+        </span>
+        <span class="info-badge return-badge">
+          <i class="ri-arrow-go-back-line"></i> <%= courier.ordersToReturn %> orders to return
+        </span>
+        <span class="info-badge orders-badge">
+          <i class="ri-truck-line"></i> <%= courier.activeOrders %> active orders
+        </span>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <a href="tel:<%= courier.phone %>" class="btn btn-sm btn-light">
+          <i class="ri-phone-line me-1"></i> Call
+        </a>
+        <!-- <a href="mailto:<%= courier.email %>" class="btn btn-sm btn-light">
+          <i class="ri-mail-line me-1"></i> Message
+        </a>
+        <button class="btn btn-sm btn-brand">
+          <i class="ri-map-pin-line me-1"></i> Track
+        </button> -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row">
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0 me-3 stat-icon stat-icon-primary">
+            <i class="ri-truck-line fs-1"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="mb-0"><%= courier.totalDeliveries %></h5>
+            <p class="text-muted mb-0">Total Deliveries</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0 me-3 stat-icon stat-icon-info">
+            <i class="ri-archive-line fs-1"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="mb-0"><%= courier.totalPickups %></h5>
+            <p class="text-muted mb-0">Total Pickups</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0 me-3 stat-icon stat-icon-success">
+            <i class="ri-check-double-line fs-1"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="mb-0"><%= courier.successRate %>%</h5>
+            <p class="text-muted mb-0">Success Rate</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6 mb-4">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0 me-3 stat-icon stat-icon-danger">
+            <i class="ri-star-line fs-1"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="mb-0"><%= courier.customerRating %>/5</h5>
+            <p class="text-muted mb-0">Customer Rating</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+  <!-- Left Column - Vertical Tabs -->
+  <div class="col-xl-3">
+    <div class="card mb-4">
+      <div class="card-body p-3">
+        <div class="nav flex-column nav-pills vertical-tabs" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+          <button class="nav-link2 active" id="v-pills-active-tab" data-bs-toggle="pill" data-bs-target="#v-pills-active" type="button" role="tab" aria-controls="v-pills-active" aria-selected="true">
+            <i class="ri-truck-line me-2"></i> Active Orders (<%= courier.activeOrders %>)
+          </button>
+          <!-- <button class="nav-link2" id="v-pills-return-tab" data-bs-toggle="pill" data-bs-target="#v-pills-return" type="button" role="tab" aria-controls="v-pills-return" aria-selected="false">
+            <i class="ri-archive-line fs-1"></i>Active Pickup (<%= courier.activePickups %>)
+          </button> -->
+          <button class="nav-link2" id="v-pills-return-tab" data-bs-toggle="pill" data-bs-target="#v-pills-return" type="button" role="tab" aria-controls="v-pills-return" aria-selected="false">
+            <i class="ri-arrow-go-back-line me-2"></i> Returns To Warehouse (<%= courier.ordersToReturn %>)
+          </button>
+          <button class="nav-link2" id="v-pills-history-tab" data-bs-toggle="pill" data-bs-target="#v-pills-history" type="button" role="tab" aria-controls="v-pills-history" aria-selected="false">
+            <i class="ri-history-line me-2"></i> Delivery History
+          </button>
+          <button class="nav-link2" id="v-pills-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-info" type="button" role="tab" aria-controls="v-pills-info" aria-selected="false">
+            <i class="ri-user-line me-2"></i> Courier Information
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column - Tab Content -->
+  <div class="col-xl-9">
+    <div class="card">
+      <div class="card-body">
+        <div class="tab-content" id="v-pills-tabContent">
+          <!-- Active Orders Tab -->
+          <div class="tab-pane fade show active" id="v-pills-active" role="tabpanel" aria-labelledby="v-pills-active-tab">
+            <h5 class="card-title mb-3">Active Orders</h5>
+
+            <% if (deliveryHistory && deliveryHistory.filter(order => ['headingToCustomer', 'headingToYou', 'inProgress'].includes(order.orderStatus)).length > 0) { %>
+            <% deliveryHistory.filter(order => ['headingToCustomer', 'headingToYou', 'inProgress'].includes(order.orderStatus)).forEach(order => { %>
+            <div class="card order-card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-1">Order #<%= order.orderNumber %></h6>
+                    <p class="text-muted mb-0">Customer: <%= order.orderShipping.firstName %> <%= order.orderShipping.lastName %></p>
+                  </div>
+                  <div class="text-end">
+                    <span class="badge bg-info"><%= order.orderStatus %></span>
+                    <p class="text-muted mb-0">Pickup: <%= new Date(order.orderDate).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'}) %></p>
+                  </div>
+                </div>
+                <hr>
+                <div class="row">
+                  <div class="col-md-6">
+                    <p class="mb-1"><i class="ri-map-pin-line text-muted me-1"></i> Delivery Address:</p>
+                    <p class="text-muted mb-0"><%= order.orderShipping.address %>, <%= order.orderShipping.city %></p>
+                  </div>
+                  <div class="col-md-3">
+                    <p class="mb-1"><i class="ri-money-dollar-circle-line text-muted me-1"></i> Amount:</p>
+                    <p class="text-muted mb-0">$<%= order.orderShipping.amount || 0 %></p>
+                  </div>
+                  <div class="col-md-3">
+                    <p class="mb-1"><i class="ri-time-line text-muted me-1"></i> ETA:</p>
+                    <p class="text-muted mb-0">--</p>
+                  </div>
+                </div>
+                <div class="mt-3 text-end">
+                  <a href="/admin/order/<%= order.orderNumber %>" class="btn btn-sm btn-outline-brand">
+                    <i class="ri-eye-line me-1"></i> View Details
+                  </a>
+                </div>
+              </div>
+            </div>
+            <% }) %>
+            <% } else { %>
+            <div class="text-center p-4">
+              <p class="text-muted">No active orders found.</p>
+            </div>
+            <% } %>
+
+        
+          </div>
+
+          <!-- Returns Tab -->
+          <div class="tab-pane fade" id="v-pills-return" role="tabpanel" aria-labelledby="v-pills-return-tab">
+            <h5 class="card-title mb-3">Returns To Warehouse</h5>
+
+            <% if (deliveryHistory && deliveryHistory.filter(order => ['returnToWarehouse', 'waitingAction'].includes(order.orderStatus)).length > 0) { %>
+            <% deliveryHistory.filter(order => ['returnToWarehouse', 'waitingAction'].includes(order.orderStatus)).forEach(order => { %>
+            <div class="card order-card">
+              <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                <h6 class="mb-1">Order #<%= order.orderNumber %></h6>
+                <p class="text-muted mb-0">Customer: <%= order.orderCustomer.fullName %> (<%= order.orderCustomer.phoneNumber %>)</p>
+                <p class="text-muted mb-0">Business: <%= order.business.brandInfo.brandName %></p>
+                </div>
+                <div class="text-end">
+                <span class="badge bg-danger">Return Pending</span>
+                <p class="text-muted mb-0">Since: <%= new Date(order.updatedAt).toLocaleDateString() %></p>
+                </div>
+              </div>
+              <hr>
+              <div class="row">
+                <div class="col-md-6">
+                <p class="mb-1"><i class="ri-error-warning-line text-danger me-1"></i> Return Reason:</p>
+                <p class="text-muted mb-0"><%= order.UnavailableReason && order.UnavailableReason.length > 0 ? order.UnavailableReason[order.UnavailableReason.length - 1] : 'Not specified' %></p>
+                </div>
+                <div class="col-md-3">
+                <p class="mb-1"><i class="ri-money-dollar-circle-line text-muted me-1"></i> Amount:</p>
+                <p class="text-muted mb-0">$<%= order.orderShipping.amount || 0 %></p>
+                </div>
+          
+              </div>
+              <div class="mt-3 text-end">
+                <a href="/admin/order/<%= order.orderNumber %>" class="btn btn-sm btn-outline-brand">
+                <i class="ri-eye-line me-1"></i> View Details
+                </a>
+              </div>
+              </div>
+            </div>
+            <% }) %>
+            <% } else { %>
+            <div class="text-center p-4">
+              <p class="text-muted">No returns found.</p>
+            </div>
+            <% } %>
+
+            <% if (deliveryHistory && deliveryHistory.filter(order => ['returnToWarehouse', 'waitingAction'].includes(order.orderStatus)).length > 5) { %>
+            <div class="text-center mt-3">
+              <button class="btn btn-light">
+                <i class="ri-loader-4-line me-1"></i> Load More
+              </button>
+            </div>
+            <% } %>
+          </div>
+
+          <!-- History Tab -->
+          <div class="tab-pane fade" id="v-pills-history" role="tabpanel" aria-labelledby="v-pills-history-tab">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="card-title mb-0">Delivery History</h5>
+              <div>
+                <select class="form-select form-select-sm">
+                  <option selected>Last 30 Days</option>
+                  <option>Last 7 Days</option>
+                  <option>Last 90 Days</option>
+                  <option>All Time</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col">Order ID</th>
+                    <th scope="col">Customer</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Amount</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (deliveryHistory && deliveryHistory.length > 0) { %>
+                  <% deliveryHistory.forEach(order => { %>
+                  <tr>
+                    <td><%= order.orderNumber %></td>
+                    <td><%= order.orderShipping.firstName %> <%= order.orderShipping.lastName %></td>
+                    <td><%= new Date(order.orderDate).toLocaleDateString() %></td>
+                    <td>$<%= order.orderShipping.amount || 0 %></td>
+                    <td>
+                      <% if (order.orderStatus === 'completed') { %>
+                      <span class="badge bg-success">Delivered</span>
+                      <% } else if (order.orderStatus === 'canceled' || order.orderStatus === 'rejected') { %>
+                      <span class="badge bg-danger">Returned</span>
+                      <% } else { %>
+                      <span class="badge bg-info"><%= order.orderStatus %></span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <a href="/admin/order-details/<%= order.orderNumber %>" class="btn btn-sm btn-outline-brand">View</a>
+                    </td>
+                  </tr>
+                  <% }) %>
+                  <% } else { %>
+                  <tr>
+                    <td colspan="6" class="text-center">No delivery history found.</td>
+                  </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+
+            <% if (deliveryHistory && deliveryHistory.length > 5) { %>
+            <div class="d-flex justify-content-end mt-3">
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Previous</a>
+                  </li>
+                  <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                  <li class="page-item"><a class="page-link" href="#">2</a></li>
+                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">Next</a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+            <% } %>
+          </div>
+
+            <!-- Courier Info Tab -->
+            <div class="tab-pane fade" id="v-pills-info" role="tabpanel" aria-labelledby="v-pills-info-tab">
+            <h5 class="card-title mb-4">Courier Information</h5>
+
+            <div class="row">
+              <div class="col-md-6">
+              <div class="mb-4">
+                <div class="d-flex align-items-center mb-3">
+                <div class="contact-icon me-3">
+                  <i class="ri-phone-line"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">Phone</p>
+                  <h6 class="mb-0"><%= courier.phone %></h6>
+                </div>
+                </div>
+
+                <div class="d-flex align-items-center mb-3">
+                <div class="contact-icon me-3">
+                  <i class="ri-mail-line"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">Email</p>
+                  <h6 class="mb-0"><%= courier.email %></h6>
+                </div>
+                </div>
+
+                <div class="d-flex align-items-center mb-3">
+                <div class="contact-icon me-3">
+                  <i class="ri-map-pin-line"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">Address</p>
+                  <h6 class="mb-0"><%= courier.address %></h6>
+                </div>
+                </div>
+
+                <div class="d-flex align-items-center mb-3">
+                <div class="contact-icon me-3">
+                  <i class="ri-calendar-line"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">Date of Birth</p>
+                  <h6 class="mb-0"><%= new Date(courier.dateOfBirth).toLocaleDateString() %></h6>
+                </div>
+                </div>
+
+                <div class="d-flex align-items-center mb-3">
+                <div class="contact-icon me-3">
+                  <i class="ri-id-card-line"></i>
+                </div>
+                <div>
+                  <p class="text-muted mb-0">National ID</p>
+                  <h6 class="mb-0"><%= courier.nationalId %></h6>
+                </div>
+                </div>
+              </div>
+              </div>
+
+              <div class="col-md-6">
+              <div class="d-flex align-items-center mb-3">
+                <div class="contact-icon me-3">
+                <i class="ri-calendar-line"></i>
+                </div>
+                <div>
+                <p class="text-muted mb-0">Joined Date</p>
+                <h6 class="mb-0"><%= new Date(courier.joinedDate).toLocaleDateString() %></h6>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center mb-3">
+                <div class="contact-icon me-3">
+                <i class="ri-motorbike-line"></i>
+                </div>
+                <div>
+                <p class="text-muted mb-0">Vehicle</p>
+                <h6 class="mb-0"><%= courier.vehicle %></h6>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center mb-3">
+                <div class="contact-icon me-3">
+                <i class="ri-map-2-line"></i>
+                </div>
+                <div>
+                <p class="text-muted mb-0">Assigned Zones</p>
+                <div class="mt-1">
+                  <% if (courier.zones && courier.zones.length > 0) { %>
+                  <% courier.zones.forEach(zone => { %>
+                  <span class="zone-badge"><%= zone %></span>
+                  <% }) %>
+                  <% } else { %>
+                  <span class="text-muted">No zones assigned</span>
+                  <% } %>
+                </div>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center">
+                <div class="contact-icon me-3">
+                <i class="ri-file-list-line"></i>
+                </div>
+                <div>
+                <p class="text-muted mb-0">All Papers</p>
+                <button class="btn btn-sm btn-outline-brand" id="viewPapersBtn">
+                  <i class="ri-eye-line me-1"></i> View Papers
+                </button>
+                </div>
+              </div>
+              </div>
+            </div>
+
+            <!-- Papers Slider -->
+            <div id="papersSlider" class="swiper-container mt-4 d-none" style="max-width: 100%; overflow: hidden;">
+              <div class="swiper-wrapper">
+              <% if (courier.allPapers && courier.allPapers.length > 0) { %>
+              <% courier.allPapers.forEach(paper => { %>
+              <div class="swiper-slide">
+              <img src="<%= paper %>" class="img-fluid rounded" alt="Paper" style="max-width: 100%; height: auto;">
+              </div>
+              <% }) %>
+              <% } %>
+              </div>
+              <div class="swiper-pagination"></div>
+              <div class="swiper-button-next"></div>
+              <div class="swiper-button-prev"></div>
+            </div>
+
+
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+
+<script>
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionality
+    const tabLinks = document.querySelectorAll('.nav-link2');
+    tabLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.nav-link2').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+
+        const tabId = this.getAttribute('data-bs-target');
+        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+        document.querySelector(tabId).classList.add('show', 'active');
+      });
+    });
+
+
+    // Call courier button
+    const callButtons = document.querySelectorAll('.btn-light');
+    callButtons.forEach(button => {
+      if (button.querySelector('.ri-phone-line')) {
+        button.addEventListener('click', function() {
+          alert('Calling Ahmed Mohamed at +20 123 456 7890...');
+        });
+      }
+    });
+
+    const viewPapersBtn = document.getElementById('viewPapersBtn');
+    const papersSlider = document.getElementById('papersSlider');
+
+    viewPapersBtn.addEventListener('click', function() {
+      papersSlider.classList.toggle('d-none');
+      if (!papersSlider.classList.contains('d-none')) {
+        new Swiper('.swiper-container', {
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      }
+    });
+
+
+  });
+
+
+
+
+</script>
