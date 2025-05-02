@@ -18,4 +18,9 @@ router.post('/admin-login', authController.loginAsAdmin);
 router.post('/courier-login', authController.loginAsCourier);
 
 
+// OTP
+router.post('/send-otp', authController.sendOTP);
+
+
+
 module.exports = router;

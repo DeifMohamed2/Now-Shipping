@@ -227,32 +227,32 @@ const sendOTP = async (req, res) => {
   const smsMessage = `Your NowShipping verification code is: ${otp}`;
 
   try {
-    const response = await axios.post(
-      'https://bulk.whysms.com/api/v3/sms/send',
-      {
-        recipient: internationalNumber,
-        sender_id: 'WhySMS Test', 
-        type: 'plain',
-        message: smsMessage,
-      },
-      {
-        headers: {
-          Authorization:
-            'Bearer 555|eouTObaho6DFjDs5S9mLojMI4lNi7VDmqMLMRcrKe5373dd8',
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      }
-    );
+    // const response = await axios.post(
+    //   'https://bulk.whysms.com/api/v3/sms/send',
+    //   {
+    //     recipient: internationalNumber,
+    //     sender_id: 'WhySMS Test', 
+    //     type: 'plain',
+    //     message: smsMessage,
+    //   },
+    //   {
+    //     headers: {
+    //       Authorization:
+    //         'Bearer 555|eouTObaho6DFjDs5S9mLojMI4lNi7VDmqMLMRcrKe5373dd8',
+    //       'Content-Type': 'application/json',
+    //       Accept: 'application/json',
+    //     },
+    //   }
+    // );
 
-    const data = response.data;
+    // const data = response.data;
 
-    if (data.status !== 'success') {
-      console.error('WhySMS API error:', data);
-      return res.status(500).json({ message: 'Failed to send OTP via SMS' });
-    }
+    // if (data.status !== 'success') {
+    //   console.error('WhySMS API error:', data);
+    //   return res.status(500).json({ message: 'Failed to send OTP via SMS' });
+    // }
 
-    return res.status(200).json({ message: 'OTP sent successfully' });
+    return res.status(200).json({ message: `OTP sent successfully: ${otp}` });
   } catch (err) {
     console.error('SMS error:', err.response?.data || err.message);
     return res.status(500).json({ message: 'SMS service error' });
@@ -283,62 +283,87 @@ const verifyOTP = async (phoneNumber, otp) => {
 
 
 const login = async (req, res) => {
-    const { email, password } = req.body;
-try{
+  const { email, password } = req.body;
+  try {
     if (!email || !password) {
-        return res.status(400).json({
-            status: 'error',
-            message: 'Please fill all the fields'
-        });
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please fill all the fields',
+      });
     }
 
-    const user = await User.findOne({ email });
+    // Check if the user exists in the User collection
+    let user = await User.findOne({ email });
+    let role = 'User';
+
+    // If not found, check in the Courier collection
     if (!user) {
-        return res.status(400).json({
-            status: 'error',
-            message: 'Email or password is incorrect'
-        });
+      user = await Courier.findOne({ email });
+      role = 'Courier';
+    }
+
+    // If still not found, return an error
+    if (!user) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email or password is incorrect',
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-        return res.status(400).json({
-            status: 'error',
-            message: 'Email or password is incorrect'
-        });
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email or password is incorrect',
+      });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-        expiresIn: '1d'
-    });
+    const token = jwt.sign(
+      { userId: user._id, role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '1d',
+      }
+    );
 
     res.cookie('token', token, {
-        httpOnly: true
+      httpOnly: true,
     });
-    
-    
 
-    res.status(200).json({
+    if(role === 'Courier') {
+      return res.status(200).json({
         status: 'success',
         token,
         user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            isCompleted : user.isCompleted,
-            isNeedStorage: user.isNeedStorage
-        }
-    });
-}catch(err){
-        res.status(500).json({
-            status: 'error',
-            message: 'An error occurred'
-        });
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role,
+        },
+      });
+    }else{
+      res.status(200).json({
+        status: 'success',
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role,
+          isCompleted: user.isCompleted,
+        },
+      });
     }
 
-}
+
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: 'An error occurred',
+    });
+  }
+};
 
 
 
@@ -495,7 +520,6 @@ const loginAsCourier  = async (req, res) => {
             name: courier.name,
             email: courier.email,
             role: courier.role,
-            isNeedStorage: courier.isNeedStorage
         }
     });
 
