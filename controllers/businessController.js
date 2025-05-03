@@ -195,6 +195,138 @@ const getDashboardPage = async (req, res) => {
     });
   }
 };
+// get Dash Baord data For API 
+
+const getDashboardData = async (req, res) => {
+  try {
+    // Only load data if user has completed account setup
+    let dashboardData = {};
+
+    if (req.userData.isCompleted) {
+      // Get today's date range
+      const today = new Date();
+      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+      // Get order statistics
+      const inProgressCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'processing',
+      });
+
+      const headingToCustomerCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'headingToCustomer',
+      });
+
+      const completedCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'completed',
+      });
+
+      const unsuccessfulCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: { $in: ['cancelled', 'rejected', 'returned', 'terminated', 'failed'] },
+      });
+
+      const totalOrders = await Order.countDocuments({
+        business: req.userData._id,
+      });
+
+      const awaitingActionCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'awaitingAction',
+      });
+
+      const headingToYouCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'headingToYou',
+      });
+
+      const newOrdersCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'new',
+      });
+
+      // Financial statistics
+      const ordersWithCOD = await Order.find({
+        business: req.userData._id,
+        'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] },
+        orderStatus: { $in: ['headingToCustomer', 'processing'] },
+      });
+
+      const expectedCash = ordersWithCOD.reduce((total, order) => {
+        return total + (order.orderShipping.amount || 0);
+      }, 0);
+
+      const collectedOrders = await Order.find({
+        business: req.userData._id,
+        'orderShipping.amountType': 'COD',
+        orderStatus: 'completed',
+        completedDate: { $gte: startOfDay, $lte: endOfDay },
+      });
+
+      const collectedCash = collectedOrders.reduce((total, order) => {
+        return total + (order.orderShipping.amount || 0);
+      }, 0);
+
+      // Calculate completion rate
+      const completionRate =
+        totalOrders > 0 ? Math.round((completedCount / totalOrders) * 100) : 0;
+
+      // Calculate unsuccessful rate
+      const unsuccessfulRate =
+        unsuccessfulCount > 0
+          ? Math.round((unsuccessfulCount / totalOrders) * 100)
+          : 0;
+
+      const collectionRate =
+        expectedCash > 0 ? Math.round((collectedCash / expectedCash) * 100) : 0;
+
+      // Compile all dashboard data
+      dashboardData = {
+        orderStats: {
+          inProgressCount,
+          headingToCustomerCount,
+          completedCount,
+          awaitingActionCount,
+          headingToYouCount,
+          newOrdersCount,
+          totalOrders,
+          completionRate,
+          unsuccessfulCount,
+          unsuccessfulRate,
+        },
+        financialStats: {
+          expectedCash,
+          collectedCash,
+          collectionRate,
+        },
+      };
+    }
+
+    console.log(dashboardData);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Dashboard data fetched successfully',
+      dashboardData: dashboardData,
+      userDate: req.userData,
+    });
+
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to load dashboard data',
+      error: error.message,
+    });
+  }
+};
+
+
+
+
 
 const completionConfirm = async (req, res) => {
   try {
@@ -369,7 +501,7 @@ The NowShipping Team
 
 //
 const requestVerification = async (req, res) => {
-
+try {
   const user = req.userData;
 
 
@@ -380,6 +512,13 @@ const requestVerification = async (req, res) => {
     status: 'success',
     message: 'Verification email sent successfully',
   });
+}catch (error) {
+  console.error('Error in requestVerification:', error);
+  res.status(500).json({
+    status: 'error',
+    message: 'Failed to send verification email',
+  });
+}
 };
 
 
@@ -1256,6 +1395,7 @@ module.exports = {
   completionConfirm,
   requestVerification,
 
+
   // Orders
   get_ordersPage,
   get_orders,
@@ -1289,4 +1429,7 @@ module.exports = {
   get_ticketsPage,
 
   logOut,
+
+  // For API
+  getDashboardData,
 };

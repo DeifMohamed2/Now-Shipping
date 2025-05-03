@@ -1,0 +1,309 @@
+<%- contentFor('HeaderCss') %>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --primary: #F39720;
+    --secondary: #FDB614;
+    --accent: #8FCAE5;
+    --light: #FDDE00;
+    --dark: #2B71B9;
+    --neutral: #EFEICF;
+    --white: #FFFFFF;
+    --gray-100: #F9FAFB;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-800: #1F2937;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--gray-100);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Background Animation Elements */
+  .animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background-color: var(--gray-100);
+    opacity: 0.8;
+  }
+
+  /* Truck animations */
+  .truck {
+    position: absolute;
+    width: 120px;
+    height: 60px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'%3E%3Cpath fill='%232B71B9' d='M48 0C21.5 0 0 21.5 0 48V368c0 26.5 21.5 48 48 48H64c0 53 43 96 96 96s96-43 96-96H384c0 53 43 96 96 96s96-43 96-96h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V288 256 237.3c0-17-6.7-33.3-18.7-45.3L512 114.7c-12-12-28.3-18.7-45.3-18.7H416V48c0-26.5-21.5-48-48-48H48zM416 160h50.7L544 237.3V256H416V160zM112 416a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zm368-48a48 48 0 1 1 0 96 48 48 0 1 1 0-96z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.1;
+  }
+
+  .truck-1 {
+    top: 10%;
+    left: -120px;
+    animation: truckMove1 20s linear infinite;
+  }
+
+  .truck-2 {
+    top: 30%;
+    right: -120px;
+    transform: scaleX(-1);
+    animation: truckMove2 25s linear infinite;
+  }
+
+  .truck-3 {
+    bottom: 15%;
+    left: -120px;
+    animation: truckMove1 22s linear infinite 5s;
+  }
+
+  @keyframes truckMove1 {
+    0% {
+      left: -120px;
+    }
+
+    100% {
+      left: 100%;
+    }
+  }
+
+  @keyframes truckMove2 {
+    0% {
+      right: -120px;
+    }
+
+    100% {
+      right: 100%;
+    }
+  }
+
+  /* Package animations */
+  .package {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23F39720' d='M50.7 58.5L0 160H208V32H93.7C75.5 32 58.9 42.3 50.7 58.5zM240 160H448L397.3 58.5C389.1 42.3 372.5 32 354.3 32H240V160zm208 32H0V416c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V192z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.15;
+  }
+
+  .package-1 {
+    top: 20%;
+    left: 10%;
+    animation: packageFloat 10s ease-in-out infinite;
+  }
+
+  .package-2 {
+    top: 60%;
+    right: 15%;
+    animation: packageFloat 12s ease-in-out infinite 2s;
+  }
+
+  .package-3 {
+    bottom: 30%;
+    left: 30%;
+    animation: packageFloat 14s ease-in-out infinite 1s;
+  }
+
+  .package-4 {
+    top: 40%;
+    right: 40%;
+    animation: packageFloat 11s ease-in-out infinite 3s;
+  }
+
+  @keyframes packageFloat {
+
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+      transform: translateY(-20px) rotate(5deg);
+    }
+  }
+
+  /* Map route animation */
+  .map-route {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--primary), var(--primary) 10px, transparent 10px, transparent 20px);
+    opacity: 0.2;
+  }
+
+  .map-route-1 {
+    top: 25%;
+    animation: routeMove 30s linear infinite;
+  }
+
+  .map-route-2 {
+    bottom: 35%;
+    animation: routeMove 30s linear infinite reverse;
+  }
+
+  @keyframes routeMove {
+    0% {
+      background-position: 0 0;
+    }
+
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  /* Logo Container Styles */
+  .logo-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .logo {
+    animation: spin 10s linear infinite;
+    margin-bottom: 20px;
+  }
+
+  .logo img {
+    /* Remove background and cut edges */
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    /* This makes the image smoother */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  .text-logo {
+    margin-top: 10px;
+    animation: fadeIn 1s ease-out forwards;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .logo img {
+      max-width: 180px;
+      height: auto;
+    }
+
+    .text-logo img {
+      max-width: 190px;
+      height: auto;
+    }
+  }
+</style>
+
+<%- contentFor('body') %>
+<!-- Animated Background -->
+<div class="animated-background">
+  <!-- Truck animations -->
+  <div class="truck truck-1"></div>
+  <div class="truck truck-2"></div>
+  <div class="truck truck-3"></div>
+
+  <!-- Package animations -->
+  <div class="package package-1"></div>
+  <div class="package package-2"></div>
+  <div class="package package-3"></div>
+  <div class="package package-4"></div>
+
+  <!-- Map routes -->
+  <div class="map-route map-route-1"></div>
+  <div class="map-route map-route-2"></div>
+</div>
+
+<!-- Centered Logo -->
+<div class="logo-container">
+  <div class="logo">
+    <img src="/assets/rimages/mainlogospining.png" alt="Now Shipping Logo" height="230">
+  </div>
+  <div class="text-logo">
+    <img src="/assets/rimages/bloewLogo.png" alt="Now Shipping Text" height="100">
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Create dynamic truck animations
+    function createExtraTrucks() {
+      const background = document.querySelector('.animated-background');
+
+      // Create additional trucks with random positions and speeds
+      for (let i = 0; i < 3; i++) {
+        const truck = document.createElement('div');
+        truck.classList.add('truck');
+
+        const isLeftToRight = Math.random() > 0.5;
+        const verticalPosition = Math.random() * 70 + 15; // Between 15% and 85%
+        const animationDuration = Math.random() * 10 + 15; // Between 15s and 25s
+        const delay = Math.random() * 5; // Between 0s and 5s
+
+        truck.style.top = `${verticalPosition}%`;
+
+        if (isLeftToRight) {
+          truck.style.left = '-120px';
+          truck.style.animation = `truckMove1 ${animationDuration}s linear infinite ${delay}s`;
+        } else {
+          truck.style.right = '-120px';
+          truck.style.transform = 'scaleX(-1)';
+          truck.style.animation = `truckMove2 ${animationDuration}s linear infinite ${delay}s`;
+        }
+
+        background.appendChild(truck);
+      }
+    }
+
+    // Initialize extra trucks
+    createExtraTrucks();
+  });
+</script>

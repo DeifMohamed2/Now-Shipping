@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 
 //================================================= Landing Page =========================================================
 const index = (req, res) => {
-  res.render('landing/index', { title: 'Home', layout: 'layouts/layout-without-nav' });
+  res.render('landing/comingsoon', { title: 'Home', layout: 'layouts/layout-without-nav' });
 };
 
 
@@ -122,6 +122,7 @@ const registerPage = (req, res) => {
       error: req.flash('error'),
     });
 }
+
 const signup = async (req, res) => {
   const { email, fullName, password, phoneNumber, storageCheck, termsCheck ,otp } =
     req.body;
@@ -294,7 +295,7 @@ const login = async (req, res) => {
 
     // Check if the user exists in the User collection
     let user = await User.findOne({ email });
-    let role = 'User';
+    let role = 'Business';
 
     // If not found, check in the Courier collection
     if (!user) {
@@ -334,6 +335,7 @@ const login = async (req, res) => {
     if(role === 'Courier') {
       return res.status(200).json({
         status: 'success',
+        message: 'Login successful',
         token,
         user: {
           id: user._id,
@@ -345,6 +347,7 @@ const login = async (req, res) => {
     }else{
       res.status(200).json({
         status: 'success',
+        message: 'Login successful',
         token,
         user: {
           id: user._id,
@@ -364,7 +367,6 @@ const login = async (req, res) => {
     });
   }
 };
-
 
 
 const createAdminAccount = async (req, res) => {

@@ -15,6 +15,7 @@ router.get('/aboutus', authController.aboutusPage);
 
 router.get('/faq', authController.faqPage);
 
+
 // Authentication routes
 
 router.get('/login', authController.loginPage);

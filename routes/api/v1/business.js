@@ -36,8 +36,10 @@ router.use(authenticateUser);
 
 //dashboard
 
+router.get('/dashboard', businessController.getDashboardData);
+
 router.post('/complete-confirmation-form', businessController.completionConfirm);
 
-
+router.get('/request-verification-email', businessController.requestVerification);
 
 module.exports = router;
