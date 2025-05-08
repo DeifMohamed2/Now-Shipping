@@ -133,7 +133,8 @@ const signup = async (req, res) => {
     !fullName ||
     !phoneNumber ||
     !storageCheck ||
-    !termsCheck
+    !termsCheck ||
+    !otp
   ) {
     return res.status(400).json({
       status: 'error',
@@ -181,6 +182,7 @@ const signup = async (req, res) => {
 
       res.status(201).json({
         status: 'success',
+        message: 'User created successfully',
         user: {
           id: user._id,
           name: user.name,

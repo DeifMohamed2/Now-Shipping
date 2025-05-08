@@ -546,7 +546,7 @@ const get_orders = async (req, res) => {
         'orderShipping.orderType': orderType,
         
       }).sort({ orderDate: -1 ,createdAt: -1});
-  }else if(orderType=='All'){
+  }else{
        orders = await Order.find({ business: req.userData._id }).sort({ orderDate: -1 ,createdAt: -1});
     }
     res.status(200).json(orders || []);
@@ -871,13 +871,25 @@ const get_orderDetailsPage = async(req, res) => {
   }
 
   console.log(order);
-  res.render('business/order-details', {
-    title: 'Order Details',
-    page_title: 'Order Details',
-    folder: 'Pages',
-    order,
-  });
+  // Check if the request is from API or web
+  if (req.originalUrl.includes('/api/')) {
+    // API request - return JSON response
+    return res.status(200).json({
+      status: 'success',
+      order
+    });
+  } else {
+    // Web request - render the page
+    res.render('business/order-details', {
+      title: 'Order Details',
+      page_title: 'Order Details',
+      folder: 'Pages',
+      order,
+    });
+  }
 };
+
+
 
 
 const deleteOrder = async (req, res) => {

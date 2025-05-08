@@ -36,6 +36,7 @@ router.use(authenticateUser);
 // Define routes
 //dashboard
 router.get('/dashboard', businessController.getDashboardPage);
+
 router.post('/completionConfirm', businessController.completionConfirm);
 
 router.get('/request-verification', businessController.requestVerification);

@@ -42,4 +42,22 @@ router.post('/complete-confirmation-form', businessController.completionConfirm)
 
 router.get('/request-verification-email', businessController.requestVerification);
 
+
+//orders
+
+router.get('/orders', businessController.get_orders);
+
+router.post('/submit-order', businessController.submitOrder);
+
+router.post('/orders/print-policy/:orderNumber/:pageSize', businessController.printPolicy);
+
+router.get('/order-details/:orderNumber', businessController.get_orderDetailsPage);
+
+router.put('/orders/edit-order/:orderId', businessController.editOrder);
+
+router.delete('/orders/delete-order/:orderId', businessController.deleteOrder);
+
+
+
+
 module.exports = router;
