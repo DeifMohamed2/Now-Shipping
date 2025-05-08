@@ -59,5 +59,20 @@ router.delete('/orders/delete-order/:orderId', businessController.deleteOrder);
 
 
 
+//pickups
+
+router.get('/get-pickups', businessController.get_pickups);
+
+router.post('/create-pickup', businessController.createPickup);
+
+router.get('/pickup-details/:pickupNumber', businessController.get_pickupDetailsPage);
+
+router.get('/pickup-details/:pickupNumber/get-pickedup-orders', businessController.get_pickedupOrders);
+
+router.post('/pickup-details/:pickupNumber/rate-pickup', businessController.ratePickup);
+
+router.delete('/pickup-details/:pickupNumber/delete-pickup', businessController.deletePickup);
+
+
 
 module.exports = router;

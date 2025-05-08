@@ -283,7 +283,7 @@
 
                 <div class="mb-4">
                   <label for="pickup-location" class="form-label">Place of Pickup <span class="required-asterisk">*</span></label>
-                  <input type="text" id="pickup-location" value="<%= userData.pickUpAdress.adressDetails %>, <%= userData.pickUpAdress.city %>, <%= userData.pickUpAdress.country %>" class="form-control readonly-field" placeholder="Enter place of pickup" readonly required />
+                  <input type="text" id="pickup-location" name="pickupLocation" value="<%= userData.pickUpAdress.adressDetails %>, <%= userData.pickUpAdress.city %>, <%= userData.pickUpAdress.country %>" class="form-control readonly-field" placeholder="Enter place of pickup" readonly required />
                   <div class="contact-info-note">
                     <i class="ri-map-pin-line me-1"></i> Your saved pickup address will be used for this order.
                   </div>

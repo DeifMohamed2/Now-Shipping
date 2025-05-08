@@ -353,6 +353,10 @@ const completionConfirm = async (req, res) => {
       taxNumber,
     } = req.body;
 
+    console.log(req.userData);
+
+
+
     // ✅ 1. Validate required fields
     if (!brandName || !brandType || !industry || !monthlyOrders || !sellingPoints.length) {
       return res.status(400).json({ error: "All brand info fields are required." });
@@ -364,6 +368,10 @@ const completionConfirm = async (req, res) => {
       return res.status(400).json({ error: "Payment method is required." });
     }
 
+    if(!req.userData.isVerified){
+      return res.status(400).json({ error: "Please verify your email address to complete your account setup." });
+    }
+    
     // ✅ 2. Validate Payment Method
     let paymentDetails = {};
     console.log(paymentMethod, mobileWalletNumber);
@@ -1056,14 +1064,13 @@ const createPickup = async (req, res) => {
       pickupNumber: `${
         Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000
       }`,
-      business: req.userData._id,
       numberOfOrders,
       pickupDate,
       phoneNumber,
       isFragileItems: isFragileItems === 'true',
       isLargeItems: isLargeItems === 'true',
       picikupStatus: 'new',
-      pickupNotes,
+      pickupNotes, 
     });
     newPickup.pickupStages.push({
       stageName: 'Pickup Created',
@@ -1088,6 +1095,12 @@ const get_pickupDetailsPage = async(req, res) => {
   const pickup = await Pickup.findOne({ pickupNumber }).populate('business').populate('assignedDriver');
   console.log(pickup);  
   if (!pickup) {
+
+    // Check if the request is from API or web
+    if (req.originalUrl.includes('/api/')) {
+      // API request - return JSON response
+      return res.status(404).json({ error: 'Pickup not found' });
+    }else{
     res.render('business/pickup-details', {
       title: 'Pickup Details',
       page_title: 'Pickup Details',
@@ -1095,14 +1108,20 @@ const get_pickupDetailsPage = async(req, res) => {
       pickup: null,
     });
     return;
+    }
   }
 
-  res.render('business/pickup-details', {
-    title: 'Pickup Details',
-    page_title: 'Pickup Details',
-    folder: 'Pages',
-    pickup,
-  });
+    if (req.originalUrl.includes('/api/')) {
+      // API request - return JSON response
+      return res.status(404).json({ error: 'Pickup not found' });
+    }else{
+      res.render('business/pickup-details', {
+        title: 'Pickup Details',
+        page_title: 'Pickup Details',
+        folder: 'Pages',
+        pickup,
+      });
+    }
 };
 
 const get_pickedupOrders = async (req, res) => {
