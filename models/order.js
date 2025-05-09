@@ -143,6 +143,11 @@ const orderSchema = new mongoose.Schema(
         type: Number,
         required: false,
       },
+      isExpressShipping: {
+        type: Boolean,
+        required: true,
+        default: false,
+      },
     },
     referralNumber: {
       type: String,

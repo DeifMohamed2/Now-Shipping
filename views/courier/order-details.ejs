@@ -126,6 +126,25 @@
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
   }
+  
+  .express-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #fff3cd;
+    border: 1px solid #ffecb5;
+    color: #664d03;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-top: 10px;
+  }
+
+  .express-badge i {
+    color: #fd7e14;
+    font-size: 1rem;
+    margin-right: 6px;
+  }
 
   .amount-display {
     font-size: 1.25rem;
@@ -450,6 +469,18 @@
                     <% } %>
                   </div>
                 </div>
+                
+                <% if (order.orderShipping.isExpressShipping) { %>
+                <div class="mb-3 mt-3">
+                  <div class="express-badge">
+                    <i class="ri-rocket-line me-1"></i> Express Shipping
+                    <span class="badge bg-danger ms-2">Priority</span>
+                  </div>
+                  <p class="text-muted small mt-1">
+                    This order requires same-day delivery. Please prioritize handling.
+                  </p>
+                </div>
+                <% } %>
               </div>
             </div>
 

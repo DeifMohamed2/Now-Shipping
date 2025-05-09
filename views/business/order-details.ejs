@@ -372,6 +372,26 @@
       </div>
     </div>
     <% } %>
+    
+    <!-- Shipping Type Information -->
+    <% if (order.orderShipping.isExpressShipping) { %>
+    <div class="border border-success border-opacity-25 rounded p-3 mt-3 bg-white">
+      <h6 class="mb-3 d-flex align-items-center">
+        <i class="ri-rocket-line me-2 text-success"></i>
+        Express Shipping
+      </h6>
+      <div class="row g-3">
+        <div class="col-md-12">
+          <p class="text-muted small mb-1 fw-medium">
+            This order uses express shipping for same-day delivery service.
+          </p>
+          <div class="badge bg-success-subtle text-success rounded-pill px-3 py-1 mt-1">
+            <i class="ri-time-line me-1"></i> Priority Handling
+          </div>
+        </div>
+      </div>
+    </div>
+    <% } %>
   </div>
 </div>
   </div>

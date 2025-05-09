@@ -363,7 +363,7 @@ const completionConfirm = async (req, res) => {
     if (!brandName || !brandType || !industry || !monthlyOrders || !sellingPoints.length) {
       return res.status(400).json({ error: "All brand info fields are required." });
     }
-    if (!country || !city || !adressDetails) {
+    if (!country || !city || !adressDetails || !zone) {
       return res.status(400).json({ error: "All address fields are required." });
     }
     if (!paymentMethod) {
@@ -613,7 +613,9 @@ const submitOrder = async (req, res) => {
     amountCashCollection,
     previewPermission,
     referralNumber,
-    Notes
+    Notes,
+    isExpressShipping,
+    orderFees
   } = req.body;
   try {
     console.log(req.body);
@@ -651,6 +653,9 @@ const submitOrder = async (req, res) => {
     }
   }
 
+  // Get the shipping fee (either from the frontend or calculate it here)
+  const calculatedOrderFees = orderFees ? Number(orderFees) : 120; // Default fee if not provided
+
   // ✅ 3. Create Order
   const newOrder = new Order({
     orderNumber: `${
@@ -658,7 +663,7 @@ const submitOrder = async (req, res) => {
     }`,
     orderDate: new Date(),
     orderStatus: 'new',
-    orderFees: 120,
+    orderFees: calculatedOrderFees,
     orderCustomer: {
       fullName,
       phoneNumber,
@@ -672,8 +677,9 @@ const submitOrder = async (req, res) => {
       productDescriptionReplacement: newPD || '',
       numberOfItemsReplacement: numberOfItemsNewPD || 0,
       orderType: orderType,
-        amountType: COD ? 'COD' : CashDifference ? 'CD' : amountCashCollection ? 'CC' : 'NA',
+      amountType: COD ? 'COD' : CashDifference ? 'CD' : amountCashCollection ? 'CC' : 'NA',
       amount: amountCOD || amountCashDifference || amountCashCollection,
+      isExpressShipping: isExpressShipping === 'on' || isExpressShipping === true,
     },
     isOrderAvailableForPreview: previewPermission === 'on',
     orderNotes: Notes || '',
@@ -768,6 +774,8 @@ const editOrder = async (req, res) => {
     previewPermission,
     referralNumber,
     Notes,
+    isExpressShipping,
+    orderFees
   } = req.body;
 
   try {
@@ -823,6 +831,9 @@ const editOrder = async (req, res) => {
       amountFromConditons = amountCOD || amountCashDifference || amountCashCollection ;
     }
 
+    // Get the shipping fee (either from the frontend or calculate it here)
+    const calculatedOrderFees = orderFees ? Number(orderFees) : 120; // Default fee if not provided
+
     // ✅ 3. Update Order
     const updatedOrder = await Order.findByIdAndUpdate(
       orderId,
@@ -834,6 +845,7 @@ const editOrder = async (req, res) => {
         government,
         zone,
       },
+      orderFees: calculatedOrderFees,
       orderShipping: {
         productDescription: productDescription || currentPD || '',
         numberOfItems: numberOfItems || numberOfItemsCurrentPD || 0,
@@ -842,6 +854,7 @@ const editOrder = async (req, res) => {
         orderType: orderType,
         amountType: COD ? 'COD' : CashDifference ? 'CD' : amountCashCollection ? 'CC' : 'NA',
         amount: amountFromConditons,
+        isExpressShipping: isExpressShipping === 'on' || isExpressShipping === true,
       },
       isOrderAvailableForPreview: previewPermission === 'on',
       orderNotes: Notes || '',

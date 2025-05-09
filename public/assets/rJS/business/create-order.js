@@ -97,66 +97,132 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Fee calculation configuration
     const feeConfig = {
-        zones: {
-            'Helwan': { base: 30, surcharge: 0 },
-            'Nasr City': { base: 25, surcharge: 0 },
-            '6th of October': { base: 35, surcharge: 5 },
-            'Shubra': { base: 25, surcharge: 0 },
-            'Maadi': { base: 30, surcharge: 0 },
-            'Zamalek': { base: 25, surcharge: 0 },
-            'Haram': { base: 35, surcharge: 5 },
-            'Dokki': { base: 25, surcharge: 0 },
-            'Mohandessin': { base: 25, surcharge: 0 },
-            'New Cairo': { base: 40, surcharge: 10 },
-            'Obour City': { base: 40, surcharge: 10 },
-            'Badr City': { base: 45, surcharge: 15 },
-            '10th of Ramadan': { base: 45, surcharge: 15 },
-            'Sheikh Zayed': { base: 40, surcharge: 10 },
-            'Mokattam': { base: 35, surcharge: 5 },
-            'Garden City': { base: 25, surcharge: 0 },
-            'Hadayek El-Kobba': { base: 30, surcharge: 0 },
-            'Ain Shams': { base: 30, surcharge: 0 },
-            'El-Marg': { base: 35, surcharge: 5 },
-            'El-Mataria': { base: 30, surcharge: 0 },
-            'El-Nozha': { base: 30, surcharge: 0 },
-            'El-Salam City': { base: 40, surcharge: 10 },
-            'El-Shorouk City': { base: 40, surcharge: 10 },
-            'El-Tagamoa': { base: 40, surcharge: 10 },
-            'El-Waily': { base: 30, surcharge: 0 },
-            'Hadayek Helwan': { base: 35, surcharge: 5 },
-            'Heliopolis': { base: 30, surcharge: 0 },
-            'Masr El-Gedida': { base: 30, surcharge: 0 },
-            'Zaytoun': { base: 30, surcharge: 0 }
+        governments: {
+            'Cairo': {
+                Delivery: 80,
+                RTO: 70,
+                CashCollection: 70,
+                CRP: 90,
+                Exchange: 95,
+                LightBulky: 180,
+                HeavyBulky: 430
+            },
+            'Alexandria': {
+                Delivery: 85,
+                RTO: 75,
+                CashCollection: 75,
+                CRP: 95,
+                Exchange: 100,
+                LightBulky: 185,
+                HeavyBulky: 480
+            },
+            'Delta-Canal': {
+                Delivery: 91,
+                RTO: 81,
+                CashCollection: 81,
+                CRP: 101,
+                Exchange: 106,
+                LightBulky: 191,
+                HeavyBulky: 540
+            },
+            'Upper-RedSea': {
+                Delivery: 116,
+                RTO: 106,
+                CashCollection: 106,
+                CRP: 126,
+                Exchange: 131,
+                LightBulky: 216,
+                HeavyBulky: 790
+            }
         },
-        orderTypes: {
-            'Deliver': { fee: 0 },
-            'Exchange': { fee: 10 },
-            'Return': { fee: 5 },
-            'Cash Collection': { fee: 15 }
+        governmentCategories: {
+            'Cairo': ['Cairo', 'Giza'],
+            'Alexandria': ['Alexandria', 'Matrouh'],
+            'Delta-Canal': ['Dakahlia', 'Sharqia', 'Qalyubia', 'Kafr El Sheikh', 'Gharbia', 'Monufia', 'Beheira', 'Damietta', 'Port Said', 'Ismailia', 'Suez'],
+            'Upper-RedSea': ['Faiyum', 'Beni Suef', 'Minya', 'Asyut', 'Sohag', 'Qena', 'Luxor', 'Aswan', 'Red Sea', 'New Valley', 'North Sinai', 'South Sinai']
         }
     };
 
     // Function to update fees display
     function updateFees() {
-        console.log('updateFees');
-        const selectedZone = form.querySelector('select[name="zone"]').value;
+        const selectedGovernment = form.querySelector('select[name="government"]').value;
         const selectedOrderType = form.querySelector('input[name="orderType"]:checked')?.value || 'Deliver';
+        const isExpressShipping = form.querySelector('input[name="isExpressShipping"]:checked') !== null;
         
-        const zoneFees = feeConfig.zones[selectedZone] || { base: 0, surcharge: 0 };
-        const orderTypeFee = feeConfig.orderTypes[selectedOrderType]?.fee || 0;
+        // Determine which government category the selected government belongs to
+        let governmentCategory = 'Cairo'; // Default
+        for (const [category, governments] of Object.entries(feeConfig.governmentCategories)) {
+            if (governments.includes(selectedGovernment)) {
+                governmentCategory = category;
+                break;
+            }
+        }
         
-        const totalFee = zoneFees.base + zoneFees.surcharge + orderTypeFee;
+        // Get base fee based on service type and government category
+        let baseFee = 0;
+        
+        if (selectedOrderType === 'Deliver') {
+            baseFee = feeConfig.governments[governmentCategory].Delivery;
+        } else if (selectedOrderType === 'Return') {
+            baseFee = feeConfig.governments[governmentCategory].RTO;
+        } else if (selectedOrderType === 'Exchange') {
+            baseFee = feeConfig.governments[governmentCategory].Exchange;
+        } else if (selectedOrderType === 'Cash Collection') {
+            baseFee = feeConfig.governments[governmentCategory].CashCollection;
+        }
+        
+        // Apply express shipping if selected (doubles the fee)
+        const totalFee = isExpressShipping ? baseFee * 2 : baseFee;
+        
         document.getElementById('totalFee').textContent = totalFee;
+        
+        // Update hidden input for order fees
+        const orderFeesInput = document.getElementById('orderFeesInput');
+        if (!orderFeesInput) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'orderFees';
+            input.id = 'orderFeesInput';
+            input.value = totalFee;
+            form.appendChild(input);
+        } else {
+            orderFeesInput.value = totalFee;
+        }
     }
 
-    // Add event listeners for zone and order type changes
+    // Add event listeners for zone, government, order type, and express shipping changes
     form.querySelector('select[name="zone"]').addEventListener('change', updateFees);
+    form.querySelector('select[name="government"]').addEventListener('change', updateFees);
+    
     orderTypeRadios.forEach(radio => {
-        radio.addEventListener('change', updateFees);
+        radio.addEventListener('change', function() {
+            updateFees();
+            
+            // Show/hide express shipping checkboxes based on order type
+            const expressCheckboxes = document.querySelectorAll('input[name="isExpressShipping"]');
+            expressCheckboxes.forEach(checkbox => {
+                checkbox.checked = false; // Reset when changing order type
+            });
+        });
+    });
+    
+    // Add event listeners for express shipping checkboxes
+    document.querySelectorAll('input[name="isExpressShipping"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Ensure only one express shipping checkbox is checked at a time
+            if (this.checked) {
+                document.querySelectorAll('input[name="isExpressShipping"]').forEach(cb => {
+                    if (cb !== this) cb.checked = false;
+                });
+            }
+            updateFees();
+        });
     });
 
-    // Initial fees calculation
-    updateFees();
+    // Initialize tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltipEl => {
+        new bootstrap.Tooltip(tooltipEl);
+    });
 
     // Function to validate Customer Info tab
     function validateCustomerInfo() {

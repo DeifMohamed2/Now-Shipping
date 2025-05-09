@@ -400,6 +400,28 @@
             <h6 class="mb-0"><%= order.orderShipping.amount %></h6>
           </div>
         </div>
+        <div class="d-flex align-items-center mb-2">
+          <div class="flex-shrink-0">
+            <p class="text-muted mb-0">Order Fees:</p>
+          </div>
+          <div class="flex-grow-1 ms-2">
+            <h6 class="mb-0"><%= order.orderFees %> EGP</h6>
+          </div>
+        </div>
+        <% if (order.orderShipping.isExpressShipping) { %>
+        <div class="d-flex align-items-center mb-2">
+          <div class="flex-shrink-0">
+            <p class="text-muted mb-0">Shipping Type:</p>
+          </div>
+          <div class="flex-grow-1 ms-2">
+            <h6 class="mb-0">
+              <span class="badge bg-success-subtle text-success">
+                <i class="ri-rocket-line me-1"></i> Express Shipping
+              </span>
+            </h6>
+          </div>
+        </div>
+        <% } %>
       </div>
     </div>
 
