@@ -55,11 +55,28 @@ const UserSchema = new mongoose.Schema(
         type: String,
         required: false,
       },
+      coordinates: {
+        type: {
+          lat: {
+            type: Number,
+            required: false,
+          },
+          lng: {
+            type: Number,
+            required: false,
+          }
+        },
+        required: false,
+      },
       country: {
         type: String,
         required: false,
       },
       city: {
+        type: String,
+        required: false,
+      },
+      zone: {
         type: String,
         required: false,
       },

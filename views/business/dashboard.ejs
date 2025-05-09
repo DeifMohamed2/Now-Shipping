@@ -3,6 +3,36 @@
 <link rel="stylesheet" href="/assets/libs/filepond/filepond.min.css" type="text/css" />
 <link rel="stylesheet" href="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
 <style>
+  /* Map styles */
+  #previewMap {
+    border-radius: 0 0.75rem 0.75rem 0;
+  }
+  #map {
+    transition: all 0.3s ease-in-out;
+  }
+  .pac-container {
+    z-index: 1060 !important; /* Higher than modal z-index */
+  }
+  .location-pin {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.7;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
   :root {
     --primary-color: #F39720;
     --secondary-color: #FDB614;
@@ -20,6 +50,10 @@
     color: var(--primary-color);
     border: 2px solid var(--primary-color);
     border-radius: 50%;
+  }
+
+  .text-primary-custom {
+    color: var(--primary-color) !important;
   }
 
   .payment-box {
@@ -102,42 +136,107 @@
   }
 
   .btn-primary-custom {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: #fff;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #fff !important;
+    padding: 0.65rem 1.8rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    box-shadow: 0 4px 8px rgba(243, 151, 32, 0.2) !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
   }
 
   .btn-primary-custom:hover {
-    background-color: var(--secondary-color);
-    border-color: var(--secondary-color);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 10px rgba(243, 151, 32, 0.2);
+    background-color: #ef9517 !important; /* Slightly darker shade for hover */
+    border-color: #E58809 !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 15px rgba(243, 151, 32, 0.35) !important;
   }
 
   .btn-dark-custom {
     background-color: var(--dark-color);
     border-color: var(--dark-color);
     color: #fff;
+    padding: 0.65rem 1.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   .btn-dark-custom:hover {
     background-color: var(--dark-secondary);
     border-color: var(--dark-secondary);
     transform: translateY(-2px);
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
   }
 
   .btn-outline-secondary {
     color: var(--dark-secondary);
     border-color: #ced4da;
+    padding: 0.65rem 1.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
   }
 
   .btn-outline-secondary:hover {
-    background-color: var(--neutral-light);
+    background-color: #f8f9fa;
     color: var(--dark-color);
-    border-color: var(--dark-secondary);
+    border-color: #ced4da;
     transform: translateY(-2px);
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Primary button when active or focused */
+  .btn-primary-custom:active, 
+  .btn-primary-custom:focus {
+    background-color: #E58809 !important;
+    border-color: #E58809 !important;
+    box-shadow: 0 0 0 0.25rem rgba(243, 151, 32, 0.4) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .btn-primary-custom:active {
+    transform: translateY(0) !important;
+  }
+
+  /* Secondary button when active or focused */
+  .btn-outline-secondary:active,
+  .btn-outline-secondary:focus {
+    background-color: #f1f3f5 !important;
+    border-color: #ced4da !important;
+    box-shadow: 0 0 0 0.25rem rgba(85, 85, 85, 0.15) !important;
+  }
+
+  /* Modal footer buttons */
+  .modal-footer .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 4px 8px rgba(243, 151, 32, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .modal-footer .btn-primary:hover {
+    background-color: #E58809;
+    border-color: #E58809;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(243, 151, 32, 0.3);
+  }
+
+  /* Map button enhancement */
+  #openMapBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(243, 151, 32, 0.2);
+  }
+
+  #openMapBtn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 15px rgba(243, 151, 32, 0.35);
   }
 
   /* Upload progress styling */
@@ -214,14 +313,6 @@
   .dashboard-stat-card .avatar-title {
     background-color: var(--neutral-light);
     color: var(--dark-color);
-  }
-
-  .text-primary-custom {
-    color: var(--primary-color) !important;
-  }
-
-  .text-dark-custom {
-    color: var(--dark-color) !important;
   }
 
   .bg-primary-custom {
@@ -336,6 +427,167 @@
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     }
+
+  /* Enhanced Zone Selection Styling */
+  .zone-select-wrapper {
+    position: relative;
+  }
+  
+  .custom-zone-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2.5rem;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    border-color: #e6e6e6;
+  }
+  
+  .custom-zone-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(243, 151, 32, 0.25);
+  }
+  
+  .zone-select-arrow {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    pointer-events: none;
+  }
+  
+  .custom-zone-select option {
+    padding: 10px;
+  }
+  
+  .custom-zone-select optgroup {
+    font-weight: 600;
+    color: var(--dark-color);
+    background-color: #f8f9fa;
+  }
+  
+  /* Custom scrollbar for select dropdown */
+  select::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  select::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  select::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+  }
+  
+  select::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+  }
+  
+  @media (max-width: 768px) {
+    .custom-zone-select {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Custom scrollbar for select dropdown */
+  select::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  select::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  select::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+  }
+  
+  select::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+  }
+  
+  /* Animation and interactive styles */
+  .custom-zone-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2.5rem;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    border-color: #e6e6e6;
+    max-height: 300px;
+  }
+  
+  /* Loading animation */
+  .loading-zones {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='38' height='38' viewBox='0 0 38 38' stroke='%23F39720'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg transform='translate(1 1)' stroke-width='2'%3E%3Ccircle stroke-opacity='.5' cx='18' cy='18' r='18'/%3E%3Cpath d='M36 18c0-9.94-8.06-18-18-18'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 18 18' to='360 18 18' dur='1s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-position: right 10px center;
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+  }
+  
+  /* Highlight effect on update */
+  .zones-updated {
+    animation: highlightZone 1s ease;
+  }
+  
+  @keyframes highlightZone {
+    0% { box-shadow: 0 0 0 0 rgba(243, 151, 32, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(243, 151, 32, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(243, 151, 32, 0); }
+  }
+  
+  /* Focus state styling */
+  .zone-select-wrapper.focused {
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.25);
+  }
+  
+  /* Selected state styling */
+  .zone-select-wrapper.has-value .zone-select-arrow {
+    color: var(--primary-color);
+    transform: translateY(-50%) rotate(180deg);
+  }
+  
+  /* Style for optgroups */
+  .custom-zone-select optgroup {
+    font-weight: 600;
+    color: #333;
+    background-color: #f5f5f5;
+    padding: 8px 5px;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  /* Style for options */
+  .custom-zone-select option {
+    padding: 10px 15px;
+    border-bottom: 1px dotted #f0f0f0;
+    transition: background-color 0.2s;
+  }
+  
+  .custom-zone-select option:hover,
+  .custom-zone-select option:focus {
+    background-color: rgba(243, 151, 32, 0.1) !important;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .custom-zone-select {
+      font-size: 0.875rem;
+    }
+    
+    .zone-select-wrapper .zone-select-arrow {
+      right: 10px;
+      font-size: 1.25rem;
+    }
+  }
 </style>
 
 
@@ -552,89 +804,310 @@
 
                   <!-- Step 3: PickUp Address -->
                   <div class="tab-pane fade" id="v-pills-location" role="tabpanel" aria-labelledby="v-pills-pickUp-tab">
-                    <div>
-                      <h5>Choose Location</h5>
-                      <p class="text-muted">Select your preferred location for receiving orders.</p>
+                    <div class="mb-4">
+                      <h4 class="fw-bold">Pickup Address</h4>
+                      <p class="text-muted">Where should we pick up your packages from?</p>
                     </div>
-                    <div class="mb-3">
-                      <button type="button" class="btn btn-dark-custom" data-bs-toggle="modal" data-bs-target="#locationModal">
-                        Select Location on Map
-                      </button>
+                    
+                    <!-- Map selection card -->
+                    <div class="card shadow-sm border mb-4">
+                      <div class="card-body p-0">
+                        <div class="row g-0">
+                          <div class="col-md-4 bg-light p-4 d-flex flex-column justify-content-center">
+                            <div class="text-center mb-3">
+                              <i class="ri-map-pin-line fs-2 text-primary-custom"></i>
+                            </div>
+                            <h5 class="fw-semibold text-center mb-3">Locate Your Business</h5>
+                            <p class="text-muted mb-4 text-center">Select your exact location on the map for accurate pickups</p>
+                            <button type="button" class="btn btn-primary-custom w-100 d-flex align-items-center justify-content-center" id="openMapBtn" data-bs-toggle="modal" data-bs-target="#locationModal">
+                              <i class="ri-map-pin-2-line me-2"></i> Choose on Map
+                            </button>
+                            <div id="selectedLocation" class="alert alert-light mt-3 text-center" style="display: none;">
+                              <i class="ri-map-pin-fill text-primary-custom me-1"></i> 
+                              <span class="fw-medium"></span>
+                            </div>
+                          </div>
+                          <div class="col-md-8">
+                            <div id="previewMap" style="height: 250px; width: 100%;"></div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                    
                     <div class="row g-3">
-                      <div class="col-md-12">
+                      <div class="col-md-6">
                         <label for="country" class="form-label">Country</label>
                         <select class="form-select" id="country" name="country" required>
                           <option value="" selected disabled>Select Country</option>
                           <option value="egypt">Egypt</option>
                         </select>
                       </div>
-                      <div class="col-md-12">
-                        <label for="region" class="form-label">Region</label>
-                        <select class="form-select" name="city" id="region" required>
-                          <option value="">Select Region...</option>
-                          <option value="Helwan">Helwan</option>
-                          <option value="Nasr City">Nasr City</option>
-                          <option value="6th of October">6th of October</option>
-                          <option value="Shubra">Shubra</option>
-                          <option value="Maadi">Maadi</option>
-                          <option value="Zamalek">Zamalek</option>
-                          <option value="Haram">Haram</option>
-                          <option value="Dokki">Dokki</option>
-                          <option value="Mohandessin">Mohandessin</option>
-                          <option value="New Cairo">New Cairo</option>
-                          <option value="Obour City">Obour City</option>
-                          <option value="Badr City">Badr City</option>
-                          <option value="10th of Ramadan">10th of Ramadan</option>
-                          <option value="Sheikh Zayed">Sheikh Zayed</option>
-                          <option value="Mokattam">Mokattam</option>
-                          <option value="Garden City">Garden City</option>
-                          <option value="Hadayek El-Kobba">Hadayek El-Kobba</option>
-                          <option value="Ain Shams">Ain Shams</option>
-                          <option value="El-Marg">El-Marg</option>
-                          <option value="El-Mataria">El-Mataria</option>
-                          <option value="El-Nozha">El-Nozha</option>
-                          <option value="El-Salam City">El-Salam City</option>
-                          <option value="El-Shorouk City">El-Shorouk City</option>
-                          <option value="El-Tagamoa">El-Tagamoa</option>
-                          <option value="El-Waily">El-Waily</option>
-                          <option value="Hadayek Helwan">Hadayek Helwan</option>
-                          <option value="Heliopolis">Heliopolis</option>
-                          <option value="Masr El-Gedida">Masr El-Gedida</option>
-                          <option value="Zaytoun">Zaytoun</option>
-                          <!-- Add other zones as needed -->
-                        </select>
+                      
+                      <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                          <div class="card-body">
+                            <h5 class="fw-semibold mb-3">Location Details</h5>
+                            
+                            <!-- Location Details Section -->
+                            <div class="row">
+                              <div class="col-md-5">
+                                <label for="region" class="form-label text-muted small fw-medium">Governorate</label>
+                                <select class="form-select form-select-lg mb-3" name="city" id="region" required>
+                                  <option value="">Select Governorate</option>
+                                  <option value="Cairo">Cairo</option>
+                                  <option value="Giza">Giza</option>
+                                  <option value="Alexandria">Alexandria</option>
+                                </select>
+                              </div>
+                              
+                              <div class="col-md-7">
+                                <label for="zone" class="form-label text-muted small fw-medium">Zone</label>
+                                <div class="zone-select-wrapper position-relative">
+                                  <select class="form-select form-select-lg custom-zone-select" name="zone" id="zone" required>
+                                    <option value="">Select Zone</option>
+                                    
+                                    <!-- Cairo zones - Comprehensive list organized by areas -->
+                                    <optgroup label="Cairo - Downtown & Central" class="zone-group" data-city="Cairo">
+                                      <option value="Downtown">Downtown Cairo</option>
+                                      <option value="Garden City">Garden City</option>
+                                      <option value="Zamalek">Zamalek</option>
+                                      <option value="Dokki">Dokki</option>
+                                      <option value="Mohandessin">Mohandessin</option>
+                                      <option value="Agouza">Agouza</option>
+                                      <option value="Bulaq">Bulaq</option>
+                                      <option value="Azbakeya">Azbakeya</option>
+                                      <option value="Abdeen">Abdeen</option>
+                                      <option value="Attaba">Attaba</option>
+                                      <option value="Ramses">Ramses</option>
+                                      <option value="Qasr El Nil">Qasr El Nil</option>
+                                      <option value="Talaat Harb">Talaat Harb</option>
+                                      <option value="Tahrir Square">Tahrir Square</option>
+                                    </optgroup>
+                                    
+                                    <optgroup label="Cairo - East" class="zone-group" data-city="Cairo">
+                                      <option value="Nasr City">Nasr City</option>
+                                      <option value="Nasr City - First Zone">Nasr City - First Zone</option>
+                                      <option value="Nasr City - Second Zone">Nasr City - Second Zone</option>
+                                      <option value="Nasr City - Third Zone">Nasr City - Third Zone</option>
+                                      <option value="Nasr City - Fourth Zone">Nasr City - Fourth Zone</option>
+                                      <option value="Nasr City - Seventh Zone">Nasr City - Seventh Zone</option>
+                                      <option value="Nasr City - Eighth Zone">Nasr City - Eighth Zone</option>
+                                      <option value="Nasr City - Tenth Zone">Nasr City - Tenth Zone</option>
+                                      <option value="Heliopolis">Heliopolis</option>
+                                      <option value="Heliopolis - Korba">Heliopolis - Korba</option>
+                                      <option value="Heliopolis - Triumph">Heliopolis - Triumph</option>
+                                      <option value="Heliopolis - Cleopatra">Heliopolis - Cleopatra</option>
+                                      <option value="Heliopolis - Almaza">Heliopolis - Almaza</option>
+                                      <option value="Masr El Gedida">Masr El Gedida</option>
+                                      <option value="El Nozha">El Nozha</option>
+                                      <option value="El Nozha El Gedida">El Nozha El Gedida</option>
+                                      <option value="El Zeitoun">El Zeitoun</option>
+                                      <option value="Ain Shams">Ain Shams</option>
+                                      <option value="Ain Shams - Ezbet El Nakhl">Ain Shams - Ezbet El Nakhl</option>
+                                      <option value="El Marg">El Marg</option>
+                                      <option value="El Marg El Gedida">El Marg El Gedida</option>
+                                      <option value="El Salam City">El Salam City</option>
+                                      <option value="El Matariya">El Matariya</option>
+                                      <option value="Hadayek El Qobba">Hadayek El Qobba</option>
+                                      <option value="El Waili">El Waili</option>
+                                      <option value="Gesr El Suez">Gesr El Suez</option>
+                                      <option value="Cairo Airport">Cairo Airport</option>
+                                      <option value="Sheraton">Sheraton</option>
+                                      <option value="Sheraton Heliopolis">Sheraton Heliopolis</option>
+                                    </optgroup>
+                                    
+                                    <optgroup label="Cairo - South & New Cairo" class="zone-group" data-city="Cairo">
+                                      <option value="Maadi">Maadi</option>
+                                      <option value="New Cairo">New Cairo</option>
+                                      <option value="Fifth Settlement">Fifth Settlement</option>
+                                      <option value="First Settlement">First Settlement</option>
+                                      <option value="Katameya">Katameya</option>
+                                      <option value="El Mokattam">El Mokattam</option>
+                                      <option value="El Basateen">El Basateen</option>
+                                      <option value="Dar El Salam">Dar El Salam</option>
+                                      <option value="El Rehab">El Rehab</option>
+                                      <option value="El Tagamoa">El Tagamoa</option>
+                                      <option value="El Shorouk">El Shorouk</option>
+                                      <option value="Badr City">Badr City</option>
+                                      <option value="Helwan">Helwan</option>
+                                      <option value="15th of May City">15th of May City</option>
+                                      <option value="Hadayek Helwan">Hadayek Helwan</option>
+                                    </optgroup>
+                                    
+                                    <optgroup label="Cairo - West" class="zone-group" data-city="Cairo">
+                                      <option value="Mohandessin">Mohandessin</option>
+                                      <option value="Dokki">Dokki</option>
+                                      <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
+                                      <option value="Imbaba">Imbaba</option>
+                                      <option value="Agouza">Agouza</option>
+                                      <option value="Warraq">Warraq</option>
+                                      <option value="Rod El Farag">Rod El Farag</option>
+                                      <option value="Shobra">Shobra</option>
+                                      <option value="Shobra El Kheima">Shobra El Kheima</option>
+                                    </optgroup>
+                                    
+                                    <!-- Giza zones - Comprehensive list organized by areas -->
+                                    <optgroup label="Giza - Central & East" class="zone-group" data-city="Giza">
+                                      <option value="Giza Square">Giza Square</option>
+                                      <option value="Dokki">Dokki</option>
+                                      <option value="Mohandessin">Mohandessin</option>
+                                      <option value="Agouza">Agouza</option>
+                                      <option value="Haram">Haram</option>
+                                      <option value="Faisal">Faisal</option>
+                                      <option value="Imbaba">Imbaba</option>
+                                      <option value="Kit Kat">Kit Kat</option>
+                                      <option value="El Manial">El Manial</option>
+                                      <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
+                                      <option value="El Saff">El Saff</option>
+                                      <option value="El Hawamdeya">El Hawamdeya</option>
+                                    </optgroup>
+                                    
+                                    <optgroup label="Giza - West" class="zone-group" data-city="Giza">
+                                      <option value="6th of October">6th of October City</option>
+                                      <option value="Sheikh Zayed">Sheikh Zayed City</option>
+                                      <option value="Smart Village">Smart Village</option>
+                                      <option value="El Moatamadeya">El Moatamadeya</option>
+                                      <option value="Dahshur">Dahshur</option>
+                                      <option value="Kirdasah">Kirdasah</option>
+                                      <option value="Remaya Square">Remaya Square</option>
+                                      <option value="Hadayek El Ahram">Hadayek El Ahram</option>
+                                      <option value="El Wahat Road">El Wahat Road</option>
+                                      <option value="El Mansuriya">El Mansuriya</option>
+                                      <option value="El Haram">El Haram</option>
+                                      <option value="Mariotiya">Mariotiya</option>
+                                      <option value="Abu Rawash">Abu Rawash</option>
+                                    </optgroup>
+                                    
+                                    <!-- Alexandria zones - Comprehensive list organized by areas -->
+                                    <optgroup label="Alexandria - Downtown & East" class="zone-group" data-city="Alexandria">
+                                      <option value="Raml Station">Raml Station</option>
+                                      <option value="Raml Station - Azarita">Raml Station - Azarita</option>
+                                      <option value="Raml Station - Mansheya">Raml Station - Mansheya</option>
+                                      <option value="Sidi Gaber">Sidi Gaber</option>
+                                      <option value="Sidi Gaber - Mostafa Kamel">Sidi Gaber - Mostafa Kamel</option>
+                                      <option value="Sidi Gaber Station">Sidi Gaber Station</option>
+                                      <option value="Cleopatra">Cleopatra</option>
+                                      <option value="Cleopatra - Tram Station">Cleopatra - Tram Station</option>
+                                      <option value="Sporting">Sporting</option>
+                                      <option value="Sporting - El Bostan">Sporting - El Bostan</option>
+                                      <option value="Stanley">Stanley</option>
+                                      <option value="Stanley - El Asafra">Stanley - El Asafra</option>
+                                      <option value="Stanley Bridge">Stanley Bridge</option>
+                                      <option value="San Stefano">San Stefano</option>
+                                      <option value="San Stefano Mall">San Stefano Mall</option>
+                                      <option value="Gleem">Gleem</option>
+                                      <option value="Gleem Bay">Gleem Bay</option>
+                                      <option value="Rushdy">Rushdy</option>
+                                      <option value="Saba Pasha">Saba Pasha</option>
+                                      <option value="Kafr Abdo">Kafr Abdo</option>
+                                      <option value="Camp Caesar">Camp Caesar</option>
+                                      <option value="Smouha">Smouha</option>
+                                      <option value="Victoria">Victoria</option>
+                                      <option value="Bolkly">Bolkly</option>
+                                      <option value="Ibrahimia">Ibrahimia</option>
+                                      <option value="Laurent">Laurent</option>
+                                      <option value="Loran">Loran</option>
+                                    </optgroup>
+                                    
+                                    <optgroup label="Alexandria - Central & West" class="zone-group" data-city="Alexandria">
+                                      <option value="Bahary">Bahary</option>
+                                      <option value="Anfushi">Anfushi</option>
+                                      <option value="Manshiya">Manshiya</option>
+                                      <option value="Attarin">Attarin</option>
+                                      <option value="Gomrok">Gomrok</option>
+                                      <option value="Karmouz">Karmouz</option>
+                                      <option value="Moharam Bek">Moharam Bek</option>
+                                      <option value="Dekhela">Dekhela</option>
+                                      <option value="Agami">Agami</option>
+                                      <option value="Amreya">Amreya</option>
+                                      <option value="Borg El Arab">Borg El Arab</option>
+                                      <option value="King Mariout">King Mariout</option>
+                                      <option value="Wardian">Wardian</option>
+                                      <option value="Bacos">Bacos</option>
+                                    </optgroup>
+                                    
+                                    <optgroup label="Alexandria - East & Montaza" class="zone-group" data-city="Alexandria">
+                                      <option value="Sidi Bishr">Sidi Bishr</option>
+                                      <option value="Miami">Miami</option>
+                                      <option value="Asafra">Asafra</option>
+                                      <option value="Mandara">Mandara</option>
+                                      <option value="Montaza">Montaza</option>
+                                      <option value="Abu Qir">Abu Qir</option>
+                                      <option value="El Maamoura">El Maamoura</option>
+                                      <option value="El Max">El Max</option>
+                                      <option value="Aboukir">Aboukir</option>
+                                      <option value="Semouha">Semouha</option>
+                                      <option value="Fleming">Fleming</option>
+                                      <option value="El Zahria">El Zahria</option>
+                                      <option value="Gianaclis">Gianaclis</option>
+                                    </optgroup>
+                                    
+                                    <optgroup label="Other Regions" class="zone-group" data-city="Other">
+                                      <option value="Other Region">Other Region</option>
+                                    </optgroup>
+                                  </select>
+                                  <div class="zone-select-arrow">
+                                    <i class="ri-arrow-down-s-line"></i>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
+                      
                       <div class="col-md-12">
                         <label for="address-details" class="form-label">Address Details</label>
                         <input type="text" class="form-control" name="adressDetails" id="address-details" placeholder="Street, Building, Floor, Apartment" required>
                       </div>
-                      <div class="col-md-12">
+                      <div class="col-md-6">
                         <label for="landmark" class="form-label">Nearby Landmark (Optional)</label>
                         <input type="text" class="form-control" name="nearbyLandmark" id="landmark" placeholder="e.g. Near the school">
                       </div>
-                      <div class="col-md-12">
+                      <div class="col-md-6">
                         <label for="pickup-phone" class="form-label">Pickup Phone Number</label>
                         <input type="tel" class="form-control" name="pickupPhone" id="pickup-phone" placeholder="e.g. +20 123 456 7890" required>
                       </div>
+                      <!-- Hidden input for storing coordinates -->
+                      <input type="hidden" id="locationCoordinates" name="coordinates">
                     </div>
+                    
+                    <!-- Map Modal with enhanced design -->
                     <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
                       <div class="modal-dialog modal-lg">
                         <div class="modal-content">
-                          <div class="modal-header">
-                            <h5 class="modal-title" id="locationModalLabel">Select Location</h5>
+                          <div class="modal-header bg-light">
+                            <h5 class="modal-title" id="locationModalLabel">
+                              <i class="ri-map-pin-line me-2 text-primary-custom"></i>
+                              Select Your Location
+                            </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                           </div>
-                          <div class="modal-body">
+                          <div class="modal-body p-0">
+                            <div class="p-3 border-bottom">
+                              <div class="input-group">
+                                <input type="text" id="mapSearch" class="form-control" placeholder="Search for a location">
+                                <button type="button" id="searchMapBtn" class="btn btn-primary">
+                                  <i class="ri-search-line"></i>
+                                </button>
+                              </div>
+                            </div>
                             <div id="map" style="width: 100%; height: 400px;"></div>
+                            <div class="p-3 bg-light">
+                              <p class="mb-1 fw-medium">Selected Location:</p>
+                              <p id="selectedLocationText" class="mb-0 text-muted">No location selected</p>
+                            </div>
                           </div>
                           <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary-custom" id="confirmLocation">Confirm Location</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="confirmLocation" disabled>
+                              <i class="ri-check-line me-1"></i> Confirm Location
+                            </button>
                           </div>
                         </div>
                       </div>
                     </div>
+                    
                     <div class="d-flex align-items-start gap-3 mt-4">
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-brand-info-tab">
                         <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Brand Info
@@ -809,7 +1282,7 @@
                       <h5>Your Account Setup is Completed!</h5>
                       <p class="text-muted">You will receive a confirmation email with details of your account setup.</p>
                       <div class="mt-4">
-                        <a href="/dashboard" class="btn btn-primary-custom">Go to Dashboard</a>
+                        <a href="/dashboard" class="btn btn-continue">Go to Dashboard</a>
                       </div>
                     </div>
                   </div>
@@ -1183,10 +1656,11 @@
 
 // Initialize Dashboard Charts if user is completed
 if (document.getElementById('revenue-chart')) {
-  const chartLabels = <%- JSON.stringify(dashboardData?.chartData?.monthlyLabels || []) %>;
-  const revenueData = <%- JSON.stringify(dashboardData?.chartData?.monthlyRevenue || []) %>;
-  const orderCountData = <%- JSON.stringify(dashboardData?.chartData?.monthlyOrderCounts || []) %>;
+  const chartLabels = JSON.parse('<%- JSON.stringify(dashboardData?.chartData?.monthlyLabels || []) %>');
+  const revenueData = JSON.parse('<%- JSON.stringify(dashboardData?.chartData?.monthlyRevenue || []) %>');
+  const orderCountData = JSON.parse('<%- JSON.stringify(dashboardData?.chartData?.monthlyOrderCounts || []) %>');
   
+  // Chart configuration
   const revenueChartOptions = {
     series: [{
       name: 'Revenue',
@@ -1242,7 +1716,7 @@ if (document.getElementById('revenue-chart')) {
 
     // Helper function to check if an element is visible
     function isVisible(el) {
-      return el && el.offsetParent !== null; // Ensures only displayed elements are considered
+      return el && el.offsetParent !== null;
     }
 
     // Helper function to clear all input values inside a container
@@ -1255,7 +1729,7 @@ if (document.getElementById('revenue-chart')) {
         } else {
           input.value = '';
         }
-        input.classList.remove('is-invalid'); // Remove validation errors when clearing
+        input.classList.remove('is-invalid');
       });
     }
 
@@ -1268,7 +1742,7 @@ if (document.getElementById('revenue-chart')) {
 
       requiredElements.forEach((el) => {
         if (!isVisible(el)) {
-          return; // Skip hidden elements
+          return;
         }
 
         if (el.type === 'radio') {
@@ -1282,7 +1756,6 @@ if (document.getElementById('revenue-chart')) {
 
           if (!groupChecked) {
             isValid = false;
-            // Find the parent container for styling
             const parentContainer = el.closest('.row');
             if (parentContainer) {
               parentContainer.querySelectorAll('.card').forEach(card => {
@@ -1290,7 +1763,6 @@ if (document.getElementById('revenue-chart')) {
               });
             }
           } else {
-            // Remove error styling
             const parentContainer = el.closest('.row');
             if (parentContainer) {
               parentContainer.querySelectorAll('.card').forEach(card => {
@@ -1323,31 +1795,6 @@ if (document.getElementById('revenue-chart')) {
       }
     }
 
-    // Function to activate a specific tab
-    function activateTab(tabId) {
-      const tabElement = document.getElementById(tabId);
-      if (!tabElement) return;
-
-      // Get the tab button
-      const tabButton = document.querySelector(`[data-bs-target="#${tabId}"]`);
-      if (!tabButton) return;
-
-      // Remove active class from all tabs and tab panes
-      document.querySelectorAll('.nav-link').forEach(tab => {
-        tab.classList.remove('active');
-        tab.setAttribute('aria-selected', 'false');
-      });
-
-      document.querySelectorAll('.tab-pane').forEach(pane => {
-        pane.classList.remove('show', 'active');
-      });
-
-      // Add active class to the selected tab and tab pane
-      tabButton.classList.add('active');
-      tabButton.setAttribute('aria-selected', 'true');
-      tabElement.classList.add('show', 'active');
-    }
-
     // Initialize form steps
     document.querySelectorAll('.form-steps').forEach((formSteps) => {
       // Handle next tab navigation
@@ -1360,15 +1807,18 @@ if (document.getElementById('revenue-chart')) {
 
           const currentTabId = currentTabPane.getAttribute('id');
 
-          // Validate current step
-          if (!validateCurrentStep(currentTabPane)) {
-            Swal.fire({
-              title: 'Validation Error',
-              text: 'Please complete all required fields before continuing.',
-              icon: 'error',
-              confirmButtonText: 'OK'
-            });
-            return;
+          // Skip validation for already verified steps
+          if (currentTabId !== 'v-pills-bill-info' || !document.querySelector('.fw-bold')?.textContent?.includes('Email Verified')) {
+            // Validate current step
+            if (!validateCurrentStep(currentTabPane)) {
+              Swal.fire({
+                title: 'Validation Error',
+                text: 'Please complete all required fields before continuing.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+              return;
+            }
           }
 
           // Mark current step as done
@@ -1378,14 +1828,14 @@ if (document.getElementById('revenue-chart')) {
           const nextTabId = this.getAttribute('data-nexttab');
           if (!nextTabId) return;
 
-          // Get the actual tab element
+          // Get the actual tab element and trigger click
           const nextTabButton = document.getElementById(nextTabId);
           if (nextTabButton) {
             // Enable the next tab if it was disabled
             nextTabButton.classList.remove('disabled');
             nextTabButton.removeAttribute('disabled');
-
-            // Activate the next tab
+            
+            // Use native click method to activate the tab
             nextTabButton.click();
           }
         });
@@ -1395,13 +1845,13 @@ if (document.getElementById('revenue-chart')) {
       formSteps.querySelectorAll('.previestab').forEach((prevBtn) => {
         prevBtn.addEventListener('click', function(e) {
           e.preventDefault();
-
-          const previousTabId = this.getAttribute('data-previous');
-          if (!previousTabId) return;
-
-          const previousTabButton = document.getElementById(previousTabId);
-          if (previousTabButton) {
-            previousTabButton.click();
+          const prevTabId = this.getAttribute('data-previous');
+          if (!prevTabId) return;
+          
+          // Get the actual tab element and trigger click
+          const prevTabButton = document.getElementById(prevTabId);
+          if (prevTabButton) {
+            prevTabButton.click();
           }
         });
       });
@@ -1674,6 +2124,17 @@ if (document.getElementById('revenue-chart')) {
 
           // Add uploaded photos
           formObject.photosOfBrandType = uploadedPhotos;
+          
+          // Add map location data
+          const locationCoordinates = document.getElementById('locationCoordinates');
+          if (locationCoordinates && locationCoordinates.value) {
+            try {
+              formObject.pickUpPointCoordinates = JSON.parse(locationCoordinates.value);
+              formObject.pickUpPointInMaps = locationCoordinates.getAttribute('data-location-text') || '';
+            } catch (e) {
+              console.error('Error parsing location coordinates:', e);
+            }
+          }
 
           // Send data to server
           const response = await fetch('/business/completionConfirm', {
@@ -1873,3 +2334,9 @@ if (document.getElementById('revenue-chart')) {
     document.getElementById('v-pills-bill-info-tab').click();
   });
 </script>
+
+<!-- Google Maps API for location selection -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBg4oV-yrhIkatEh2fVvzOXmFaDmJ-h7Aw&libraries=places&callback=initMap" async defer></script>
+<script src="/assets/js/map-location.js"></script>
+  </body>
+</html>

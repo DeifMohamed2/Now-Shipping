@@ -351,11 +351,13 @@ const completionConfirm = async (req, res) => {
       nationalId,
       photosOfBrandType,
       taxNumber,
+      pickUpPointCoordinates,
+      pickUpPointInMaps,
+      coordinates,
+      zone
     } = req.body;
 
     console.log(req.userData);
-
-
 
     // ✅ 1. Validate required fields
     if (!brandName || !brandType || !industry || !monthlyOrders || !sellingPoints.length) {
@@ -408,6 +410,18 @@ const completionConfirm = async (req, res) => {
       return res.status(400).json({ error: "Invalid brand type." });
     }
 
+    // Process coordinates - they could be coming from different properties
+    let locationCoords = null;
+    if (pickUpPointCoordinates) {
+      locationCoords = pickUpPointCoordinates;
+    } else if (coordinates && typeof coordinates === 'string') {
+      try {
+        locationCoords = JSON.parse(coordinates);
+      } catch (e) {
+        console.error("Error parsing coordinates:", e);
+      }
+    }
+
     // ✅ 4. Update Existing User
     const updatedUser = await User.findByIdAndUpdate(
       req.userData._id,
@@ -425,6 +439,9 @@ const completionConfirm = async (req, res) => {
           adressDetails,
           nearbyLandmark: nearbyLandmark || '',
           pickupPhone,
+          pickUpPointInMaps: pickUpPointInMaps || '',
+          coordinates: locationCoords,
+          zone  
         },
         paymentMethod: {
           paymentChoice: paymentMethod,
@@ -476,7 +493,7 @@ Please verify your email by clicking the link below:
 
 ${verificationLink}
 
-If you didn’t create this account, you can safely ignore this email.
+If you didn't create this account, you can safely ignore this email.
 
 Regards,  
 The NowShipping Team
@@ -490,10 +507,10 @@ The NowShipping Team
   <div style="text-align: center; margin: 30px 0;">
     <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-size: 16px;">Verify Email</a>
   </div>
-  <p style="font-size: 14px; color: #888;">If the button above doesn’t work, copy and paste this link into your browser:</p>
+  <p style="font-size: 14px; color: #888;">If the button above doesn't work, copy and paste this link into your browser:</p>
   <p style="font-size: 14px; color: #888;">${verificationLink}</p>
   <hr style="margin: 20px 0;">
-  <p style="font-size: 12px; color: #999;">If you didn’t create an account, you can ignore this email.</p>
+  <p style="font-size: 12px; color: #999;">If you didn't create an account, you can ignore this email.</p>
 </div>
     `,
   };
@@ -1419,7 +1436,6 @@ const logOut = (req, res) => {
   res.clearCookie('token');
   res.redirect('/login');
 }
-
 
 module.exports = {
   getDashboardPage,

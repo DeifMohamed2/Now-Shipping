@@ -73,6 +73,4 @@ router.post('/pickup-details/:pickupNumber/rate-pickup', businessController.rate
 
 router.delete('/pickup-details/:pickupNumber/delete-pickup', businessController.deletePickup);
 
-
-
 module.exports = router;
