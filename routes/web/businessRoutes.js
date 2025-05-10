@@ -50,6 +50,9 @@ router.get('/create-order', businessController.get_createOrderPage);
 
 router.post('/submit-order', businessController.submitOrder);
 
+// Add new route for calculating fees
+router.post('/calculate-fees', businessController.calculateOrderFees);
+
 router.post(
   '/orders/print-policy/:orderNumber/:pageSize',
   businessController.printPolicy

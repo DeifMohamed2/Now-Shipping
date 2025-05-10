@@ -132,7 +132,7 @@ const orderSchema = new mongoose.Schema(
       orderType: {
         type: String,
         required: true,
-        enum: ['Deliver', 'Return', 'Exchange', 'CashCollection'],
+        enum: ['Deliver', 'Return', 'Exchange', 'Cash Collection'],
       },
       amountType: {
         type: String,

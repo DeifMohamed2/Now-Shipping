@@ -57,6 +57,10 @@ router.put('/orders/edit-order/:orderId', businessController.editOrder);
 
 router.delete('/orders/delete-order/:orderId', businessController.deleteOrder);
 
+router.post('/calculate-fees', businessController.calculateOrderFees);
+
+
+
 
 
 //pickups

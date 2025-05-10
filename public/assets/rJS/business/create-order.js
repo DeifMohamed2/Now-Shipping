@@ -50,7 +50,6 @@ function setupCounter(buttonId, inputId, increment = true) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Invalid Value',
-                    text: 'Number of items cannot be zero or negative.',
                 });
             }
         }
@@ -86,6 +85,47 @@ setupNumberValidation('shipping-count');
 setupNumberValidation('exchange-current-count');
 setupNumberValidation('exchange-new-count');
 
+// Filter zones based on selected government
+function filterZonesByGovernment(governmentSelect, zoneSelect) {
+    // Get the selected government
+    const selectedGovernment = governmentSelect.value;
+    
+    // Clear the zone select dropdown first
+    zoneSelect.innerHTML = '<option value="">Select Area</option>';
+    
+    // If no government is selected, just leave the empty dropdown
+    if (!selectedGovernment) {
+        return;
+    }
+    
+    // Get all optgroups from the dropdown
+    const sourceElement = document.createElement('select');
+    sourceElement.style.display = 'none';
+    sourceElement.innerHTML = document.getElementById('zone-options-template').innerHTML;
+    document.body.appendChild(sourceElement);
+    
+    // Add only relevant optgroups and options based on selected government
+    if (selectedGovernment === 'Cairo') {
+        // Add only Cairo zones
+        sourceElement.querySelectorAll('optgroup[label^="Cairo"]').forEach(optgroup => {
+            zoneSelect.appendChild(optgroup.cloneNode(true));
+        });
+    } else if (selectedGovernment === 'Giza') {
+        // Add only Giza zones
+        sourceElement.querySelectorAll('optgroup[label^="Giza"]').forEach(optgroup => {
+            zoneSelect.appendChild(optgroup.cloneNode(true));
+        });
+    } else if (selectedGovernment === 'Alexandria') {
+        // Add only Alexandria zones
+        sourceElement.querySelectorAll('optgroup[label^="Alexandria"]').forEach(optgroup => {
+            zoneSelect.appendChild(optgroup.cloneNode(true));
+        });
+    }
+    
+    // Clean up the temporary element
+    document.body.removeChild(sourceElement);
+}
+
 // Handle form submission
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('createOrderForm');
@@ -94,99 +134,71 @@ document.addEventListener('DOMContentLoaded', function () {
     const exchangeSection = document.getElementById('exchange-section');
     const cashCollectionSection = document.getElementById('cash-collection-section');
     const completeOrderBTN = document.getElementById('completeOrderBTN');
+    const feeDisplay = document.getElementById('totalFee');
+    const feeDisplayContainer = document.getElementById('feeDisplayContainer');
+    
+    // Setup government and zone filtering
+    const governmentSelect = form.querySelector('select[name="government"]');
+    const zoneSelect = form.querySelector('select[name="zone"]');
+    
+    if (governmentSelect && zoneSelect) {
+        // Initialize filtering on page load - only when government is already selected
+        if (governmentSelect.value) {
+            filterZonesByGovernment(governmentSelect, zoneSelect);
+        }
+        
+        // Add change event listener to government dropdown
+        governmentSelect.addEventListener('change', function() {
+            filterZonesByGovernment(governmentSelect, zoneSelect);
+            updateFees(); // Recalculate fees when government changes
+        });
+    }
 
-    // Fee calculation configuration
-    const feeConfig = {
-        governments: {
-            'Cairo': {
-                Delivery: 80,
-                RTO: 70,
-                CashCollection: 70,
-                CRP: 90,
-                Exchange: 95,
-                LightBulky: 180,
-                HeavyBulky: 430
-            },
-            'Alexandria': {
-                Delivery: 85,
-                RTO: 75,
-                CashCollection: 75,
-                CRP: 95,
-                Exchange: 100,
-                LightBulky: 185,
-                HeavyBulky: 480
-            },
-            'Delta-Canal': {
-                Delivery: 91,
-                RTO: 81,
-                CashCollection: 81,
-                CRP: 101,
-                Exchange: 106,
-                LightBulky: 191,
-                HeavyBulky: 540
-            },
-            'Upper-RedSea': {
-                Delivery: 116,
-                RTO: 106,
-                CashCollection: 106,
-                CRP: 126,
-                Exchange: 131,
-                LightBulky: 216,
-                HeavyBulky: 790
+    // Function to update fees by calling server API
+    async function updateFees() {
+        try {
+            const selectedGovernment = form.querySelector('select[name="government"]').value;
+            if (!selectedGovernment) {
+                feeDisplay.textContent = '0';
+                return;
             }
-        },
-        governmentCategories: {
-            'Cairo': ['Cairo', 'Giza'],
-            'Alexandria': ['Alexandria', 'Matrouh'],
-            'Delta-Canal': ['Dakahlia', 'Sharqia', 'Qalyubia', 'Kafr El Sheikh', 'Gharbia', 'Monufia', 'Beheira', 'Damietta', 'Port Said', 'Ismailia', 'Suez'],
-            'Upper-RedSea': ['Faiyum', 'Beni Suef', 'Minya', 'Asyut', 'Sohag', 'Qena', 'Luxor', 'Aswan', 'Red Sea', 'New Valley', 'North Sinai', 'South Sinai']
-        }
-    };
-
-    // Function to update fees display
-    function updateFees() {
-        const selectedGovernment = form.querySelector('select[name="government"]').value;
-        const selectedOrderType = form.querySelector('input[name="orderType"]:checked')?.value || 'Deliver';
-        const isExpressShipping = form.querySelector('input[name="isExpressShipping"]:checked') !== null;
-        
-        // Determine which government category the selected government belongs to
-        let governmentCategory = 'Cairo'; // Default
-        for (const [category, governments] of Object.entries(feeConfig.governmentCategories)) {
-            if (governments.includes(selectedGovernment)) {
-                governmentCategory = category;
-                break;
+            
+            // Show loading indicator
+            if (feeDisplayContainer) {
+                feeDisplayContainer.classList.add('loading');
             }
-        }
-        
-        // Get base fee based on service type and government category
-        let baseFee = 0;
-        
-        if (selectedOrderType === 'Deliver') {
-            baseFee = feeConfig.governments[governmentCategory].Delivery;
-        } else if (selectedOrderType === 'Return') {
-            baseFee = feeConfig.governments[governmentCategory].RTO;
-        } else if (selectedOrderType === 'Exchange') {
-            baseFee = feeConfig.governments[governmentCategory].Exchange;
-        } else if (selectedOrderType === 'Cash Collection') {
-            baseFee = feeConfig.governments[governmentCategory].CashCollection;
-        }
-        
-        // Apply express shipping if selected (doubles the fee)
-        const totalFee = isExpressShipping ? baseFee * 2 : baseFee;
-        
-        document.getElementById('totalFee').textContent = totalFee;
-        
-        // Update hidden input for order fees
-        const orderFeesInput = document.getElementById('orderFeesInput');
-        if (!orderFeesInput) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'orderFees';
-            input.id = 'orderFeesInput';
-            input.value = totalFee;
-            form.appendChild(input);
-        } else {
-            orderFeesInput.value = totalFee;
+            
+            const selectedOrderType = form.querySelector('input[name="orderType"]:checked')?.value || 'Deliver';
+            const isExpressShipping = form.querySelector('input[name="isExpressShipping"]:checked') !== null;
+            
+            const response = await fetch('/business/calculate-fees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    government: selectedGovernment,
+                    orderType: selectedOrderType,
+                    isExpressShipping: isExpressShipping
+                }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                feeDisplay.textContent = data.fee;
+            } else {
+                console.error('Error calculating fees:', data.error);
+                feeDisplay.textContent = '0';
+            }
+        } catch (error) {
+            console.error('Error calculating fees:', error);
+            feeDisplay.textContent = '0';
+        } finally {
+            // Hide loading indicator
+            if (feeDisplayContainer) {
+                feeDisplayContainer.classList.remove('loading');
+            }
         }
     }
 
@@ -196,13 +208,14 @@ document.addEventListener('DOMContentLoaded', function () {
     
     orderTypeRadios.forEach(radio => {
         radio.addEventListener('change', function() {
-            updateFees();
-            
             // Show/hide express shipping checkboxes based on order type
             const expressCheckboxes = document.querySelectorAll('input[name="isExpressShipping"]');
             expressCheckboxes.forEach(checkbox => {
                 checkbox.checked = false; // Reset when changing order type
             });
+            
+            // Recalculate fees when order type changes
+            updateFees();
         });
     });
     
@@ -215,6 +228,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (cb !== this) cb.checked = false;
                 });
             }
+            
+            // Recalculate fees when express shipping option changes
             updateFees();
         });
     });
@@ -371,4 +386,7 @@ document.addEventListener('DOMContentLoaded', function () {
             cashCollectionSection.style.display = this.id === 'paymentMethod04' ? 'block' : 'none';
         });
     });
+    
+    // Initialize fees calculation
+    updateFees();
 });

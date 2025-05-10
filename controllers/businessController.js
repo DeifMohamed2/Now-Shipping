@@ -416,7 +416,14 @@ const completionConfirm = async (req, res) => {
       locationCoords = pickUpPointCoordinates;
     } else if (coordinates && typeof coordinates === 'string') {
       try {
-        locationCoords = JSON.parse(coordinates);
+     
+        const coordParts = coordinates.split(',');
+        if (coordParts.length === 2) {
+          locationCoords = {
+            lat: parseFloat(coordParts[0]),
+            lng: parseFloat(coordParts[1])
+          };
+        }
       } catch (e) {
         console.error("Error parsing coordinates:", e);
       }
@@ -597,7 +604,7 @@ const submitOrder = async (req, res) => {
     fullName,
     phoneNumber,
     address,
-    government ,
+    government,
     zone,
     orderType,
     productDescription,
@@ -614,8 +621,7 @@ const submitOrder = async (req, res) => {
     previewPermission,
     referralNumber,
     Notes,
-    isExpressShipping,
-    orderFees
+    isExpressShipping
   } = req.body;
   try {
     console.log(req.body);
@@ -634,27 +640,39 @@ const submitOrder = async (req, res) => {
       .json({ error: 'All customer info fields are required.' });
   }
 
-  // ✅ 2. Validate Shipping Info tab based on order type
-  console.log(orderType);
-  if (orderType === "Deliver" || orderType === "Return") {
+  // ✅ 2. Validate product fields based on order type
+  if (orderType === 'Deliver' || orderType === 'Return') {
     if (!productDescription || !numberOfItems) {
-      return res.status(400).json({ error: "All fields in the Deliver section are required." });
+      return res
+        .status(400)
+        .json({
+          error: `${orderType} orders require product description and number of items.`,
+        });
     }
-  }
-  if (orderType === "Exchange") {
-    if (!currentPD || !numberOfItemsCurrentPD || !newPD || !numberOfItemsNewPD) {
-      return res.status(400).json({ error: "All fields in the Exchange section are required." });
+  } else if (orderType === 'Exchange') {
+    if (
+      !currentPD ||
+      !numberOfItemsCurrentPD ||
+      !newPD ||
+      !numberOfItemsNewPD
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: 'Exchange orders require current and new product details.',
+        });
     }
-  }
-
-  if (orderType === "Cash Collection") {
+  } else if (orderType === 'Cash Collection') {
     if (!amountCashCollection) {
-      return res.status(400).json({ error: "All fields in the Cash Collection section are required." });
+      return res
+        .status(400)
+        .json({ error: 'Cash collection amount is required.' });
     }
   }
 
-  // Get the shipping fee (either from the frontend or calculate it here)
-  const calculatedOrderFees = orderFees ? Number(orderFees) : 120; // Default fee if not provided
+  // ✅ 3. Calculate order fees using server-side calculator
+  const expressShippingValue = isExpressShipping === 'on' || isExpressShipping === true;
+  const orderFees = calculateFees(government, orderType, expressShippingValue);
 
   // ✅ 3. Create Order
   const newOrder = new Order({
@@ -663,7 +681,7 @@ const submitOrder = async (req, res) => {
     }`,
     orderDate: new Date(),
     orderStatus: 'new',
-    orderFees: calculatedOrderFees,
+    orderFees: orderFees,
     orderCustomer: {
       fullName,
       phoneNumber,
@@ -774,61 +792,64 @@ const editOrder = async (req, res) => {
     previewPermission,
     referralNumber,
     Notes,
-    isExpressShipping,
-    orderFees
+    isExpressShipping
   } = req.body;
 
   try {
-
-    console.log(amountCOD, amountCashCollection);
-
-    // ✅ 1. Validate required fields
-    if (
-      !fullName ||
-      !phoneNumber ||
-      !address ||
-      !government ||
-      !zone ||
-      !orderType
-    ) {
-      return res
-        .status(400)
-        .json({ error: 'All customer info fields are required.' });
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
     }
 
-
-    // ✅ 2. Validate Shipping Info tab based on order type
-    if (orderType === "Deliver") {
- 
-      if (!productDescription || !numberOfItems) {
-        return res.status(400).json({ error: "All fields in the Deliver section are required." });
-      }
-    }
-    if (orderType === "Exchange") {
-      if (!currentPD || !numberOfItemsCurrentPD || !newPD || !numberOfItemsNewPD) {
-        return res.status(400).json({ error: "All fields in the Exchange section are required." });
-      }
+    // Verify the order belongs to the user's business
+    if (order.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'You do not have permission to edit this order' });
     }
 
-    if (orderType === "Return") {
-      if (!CashDifference || !amountCashDifference) {
-        return res.status(400).json({ error: "All fields in the Cash Difference section are required." });
-      }
+    // Use existing order type if not provided in form (since radio buttons are disabled in form)
+    const updatedOrderType = orderType || order.orderShipping.orderType;
 
+    // Validate required fields
+    if (!fullName || !phoneNumber || !address || !government || !zone) {
+      return res.status(400).json({ error: 'All customer info fields are required' });
     }
 
-    if (orderType === "Cash Collection") {
-     
-      if (!amountCashCollection) {
-        return res.status(400).json({ error: "All fields in the Cash Collection section are required." });
-      }
+    // Check if order was created more than 6 hours ago
+    const orderCreationTime = new Date(order.createdAt).getTime();
+    const currentTime = new Date().getTime();
+    const sixHoursInMs = 6 * 60 * 60 * 1000;
+    const isOrderOlderThanSixHours = (currentTime - orderCreationTime) > sixHoursInMs;
+    
+    // Convert isExpressShipping to boolean for comparison
+    const requestedExpressShipping = isExpressShipping === true || isExpressShipping === 'true' || isExpressShipping === 'on';
+    const currentExpressShipping = order.orderShipping.isExpressShipping;
+
+    // Check if user is trying to change express shipping on an old order
+    if (isOrderOlderThanSixHours && requestedExpressShipping !== currentExpressShipping) {
+      return res.status(403).json({ 
+        error: 'Express shipping option cannot be changed for orders older than 6 hours.',
+        orderAge: 'old'
+      });
     }
-      console.log(amountCOD, amountCashDifference, amountCashCollection);
 
-    let amountFromConditons = 0 
+    // Calculate fees based on updated information
+    const expressShippingValue = requestedExpressShipping;
+    const orderFees = calculateFees(government, updatedOrderType, expressShippingValue);
 
-    if(!COD||!CashDifference||!amountCashCollection){
-      amountFromConditons = amountCOD || amountCashDifference || amountCashCollection ;
+    // Determine the amount value based on order type
+    let amountFromConditions = 0;
+    let amountType = 'NA';
+    
+    if (COD === 'on' || COD === true) {
+      amountType = 'COD';
+      amountFromConditions = parseFloat(amountCOD) || 0;
+    } else if (CashDifference === 'on' || CashDifference === true) {
+      amountType = 'CD';
+      amountFromConditions = parseFloat(amountCashDifference) || 0;
+    } else if (amountCashCollection) {
+      amountType = 'CC';
+      amountFromConditions = parseFloat(amountCashCollection) || 0;
     }
 
     // Get the shipping fee (either from the frontend or calculate it here)
@@ -851,10 +872,10 @@ const editOrder = async (req, res) => {
         numberOfItems: numberOfItems || numberOfItemsCurrentPD || 0,
         productDescriptionReplacement: newPD || '',
         numberOfItemsReplacement: numberOfItemsNewPD || 0,
-        orderType: orderType,
-        amountType: COD ? 'COD' : CashDifference ? 'CD' : amountCashCollection ? 'CC' : 'NA',
-        amount: amountFromConditons,
-        isExpressShipping: isExpressShipping === 'on' || isExpressShipping === true,
+        orderType: updatedOrderType,
+        amountType: amountType,
+        amount: amountFromConditions,
+        isExpressShipping: expressShippingValue,
       },
       isOrderAvailableForPreview: previewPermission === 'on',
       orderNotes: Notes || '',
@@ -1450,8 +1471,106 @@ const logOut = (req, res) => {
   res.redirect('/login');
 }
 
+const calculateFees = (government, orderType, isExpressShipping) => {
+  // Define fee configuration
+  const feeConfig = {
+    governments: {
+      'Cairo': {
+        Deliver: 80,
+        Return: 70,
+        CashCollection: 70,
+        Exchange: 95,
+      },
+      'Alexandria': {
+        Deliver: 85,
+        Return: 75,
+        CashCollection: 75,
+        Exchange: 100,
+      },
+      'Delta-Canal': {
+        Deliver: 91,
+        Return: 81,
+        CashCollection: 81,
+        Exchange: 106,
+      },
+      'Upper-RedSea': {
+        Deliver: 116,
+        Return: 106,
+        CashCollection: 106,
+        Exchange: 131,
+      }
+    },
+    governmentCategories: {
+      'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
+      'Alexandria': ['Alexandria', 'Beheira', 'Matrouh'],
+      'Delta-Canal': [
+        'Dakahlia', 'Sharqia', 'Monufia', 'Gharbia', 
+        'Kafr el-Sheikh', 'Damietta', 'Port Said', 'Ismailia', 'Suez'
+      ],
+      'Upper-RedSea': [
+        'Fayoum', 'Beni Suef', 'Minya', 'Asyut', 
+        'Sohag', 'Qena', 'Luxor', 'Aswan', 'Red Sea', 
+        'North Sinai', 'South Sinai', 'New Valley'
+      ]
+    }
+  };
+
+  // Find the category for the government
+  let category = 'Cairo'; // Default
+  for (const [cat, govs] of Object.entries(feeConfig.governmentCategories)) {
+    if (govs.includes(government)) {
+      category = cat;
+      break;
+    }
+  }
+
+  // Get base fee from config
+  let fee = feeConfig.governments[category][orderType] || 0;
+
+  // Apply express shipping multiplier if needed
+  if (isExpressShipping) {
+    fee *= 2;
+  }
+
+  return fee;
+};
+
+// Helper function to generate a unique order number
+const generateOrderNumber = () => {
+  // Generate a 6-digit number
+  const randomPart = Math.floor(100000 + Math.random() * 900000);
+  // Add a timestamp component for uniqueness (last 4 digits of current timestamp)
+  const timestampPart = Date.now().toString().slice(-4);
+  return `${randomPart}${timestampPart}`;
+};
+
+const calculateOrderFees = async (req, res) => {
+  try {
+    const { government, orderType, isExpressShipping } = req.body;
+
+    // Validate inputs
+    if (!government || !orderType) {
+      return res.status(400).json({ error: 'Government and orderType are required' });
+    }
+
+    // Calculate the fee
+    const fee = calculateFees(
+      government, 
+      orderType, 
+      isExpressShipping === 'true' || isExpressShipping === true
+    );
+
+    // Return the calculated fee
+    return res.json({ fee });
+  } catch (error) {
+    console.error('Error calculating fees:', error);
+    return res.status(500).json({ error: 'An error occurred while calculating fees' });
+  }
+};
+
 module.exports = {
   getDashboardPage,
+  getDashboardData,
   completionConfirm,
   requestVerification,
 
@@ -1490,6 +1609,5 @@ module.exports = {
 
   logOut,
 
-  // For API
-  getDashboardData,
+  calculateOrderFees,
 };

@@ -42,6 +42,10 @@ const faqPage = (req, res) => {
   res.render('landing/faq', { title: 'Home', layout: 'layouts/layout-without-nav' });
 };
 
+const privacyPolicyPage = (req, res) => {
+  res.render('landing/privacy-policy', { title: 'Privacy Policy', layout: 'layouts/layout-without-nav' });
+};
+
 
 //================================================= Authentication =========================================================
 
@@ -550,7 +554,7 @@ module.exports = {
   pricingPage,
   aboutusPage,
   faqPage,
-
+  privacyPolicyPage,
   //Auth
   loginPage,
   adminLogin,

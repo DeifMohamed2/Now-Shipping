@@ -202,6 +202,7 @@
     border-radius: 12px;
     padding: 1.5rem;
     text-align: center;
+    position: relative;
   }
 
   .fee-amount {
@@ -219,6 +220,24 @@
   .fee-label {
     color: var(--text-light);
     font-size: 0.9rem;
+  }
+  
+  /* Loading styles */
+  .loading-spinner {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .loading .loading-spinner {
+    display: block;
+  }
+  
+  .loading .fee-amount,
+  .loading .fee-currency {
+    opacity: 0.3;
   }
 
   /* Completion Screen */
@@ -260,6 +279,43 @@
     padding-right: 2.5rem;
   }
 
+  .zone-select-wrapper {
+    position: relative;
+  }
+
+  .zone-select-arrow {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .zone-select-arrow i {
+    color: var(--text-medium);
+  }
+
+  /* Loading styles for fee display */
+  .fee-display {
+    position: relative;
+  }
+
+  .loading-spinner {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .loading .loading-spinner {
+    display: block;
+  }
+
+  .loading .fee-amount,
+  .loading .fee-currency {
+    opacity: 0.3;
+  }
 
 </style>
 
@@ -320,87 +376,43 @@
                     </div>
                   </div>
                 </div>
-                <div class="row g-4">
-                  <div class="mb-3 col-md-6">
-                    <label for="billinginfo-address" class="form-label">Address</label>
-                    <textarea class="form-control" name="address" id="billinginfo-address" placeholder="Enter complete address" rows="3"></textarea>
+                <div class="row g-3">
+                  <div class="col-md-12">
+                    <h5 class="section-title mb-3">Location Details</h5>
                   </div>
-                  <div class="col-md-6">
-                    <div class="row g-3">
-                      <div class="mb-3 col-md-6">
-                        <label for="state" class="form-label">Government</label>
-                        <div class="select-container">
-                          <select class="form-select" id="state" name="government" data-plugin="choices">
-                            <option value="">Select Government</option>
-                            <option value="Cairo">Cairo</option>
-                            <option value="Alexandria">Alexandria</option>
-                            <option value="Giza">Giza</option>
-                            <option value="Luxor">Luxor</option>
-                            <option value="Aswan">Aswan</option>
-                            <option value="Suez">Suez</option>
-                            <option value="Port Said">Port Said</option>
-                            <option value="Ismailia">Ismailia</option>
-                            <option value="Faiyum">Faiyum</option>
-                            <option value="Sharqia">Sharqia</option>
-                            <option value="Dakahlia">Dakahlia</option>
-                            <option value="Qalyubia">Qalyubia</option>
-                            <option value="Gharbia">Gharbia</option>
-                            <option value="Monufia">Monufia</option>
-                            <option value="Beheira">Beheira</option>
-                            <option value="Kafr El Sheikh">Kafr El Sheikh</option>
-                            <option value="Beni Suef">Beni Suef</option>
-                            <option value="Minya">Minya</option>
-                            <option value="Assiut">Assiut</option>
-                            <option value="Sohag">Sohag</option>
-                            <option value="Qena">Qena</option>
-                            <option value="Red Sea">Red Sea</option>
-                            <option value="New Valley">New Valley</option>
-                            <option value="Matruh">Matruh</option>
-                            <option value="North Sinai">North Sinai</option>
-                            <option value="South Sinai">South Sinai</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div class="mb-3 col-md-6">
-                        <label for="zone" class="form-label">Area/Zone</label>
-                        <div class="select-container">
-                          <select class="form-select" name="zone" id="zone" data-plugin="choices">
-                            <option value="">Select Area</option>
-                            <option value="Helwan">Helwan</option>
-                            <option value="Nasr City">Nasr City</option>
-                            <option value="6th of October">6th of October</option>
-                            <option value="Shubra">Shubra</option>
-                            <option value="Maadi">Maadi</option>
-                            <option value="Zamalek">Zamalek</option>
-                            <option value="Haram">Haram</option>
-                            <option value="Dokki">Dokki</option>
-                            <option value="Mohandessin">Mohandessin</option>
-                            <option value="New Cairo">New Cairo</option>
-                            <option value="Obour City">Obour City</option>
-                            <option value="Badr City">Badr City</option>
-                            <option value="10th of Ramadan">10th of Ramadan</option>
-                            <option value="Sheikh Zayed">Sheikh Zayed</option>
-                            <option value="Mokattam">Mokattam</option>
-                            <option value="Garden City">Garden City</option>
-                            <option value="Hadayek El-Kobba">Hadayek El-Kobba</option>
-                            <option value="Ain Shams">Ain Shams</option>
-                            <option value="El-Marg">El-Marg</option>
-                            <option value="El-Mataria">El-Mataria</option>
-                            <option value="El-Nozha">El-Nozha</option>
-                            <option value="El-Salam City">El-Salam City</option>
-                            <option value="El-Shorouk City">El-Shorouk City</option>
-                            <option value="El-Tagamoa">El-Tagamoa</option>
-                            <option value="El-Waily">El-Waily</option>
-                            <option value="Hadayek Helwan">Hadayek Helwan</option>
-                            <option value="Heliopolis">Heliopolis</option>
-                            <option value="Masr El-Gedida">Masr El-Gedida</option>
-                            <option value="Zaytoun">Zaytoun</option>
-                          </select>
-                        </div>
+
+                  <div class="mb-3 col-md-6">
+                    <label for="state" class="form-label">Government</label>
+                    <div class="select-container">
+                      <select class="form-select" id="state" name="government" data-plugin="choices">
+                        <option value="">Select Government</option>
+                        <option value="Cairo">Cairo</option>
+                        <option value="Giza">Giza</option>
+                        <option value="Alexandria">Alexandria</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="mb-3 col-md-6">
+                    <label for="zone" class="form-label">Area</label>
+                    <div class="zone-select-wrapper">
+                      <select class="form-select custom-zone-select" name="zone" id="zone" data-plugin="choices">
+                        <option value="">Select Area</option>
+                      </select>
+                      <div class="zone-select-arrow">
+                        <i class="ri-arrow-down-s-line"></i>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                <div class="row g-3">
+                  <div class="col-md-12">
+                    <label for="address" class="form-label">Address</label>
+                    <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter full address"></textarea>
+                  </div>
+                </div>
+
                 <div class="d-flex align-items-start gap-3 mt-4">
                   <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-bill-address-tab">
                     <i class="ri-truck-line label-icon align-middle fs-16 ms-2"></i>Continue to Shipping
@@ -632,10 +644,15 @@
                   <h6 class="mb-0">Delivery Fee Summary</h6>
                 </div>
                 <div class="card-body">
-                  <div class="fee-display">
+                  <div class="fee-display" id="feeDisplayContainer">
                     <span class="fee-amount" id="totalFee">0</span>
                     <span class="fee-currency"> EGP</span>
                     <p class="fee-label mt-2">Total Delivery Fee</p>
+                    <div class="loading-spinner">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -670,72 +687,149 @@
 
 <%- contentFor('FooterJs') %>
 
+<!-- Hidden template for zone options -->
+<script type="text/template" id="zone-options-template">
+  <!-- Cairo zones -->
+  <optgroup label="Cairo - Downtown & Central">
+    <option value="Downtown">Downtown Cairo</option>
+    <option value="Garden City">Garden City</option>
+    <option value="Zamalek">Zamalek</option>
+    <option value="Dokki">Dokki</option>
+    <option value="Mohandessin">Mohandessin</option>
+    <option value="Agouza">Agouza</option>
+    <option value="Bulaq">Bulaq</option>
+    <option value="Azbakeya">Azbakeya</option>
+    <option value="Abdeen">Abdeen</option>
+    <option value="Attaba">Attaba</option>
+    <option value="Ramses">Ramses</option>
+    <option value="Qasr El Nil">Qasr El Nil</option>
+    <option value="Talaat Harb">Talaat Harb</option>
+    <option value="Tahrir Square">Tahrir Square</option>
+  </optgroup>
+  <optgroup label="Cairo - East">
+    <option value="Nasr City">Nasr City</option>
+    <option value="Nasr City - First Zone">Nasr City - First Zone</option>
+    <option value="Nasr City - Second Zone">Nasr City - Second Zone</option>
+    <option value="Nasr City - Third Zone">Nasr City - Third Zone</option>
+    <option value="Nasr City - Fourth Zone">Nasr City - Fourth Zone</option>
+    <option value="Nasr City - Seventh Zone">Nasr City - Seventh Zone</option>
+    <option value="Nasr City - Eighth Zone">Nasr City - Eighth Zone</option>
+    <option value="Nasr City - Tenth Zone">Nasr City - Tenth Zone</option>
+    <option value="Heliopolis">Heliopolis</option>
+    <option value="Heliopolis - Korba">Heliopolis - Korba</option>
+    <option value="Heliopolis - Triumph">Heliopolis - Triumph</option>
+    <option value="Heliopolis - Cleopatra">Heliopolis - Cleopatra</option>
+    <option value="Heliopolis - Almaza">Heliopolis - Almaza</option>
+    <option value="Masr El Gedida">Masr El Gedida</option>
+    <option value="El Nozha">El Nozha</option>
+    <option value="El Nozha El Gedida">El Nozha El Gedida</option>
+    <option value="El Zeitoun">El Zeitoun</option>
+    <option value="Ain Shams">Ain Shams</option>
+    <option value="Ain Shams - Ezbet El Nakhl">Ain Shams - Ezbet El Nakhl</option>
+    <option value="El Marg">El Marg</option>
+    <option value="El Marg El Gedida">El Marg El Gedida</option>
+  </optgroup>
+  <optgroup label="Cairo - South & New Cairo">
+    <option value="Maadi">Maadi</option>
+    <option value="New Cairo">New Cairo</option>
+    <option value="Fifth Settlement">Fifth Settlement</option>
+    <option value="First Settlement">First Settlement</option>
+    <option value="Katameya">Katameya</option>
+    <option value="El Mokattam">El Mokattam</option>
+    <option value="El Basateen">El Basateen</option>
+    <option value="Dar El Salam">Dar El Salam</option>
+    <option value="El Rehab">El Rehab</option>
+    <option value="El Tagamoa">El Tagamoa</option>
+    <option value="El Shorouk">El Shorouk</option>
+    <option value="Badr City">Badr City</option>
+    <option value="Helwan">Helwan</option>
+    <option value="15th of May City">15th of May City</option>
+    <option value="Hadayek Helwan">Hadayek Helwan</option>
+  </optgroup>
+  <optgroup label="Cairo - West">
+    <option value="Mohandessin">Mohandessin</option>
+    <option value="Dokki">Dokki</option>
+    <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
+    <option value="Imbaba">Imbaba</option>
+    <option value="Agouza">Agouza</option>
+    <option value="Warraq">Warraq</option>
+    <option value="Rod El Farag">Rod El Farag</option>
+    <option value="Shobra">Shobra</option>
+    <option value="Shobra El Kheima">Shobra El Kheima</option>
+  </optgroup>
+  
+  <!-- Giza zones -->
+  <optgroup label="Giza - Central & East">
+    <option value="Giza Square">Giza Square</option>
+    <option value="Dokki">Dokki</option>
+    <option value="Mohandessin">Mohandessin</option>
+    <option value="Agouza">Agouza</option>
+    <option value="Haram">Haram</option>
+    <option value="Faisal">Faisal</option>
+    <option value="Imbaba">Imbaba</option>
+    <option value="Kit Kat">Kit Kat</option>
+    <option value="El Manial">El Manial</option>
+    <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
+    <option value="El Saff">El Saff</option>
+    <option value="El Hawamdeya">El Hawamdeya</option>
+  </optgroup>
+  <optgroup label="Giza - West & 6th October">
+    <option value="Sheikh Zayed">Sheikh Zayed</option>
+    <option value="6th of October">6th of October</option>
+    <option value="Hadayek Al Ahram">Hadayek Al Ahram</option>
+    <option value="Al Wahat Road">Al Wahat Road</option>
+    <option value="Smart Village">Smart Village</option>
+    <option value="Egyptian Media Production City">Egyptian Media Production City</option>
+  </optgroup>
+  
+  <!-- Alexandria zones -->
+  <optgroup label="Alexandria - East">
+    <option value="Sidi Gaber">Sidi Gaber</option>
+    <option value="Sporting">Sporting</option>
+    <option value="Camp Caesar">Camp Caesar</option>
+    <option value="Smouha">Smouha</option>
+    <option value="Victoria">Victoria</option>
+    <option value="Bolkly">Bolkly</option>
+    <option value="Ibrahimia">Ibrahimia</option>
+    <option value="Laurent">Laurent</option>
+    <option value="Loran">Loran</option>
+  </optgroup>
+  <optgroup label="Alexandria - Central & West">
+    <option value="Bahary">Bahary</option>
+    <option value="Anfushi">Anfushi</option>
+    <option value="Manshiya">Manshiya</option>
+    <option value="Attarin">Attarin</option>
+    <option value="Gomrok">Gomrok</option>
+    <option value="Karmouz">Karmouz</option>
+    <option value="Moharam Bek">Moharam Bek</option>
+    <option value="Dekhela">Dekhela</option>
+    <option value="Agami">Agami</option>
+    <option value="Amreya">Amreya</option>
+    <option value="Borg El Arab">Borg El Arab</option>
+    <option value="King Mariout">King Mariout</option>
+    <option value="Wardian">Wardian</option>
+    <option value="Bacos">Bacos</option>
+  </optgroup>
+  <optgroup label="Alexandria - East & Montaza">
+    <option value="Sidi Bishr">Sidi Bishr</option>
+    <option value="Miami">Miami</option>
+    <option value="Asafra">Asafra</option>
+    <option value="Mandara">Mandara</option>
+    <option value="Montaza">Montaza</option>
+    <option value="Abu Qir">Abu Qir</option>
+    <option value="El Maamoura">El Maamoura</option>
+    <option value="El Max">El Max</option>
+    <option value="Aboukir">Aboukir</option>
+    <option value="Semouha">Semouha</option>
+    <option value="Fleming">Fleming</option>
+    <option value="El Zahria">El Zahria</option>
+    <option value="Gianaclis">Gianaclis</option>
+  </optgroup>
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script src="/assets/rJS/business/create-order.js"></script>
 
 <!-- init js -->
 <script src="/assets/js/pages/ecommerce-product-checkout.init.js"></script>
-
-<!-- <script>
-  // Counter setup function
-  function setupCounter(buttonId, inputId, isIncrement) {
-    document.getElementById(buttonId).addEventListener('click', function() {
-      const input = document.getElementById(inputId);
-      let value = parseInt(input.value, 10);
-
-      if (isIncrement) {
-        value++;
-      } else if (value > 1) {
-        value--;
-      }
-
-      input.value = value;
-    });
-  }
-
-  // Setup all counters
-  document.addEventListener('DOMContentLoaded', function() {
-    // Delivery counters
-    setupCounter('increment-shipping', 'shipping-count', true);
-    setupCounter('decrement-shipping', 'shipping-count', false);
-
-    // Exchange counters
-    setupCounter('increment-current', 'exchange-current-count', true);
-    setupCounter('decrement-current', 'exchange-current-count', false);
-    setupCounter('increment-new', 'exchange-new-count', true);
-    setupCounter('decrement-new', 'exchange-new-count', false);
-
-    // Cash on delivery toggle
-    document.getElementById('cash-on-delivery-checkbox').addEventListener('change', function() {
-      document.getElementById('cash-on-delivery-amount').style.display = this.checked ? 'block' : 'none';
-    });
-
-    // Cash difference toggle
-    document.getElementById('cash-difference-checkbox').addEventListener('change', function() {
-      document.getElementById('cash-difference-amount').style.display = this.checked ? 'block' : 'none';
-    });
-
-    // Order type selection
-    const orderTypeRadios = document.querySelectorAll('input[name="orderType"]');
-    orderTypeRadios.forEach(function(radio) {
-      radio.addEventListener('change', function() {
-        // Hide all sections first
-        document.getElementById('deliver-section').style.display = 'none';
-        document.getElementById('exchange-section').style.display = 'none';
-        document.getElementById('cash-collection-section').style.display = 'none';
-
-        // Show the selected section
-        if (this.value === 'Deliver') {
-          document.getElementById('deliver-section').style.display = 'block';
-          document.getElementById('cash-on-delivery-section').style.display = 'block';
-        } else if (this.value === 'Exchange') {
-          document.getElementById('exchange-section').style.display = 'block';
-          document.getElementById('cash-difference-section').style.display = 'block';
-        } else if (this.value === 'Cash Collection') {
-          document.getElementById('cash-collection-section').style.display = 'block';
-        }
-      });
-    });
-  });
-</script> -->
