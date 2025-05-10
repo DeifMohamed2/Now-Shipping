@@ -219,6 +219,11 @@ const getDashboardData = async (req, res) => {
         orderStatus: 'headingToCustomer',
       });
 
+      const inStockCount = await Order.countDocuments({
+        business: req.userData._id,
+        orderStatus: 'inStock',
+      });
+
       const completedCount = await Order.countDocuments({
         business: req.userData._id,
         orderStatus: 'completed',
@@ -292,6 +297,7 @@ const getDashboardData = async (req, res) => {
           awaitingActionCount,
           headingToYouCount,
           newOrdersCount,
+          inStockCount,
           totalOrders,
           completionRate,
           unsuccessfulCount,
