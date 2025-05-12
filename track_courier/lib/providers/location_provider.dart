@@ -8,7 +8,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 // Base API URL
 const String baseApiUrl =
-    'http://192.168.1.10:3000'; // Replace with your actual server IP/domain
+    'https://nowshipping.co'; // Replace with your actual server IP/domain
 
 class LocationProvider extends ChangeNotifier {
   final storage = const FlutterSecureStorage();
