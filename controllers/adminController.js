@@ -1230,6 +1230,70 @@ const logOut = (req, res) => {
   res.redirect('/admin-login');
 }
 
+// Courier Tracking Page
+const getCourierTrackingPage = (req, res) => {
+    res.render('admin/courier-tracking', {
+        title: "Courier Tracking",
+        page_title: 'Courier Tracking',
+        folder: 'Pages',
+        breadcrumb: [
+            { title: 'Dashboard', link: '/admin' },
+            { title: 'Courier Tracking', active: true }
+        ]
+    });
+};
+
+// Get all courier locations
+const getCourierLocations = async (req, res) => {
+    try {
+        const couriers = await Courier.find({
+            isLocationTrackingEnabled: true,
+            'currentLocation.coordinates.0': { $ne: 0 },
+            'currentLocation.coordinates.1': { $ne: 0 }
+        }).select('name courierID currentLocation vehicleType isAvailable');
+        
+        return res.status(200).json({
+            success: true,
+            couriers: couriers
+        });
+    } catch (error) {
+        console.error('Error fetching courier locations:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch courier locations',
+            error: error.message
+        });
+    }
+};
+
+// Get a specific courier's location
+const getCourierLocation = async (req, res) => {
+    try {
+        const { courierId } = req.params;
+        
+        const courier = await Courier.findById(courierId)
+            .select('name courierID currentLocation vehicleType isAvailable');
+        
+        if (!courier) {
+            return res.status(404).json({
+                success: false,
+                message: 'Courier not found'
+            });
+        }
+        
+        return res.status(200).json({
+            success: true,
+            courier: courier
+        });
+    } catch (error) {
+        console.error('Error fetching courier location:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch courier location',
+            error: error.message
+        });
+    }
+};
 
 module.exports = {
   getDashboardPage,
@@ -1283,4 +1347,7 @@ module.exports = {
   get_ticketsPage,
   // Logout
   logOut,
+  getCourierTrackingPage,
+  getCourierLocations,
+  getCourierLocation
 };

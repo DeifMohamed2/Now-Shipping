@@ -6,6 +6,7 @@ const User = require('../../models/user.js');
 const jwtSecret = process.env.JWT_SECRET;
 
 const businessController = require('../../controllers/businessController.js');
+const assistantController = require('../../controllers/assistantController.js');
 
 async function authenticateUser(req, res, next) {
   const token = req.cookies.token;
@@ -118,6 +119,14 @@ router.get('/shop', businessController.get_shopPage);
 
 // tickets
 router.get('/tickets', businessController.get_ticketsPage);
+
+// AI Assistant routes
+router.get('/assistant', assistantController.getAssistantPage);
+router.get('/assistant/preferences', assistantController.getPreferences);
+router.post('/assistant/preferences', assistantController.updatePreferences);
+router.get('/assistant/conversation', assistantController.getConversation);
+router.post('/assistant/send', assistantController.sendMessage);
+router.post('/assistant/clear', assistantController.clearConversation);
 
 //logout
 router.get('/logout', businessController.logOut);

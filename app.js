@@ -4,9 +4,12 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const path = require('path');
+const http = require("http");
+const server = http.createServer(app);
+const socketController = require('./controllers/socketController');
 
-
-
+// Initialize Socket.IO
+socketController.initializeSocket(server);
 
 // Web Routes
 const adminRouter = require('./routes/web/adminRoutes');
@@ -18,6 +21,8 @@ const authRouter = require('./routes/web/authRoutes');
 // Mobile Routes
 const AuthRouterApi = require('./routes/api/v1/auth');
 const businessRouterApi = require('./routes/api/v1/business');
+const assistantRouterApi = require('./routes/api/v1/assistant');
+const courierRouterApi = require('./routes/api/v1/courier');
 
 // Import jobs
 const dailyOrderProcessing = require('./jobs/dailyOrderProcessing');
@@ -112,6 +117,8 @@ app.use('/courier', courierRouter);
 // Mobile app routes V1
 app.use('/api/v1/auth', AuthRouterApi);
 app.use('/api/v1/business', businessRouterApi);
+app.use('/api/v1/assistant', assistantRouterApi);
+app.use('/api/v1/courier', courierRouterApi);
 
 
 
@@ -125,5 +132,4 @@ app.all("*", function (req, res) {
 });
 
 
-const http = require("http").createServer(app);
-http.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
+server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));

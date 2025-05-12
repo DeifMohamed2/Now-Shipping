@@ -85,9 +85,35 @@ const courierSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    currentLocation: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point'
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        default: [0, 0]
+      },
+      lastUpdated: {
+        type: Date,
+        default: Date.now
+      }
+    },
+    isLocationTrackingEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    deviceToken: {
+      type: String,
+      default: null
+    }
   },
   { timestamps: true }
 );
+
+// Create a geospatial index for location-based queries
+courierSchema.index({ currentLocation: '2dsphere' });
 
 const Courier = mongoose.model('courier', courierSchema);
 

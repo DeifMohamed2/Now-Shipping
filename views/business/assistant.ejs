@@ -1,0 +1,1052 @@
+<%- contentFor('HeaderCss') %>
+<%- contentFor('FooterJs') %>
+
+<%- include("../partials/title-meta", {title: title}) %>
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Virtual Assistant</h4>
+
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Pages</a></li>
+                    <li class="breadcrumb-item active">Virtual Assistant</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-info" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="ri-information-line me-2 fs-3"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">AI-Powered Assistant</h5>
+                    <p class="mb-0">This assistant is powered by advanced AI technology to provide intelligent, context-aware responses to your queries.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">AI Assistant</h4>
+            </div>
+            <div class="card-body">
+                <div class="assistant-container">
+                    <div class="assistant-messages" id="assistant-messages">
+                        <!-- Messages will be loaded here -->
+                        <div class="d-flex justify-content-center mt-4 mb-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="assistant-suggestions mt-3" id="assistant-suggestions">
+                        <!-- Suggestions will be loaded here -->
+                    </div>
+                    
+                    <div class="assistant-input mt-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="assistant-input-field" 
+                                   placeholder="Type your message here..." aria-label="Message">
+                            <button class="btn btn-primary" type="button" id="assistant-send-btn">
+                                <i class="ri-send-plane-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Assistant Settings</h4>
+            </div>
+            <div class="card-body">
+                <form id="assistant-preferences-form">
+                    <div class="mb-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="assistant-enabled" checked>
+                        <label class="form-check-label" for="assistant-enabled">Enable Assistant</label>
+                    </div>
+                    
+                    <div class="mb-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="assistant-suggestions" checked>
+                        <label class="form-check-label" for="assistant-suggestions">Show Suggestions</label>
+                    </div>
+                    
+                    <div class="mb-3 form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="assistant-auto-open">
+                        <label class="form-check-label" for="assistant-auto-open">Auto-open Assistant</label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="assistant-theme" class="form-label">Theme</label>
+                        <select class="form-select" id="assistant-theme">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="system">System</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
+                
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-danger" id="assistant-clear-btn">
+                        Clear Conversation History
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Help & Information</h4>
+            </div>
+            <div class="card-body">
+                <h5>What can the assistant help with?</h5>
+                <ul class="list-unstyled mt-3">
+                    <li><i class="ri-check-line text-success me-2"></i> Check order status</li>
+                    <li><i class="ri-check-line text-success me-2"></i> Schedule pickups</li>
+                    <li><i class="ri-check-line text-success me-2"></i> View balance information</li>
+                    <li><i class="ri-check-line text-success me-2"></i> Get shipping rates</li>
+                    <li><i class="ri-check-line text-success me-2"></i> Create new orders</li>
+                    <li><i class="ri-check-line text-success me-2"></i> View order statistics</li>
+                </ul>
+                
+                <p class="mt-3">
+                    The AI assistant uses natural language processing to understand your requests and provide helpful responses.
+                    Try asking questions in a conversational way for the best results.
+                </p>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4 class="card-title mb-0">AI Model Information</h4>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar-sm flex-shrink-0 me-3">
+                        <span class="avatar-title bg-soft-primary text-primary rounded-circle fs-4">
+                            <i class="ri-ai-generate"></i>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="fs-15 mb-1">Professional AI Model</h5>
+                        <p class="text-muted mb-0">Trained on shipping and logistics data</p>
+                    </div>
+                </div>
+                
+                <p class="mb-2">This assistant uses a professional-grade AI model that understands:</p>
+                <ul class="list-unstyled mb-0">
+                    <li><i class="ri-check-line text-success me-2"></i> Shipping terminology and processes</li>
+                    <li><i class="ri-check-line text-success me-2"></i> Order management workflows</li>
+                    <li><i class="ri-check-line text-success me-2"></i> Business analytics and reporting</li>
+                    <li><i class="ri-check-line text-success me-2"></i> Customer service best practices</li>
+                    <li><i class="ri-check-line text-success me-2"></i> Financial operations and transactions</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this to the bottom of the page -->
+<div class="assistant-floating-button" id="assistant-floating-button">
+    <button class="btn btn-primary btn-lg rounded-circle">
+        <i class="ri-robot-line"></i>
+    </button>
+</div>
+
+<div class="assistant-floating-container" id="assistant-floating-container">
+    <div class="assistant-floating-header">
+        <h5 class="mb-0">Virtual Assistant</h5>
+        <div>
+            <button class="btn btn-sm btn-light" id="assistant-floating-minimize">
+                <i class="ri-subtract-line"></i>
+            </button>
+            <button class="btn btn-sm btn-light" id="assistant-floating-close">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+    </div>
+    <div class="assistant-floating-body">
+        <div class="assistant-floating-messages" id="assistant-floating-messages">
+            <!-- Messages will be loaded here -->
+        </div>
+        
+        <div class="assistant-floating-suggestions mt-2" id="assistant-floating-suggestions">
+            <!-- Suggestions will be loaded here -->
+        </div>
+    </div>
+    <div class="assistant-floating-footer">
+        <div class="input-group">
+            <input type="text" class="form-control" id="assistant-floating-input" 
+                   placeholder="Type your message..." aria-label="Message">
+            <button class="btn btn-primary" type="button" id="assistant-floating-send">
+                <i class="ri-send-plane-fill"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Main Assistant Styles */
+    .assistant-container {
+        display: flex;
+        flex-direction: column;
+        height: 500px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .assistant-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.25rem;
+        background-color: #f8f9fa;
+        border-radius: 0.75rem;
+        scrollbar-width: thin;
+        scrollbar-color: #dee2e6 transparent;
+    }
+    
+    .assistant-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .assistant-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .assistant-messages::-webkit-scrollbar-thumb {
+        background-color: #dee2e6;
+        border-radius: 6px;
+    }
+    
+    .assistant-message {
+        margin-bottom: 1.25rem;
+        max-width: 85%;
+        animation: fadeIn 0.3s ease-in-out;
+        position: relative;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .assistant-message.user {
+        margin-left: auto;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
+        padding: 0.875rem 1.125rem;
+        box-shadow: 0 2px 5px rgba(13, 110, 253, 0.2);
+    }
+    
+    .assistant-message.assistant {
+        margin-right: auto;
+        background-color: white;
+        border: 1px solid #e9ecef;
+        border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
+        padding: 0.875rem 1.125rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .assistant-message.assistant::before {
+        content: "";
+        position: absolute;
+        left: -8px;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(45deg, white 50%, transparent 50%);
+        border-left: 1px solid #e9ecef;
+        border-bottom: 1px solid #e9ecef;
+        border-radius: 0 0 0 10px;
+        transform: rotate(45deg);
+        z-index: -1;
+    }
+    
+    .assistant-message.user::after {
+        content: "";
+        position: absolute;
+        right: -8px;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(45deg, transparent 50%, #0d6efd 50%);
+        border-radius: 0 0 10px 0;
+        transform: rotate(45deg);
+        z-index: -1;
+    }
+    
+    .assistant-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.625rem;
+        margin-top: 1rem;
+    }
+    
+    .assistant-suggestion {
+        cursor: pointer;
+        background-color: #e9ecef;
+        border-radius: 2rem;
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        font-weight: 500;
+    }
+    
+    .assistant-suggestion:hover {
+        background-color: #0d6efd;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .assistant-data-card {
+        background-color: white;
+        border: 1px solid #e9ecef;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-top: 0.75rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .assistant-actions {
+        display: flex;
+        gap: 0.625rem;
+        margin-top: 0.75rem;
+    }
+    
+    .assistant-actions .btn {
+        border-radius: 2rem;
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .assistant-actions .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .assistant-input {
+        margin-top: 1rem;
+        position: relative;
+    }
+    
+    .assistant-input .form-control {
+        border-radius: 2rem;
+        padding: 0.75rem 1.25rem;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+    
+    .assistant-input .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .assistant-input .btn {
+        border-radius: 50%;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    
+    .assistant-input .btn:hover {
+        transform: scale(1.1);
+    }
+    
+    /* Floating Assistant Styles */
+    .assistant-floating-button {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1040;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+    
+    .assistant-floating-button:hover {
+        transform: scale(1.1);
+    }
+    
+    .assistant-floating-button .btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .assistant-floating-container {
+        position: fixed;
+        bottom: 6rem;
+        right: 2rem;
+        width: 380px;
+        height: 550px;
+        background-color: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        z-index: 1030;
+        display: none;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .assistant-floating-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f8f9fa;
+    }
+    
+    .assistant-floating-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.25rem;
+        background-color: #f8f9fa;
+        scrollbar-width: thin;
+        scrollbar-color: #dee2e6 transparent;
+    }
+    
+    .assistant-floating-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .assistant-floating-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .assistant-floating-body::-webkit-scrollbar-thumb {
+        background-color: #dee2e6;
+        border-radius: 6px;
+    }
+    
+    .assistant-floating-footer {
+        padding: 1.25rem;
+        border-top: 1px solid #e9ecef;
+        background-color: #f8f9fa;
+    }
+    
+    .assistant-floating-messages {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .assistant-floating-message {
+        margin-bottom: 1.25rem;
+        max-width: 85%;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .assistant-floating-message.user {
+        margin-left: auto;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
+        padding: 0.875rem 1.125rem;
+        box-shadow: 0 2px 5px rgba(13, 110, 253, 0.2);
+    }
+    
+    .assistant-floating-message.assistant {
+        margin-right: auto;
+        background-color: white;
+        border: 1px solid #e9ecef;
+        border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
+        padding: 0.875rem 1.125rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .assistant-floating-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.625rem;
+        margin-top: 1rem;
+    }
+    
+    .assistant-floating-suggestion {
+        cursor: pointer;
+        background-color: #e9ecef;
+        border-radius: 2rem;
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        font-weight: 500;
+    }
+    
+    .assistant-floating-suggestion:hover {
+        background-color: #0d6efd;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Dark theme */
+    .assistant-dark .assistant-messages,
+    .assistant-dark .assistant-floating-body {
+        background-color: #212529;
+    }
+    
+    .assistant-dark .assistant-message.assistant,
+    .assistant-dark .assistant-floating-message.assistant,
+    .assistant-dark .assistant-data-card {
+        background-color: #343a40;
+        border-color: #495057;
+        color: white;
+    }
+    
+    .assistant-dark .assistant-message.assistant::before {
+        background: linear-gradient(45deg, #343a40 50%, transparent 50%);
+        border-left: 1px solid #495057;
+        border-bottom: 1px solid #495057;
+    }
+    
+    .assistant-dark .assistant-suggestion,
+    .assistant-dark .assistant-floating-suggestion {
+        background-color: #495057;
+        color: white;
+    }
+    
+    .assistant-dark .assistant-suggestion:hover,
+    .assistant-dark .assistant-floating-suggestion:hover {
+        background-color: #0d6efd;
+    }
+    
+    .assistant-dark .assistant-input .form-control {
+        background-color: #343a40;
+        border-color: #495057;
+        color: white;
+    }
+    
+    .assistant-dark .assistant-input .form-control::placeholder {
+        color: #adb5bd;
+    }
+    
+    .assistant-dark .assistant-floating-header,
+    .assistant-dark .assistant-floating-footer {
+        background-color: #212529;
+        border-color: #495057;
+    }
+    
+    /* Typing indicator */
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        border-radius: 50%;
+        background-color: #adb5bd;
+        display: inline-block;
+        margin-right: 5px;
+        animation: typing 1.5s infinite ease-in-out;
+    }
+    
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+        margin-right: 0;
+    }
+    
+    @keyframes typing {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0); }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+        .assistant-floating-container {
+            width: calc(100% - 2rem);
+            height: 60vh;
+            right: 1rem;
+            left: 1rem;
+        }
+        
+        .assistant-floating-button {
+            right: 1rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM Elements
+        const messagesContainer = document.getElementById('assistant-messages');
+        const suggestionsContainer = document.getElementById('assistant-suggestions');
+        const inputField = document.getElementById('assistant-input-field');
+        const sendButton = document.getElementById('assistant-send-btn');
+        const clearButton = document.getElementById('assistant-clear-btn');
+        const preferencesForm = document.getElementById('assistant-preferences-form');
+        
+        const floatingButton = document.getElementById('assistant-floating-button');
+        const floatingContainer = document.getElementById('assistant-floating-container');
+        const floatingMessages = document.getElementById('assistant-floating-messages');
+        const floatingSuggestions = document.getElementById('assistant-floating-suggestions');
+        const floatingInput = document.getElementById('assistant-floating-input');
+        const floatingSend = document.getElementById('assistant-floating-send');
+        const floatingMinimize = document.getElementById('assistant-floating-minimize');
+        const floatingClose = document.getElementById('assistant-floating-close');
+        
+        // Preferences Elements
+        const enabledSwitch = document.getElementById('assistant-enabled');
+        const suggestionsSwitch = document.getElementById('assistant-suggestions');
+        const autoOpenSwitch = document.getElementById('assistant-auto-open');
+        const themeSelect = document.getElementById('assistant-theme');
+        
+        // State
+        let preferences = {
+            enabled: true,
+            showSuggestions: true,
+            autoOpen: false,
+            theme: 'system'
+        };
+        
+        // Functions
+        function loadPreferences() {
+            fetch('/business/assistant/preferences')
+                .then(response => response.json())
+                .then(data => {
+                    preferences = data;
+                    
+                    // Update UI
+                    enabledSwitch.checked = preferences.enabled;
+                    suggestionsSwitch.checked = preferences.showSuggestions;
+                    autoOpenSwitch.checked = preferences.autoOpen;
+                    themeSelect.value = preferences.theme;
+                    
+                    // Apply theme
+                    applyTheme();
+                    
+                    // Show/hide floating button based on preferences
+                    floatingButton.style.display = preferences.enabled ? 'block' : 'none';
+                    
+                    // Auto-open if enabled
+                    if (preferences.autoOpen && preferences.enabled) {
+                        setTimeout(() => {
+                            floatingContainer.style.display = 'flex';
+                        }, 1000);
+                    }
+                })
+                .catch(error => console.error('Error loading preferences:', error));
+        }
+        
+        function applyTheme() {
+            const isDarkMode = preferences.theme === 'dark' || 
+                (preferences.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDarkMode) {
+                document.querySelector('.assistant-container').classList.add('assistant-dark');
+                floatingContainer.classList.add('assistant-dark');
+            } else {
+                document.querySelector('.assistant-container').classList.remove('assistant-dark');
+                floatingContainer.classList.remove('assistant-dark');
+            }
+        }
+        
+        function loadConversation() {
+            fetch('/business/assistant/conversation')
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing messages
+                    messagesContainer.innerHTML = '';
+                    floatingMessages.innerHTML = '';
+                    
+                    // Display messages
+                    data.messages.forEach(message => {
+                        displayMessage(message);
+                    });
+                    
+                    // Scroll to bottom
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    floatingMessages.scrollTop = floatingMessages.scrollHeight;
+                })
+                .catch(error => console.error('Error loading conversation:', error));
+        }
+        
+        function displayMessage(message) {
+            // Parse content if it's a JSON string
+            let content = message.content;
+            let parsedContent = null;
+            
+            try {
+                parsedContent = JSON.parse(content);
+                content = parsedContent.text || content;
+            } catch (e) {
+                // Not JSON, use as is
+            }
+            
+            // Create message element for main container
+            const messageEl = document.createElement('div');
+            messageEl.className = `assistant-message ${message.sender}`;
+            messageEl.textContent = content;
+            messagesContainer.appendChild(messageEl);
+            
+            // Create message element for floating container
+            const floatingMessageEl = document.createElement('div');
+            floatingMessageEl.className = `assistant-floating-message ${message.sender}`;
+            floatingMessageEl.textContent = content;
+            floatingMessages.appendChild(floatingMessageEl);
+            
+            // If assistant message has data, display it
+            if (parsedContent && parsedContent.data) {
+                displayData(parsedContent.data, messagesContainer);
+                displayData(parsedContent.data, floatingMessages);
+            }
+            
+            // If assistant message has actions, display them
+            if (parsedContent && parsedContent.actions) {
+                displayActions(parsedContent.actions, messagesContainer);
+                displayActions(parsedContent.actions, floatingMessages);
+            }
+            
+            // If assistant message has suggestions and preferences allow it, display them
+            if (parsedContent && parsedContent.suggestions && preferences.showSuggestions) {
+                displaySuggestions(parsedContent.suggestions);
+            }
+        }
+        
+        function displayData(data, container) {
+            if (!data) return;
+            
+            const dataCard = document.createElement('div');
+            dataCard.className = 'assistant-data-card';
+            
+            // Check if data is an array
+            if (Array.isArray(data)) {
+                const list = document.createElement('ul');
+                list.className = 'list-group list-group-flush';
+                
+                data.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'list-group-item';
+                    
+                    // Format based on data type
+                    if (typeof item === 'object') {
+                        let content = '';
+                        for (const [key, value] of Object.entries(item)) {
+                            content += `<strong>${key}:</strong> ${value}<br>`;
+                        }
+                        listItem.innerHTML = content;
+                    } else {
+                        listItem.textContent = item;
+                    }
+                    
+                    list.appendChild(listItem);
+                });
+                
+                dataCard.appendChild(list);
+            } else if (typeof data === 'object') {
+                // Format object data
+                const table = document.createElement('table');
+                table.className = 'table table-sm';
+                
+                for (const [key, value] of Object.entries(data)) {
+                    const row = document.createElement('tr');
+                    const keyCell = document.createElement('th');
+                    const valueCell = document.createElement('td');
+                    
+                    keyCell.textContent = key;
+                    
+                    // Format value based on type
+                    if (typeof value === 'number' && key.toLowerCase().includes('rate')) {
+                        valueCell.textContent = `${value}%`;
+                    } else {
+                        valueCell.textContent = value;
+                    }
+                    
+                    row.appendChild(keyCell);
+                    row.appendChild(valueCell);
+                    table.appendChild(row);
+                }
+                
+                dataCard.appendChild(table);
+            } else {
+                // Simple data
+                dataCard.textContent = data;
+            }
+            
+            container.appendChild(dataCard);
+        }
+        
+        function displayActions(actions, container) {
+            if (!actions || !actions.length) return;
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'assistant-actions';
+            
+            actions.forEach(action => {
+                const actionButton = document.createElement('a');
+                actionButton.className = 'btn btn-sm btn-primary';
+                actionButton.href = action.url;
+                actionButton.textContent = action.text;
+                actionsDiv.appendChild(actionButton);
+            });
+            
+            container.appendChild(actionsDiv);
+        }
+        
+        function displaySuggestions(suggestions) {
+            if (!suggestions || !suggestions.length) return;
+            
+            // Clear existing suggestions
+            suggestionsContainer.innerHTML = '';
+            floatingSuggestions.innerHTML = '';
+            
+            // Add new suggestions to main container
+            suggestions.forEach(suggestion => {
+                const suggestionEl = document.createElement('div');
+                suggestionEl.className = 'assistant-suggestion';
+                suggestionEl.textContent = suggestion;
+                suggestionEl.addEventListener('click', () => {
+                    inputField.value = suggestion;
+                    sendMessage(suggestion);
+                });
+                suggestionsContainer.appendChild(suggestionEl);
+            });
+            
+            // Add new suggestions to floating container
+            suggestions.forEach(suggestion => {
+                const suggestionEl = document.createElement('div');
+                suggestionEl.className = 'assistant-floating-suggestion';
+                suggestionEl.textContent = suggestion;
+                suggestionEl.addEventListener('click', () => {
+                    floatingInput.value = suggestion;
+                    sendMessage(suggestion);
+                });
+                floatingSuggestions.appendChild(suggestionEl);
+            });
+        }
+        
+        // Add this function to display a typing indicator before the assistant responds
+        function showTypingIndicator(container) {
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator assistant-message assistant';
+            typingIndicator.id = 'typing-indicator';
+            
+            // Add three dots for the typing animation
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('span');
+                typingIndicator.appendChild(dot);
+            }
+            
+            container.appendChild(typingIndicator);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Add this function to remove the typing indicator
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+        
+        // Update the sendMessage function to show and hide the typing indicator
+        function sendMessage(message) {
+            if (!message.trim()) return;
+            
+            // Clear input fields
+            inputField.value = '';
+            floatingInput.value = '';
+            
+            // Clear suggestions
+            suggestionsContainer.innerHTML = '';
+            floatingSuggestions.innerHTML = '';
+            
+            // Create temporary user message
+            const userMessage = {
+                sender: 'user',
+                content: message
+            };
+            
+            // Display user message immediately
+            displayMessage(userMessage);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            floatingMessages.scrollTop = floatingMessages.scrollHeight;
+            
+            // Show typing indicator
+            showTypingIndicator(messagesContainer);
+            showTypingIndicator(floatingMessages);
+            
+            // Send to server
+            fetch('/business/assistant/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Display assistant response
+                const assistantMessage = {
+                    sender: 'assistant',
+                    content: JSON.stringify(data.response)
+                };
+                
+                displayMessage(assistantMessage);
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                floatingMessages.scrollTop = floatingMessages.scrollHeight;
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+                
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Display error message
+                const errorMessage = {
+                    sender: 'assistant',
+                    content: JSON.stringify({
+                        text: "Sorry, I encountered an error. Please try again later.",
+                        suggestions: ["Start over", "Help"]
+                    })
+                };
+                
+                displayMessage(errorMessage);
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                floatingMessages.scrollTop = floatingMessages.scrollHeight;
+            });
+        }
+        
+        function clearConversation() {
+            fetch('/business/assistant/clear', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reload conversation
+                loadConversation();
+            })
+            .catch(error => console.error('Error clearing conversation:', error));
+        }
+        
+        // Event Listeners
+        sendButton.addEventListener('click', () => {
+            sendMessage(inputField.value);
+        });
+        
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage(inputField.value);
+            }
+        });
+        
+        floatingSend.addEventListener('click', () => {
+            sendMessage(floatingInput.value);
+        });
+        
+        floatingInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage(floatingInput.value);
+            }
+        });
+        
+        clearButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear your conversation history?')) {
+                clearConversation();
+            }
+        });
+        
+        preferencesForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const updatedPreferences = {
+                enabled: enabledSwitch.checked,
+                showSuggestions: suggestionsSwitch.checked,
+                autoOpen: autoOpenSwitch.checked,
+                theme: themeSelect.value
+            };
+            
+            fetch('/business/assistant/preferences', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedPreferences)
+            })
+            .then(response => response.json())
+            .then(data => {
+                preferences = data;
+                
+                // Apply theme
+                applyTheme();
+                
+                // Show/hide floating button based on preferences
+                floatingButton.style.display = preferences.enabled ? 'block' : 'none';
+                
+                // Show success message
+                alert('Preferences saved successfully!');
+            })
+            .catch(error => console.error('Error saving preferences:', error));
+        });
+        
+        floatingButton.addEventListener('click', () => {
+            floatingContainer.style.display = 'flex';
+        });
+        
+        floatingMinimize.addEventListener('click', () => {
+            floatingContainer.style.display = 'none';
+        });
+        
+        floatingClose.addEventListener('click', () => {
+            floatingContainer.style.display = 'none';
+        });
+        
+        // Listen for dark mode changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+        
+        // Initialize
+        loadPreferences();
+        loadConversation();
+    });
+</script> 
