@@ -62,7 +62,7 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final response = await http.post(
-        Uri.parse('$baseApiUrl/api/v1/auth/login'),
+        Uri.parse('$baseApiUrl/api/v1/auth/courier-login'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': email,
@@ -70,10 +70,21 @@ class AuthProvider extends ChangeNotifier {
         }),
       );
 
+      print('Login response: ${response.statusCode} - ${response.body}');
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         _token = data['token'];
+
+        if (_token == null) {
+          _error = 'No token received from server';
+          _isLoading = false;
+          notifyListeners();
+          return false;
+        }
+
         _userData = JwtDecoder.decode(_token!);
+        print('User data from token: $_userData');
 
         // Save token to secure storage
         await storage.write(key: 'auth_token', value: _token);
@@ -91,6 +102,7 @@ class AuthProvider extends ChangeNotifier {
       }
     } catch (e) {
       _error = e.toString();
+      print('Login error: $_error');
       _isLoading = false;
       notifyListeners();
       return false;

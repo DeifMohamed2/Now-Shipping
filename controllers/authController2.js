@@ -513,7 +513,7 @@ const loginAsCourier  = async (req, res) => {
         });
     }
 
-    const token = jwt.sign({ courierId: courier._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: courier._id, userType: 'courier' }, process.env.JWT_SECRET, {
         expiresIn: '1d'
     });
 
@@ -523,16 +523,18 @@ const loginAsCourier  = async (req, res) => {
 
     res.status(200).json({
         status: 'success',
+        token: token,
         user: {
             id: courier._id,
             name: courier.name,
             email: courier.email,
-            role: courier.role,
+            role: 'courier',
         }
     });
 
 }
 catch(err){
+    console.error('Error in loginAsCourier:', err);
     res.status(500).json({
         status: 'error',
         message: 'An error occurred'

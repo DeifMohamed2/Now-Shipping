@@ -1,6 +1,6 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
-require('dotenv').config();
 const express = require('express');
 const app = express();
 const path = require('path');

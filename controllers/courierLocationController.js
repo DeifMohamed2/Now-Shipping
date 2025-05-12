@@ -65,17 +65,23 @@ const updateLocationPreferences = async (req, res) => {
             });
         }
 
+        console.log(`Updating location preferences for courier ID: ${courierId}, isEnabled: ${isEnabled}`);
+        
         const courier = await Courier.findById(courierId);
         
         if (!courier) {
+            console.log(`Courier not found with ID: ${courierId}`);
             return res.status(404).json({ 
                 success: false, 
-                message: 'Courier not found' 
+                message: 'Courier not found',
+                details: 'Your courier account may not be properly set up. Please contact support.' 
             });
         }
 
         courier.isLocationTrackingEnabled = isEnabled;
         await courier.save();
+        
+        console.log(`Location tracking ${isEnabled ? 'enabled' : 'disabled'} for courier: ${courier.name}`);
 
         return res.status(200).json({ 
             success: true, 

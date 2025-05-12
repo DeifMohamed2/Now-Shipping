@@ -137,8 +137,8 @@ router.get('/tickets', adminController.get_ticketsPage);
 router.get('/logout', adminController.logOut);
 
 // Courier Tracking
-router.get('/courier-tracking', adminController.getCourierTrackingPage);
+router.get('/courier-tracking', adminController.courierTracking);
 router.get('/courier-locations', adminController.getCourierLocations);
-router.get('/courier-location/:courierId', adminController.getCourierLocation);
+router.get('/courier-location/:id', adminController.getCourierLocation);
 
 module.exports = router;

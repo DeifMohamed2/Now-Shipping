@@ -1243,24 +1243,35 @@ const getCourierTrackingPage = (req, res) => {
     });
 };
 
+// Courier Tracking
+const courierTracking = (req, res) => {
+    res.render('admin/courier-tracking', {
+        title: 'Courier Tracking',
+        page_title: 'Courier Tracking',
+        folder: 'Pages',
+        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY
+    });
+};
+
 // Get all courier locations
 const getCourierLocations = async (req, res) => {
     try {
+        // Get all couriers with location tracking enabled and have a valid location
         const couriers = await Courier.find({
             isLocationTrackingEnabled: true,
             'currentLocation.coordinates.0': { $ne: 0 },
             'currentLocation.coordinates.1': { $ne: 0 }
-        }).select('name courierID currentLocation vehicleType isAvailable');
-        
-        return res.status(200).json({
+        }).select('name courierID vehicleType isAvailable currentLocation isLocationTrackingEnabled');
+
+        res.json({
             success: true,
-            couriers: couriers
+            couriers
         });
     } catch (error) {
-        console.error('Error fetching courier locations:', error);
-        return res.status(500).json({
+        console.error('Error getting courier locations:', error);
+        res.status(500).json({
             success: false,
-            message: 'Failed to fetch courier locations',
+            message: 'Failed to get courier locations',
             error: error.message
         });
     }
@@ -1269,27 +1280,25 @@ const getCourierLocations = async (req, res) => {
 // Get a specific courier's location
 const getCourierLocation = async (req, res) => {
     try {
-        const { courierId } = req.params;
-        
-        const courier = await Courier.findById(courierId)
-            .select('name courierID currentLocation vehicleType isAvailable');
-        
+        const courierId = req.params.id;
+        const courier = await Courier.findById(courierId).select('name courierID vehicleType isAvailable currentLocation phoneNumber email isLocationTrackingEnabled');
+
         if (!courier) {
             return res.status(404).json({
                 success: false,
                 message: 'Courier not found'
             });
         }
-        
-        return res.status(200).json({
+
+        res.json({
             success: true,
-            courier: courier
+            courier
         });
     } catch (error) {
-        console.error('Error fetching courier location:', error);
-        return res.status(500).json({
+        console.error('Error getting courier location:', error);
+        res.status(500).json({
             success: false,
-            message: 'Failed to fetch courier location',
+            message: 'Failed to get courier location',
             error: error.message
         });
     }
@@ -1349,5 +1358,6 @@ module.exports = {
   logOut,
   getCourierTrackingPage,
   getCourierLocations,
-  getCourierLocation
+  getCourierLocation,
+  courierTracking
 };

@@ -1,79 +1,5 @@
 <%- contentFor('HeaderCss') %>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-
-<%- contentFor('FooterJs') %>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin=""></script>
-
-<%- include("../partials/title-meta", {title: title}) %>
-
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Courier Tracking</h4>
-
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="/admin">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Courier Tracking</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title mb-0">Active Couriers</h4>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-3">
-                    <div>
-                        <h5 class="fs-14 mb-0">Available Couriers</h5>
-                    </div>
-                    <div>
-                        <button id="refresh-couriers" class="btn btn-sm btn-primary">
-                            <i class="ri-refresh-line"></i> Refresh
-                        </button>
-                    </div>
-                </div>
-                <div class="courier-list" id="courier-list">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2">Loading couriers...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mt-4">
-            <div class="card-header">
-                <h4 class="card-title mb-0">Courier Details</h4>
-            </div>
-            <div class="card-body">
-                <div id="courier-details">
-                    <p class="text-muted">Select a courier to view details</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title mb-0">Live Tracking Map</h4>
-            </div>
-            <div class="card-body">
-                <div id="map" style="height: 600px; border-radius: 8px;"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- Google Maps API CSS -->
 <style>
     .courier-item {
         padding: 12px;
@@ -124,315 +50,720 @@
         margin-bottom: 5px;
         color: #878a99;
     }
+    
+    #map {
+        height: 600px;
+        width: 100%;
+        border-radius: 8px;
+    }
+    
+    .map-container {
+        position: relative;
+    }
+    
+    .map-loader {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    .courier-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #f3f6f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+    }
+    
+    .courier-avatar i {
+        font-size: 20px;
+        color: #405189;
+    }
+    
+    .courier-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .courier-header h5 {
+        margin-bottom: 0;
+    }
+    
+    .no-couriers-message {
+        text-align: center;
+        padding: 30px 0;
+    }
+    
+    .no-couriers-message i {
+        font-size: 48px;
+        color: #878a99;
+        margin-bottom: 15px;
+    }
+    
+    .map-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+    }
+    
+    .map-controls .btn {
+        margin-bottom: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 </style>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize map
-        const map = L.map('map').setView([30.0444, 31.2357], 10); // Default to Cairo
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-        
-        // Store markers
-        const markers = {};
-        
-        // Get courier list element
-        const courierListEl = document.getElementById('courier-list');
-        const courierDetailsEl = document.getElementById('courier-details');
-        const refreshBtn = document.getElementById('refresh-couriers');
-        
-        // Selected courier
-        let selectedCourierId = null;
-        
-        // Fetch couriers
-        async function fetchCouriers() {
-            try {
-                const response = await fetch('/admin/courier-locations');
-                const data = await response.json();
-                
-                if (data.success) {
-                    renderCouriers(data.couriers);
-                    updateMarkers(data.couriers);
-                } else {
-                    courierListEl.innerHTML = `<div class="alert alert-danger">Failed to load couriers</div>`;
-                }
-            } catch (error) {
-                console.error('Error fetching couriers:', error);
-                courierListEl.innerHTML = `<div class="alert alert-danger">Failed to load couriers</div>`;
-            }
-        }
-        
-        // Render couriers list
-        function renderCouriers(couriers) {
-            if (couriers.length === 0) {
-                courierListEl.innerHTML = `
+
+<%- contentFor('body') %>
+
+
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">Active Couriers</h4>
+                    </div>
+                    <div class="ms-auto">
+                        <button id="refresh-couriers" class="btn btn-sm btn-primary">
+                            <i class="ri-refresh-line"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="courier-list" id="courier-list">
                     <div class="text-center py-4">
-                        <div class="alert alert-info mb-0">
-                            No active couriers found
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
                         </div>
+                        <p class="mt-2">Loading couriers...</p>
                     </div>
-                `;
-                return;
-            }
-            
-            let html = '';
-            couriers.forEach(courier => {
-                const lastUpdated = new Date(courier.currentLocation.lastUpdated);
-                const timeAgo = getTimeAgo(lastUpdated);
-                
-                html += `
-                    <div class="courier-item ${selectedCourierId === courier._id ? 'active' : ''}" 
-                         data-courier-id="${courier._id}">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h5 class="fs-14 mb-1">${courier.name}</h5>
-                                <p class="text-muted mb-0">ID: ${courier.courierID}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Courier Details</h4>
+            </div>
+            <div class="card-body">
+                <div id="courier-details">
+                    <div class="no-couriers-message">
+                        <i class="ri-user-search-line"></i>
+                        <h5>No Courier Selected</h5>
+                        <p class="text-muted">Select a courier from the list to view their details</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Live Tracking Map</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="map-container">
+                    <div id="map-loader" class="map-loader">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading map...</span>
                             </div>
-                            <div>
-                                <span class="courier-status ${courier.isAvailable ? 'available' : 'unavailable'}" 
-                                      title="${courier.isAvailable ? 'Available' : 'Unavailable'}"></span>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <small class="text-muted">
-                                <i class="ri-time-line"></i> ${timeAgo}
-                            </small>
-                            <small class="text-muted ms-2">
-                                <i class="ri-car-line"></i> ${courier.vehicleType}
-                            </small>
+                            <p class="mt-2">Initializing map...</p>
                         </div>
                     </div>
-                `;
-            });
-            
-            courierListEl.innerHTML = html;
-            
-            // Add event listeners
-            document.querySelectorAll('.courier-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const courierId = this.getAttribute('data-courier-id');
-                    selectCourier(courierId);
-                });
-            });
-        }
-        
-        // Update map markers
-        function updateMarkers(couriers) {
-            // Remove old markers
-            Object.keys(markers).forEach(id => {
-                if (!couriers.find(c => c._id === id)) {
-                    map.removeLayer(markers[id]);
-                    delete markers[id];
-                }
-            });
-            
-            // Add/update markers
-            couriers.forEach(courier => {
-                const [lng, lat] = courier.currentLocation.coordinates;
-                
-                if (markers[courier._id]) {
-                    // Update existing marker
-                    markers[courier._id].setLatLng([lat, lng]);
-                } else {
-                    // Create new marker
-                    const marker = L.marker([lat, lng], {
-                        title: courier.name
-                    }).addTo(map);
-                    
-                    marker.bindPopup(`
-                        <div>
-                            <h6>${courier.name}</h6>
-                            <p>ID: ${courier.courierID}</p>
-                            <p>Vehicle: ${courier.vehicleType}</p>
-                            <p>Status: ${courier.isAvailable ? 'Available' : 'Unavailable'}</p>
-                        </div>
-                    `);
-                    
-                    markers[courier._id] = marker;
-                }
-            });
-            
-            // If we have a selected courier, make sure it's centered
-            if (selectedCourierId && markers[selectedCourierId]) {
-                map.setView(markers[selectedCourierId].getLatLng(), 15);
-            } else if (couriers.length > 0) {
-                // Otherwise fit all markers
-                const bounds = [];
-                couriers.forEach(courier => {
-                    const [lng, lat] = courier.currentLocation.coordinates;
-                    bounds.push([lat, lng]);
-                });
-                
-                if (bounds.length > 0) {
-                    map.fitBounds(bounds);
-                }
-            }
-        }
-        
-        // Select courier
-        async function selectCourier(courierId) {
-            // Update UI
-            document.querySelectorAll('.courier-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.getAttribute('data-courier-id') === courierId) {
-                    item.classList.add('active');
-                }
-            });
-            
-            selectedCourierId = courierId;
-            
-            // Show loading
-            courierDetailsEl.innerHTML = `
-                <div class="text-center py-2">
-                    <div class="spinner-border spinner-border-sm text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                    <div id="map"></div>
+                    <div class="map-controls">
+                        <button id="fit-all-markers" class="btn btn-light btn-sm">
+                            <i class="ri-focus-3-line"></i> Show All
+                        </button>
                     </div>
-                    <p class="mt-2">Loading courier details...</p>
                 </div>
-            `;
-            
-            try {
-                const response = await fetch(`/admin/courier-location/${courierId}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    renderCourierDetails(data.courier);
-                    
-                    // Center map on courier
-                    if (markers[courierId]) {
-                        map.setView(markers[courierId].getLatLng(), 15);
-                        markers[courierId].openPopup();
-                    }
-                } else {
-                    courierDetailsEl.innerHTML = `<div class="alert alert-danger">Failed to load courier details</div>`;
+            </div>
+        </div>
+    </div>
+</div>
+<%- contentFor('FooterJs') %>
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyIdhgj9Rn2S30XfyYv9SCflp7-qJD6As&callback=initMap" defer></script>
+<!-- Socket.IO -->
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin=""></script>
+
+
+<script>
+    let map;
+    let markers = {};
+    let selectedCourierId = null;
+    let courierListEl, courierDetailsEl, refreshBtn, mapLoader, fitAllMarkersBtn;
+    
+    // Initialize Google Map
+    function initMap() {
+        // Set up DOM elements
+        courierListEl = document.getElementById('courier-list');
+        courierDetailsEl = document.getElementById('courier-details');
+        refreshBtn = document.getElementById('refresh-couriers');
+        mapLoader = document.getElementById('map-loader');
+        fitAllMarkersBtn = document.getElementById('fit-all-markers');
+        
+        // Default to Cairo coordinates
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: 30.0444, lng: 31.2357 },
+            zoom: 10,
+            styles: [
+                {
+                    "featureType": "water",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#e9e9e9"}, {"lightness": 17}]
+                },
+                {
+                    "featureType": "landscape",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#f5f5f5"}, {"lightness": 20}]
+                },
+                {
+                    "featureType": "road.highway",
+                    "elementType": "geometry.fill",
+                    "stylers": [{"color": "#ffffff"}, {"lightness": 17}]
+                },
+                {
+                    "featureType": "road.highway",
+                    "elementType": "geometry.stroke",
+                    "stylers": [{"color": "#ffffff"}, {"lightness": 29}, {"weight": 0.2}]
+                },
+                {
+                    "featureType": "road.arterial",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#ffffff"}, {"lightness": 18}]
+                },
+                {
+                    "featureType": "road.local",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#ffffff"}, {"lightness": 16}]
+                },
+                {
+                    "featureType": "poi",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#f5f5f5"}, {"lightness": 21}]
+                },
+                {
+                    "featureType": "poi.park",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#dedede"}, {"lightness": 21}]
+                },
+                {
+                    "featureType": "transit",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#f2f2f2"}, {"lightness": 19}]
                 }
-            } catch (error) {
-                console.error('Error fetching courier details:', error);
-                courierDetailsEl.innerHTML = `<div class="alert alert-danger">Failed to load courier details</div>`;
-            }
+            ],
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true,
+            zoomControl: true
+        });
+        
+        // Hide loader when map is loaded
+        google.maps.event.addListenerOnce(map, 'idle', function() {
+            hideMapLoader();
+        });
+        
+        // Set up event listeners
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', fetchCouriers);
         }
         
-        // Render courier details
-        function renderCourierDetails(courier) {
-            const [lng, lat] = courier.currentLocation.coordinates;
-            const lastUpdated = new Date(courier.currentLocation.lastUpdated);
-            const timeAgo = getTimeAgo(lastUpdated);
-            
-            courierDetailsEl.innerHTML = `
-                <div class="text-center mb-4">
-                    <div class="avatar-lg mx-auto">
-                        <div class="avatar-title bg-soft-primary text-primary display-5 rounded-circle">
-                            <i class="ri-user-line"></i>
-                        </div>
-                    </div>
-                    <h5 class="mt-3">${courier.name}</h5>
-                    <p class="text-muted mb-0">ID: ${courier.courierID}</p>
-                </div>
-                
-                <div class="courier-details-item">
-                    <h6>Status</h6>
-                    <p class="mb-0">
-                        <span class="badge ${courier.isAvailable ? 'bg-success' : 'bg-danger'}">
-                            ${courier.isAvailable ? 'Available' : 'Unavailable'}
-                        </span>
-                    </p>
-                </div>
-                
-                <div class="courier-details-item">
-                    <h6>Vehicle Type</h6>
-                    <p class="mb-0">${courier.vehicleType}</p>
-                </div>
-                
-                <div class="courier-details-item">
-                    <h6>Current Location</h6>
-                    <p class="mb-0">Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}</p>
-                    <small class="text-muted">Last updated: ${timeAgo}</small>
-                </div>
-                
-                <div class="mt-4">
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
-                       target="_blank" class="btn btn-primary w-100">
-                        <i class="ri-route-line me-1"></i> Get Directions
-                    </a>
-                </div>
-            `;
+        if (fitAllMarkersBtn) {
+            fitAllMarkersBtn.addEventListener('click', fitAllMarkers);
         }
         
-        // Helper function to format time ago
-        function getTimeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
-            
-            let interval = Math.floor(seconds / 31536000);
-            if (interval > 1) return interval + ' years ago';
-            
-            interval = Math.floor(seconds / 2592000);
-            if (interval > 1) return interval + ' months ago';
-            
-            interval = Math.floor(seconds / 86400);
-            if (interval > 1) return interval + ' days ago';
-            
-            interval = Math.floor(seconds / 3600);
-            if (interval > 1) return interval + ' hours ago';
-            
-            interval = Math.floor(seconds / 60);
-            if (interval > 1) return interval + ' minutes ago';
-            
-            if (seconds < 10) return 'just now';
-            
-            return Math.floor(seconds) + ' seconds ago';
-        }
-        
-        // Set up refresh button
-        refreshBtn.addEventListener('click', fetchCouriers);
+        // Fetch couriers after map is initialized
+        fetchCouriers();
         
         // Set up polling for updates
-        fetchCouriers();
         setInterval(fetchCouriers, 30000); // Refresh every 30 seconds
         
         // Set up Socket.IO for real-time updates
+        setupSocketIO();
+    }
+    
+    function hideMapLoader() {
+        if (mapLoader) {
+            mapLoader.style.display = 'none';
+        }
+    }
+    
+    function showMapLoader() {
+        if (mapLoader) {
+            mapLoader.style.display = 'flex';
+        }
+    }
+    
+    // Fit all markers in the map view
+    function fitAllMarkers() {
+        const markerIds = Object.keys(markers);
+        
+        if (markerIds.length === 0) {
+            return;
+        }
+        
+        const bounds = new google.maps.LatLngBounds();
+        
+        markerIds.forEach(id => {
+            bounds.extend(markers[id].getPosition());
+        });
+        
+        map.fitBounds(bounds);
+        
+        // Add some padding
+        const padding = { 
+            top: 50, 
+            right: 50, 
+            bottom: 50, 
+            left: 50 
+        };
+        
+        const newBounds = map.getBounds();
+        const newCenter = map.getCenter();
+        
+        map.fitBounds(newBounds, padding);
+    }
+    
+    // Fetch couriers
+    async function fetchCouriers() {
+        try {
+            const response = await fetch('/admin/courier-locations');
+            const data = await response.json();
+            
+            if (data.success) {
+                // Filter only couriers with location tracking enabled
+                const activeCouriers = data.couriers.filter(courier => 
+                    courier.isLocationTrackingEnabled === true
+                );
+                
+                renderCouriers(activeCouriers);
+                updateMarkers(activeCouriers);
+            } else {
+                courierListEl.innerHTML = `<div class="alert alert-danger">Failed to load couriers</div>`;
+            }
+        } catch (error) {
+            console.error('Error fetching couriers:', error);
+            courierListEl.innerHTML = `<div class="alert alert-danger">Failed to load couriers</div>`;
+        }
+    }
+    
+    // Render couriers list
+    function renderCouriers(couriers) {
+        if (couriers.length === 0) {
+            courierListEl.innerHTML = `
+                <div class="no-couriers-message">
+                    <i class="ri-user-search-line"></i>
+                    <h5>No Active Couriers</h5>
+                    <p class="text-muted">No couriers with active location tracking found</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        couriers.forEach(courier => {
+            const lastUpdated = new Date(courier.currentLocation.lastUpdated);
+            const timeAgo = getTimeAgo(lastUpdated);
+            
+            html += `
+                <div class="courier-item ${selectedCourierId === courier._id ? 'active' : ''}" 
+                     data-courier-id="${courier._id}">
+                    <div class="d-flex align-items-center">
+                        <div class="courier-avatar">
+                            <i class="ri-user-line"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="fs-14 mb-1">${courier.name}</h5>
+                            <p class="text-muted mb-0">ID: ${courier.courierID}</p>
+                        </div>
+                        <div>
+                            <span class="courier-status ${courier.isAvailable ? 'available' : 'unavailable'}" 
+                                  title="${courier.isAvailable ? 'Available' : 'Unavailable'}"></span>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="ri-time-line"></i> ${timeAgo}
+                        </small>
+                        <small class="text-muted ms-2">
+                            <i class="ri-car-line"></i> ${courier.vehicleType}
+                        </small>
+                    </div>
+                </div>
+            `;
+        });
+        
+        courierListEl.innerHTML = html;
+        
+        // Add event listeners
+        document.querySelectorAll('.courier-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const courierId = this.getAttribute('data-courier-id');
+                selectCourier(courierId);
+            });
+        });
+    }
+    
+    // Update map markers
+    function updateMarkers(couriers) {
+        // Remove old markers
+        Object.keys(markers).forEach(id => {
+            if (!couriers.find(c => c._id === id)) {
+                markers[id].setMap(null);
+                delete markers[id];
+            }
+        });
+        
+        // Add/update markers
+        couriers.forEach(courier => {
+            const [lng, lat] = courier.currentLocation.coordinates;
+            const position = { lat: lat, lng: lng };
+            
+            if (markers[courier._id]) {
+                // Update existing marker
+                markers[courier._id].setPosition(position);
+                
+                // Update icon based on availability
+                markers[courier._id].setIcon({
+                    url: courier.isAvailable ? 
+                        'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
+                        'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                    scaledSize: new google.maps.Size(40, 40)
+                });
+            } else {
+                // Create new marker with custom icon
+                const marker = new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    title: courier.name,
+                    icon: {
+                        url: courier.isAvailable ? 
+                            'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
+                            'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                        scaledSize: new google.maps.Size(40, 40)
+                    },
+                    animation: google.maps.Animation.DROP
+                });
+                
+                // Add info window
+                const infoContent = `
+                    <div style="width: 200px; padding: 10px;">
+                        <h6 style="margin: 0 0 5px 0; font-weight: 600;">${courier.name}</h6>
+                        <p style="margin: 0 0 5px 0;">ID: ${courier.courierID}</p>
+                        <p style="margin: 0 0 5px 0;">Vehicle: ${courier.vehicleType}</p>
+                        <p style="margin: 0; color: ${courier.isAvailable ? '#0ab39c' : '#f06548'};">
+                            Status: ${courier.isAvailable ? 'Available' : 'Unavailable'}
+                        </p>
+                    </div>
+                `;
+                
+                const infoWindow = new google.maps.InfoWindow({
+                    content: infoContent
+                });
+                
+                marker.addListener('click', () => {
+                    // Close all other info windows
+                    Object.keys(markers).forEach(id => {
+                        if (markers[id].infoWindow && markers[id] !== marker) {
+                            markers[id].infoWindow.close();
+                        }
+                    });
+                    
+                    infoWindow.open(map, marker);
+                    selectCourier(courier._id);
+                });
+                
+                // Store info window with marker for later reference
+                marker.infoWindow = infoWindow;
+                markers[courier._id] = marker;
+            }
+        });
+        
+        // If we have a selected courier, make sure it's centered
+        if (selectedCourierId && markers[selectedCourierId]) {
+            map.setCenter(markers[selectedCourierId].getPosition());
+            map.setZoom(15);
+        } else if (Object.keys(markers).length > 0) {
+            // Otherwise fit all markers
+            fitAllMarkers();
+        }
+    }
+    
+    // Select courier
+    async function selectCourier(courierId) {
+        // Update UI
+        document.querySelectorAll('.courier-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('data-courier-id') === courierId) {
+                item.classList.add('active');
+            }
+        });
+        
+        selectedCourierId = courierId;
+        
+        // Show loading
+        courierDetailsEl.innerHTML = `
+            <div class="text-center py-2">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading courier details...</p>
+            </div>
+        `;
+        
+        try {
+            const response = await fetch(`/admin/courier-location/${courierId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                renderCourierDetails(data.courier);
+                
+                // Center map on courier and open info window
+                if (markers[courierId]) {
+                    map.setCenter(markers[courierId].getPosition());
+                    map.setZoom(15);
+                    
+                    // Open info window
+                    if (markers[courierId].infoWindow) {
+                        markers[courierId].infoWindow.open(map, markers[courierId]);
+                    }
+                }
+            } else {
+                courierDetailsEl.innerHTML = `<div class="alert alert-danger">Failed to load courier details</div>`;
+            }
+        } catch (error) {
+            console.error('Error fetching courier details:', error);
+            courierDetailsEl.innerHTML = `<div class="alert alert-danger">Failed to load courier details</div>`;
+        }
+    }
+    
+    // Render courier details
+    function renderCourierDetails(courier) {
+        const [lng, lat] = courier.currentLocation.coordinates;
+        const lastUpdated = new Date(courier.currentLocation.lastUpdated);
+        const timeAgo = getTimeAgo(lastUpdated);
+        
+        courierDetailsEl.innerHTML = `
+            <div class="text-center mb-4">
+                <div class="avatar-lg mx-auto">
+                    <div class="avatar-title bg-soft-primary text-primary display-5 rounded-circle">
+                        <i class="ri-user-line"></i>
+                    </div>
+                </div>
+                <h5 class="mt-3">${courier.name}</h5>
+                <p class="text-muted mb-0">ID: ${courier.courierID}</p>
+            </div>
+            
+            <div class="courier-details-item">
+                <h6>Status</h6>
+                <p class="mb-0">
+                    <span class="badge ${courier.isAvailable ? 'bg-success' : 'bg-danger'}">
+                        ${courier.isAvailable ? 'Available' : 'Unavailable'}
+                    </span>
+                </p>
+            </div>
+            
+            <div class="courier-details-item">
+                <h6>Vehicle Type</h6>
+                <p class="mb-0">${courier.vehicleType}</p>
+            </div>
+            
+            <div class="courier-details-item">
+                <h6>Contact</h6>
+                <p class="mb-0"><i class="ri-phone-line me-1"></i> ${courier.phoneNumber || 'N/A'}</p>
+                <p class="mb-0"><i class="ri-mail-line me-1"></i> ${courier.email || 'N/A'}</p>
+            </div>
+            
+            <div class="courier-details-item">
+                <h6>Current Location</h6>
+                <p class="mb-0">Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}</p>
+                <small class="text-muted">Last updated: ${timeAgo}</small>
+            </div>
+            
+            <div class="mt-4">
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
+                   target="_blank" class="btn btn-primary w-100">
+                    <i class="ri-route-line me-1"></i> Get Directions
+                </a>
+            </div>
+        `;
+    }
+    
+    // Helper function to format time ago
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        let interval = Math.floor(seconds / 31536000);
+        if (interval > 1) return interval + ' years ago';
+        
+        interval = Math.floor(seconds / 2592000);
+        if (interval > 1) return interval + ' months ago';
+        
+        interval = Math.floor(seconds / 86400);
+        if (interval > 1) return interval + ' days ago';
+        
+        interval = Math.floor(seconds / 3600);
+        if (interval > 1) return interval + ' hours ago';
+        
+        interval = Math.floor(seconds / 60);
+        if (interval > 1) return interval + ' minutes ago';
+        
+        if (seconds < 10) return 'just now';
+        
+        return Math.floor(seconds) + ' seconds ago';
+    }
+    
+    // Set up Socket.IO for real-time updates
+    function setupSocketIO() {
         try {
             const socket = io();
             
+            // Handle courier location updates
             socket.on('courier-location-update', function(data) {
-                // Update marker for the specific courier
-                if (data && data.courierId) {
-                    // Fetch the updated courier data
+                if (!data || !data.courierId) return;
+                
+                console.log('Received location update for courier:', data.courierId);
+                
+                // If we have all the data needed, update directly without a fetch request
+                if (data.location && data.name && data.courierID && data.vehicleType !== undefined) {
+                    const courierId = data.courierId;
+                    const lat = data.location.latitude;
+                    const lng = data.location.longitude;
+                    
+                    // Update marker position if it exists
+                    if (markers[courierId]) {
+                        markers[courierId].setPosition({ lat, lng });
+                        
+                        // Update icon based on availability
+                        markers[courierId].setIcon({
+                            url: data.isAvailable ? 
+                                'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
+                                'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                            scaledSize: new google.maps.Size(40, 40)
+                        });
+                        
+                        // Update info window content
+                        if (markers[courierId].infoWindow) {
+                            const infoContent = `
+                                <div style="width: 200px; padding: 10px;">
+                                    <h6 style="margin: 0 0 5px 0; font-weight: 600;">${data.name}</h6>
+                                    <p style="margin: 0 0 5px 0;">ID: ${data.courierID}</p>
+                                    <p style="margin: 0 0 5px 0;">Vehicle: ${data.vehicleType}</p>
+                                    <p style="margin: 0; color: ${data.isAvailable ? '#0ab39c' : '#f06548'};">
+                                        Status: ${data.isAvailable ? 'Available' : 'Unavailable'}
+                                    </p>
+                                </div>
+                            `;
+                            
+                            markers[courierId].infoWindow.setContent(infoContent);
+                        }
+                        
+                        // If this is the selected courier, update details
+                        if (selectedCourierId === courierId) {
+                            // Fetch full courier details to update the details panel
+                            fetch(`/admin/courier-location/${courierId}`)
+                                .then(response => response.json())
+                                .then(result => {
+                                    if (result.success) {
+                                        renderCourierDetails(result.courier);
+                                        map.setCenter({ lat, lng });
+                                    }
+                                })
+                                .catch(error => console.error('Error fetching updated courier data:', error));
+                        }
+                    } else {
+                        // If marker doesn't exist, refresh all couriers
+                        fetchCouriers();
+                    }
+                } else {
+                    // If we don't have all the data, fetch the courier data
                     fetch(`/admin/courier-location/${data.courierId}`)
                         .then(response => response.json())
                         .then(result => {
                             if (result.success) {
-                                // Update marker
                                 const courier = result.courier;
                                 const [lng, lat] = courier.currentLocation.coordinates;
                                 
                                 if (markers[courier._id]) {
-                                    markers[courier._id].setLatLng([lat, lng]);
-                                    
-                                    // Update popup content
-                                    markers[courier._id].setPopupContent(`
-                                        <div>
-                                            <h6>${courier.name}</h6>
-                                            <p>ID: ${courier.courierID}</p>
-                                            <p>Vehicle: ${courier.vehicleType}</p>
-                                            <p>Status: ${courier.isAvailable ? 'Available' : 'Unavailable'}</p>
-                                        </div>
-                                    `);
+                                    markers[courier._id].setPosition({ lat, lng });
                                     
                                     // If this is the selected courier, update details and center map
                                     if (selectedCourierId === courier._id) {
                                         renderCourierDetails(courier);
-                                        map.setView([lat, lng], map.getZoom());
+                                        map.setCenter({ lat, lng });
                                     }
+                                } else {
+                                    // If marker doesn't exist, refresh all couriers
+                                    fetchCouriers();
                                 }
                             }
                         })
                         .catch(error => console.error('Error fetching updated courier data:', error));
                 }
             });
+            
+            // Handle courier status updates
+            socket.on('courier-status-update', function(data) {
+                if (!data || !data.courierId) return;
+                
+                console.log('Received status update for courier:', data.courierId);
+                
+                // Fetch the updated courier data
+                fetch(`/admin/courier-location/${data.courierId}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            const courier = result.courier;
+                            
+                            // Update marker icon based on availability
+                            if (markers[courier._id]) {
+                                markers[courier._id].setIcon({
+                                    url: courier.isAvailable ? 
+                                        'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
+                                        'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                                    scaledSize: new google.maps.Size(40, 40)
+                                });
+                                
+                                // If this is the selected courier, update details
+                                if (selectedCourierId === courier._id) {
+                                    renderCourierDetails(courier);
+                                }
+                            }
+                            
+                            // Update courier in the list
+                            const courierItem = document.querySelector(`.courier-item[data-courier-id="${courier._id}"]`);
+                            if (courierItem) {
+                                const statusDot = courierItem.querySelector('.courier-status');
+                                if (statusDot) {
+                                    statusDot.className = `courier-status ${courier.isAvailable ? 'available' : 'unavailable'}`;
+                                    statusDot.title = courier.isAvailable ? 'Available' : 'Unavailable';
+                                }
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error fetching updated courier data:', error));
+            });
         } catch (error) {
             console.error('Socket.IO initialization failed:', error);
         }
-    });
+    }
 </script> 

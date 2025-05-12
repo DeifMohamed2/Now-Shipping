@@ -38,8 +38,10 @@ const initializeSocket = (server) => {
         // Join room based on user type
         if (socket.userType === 'courier') {
             socket.join(`courier:${socket.userId}`);
+            console.log(`Courier ${socket.userId} joined their room`);
         } else if (socket.userType === 'admin') {
             socket.join('admin');
+            console.log(`Admin ${socket.userId} joined admin room`);
         }
         
         // Handle location updates from couriers
@@ -48,21 +50,34 @@ const initializeSocket = (server) => {
                 const { latitude, longitude } = data;
                 
                 if (!latitude || !longitude) {
+                    console.log('Invalid location data received');
                     return;
                 }
                 
                 if (socket.userType !== 'courier') {
+                    console.log('Location update from non-courier user rejected');
                     return;
                 }
                 
+                console.log(`Courier ${socket.userId} location update: ${latitude}, ${longitude}`);
+                
                 // Update courier location in database
-                await Courier.findByIdAndUpdate(socket.userId, {
-                    currentLocation: {
-                        type: 'Point',
-                        coordinates: [longitude, latitude],
-                        lastUpdated: new Date()
-                    }
-                });
+                const updatedCourier = await Courier.findByIdAndUpdate(
+                    socket.userId, 
+                    {
+                        currentLocation: {
+                            type: 'Point',
+                            coordinates: [longitude, latitude],
+                            lastUpdated: new Date()
+                        }
+                    },
+                    { new: true } // Return updated document
+                );
+                
+                if (!updatedCourier) {
+                    console.log(`Courier ${socket.userId} not found in database`);
+                    return;
+                }
                 
                 // Broadcast to admin room
                 io.to('admin').emit('courier-location-update', {
@@ -71,11 +86,44 @@ const initializeSocket = (server) => {
                         latitude,
                         longitude,
                         timestamp: new Date()
-                    }
+                    },
+                    isAvailable: updatedCourier.isAvailable,
+                    name: updatedCourier.name,
+                    courierID: updatedCourier.courierID,
+                    vehicleType: updatedCourier.vehicleType
                 });
+                
+                console.log(`Location update for courier ${socket.userId} broadcast to admin room`);
                 
             } catch (error) {
                 console.error('Error handling location update:', error);
+            }
+        });
+        
+        // Handle courier status change
+        socket.on('status_update', async (data) => {
+            try {
+                const { isAvailable } = data;
+                
+                if (isAvailable === undefined) {
+                    return;
+                }
+                
+                if (socket.userType !== 'courier') {
+                    return;
+                }
+                
+                // Update courier status in database
+                await Courier.findByIdAndUpdate(socket.userId, { isAvailable });
+                
+                // Broadcast to admin room
+                io.to('admin').emit('courier-status-update', {
+                    courierId: socket.userId,
+                    isAvailable
+                });
+                
+            } catch (error) {
+                console.error('Error handling status update:', error);
             }
         });
         
