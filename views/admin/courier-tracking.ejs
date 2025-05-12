@@ -224,55 +224,8 @@
         map = new google.maps.Map(document.getElementById('map'), {
             center: { lat: 30.0444, lng: 31.2357 },
             zoom: 10,
-            styles: [
-                {
-                    "featureType": "water",
-                    "elementType": "geometry",
-                    "stylers": [{"color": "#e9e9e9"}, {"lightness": 17}]
-                },
-                {
-                    "featureType": "landscape",
-                    "elementType": "geometry",
-                    "stylers": [{"color": "#f5f5f5"}, {"lightness": 20}]
-                },
-                {
-                    "featureType": "road.highway",
-                    "elementType": "geometry.fill",
-                    "stylers": [{"color": "#ffffff"}, {"lightness": 17}]
-                },
-                {
-                    "featureType": "road.highway",
-                    "elementType": "geometry.stroke",
-                    "stylers": [{"color": "#ffffff"}, {"lightness": 29}, {"weight": 0.2}]
-                },
-                {
-                    "featureType": "road.arterial",
-                    "elementType": "geometry",
-                    "stylers": [{"color": "#ffffff"}, {"lightness": 18}]
-                },
-                {
-                    "featureType": "road.local",
-                    "elementType": "geometry",
-                    "stylers": [{"color": "#ffffff"}, {"lightness": 16}]
-                },
-                {
-                    "featureType": "poi",
-                    "elementType": "geometry",
-                    "stylers": [{"color": "#f5f5f5"}, {"lightness": 21}]
-                },
-                {
-                    "featureType": "poi.park",
-                    "elementType": "geometry",
-                    "stylers": [{"color": "#dedede"}, {"lightness": 21}]
-                },
-                {
-                    "featureType": "transit",
-                    "elementType": "geometry",
-                    "stylers": [{"color": "#f2f2f2"}, {"lightness": 19}]
-                }
-            ],
-            mapTypeControl: false,
-            streetViewControl: false,
+            mapTypeControl: true,
+            streetViewControl: true,
             fullscreenControl: true,
             zoomControl: true
         });
@@ -442,37 +395,24 @@
                 // Update existing marker
                 markers[courier._id].setPosition(position);
                 
-                // Update icon based on availability
-                markers[courier._id].setIcon({
-                    url: courier.isAvailable ? 
-                        'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
-                        'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                    scaledSize: new google.maps.Size(40, 40)
-                });
+                // Update icon based on vehicle type and availability
+                markers[courier._id].setIcon(getVehicleIcon(courier));
             } else {
-                // Create new marker with custom icon
+                // Create new marker
                 const marker = new google.maps.Marker({
                     position: position,
                     map: map,
                     title: courier.name,
-                    icon: {
-                        url: courier.isAvailable ? 
-                            'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
-                            'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                        scaledSize: new google.maps.Size(40, 40)
-                    },
-                    animation: google.maps.Animation.DROP
+                    icon: getVehicleIcon(courier)
                 });
                 
-                // Add info window
+                // Create info window
                 const infoContent = `
-                    <div style="width: 200px; padding: 10px;">
-                        <h6 style="margin: 0 0 5px 0; font-weight: 600;">${courier.name}</h6>
-                        <p style="margin: 0 0 5px 0;">ID: ${courier.courierID}</p>
-                        <p style="margin: 0 0 5px 0;">Vehicle: ${courier.vehicleType}</p>
-                        <p style="margin: 0; color: ${courier.isAvailable ? '#0ab39c' : '#f06548'};">
-                            Status: ${courier.isAvailable ? 'Available' : 'Unavailable'}
-                        </p>
+                    <div style="padding: 10px; max-width: 200px;">
+                        <h6 style="margin: 0 0 5px 0;">${courier.name}</h6>
+                        <p style="margin: 0 0 5px 0;"><strong>Status:</strong> ${courier.isAvailable ? 'Available' : 'Unavailable'}</p>
+                        <p style="margin: 0 0 5px 0;"><strong>Vehicle:</strong> ${courier.vehicleType}</p>
+                        <p style="margin: 0;"><strong>Last Updated:</strong> ${new Date(courier.currentLocation.lastUpdated).toLocaleTimeString()}</p>
                     </div>
                 `;
                 
@@ -480,11 +420,11 @@
                     content: infoContent
                 });
                 
-                marker.addListener('click', () => {
+                marker.addListener('click', function() {
                     // Close all other info windows
-                    Object.keys(markers).forEach(id => {
-                        if (markers[id].infoWindow && markers[id] !== marker) {
-                            markers[id].infoWindow.close();
+                    Object.values(markers).forEach(m => {
+                        if (m.infoWindow) {
+                            m.infoWindow.close();
                         }
                     });
                     
@@ -506,6 +446,30 @@
             // Otherwise fit all markers
             fitAllMarkers();
         }
+    }
+    
+    // Get appropriate icon based on vehicle type and availability
+    function getVehicleIcon(courier) {
+        let iconUrl;
+        const isAvailable = courier.isAvailable;
+        const vehicleType = courier.vehicleType.toLowerCase();
+        
+        // Set base icon URL based on vehicle type
+        if (vehicleType.includes('motorcycle') || vehicleType.includes('bike')) {
+            iconUrl = '/assets/images/map-icons/motorcycle-red.png'
+        } else if (vehicleType.includes('car')) {
+            iconUrl = '/assets/images/map-icons/car-red.png';
+        } else if (vehicleType.includes('truck') || vehicleType.includes('van')) {
+            iconUrl ='/assets/images/map-icons/van1.png';
+        } else {
+            // Default icons if vehicle type doesn't match
+            iconUrl = isAvailable ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        }
+        
+        return {
+            url: iconUrl,
+            scaledSize: new google.maps.Size(40, 40)
+        };
     }
     
     // Select courier
@@ -653,13 +617,8 @@
                     if (markers[courierId]) {
                         markers[courierId].setPosition({ lat, lng });
                         
-                        // Update icon based on availability
-                        markers[courierId].setIcon({
-                            url: data.isAvailable ? 
-                                'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
-                                'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                            scaledSize: new google.maps.Size(40, 40)
-                        });
+                        // Update icon based on vehicle type and availability
+                        markers[courierId].setIcon(getVehicleIcon(data));
                         
                         // Update info window content
                         if (markers[courierId].infoWindow) {
@@ -734,14 +693,9 @@
                         if (result.success) {
                             const courier = result.courier;
                             
-                            // Update marker icon based on availability
+                            // Update marker icon based on vehicle type and availability
                             if (markers[courier._id]) {
-                                markers[courier._id].setIcon({
-                                    url: courier.isAvailable ? 
-                                        'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
-                                        'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                                    scaledSize: new google.maps.Size(40, 40)
-                                });
+                                markers[courier._id].setIcon(getVehicleIcon(courier));
                                 
                                 // If this is the selected courier, update details
                                 if (selectedCourierId === courier._id) {
