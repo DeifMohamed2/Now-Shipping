@@ -7,6 +7,7 @@ import 'package:track_courier/screens/login_screen.dart';
 import 'package:track_courier/utils/app_theme.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,18 +16,20 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   GoogleMapController? _mapController;
   final Set<Marker> _markers = {};
   bool _mapReady = false;
   bool _isFirstLoad = true;
   bool _showErrorBanner = false;
   String _errorMessage = '';
+  DateTime? _lastUpdateTime;
 
   @override
   void initState() {
     super.initState();
     print("HomeScreen initialized");
+    WidgetsBinding.instance.addObserver(this);
 
     // Request location permission if not already granted
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -55,6 +58,29 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // When app comes back to foreground, update position
+    if (state == AppLifecycleState.resumed) {
+      final locationProvider =
+          Provider.of<LocationProvider>(context, listen: false);
+
+      if (locationProvider.isLocationTrackingEnabled &&
+          locationProvider.isPermissionGranted) {
+        _updateCurrentPosition(locationProvider);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _mapController?.dispose();
+    super.dispose();
   }
 
   Future<void> _updateCurrentPosition(LocationProvider locationProvider) async {
@@ -91,8 +117,11 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'Your Location',
               snippet: 'You are here',
             ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueAzure),
           ),
         );
+        _lastUpdateTime = DateTime.now();
       });
 
       print(
@@ -130,6 +159,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  String _formatLastUpdateTime() {
+    if (_lastUpdateTime == null) return 'Not updated yet';
+    return DateFormat('HH:mm:ss').format(_lastUpdateTime!);
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -153,6 +187,11 @@ class _HomeScreenState extends State<HomeScreen> {
         _updateMapWithCurrentLocation(locationProvider);
       });
       _isFirstLoad = false;
+    }
+
+    // Update last update time when position changes
+    if (locationProvider.currentPosition != null && !_isFirstLoad) {
+      _lastUpdateTime = DateTime.now();
     }
 
     return Scaffold(
@@ -248,8 +287,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     title: 'Your Location',
                                     snippet: 'You are here',
                                   ),
+                                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                                      BitmapDescriptor.hueAzure),
                                 ),
                               );
+                              _lastUpdateTime = DateTime.now();
                             });
                           }
                         },
@@ -258,12 +300,121 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: CircularProgressIndicator(),
                       ),
 
+                // Map overlay with location info
+                if (locationProvider.currentPosition != null)
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    right: 16,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on,
+                                  color: AppTheme.primaryColor,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Current Location',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: locationProvider
+                                            .isLocationTrackingEnabled
+                                        ? AppTheme.successColor.withOpacity(0.1)
+                                        : Colors.grey.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: locationProvider
+                                                  .isLocationTrackingEnabled
+                                              ? AppTheme.successColor
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        locationProvider
+                                                .isLocationTrackingEnabled
+                                            ? 'Active'
+                                            : 'Inactive',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: locationProvider
+                                                  .isLocationTrackingEnabled
+                                              ? AppTheme.successColor
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Lat: ${locationProvider.currentPosition!.latitude.toStringAsFixed(6)}, Lng: ${locationProvider.currentPosition!.longitude.toStringAsFixed(6)}',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Last update: ${_formatLastUpdateTime()}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                Text(
+                                  'Updates every 7 seconds',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
                 // Debug button to force position update
                 Positioned(
-                  top: 10,
-                  right: 10,
+                  bottom: 16,
+                  right: 16,
                   child: FloatingActionButton(
-                    mini: true,
+                    heroTag: 'refreshLocation',
                     backgroundColor: Colors.white,
                     child: const Icon(Icons.refresh, color: Colors.blue),
                     onPressed: () {
@@ -272,6 +423,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       if (locationProvider.currentPosition != null) {
                         _updateMapWithCurrentLocation(locationProvider);
+                        setState(() {
+                          _lastUpdateTime = DateTime.now();
+                        });
+                        Fluttertoast.showToast(
+                          msg: "Location updated",
+                          backgroundColor: Colors.green,
+                        );
                       } else {
                         Fluttertoast.showToast(
                           msg: "Waiting for location...",
@@ -343,95 +501,115 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
 
                 // Location tracking toggle
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Location Tracking',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Location Tracking',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Switch(
+                            value: locationProvider.isLocationTrackingEnabled,
+                            onChanged: (value) async {
+                              print("Toggle switch changed to: $value");
+                              if (!locationProvider.isPermissionGranted) {
+                                print("Permission not granted, requesting");
+                                await locationProvider
+                                    .checkLocationPermission();
+                                if (!locationProvider.isPermissionGranted) {
+                                  print(
+                                      "Permission still not granted after request");
+                                  Fluttertoast.showToast(
+                                    msg: 'Location permission is required',
+                                    backgroundColor: Colors.red,
+                                  );
+                                  return;
+                                }
+                              }
+
+                              print("Calling toggleLocationTracking");
+                              await locationProvider
+                                  .toggleLocationTracking(value);
+                              print(
+                                  "Toggle complete, new state: ${locationProvider.isLocationTrackingEnabled}");
+
+                              if (value &&
+                                  locationProvider.currentPosition != null) {
+                                print("Animating camera to current position");
+                                _updateMapWithCurrentLocation(locationProvider);
+                              }
+
+                              // Check for errors after toggle
+                              if (locationProvider.error != null) {
+                                setState(() {
+                                  _showErrorBanner = true;
+                                  _errorMessage = locationProvider.error!;
+                                });
+                              }
+                            },
+                            activeColor: AppTheme.successColor,
+                          ),
+                        ],
                       ),
-                    ),
-                    Switch(
-                      value: locationProvider.isLocationTrackingEnabled,
-                      onChanged: (value) async {
-                        print("Toggle switch changed to: $value");
-                        if (!locationProvider.isPermissionGranted) {
-                          print("Permission not granted, requesting");
-                          await locationProvider.checkLocationPermission();
-                          if (!locationProvider.isPermissionGranted) {
-                            print("Permission still not granted after request");
-                            Fluttertoast.showToast(
-                              msg: 'Location permission is required',
-                              backgroundColor: Colors.red,
-                            );
-                            return;
-                          }
-                        }
 
-                        print("Calling toggleLocationTracking");
-                        await locationProvider.toggleLocationTracking(value);
-                        print(
-                            "Toggle complete, new state: ${locationProvider.isLocationTrackingEnabled}");
+                      const SizedBox(height: 8),
 
-                        if (value && locationProvider.currentPosition != null) {
-                          print("Animating camera to current position");
-                          _updateMapWithCurrentLocation(locationProvider);
-                        }
-
-                        // Check for errors after toggle
-                        if (locationProvider.error != null) {
-                          setState(() {
-                            _showErrorBanner = true;
-                            _errorMessage = locationProvider.error!;
-                          });
-                        }
-                      },
-                      activeColor: AppTheme.successColor,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // Status text
-                Text(
-                  locationProvider.isLocationTrackingEnabled
-                      ? 'Your location is being shared with the admin'
-                      : 'Location sharing is currently disabled',
-                  style: TextStyle(
-                    color: locationProvider.isLocationTrackingEnabled
-                        ? AppTheme.successColor
-                        : Colors.grey[600],
-                    fontSize: 14,
+                      // Status text
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: locationProvider.isLocationTrackingEnabled
+                              ? AppTheme.successColor.withOpacity(0.1)
+                              : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              locationProvider.isLocationTrackingEnabled
+                                  ? Icons.check_circle_outline
+                                  : Icons.info_outline,
+                              size: 18,
+                              color: locationProvider.isLocationTrackingEnabled
+                                  ? AppTheme.successColor
+                                  : Colors.grey[600],
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                locationProvider.isLocationTrackingEnabled
+                                    ? 'Your location is being shared with the admin'
+                                    : 'Location sharing is currently disabled',
+                                style: TextStyle(
+                                  color:
+                                      locationProvider.isLocationTrackingEnabled
+                                          ? AppTheme.successColor
+                                          : Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-
-                if (locationProvider.currentPosition != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Last update: ${DateTime.now().toString().substring(11, 19)}',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-
-                // Add coordinates display for debugging
-                if (locationProvider.currentPosition != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Coordinates: ${locationProvider.currentPosition!.latitude.toStringAsFixed(6)}, ${locationProvider.currentPosition!.longitude.toStringAsFixed(6)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),

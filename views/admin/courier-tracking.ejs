@@ -8,12 +8,13 @@
         border: 1px solid #e9e9ef;
         transition: all 0.3s ease;
         cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     
     .courier-item:hover {
         background-color: #f3f6f9;
         transform: translateY(-2px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
     .courier-item.active {
@@ -121,6 +122,101 @@
     .map-controls .btn {
         margin-bottom: 5px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Enhanced map info window styles */
+    .gm-style .gm-style-iw-c {
+        padding: 0 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .courier-info-window {
+        padding: 16px;
+        min-width: 220px;
+        border-radius: 8px;
+        background: #fff;
+    }
+    
+    .courier-info-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 8px;
+    }
+    
+    .courier-info-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: #f3f6f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+    }
+    
+    .courier-info-avatar i {
+        font-size: 18px;
+        color: #405189;
+    }
+    
+    .courier-info-name {
+        font-weight: 600;
+        font-size: 15px;
+        margin: 0;
+    }
+    
+    .courier-info-id {
+        font-size: 12px;
+        color: #878a99;
+        margin: 0;
+    }
+    
+    .courier-info-details {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 10px;
+        font-size: 13px;
+    }
+    
+    .courier-info-label {
+        color: #878a99;
+        font-weight: 500;
+    }
+    
+    .courier-info-value {
+        color: #212529;
+    }
+    
+    .courier-info-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .courier-info-status.available {
+        background-color: rgba(10, 179, 156, 0.1);
+        color: #0ab39c;
+    }
+    
+    .courier-info-status.unavailable {
+        background-color: rgba(240, 101, 72, 0.1);
+        color: #f06548;
+    }
+    
+    .courier-info-footer {
+        margin-top: 12px;
+        text-align: right;
+    }
+    
+    .courier-info-time {
+        font-size: 11px;
+        color: #878a99;
     }
 </style>
 
@@ -246,9 +342,6 @@
         
         // Fetch couriers after map is initialized
         fetchCouriers();
-        
-        // Set up polling for updates
-        setInterval(fetchCouriers, 30000); // Refresh every 30 seconds
         
         // Set up Socket.IO for real-time updates
         setupSocketIO();
@@ -378,13 +471,8 @@
     
     // Update map markers
     function updateMarkers(couriers) {
-        // Remove old markers
-        Object.keys(markers).forEach(id => {
-            if (!couriers.find(c => c._id === id)) {
-                markers[id].setMap(null);
-                delete markers[id];
-            }
-        });
+        // Keep track of couriers to keep on the map even if inactive
+        const courierIds = couriers.map(c => c._id);
         
         // Add/update markers
         couriers.forEach(courier => {
@@ -406,18 +494,12 @@
                     icon: getVehicleIcon(courier)
                 });
                 
-                // Create info window
-                const infoContent = `
-                    <div style="padding: 10px; max-width: 200px;">
-                        <h6 style="margin: 0 0 5px 0;">${courier.name}</h6>
-                        <p style="margin: 0 0 5px 0;"><strong>Status:</strong> ${courier.isAvailable ? 'Available' : 'Unavailable'}</p>
-                        <p style="margin: 0 0 5px 0;"><strong>Vehicle:</strong> ${courier.vehicleType}</p>
-                        <p style="margin: 0;"><strong>Last Updated:</strong> ${new Date(courier.currentLocation.lastUpdated).toLocaleTimeString()}</p>
-                    </div>
-                `;
+                // Create enhanced info window
+                const infoContent = createInfoWindowContent(courier);
                 
                 const infoWindow = new google.maps.InfoWindow({
-                    content: infoContent
+                    content: infoContent,
+                    maxWidth: 300
                 });
                 
                 marker.addListener('click', function() {
@@ -446,6 +528,49 @@
             // Otherwise fit all markers
             fitAllMarkers();
         }
+    }
+    
+    // Create enhanced info window content
+    function createInfoWindowContent(courier) {
+        const [lng, lat] = courier.currentLocation.coordinates;
+        const lastUpdated = new Date(courier.currentLocation.lastUpdated);
+        const timeAgo = getTimeAgo(lastUpdated);
+        
+        return `
+            <div class="courier-info-window">
+                <div class="courier-info-header">
+                    <div class="courier-info-avatar">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <div>
+                        <h5 class="courier-info-name">${courier.name}</h5>
+                        <p class="courier-info-id">${courier.courierID}</p>
+                    </div>
+                </div>
+                
+                <div class="courier-info-details">
+                    <span class="courier-info-label">Status:</span>
+                    <span class="courier-info-value">
+                        <span class="courier-info-status ${courier.isAvailable ? 'available' : 'unavailable'}">
+                            ${courier.isAvailable ? 'Available' : 'Unavailable'}
+                        </span>
+                    </span>
+                    
+                    <span class="courier-info-label">Vehicle:</span>
+                    <span class="courier-info-value">${courier.vehicleType}</span>
+                    
+                    <span class="courier-info-label">Updated:</span>
+                    <span class="courier-info-value">${timeAgo}</span>
+                </div>
+                
+                <div class="courier-info-footer">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
+                       target="_blank" class="btn btn-sm btn-primary mt-2">
+                        <i class="ri-route-line me-1"></i> Get Directions
+                    </a>
+                </div>
+            </div>
+        `;
     }
     
     // Get appropriate icon based on vehicle type and availability
@@ -623,13 +748,38 @@
                         // Update info window content
                         if (markers[courierId].infoWindow) {
                             const infoContent = `
-                                <div style="width: 200px; padding: 10px;">
-                                    <h6 style="margin: 0 0 5px 0; font-weight: 600;">${data.name}</h6>
-                                    <p style="margin: 0 0 5px 0;">ID: ${data.courierID}</p>
-                                    <p style="margin: 0 0 5px 0;">Vehicle: ${data.vehicleType}</p>
-                                    <p style="margin: 0; color: ${data.isAvailable ? '#0ab39c' : '#f06548'};">
-                                        Status: ${data.isAvailable ? 'Available' : 'Unavailable'}
-                                    </p>
+                                <div class="courier-info-window">
+                                    <div class="courier-info-header">
+                                        <div class="courier-info-avatar">
+                                            <i class="ri-user-line"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="courier-info-name">${data.name}</h5>
+                                            <p class="courier-info-id">${data.courierID}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="courier-info-details">
+                                        <span class="courier-info-label">Status:</span>
+                                        <span class="courier-info-value">
+                                            <span class="courier-info-status ${data.isAvailable ? 'available' : 'unavailable'}">
+                                                ${data.isAvailable ? 'Available' : 'Unavailable'}
+                                            </span>
+                                        </span>
+                                        
+                                        <span class="courier-info-label">Vehicle:</span>
+                                        <span class="courier-info-value">${data.vehicleType}</span>
+                                        
+                                        <span class="courier-info-label">Updated:</span>
+                                        <span class="courier-info-value">just now</span>
+                                    </div>
+                                    
+                                    <div class="courier-info-footer">
+                                        <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
+                                           target="_blank" class="btn btn-sm btn-primary mt-2">
+                                            <i class="ri-route-line me-1"></i> Get Directions
+                                        </a>
+                                    </div>
                                 </div>
                             `;
                             
@@ -648,6 +798,15 @@
                                     }
                                 })
                                 .catch(error => console.error('Error fetching updated courier data:', error));
+                        }
+                        
+                        // Also update the courier in the list with new timestamp
+                        const courierItem = document.querySelector(`.courier-item[data-courier-id="${courierId}"]`);
+                        if (courierItem) {
+                            const timeElement = courierItem.querySelector('small:first-of-type');
+                            if (timeElement) {
+                                timeElement.innerHTML = '<i class="ri-time-line"></i> just now';
+                            }
                         }
                     } else {
                         // If marker doesn't exist, refresh all couriers

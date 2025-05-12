@@ -238,8 +238,8 @@ class LocationProvider extends ChangeNotifier {
     // Get current position immediately
     _getCurrentPosition();
 
-    // Set up timer for regular updates
-    _locationUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    // Set up timer for regular updates every 10 seconds
+    _locationUpdateTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       print("Timer triggered, getting current position");
       _getCurrentPosition();
     });
