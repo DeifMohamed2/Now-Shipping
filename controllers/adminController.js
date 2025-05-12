@@ -1261,11 +1261,20 @@ const getCourierLocations = async (req, res) => {
             isLocationTrackingEnabled: true,
             'currentLocation.coordinates.0': { $ne: 0 },
             'currentLocation.coordinates.1': { $ne: 0 }
-        }).select('name courierID vehicleType isAvailable currentLocation isLocationTrackingEnabled');
+        }).select('name courierID vehicleType isAvailable currentLocation isLocationTrackingEnabled personalPhoto');
+
+        // Process couriers to add photoUrl
+        const processedCouriers = couriers.map(courier => {
+            const courierObj = courier.toObject();
+            if (courierObj.personalPhoto) {
+                courierObj.photoUrl = `/uploads/couriers/${courierObj.personalPhoto}`;
+            }
+            return courierObj;
+        });
 
         res.json({
             success: true,
-            couriers
+            couriers: processedCouriers
         });
     } catch (error) {
         console.error('Error getting courier locations:', error);
@@ -1281,7 +1290,7 @@ const getCourierLocations = async (req, res) => {
 const getCourierLocation = async (req, res) => {
     try {
         const courierId = req.params.id;
-        const courier = await Courier.findById(courierId).select('name courierID vehicleType isAvailable currentLocation phoneNumber email isLocationTrackingEnabled');
+        const courier = await Courier.findById(courierId).select('name courierID vehicleType isAvailable currentLocation phoneNumber email isLocationTrackingEnabled personalPhoto');
 
         if (!courier) {
             return res.status(404).json({
@@ -1290,9 +1299,15 @@ const getCourierLocation = async (req, res) => {
             });
         }
 
+        // Add photoUrl if personalPhoto exists
+        const courierObj = courier.toObject();
+        if (courierObj.personalPhoto) {
+            courierObj.photoUrl = `/uploads/couriers/${courierObj.personalPhoto}`;
+        }
+
         res.json({
             success: true,
-            courier
+            courier: courierObj
         });
     } catch (error) {
         console.error('Error getting courier location:', error);

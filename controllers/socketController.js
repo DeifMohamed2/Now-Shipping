@@ -84,6 +84,12 @@ const initializeSocket = (server) => {
                     console.log(`Courier ${socket.userId} not found in database`);
                     return;
                 }
+
+                // Prepare photo URL if available
+                let photoUrl = null;
+                if (updatedCourier.personalPhoto) {
+                    photoUrl = `/uploads/couriers/${updatedCourier.personalPhoto}`;
+                }
                 
                 // Broadcast to admin room
                 io.to('admin').emit('courier-location-update', {
@@ -98,7 +104,8 @@ const initializeSocket = (server) => {
                     courierID: updatedCourier.courierID,
                     vehicleType: updatedCourier.vehicleType,
                     phoneNumber: updatedCourier.phoneNumber,
-                    email: updatedCourier.user?.email || updatedCourier.email
+                    email: updatedCourier.user?.email || updatedCourier.email,
+                    photoUrl: photoUrl
                 });
                 
                 console.log(`Location update for courier ${socket.userId} broadcast to admin room`);
@@ -168,6 +175,12 @@ async function sendCourierStatusToAdmin(courierId) {
             return;
         }
         
+        // Prepare photo URL if available
+        let photoUrl = null;
+        if (courier.personalPhoto) {
+            photoUrl = `/uploads/couriers/${courier.personalPhoto}`;
+        }
+        
         io.to('admin').emit('courier-status-update', {
             courierId: courier._id,
             isAvailable: courier.isAvailable,
@@ -176,7 +189,8 @@ async function sendCourierStatusToAdmin(courierId) {
             vehicleType: courier.vehicleType,
             phoneNumber: courier.phoneNumber,
             email: courier.user?.email || courier.email,
-            currentLocation: courier.currentLocation
+            currentLocation: courier.currentLocation,
+            photoUrl: photoUrl
         });
         
         console.log(`Courier ${courierId} status sent to admin room`);
@@ -197,6 +211,12 @@ async function sendAllCourierLocationsToAdmin(socket) {
             if (courier.currentLocation && courier.currentLocation.coordinates) {
                 const [longitude, latitude] = courier.currentLocation.coordinates;
                 
+                // Prepare photo URL if available
+                let photoUrl = null;
+                if (courier.personalPhoto) {
+                    photoUrl = `/uploads/couriers/${courier.personalPhoto}`;
+                }
+                
                 socket.emit('courier-location-update', {
                     courierId: courier._id,
                     location: {
@@ -209,7 +229,8 @@ async function sendAllCourierLocationsToAdmin(socket) {
                     courierID: courier.courierID,
                     vehicleType: courier.vehicleType,
                     phoneNumber: courier.phoneNumber,
-                    email: courier.user?.email || courier.email
+                    email: courier.user?.email || courier.email,
+                    photoUrl: photoUrl
                 });
             }
         });

@@ -521,6 +521,8 @@ const loginAsCourier  = async (req, res) => {
         httpOnly: true
     });
 
+
+    console.log('token:', token);
     res.status(200).json({
         status: 'success',
         token: token,

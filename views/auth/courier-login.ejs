@@ -847,6 +847,7 @@
 
     if (loginForm) {
       loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
         let isValid = true;
 
         // Email validation

@@ -15,8 +15,9 @@ async function authenticateCourier(req, res, next) {
 
   try {
     const decode = jwt.verify(token, jwtSecret);
-    req.courierId = decode.courierId;
-    const courier = await Courier.findOne({ _id: decode.courierId });
+    console.log('decode:', decode);
+    req.courierId = decode.id;
+    const courier = await Courier.findOne({ _id: decode.id });
     if (!courier) {
       res.clearCookie('token');
       return res.status(401).redirect('/courier-login');

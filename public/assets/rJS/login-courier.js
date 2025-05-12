@@ -14,7 +14,9 @@ loginForm.addEventListener('submit', async (e) => {
     });
 
     const data = await response.json();
+    console.log('data:', data);
     if (response.ok) {
+      console.log('response.ok:', response.ok);
       window.location.href = '/courier/dashboard';
     } else {
     errorMessage.style.display = 'block';

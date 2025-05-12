@@ -22,6 +22,11 @@
         border-left: 3px solid #0ab39c;
     }
     
+    .courier-item.disconnected {
+        border: 2px solid #f06548;
+        background-color: rgba(240, 101, 72, 0.05);
+    }
+    
     .courier-status {
         width: 10px;
         height: 10px;
@@ -36,6 +41,17 @@
     
     .courier-status.unavailable {
         background-color: #f06548;
+    }
+    
+    .courier-status.disconnected {
+        background-color: #f7b84b;
+        animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
     }
     
     .courier-list {
@@ -60,6 +76,9 @@
     
     .map-container {
         position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
     }
     
     .map-loader {
@@ -89,6 +108,12 @@
     .courier-avatar i {
         font-size: 20px;
         color: #405189;
+    }
+    
+    .courier-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
     
     .courier-header {
@@ -129,10 +154,52 @@
         padding: 0 !important;
         border-radius: 8px !important;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+        max-width: 250px !important; /* Reduced from 300px */
+        margin-top: 0 !important;
     }
     
+    .gm-style .gm-style-iw-d {
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Fix close button positioning */
+    .gm-style .gm-style-iw-t::after {
+        display: none !important;
+    }
+
+    .gm-style .gm-style-iw-tc {
+        display: none !important;
+    }
+
+    .gm-style-iw-c button.gm-ui-hover-effect {
+        top: 2px !important;
+        right: 2px !important;
+        opacity: .8 !important;
+        border-radius: 50% !important;
+        background-color: white !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+        padding: 0 !important;
+        width: 22px !important;
+        height: 22px !important;
+    }
+
+    .gm-style-iw-c button.gm-ui-hover-effect:hover {
+        opacity: 1 !important;
+    }
+    .gm-ui-hover-effect > span {
+        z-index: 1000;
+        pointer-events: none;
+        display: block;
+        width: 14px !important;
+        height: 14px !important;
+        margin: 4px !important;
+        background-size: 14px !important;
+    }
+
     .courier-info-window {
-        padding: 16px;
+        padding: 8px 12px 12px 12px;
         min-width: 220px;
         border-radius: 8px;
         background: #fff;
@@ -141,35 +208,43 @@
     .courier-info-header {
         display: flex;
         align-items: center;
-        margin-bottom: 12px;
+        margin-bottom: 6px;
         border-bottom: 1px solid #f0f0f0;
-        padding-bottom: 8px;
+        padding-bottom: 5px;
     }
     
     .courier-info-avatar {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         background-color: #f3f6f9;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-right: 10px;
+        overflow: hidden;
+        border: 2px solid #e9e9ef;
     }
     
     .courier-info-avatar i {
-        font-size: 18px;
+        font-size: 20px;
         color: #405189;
+    }
+    
+    .courier-info-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
     
     .courier-info-name {
         font-weight: 600;
-        font-size: 15px;
+        font-size: 14px;
         margin: 0;
     }
     
     .courier-info-id {
-        font-size: 12px;
+        font-size: 11px;
         color: #878a99;
         margin: 0;
     }
@@ -178,7 +253,7 @@
         display: grid;
         grid-template-columns: auto 1fr;
         gap: 6px 10px;
-        font-size: 13px;
+        font-size: 12px;
     }
     
     .courier-info-label {
@@ -194,8 +269,8 @@
         display: inline-flex;
         align-items: center;
         padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 12px;
+        border-radius: 10px;
+        font-size: 11px;
         font-weight: 500;
     }
     
@@ -209,14 +284,120 @@
         color: #f06548;
     }
     
+    .courier-info-status.disconnected {
+        background-color: rgba(247, 184, 75, 0.1);
+        color: #f7b84b;
+    }
+    
     .courier-info-footer {
-        margin-top: 12px;
-        text-align: right;
+        margin-top: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     
     .courier-info-time {
         font-size: 11px;
         color: #878a99;
+    }
+
+    /* Map custom styles */
+    .courier-map-label {
+        background-color: white;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        white-space: nowrap;
+        border: 1px solid #e9e9ef;
+    }
+
+    .map-overlay-info {
+        position: absolute;
+        top: 70px;
+        right: 10px;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        border-radius: 8px;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        max-width: 200px;
+        font-size: 12px;
+    }
+
+    .map-overlay-info p {
+        margin: 0 0 5px 0;
+    }
+
+    .map-overlay-info .courier-count {
+        font-weight: bold;
+        color: #405189;
+    }
+
+    /* Add fullscreen control button styles */
+    .map-fullscreen-btn {
+        position: absolute;
+        top: 10px;
+        right: 95px;
+        z-index: 1000;
+        background: white;
+        border: none;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .map-fullscreen-btn i {
+        font-size: 18px;
+        color: #405189;
+    }
+
+    .map-container.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+        height: 100vh !important;
+        width: 100vw !important;
+        border-radius: 0;
+    }
+
+    .map-container.fullscreen #map {
+        height: 100vh !important;
+    }
+
+    .fullscreen-exit {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10000;
+        background: white;
+        border: none;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        display: none;
+    }
+
+    .map-container.fullscreen .fullscreen-exit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fullscreen-exit i {
+        font-size: 18px;
+        color: #f06548;
     }
 </style>
 
@@ -284,10 +465,23 @@
                         </div>
                     </div>
                     <div id="map"></div>
+                    <button id="fullscreen-btn" class="map-fullscreen-btn" title="Full Screen">
+                        <i class="ri-fullscreen-line"></i>
+                    </button>
+                    <button id="fullscreen-exit" class="fullscreen-exit" title="Exit Full Screen">
+                        <i class="ri-fullscreen-exit-line"></i>
+                    </button>
                     <div class="map-controls">
                         <button id="fit-all-markers" class="btn btn-light btn-sm">
                             <i class="ri-focus-3-line"></i> Show All
                         </button>
+                    </div>
+                    <div id="map-overlay-info" class="map-overlay-info d-none">
+                        <div class="courier-count-info mb-2">
+                            <p class="mb-1"><strong>Active Couriers:</strong> <span id="active-courier-count">0</span></p>
+                            <p class="mb-0"><strong>Disconnected:</strong> <span id="disconnected-courier-count" class="text-warning">0</span></p>
+                        </div>
+                        <div id="disconnected-couriers-list" class="small text-muted"></div>
                     </div>
                 </div>
             </div>
@@ -306,6 +500,7 @@
     let markers = {};
     let selectedCourierId = null;
     let courierListEl, courierDetailsEl, refreshBtn, mapLoader, fitAllMarkersBtn;
+    let isFullScreen = false;
     
     // Initialize Google Map
     function initMap() {
@@ -315,6 +510,9 @@
         refreshBtn = document.getElementById('refresh-couriers');
         mapLoader = document.getElementById('map-loader');
         fitAllMarkersBtn = document.getElementById('fit-all-markers');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const fullscreenExit = document.getElementById('fullscreen-exit');
+        const mapContainer = document.querySelector('.map-container');
         
         // Default to Cairo coordinates
         map = new google.maps.Map(document.getElementById('map'), {
@@ -322,7 +520,7 @@
             zoom: 10,
             mapTypeControl: true,
             streetViewControl: true,
-            fullscreenControl: true,
+            fullscreenControl: false, // Disable default fullscreen control
             zoomControl: true
         });
         
@@ -339,6 +537,39 @@
         if (fitAllMarkersBtn) {
             fitAllMarkersBtn.addEventListener('click', fitAllMarkers);
         }
+        
+        // Add fullscreen functionality
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', function() {
+                mapContainer.classList.add('fullscreen');
+                isFullScreen = true;
+                // Trigger resize event to ensure map displays correctly
+                google.maps.event.trigger(map, 'resize');
+                // Refit all markers
+                setTimeout(fitAllMarkers, 100);
+            });
+        }
+        
+        if (fullscreenExit) {
+            fullscreenExit.addEventListener('click', function() {
+                mapContainer.classList.remove('fullscreen');
+                isFullScreen = false;
+                // Trigger resize event to ensure map displays correctly
+                google.maps.event.trigger(map, 'resize');
+                // Refit all markers
+                setTimeout(fitAllMarkers, 100);
+            });
+        }
+        
+        // Add escape key listener for exiting fullscreen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isFullScreen) {
+                mapContainer.classList.remove('fullscreen');
+                isFullScreen = false;
+                google.maps.event.trigger(map, 'resize');
+                setTimeout(fitAllMarkers, 100);
+            }
+        });
         
         // Fetch couriers after map is initialized
         fetchCouriers();
@@ -403,6 +634,28 @@
                 
                 renderCouriers(activeCouriers);
                 updateMarkers(activeCouriers);
+                
+                // Count active and disconnected couriers for initial overlay
+                let activeCount = 0;
+                let disconnectedCount = 0;
+                let disconnectedCouriers = [];
+                
+                activeCouriers.forEach(courier => {
+                    const lastUpdated = new Date(courier.currentLocation.lastUpdated);
+                    const isDisconnected = isLocationStale(lastUpdated);
+                    
+                    if (isDisconnected) {
+                        disconnectedCount++;
+                        disconnectedCouriers.push({
+                            name: courier.name,
+                            timeAgo: getTimeAgo(lastUpdated)
+                        });
+                    } else {
+                        activeCount++;
+                    }
+                });
+                
+                updateMapOverlayInfo(activeCount, disconnectedCount, disconnectedCouriers);
             } else {
                 courierListEl.innerHTML = `<div class="alert alert-danger">Failed to load couriers</div>`;
             }
@@ -429,21 +682,25 @@
         couriers.forEach(courier => {
             const lastUpdated = new Date(courier.currentLocation.lastUpdated);
             const timeAgo = getTimeAgo(lastUpdated);
+            const isDisconnected = isLocationStale(lastUpdated);
             
             html += `
-                <div class="courier-item ${selectedCourierId === courier._id ? 'active' : ''}" 
+                <div class="courier-item ${selectedCourierId === courier._id ? 'active' : ''} ${isDisconnected ? 'disconnected' : ''}" 
                      data-courier-id="${courier._id}">
                     <div class="d-flex align-items-center">
                         <div class="courier-avatar">
-                            <i class="ri-user-line"></i>
+                            ${courier.personalPhoto ? 
+                                `<img src="${courier.personalPhoto}" alt="${courier.name}" />` : 
+                                `<i class="ri-user-line"></i>`
+                            }
                         </div>
                         <div class="flex-grow-1">
                             <h5 class="fs-14 mb-1">${courier.name}</h5>
                             <p class="text-muted mb-0">ID: ${courier.courierID}</p>
                         </div>
                         <div>
-                            <span class="courier-status ${courier.isAvailable ? 'available' : 'unavailable'}" 
-                                  title="${courier.isAvailable ? 'Available' : 'Unavailable'}"></span>
+                            <span class="courier-status ${isDisconnected ? 'disconnected' : courier.isAvailable ? 'available' : 'unavailable'}" 
+                                  title="${isDisconnected ? 'Disconnected' : courier.isAvailable ? 'Available' : 'Unavailable'}"></span>
                         </div>
                     </div>
                     <div class="mt-2">
@@ -453,6 +710,12 @@
                         <small class="text-muted ms-2">
                             <i class="ri-car-line"></i> ${courier.vehicleType}
                         </small>
+                        ${isDisconnected ? 
+                            `<div class="mt-1 text-warning">
+                                <i class="ri-error-warning-line"></i> Connection lost
+                            </div>` : 
+                            ''
+                        }
                     </div>
                 </div>
             `;
@@ -469,56 +732,116 @@
         });
     }
     
+    // Check if location data is stale (more than 5 minutes old)
+    function isLocationStale(lastUpdated) {
+        const fiveMinutesAgo = new Date();
+        fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+        return lastUpdated < fiveMinutesAgo;
+    }
+    
     // Update map markers
     function updateMarkers(couriers) {
         // Keep track of couriers to keep on the map even if inactive
         const courierIds = couriers.map(c => c._id);
         
+        // Count active and disconnected couriers
+        let activeCount = 0;
+        let disconnectedCount = 0;
+        let disconnectedCouriers = [];
+        
         // Add/update markers
         couriers.forEach(courier => {
             const [lng, lat] = courier.currentLocation.coordinates;
             const position = { lat: lat, lng: lng };
+            const lastUpdated = new Date(courier.currentLocation.lastUpdated);
+            const isDisconnected = isLocationStale(lastUpdated);
+            
+            // Count couriers
+            if (isDisconnected) {
+                disconnectedCount++;
+                disconnectedCouriers.push({
+                    name: courier.name,
+                    timeAgo: getTimeAgo(lastUpdated)
+                });
+            } else {
+                activeCount++;
+            }
             
             if (markers[courier._id]) {
                 // Update existing marker
                 markers[courier._id].setPosition(position);
                 
                 // Update icon based on vehicle type and availability
-                markers[courier._id].setIcon(getVehicleIcon(courier));
+                markers[courier._id].setIcon(getVehicleIcon(courier, isDisconnected));
+                
+                // Update info window content
+                if (markers[courier._id].infoWindow) {
+                    markers[courier._id].infoWindow.setContent(createInfoWindowContent(courier, isDisconnected));
+                }
+                
+                // Always show info window for all couriers
+                if (markers[courier._id].infoWindow && !markers[courier._id].infoWindowOpen) {
+                    markers[courier._id].infoWindow.open(map, markers[courier._id]);
+                    markers[courier._id].infoWindowOpen = true;
+                }
+                
+                // Update label position if it exists
+                if (markers[`${courier._id}_label`]) {
+                    markers[`${courier._id}_label`].setPosition(position);
+                }
             } else {
                 // Create new marker
                 const marker = new google.maps.Marker({
                     position: position,
                     map: map,
                     title: courier.name,
-                    icon: getVehicleIcon(courier)
+                    icon: getVehicleIcon(courier, isDisconnected)
                 });
                 
                 // Create enhanced info window
-                const infoContent = createInfoWindowContent(courier);
+                const infoContent = createInfoWindowContent(courier, isDisconnected);
                 
                 const infoWindow = new google.maps.InfoWindow({
                     content: infoContent,
-                    maxWidth: 300
+                    maxWidth: 250, // Reduced from 300
+                    disableAutoPan: true // Prevent map from panning when info window opens
                 });
                 
+                // Open info window by default
+                infoWindow.open(map, marker);
+                
                 marker.addListener('click', function() {
-                    // Close all other info windows
-                    Object.values(markers).forEach(m => {
-                        if (m.infoWindow) {
-                            m.infoWindow.close();
-                        }
-                    });
-                    
-                    infoWindow.open(map, marker);
                     selectCourier(courier._id);
                 });
                 
                 // Store info window with marker for later reference
                 marker.infoWindow = infoWindow;
+                marker.infoWindowOpen = true;
                 markers[courier._id] = marker;
+                
+                // Add label with courier name above the marker
+                const mapLabel = new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 0
+                    },
+                    label: {
+                        text: courier.name,
+                        color: '#405189',
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                    }
+                });
+                
+                // Store label with marker
+                markers[`${courier._id}_label`] = mapLabel;
             }
         });
+        
+        // Update overlay info
+        updateMapOverlayInfo(activeCount, disconnectedCount, disconnectedCouriers);
         
         // If we have a selected courier, make sure it's centered
         if (selectedCourierId && markers[selectedCourierId]) {
@@ -530,17 +853,57 @@
         }
     }
     
+    // Update map overlay info
+    function updateMapOverlayInfo(activeCount, disconnectedCount, disconnectedCouriers) {
+        const overlayEl = document.getElementById('map-overlay-info');
+        const activeCountEl = document.getElementById('active-courier-count');
+        const disconnectedCountEl = document.getElementById('disconnected-courier-count');
+        const disconnectedListEl = document.getElementById('disconnected-couriers-list');
+        
+        if (activeCountEl) activeCountEl.textContent = activeCount;
+        if (disconnectedCountEl) disconnectedCountEl.textContent = disconnectedCount;
+        
+        if (disconnectedListEl) {
+            if (disconnectedCouriers.length > 0) {
+                let html = '<p class="mb-1"><strong>Disconnected couriers:</strong></p>';
+                
+                disconnectedCouriers.forEach((courier, index) => {
+                    if (index < 3) { // Show first 3 disconnected couriers
+                        html += `<p class="mb-0 small">• ${courier.name} (${courier.timeAgo})</p>`;
+                    } else if (index === 3) {
+                        html += `<p class="mb-0 small">• And ${disconnectedCouriers.length - 3} more...</p>`;
+                    }
+                });
+                
+                disconnectedListEl.innerHTML = html;
+                overlayEl.classList.remove('d-none');
+            } else {
+                disconnectedListEl.innerHTML = '';
+                if (activeCount === 0) {
+                    overlayEl.classList.add('d-none');
+                } else {
+                    overlayEl.classList.remove('d-none');
+                }
+            }
+        }
+    }
+    
     // Create enhanced info window content
-    function createInfoWindowContent(courier) {
+    function createInfoWindowContent(courier, isDisconnected) {
         const [lng, lat] = courier.currentLocation.coordinates;
         const lastUpdated = new Date(courier.currentLocation.lastUpdated);
         const timeAgo = getTimeAgo(lastUpdated);
+        
+        // Default icon if no photo
+        const avatarContent = courier.personalPhoto ? 
+            `<img src="${courier.personalPhoto}" alt="${courier.name}" />` : 
+            `<i class="ri-user-3-fill"></i>`;
         
         return `
             <div class="courier-info-window">
                 <div class="courier-info-header">
                     <div class="courier-info-avatar">
-                        <i class="ri-user-line"></i>
+                        ${avatarContent}
                     </div>
                     <div>
                         <h5 class="courier-info-name">${courier.name}</h5>
@@ -551,22 +914,22 @@
                 <div class="courier-info-details">
                     <span class="courier-info-label">Status:</span>
                     <span class="courier-info-value">
-                        <span class="courier-info-status ${courier.isAvailable ? 'available' : 'unavailable'}">
-                            ${courier.isAvailable ? 'Available' : 'Unavailable'}
+                        <span class="courier-info-status ${isDisconnected ? 'disconnected' : courier.isAvailable ? 'available' : 'unavailable'}">
+                            ${isDisconnected ? 'Disconnected' : courier.isAvailable ? 'Available' : 'Unavailable'}
                         </span>
                     </span>
-                    
-                    <span class="courier-info-label">Vehicle:</span>
-                    <span class="courier-info-value">${courier.vehicleType}</span>
                     
                     <span class="courier-info-label">Updated:</span>
                     <span class="courier-info-value">${timeAgo}</span>
                 </div>
                 
                 <div class="courier-info-footer">
+                    <span class="courier-info-time">
+                        ${isDisconnected ? '<i class="ri-error-warning-line text-warning"></i> Last known location' : ''}
+                    </span>
                     <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
-                       target="_blank" class="btn btn-sm btn-primary mt-2">
-                        <i class="ri-route-line me-1"></i> Get Directions
+                       target="_blank" class="btn btn-sm btn-primary">
+                        <i class="ri-route-line me-1"></i> Directions
                     </a>
                 </div>
             </div>
@@ -574,26 +937,43 @@
     }
     
     // Get appropriate icon based on vehicle type and availability
-    function getVehicleIcon(courier) {
+    function getVehicleIcon(courier, isDisconnected) {
         let iconUrl;
         const isAvailable = courier.isAvailable;
-        const vehicleType = courier.vehicleType.toLowerCase();
+        const vehicleType = courier.vehicleType ? courier.vehicleType.toLowerCase() : 'default';
         
         // Set base icon URL based on vehicle type
-        if (vehicleType.includes('motorcycle') || vehicleType.includes('bike')) {
-            iconUrl = '/assets/images/map-icons/motorcycle-red.png'
+        if (vehicleType.includes('Motorcyclead') || vehicleType.includes('bike')) {
+            iconUrl = '/assets/images/map-icons/motorcycle-red.png';
         } else if (vehicleType.includes('car')) {
-            iconUrl = '/assets/images/map-icons/car-red.png';
+            iconUrl =  '/assets/images/map-icons/car-red.png';
         } else if (vehicleType.includes('truck') || vehicleType.includes('van')) {
-            iconUrl ='/assets/images/map-icons/van1.png';
+            iconUrl = '/assets/images/map-icons/van1.png';
         } else {
             // Default icons if vehicle type doesn't match
-            iconUrl = isAvailable ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        }
+        
+        // Function to check if an image exists (using a test image)
+        const imageExists = (url) => {
+            // Always default to Google Maps icons to avoid client-side network requests
+            if (url.startsWith('/assets/')) {
+                return false;
+            }
+            return true;
+        };
+        
+        // Fallback to standard Google Maps icons if custom vehicle icons don't exist
+        if (!imageExists(iconUrl)) {
+            // Use Google Maps default icons as fallback
+            iconUrl = isDisconnected ? 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' : 
+                     isAvailable ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
+                     'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
         }
         
         return {
             url: iconUrl,
-            scaledSize: new google.maps.Size(40, 40)
+            scaledSize: new google.maps.Size(36, 36) // Slightly smaller (was 40)
         };
     }
     
@@ -650,42 +1030,102 @@
         const [lng, lat] = courier.currentLocation.coordinates;
         const lastUpdated = new Date(courier.currentLocation.lastUpdated);
         const timeAgo = getTimeAgo(lastUpdated);
+        const isDisconnected = isLocationStale(lastUpdated);
         
         courierDetailsEl.innerHTML = `
             <div class="text-center mb-4">
-                <div class="avatar-lg mx-auto">
-                    <div class="avatar-title bg-soft-primary text-primary display-5 rounded-circle">
-                        <i class="ri-user-line"></i>
+                <div class="position-relative d-inline-block">
+                    <div class="avatar-lg mx-auto ${isDisconnected ? 'border-danger' : courier.isAvailable ? 'border-success' : 'border-warning'}" style="border: 2px solid; border-radius: 50%;">
+                        ${courier.personalPhoto ? 
+                            `<img src="${courier.personalPhoto}" alt="${courier.name}" class="img-fluid rounded-circle" style="width: 100%; height: 100%; object-fit: cover;" />` : 
+                            `<div class="avatar-title bg-soft-primary text-primary display-5 rounded-circle">
+                                <i class="ri-user-line"></i>
+                             </div>`
+                        }
                     </div>
+                    <span class="position-absolute bottom-0 end-0 translate-middle badge rounded-pill ${isDisconnected ? 'bg-danger' : courier.isAvailable ? 'bg-success' : 'bg-warning'}" style="border: 2px solid #fff;">
+                        <i class="ri-${isDisconnected ? 'wifi-off-line' : courier.isAvailable ? 'check-line' : 'time-line'}"></i>
+                    </span>
                 </div>
                 <h5 class="mt-3">${courier.name}</h5>
                 <p class="text-muted mb-0">ID: ${courier.courierID}</p>
-            </div>
-            
-            <div class="courier-details-item">
-                <h6>Status</h6>
-                <p class="mb-0">
-                    <span class="badge ${courier.isAvailable ? 'bg-success' : 'bg-danger'}">
-                        ${courier.isAvailable ? 'Available' : 'Unavailable'}
+                <div class="mt-1">
+                    <span class="badge ${isDisconnected ? 'bg-danger' : courier.isAvailable ? 'bg-success' : 'bg-warning'}">
+                        ${isDisconnected ? 'Disconnected' : courier.isAvailable ? 'Available' : 'Unavailable'}
                     </span>
-                </p>
+                </div>
             </div>
             
-            <div class="courier-details-item">
-                <h6>Vehicle Type</h6>
-                <p class="mb-0">${courier.vehicleType}</p>
+            <div class="card border shadow-sm mb-3">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="ri-car-line fs-24 text-muted"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Vehicle Type</h6>
+                            <p class="mb-0 text-muted">${courier.vehicleType}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="ri-phone-line fs-24 text-muted"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Contact</h6>
+                            <p class="mb-0 text-muted">
+                                <a href="tel:${courier.phoneNumber}" class="text-muted">${courier.phoneNumber || 'N/A'}</a>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="ri-mail-line fs-24 text-muted"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Email</h6>
+                            <p class="mb-0 text-muted">
+                                <a href="mailto:${courier.email}" class="text-muted">${courier.email || 'N/A'}</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="courier-details-item">
-                <h6>Contact</h6>
-                <p class="mb-0"><i class="ri-phone-line me-1"></i> ${courier.phoneNumber || 'N/A'}</p>
-                <p class="mb-0"><i class="ri-mail-line me-1"></i> ${courier.email || 'N/A'}</p>
-            </div>
-            
-            <div class="courier-details-item">
-                <h6>Current Location</h6>
-                <p class="mb-0">Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}</p>
-                <small class="text-muted">Last updated: ${timeAgo}</small>
+            <div class="card border ${isDisconnected ? 'border-danger' : ''} shadow-sm mb-3">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="flex-shrink-0">
+                            <i class="ri-map-pin-line fs-24 ${isDisconnected ? 'text-danger' : 'text-primary'}"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Current Location</h6>
+                            ${isDisconnected ? 
+                                `<span class="text-danger small">
+                                    <i class="ri-error-warning-line"></i> Last known location
+                                </span>` : 
+                                ''
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <p class="mb-1"><strong>Coordinates:</strong></p>
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text">Lat:</span>
+                            <input type="text" class="form-control" value="${lat.toFixed(6)}" readonly>
+                        </div>
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text">Lng:</span>
+                            <input type="text" class="form-control" value="${lng.toFixed(6)}" readonly>
+                        </div>
+                        <p class="mb-0 text-muted small">
+                            <i class="ri-time-line"></i> Last updated: ${timeAgo}
+                        </p>
+                    </div>
+                </div>
             </div>
             
             <div class="mt-4">
@@ -737,21 +1177,33 @@
                     const courierId = data.courierId;
                     const lat = data.location.latitude;
                     const lng = data.location.longitude;
+                    const lastUpdated = new Date(data.location.timestamp);
+                    const isDisconnected = isLocationStale(lastUpdated);
                     
                     // Update marker position if it exists
                     if (markers[courierId]) {
                         markers[courierId].setPosition({ lat, lng });
                         
                         // Update icon based on vehicle type and availability
-                        markers[courierId].setIcon(getVehicleIcon(data));
+                        markers[courierId].setIcon(getVehicleIcon(data, isDisconnected));
+                        
+                        // Update label position if it exists
+                        if (markers[`${courierId}_label`]) {
+                            markers[`${courierId}_label`].setPosition({ lat, lng });
+                        }
                         
                         // Update info window content
                         if (markers[courierId].infoWindow) {
+                            // Default avatar if no photo provided
+                            const avatarContent = data.personalPhoto ? 
+                                `<img src="${data.personalPhoto}" alt="${data.name}" />` : 
+                                `<i class="ri-user-3-fill"></i>`;
+                            
                             const infoContent = `
                                 <div class="courier-info-window">
                                     <div class="courier-info-header">
                                         <div class="courier-info-avatar">
-                                            <i class="ri-user-line"></i>
+                                            ${avatarContent}
                                         </div>
                                         <div>
                                             <h5 class="courier-info-name">${data.name}</h5>
@@ -762,28 +1214,34 @@
                                     <div class="courier-info-details">
                                         <span class="courier-info-label">Status:</span>
                                         <span class="courier-info-value">
-                                            <span class="courier-info-status ${data.isAvailable ? 'available' : 'unavailable'}">
-                                                ${data.isAvailable ? 'Available' : 'Unavailable'}
+                                            <span class="courier-info-status ${isDisconnected ? 'disconnected' : data.isAvailable ? 'available' : 'unavailable'}">
+                                                ${isDisconnected ? 'Disconnected' : data.isAvailable ? 'Available' : 'Unavailable'}
                                             </span>
                                         </span>
-                                        
-                                        <span class="courier-info-label">Vehicle:</span>
-                                        <span class="courier-info-value">${data.vehicleType}</span>
                                         
                                         <span class="courier-info-label">Updated:</span>
                                         <span class="courier-info-value">just now</span>
                                     </div>
                                     
                                     <div class="courier-info-footer">
+                                        <span class="courier-info-time">
+                                            ${isDisconnected ? '<i class="ri-error-warning-line text-warning"></i> Last known location' : ''}
+                                        </span>
                                         <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
-                                           target="_blank" class="btn btn-sm btn-primary mt-2">
-                                            <i class="ri-route-line me-1"></i> Get Directions
+                                           target="_blank" class="btn btn-sm btn-primary">
+                                            <i class="ri-route-line me-1"></i> Directions
                                         </a>
                                     </div>
                                 </div>
                             `;
                             
                             markers[courierId].infoWindow.setContent(infoContent);
+                            
+                            // Make sure info window is open
+                            if (!markers[courierId].infoWindowOpen) {
+                                markers[courierId].infoWindow.open(map, markers[courierId]);
+                                markers[courierId].infoWindowOpen = true;
+                            }
                         }
                         
                         // If this is the selected courier, update details
@@ -803,9 +1261,34 @@
                         // Also update the courier in the list with new timestamp
                         const courierItem = document.querySelector(`.courier-item[data-courier-id="${courierId}"]`);
                         if (courierItem) {
+                            // Update the time element
                             const timeElement = courierItem.querySelector('small:first-of-type');
                             if (timeElement) {
                                 timeElement.innerHTML = '<i class="ri-time-line"></i> just now';
+                            }
+                            
+                            // Update the status dot
+                            const statusDot = courierItem.querySelector('.courier-status');
+                            if (statusDot) {
+                                statusDot.className = `courier-status ${isDisconnected ? 'disconnected' : data.isAvailable ? 'available' : 'unavailable'}`;
+                                statusDot.title = isDisconnected ? 'Disconnected' : data.isAvailable ? 'Available' : 'Unavailable';
+                            }
+                            
+                            // Update disconnected status
+                            courierItem.classList.toggle('disconnected', isDisconnected);
+                            
+                            // Update warning message
+                            const warningContainer = courierItem.querySelector('.mt-2');
+                            if (warningContainer) {
+                                const existingWarning = warningContainer.querySelector('.text-warning');
+                                if (isDisconnected && !existingWarning) {
+                                    const warningElement = document.createElement('div');
+                                    warningElement.className = 'mt-1 text-warning';
+                                    warningElement.innerHTML = '<i class="ri-error-warning-line"></i> Connection lost';
+                                    warningContainer.appendChild(warningElement);
+                                } else if (!isDisconnected && existingWarning) {
+                                    existingWarning.remove();
+                                }
                             }
                         }
                     } else {
@@ -851,10 +1334,12 @@
                     .then(result => {
                         if (result.success) {
                             const courier = result.courier;
+                            const lastUpdated = new Date(courier.currentLocation?.lastUpdated || new Date());
+                            const isDisconnected = isLocationStale(lastUpdated);
                             
                             // Update marker icon based on vehicle type and availability
                             if (markers[courier._id]) {
-                                markers[courier._id].setIcon(getVehicleIcon(courier));
+                                markers[courier._id].setIcon(getVehicleIcon(courier, isDisconnected));
                                 
                                 // If this is the selected courier, update details
                                 if (selectedCourierId === courier._id) {
@@ -867,10 +1352,30 @@
                             if (courierItem) {
                                 const statusDot = courierItem.querySelector('.courier-status');
                                 if (statusDot) {
-                                    statusDot.className = `courier-status ${courier.isAvailable ? 'available' : 'unavailable'}`;
-                                    statusDot.title = courier.isAvailable ? 'Available' : 'Unavailable';
+                                    statusDot.className = `courier-status ${isDisconnected ? 'disconnected' : courier.isAvailable ? 'available' : 'unavailable'}`;
+                                    statusDot.title = isDisconnected ? 'Disconnected' : courier.isAvailable ? 'Available' : 'Unavailable';
+                                }
+                                
+                                // Update disconnected status
+                                courierItem.classList.toggle('disconnected', isDisconnected);
+                                
+                                // Update warning message
+                                const warningContainer = courierItem.querySelector('.mt-2');
+                                if (warningContainer) {
+                                    const existingWarning = warningContainer.querySelector('.text-warning');
+                                    if (isDisconnected && !existingWarning) {
+                                        const warningElement = document.createElement('div');
+                                        warningElement.className = 'mt-1 text-warning';
+                                        warningElement.innerHTML = '<i class="ri-error-warning-line"></i> Connection lost';
+                                        warningContainer.appendChild(warningElement);
+                                    } else if (!isDisconnected && existingWarning) {
+                                        existingWarning.remove();
+                                    }
                                 }
                             }
+                            
+                            // Count active and disconnected couriers for overlay update
+                            countAndUpdateDisconnectedCouriers();
                         }
                     })
                     .catch(error => console.error('Error fetching updated courier data:', error));
@@ -878,5 +1383,38 @@
         } catch (error) {
             console.error('Socket.IO initialization failed:', error);
         }
+    }
+
+    // Count disconnected couriers and update overlay
+    function countAndUpdateDisconnectedCouriers() {
+        // Fetch all couriers to get the latest data
+        fetch('/admin/courier-locations')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const couriers = data.couriers;
+                    let activeCount = 0;
+                    let disconnectedCount = 0;
+                    let disconnectedCouriers = [];
+                    
+                    couriers.forEach(courier => {
+                        const lastUpdated = new Date(courier.currentLocation.lastUpdated);
+                        const isDisconnected = isLocationStale(lastUpdated);
+                        
+                        if (isDisconnected) {
+                            disconnectedCount++;
+                            disconnectedCouriers.push({
+                                name: courier.name,
+                                timeAgo: getTimeAgo(lastUpdated)
+                            });
+                        } else {
+                            activeCount++;
+                        }
+                    });
+                    
+                    updateMapOverlayInfo(activeCount, disconnectedCount, disconnectedCouriers);
+                }
+            })
+            .catch(error => console.error('Error fetching couriers for overlay update:', error));
     }
 </script> 
