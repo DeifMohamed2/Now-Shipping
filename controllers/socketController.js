@@ -106,7 +106,7 @@ const initializeSocket = (server) => {
                         }
                     },
                     { new: true } // Return updated document
-                ).populate('user', 'email');
+                )
                 
                 if (!updatedCourier) {
                     console.log(`Courier ${socket.userId} not found in database`);
@@ -243,7 +243,7 @@ async function sendAllCourierLocationsToAdmin(socket) {
         const couriers = await Courier.find({
             isLocationTrackingEnabled: true,
             currentLocation: { $exists: true }
-        }).populate('user', 'email');
+        });
         
         couriers.forEach(courier => {
             if (courier.currentLocation && courier.currentLocation.coordinates) {
@@ -267,7 +267,7 @@ async function sendAllCourierLocationsToAdmin(socket) {
                     courierID: courier.courierID,
                     vehicleType: courier.vehicleType,
                     phoneNumber: courier.phoneNumber,
-                    email: courier.user?.email || courier.email,
+                    email: courier.email,
                     photoUrl: photoUrl
                 });
             }
