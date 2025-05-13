@@ -11,28 +11,17 @@ const initializeSocket = (server) => {
             origin: "*",
             methods: ["GET", "POST"]
         },
-        path: '/socket.io',
-        transports: ['websocket', 'polling'], // Support both WebSocket and polling
-        pingTimeout: 30000, // Increase ping timeout
-        pingInterval: 25000, // Increase ping interval
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
+        transports: ['websocket', 'polling'],
+        pingTimeout: 30000,
+        pingInterval: 25000,
+        allowEIO3: true
     });
 
-    // Authentication middleware - Skip auth for admin panel connections
-    io.use(async (socket, next) => {
+    // Authentication middleware for authenticated routes
+    const authenticatedNamespace = io.of('/authenticated');
+    
+    authenticatedNamespace.use(async (socket, next) => {
         try {
-            // Check if this is a connection from admin panel (typically no auth token)
-            if (socket.handshake.query && socket.handshake.query.isAdmin === 'true') {
-                // Allow admin panel connections without authentication
-                socket.userType = 'admin';
-                socket.userId = 'admin-' + Math.random().toString(36).substring(2, 10);
-                console.log(`Admin panel user connected without auth: ${socket.userId}`);
-                return next();
-            }
-            
-            // Normal authentication for mobile app connections
             const token = socket.handshake.auth.token;
             
             if (!token) {
@@ -45,13 +34,13 @@ const initializeSocket = (server) => {
             
             next();
         } catch (error) {
-            console.error('Socket authentication error:', error.message);
             return next(new Error('Authentication error: Invalid token'));
         }
     });
-
-    io.on('connection', (socket) => {
-        console.log(`User connected: ${socket.userId}, Type: ${socket.userType}`);
+    
+    // Set up the authenticated connections
+    authenticatedNamespace.on('connection', (socket) => {
+        console.log(`Authenticated user connected: ${socket.userId}, Type: ${socket.userType}`);
         
         // Join room based on user type
         if (socket.userType === 'courier') {
@@ -60,134 +49,139 @@ const initializeSocket = (server) => {
             
             // When a courier connects, immediately send their current status to admin
             sendCourierStatusToAdmin(socket.userId);
-        } else if (socket.userType === 'admin') {
-            socket.join('admin');
-            console.log(`Admin ${socket.userId} joined admin room`);
             
-            // Send all active courier locations to the admin when they connect
-            sendAllCourierLocationsToAdmin(socket);
+            // Handle location updates from couriers
+            socket.on('location_update', async (data) => {
+                try {
+                    const { latitude, longitude } = data;
+                    
+                    if (!latitude || !longitude) {
+                        console.log('Invalid location data received');
+                        return;
+                    }
+                    
+                    console.log(`Courier ${socket.userId} location update: ${latitude}, ${longitude}`);
+                    
+                    // Update courier location in database
+                    const updatedCourier = await Courier.findByIdAndUpdate(
+                        socket.userId, 
+                        {
+                            currentLocation: {
+                                type: 'Point',
+                                coordinates: [longitude, latitude],
+                                lastUpdated: new Date()
+                            }
+                        },
+                        { new: true } // Return updated document
+                    );
+                    
+                    if (!updatedCourier) {
+                        console.log(`Courier ${socket.userId} not found in database`);
+                        return;
+                    }
+
+                    // Prepare photo URL if available
+                    let photoUrl = null;
+                    if (updatedCourier.personalPhoto) {
+                        photoUrl = `/uploads/couriers/${updatedCourier.personalPhoto}`;
+                    }
+                    
+                    // Broadcast to admin room
+                    io.emit('courier-location-update', {
+                        courierId: socket.userId,
+                        location: {
+                            latitude,
+                            longitude,
+                            timestamp: new Date()
+                        },
+                        isAvailable: updatedCourier.isAvailable,
+                        name: updatedCourier.name,
+                        courierID: updatedCourier.courierID,
+                        vehicleType: updatedCourier.vehicleType,
+                        phoneNumber: updatedCourier.phoneNumber,
+                        email: updatedCourier.email,
+                        photoUrl: photoUrl
+                    });
+                    
+                    console.log(`Location update for courier ${socket.userId} broadcast to all users`);
+                    
+                } catch (error) {
+                    console.error('Error handling location update:', error);
+                }
+            });
+            
+            // Handle courier status change
+            socket.on('status_update', async (data) => {
+                try {
+                    const { isAvailable } = data;
+                    
+                    if (isAvailable === undefined) {
+                        return;
+                    }
+                    
+                    // Update courier status in database
+                    const updatedCourier = await Courier.findByIdAndUpdate(
+                        socket.userId, 
+                        { isAvailable },
+                        { new: true }
+                    );
+                    
+                    if (!updatedCourier) {
+                        console.log(`Courier ${socket.userId} not found in database`);
+                        return;
+                    }
+                    
+                    // Broadcast to all users
+                    io.emit('courier-status-update', {
+                        courierId: socket.userId,
+                        isAvailable,
+                        name: updatedCourier.name,
+                        courierID: updatedCourier.courierID,
+                        vehicleType: updatedCourier.vehicleType,
+                        phoneNumber: updatedCourier.phoneNumber,
+                        email: updatedCourier.email,
+                        currentLocation: updatedCourier.currentLocation
+                    });
+                    
+                } catch (error) {
+                    console.error('Error handling status update:', error);
+                }
+            });
         }
         
-        // Handle location updates from couriers
-        socket.on('location_update', async (data) => {
-            try {
-                const { latitude, longitude } = data;
-                
-                if (!latitude || !longitude) {
-                    console.log('Invalid location data received');
-                    return;
-                }
-                
-                if (socket.userType !== 'courier') {
-                    console.log('Location update from non-courier user rejected');
-                    return;
-                }
-                
-                console.log(`Courier ${socket.userId} location update: ${latitude}, ${longitude}`);
-                
-                // Update courier location in database
-                const updatedCourier = await Courier.findByIdAndUpdate(
-                    socket.userId, 
-                    {
-                        currentLocation: {
-                            type: 'Point',
-                            coordinates: [longitude, latitude],
-                            lastUpdated: new Date()
-                        }
-                    },
-                    { new: true } // Return updated document
-                ).populate('user', 'email');
-                
-                if (!updatedCourier) {
-                    console.log(`Courier ${socket.userId} not found in database`);
-                    return;
-                }
-
-                // Prepare photo URL if available
-                let photoUrl = null;
-                if (updatedCourier.personalPhoto) {
-                    photoUrl = `/uploads/couriers/${updatedCourier.personalPhoto}`;
-                }
-                
-                // Broadcast to admin room
-                io.to('admin').emit('courier-location-update', {
-                    courierId: socket.userId,
-                    location: {
-                        latitude,
-                        longitude,
-                        timestamp: new Date()
-                    },
-                    isAvailable: updatedCourier.isAvailable,
-                    name: updatedCourier.name,
-                    courierID: updatedCourier.courierID,
-                    vehicleType: updatedCourier.vehicleType,
-                    phoneNumber: updatedCourier.phoneNumber,
-                    email: updatedCourier.user?.email || updatedCourier.email,
-                    personalPhoto: photoUrl
-                });
-                
-                console.log(`Location update for courier ${socket.userId} broadcast to admin room`);
-                
-            } catch (error) {
-                console.error('Error handling location update:', error);
-            }
-        });
-        
-        // Handle courier status change
-        socket.on('status_update', async (data) => {
-            try {
-                const { isAvailable } = data;
-                
-                if (isAvailable === undefined) {
-                    return;
-                }
-                
-                if (socket.userType !== 'courier') {
-                    return;
-                }
-                
-                // Update courier status in database
-                const updatedCourier = await Courier.findByIdAndUpdate(
-                    socket.userId, 
-                    { isAvailable },
-                    { new: true }
-                ).populate('user', 'email');
-                
-                if (!updatedCourier) {
-                    console.log(`Courier ${socket.userId} not found in database`);
-                    return;
-                }
-                
-                // Broadcast to admin room
-                io.to('admin').emit('courier-status-update', {
-                    courierId: socket.userId,
-                    isAvailable,
-                    name: updatedCourier.name,
-                    courierID: updatedCourier.courierID,
-                    vehicleType: updatedCourier.vehicleType,
-                    phoneNumber: updatedCourier.phoneNumber,
-                    email: updatedCourier.user?.email || updatedCourier.email,
-                    currentLocation: updatedCourier.currentLocation
-                });
-                
-            } catch (error) {
-                console.error('Error handling status update:', error);
-            }
-        });
-        
         socket.on('disconnect', () => {
-            console.log(`User disconnected: ${socket.userId}`);
-        });
-        
-        // Handle errors
-        socket.on('error', (error) => {
-            console.error(`Socket error for user ${socket.userId}:`, error);
+            console.log(`Authenticated user disconnected: ${socket.userId}`);
         });
     });
     
-    // Handle server-level Socket.IO errors
-    io.on('connect_error', (error) => {
-        console.error('Socket.IO connection error:', error);
+    // Set up unauthenticated connections for admin panel
+    io.on('connection', (socket) => {
+        console.log('Client connected to main namespace');
+        
+        socket.on('disconnect', (reason) => {
+            console.log(`Client disconnected from main namespace: ${reason}`);
+        });
+        
+        socket.on('error', (error) => {
+            console.error('Socket error:', error);
+        });
+        
+        // Admin can request courier locations directly
+        socket.on('request_courier_locations', async () => {
+            try {
+                sendAllCourierLocationsToSocket(socket);
+            } catch (error) {
+                console.error('Error sending courier locations to admin:', error);
+            }
+        });
+    });
+    
+    // Handle connection errors
+    io.engine.on("connection_error", (err) => {
+        console.log('Connection error:', err.req);
+        console.log('Error code:', err.code);
+        console.log('Error message:', err.message);
+        console.log('Error context:', err.context);
     });
     
     return io;
@@ -196,7 +190,7 @@ const initializeSocket = (server) => {
 // Helper function to send courier status to admin
 async function sendCourierStatusToAdmin(courierId) {
     try {
-        const courier = await Courier.findById(courierId).populate('user', 'email');
+        const courier = await Courier.findById(courierId);
         
         if (!courier) {
             console.log(`Courier ${courierId} not found in database`);
@@ -209,31 +203,33 @@ async function sendCourierStatusToAdmin(courierId) {
             photoUrl = `/uploads/couriers/${courier.personalPhoto}`;
         }
         
-        io.to('admin').emit('courier-status-update', {
+        io.emit('courier-status-update', {
             courierId: courier._id,
             isAvailable: courier.isAvailable,
             name: courier.name,
             courierID: courier.courierID,
             vehicleType: courier.vehicleType,
             phoneNumber: courier.phoneNumber,
-            email: courier.user?.email || courier.email,
+            email: courier.email,
             currentLocation: courier.currentLocation,
-            personalPhoto: photoUrl
+            photoUrl: photoUrl
         });
         
-        console.log(`Courier ${courierId} status sent to admin room`);
+        console.log(`Courier ${courierId} status sent to all connected clients`);
     } catch (error) {
         console.error('Error sending courier status to admin:', error);
     }
 }
 
-// Helper function to send all courier locations to admin
-async function sendAllCourierLocationsToAdmin(socket) {
+// Helper function to send all courier locations to a specific socket
+async function sendAllCourierLocationsToSocket(socket) {
     try {
         const couriers = await Courier.find({
             isLocationTrackingEnabled: true,
             currentLocation: { $exists: true }
-        }).populate('user', 'email');
+        });
+        
+        console.log(`Sending ${couriers.length} courier locations to socket`);
         
         couriers.forEach(courier => {
             if (courier.currentLocation && courier.currentLocation.coordinates) {
@@ -257,16 +253,19 @@ async function sendAllCourierLocationsToAdmin(socket) {
                     courierID: courier.courierID,
                     vehicleType: courier.vehicleType,
                     phoneNumber: courier.phoneNumber,
-                    email: courier.user?.email || courier.email,
-                    personalPhoto: photoUrl
+                    email: courier.email,
+                    photoUrl: photoUrl
                 });
             }
         });
-        
-        console.log(`All courier locations sent to admin ${socket.userId}`);
     } catch (error) {
-        console.error('Error sending all courier locations to admin:', error);
+        console.error('Error sending all courier locations to socket:', error);
     }
+}
+
+// Helper function used for admin panel connection
+async function sendAllCourierLocationsToAdmin(socket) {
+    return sendAllCourierLocationsToSocket(socket);
 }
 
 // Get Socket.IO instance

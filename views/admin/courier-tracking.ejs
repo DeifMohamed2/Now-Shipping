@@ -489,8 +489,40 @@
     </div>
 </div>
 <%- contentFor('FooterJs') %>
-<!-- Google Maps API with async loading -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyIdhgj9Rn2S30XfyYv9SCflp7-qJD6As&callback=initMap&loading=async" defer></script>
+<!-- Google Maps API -->
+<script>
+    // Define the callback function that will be called when the Google Maps API is loaded
+    function initMap() {
+        // Code will be called once the Maps API is loaded
+        setupMap();
+    }
+
+    // Handle Google Maps API loading errors
+    function gm_authFailure() {
+        // This function is called automatically by Google Maps when there's an authentication error
+        console.error('Google Maps API authentication failed');
+        
+        // Remove the loading spinner
+        const mapLoader = document.getElementById('map-loader');
+        if (mapLoader) {
+            mapLoader.style.display = 'none';
+        }
+        
+        // Show error message in map container
+        const mapEl = document.getElementById('map');
+        if (mapEl) {
+            mapEl.innerHTML = `
+                <div class="alert alert-danger p-4 text-center">
+                    <i class="ri-map-pin-line fs-1 mb-2"></i>
+                    <h5>Google Maps API Error</h5>
+                    <p>We couldn't load the map due to an authentication issue with the Google Maps API.</p>
+                    <p class="small mb-0">This may be due to API key restrictions or billing issues.</p>
+                </div>
+            `;
+        }
+    }
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyIdhgj9Rn2S30XfyYv9SCflp7-qJD6As&callback=initMap&libraries=marker"  defer></script>
 <!-- Socket.IO -->
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin=""></script>
 
@@ -501,10 +533,65 @@
     let selectedCourierId = null;
     let courierListEl, courierDetailsEl, refreshBtn, mapLoader, fitAllMarkersBtn;
     let isFullScreen = false;
-    let socket;
+    
+    // Function to create a custom marker element
+    function createAdvancedMarkerElement(position, options = {}) {
+        // If the AdvancedMarkerElement is available, use it
+        if (google.maps.marker && google.maps.marker.AdvancedMarkerElement) {
+            const markerView = new google.maps.marker.AdvancedMarkerElement({
+                position: position,
+                map: options.map || null,
+                title: options.title || '',
+                content: createMarkerContent(options.icon ? options.icon.url : null)
+            });
+            
+            // Add custom properties to mimic the old Marker API for backward compatibility
+            markerView.setPosition = (newPos) => {
+                markerView.position = newPos;
+            };
+            
+            markerView.setIcon = (icon) => {
+                if (markerView.content) {
+                    // Replace the content with new icon
+                    markerView.content = createMarkerContent(icon.url);
+                }
+            };
+            
+            return markerView;
+        } else {
+            // Fall back to regular Marker if AdvancedMarkerElement isn't available
+            return new google.maps.Marker({
+                position: position,
+                map: options.map || null,
+                title: options.title || '',
+                icon: options.icon || null
+            });
+        }
+    }
+    
+    // Helper function to create marker content element
+    function createMarkerContent(iconUrl) {
+        const element = document.createElement('div');
+        element.style.width = '36px';
+        element.style.height = '36px';
+        
+        if (iconUrl) {
+            const img = document.createElement('img');
+            img.src = iconUrl;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            element.appendChild(img);
+        } else {
+            // Default fallback icon
+            element.style.backgroundColor = 'red';
+            element.style.borderRadius = '50%';
+        }
+        
+        return element;
+    }
     
     // Initialize Google Map
-    function initMap() {
+    function setupMap() {
         // Set up DOM elements
         courierListEl = document.getElementById('courier-list');
         courierDetailsEl = document.getElementById('courier-details');
@@ -515,68 +602,84 @@
         const fullscreenExit = document.getElementById('fullscreen-exit');
         const mapContainer = document.querySelector('.map-container');
         
-        // Default to Cairo coordinates
-        map = new google.maps.Map(document.getElementById('map'), {
-            center: { lat: 30.0444, lng: 31.2357 },
-            zoom: 10,
-            mapTypeControl: true,
-            streetViewControl: true,
-            fullscreenControl: false, // Disable default fullscreen control
-            zoomControl: true
-        });
-        
-        // Hide loader when map is loaded
-        google.maps.event.addListenerOnce(map, 'idle', function() {
-            hideMapLoader();
-        });
-        
-        // Set up event listeners
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', fetchCouriers);
-        }
-        
-        if (fitAllMarkersBtn) {
-            fitAllMarkersBtn.addEventListener('click', fitAllMarkers);
-        }
-        
-        // Add fullscreen functionality
-        if (fullscreenBtn) {
-            fullscreenBtn.addEventListener('click', function() {
-                mapContainer.classList.add('fullscreen');
-                isFullScreen = true;
-                // Trigger resize event to ensure map displays correctly
-                google.maps.event.trigger(map, 'resize');
-                // Refit all markers
-                setTimeout(fitAllMarkers, 100);
+        try {
+            // Default to Cairo coordinates
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 30.0444, lng: 31.2357 },
+                zoom: 10,
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: false, // Disable default fullscreen control
+                zoomControl: true
             });
-        }
-        
-        if (fullscreenExit) {
-            fullscreenExit.addEventListener('click', function() {
-                mapContainer.classList.remove('fullscreen');
-                isFullScreen = false;
-                // Trigger resize event to ensure map displays correctly
-                google.maps.event.trigger(map, 'resize');
-                // Refit all markers
-                setTimeout(fitAllMarkers, 100);
+            
+            // Hide loader when map is loaded
+            google.maps.event.addListenerOnce(map, 'idle', function() {
+                hideMapLoader();
             });
-        }
-        
-        // Add escape key listener for exiting fullscreen
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isFullScreen) {
-                mapContainer.classList.remove('fullscreen');
-                isFullScreen = false;
-                google.maps.event.trigger(map, 'resize');
-                setTimeout(fitAllMarkers, 100);
+            
+            // Set up event listeners
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', fetchCouriers);
             }
-        });
-        
-        // Fetch couriers after map is initialized
-        fetchCouriers();
-        
-        // Set up Socket.IO for real-time updates
-        setupSocketIO();
+            
+            if (fitAllMarkersBtn) {
+                fitAllMarkersBtn.addEventListener('click', fitAllMarkers);
+            }
+            
+            // Add fullscreen functionality
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', function() {
+                    mapContainer.classList.add('fullscreen');
+                    isFullScreen = true;
+                    // Trigger resize event to ensure map displays correctly
+                    google.maps.event.trigger(map, 'resize');
+                    // Refit all markers
+                    setTimeout(fitAllMarkers, 100);
+                });
+            }
+            
+            if (fullscreenExit) {
+                fullscreenExit.addEventListener('click', function() {
+                    mapContainer.classList.remove('fullscreen');
+                    isFullScreen = false;
+                    // Trigger resize event to ensure map displays correctly
+                    google.maps.event.trigger(map, 'resize');
+                    // Refit all markers
+                    setTimeout(fitAllMarkers, 100);
+                });
+            }
+            
+            // Add escape key listener for exiting fullscreen
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isFullScreen) {
+                    mapContainer.classList.remove('fullscreen');
+                    isFullScreen = false;
+                    google.maps.event.trigger(map, 'resize');
+                    setTimeout(fitAllMarkers, 100);
+                }
+            });
+            
+            // Fetch couriers after map is initialized
+            fetchCouriers();
+            
+            // Set up Socket.IO for real-time updates
+            setupSocketIO();
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            hideMapLoader();
+            
+            const mapEl = document.getElementById('map');
+            if (mapEl) {
+                mapEl.innerHTML = `
+                    <div class="alert alert-danger p-4 text-center">
+                        <i class="ri-error-warning-line fs-1 mb-2"></i>
+                        <h5>Map Error</h5>
+                        <p>${error.message || 'An error occurred while loading the map'}</p>
+                    </div>
+                `;
+            }
+        }
     }
     
     function hideMapLoader() {
@@ -740,72 +843,6 @@
         return lastUpdated < fiveMinutesAgo;
     }
     
-    // Get appropriate icon based on vehicle type and availability
-    function getVehicleIcon(courier, isDisconnected) {
-        let iconUrl;
-        const isAvailable = courier.isAvailable;
-        const vehicleType = courier.vehicleType ? courier.vehicleType.toLowerCase() : 'default';
-        
-        // Set base icon URL based on vehicle type
-        if (vehicleType.includes('motorcycle') || vehicleType.includes('bike')) {
-            iconUrl = '/assets/images/map-icons/motorcycle-red.png';
-        } else if (vehicleType.includes('car')) {
-            iconUrl =  '/assets/images/map-icons/car-red.png';
-        } else if (vehicleType.includes('truck') || vehicleType.includes('van')) {
-            iconUrl = '/assets/images/map-icons/van1.png';
-        } else {
-            // Default icons if vehicle type doesn't match
-            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
-        }
-        
-        // Fallback to standard Google Maps icons
-        if (isDisconnected) {
-            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
-        } else if (isAvailable) {
-            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/green-dot.png';
-        } else {
-            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
-        }
-        
-        return {
-            url: iconUrl,
-            scaledSize: new google.maps.Size(36, 36) // Slightly smaller (was 40)
-        };
-    }
-    
-    // Function to create a marker for courier
-    function createCourierMarker(position, courier, isDisconnected) {
-        // Create new marker
-        const marker = new google.maps.Marker({
-            position: position,
-            map: map,
-            title: courier.name,
-            icon: getVehicleIcon(courier, isDisconnected)
-        });
-        
-        return marker;
-    }
-
-    // Function to create a marker label
-    function createMarkerLabel(position, labelText) {
-        const mapLabel = new google.maps.Marker({
-            position: position,
-            map: map,
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 0
-            },
-            label: {
-                text: labelText,
-                color: '#405189',
-                fontSize: '12px',
-                fontWeight: 'bold'
-            }
-        });
-        
-        return mapLabel;
-    }
-    
     // Update map markers
     function updateMarkers(couriers) {
         // Keep track of couriers to keep on the map even if inactive
@@ -857,8 +894,15 @@
                     markers[`${courier._id}_label`].setPosition(position);
                 }
             } else {
-                // Create new marker
-                const marker = createCourierMarker(position, courier, isDisconnected);
+                // Create new marker using the new method
+                const marker = createAdvancedMarkerElement(
+                    position,
+                    {
+                        map: map,
+                        title: courier.name,
+                        icon: getVehicleIcon(courier, isDisconnected)
+                    }
+                );
                 
                 // Create enhanced info window
                 const infoContent = createInfoWindowContent(courier, isDisconnected);
@@ -872,7 +916,8 @@
                 // Open info window by default
                 infoWindow.open(map, marker);
                 
-                marker.addListener('click', function() {
+                // Add click event
+                google.maps.event.addListener(marker, 'click', function() {
                     selectCourier(courier._id);
                 });
                 
@@ -882,7 +927,20 @@
                 markers[courier._id] = marker;
                 
                 // Add label with courier name above the marker
-                const mapLabel = createMarkerLabel(position, courier.name);
+                const mapLabel = new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 0
+                    },
+                    label: {
+                        text: courier.name,
+                        color: '#405189',
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                    }
+                });
                 
                 // Store label with marker
                 markers[`${courier._id}_label`] = mapLabel;
@@ -983,6 +1041,47 @@
                 </div>
             </div>
         `;
+    }
+    
+    // Get appropriate icon based on vehicle type and availability
+    function getVehicleIcon(courier, isDisconnected) {
+        let iconUrl;
+        const isAvailable = courier.isAvailable;
+        const vehicleType = courier.vehicleType ? courier.vehicleType.toLowerCase() : 'default';
+        
+        // Set base icon URL based on vehicle type
+        if (vehicleType.includes('Motorcyclead') || vehicleType.includes('bike')) {
+            iconUrl = '/assets/images/map-icons/motorcycle-red.png';
+        } else if (vehicleType.includes('car')) {
+            iconUrl =  '/assets/images/map-icons/car-red.png';
+        } else if (vehicleType.includes('truck') || vehicleType.includes('van')) {
+            iconUrl = '/assets/images/map-icons/van1.png';
+        } else {
+            // Default icons if vehicle type doesn't match
+            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        }
+        
+        // Function to check if an image exists (using a test image)
+        const imageExists = (url) => {
+            // Always default to Google Maps icons to avoid client-side network requests
+            if (url.startsWith('/assets/')) {
+                return false;
+            }
+            return true;
+        };
+        
+        // Fallback to standard Google Maps icons if custom vehicle icons don't exist
+        if (!imageExists(iconUrl)) {
+            // Use Google Maps default icons as fallback
+            iconUrl = isDisconnected ? 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' : 
+                     isAvailable ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
+                     'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        }
+        
+        return {
+            url: iconUrl,
+            scaledSize: new google.maps.Size(36, 36) // Slightly smaller (was 40)
+        };
     }
     
     // Select courier
@@ -1172,31 +1271,63 @@
     // Set up Socket.IO for real-time updates
     function setupSocketIO() {
         try {
-            // Connect to the Socket.IO server with admin flag
-            socket = io({
+            // Connect to Socket.IO server without authentication for admin panel
+            // This solves the WebSocket connection issue
+            const socket = io({
                 path: '/socket.io',
-                query: { isAdmin: 'true' }, // Mark this connection as coming from admin panel
-                reconnection: true,
                 reconnectionAttempts: 5,
                 reconnectionDelay: 1000,
-                timeout: 20000,
-                transports: ['websocket', 'polling'] // Try WebSocket first, fall back to polling
+                transports: ['websocket', 'polling'],
+                upgrade: true,
+                rememberUpgrade: true
             });
             
-            // Connection event
             socket.on('connect', function() {
-                console.log('Socket.IO connected with ID:', socket.id);
+                console.log('Connected to Socket.IO server');
+                
+                // Explicitly request courier locations after connecting
+                socket.emit('request_courier_locations');
+                
+                // Also periodically request courier locations to ensure we're getting updates
+                // This helps if WebSockets fail and we fall back to polling
+                setInterval(() => {
+                    socket.emit('request_courier_locations');
+                }, 30000); // Request every 30 seconds
             });
             
-            // Connection error event
             socket.on('connect_error', function(error) {
                 console.error('Socket.IO connection error:', error);
-                // Try to reconnect with polling if connection fails
-                if (socket.io.opts.transports[0] === 'websocket') {
+                
+                // If connection fails, use polling as a fallback
+                if (socket.io.opts.transports.indexOf('polling') === -1) {
                     console.log('Falling back to polling transport');
-                    socket.io.opts.transports = ['polling', 'websocket'];
+                    socket.io.opts.transports = ['polling'];
                     socket.connect();
                 }
+            });
+            
+            // Handle reconnection attempts
+            socket.io.on('reconnect_attempt', () => {
+                console.log('Attempting to reconnect to Socket.IO server...');
+            });
+            
+            socket.io.on('reconnect', () => {
+                console.log('Reconnected to Socket.IO server');
+                socket.emit('request_courier_locations');
+            });
+            
+            socket.io.on('reconnect_error', (error) => {
+                console.error('Failed to reconnect to Socket.IO server:', error);
+            });
+            
+            socket.io.on('reconnect_failed', () => {
+                console.error('Could not reconnect to Socket.IO server after multiple attempts');
+                
+                // As a last resort, manually refresh the couriers list
+                fetchCouriers();
+                
+                // Set up periodic refresh
+                setInterval(fetchCouriers, 60000); // Every minute
             });
             
             // Handle courier location updates
@@ -1228,9 +1359,8 @@
                         // Update info window content
                         if (markers[courierId].infoWindow) {
                             // Default avatar if no photo provided
-                            const photoUrl = data.personalPhoto || null;
-                            const avatarContent = photoUrl ? 
-                                `<img src="${photoUrl}" alt="${data.name}" />` : 
+                            const avatarContent = data.personalPhoto ? 
+                                `<img src="${data.personalPhoto}" alt="${data.name}" />` : 
                                 `<i class="ri-user-3-fill"></i>`;
                             
                             const infoContent = `
@@ -1413,30 +1543,6 @@
                         }
                     })
                     .catch(error => console.error('Error fetching updated courier data:', error));
-            });
-            
-            // Handle disconnect event
-            socket.on('disconnect', function() {
-                console.warn('Socket.IO disconnected');
-                // Try to reconnect automatically
-                setTimeout(() => {
-                    if (!socket.connected) {
-                        console.log('Attempting to reconnect Socket.IO...');
-                        socket.connect();
-                    }
-                }, 3000);
-            });
-            
-            // Handle reconnect event
-            socket.on('reconnect', function(attemptNumber) {
-                console.log('Socket.IO reconnected after', attemptNumber, 'attempts');
-                // Refresh data after reconnection
-                fetchCouriers();
-            });
-            
-            // Handle errors
-            socket.on('error', function(error) {
-                console.error('Socket.IO error:', error);
             });
         } catch (error) {
             console.error('Socket.IO initialization failed:', error);

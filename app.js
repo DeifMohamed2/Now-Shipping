@@ -8,17 +8,6 @@ const http = require("http");
 const server = http.createServer(app);
 const socketController = require('./controllers/socketController');
 
-// Force HTTPS in production
-if (process.env.NODE_ENV === 'production') {
-    app.use((req, res, next) => {
-        if (req.header('x-forwarded-proto') !== 'https' && !req.secure) {
-            const secureUrl = `https://${req.header('host')}${req.url}`;
-            return res.redirect(secureUrl);
-        }
-        next();
-    });
-}
-
 // Initialize Socket.IO
 socketController.initializeSocket(server);
 
