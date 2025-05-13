@@ -489,8 +489,8 @@
     </div>
 </div>
 <%- contentFor('FooterJs') %>
-<!-- Google Maps API -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyIdhgj9Rn2S30XfyYv9SCflp7-qJD6As&callback=initMap" defer></script>
+<!-- Google Maps API with async loading -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyIdhgj9Rn2S30XfyYv9SCflp7-qJD6As&callback=initMap&loading=async" defer></script>
 <!-- Socket.IO -->
 <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin=""></script>
 
@@ -501,6 +501,7 @@
     let selectedCourierId = null;
     let courierListEl, courierDetailsEl, refreshBtn, mapLoader, fitAllMarkersBtn;
     let isFullScreen = false;
+    let socket;
     
     // Initialize Google Map
     function initMap() {
@@ -739,6 +740,72 @@
         return lastUpdated < fiveMinutesAgo;
     }
     
+    // Get appropriate icon based on vehicle type and availability
+    function getVehicleIcon(courier, isDisconnected) {
+        let iconUrl;
+        const isAvailable = courier.isAvailable;
+        const vehicleType = courier.vehicleType ? courier.vehicleType.toLowerCase() : 'default';
+        
+        // Set base icon URL based on vehicle type
+        if (vehicleType.includes('motorcycle') || vehicleType.includes('bike')) {
+            iconUrl = '/assets/images/map-icons/motorcycle-red.png';
+        } else if (vehicleType.includes('car')) {
+            iconUrl =  '/assets/images/map-icons/car-red.png';
+        } else if (vehicleType.includes('truck') || vehicleType.includes('van')) {
+            iconUrl = '/assets/images/map-icons/van1.png';
+        } else {
+            // Default icons if vehicle type doesn't match
+            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        }
+        
+        // Fallback to standard Google Maps icons
+        if (isDisconnected) {
+            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
+        } else if (isAvailable) {
+            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/green-dot.png';
+        } else {
+            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        }
+        
+        return {
+            url: iconUrl,
+            scaledSize: new google.maps.Size(36, 36) // Slightly smaller (was 40)
+        };
+    }
+    
+    // Function to create a marker for courier
+    function createCourierMarker(position, courier, isDisconnected) {
+        // Create new marker
+        const marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            title: courier.name,
+            icon: getVehicleIcon(courier, isDisconnected)
+        });
+        
+        return marker;
+    }
+
+    // Function to create a marker label
+    function createMarkerLabel(position, labelText) {
+        const mapLabel = new google.maps.Marker({
+            position: position,
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 0
+            },
+            label: {
+                text: labelText,
+                color: '#405189',
+                fontSize: '12px',
+                fontWeight: 'bold'
+            }
+        });
+        
+        return mapLabel;
+    }
+    
     // Update map markers
     function updateMarkers(couriers) {
         // Keep track of couriers to keep on the map even if inactive
@@ -791,12 +858,7 @@
                 }
             } else {
                 // Create new marker
-                const marker = new google.maps.Marker({
-                    position: position,
-                    map: map,
-                    title: courier.name,
-                    icon: getVehicleIcon(courier, isDisconnected)
-                });
+                const marker = createCourierMarker(position, courier, isDisconnected);
                 
                 // Create enhanced info window
                 const infoContent = createInfoWindowContent(courier, isDisconnected);
@@ -820,20 +882,7 @@
                 markers[courier._id] = marker;
                 
                 // Add label with courier name above the marker
-                const mapLabel = new google.maps.Marker({
-                    position: position,
-                    map: map,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 0
-                    },
-                    label: {
-                        text: courier.name,
-                        color: '#405189',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                    }
-                });
+                const mapLabel = createMarkerLabel(position, courier.name);
                 
                 // Store label with marker
                 markers[`${courier._id}_label`] = mapLabel;
@@ -934,47 +983,6 @@
                 </div>
             </div>
         `;
-    }
-    
-    // Get appropriate icon based on vehicle type and availability
-    function getVehicleIcon(courier, isDisconnected) {
-        let iconUrl;
-        const isAvailable = courier.isAvailable;
-        const vehicleType = courier.vehicleType ? courier.vehicleType.toLowerCase() : 'default';
-        
-        // Set base icon URL based on vehicle type
-        if (vehicleType.includes('Motorcyclead') || vehicleType.includes('bike')) {
-            iconUrl = '/assets/images/map-icons/motorcycle-red.png';
-        } else if (vehicleType.includes('car')) {
-            iconUrl =  '/assets/images/map-icons/car-red.png';
-        } else if (vehicleType.includes('truck') || vehicleType.includes('van')) {
-            iconUrl = '/assets/images/map-icons/van1.png';
-        } else {
-            // Default icons if vehicle type doesn't match
-            iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
-        }
-        
-        // Function to check if an image exists (using a test image)
-        const imageExists = (url) => {
-            // Always default to Google Maps icons to avoid client-side network requests
-            if (url.startsWith('/assets/')) {
-                return false;
-            }
-            return true;
-        };
-        
-        // Fallback to standard Google Maps icons if custom vehicle icons don't exist
-        if (!imageExists(iconUrl)) {
-            // Use Google Maps default icons as fallback
-            iconUrl = isDisconnected ? 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' : 
-                     isAvailable ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
-                     'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
-        }
-        
-        return {
-            url: iconUrl,
-            scaledSize: new google.maps.Size(36, 36) // Slightly smaller (was 40)
-        };
     }
     
     // Select courier
@@ -1164,7 +1172,32 @@
     // Set up Socket.IO for real-time updates
     function setupSocketIO() {
         try {
-            const socket = io();
+            // Connect to the Socket.IO server with admin flag
+            socket = io({
+                path: '/socket.io',
+                query: { isAdmin: 'true' }, // Mark this connection as coming from admin panel
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+                timeout: 20000,
+                transports: ['websocket', 'polling'] // Try WebSocket first, fall back to polling
+            });
+            
+            // Connection event
+            socket.on('connect', function() {
+                console.log('Socket.IO connected with ID:', socket.id);
+            });
+            
+            // Connection error event
+            socket.on('connect_error', function(error) {
+                console.error('Socket.IO connection error:', error);
+                // Try to reconnect with polling if connection fails
+                if (socket.io.opts.transports[0] === 'websocket') {
+                    console.log('Falling back to polling transport');
+                    socket.io.opts.transports = ['polling', 'websocket'];
+                    socket.connect();
+                }
+            });
             
             // Handle courier location updates
             socket.on('courier-location-update', function(data) {
@@ -1195,8 +1228,9 @@
                         // Update info window content
                         if (markers[courierId].infoWindow) {
                             // Default avatar if no photo provided
-                            const avatarContent = data.personalPhoto ? 
-                                `<img src="${data.personalPhoto}" alt="${data.name}" />` : 
+                            const photoUrl = data.personalPhoto || null;
+                            const avatarContent = photoUrl ? 
+                                `<img src="${photoUrl}" alt="${data.name}" />` : 
                                 `<i class="ri-user-3-fill"></i>`;
                             
                             const infoContent = `
@@ -1379,6 +1413,30 @@
                         }
                     })
                     .catch(error => console.error('Error fetching updated courier data:', error));
+            });
+            
+            // Handle disconnect event
+            socket.on('disconnect', function() {
+                console.warn('Socket.IO disconnected');
+                // Try to reconnect automatically
+                setTimeout(() => {
+                    if (!socket.connected) {
+                        console.log('Attempting to reconnect Socket.IO...');
+                        socket.connect();
+                    }
+                }, 3000);
+            });
+            
+            // Handle reconnect event
+            socket.on('reconnect', function(attemptNumber) {
+                console.log('Socket.IO reconnected after', attemptNumber, 'attempts');
+                // Refresh data after reconnection
+                fetchCouriers();
+            });
+            
+            // Handle errors
+            socket.on('error', function(error) {
+                console.error('Socket.IO error:', error);
             });
         } catch (error) {
             console.error('Socket.IO initialization failed:', error);

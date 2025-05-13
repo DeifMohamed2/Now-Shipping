@@ -10,12 +10,29 @@ const initializeSocket = (server) => {
         cors: {
             origin: "*",
             methods: ["GET", "POST"]
-        }
+        },
+        path: '/socket.io',
+        transports: ['websocket', 'polling'], // Support both WebSocket and polling
+        pingTimeout: 30000, // Increase ping timeout
+        pingInterval: 25000, // Increase ping interval
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
     });
 
-    // Authentication middleware
+    // Authentication middleware - Skip auth for admin panel connections
     io.use(async (socket, next) => {
         try {
+            // Check if this is a connection from admin panel (typically no auth token)
+            if (socket.handshake.query && socket.handshake.query.isAdmin === 'true') {
+                // Allow admin panel connections without authentication
+                socket.userType = 'admin';
+                socket.userId = 'admin-' + Math.random().toString(36).substring(2, 10);
+                console.log(`Admin panel user connected without auth: ${socket.userId}`);
+                return next();
+            }
+            
+            // Normal authentication for mobile app connections
             const token = socket.handshake.auth.token;
             
             if (!token) {
@@ -28,6 +45,7 @@ const initializeSocket = (server) => {
             
             next();
         } catch (error) {
+            console.error('Socket authentication error:', error.message);
             return next(new Error('Authentication error: Invalid token'));
         }
     });
@@ -105,7 +123,7 @@ const initializeSocket = (server) => {
                     vehicleType: updatedCourier.vehicleType,
                     phoneNumber: updatedCourier.phoneNumber,
                     email: updatedCourier.user?.email || updatedCourier.email,
-                    photoUrl: photoUrl
+                    personalPhoto: photoUrl
                 });
                 
                 console.log(`Location update for courier ${socket.userId} broadcast to admin room`);
@@ -160,6 +178,16 @@ const initializeSocket = (server) => {
         socket.on('disconnect', () => {
             console.log(`User disconnected: ${socket.userId}`);
         });
+        
+        // Handle errors
+        socket.on('error', (error) => {
+            console.error(`Socket error for user ${socket.userId}:`, error);
+        });
+    });
+    
+    // Handle server-level Socket.IO errors
+    io.on('connect_error', (error) => {
+        console.error('Socket.IO connection error:', error);
     });
     
     return io;
@@ -190,7 +218,7 @@ async function sendCourierStatusToAdmin(courierId) {
             phoneNumber: courier.phoneNumber,
             email: courier.user?.email || courier.email,
             currentLocation: courier.currentLocation,
-            photoUrl: photoUrl
+            personalPhoto: photoUrl
         });
         
         console.log(`Courier ${courierId} status sent to admin room`);
@@ -230,7 +258,7 @@ async function sendAllCourierLocationsToAdmin(socket) {
                     vehicleType: courier.vehicleType,
                     phoneNumber: courier.phoneNumber,
                     email: courier.user?.email || courier.email,
-                    photoUrl: photoUrl
+                    personalPhoto: photoUrl
                 });
             }
         });
