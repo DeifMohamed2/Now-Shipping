@@ -401,7 +401,6 @@
     }
 </style>
 
-
 <%- contentFor('body') %>
 
 
@@ -490,10 +489,6 @@
 </div>
 <%- contentFor('FooterJs') %>
 <!-- Google Maps API -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyIdhgj9Rn2S30XfyYv9SCflp7-qJD6As&callback=initMap" defer></script>
-<!-- Socket.IO -->
-<script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin=""></script>
-
 
 <script>
     let map;
@@ -502,82 +497,7 @@
     let courierListEl, courierDetailsEl, refreshBtn, mapLoader, fitAllMarkersBtn;
     let isFullScreen = false;
     
-    // Initialize Google Map
-    function initMap() {
-        // Set up DOM elements
-        courierListEl = document.getElementById('courier-list');
-        courierDetailsEl = document.getElementById('courier-details');
-        refreshBtn = document.getElementById('refresh-couriers');
-        mapLoader = document.getElementById('map-loader');
-        fitAllMarkersBtn = document.getElementById('fit-all-markers');
-        const fullscreenBtn = document.getElementById('fullscreen-btn');
-        const fullscreenExit = document.getElementById('fullscreen-exit');
-        const mapContainer = document.querySelector('.map-container');
-        
-        // Default to Cairo coordinates
-        map = new google.maps.Map(document.getElementById('map'), {
-            center: { lat: 30.0444, lng: 31.2357 },
-            zoom: 10,
-            mapTypeControl: true,
-            streetViewControl: true,
-            fullscreenControl: false, // Disable default fullscreen control
-            zoomControl: true
-        });
-        
-        // Hide loader when map is loaded
-        google.maps.event.addListenerOnce(map, 'idle', function() {
-            hideMapLoader();
-        });
-        
-        // Set up event listeners
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', fetchCouriers);
-        }
-        
-        if (fitAllMarkersBtn) {
-            fitAllMarkersBtn.addEventListener('click', fitAllMarkers);
-        }
-        
-        // Add fullscreen functionality
-        if (fullscreenBtn) {
-            fullscreenBtn.addEventListener('click', function() {
-                mapContainer.classList.add('fullscreen');
-                isFullScreen = true;
-                // Trigger resize event to ensure map displays correctly
-                google.maps.event.trigger(map, 'resize');
-                // Refit all markers
-                setTimeout(fitAllMarkers, 100);
-            });
-        }
-        
-        if (fullscreenExit) {
-            fullscreenExit.addEventListener('click', function() {
-                mapContainer.classList.remove('fullscreen');
-                isFullScreen = false;
-                // Trigger resize event to ensure map displays correctly
-                google.maps.event.trigger(map, 'resize');
-                // Refit all markers
-                setTimeout(fitAllMarkers, 100);
-            });
-        }
-        
-        // Add escape key listener for exiting fullscreen
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isFullScreen) {
-                mapContainer.classList.remove('fullscreen');
-                isFullScreen = false;
-                google.maps.event.trigger(map, 'resize');
-                setTimeout(fitAllMarkers, 100);
-            }
-        });
-        
-        // Fetch couriers after map is initialized
-        fetchCouriers();
-        
-        // Set up Socket.IO for real-time updates
-        setupSocketIO();
-    }
-    
+    // Hide map loader
     function hideMapLoader() {
         if (mapLoader) {
             mapLoader.style.display = 'none';
@@ -665,6 +585,113 @@
         }
     }
     
+    // Check if location data is stale (more than 5 minutes old)
+    function isLocationStale(lastUpdated) {
+        const fiveMinutesAgo = new Date();
+        fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+        return lastUpdated < fiveMinutesAgo;
+    }
+    
+    // Helper function to format time ago
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        let interval = Math.floor(seconds / 31536000);
+        if (interval > 1) return interval + ' years ago';
+        
+        interval = Math.floor(seconds / 2592000);
+        if (interval > 1) return interval + ' months ago';
+        
+        interval = Math.floor(seconds / 86400);
+        if (interval > 1) return interval + ' days ago';
+        
+        interval = Math.floor(seconds / 3600);
+        if (interval > 1) return interval + ' hours ago';
+        
+        interval = Math.floor(seconds / 60);
+        if (interval > 1) return interval + ' minutes ago';
+        
+        if (seconds < 10) return 'just now';
+        
+        return Math.floor(seconds) + ' seconds ago';
+    }
+    
+    // Define initMap function before loading the API
+    function initMap() {
+        // Set up DOM elements
+        courierListEl = document.getElementById('courier-list');
+        courierDetailsEl = document.getElementById('courier-details');
+        refreshBtn = document.getElementById('refresh-couriers');
+        mapLoader = document.getElementById('map-loader');
+        fitAllMarkersBtn = document.getElementById('fit-all-markers');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const fullscreenExit = document.getElementById('fullscreen-exit');
+        const mapContainer = document.querySelector('.map-container');
+        
+        // Default to Cairo coordinates
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: 30.0444, lng: 31.2357 },
+            zoom: 10,
+            mapTypeControl: true,
+            streetViewControl: true,
+            fullscreenControl: false, // Disable default fullscreen control
+            zoomControl: true
+        });
+        
+        // Hide loader when map is loaded
+        google.maps.event.addListenerOnce(map, 'idle', function() {
+            hideMapLoader();
+        });
+        
+        // Set up event listeners
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', fetchCouriers);
+        }
+        
+        if (fitAllMarkersBtn) {
+            fitAllMarkersBtn.addEventListener('click', fitAllMarkers);
+        }
+        
+        // Add fullscreen functionality
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', function() {
+                mapContainer.classList.add('fullscreen');
+                isFullScreen = true;
+                // Trigger resize event to ensure map displays correctly
+                google.maps.event.trigger(map, 'resize');
+                // Refit all markers
+                setTimeout(fitAllMarkers, 100);
+            });
+        }
+        
+        if (fullscreenExit) {
+            fullscreenExit.addEventListener('click', function() {
+                mapContainer.classList.remove('fullscreen');
+                isFullScreen = false;
+                // Trigger resize event to ensure map displays correctly
+                google.maps.event.trigger(map, 'resize');
+                // Refit all markers
+                setTimeout(fitAllMarkers, 100);
+            });
+        }
+        
+        // Add escape key listener for exiting fullscreen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isFullScreen) {
+                mapContainer.classList.remove('fullscreen');
+                isFullScreen = false;
+                google.maps.event.trigger(map, 'resize');
+                setTimeout(fitAllMarkers, 100);
+            }
+        });
+        
+        // Fetch couriers after map is initialized
+        fetchCouriers();
+        
+        // Set up Socket.IO for real-time updates
+        setupSocketIO();
+    }
+
     // Render couriers list
     function renderCouriers(couriers) {
         if (couriers.length === 0) {
@@ -730,13 +757,6 @@
                 selectCourier(courierId);
             });
         });
-    }
-    
-    // Check if location data is stale (more than 5 minutes old)
-    function isLocationStale(lastUpdated) {
-        const fiveMinutesAgo = new Date();
-        fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
-        return lastUpdated < fiveMinutesAgo;
     }
     
     // Update map markers
@@ -941,9 +961,8 @@
         let iconUrl;
         const isAvailable = courier.isAvailable;
         const vehicleType = courier.vehicleType ? courier.vehicleType.toLowerCase() : 'default';
-        
         // Set base icon URL based on vehicle type
-        if (vehicleType.includes('Motorcyclead') || vehicleType.includes('bike')) {
+        if (vehicleType.includes('motorcyclead') || vehicleType.includes('bike')) {
             iconUrl = '/assets/images/map-icons/motorcycle-red.png';
         } else if (vehicleType.includes('car')) {
             iconUrl =  '/assets/images/map-icons/car-red.png';
@@ -953,7 +972,6 @@
             // Default icons if vehicle type doesn't match
             iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
         }
-        
         // Function to check if an image exists (using a test image)
         const imageExists = (url) => {
             // Always default to Google Maps icons to avoid client-side network requests
@@ -964,12 +982,12 @@
         };
         
         // Fallback to standard Google Maps icons if custom vehicle icons don't exist
-        if (!imageExists(iconUrl)) {
-            // Use Google Maps default icons as fallback
-            iconUrl = isDisconnected ? 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' : 
-                     isAvailable ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
-                     'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
-        }
+        // if (!imageExists(iconUrl)) {
+        //     // Use Google Maps default icons as fallback
+        //     iconUrl = isDisconnected ? 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' : 
+        //              isAvailable ? 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' : 
+        //              'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        // }
         
         return {
             url: iconUrl,
@@ -1136,142 +1154,256 @@
             </div>
         `;
     }
-    
-    // Helper function to format time ago
-    function getTimeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
-        
-        let interval = Math.floor(seconds / 31536000);
-        if (interval > 1) return interval + ' years ago';
-        
-        interval = Math.floor(seconds / 2592000);
-        if (interval > 1) return interval + ' months ago';
-        
-        interval = Math.floor(seconds / 86400);
-        if (interval > 1) return interval + ' days ago';
-        
-        interval = Math.floor(seconds / 3600);
-        if (interval > 1) return interval + ' hours ago';
-        
-        interval = Math.floor(seconds / 60);
-        if (interval > 1) return interval + ' minutes ago';
-        
-        if (seconds < 10) return 'just now';
-        
-        return Math.floor(seconds) + ' seconds ago';
-    }
-    
+
     // Set up Socket.IO for real-time updates
     function setupSocketIO() {
         try {
-            const socket = io();
+            // First try to load Socket.IO from server
+            const script = document.createElement('script');
+            script.src = "/socket.io/socket.io.js";
+            script.onload = function() {
+                console.log('Socket.IO library loaded from server');
+                initializeSocketConnection();
+            };
+            script.onerror = function() {
+                console.error('Failed to load Socket.IO from server, trying CDN');
+                // Try CDN as fallback
+                const cdnScript = document.createElement('script');
+                cdnScript.src = "https://cdn.socket.io/4.6.0/socket.io.min.js";
+                cdnScript.integrity = "sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+";
+                cdnScript.crossOrigin = "anonymous";
+                cdnScript.onload = function() {
+                    console.log('Socket.IO library loaded from CDN');
+                    initializeSocketConnection();
+                };
+                cdnScript.onerror = function() {
+                    console.error('Failed to load Socket.IO from all sources');
+                    showConnectionError();
+                };
+                document.head.appendChild(cdnScript);
+            };
+            document.head.appendChild(script);
+        } catch (error) {
+            console.error('Socket.IO initialization failed:', error);
+            showConnectionError();
+        }
+    }
+    
+    function showConnectionError() {
+        if (courierListEl) {
+            courierListEl.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="ri-error-warning-line"></i> 
+                    Connection error. Please refresh the page.
+                </div>
+            `;
+        }
+        
+        if (mapLoader) {
+            hideMapLoader();
+        }
+    }
+    
+    function initializeSocketConnection() {
+        // Create socket connection with adminPanel flag
+        const socket = io(window.location.origin, {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            auth: {
+                adminPanel: true
+            }
+        });
+        
+        // Handle courier location updates
+        socket.on('courier-location-update', function(data) {
+            if (!data || !data.courierId) return;
             
-            // Handle courier location updates
-            socket.on('courier-location-update', function(data) {
-                if (!data || !data.courierId) return;
+            console.log('Received location update for courier:', data.courierId);
+            
+            // If we have all the data needed, update directly without a fetch request
+            if (data.location && data.name && data.courierID && data.vehicleType !== undefined) {
+                const courierId = data.courierId;
+                const lat = data.location.latitude;
+                const lng = data.location.longitude;
+                const lastUpdated = new Date(data.location.timestamp);
+                const isDisconnected = isLocationStale(lastUpdated);
                 
-                console.log('Received location update for courier:', data.courierId);
-                
-                // If we have all the data needed, update directly without a fetch request
-                if (data.location && data.name && data.courierID && data.vehicleType !== undefined) {
-                    const courierId = data.courierId;
-                    const lat = data.location.latitude;
-                    const lng = data.location.longitude;
-                    const lastUpdated = new Date(data.location.timestamp);
-                    const isDisconnected = isLocationStale(lastUpdated);
+                // Update marker position if it exists
+                if (markers[courierId]) {
+                    markers[courierId].setPosition({ lat, lng });
                     
-                    // Update marker position if it exists
-                    if (markers[courierId]) {
-                        markers[courierId].setPosition({ lat, lng });
+                    // Update icon based on vehicle type and availability
+                    markers[courierId].setIcon(getVehicleIcon(data, isDisconnected));
+                    
+                    // Update label position if it exists
+                    if (markers[`${courierId}_label`]) {
+                        markers[`${courierId}_label`].setPosition({ lat, lng });
+                    }
+                    
+                    // Update info window content
+                    if (markers[courierId].infoWindow) {
+                        // Default avatar if no photo provided
+                        const avatarContent = data.personalPhoto ? 
+                            `<img src="${data.personalPhoto}" alt="${data.name}" />` : 
+                            `<i class="ri-user-3-fill"></i>`;
                         
-                        // Update icon based on vehicle type and availability
-                        markers[courierId].setIcon(getVehicleIcon(data, isDisconnected));
-                        
-                        // Update label position if it exists
-                        if (markers[`${courierId}_label`]) {
-                            markers[`${courierId}_label`].setPosition({ lat, lng });
-                        }
-                        
-                        // Update info window content
-                        if (markers[courierId].infoWindow) {
-                            // Default avatar if no photo provided
-                            const avatarContent = data.personalPhoto ? 
-                                `<img src="${data.personalPhoto}" alt="${data.name}" />` : 
-                                `<i class="ri-user-3-fill"></i>`;
-                            
-                            const infoContent = `
-                                <div class="courier-info-window">
-                                    <div class="courier-info-header">
-                                        <div class="courier-info-avatar">
-                                            ${avatarContent}
-                                        </div>
-                                        <div>
-                                            <h5 class="courier-info-name">${data.name}</h5>
-                                            <p class="courier-info-id">${data.courierID}</p>
-                                        </div>
+                        const infoContent = `
+                            <div class="courier-info-window">
+                                <div class="courier-info-header">
+                                    <div class="courier-info-avatar">
+                                        ${avatarContent}
                                     </div>
-                                    
-                                    <div class="courier-info-details">
-                                        <span class="courier-info-label">Status:</span>
-                                        <span class="courier-info-value">
-                                            <span class="courier-info-status ${isDisconnected ? 'disconnected' : data.isAvailable ? 'available' : 'unavailable'}">
-                                                ${isDisconnected ? 'Disconnected' : data.isAvailable ? 'Available' : 'Unavailable'}
-                                            </span>
-                                        </span>
-                                        
-                                        <span class="courier-info-label">Updated:</span>
-                                        <span class="courier-info-value">just now</span>
-                                    </div>
-                                    
-                                    <div class="courier-info-footer">
-                                        <span class="courier-info-time">
-                                            ${isDisconnected ? '<i class="ri-error-warning-line text-warning"></i> Last known location' : ''}
-                                        </span>
-                                        <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
-                                           target="_blank" class="btn btn-sm btn-primary">
-                                            <i class="ri-route-line me-1"></i> Directions
-                                        </a>
+                                    <div>
+                                        <h5 class="courier-info-name">${data.name}</h5>
+                                        <p class="courier-info-id">${data.courierID}</p>
                                     </div>
                                 </div>
-                            `;
+                                
+                                <div class="courier-info-details">
+                                    <span class="courier-info-label">Status:</span>
+                                    <span class="courier-info-value">
+                                        <span class="courier-info-status ${isDisconnected ? 'disconnected' : data.isAvailable ? 'available' : 'unavailable'}">
+                                            ${isDisconnected ? 'Disconnected' : data.isAvailable ? 'Available' : 'Unavailable'}
+                                        </span>
+                                    </span>
+                                    
+                                    <span class="courier-info-label">Updated:</span>
+                                    <span class="courier-info-value">just now</span>
+                                </div>
+                                
+                                <div class="courier-info-footer">
+                                    <span class="courier-info-time">
+                                        ${isDisconnected ? '<i class="ri-error-warning-line text-warning"></i> Last known location' : ''}
+                                    </span>
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" 
+                                       target="_blank" class="btn btn-sm btn-primary">
+                                        <i class="ri-route-line me-1"></i> Directions
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        
+                        markers[courierId].infoWindow.setContent(infoContent);
+                        
+                        // Make sure info window is open
+                        if (!markers[courierId].infoWindowOpen) {
+                            markers[courierId].infoWindow.open(map, markers[courierId]);
+                            markers[courierId].infoWindowOpen = true;
+                        }
+                    }
+                    
+                    // If this is the selected courier, update details
+                    if (selectedCourierId === courierId) {
+                        // Fetch full courier details to update the details panel
+                        fetch(`/admin/courier-location/${courierId}`)
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    renderCourierDetails(result.courier);
+                                    map.setCenter({ lat, lng });
+                                }
+                            })
+                            .catch(error => console.error('Error fetching updated courier data:', error));
+                    }
+                    
+                    // Also update the courier in the list with new timestamp
+                    const courierItem = document.querySelector(`.courier-item[data-courier-id="${courierId}"]`);
+                    if (courierItem) {
+                        // Update the time element
+                        const timeElement = courierItem.querySelector('small:first-of-type');
+                        if (timeElement) {
+                            timeElement.innerHTML = '<i class="ri-time-line"></i> just now';
+                        }
+                        
+                        // Update the status dot
+                        const statusDot = courierItem.querySelector('.courier-status');
+                        if (statusDot) {
+                            statusDot.className = `courier-status ${isDisconnected ? 'disconnected' : data.isAvailable ? 'available' : 'unavailable'}`;
+                            statusDot.title = isDisconnected ? 'Disconnected' : data.isAvailable ? 'Available' : 'Unavailable';
+                        }
+                        
+                        // Update disconnected status
+                        courierItem.classList.toggle('disconnected', isDisconnected);
+                        
+                        // Update warning message
+                        const warningContainer = courierItem.querySelector('.mt-2');
+                        if (warningContainer) {
+                            const existingWarning = warningContainer.querySelector('.text-warning');
+                            if (isDisconnected && !existingWarning) {
+                                const warningElement = document.createElement('div');
+                                warningElement.className = 'mt-1 text-warning';
+                                warningElement.innerHTML = '<i class="ri-error-warning-line"></i> Connection lost';
+                                warningContainer.appendChild(warningElement);
+                            } else if (!isDisconnected && existingWarning) {
+                                existingWarning.remove();
+                            }
+                        }
+                    }
+                } else {
+                    // If marker doesn't exist, refresh all couriers
+                    fetchCouriers();
+                }
+            } else {
+                // If we don't have all the data, fetch the courier data
+                fetch(`/admin/courier-location/${data.courierId}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            const courier = result.courier;
+                            const [lng, lat] = courier.currentLocation.coordinates;
                             
-                            markers[courierId].infoWindow.setContent(infoContent);
+                            if (markers[courier._id]) {
+                                markers[courier._id].setPosition({ lat, lng });
+                                
+                                // If this is the selected courier, update details and center map
+                                if (selectedCourierId === courier._id) {
+                                    renderCourierDetails(courier);
+                                    map.setCenter({ lat, lng });
+                                }
+                            } else {
+                                // If marker doesn't exist, refresh all couriers
+                                fetchCouriers();
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error fetching updated courier data:', error));
+            }
+        });
+        
+        // Handle courier status updates
+        socket.on('courier-status-update', function(data) {
+            if (!data || !data.courierId) return;
+            
+            console.log('Received status update for courier:', data.courierId);
+            
+            // Fetch the updated courier data
+            fetch(`/admin/courier-location/${data.courierId}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        const courier = result.courier;
+                        const lastUpdated = new Date(courier.currentLocation?.lastUpdated || new Date());
+                        const isDisconnected = isLocationStale(lastUpdated);
+                        
+                        // Update marker icon based on vehicle type and availability
+                        if (markers[courier._id]) {
+                            markers[courier._id].setIcon(getVehicleIcon(courier, isDisconnected));
                             
-                            // Make sure info window is open
-                            if (!markers[courierId].infoWindowOpen) {
-                                markers[courierId].infoWindow.open(map, markers[courierId]);
-                                markers[courierId].infoWindowOpen = true;
+                            // If this is the selected courier, update details
+                            if (selectedCourierId === courier._id) {
+                                renderCourierDetails(courier);
                             }
                         }
                         
-                        // If this is the selected courier, update details
-                        if (selectedCourierId === courierId) {
-                            // Fetch full courier details to update the details panel
-                            fetch(`/admin/courier-location/${courierId}`)
-                                .then(response => response.json())
-                                .then(result => {
-                                    if (result.success) {
-                                        renderCourierDetails(result.courier);
-                                        map.setCenter({ lat, lng });
-                                    }
-                                })
-                                .catch(error => console.error('Error fetching updated courier data:', error));
-                        }
-                        
-                        // Also update the courier in the list with new timestamp
-                        const courierItem = document.querySelector(`.courier-item[data-courier-id="${courierId}"]`);
+                        // Update courier in the list
+                        const courierItem = document.querySelector(`.courier-item[data-courier-id="${courier._id}"]`);
                         if (courierItem) {
-                            // Update the time element
-                            const timeElement = courierItem.querySelector('small:first-of-type');
-                            if (timeElement) {
-                                timeElement.innerHTML = '<i class="ri-time-line"></i> just now';
-                            }
-                            
-                            // Update the status dot
                             const statusDot = courierItem.querySelector('.courier-status');
                             if (statusDot) {
-                                statusDot.className = `courier-status ${isDisconnected ? 'disconnected' : data.isAvailable ? 'available' : 'unavailable'}`;
-                                statusDot.title = isDisconnected ? 'Disconnected' : data.isAvailable ? 'Available' : 'Unavailable';
+                                statusDot.className = `courier-status ${isDisconnected ? 'disconnected' : courier.isAvailable ? 'available' : 'unavailable'}`;
+                                statusDot.title = isDisconnected ? 'Disconnected' : courier.isAvailable ? 'Available' : 'Unavailable';
                             }
                             
                             // Update disconnected status
@@ -1291,100 +1423,31 @@
                                 }
                             }
                         }
-                    } else {
-                        // If marker doesn't exist, refresh all couriers
-                        fetchCouriers();
+                        
+                        // Count active and disconnected couriers for overlay update
+                        countAndUpdateDisconnectedCouriers();
                     }
-                } else {
-                    // If we don't have all the data, fetch the courier data
-                    fetch(`/admin/courier-location/${data.courierId}`)
-                        .then(response => response.json())
-                        .then(result => {
-                            if (result.success) {
-                                const courier = result.courier;
-                                const [lng, lat] = courier.currentLocation.coordinates;
-                                
-                                if (markers[courier._id]) {
-                                    markers[courier._id].setPosition({ lat, lng });
-                                    
-                                    // If this is the selected courier, update details and center map
-                                    if (selectedCourierId === courier._id) {
-                                        renderCourierDetails(courier);
-                                        map.setCenter({ lat, lng });
-                                    }
-                                } else {
-                                    // If marker doesn't exist, refresh all couriers
-                                    fetchCouriers();
-                                }
-                            }
-                        })
-                        .catch(error => console.error('Error fetching updated courier data:', error));
-                }
-            });
-            
-            // Handle courier status updates
-            socket.on('courier-status-update', function(data) {
-                if (!data || !data.courierId) return;
-                
-                console.log('Received status update for courier:', data.courierId);
-                
-                // Fetch the updated courier data
-                fetch(`/admin/courier-location/${data.courierId}`)
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            const courier = result.courier;
-                            const lastUpdated = new Date(courier.currentLocation?.lastUpdated || new Date());
-                            const isDisconnected = isLocationStale(lastUpdated);
-                            
-                            // Update marker icon based on vehicle type and availability
-                            if (markers[courier._id]) {
-                                markers[courier._id].setIcon(getVehicleIcon(courier, isDisconnected));
-                                
-                                // If this is the selected courier, update details
-                                if (selectedCourierId === courier._id) {
-                                    renderCourierDetails(courier);
-                                }
-                            }
-                            
-                            // Update courier in the list
-                            const courierItem = document.querySelector(`.courier-item[data-courier-id="${courier._id}"]`);
-                            if (courierItem) {
-                                const statusDot = courierItem.querySelector('.courier-status');
-                                if (statusDot) {
-                                    statusDot.className = `courier-status ${isDisconnected ? 'disconnected' : courier.isAvailable ? 'available' : 'unavailable'}`;
-                                    statusDot.title = isDisconnected ? 'Disconnected' : courier.isAvailable ? 'Available' : 'Unavailable';
-                                }
-                                
-                                // Update disconnected status
-                                courierItem.classList.toggle('disconnected', isDisconnected);
-                                
-                                // Update warning message
-                                const warningContainer = courierItem.querySelector('.mt-2');
-                                if (warningContainer) {
-                                    const existingWarning = warningContainer.querySelector('.text-warning');
-                                    if (isDisconnected && !existingWarning) {
-                                        const warningElement = document.createElement('div');
-                                        warningElement.className = 'mt-1 text-warning';
-                                        warningElement.innerHTML = '<i class="ri-error-warning-line"></i> Connection lost';
-                                        warningContainer.appendChild(warningElement);
-                                    } else if (!isDisconnected && existingWarning) {
-                                        existingWarning.remove();
-                                    }
-                                }
-                            }
-                            
-                            // Count active and disconnected couriers for overlay update
-                            countAndUpdateDisconnectedCouriers();
-                        }
-                    })
-                    .catch(error => console.error('Error fetching updated courier data:', error));
-            });
-        } catch (error) {
-            console.error('Socket.IO initialization failed:', error);
-        }
+                })
+                .catch(error => console.error('Error fetching updated courier data:', error));
+        });
+        
+        socket.on('connect', function() {
+            console.log('Socket.IO connected successfully');
+            hideMapLoader(); // Make sure map loader is hidden when socket connects
+        });
+        
+        socket.on('connect_error', function(error) {
+            console.error('Socket.IO connection error:', error);
+            // Show a user-friendly error message
+            courierListEl.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="ri-error-warning-line"></i> 
+                    Connection error. Please refresh the page.
+                </div>
+            `;
+        });
     }
-
+    
     // Count disconnected couriers and update overlay
     function countAndUpdateDisconnectedCouriers() {
         // Fetch all couriers to get the latest data
@@ -1417,4 +1480,5 @@
             })
             .catch(error => console.error('Error fetching couriers for overlay update:', error));
     }
-</script> 
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyIdhgj9Rn2S30XfyYv9SCflp7-qJD6As&callback=initMap" async defer></script>

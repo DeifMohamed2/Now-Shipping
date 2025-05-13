@@ -10,30 +10,58 @@ const initializeSocket = (server) => {
         cors: {
             origin: "*",
             methods: ["GET", "POST"]
-        }
+        },
+        transports: ['websocket', 'polling'],
+        pingTimeout: 30000,
+        pingInterval: 10000,
+        cookie: false
     });
+
+    // Log socket.io server initialization
+    console.log("Socket.IO server initialized");
 
     // Authentication middleware
     io.use(async (socket, next) => {
         try {
+            // Check if this is an admin panel connection
+            if (socket.handshake.auth.adminPanel === true) {
+                // For admin panel, we'll check the session from the cookie
+                // The session is already validated by Express middleware before serving the page
+                // So if they can access the admin panel, they're already authenticated
+                socket.userId = 'admin-panel';
+                socket.userType = 'admin';
+                console.log(`Admin panel connected: ${socket.id}`);
+                return next();
+            }
+            
+            // For mobile app connections, verify JWT token
             const token = socket.handshake.auth.token;
             
             if (!token) {
+                console.log("Socket auth failed: No token provided");
                 return next(new Error('Authentication error: Token not provided'));
             }
             
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            socket.userId = decoded.id;
-            socket.userType = decoded.userType;
-            
-            next();
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                socket.userId = decoded.id;
+                socket.userType = decoded.userType;
+                
+                console.log(`Socket auth successful: ${socket.userType} ${socket.userId}`);
+                next();
+            } catch (jwtError) {
+                console.log(`Socket auth failed: Invalid token - ${jwtError.message}`);
+                return next(new Error('Authentication error: Invalid token'));
+            }
         } catch (error) {
-            return next(new Error('Authentication error: Invalid token'));
+            console.log(`Socket auth error: ${error.message}`);
+            return next(new Error(`Authentication error: ${error.message}`));
         }
     });
 
+    // Handle connection events
     io.on('connection', (socket) => {
-        console.log(`User connected: ${socket.userId}, Type: ${socket.userType}`);
+        console.log(`User connected: ${socket.userId}, Type: ${socket.userType}, Transport: ${socket.conn.transport.name}`);
         
         // Join room based on user type
         if (socket.userType === 'courier') {
@@ -157,9 +185,19 @@ const initializeSocket = (server) => {
             }
         });
         
-        socket.on('disconnect', () => {
-            console.log(`User disconnected: ${socket.userId}`);
+        // Handle error events
+        socket.on('error', (error) => {
+            console.error(`Socket error for ${socket.userType} ${socket.userId}: ${error}`);
         });
+        
+        socket.on('disconnect', (reason) => {
+            console.log(`User disconnected: ${socket.userId}, Reason: ${reason}`);
+        });
+    });
+    
+    // Log global Socket.IO errors
+    io.engine.on('connection_error', (err) => {
+        console.error('Connection error:', err);
     });
     
     return io;

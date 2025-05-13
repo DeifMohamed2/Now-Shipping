@@ -327,9 +327,19 @@ class LocationProvider extends ChangeNotifier {
       print(
           "Token for socket: ${token != null ? 'available' : 'not available'}");
 
+      // Disconnect existing socket if any
+      if (_socket != null) {
+        _socket!.disconnect();
+        _socket = null;
+      }
+
       _socket = IO.io(baseApiUrl, <String, dynamic>{
-        'transports': ['websocket'],
+        'transports': ['websocket', 'polling'], // Try both transports
         'autoConnect': true,
+        'reconnection': true,
+        'reconnectionAttempts': 5,
+        'reconnectionDelay': 1000,
+        'timeout': 10000, // 10 seconds timeout
         'auth': {
           'token': token,
         }
@@ -337,6 +347,14 @@ class LocationProvider extends ChangeNotifier {
 
       _socket!.onConnect((_) {
         print('Socket.IO connected');
+        _error = null; // Clear any previous connection errors
+        notifyListeners();
+      });
+
+      _socket!.onConnectError((error) {
+        print('Socket.IO connection error: $error');
+        _error = "Connection error: $error";
+        notifyListeners();
       });
 
       _socket!.onDisconnect((_) {
@@ -345,6 +363,12 @@ class LocationProvider extends ChangeNotifier {
 
       _socket!.onError((error) {
         print('Socket.IO error: $error');
+        _error = "Socket error: $error";
+        notifyListeners();
+      });
+
+      _socket!.onReconnect((_) {
+        print('Socket.IO reconnected');
       });
 
       _socket!.connect();

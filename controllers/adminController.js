@@ -1271,7 +1271,7 @@ const getCourierLocations = async (req, res) => {
             }
             return courierObj;
         });
-
+        console.log(processedCouriers)
         res.json({
             success: true,
             couriers: processedCouriers
