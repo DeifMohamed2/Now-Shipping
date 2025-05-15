@@ -67,6 +67,12 @@
           </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link menu-link" href="/admin/notifications" role="button">
+            <i class="ri-notification-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Send dCourier Notifications</span>
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link menu-link" href="#sidebarStockManagement" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarStockManagement">
             <i class="ri-store-line" style="color: #F39720;"></i>
             <span data-key="" style="color: #212529; font-size: 15px;">Stock Management</span>
@@ -315,6 +321,30 @@
   .dropdown-divider {
     border-top: 1px solid #f0f0f0;
     margin: 8px 0;
+  }
+
+  /* Scrollbar styling */
+  #scrollbar {
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    padding: 10px 0;
+  }
+
+  #scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  #scrollbar::-webkit-scrollbar-track {
+    background: #f8f9fa;
+  }
+
+  #scrollbar::-webkit-scrollbar-thumb {
+    background: #e9ecef;
+    border-radius: 5px;
+  }
+
+  #scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #F39720;
   }
 
   /* Submenu styling */

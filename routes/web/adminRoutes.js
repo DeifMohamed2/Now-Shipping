@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Admin = require('../../models/admin.js');
+const Notification = require('../../models/notification.js');
 
 const adminController = require('../../controllers/adminController.js');
+const notificationController = require('../../controllers/notificationController.js');
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -140,5 +142,11 @@ router.get('/logout', adminController.logOut);
 router.get('/courier-tracking', adminController.courierTracking);
 router.get('/courier-locations', adminController.getCourierLocations);
 router.get('/courier-location/:id', adminController.getCourierLocation);
+
+// Notification routes
+router.get('/notifications', notificationController.getNotificationsPage);
+router.post('/notifications/courier', notificationController.sendNotificationToCourier);
+router.post('/notifications/broadcast', notificationController.sendNotificationToAllCouriers);
+router.get('/notifications/recent', notificationController.getRecentNotifications);
 
 module.exports = router;

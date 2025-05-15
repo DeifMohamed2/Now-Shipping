@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:track_courier/providers/auth_provider.dart';
 import 'package:track_courier/providers/location_provider.dart';
 import 'package:track_courier/screens/login_screen.dart';
+import 'package:track_courier/screens/notifications_screen.dart';
 import 'package:track_courier/utils/app_theme.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -198,6 +199,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Text('Courier Tracking'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {

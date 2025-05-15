@@ -21,12 +21,37 @@ const verifyToken = (req, res, next) => {
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Add user ID to request object
-    req.userId = decoded.id || decoded.courierId || decoded.adminId;
-    req.userType = decoded.userType || (decoded.courierId ? 'courier' : (decoded.adminId ? 'admin' : 'user'));
+    console.log('JWT token decoded:', decoded);
+    
+    // Add user ID to request object - handle different fields in the token
+    if (decoded.id) {
+      req.userId = decoded.id;
+    } else if (decoded.courierId) {
+      req.userId = decoded.courierId;
+    } else if (decoded.adminId) {
+      req.userId = decoded.adminId;
+    } else if (decoded.userId) {
+      req.userId = decoded.userId;
+    } else {
+      console.error('Token does not contain a valid user ID field:', decoded);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token: no user ID found'
+      });
+    }
+    
+    // Set user type
+    req.userType = decoded.userType || 
+                  (decoded.courierId ? 'courier' : 
+                  (decoded.adminId ? 'admin' : 
+                  (decoded.id && decoded.userType === 'courier' ? 'courier' : 'user')));
+    
+    console.log(`User authenticated: ID=${req.userId}, Type=${req.userType}`);
     
     next();
   } catch (error) {
+    console.error('Token verification error:', error);
+    
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
