@@ -8,6 +8,9 @@ const http = require("http");
 const server = http.createServer(app);
 const socketController = require('./controllers/socketController');
 
+// Initialize Firebase Admin SDK
+require('./config/firebase');
+
 // Initialize Socket.IO
 socketController.initializeSocket(server);
 
@@ -26,11 +29,7 @@ const courierRouterApi = require('./routes/api/v1/courier');
 
 // Import jobs
 const dailyOrderProcessing = require('./jobs/dailyOrderProcessing');
-
 const releasesProccessing = require('./jobs/releasesProccessing');
-
-
-
 
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');

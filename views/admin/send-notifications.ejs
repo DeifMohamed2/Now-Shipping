@@ -1,0 +1,837 @@
+<%- contentFor('HeaderCss') %>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<%- contentFor('body') %>
+
+<style>
+  .notification-preview {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .notification-phone {
+    background: #f9f9f9;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    border: 1px solid #ddd;
+    transition: all 0.3s ease;
+  }
+
+  .notification-phone:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .notification-status-bar {
+    background: #444;
+    color: white;
+    padding: 5px 15px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+  }
+
+  .notification-icons i {
+    margin-left: 5px;
+  }
+
+  .notification-content {
+    padding: 15px;
+    background: white;
+  }
+
+  .notification-app {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .notification-app-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    border-radius: 4px;
+  }
+
+  .notification-app-name {
+    font-weight: 500;
+  }
+
+  .notification-time-small {
+    margin-left: auto;
+    color: #777;
+    font-size: 12px;
+  }
+
+  .notification-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+  }
+
+  .notification-message {
+    font-size: 14px;
+    margin: 0;
+    color: #555;
+  }
+
+  /* Custom styling for the form */
+  .form-container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    padding: 20px;
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #555;
+  }
+
+  /* Filter controls styling */
+  .filter-controls {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  /* Status pill styling */
+  .status-pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* Pagination styling */
+  .pagination {
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .pagination .page-item .page-link {
+    color: #495057;
+    border-radius: 4px;
+    margin: 0 3px;
+  }
+
+  .pagination .page-item.active .page-link {
+    background-color: #f39720;
+    border-color: #f39720;
+  }
+
+  /* Delivery status indicators */
+  .status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+
+  .status-delivered {
+    background-color: #10b981;
+  }
+
+  .status-failed {
+    background-color: #ef4444;
+  }
+
+  .status-pending {
+    background-color: #f59e0b;
+  }
+
+  /* Spinner animation */
+  @keyframes spinner {
+    to {transform: rotate(360deg);}
+  }
+
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #f39720;
+    border-radius: 50%;
+    animation: spinner 0.6s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+  }
+
+  .notification-type-indicator {
+    background: #f8f8f8;
+    padding: 5px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+  }
+  
+  #notification-mode-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+</style>
+<!-- container-fluid -->
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title mb-0">Send Notifications to Couriers</h4>
+        <p class="text-muted small mt-1 mb-0">Send push notifications to all couriers or a specific courier</p>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="alert alert-info mb-4">
+              <p class="mb-0">Use this form to send push notifications to your couriers. You can send to all couriers at once or to a specific courier.</p>
+            </div>
+
+            <div id="notification-success" class="alert alert-success alert-dismissible fade" role="alert">
+              <div id="success-message"></div>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div id="notification-error" class="alert alert-danger alert-dismissible fade" role="alert">
+              <div id="error-message"></div>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <form id="notification-form" class="form-container">
+              <div class="mb-3">
+                <label for="notification-type" class="form-label">Notification Type</label>
+                <select class="form-select" id="notification-type">
+                  <option value="broadcast" selected>All Couriers (Broadcast)</option>
+                  <option value="individual">Specific Courier (Individual)</option>
+                </select>
+                <div class="form-text">
+                  Select "All Couriers" to send to everyone, or "Specific Courier" to send to an individual.
+                </div>
+              </div>
+
+              <div class="mb-3" id="courier-select-container" style="display: none;">
+                <label for="courier-select" class="form-label">Select Courier</label>
+                <select class="form-select border-primary" id="courier-select">
+                  <option value="" selected disabled>-- Select a Courier --</option>
+                  <% couriers.forEach(courier => { %>
+                    <option value="<%= courier._id %>"><%= courier.name %> (<%= courier.courierID %>)</option>
+                  <% }); %>
+                </select>
+                <div class="form-text text-danger">
+                  <i class="ri-information-line"></i> You must select a courier when sending an individual notification.
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="notification-title" class="form-label">Notification Title</label>
+                <input type="text" class="form-control" id="notification-title" placeholder="Enter notification title">
+              </div>
+
+              <div class="mb-3">
+                <label for="notification-body" class="form-label">Notification Message</label>
+                <textarea class="form-control" id="notification-body" rows="4" placeholder="Enter notification message"></textarea>
+              </div>
+
+              <div class="d-flex justify-content-end">
+                <button type="reset" class="btn btn-light me-2">
+                  <i class="ri-restart-line align-middle me-1"></i> Reset
+                </button>
+                <button type="submit" class="btn btn-primary" id="send-notification-btn">
+                  <i class="ri-send-plane-line align-middle me-1"></i> Send Notification
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="card border shadow-none mb-0">
+              <div class="card-header bg-soft-light border-bottom">
+                <h5 class="mb-0">Preview</h5>
+              </div>
+              <div class="card-body d-flex justify-content-center align-items-center" style="min-height: 400px;">
+                <div class="notification-preview">
+                  <div class="notification-phone">
+                    <div class="notification-status-bar">
+                      <div class="notification-time">9:41</div>
+                      <div class="notification-icons">
+                        <i class="ri-wifi-line"></i>
+                        <i class="ri-battery-line"></i>
+                      </div>
+                    </div>
+                    <div class="notification-type-indicator">
+                      <span id="notification-mode-badge" class="badge bg-info">Broadcast Mode</span>
+                    </div>
+                    <div class="notification-content">
+                      <div class="notification-app">
+                        <img src="/assets/rimages/logo.png" alt="App Logo" class="notification-app-icon">
+                        <span class="notification-app-name">Now Shipping</span>
+                        <span class="notification-time-small">now</span>
+                      </div>
+                      <h3 class="notification-title" id="preview-title">Notification Title</h3>
+                      <p class="notification-message" id="preview-body">Notification message will appear here</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="card-title mb-0">Recent Notifications</h4>
+        <div>
+          <button class="btn btn-sm btn-light" id="refresh-notifications">
+            <i class="ri-refresh-line"></i> Refresh
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Filter controls -->
+        <div class="filter-controls">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label for="filter-type" class="form-label">Type</label>
+              <select class="form-select form-select-sm" id="filter-type">
+                <option value="">All Types</option>
+                <option value="broadcast">All Couriers</option>
+                <option value="personal">Individual</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="filter-courier" class="form-label">Courier</label>
+              <select class="form-select form-select-sm" id="filter-courier">
+                <option value="">All Couriers</option>
+                <% couriers.forEach(courier => { %>
+                  <option value="<%= courier._id %>"><%= courier.name %> (<%= courier.courierID %>)</option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="filter-date-range" class="form-label">Date Range</label>
+              <input type="text" class="form-control form-control-sm" id="filter-date-range" placeholder="Select date range">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button class="btn btn-primary btn-sm w-100" id="apply-filters">
+                <i class="ri-filter-3-line"></i> Apply
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Message</th>
+                <th>Type</th>
+                <th>Recipient</th>
+                <th>Status</th>
+                <th>Sent At</th>
+              </tr>
+            </thead>
+            <tbody id="notifications-table-body">
+              <tr>
+                <td colspan="6" class="text-center">Loading notifications...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div class="text-muted">
+            Showing <span id="showing-start">0</span> to <span id="showing-end">0</span> of <span id="total-records">0</span> records
+          </div>
+          <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm justify-content-end" id="pagination-container">
+              <!-- Pagination will be inserted by JavaScript -->
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Hide alert messages initially
+    document.getElementById('notification-success').classList.remove('show');
+    document.getElementById('notification-error').classList.remove('show');
+
+    // Initialize the preview with the broadcast prefix
+    const previewTitle = document.getElementById('preview-title');
+    if (!previewTitle.textContent.includes('[Broadcast]')) {
+      previewTitle.textContent = '[Broadcast] ' + previewTitle.textContent;
+    }
+
+    // Initialize flatpickr for date range picker
+    const dateRangePicker = flatpickr('#filter-date-range', {
+      mode: 'range',
+      dateFormat: 'Y-m-d',
+      maxDate: new Date(),
+      clear: true
+    });
+
+    // Toggle courier selection based on notification type
+    document.getElementById('notification-type').addEventListener('change', function() {
+      const courierSelectContainer = document.getElementById('courier-select-container');
+      const previewTitle = document.getElementById('preview-title');
+      const modeBadge = document.getElementById('notification-mode-badge');
+      const currentTitle = document.getElementById('notification-title').value || 'Notification Title';
+      
+      if (this.value === 'individual') {
+        // Show courier selection and update the preview to indicate individual mode
+        courierSelectContainer.style.display = 'block';
+        
+        // Update the form appearance to indicate individual mode
+        document.querySelector('.form-container').classList.add('border-primary', 'border');
+        
+        // Update preview title - check if a courier is already selected
+        const courierSelect = document.getElementById('courier-select');
+        const selectedOption = courierSelect.options[courierSelect.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+          // Add personalized greeting if a courier is selected
+          const courierName = selectedOption.text.split('(')[0].trim();
+          const personalizedTitle = `${currentTitle} (Hi ${courierName})`;
+          previewTitle.textContent = `[Individual] ${personalizedTitle}`;
+        } else {
+          // No courier selected yet
+          previewTitle.textContent = `[Individual] ${currentTitle}`;
+        }
+        
+        // Update the mode badge
+        modeBadge.textContent = 'Individual Mode';
+        modeBadge.classList.remove('bg-info');
+        modeBadge.classList.add('bg-primary');
+      } else {
+        // Hide courier selection and update the preview to indicate broadcast mode
+        courierSelectContainer.style.display = 'none';
+        
+        // Update the form appearance to indicate broadcast mode
+        document.querySelector('.form-container').classList.remove('border-primary', 'border');
+        
+        // Update preview title - remove any personalized greeting
+        previewTitle.textContent = `[Broadcast] ${currentTitle.replace(/\s*\(Hi.*?\)/, '')}`;
+        
+        // Update the mode badge
+        modeBadge.textContent = 'Broadcast Mode';
+        modeBadge.classList.remove('bg-primary');
+        modeBadge.classList.add('bg-info');
+      }
+    });
+
+    // Update the preview to show personalized title when a courier is selected
+    document.getElementById('courier-select').addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      if (selectedOption.value) {
+        const courierName = selectedOption.text.split('(')[0].trim();
+        const currentTitle = document.getElementById('notification-title').value || 'Notification Title';
+        const personalizedTitle = `${currentTitle} (Hi ${courierName})`;
+        document.getElementById('preview-title').textContent = `[Individual] ${personalizedTitle}`;
+      }
+    });
+
+    // Live preview of notification
+    document.getElementById('notification-title').addEventListener('input', function() {
+      const notificationType = document.getElementById('notification-type').value;
+      const prefix = notificationType === 'individual' ? '[Individual] ' : '[Broadcast] ';
+      
+      if (this.value) {
+        if (notificationType === 'individual') {
+          const courierSelect = document.getElementById('courier-select');
+          const selectedOption = courierSelect.options[courierSelect.selectedIndex];
+          if (selectedOption && selectedOption.value) {
+            const courierName = selectedOption.text.split('(')[0].trim();
+            const personalizedTitle = `${this.value} (Hi ${courierName})`;
+            document.getElementById('preview-title').textContent = prefix + personalizedTitle;
+          } else {
+            document.getElementById('preview-title').textContent = prefix + this.value;
+          }
+        } else {
+          document.getElementById('preview-title').textContent = prefix + this.value;
+        }
+      } else {
+        document.getElementById('preview-title').textContent = prefix + 'Notification Title';
+      }
+    });
+
+    document.getElementById('notification-body').addEventListener('input', function() {
+      document.getElementById('preview-body').textContent = this.value || 'Notification message will appear here';
+    });
+
+    // Pagination variables
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalPages = 1;
+    let allNotifications = [];
+    let filteredNotifications = [];
+
+    // Filter variables
+    let filters = {
+      type: '',
+      courierId: '',
+      dateRange: {
+        startDate: null,
+        endDate: null
+      }
+    };
+
+    // Apply filters when button is clicked
+    document.getElementById('apply-filters').addEventListener('click', function() {
+      const typeFilter = document.getElementById('filter-type').value;
+      const courierFilter = document.getElementById('filter-courier').value;
+      const dateRange = document.getElementById('filter-date-range').value;
+      
+      filters.type = typeFilter;
+      filters.courierId = courierFilter;
+      
+      if (dateRange) {
+        const dates = dateRange.split(' to ');
+        filters.dateRange.startDate = dates[0] ? new Date(dates[0]) : null;
+        filters.dateRange.endDate = dates[1] ? new Date(dates[1]) : null;
+      } else {
+        filters.dateRange.startDate = null;
+        filters.dateRange.endDate = null;
+      }
+      
+      // Reset to first page when applying new filters
+      currentPage = 1;
+      
+      // Fetch notifications with new filters
+      fetchRecentNotifications();
+    });
+
+    // Update renderNotificationsPage to use server-side pagination
+    function renderNotificationsPage() {
+      fetchRecentNotifications();
+    }
+    
+    // Render pagination controls
+    function renderPagination() {
+      const paginationContainer = document.getElementById('pagination-container');
+      paginationContainer.innerHTML = '';
+      
+      // Don't show pagination if only one page
+      if (totalPages <= 1) {
+        return;
+      }
+      
+      // Previous button
+      const prevLi = document.createElement('li');
+      prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+      prevLi.innerHTML = `<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+      prevLi.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (currentPage > 1) {
+          currentPage--;
+          renderNotificationsPage();
+        }
+      });
+      paginationContainer.appendChild(prevLi);
+      
+      // Page numbers
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      // Adjust if we're near the end
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        const pageLi = document.createElement('li');
+        pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        pageLi.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+        pageLi.addEventListener('click', function(e) {
+          e.preventDefault();
+          currentPage = i;
+          renderNotificationsPage();
+        });
+        paginationContainer.appendChild(pageLi);
+      }
+      
+      // Next button
+      const nextLi = document.createElement('li');
+      nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+      nextLi.innerHTML = `<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+      nextLi.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderNotificationsPage();
+        }
+      });
+      paginationContainer.appendChild(nextLi);
+    }
+
+    // Form submission
+    document.getElementById('notification-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const notificationType = document.getElementById('notification-type').value;
+      const title = document.getElementById('notification-title').value;
+      const body = document.getElementById('notification-body').value;
+      
+      // Validation
+      if (!title || !body) {
+        showError('Please fill in both title and message fields');
+        return;
+      }
+      
+      const sendButton = document.getElementById('send-notification-btn');
+      sendButton.disabled = true;
+      sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+      
+      try {
+        let response;
+        
+        if (notificationType === 'broadcast') {
+          // Send to all couriers
+          response = await fetch('/admin/notifications/broadcast', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title, body })
+          });
+        } else if (notificationType === 'individual') {
+          // Send to specific courier
+          const courierId = document.getElementById('courier-select').value;
+          if (!courierId) {
+            showError('Please select a courier');
+            sendButton.disabled = false;
+            sendButton.innerHTML = '<i class="ri-send-plane-line align-middle me-1"></i> Send Notification';
+            return;
+          }
+          
+          response = await fetch('/admin/notifications/courier', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ courierId, title, body })
+          });
+        } else {
+          showError('Invalid notification type');
+          sendButton.disabled = false;
+          sendButton.innerHTML = '<i class="ri-send-plane-line align-middle me-1"></i> Send Notification';
+          return;
+        }
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+          showSuccess('Notification sent successfully!');
+          document.getElementById('notification-form').reset();
+          document.getElementById('preview-title').textContent = 'Notification Title';
+          document.getElementById('preview-body').textContent = 'Notification message will appear here';
+          // Hide courier selection if it was visible
+          document.getElementById('courier-select-container').style.display = 'none';
+          fetchRecentNotifications();
+        } else {
+          // Handle specific error cases
+          if (result.error && result.error.includes('FCM token')) {
+            showError('Unable to send notification: Courier does not have a valid device token. The notification was saved but not delivered.');
+          } else if (result.error && result.error.includes('configuration')) {
+            showError('Firebase configuration error: Please contact support to verify your setup.');
+          } else {
+            showError(result.message || 'Failed to send notification: ' + (result.error || 'Unknown error'));
+          }
+        }
+      } catch (error) {
+        console.error('Error sending notification:', error);
+        showError('An error occurred while connecting to the server. Please check your network connection and try again.');
+      } finally {
+        sendButton.disabled = false;
+        sendButton.innerHTML = '<i class="ri-send-plane-line align-middle me-1"></i> Send Notification';
+      }
+    });
+
+    // Show success message
+    function showSuccess(message) {
+      const successAlert = document.getElementById('notification-success');
+      document.getElementById('success-message').textContent = message;
+      successAlert.classList.add('show');
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        successAlert.classList.remove('show');
+      }, 5000);
+    }
+
+    // Show error message
+    function showError(message) {
+      const errorAlert = document.getElementById('notification-error');
+      document.getElementById('error-message').textContent = message;
+      errorAlert.classList.add('show');
+      
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        errorAlert.classList.remove('show');
+      }, 10000);
+    }
+
+    // Fetch recent notifications
+    async function fetchRecentNotifications() {
+      try {
+        const loadingHtml = `
+          <tr>
+            <td colspan="6" class="text-center">
+              <div class="loading-spinner"></div> Loading notifications...
+            </td>
+          </tr>
+        `;
+        document.getElementById('notifications-table-body').innerHTML = loadingHtml;
+        
+        // Build API URL with filters
+        let apiUrl = '/admin/notifications/recent?';
+        const params = [];
+        
+        // Add current page
+        params.push(`page=${currentPage}`);
+        
+        // Add page size
+        params.push(`limit=${pageSize}`);
+        
+        // Add type filter if selected
+        if (filters.type) {
+          params.push(`type=${filters.type}`);
+        }
+        
+        // Add courier filter if selected
+        if (filters.courierId) {
+          params.push(`courierId=${filters.courierId}`);
+        }
+        
+        // Add date range if selected
+        if (filters.dateRange.startDate && filters.dateRange.endDate) {
+          params.push(`startDate=${filters.dateRange.startDate.toISOString()}`);
+          params.push(`endDate=${filters.dateRange.endDate.toISOString()}`);
+        }
+        
+        // Join all parameters
+        apiUrl += params.join('&');
+        
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Process notifications with status
+          const notifications = data.notifications.map(notification => {
+            // Add a delivery status based on response data if available
+            if (!notification.status) {
+              // Default status based on FCM response (if available)
+              if (notification.fcmResponse && notification.fcmResponse.success === false) {
+                notification.status = 'failed';
+              } else if (notification.fcmResponse && notification.fcmResponse.success === true) {
+                notification.status = 'delivered';
+              } else {
+                notification.status = 'pending';
+              }
+            }
+            return notification;
+          });
+          
+          // Update pagination information
+          if (data.pagination) {
+            totalPages = data.pagination.totalPages;
+            document.getElementById('showing-start').textContent = ((currentPage - 1) * pageSize) + 1;
+            document.getElementById('showing-end').textContent = Math.min(currentPage * pageSize, data.pagination.total);
+            document.getElementById('total-records').textContent = data.pagination.total;
+          }
+          
+          renderNotifications(notifications);
+          renderPagination();
+        } else {
+          document.getElementById('notifications-table-body').innerHTML = `
+            <tr>
+              <td colspan="6" class="text-center">Failed to load notifications</td>
+            </tr>
+          `;
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        document.getElementById('notifications-table-body').innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center">Error loading notifications</td>
+          </tr>
+        `;
+      }
+    }
+
+    // Render notifications in the table
+    function renderNotifications(notifications) {
+      const tbody = document.getElementById('notifications-table-body');
+      
+      if (!notifications || notifications.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center">No notifications match your filters</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = notifications.map(notification => {
+        // Generate status display with visual indicator
+        let statusDisplay = '';
+        if (notification.status === 'delivered') {
+          statusDisplay = '<span class="status-dot status-delivered"></span> Delivered';
+        } else if (notification.status === 'failed') {
+          statusDisplay = '<span class="status-dot status-failed"></span> Failed';
+        } else {
+          statusDisplay = '<span class="status-dot status-pending"></span> Pending';
+        }
+        
+        return `
+          <tr>
+            <td>${escapeHtml(notification.title)}</td>
+            <td>${escapeHtml(truncateText(notification.body, 40))}</td>
+            <td>
+              <span class="badge ${notification.type === 'broadcast' ? 'bg-info' : 'bg-primary'}">
+                ${notification.type === 'broadcast' ? 'All Couriers' : 'Individual'}
+              </span>
+            </td>
+            <td>${notification.recipient ? escapeHtml(notification.recipientName || 'Unknown') : 'All Couriers'}</td>
+            <td>${statusDisplay}</td>
+            <td>${new Date(notification.createdAt).toLocaleString()}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Helper function to prevent XSS
+    function escapeHtml(unsafe) {
+      if (!unsafe) return '';
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+    
+    // Helper to truncate long text
+    function truncateText(text, maxLength) {
+      if (!text) return '';
+      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
+    // Refresh notifications when button is clicked
+    document.getElementById('refresh-notifications').addEventListener('click', fetchRecentNotifications);
+
+    // Initial fetch of notifications
+    fetchRecentNotifications();
+  });
+</script>

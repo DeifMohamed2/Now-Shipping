@@ -107,6 +107,10 @@ const courierSchema = new Schema(
     deviceToken: {
       type: String,
       default: null
+    },
+    fcmToken: {
+      type: String,
+      default: null
     }
   },
   { timestamps: true }

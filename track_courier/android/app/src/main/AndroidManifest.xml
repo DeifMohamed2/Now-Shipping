@@ -53,4 +53,18 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Add these metadata inside the application tag -->
+    <meta-data
+        android:name="com.google.firebase.messaging.default_notification_channel_id"
+        android:value="high_importance_channel" />
+    
+    <meta-data
+        android:name="firebase_messaging_auto_init_enabled"
+        android:value="true" />
+    
+    <meta-data
+        android:name="firebase_analytics_collection_enabled"
+        android:value="true" />
 </manifest>
