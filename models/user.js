@@ -11,6 +11,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    profileImage: {
+      type: String,
+      required: false,
+    },
     email: {
       type: String,
       required: [true, 'Please provide your email'],
@@ -27,6 +31,7 @@ const UserSchema = new mongoose.Schema(
     isNeedStorage: {
       type: Boolean,
       default: false,
+      required: false,
     },
     brandInfo: {
       brandName: {

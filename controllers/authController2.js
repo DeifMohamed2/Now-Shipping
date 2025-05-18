@@ -136,7 +136,6 @@ const signup = async (req, res) => {
     !password ||
     !fullName ||
     !phoneNumber ||
-    !storageCheck ||
     !termsCheck ||
     !otp
   ) {

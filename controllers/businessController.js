@@ -1574,6 +1574,43 @@ const calculateOrderFees = async (req, res) => {
   }
 };
 
+
+// ================================================= Edit Profile ================================================= //
+
+const editProfile = async (req, res) => {
+  try {
+    const { name, phoneNumber, profileImage, brandName, email } = req.body;
+
+    // Create an update object with only the fields that need to be updated
+    const updateData = {};
+    
+    if (name) updateData.name = name;
+    if (phoneNumber) updateData.phoneNumber = phoneNumber;
+    if (profileImage) updateData.profileImage = profileImage;
+    if (email) updateData.email = email;
+    if (brandName) updateData['brandInfo.brandName'] = brandName;
+    
+    const user = await User.findByIdAndUpdate(
+      req.userData._id,
+      updateData,
+      { new: true }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile updated successfully',
+      user
+    }); 
+
+  } catch (error) {
+    console.error('Error in editProfile:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+
+
+
 module.exports = {
   getDashboardPage,
   getDashboardData,
@@ -1612,6 +1649,10 @@ module.exports = {
 
   // Tickets
   get_ticketsPage,
+
+
+  // Edit Profil
+  editProfile,
 
   logOut,
 

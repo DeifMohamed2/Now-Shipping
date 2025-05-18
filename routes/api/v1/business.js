@@ -20,6 +20,7 @@ async function authenticateUser(req, res, next) {
     try {
         const decode = jwt.verify(token, jwtSecret);
         req.userId = decode.userId;
+        console.log('decode:', new Date(decode.exp * 1000).toISOString());
         const user = await User.findOne({ _id: decode.userId });
         req.userData = user; // Attach user data to request object
         if (!user) {
@@ -32,7 +33,34 @@ async function authenticateUser(req, res, next) {
     }
 }
 
-router.use(authenticateUser);
+
+
+// Apply the middlewares in the correct order
+router.use(authenticateUser); // First authenticate the user to set req.userId
+
+
+// get user data
+router.get('/user-data', async (req, res) => {
+    try {
+        const user = await User.findById(req.userId, {
+            role: 1,
+            name: 1,
+            email: 1,
+            phoneNumber: 1,
+            isNeedStorage: 1,
+            isCompleted: 1,
+            isVerified: 1,
+            brandInfo: 1,
+            pickUpAdress: 1,
+            profileImage: 1,
+            createdAt:1,
+        });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 
 //dashboard
 
@@ -59,6 +87,7 @@ router.delete('/orders/delete-order/:orderId', businessController.deleteOrder);
 
 router.post('/calculate-fees', businessController.calculateOrderFees);
 
+router.get('/orders/print-policy/:orderNumber/:pageSize', businessController.printPolicy);
 
 
 
@@ -76,5 +105,9 @@ router.get('/pickup-details/:pickupNumber/get-pickedup-orders', businessControll
 router.post('/pickup-details/:pickupNumber/rate-pickup', businessController.ratePickup);
 
 router.delete('/pickup-details/:pickupNumber/delete-pickup', businessController.deletePickup);
+
+
+// edit profile
+router.put('/edit-profile', businessController.editProfile);
 
 module.exports = router;
