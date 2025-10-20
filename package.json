@@ -65,8 +65,10 @@
     "dragula": "^3.7.3",
     "dropzone": "^6.0.0-beta.2",
     "echarts": "^5.5.1",
+    "exceljs": "^4.4.0",
     "feather-icons": "^4.29.2",
     "fg-emoji-picker": "^1.0.1",
+    "file-saver": "^2.0.5",
     "filepond": "^4.30.4",
     "filepond-plugin-file-encode": "^2.1.13",
     "filepond-plugin-file-validate-size": "^2.2.8",
@@ -102,7 +104,8 @@
     "sweetalert2": "^11.14.1",
     "swiper": "^11.1.14",
     "toastify-js": "^1.12.0",
-    "wnumb": "^1.2.0"
+    "wnumb": "^1.2.0",
+    "xlsx": "^0.18.5"
   },
   "resolutions": {
     "autoprefixer": "10.4.5"

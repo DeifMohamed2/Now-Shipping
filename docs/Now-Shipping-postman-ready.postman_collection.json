@@ -1,0 +1,229 @@
+{
+  "info": {
+    "name": "Now-Shipping API - v1 (Postman-ready)",
+    "_postman_id": "8b7f6c2a-3c29-4b3a-9f1a-2d9d6a0f5e12",
+    "description": "Simplified Postman collection for Now-Shipping API v1. Use environment variables {{baseUrl}} and {{jwt}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:6098/api/v1", "type": "string" },
+    { "key": "jwt", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"business@example.com\",\n  \"password\": \"secret\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/login" }
+          },
+          "description": "Returns { token, user } on success. 401 on invalid creds."
+        }
+      ]
+    },
+    {
+      "name": "Business - Profile",
+      "item": [
+        {
+          "name": "Get User Data",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/user-data" }
+          },
+          "description": "200 => user object. 401 => Unauthorized"
+        },
+        {
+          "name": "Edit Profile",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "body": { "mode": "raw", "raw": "{ \"name\": \"New Business Name\", \"phoneNumber\": \"0100111222\", \"pickUpAdress\": \"123 Street\" }" },
+            "url": { "raw": "{{baseUrl}}/business/edit-profile" }
+          },
+          "description": "200 => Profile updated. 400 => validation error."
+        }
+      ]
+    },
+    {
+      "name": "Business - Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/dashboard" }
+          },
+          "description": "200 => dashboard metrics"
+        }
+      ]
+    },
+    {
+      "name": "Business - Orders",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/orders?orderType=Deliver&statusCategory=active&page=1&limit=20" }
+          },
+          "description": "Query params: orderType, statusCategory, page, limit. 200 => paginated orders."
+        },
+        {
+          "name": "Submit Order",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"John Doe\",\n  \"phoneNumber\": \"0100111222\",\n  \"address\": \"123 Some Street\",\n  \"government\": \"Cairo\",\n  \"zone\": \"Z1\",\n  \"orderType\": \"Deliver\",\n  \"productDescription\": \"T-shirt\",\n  \"numberOfItems\": 1,\n  \"COD\": false,\n  \"amountCOD\": 0\n}" },
+            "url": { "raw": "{{baseUrl}}/business/submit-order" }
+          },
+          "description": "201 => created with { orderNumber }. 400 => validation error."
+        },
+        {
+          "name": "Order Details",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/order-details/ORD123" }
+          },
+          "description": "200 => order object. 404 => not found. Replace ORD123 with your orderNumber."
+        },
+        {
+          "name": "Edit Order",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "body": { "mode": "raw", "raw": "{ \"address\": \"New Address\", \"numberOfItems\": 2 }" },
+            "url": { "raw": "{{baseUrl}}/business/orders/edit-order/:orderId" }
+          },
+          "description": "Replace :orderId with a real Mongo ObjectId. 200 => updated."
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/orders/delete-order/:orderId" }
+          },
+          "description": "200 => deleted. 404 => not found."
+        },
+        {
+          "name": "Print Policy (PDF)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/orders/print-policy/:orderNumber/:pageSize" }
+          },
+          "description": "Returns PDF binary stream. Replace placeholders."
+        }
+      ]
+    },
+    {
+      "name": "Business - Pickups",
+      "item": [
+        {
+          "name": "Get Pickups",
+          "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/get-pickups" } },
+          "description": "200 => pickups list"
+        },
+        {
+          "name": "Create Pickup",
+          "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "body": { "mode": "raw", "raw": "{ \"pickupDate\": \"2025-10-20\", \"address\": \"123 Street\", \"orders\": [\"ORD123\"] }" }, "url": { "raw": "{{baseUrl}}/business/create-pickup" } },
+          "description": "201 => created"
+        }
+      ]
+    },
+    {
+      "name": "Business - Returns",
+      "item": [
+        { "name": "Get Available Return Orders", "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/return-orders/available" } }, "description": "200 => list" },
+        { "name": "Get Return Order Details", "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/return-orders/:orderId" } }, "description": "200 => details, 404 => not found" },
+        { "name": "List Return Orders", "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/return-orders?page=1&limit=20&status=returned" } }, "description": "200 => paginated list" },
+        { "name": "Calculate Return Fees", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "body": { "mode": "raw", "raw": "{ \"orderType\": \"Return\", \"government\": \"Giza\", \"isExpress\": false, \"returnCondition\": \"good\" }" }, "url": { "raw": "{{baseUrl}}/business/return-orders/calculate-fees" } }, "description": "200 => fees, 400 => missing params" }
+      ]
+    },
+    {
+      "name": "Business - Waiting Actions",
+      "item": [
+        {
+          "name": "Retry Tomorrow",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"notes\": \"Customer not available\" }" },
+            "url": { "raw": "{{baseUrl}}/business/orders/:orderId/retry-tomorrow" }
+          },
+          "description": "200 => scheduled"
+        }
+      ]
+    },
+    {
+      "name": "Business - Order Management",
+      "item": [
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"reason\": \"Customer canceled\" }" },
+            "url": { "raw": "{{baseUrl}}/business/orders/:orderId/cancel" }
+          },
+          "description": "200 => canceled, 400 => cannot cancel"
+        }
+      ]
+    },
+    {
+      "name": "Business - Recovery",
+      "item": [
+        {
+          "name": "Recover Courier Assignment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"reason\": \"Courier left company\" }" },
+            "url": { "raw": "{{baseUrl}}/business/orders/:orderId/recover-courier" }
+          },
+          "description": "200 => recovered"
+        }
+      ]
+    },
+    {
+      "name": "Business - Transactions & Cash",
+      "item": [
+        {
+          "name": "Get Transactions By Date",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/transactions?date=2025-10-17" }
+          },
+          "description": "query param: date"
+        },
+        {
+          "name": "Get Cash Cycles",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/cash-cycles?dateFrom=2025-10-01&dateTo=2025-10-17" }
+          },
+          "description": "query params: dateFrom, dateTo"
+        }
+      ]
+    }
+  ]
+}

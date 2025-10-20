@@ -4,13 +4,15 @@ const User = require('../models/user');
 const Order = require('../models/order');
 const Pickup = require('../models/pickup');
 const nodemailer = require('nodemailer');
+const statusHelper = require('../utils/statusHelper');
+const ExcelJS = require('exceljs');
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: Number(process.env.SMTP_PORT || 465),
+  secure: (process.env.SMTP_SECURE || 'true') === 'true',
   auth: {
-    user: 'deifm81@gmail.com',
-    pass: 'yduu pmtg shyb kapc',
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
 
@@ -29,7 +31,7 @@ const getDashboardPage = async (req, res) => {
       // Get order statistics
       const inProgressCount = await Order.countDocuments({
         business: req.userData._id,
-        orderStatus: 'processing',
+        orderStatus: 'inProgress',
       });
 
       const headingToCustomerCount = await Order.countDocuments({
@@ -48,12 +50,12 @@ const getDashboardPage = async (req, res) => {
 
       const awaitingActionCount = await Order.countDocuments({
         business: req.userData._id,
-        orderStatus: 'awaitingAction',
+        orderStatus: 'waitingAction',
       });
 
       const headingToYouCount = await Order.countDocuments({
         business: req.userData._id,
-        orderStatus: 'headingToYou',
+        orderStatus: 'returnToBusiness',
       });
 
       const newOrdersCount = await Order.countDocuments({
@@ -65,7 +67,7 @@ const getDashboardPage = async (req, res) => {
       const ordersWithCOD = await Order.find({
         business: req.userData._id,
         'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] },
-        orderStatus: { $in: ['headingToCustomer', 'processing'] },
+        orderStatus: { $in: ['headingToCustomer', 'inProgress'] },
       });
 
       const expectedCash = ordersWithCOD.reduce((total, order) => {
@@ -211,7 +213,7 @@ const getDashboardData = async (req, res) => {
       // Get order statistics
       const inProgressCount = await Order.countDocuments({
         business: req.userData._id,
-        orderStatus: 'processing',
+        orderStatus: 'inProgress',
       });
 
       const headingToCustomerCount = await Order.countDocuments({
@@ -231,7 +233,7 @@ const getDashboardData = async (req, res) => {
 
       const unsuccessfulCount = await Order.countDocuments({
         business: req.userData._id,
-        orderStatus: { $in: ['cancelled', 'rejected', 'returned', 'terminated', 'failed'] },
+        orderStatus: { $in: ['cancelled', 'rejected', 'returnCompleted', 'terminated', 'failed'] },
       });
 
       const totalOrders = await Order.countDocuments({
@@ -240,12 +242,12 @@ const getDashboardData = async (req, res) => {
 
       const awaitingActionCount = await Order.countDocuments({
         business: req.userData._id,
-        orderStatus: 'awaitingAction',
+        orderStatus: 'waitingAction',
       });
 
       const headingToYouCount = await Order.countDocuments({
         business: req.userData._id,
-        orderStatus: 'headingToYou',
+        orderStatus: 'returnToBusiness',
       });
 
       const newOrdersCount = await Order.countDocuments({
@@ -257,7 +259,7 @@ const getDashboardData = async (req, res) => {
       const ordersWithCOD = await Order.find({
         business: req.userData._id,
         'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] },
-        orderStatus: { $in: ['headingToCustomer', 'processing'] },
+        orderStatus: { $in: ['headingToCustomer', 'inProgress'] },
       });
 
       const expectedCash = ordersWithCOD.reduce((total, order) => {
@@ -575,19 +577,38 @@ const get_ordersPage = async (req, res) => {
 };
 
 const get_orders = async (req, res) => {
-  const { orderType } = req.query;
+  const { orderType, statusCategory } = req.query;
   try {
-  let orders = [];
-    if (orderType=='Deliver' || orderType=='Return' || orderType=='Exchange' || orderType=='Cash Collection') {
-       orders = await Order.find({
-        business: req.userData._id,
-        'orderShipping.orderType': orderType,
-        
-      }).sort({ orderDate: -1 ,createdAt: -1});
-  }else{
-       orders = await Order.find({ business: req.userData._id }).sort({ orderDate: -1 ,createdAt: -1});
+    let query = { business: req.userData._id };
+    
+    // Filter by order type if provided
+    if (orderType && statusHelper.ORDER_TYPES[orderType]) {
+      query['orderShipping.orderType'] = orderType;
     }
-    res.status(200).json(orders || []);
+    
+    // Filter by status category if provided
+    if (statusCategory && statusHelper.STATUS_CATEGORIES[statusCategory]) {
+      query.statusCategory = statusCategory;
+    }
+    
+    // Get orders with filters
+    const orders = await Order.find(query).sort({ orderDate: -1, createdAt: -1 });
+    
+    // Enhance orders with status information
+    const enhancedOrders = orders.map(order => {
+      const orderObj = order.toObject();
+      orderObj.statusLabel = statusHelper.getOrderStatusLabel(order.orderStatus);
+      orderObj.statusDescription = statusHelper.getOrderStatusDescription(order.orderStatus);
+      orderObj.categoryClass = statusHelper.getCategoryClass(order.statusCategory);
+      orderObj.categoryColor = statusHelper.getCategoryColor(order.statusCategory);
+      
+      // Add fast shipping indicator
+      orderObj.isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
+      
+      return orderObj;
+    });
+    
+    res.status(200).json(enhancedOrders || []);
   } catch (error) {
     console.error('Error in orders:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -605,6 +626,9 @@ const get_createOrderPage = (req, res) => {
 }
 
 
+/**
+ * Submit a new order with proper status categorization
+ */
 const submitOrder = async (req, res) => {
   const {
     fullName,
@@ -627,8 +651,19 @@ const submitOrder = async (req, res) => {
     previewPermission,
     referralNumber,
     Notes,
-    isExpressShipping
+    isExpressShipping,
+    // Return order specific fields
+    originalOrderNumber,
+    returnReason,
+    returnNotes
   } = req.body;
+
+  // Check if this is a partial return
+  const isPartialReturn = req.body.isPartialReturn === 'true' || req.body.isPartialReturn === true;
+
+  // Determine the number of items for the order
+  let numberOfItemsForOrder = numberOfItems;
+
   try {
     console.log(req.body);
 
@@ -647,12 +682,91 @@ const submitOrder = async (req, res) => {
   }
 
   // ✅ 2. Validate product fields based on order type
-  if (orderType === 'Deliver' || orderType === 'Return') {
+  if (orderType === 'Deliver') {
     if (!productDescription || !numberOfItems) {
       return res
         .status(400)
         .json({
-          error: `${orderType} orders require product description and number of items.`,
+          error: 'Deliver orders require product description and number of items.',
+        });
+    }
+  } else if (orderType === 'Return') {
+    if (isPartialReturn) {
+      // For partial returns, validate standard fields plus partial return item count
+      if (!req.body.partialReturnItemCount || !productDescription || !originalOrderNumber || !returnReason) {
+        return res
+          .status(400)
+          .json({
+            error: 'Partial return orders require partial return item count, product description, original order number, and return reason.',
+          });
+      }
+      // Set numberOfItems from partialReturnItemCount for partial returns
+      numberOfItemsForOrder = req.body.partialReturnItemCount;
+    } else {
+      // For full returns, validate standard fields
+      if (!productDescription || !numberOfItems || !originalOrderNumber || !returnReason) {
+        return res
+          .status(400)
+          .json({
+            error: 'Return orders require product description, number of items, original order number, and return reason.',
+          });
+      }
+    }
+    
+    // Validate that the original order exists and is eligible for return
+    const originalOrder = await Order.findOne({ 
+      orderNumber: originalOrderNumber,
+      business: req.userData._id,
+      orderStatus: 'completed',
+      'orderShipping.orderType': 'Deliver'
+    });
+    console.log('Original order found:', originalOrder);
+    
+    // Debug: If not found, try to find the order without restrictions
+    if (!originalOrder) {
+      console.log('Order not found in submitOrder, searching without restrictions...');
+      const debugOrder = await Order.findOne({ 
+        orderNumber: originalOrderNumber,
+        business: req.userData._id
+      }).select('orderNumber orderCustomer orderShipping orderStatus business');
+      
+      if (debugOrder) {
+        console.log('Debug - Found order in submitOrder:', {
+          orderNumber: debugOrder.orderNumber,
+          orderStatus: debugOrder.orderStatus,
+          orderType: debugOrder.orderShipping.orderType,
+          business: debugOrder.business,
+          requestedBusiness: req.userData._id
+        });
+        
+        return res.status(400).json({ 
+          error: 'Original order found but not eligible for return',
+          message: `Order status: ${debugOrder.orderStatus}, Order type: ${debugOrder.orderShipping.orderType}. Only completed deliver orders can be returned.`,
+          debug: {
+            foundOrderStatus: debugOrder.orderStatus,
+            foundOrderType: debugOrder.orderShipping.orderType,
+            expectedStatus: 'completed',
+            expectedType: 'Deliver'
+          }
+        });
+      }
+    }
+    
+    if (!originalOrder) {
+      return res.status(400).json({ 
+        error: 'Original order not found or not eligible for return. Only completed deliver orders can be returned.' 
+      });
+    }
+
+    // Check if this order is already linked to a return
+    const existingReturn = await Order.findOne({
+      'orderShipping.originalOrderNumber': originalOrderNumber,
+      business: req.userData._id
+    });
+
+    if (existingReturn) {
+      return res.status(400).json({ 
+        error: 'This order already has an associated return request.' 
         });
     }
   } else if (orderType === 'Exchange') {
@@ -668,11 +782,23 @@ const submitOrder = async (req, res) => {
           error: 'Exchange orders require current and new product details.',
         });
     }
+    
+
+    // Cash Difference amount is optional for Exchange orders
+    // No validation required for amountCashDifference
   } else if (orderType === 'Cash Collection') {
     if (!amountCashCollection) {
       return res
         .status(400)
         .json({ error: 'Cash collection amount is required.' });
+    }
+    
+    // Cash Collection doesn't need product description or number of items
+    // But we'll validate the amount is positive
+    if (parseFloat(amountCashCollection) <= 0) {
+      return res
+        .status(400)
+        .json({ error: 'Cash collection amount must be greater than zero.' });
     }
   }
 
@@ -687,6 +813,7 @@ const submitOrder = async (req, res) => {
     }`,
     orderDate: new Date(),
     orderStatus: 'new',
+    statusCategory: statusHelper.STATUS_CATEGORIES.NEW,
     orderFees: orderFees,
     orderCustomer: {
       fullName,
@@ -697,29 +824,150 @@ const submitOrder = async (req, res) => {
     },
     orderShipping: {
       productDescription: productDescription || currentPD || '',
-      numberOfItems: numberOfItems || numberOfItemsCurrentPD || 0,
+      numberOfItems: numberOfItemsForOrder || numberOfItemsCurrentPD || 0,
       productDescriptionReplacement: newPD || '',
       numberOfItemsReplacement: numberOfItemsNewPD || 0,
       orderType: orderType,
       amountType: COD ? 'COD' : CashDifference ? 'CD' : amountCashCollection ? 'CC' : 'NA',
       amount: amountCOD || amountCashDifference || amountCashCollection,
       isExpressShipping: isExpressShipping === 'on' || isExpressShipping === true,
+      // Return order specific fields
+      originalOrderNumber: originalOrderNumber || null,
+      returnReason: returnReason || null,
+      returnNotes: returnNotes || null,
+      // Partial return fields
+      isPartialReturn: isPartialReturn === 'true' || isPartialReturn === true,
+      originalOrderItemCount: req.body.originalOrderItemCount || null,
+      partialReturnItemCount: req.body.partialReturnItemCount || null,
     },
     isOrderAvailableForPreview: previewPermission === 'on',
     orderNotes: Notes || '',
     referralNumber: referralNumber || '',
-    orderStages: [
-      {
-        stageName: 'Order Created',
-        stageDate: new Date(),
-        stageNotes: [
-          {
-            text: 'Order has been created.',
-            date: new Date()
-          }
-        ],
+    orderStages: {
+      orderPlaced: {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Order has been created.'
       },
-    ],
+      packed: {
+        isCompleted: false,
+        completedAt: null,
+        notes: ''
+      },
+      shipping: {
+        isCompleted: false,
+        completedAt: null,
+        notes: ''
+      },
+      inProgress: {
+        isCompleted: false,
+        completedAt: null,
+        notes: ''
+      },
+      outForDelivery: {
+        isCompleted: false,
+        completedAt: null,
+        notes: ''
+      },
+      delivered: {
+        isCompleted: false,
+        completedAt: null,
+        notes: ''
+      },
+      // Return-specific stages (only for return orders)
+      ...(orderType === 'Return' && {
+        returnInitiated: {
+          isCompleted: true,
+          completedAt: new Date(),
+          notes: 'Return order initiated by business.',
+          initiatedBy: 'business',
+          reason: returnReason
+        },
+        returnAssigned: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          assignedCourier: null,
+          assignedBy: null
+        },
+        returnPickedUp: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          pickedUpBy: null,
+          pickupLocation: null,
+          pickupPhotos: []
+        },
+        returnAtWarehouse: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          receivedBy: null,
+          warehouseLocation: null,
+          conditionNotes: ''
+        },
+        returnInspection: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          inspectedBy: null,
+          inspectionResult: null,
+          inspectionPhotos: []
+        },
+        returnProcessing: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          processedBy: null,
+          processingType: null
+        },
+        returnToBusiness: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          assignedCourier: null,
+          assignedBy: null
+        },
+        returnCompleted: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          completedBy: null,
+          deliveryLocation: null,
+          businessSignature: null
+        }
+      }),
+      // Exchange-specific stages (only for exchange orders)
+      ...(orderType === 'Exchange' && {
+        exchangePickup: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          pickedUpBy: null,
+          pickupLocation: null,
+          originalItemPhotos: []
+        },
+        exchangeDelivery: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          deliveredBy: null,
+          deliveryLocation: null,
+          replacementItemPhotos: []
+        }
+      }),
+      // Cash Collection-specific stages
+      ...(orderType === 'Cash Collection' && {
+        collectionComplete: {
+          isCompleted: false,
+          completedAt: null,
+          notes: '',
+          collectedBy: null,
+          collectionAmount: amountCashCollection || 0,
+          collectionReceipt: null
+        }
+      })
+    },
     business: req.userData._id,
   });
 
@@ -905,57 +1153,298 @@ const editOrder = async (req, res) => {
 
 
 
-const get_orderDetailsPage = async(req, res) => {
+const get_orderDetailsPage = async (req, res) => {
+  try {
+    const { orderNumber } = req.params;
+    const userData = req.userData;
+    if (!userData || !userData._id) {
+      req.flash('error', 'Unauthorized');
+      return res.redirect('/business/orders');
+    }
+    const order = await Order.findOne({ orderNumber: orderNumber, business: userData._id })
+      .populate('deliveryMan')
+      .populate({
+        path: 'courierHistory.courier',
+        model: 'courier',
+        select: 'name'
+      });
 
-  const { orderNumber } = req.params;
+    if (!order) {
+      req.flash('error', 'Order not found');
+      return res.redirect('/business/orders');
+    }
 
-  const order = await Order
-  .findOne({ orderNumber })
-  .populate('business');
-
-
-  
-  if (!order) {
     res.render('business/order-details', {
       title: 'Order Details',
       page_title: 'Order Details',
-      folder: 'Pages',
-      order: null,
+      folder: 'Orders',
+      order: order
     });
-    return;
-  }
-
-  if(order.business._id.toString() !== req.userData._id.toString()){
-       res.render('business/order-details', {
-         title: 'Order Details',
-         page_title: 'Order Details',
-         folder: 'Pages',
-         order: null,
-       });
-       return;
-  }
-
-  console.log(order);
-  // Check if the request is from API or web
-  if (req.originalUrl.includes('/api/')) {
-    // API request - return JSON response
-    return res.status(200).json({
-      status: 'success',
-      order
-    });
-  } else {
-    // Web request - render the page
-    res.render('business/order-details', {
-      title: 'Order Details',
-      page_title: 'Order Details',
-      folder: 'Pages',
-      order,
-    });
+  } catch (error) {
+    console.log(error);
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/business/orders');
   }
 };
 
 
 
+
+/**
+ * Cancel an order with proper status transition validation
+ */
+const cancelOrder = async (req, res) => {
+  const { orderId } = req.params;
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Check if business owns this order
+    if (order.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    // Determine cancellation behavior based on order status and stage
+    const isOrderPickedUp = order.orderStages.packed && order.orderStages.packed.isCompleted;
+    const isOrderInProgress = order.orderStages.shipping && order.orderStages.shipping.isCompleted;
+    const isOrderOutForDelivery = order.orderStages.outForDelivery && order.orderStages.outForDelivery.isCompleted;
+    const hasCourierAssigned = order.deliveryMan && order.deliveryMan.toString().length > 0;
+
+    console.log('Cancellation Debug:', {
+      orderNumber: order.orderNumber,
+      isOrderPickedUp,
+      isOrderInProgress,
+      isOrderOutForDelivery,
+      hasCourierAssigned,
+      deliveryMan: order.deliveryMan,
+      orderStatus: order.orderStatus
+    });
+
+    // If order is just created (not picked up yet), cancel directly
+    if (!isOrderPickedUp && !isOrderInProgress && !isOrderOutForDelivery) {
+      order.orderStatus = 'canceled';
+      order.orderStages.canceled = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Order canceled by business before pickup',
+        canceledBy: 'business'
+      };
+      await order.save();
+      return res.status(200).json({ message: 'Order canceled successfully.' });
+    }
+
+    // If order status is 'pickedUp', update to returnPickedUp and change status to returnToWarehouse
+    // Validate the status transition
+    if (!statusHelper.isValidStatusTransition(order.orderStatus, 'canceled')) {
+      return res.status(400).json({
+        error: `Cannot cancel order from current status: ${order.orderStatus}`,
+        currentStatus: order.orderStatus,
+        statusLabel: statusHelper.getOrderStatusLabel(order.orderStatus)
+      });
+    }
+    
+    if (order.orderStatus === 'pickedUp') {
+      order.orderStatus = 'returnToWarehouse';
+      
+      // Ensure order is treated as a Return type going forward
+      if (order.orderShipping && order.orderShipping.orderType !== 'Return') {
+        order.orderShipping.returnReason = 'business_canceled';
+        order.orderShipping.orderType = 'Return';
+      }
+      
+      // Initialize return stages properly
+      order.orderStages.returnInitiated = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Order canceled by business after pickup — moved to return flow',
+        initiatedBy: 'business',
+        reason: 'business_canceled'
+      };
+      
+      // Mark returnPickedUp as completed since order was already picked up
+      order.orderStages.returnPickedUp = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Return picked up (courier already has the order from original pickup)',
+        pickedUpBy: order.deliveryMan
+      };
+      
+      await order.save();
+      return res.status(200).json({ message: 'Order moved to return to warehouse.' });
+    }
+    
+    // If order status is 'inStock', update to returnAtWarehouse
+    if (order.orderStatus === 'inStock') {
+      order.orderStatus = 'returnAtWarehouse';
+      
+      // Ensure order is treated as a Return type going forward
+      if (order.orderShipping && order.orderShipping.orderType !== 'Return') {
+        order.orderShipping.returnReason = 'business_canceled';
+        order.orderShipping.orderType = 'Return';
+      }
+      
+      // Initialize return stages
+      order.orderStages.returnInitiated = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Order canceled by business while in stock — moved to return flow',
+        initiatedBy: 'business',
+        reason: 'business_canceled'
+      };
+      
+      // Mark returnPickedUp and returnAtWarehouse as completed since order is already at warehouse
+      order.orderStages.returnPickedUp = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Return picked up (order was already at warehouse)',
+        pickedUpBy: order.deliveryMan
+      };
+      
+      order.orderStages.returnAtWarehouse = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Return at warehouse (order was already at warehouse)',
+        receivedBy: null,
+        warehouseLocation: 'main_warehouse',
+        conditionNotes: 'Order was already in stock before cancellation'
+      };
+      
+      await order.save();
+      return res.status(200).json({ message: 'Order moved to return at warehouse.' });
+    }
+    
+    // If order status is 'headingToCustomer', update to returnToWarehouse
+    if (order.orderStatus === 'headingToCustomer') {
+      order.orderStatus = 'returnToWarehouse';
+      
+      // Ensure order is treated as a Return type going forward
+      if (order.orderShipping && order.orderShipping.orderType !== 'Return') {
+        order.orderShipping.returnReason = 'business_canceled';
+        order.orderShipping.orderType = 'Return';
+      }
+      
+      // Initialize return stages
+      order.orderStages.returnInitiated = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Order canceled by business while heading to customer — moved to return flow',
+        initiatedBy: 'business',
+        reason: 'business_canceled'
+      };
+      
+      // If courier is assigned, preserve for return
+      if (order.deliveryMan) {
+        order.courierHistory.push({
+          courier: order.deliveryMan,
+          assignedAt: new Date(),
+          action: 'assigned',
+          notes: 'Courier reassigned for return process after cancellation'
+        });
+        
+        order.orderStages.returnAssigned = {
+          isCompleted: true,
+          completedAt: new Date(),
+          notes: 'Same courier assigned for return (preserved from original delivery)',
+          assignedCourier: order.deliveryMan,
+          assignedBy: null
+        };
+      }
+      
+      await order.save();
+      return res.status(200).json({ message: 'Order heading to customer has been recalled to warehouse.' });
+    }
+
+    // If order is in any other stage that involves courier, handle the return flow
+    if (isOrderPickedUp || isOrderInProgress || isOrderOutForDelivery) {
+      order.orderStatus = 'returnToWarehouse';
+      
+      // Ensure order is treated as a Return type going forward
+      if (order.orderShipping && order.orderShipping.orderType !== 'Return') {
+        order.orderShipping.returnReason = 'business_canceled';
+        order.orderShipping.orderType = 'Return';
+      }
+      
+      // Initialize return stages properly
+      if (!order.orderStages.returnInitiated || !order.orderStages.returnInitiated.isCompleted) {
+        order.orderStages.returnInitiated = {
+          isCompleted: true,
+          completedAt: new Date(),
+          notes: 'Order canceled by business after processing — moved to return flow',
+          initiatedBy: 'business',
+          reason: 'business_canceled'
+        };
+      }
+
+      // If order has a courier assigned, preserve the assignment for return
+      if (order.deliveryMan) {
+        // Add courier to history for return process
+        order.courierHistory.push({
+          courier: order.deliveryMan,
+          assignedAt: new Date(),
+          action: 'assigned',
+          notes: 'Courier preserved for return process after cancellation'
+        });
+        
+        // Mark return assigned as completed (same courier)
+        order.orderStages.returnAssigned = {
+          isCompleted: true,
+          completedAt: new Date(),
+          notes: 'Same courier assigned for return (preserved from original delivery)',
+          assignedCourier: order.deliveryMan,
+          assignedBy: null
+        };
+
+        // Mark return picked up as completed if courier already has the order
+        if (order.orderStatus === 'outForDelivery' || order.orderStatus === 'headingToCustomer') {
+          order.orderStages.returnPickedUp = {
+            isCompleted: true,
+            completedAt: new Date(),
+            notes: 'Return picked up (courier already has the order from delivery)',
+            pickedUpBy: order.deliveryMan,
+            pickupLocation: 'with_courier',
+            pickupPhotos: []
+          };
+        }
+      } else {
+        // SAFETY CHECK: If order has stages completed but no courier assigned, log this issue
+        console.warn(`Order ${order.orderNumber} has completed stages but no courier assigned:`, {
+          isOrderPickedUp,
+          isOrderInProgress,
+          isOrderOutForDelivery,
+          orderStages: order.orderStages
+        });
+        
+        // Initialize return stages without courier (admin will need to assign)
+        order.orderStages.returnAssigned = {
+          isCompleted: false,
+          completedAt: null,
+          notes: 'No courier assigned - admin needs to assign courier for return',
+          assignedCourier: null,
+          assignedBy: null
+        };
+      }
+      
+      // Mark forward delivery stages inactive
+      order.orderStages.outForDelivery.isCompleted = false;
+      order.orderStages.inProgress.isCompleted = false;
+      
+      await order.save();
+      return res.status(200).json({ message: 'Order moved to return pipeline for processing.' });
+    }
+
+    // For any other status, just mark as canceled
+    order.orderStatus = 'canceled';
+    await order.save();
+    return res.status(200).json({ message: 'Order canceled successfully.' });
+
+  } catch (error) {
+    console.error('Error in cancelOrder:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
 
 const deleteOrder = async (req, res) => {
   const { orderId } = req.params;
@@ -1009,7 +1498,7 @@ const printPolicy = async (req, res) => {
         ["Customer Name:", order.orderCustomer?.fullName || 'N/A'],
         ["Phone:", order.orderCustomer?.phoneNumber || 'N/A'],
         ["Address:", order.orderCustomer?.address || 'N/A'],
-        ["City:", order.orderCustomer?.governmant || 'N/A'],
+        ["City:", order.orderCustomer?.government || 'N/A'],
         ["Zone:", order.orderCustomer?.zone || 'N/A'],
         ["Product:", order.orderShipping?.productDescription || 'N/A'],
         ["Items:", order.orderShipping?.numberOfItems?.toString() || '0'],
@@ -1050,6 +1539,413 @@ const printPolicy = async (req, res) => {
   }
 };
 
+// ================= WaitingAction Actions ================= //
+
+const retryTomorrow = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.business.toString() !== req.userData._id.toString()) return res.status(403).json({ error: 'Forbidden' });
+    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
+    order.scheduledRetryAt = new Date(Date.now() + 24*60*60*1000);
+    // Update inProgress stage for rescheduled
+    if (!order.orderStages.inProgress.isCompleted) {
+      order.orderStages.inProgress.isCompleted = true;
+      order.orderStages.inProgress.completedAt = new Date();
+      order.orderStages.inProgress.notes = 'Retry scheduled for tomorrow';
+    }
+    order.orderStatus = 'rescheduled';
+    await order.save();
+    return res.status(200).json({ message: 'Retry scheduled for tomorrow' });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to schedule retry' });
+  }
+}
+
+const retryScheduled = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { date } = req.body; // ISO date string
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.business.toString() !== req.userData._id.toString()) return res.status(403).json({ error: 'Forbidden' });
+    if (!['waitingAction','rescheduled'].includes(order.orderStatus)) return res.status(400).json({ error: 'Order not eligible for scheduling' });
+    const when = new Date(date);
+    if (isNaN(when.getTime())) return res.status(400).json({ error: 'Invalid date' });
+    order.scheduledRetryAt = when;
+    // Update inProgress stage for rescheduled
+    if (!order.orderStages.inProgress.isCompleted) {
+      order.orderStages.inProgress.isCompleted = true;
+      order.orderStages.inProgress.completedAt = new Date();
+      order.orderStages.inProgress.notes = 'Retry rescheduled';
+    }
+    order.orderStatus = 'rescheduled';
+    await order.save();
+    return res.status(200).json({ message: 'Retry scheduled' });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to schedule retry' });
+  }
+}
+
+const returnToWarehouseFromWaiting = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.business.toString() !== req.userData._id.toString()) return res.status(403).json({ error: 'Forbidden' });
+    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
+    order.orderStatus = 'returnToWarehouse';
+    // Update inProgress stage for return to warehouse
+    if (!order.orderStages.inProgress.isCompleted) {
+      order.orderStages.inProgress.isCompleted = true;
+      order.orderStages.inProgress.completedAt = new Date();
+      order.orderStages.inProgress.notes = 'Business requested return to warehouse';
+    }
+    await order.save();
+    return res.status(200).json({ message: 'Order moved to return stock' });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to move to return stock' });
+  }
+}
+
+const cancelFromWaiting = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.business.toString() !== req.userData._id.toString()) return res.status(403).json({ error: 'Forbidden' });
+    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
+    // Transition to return pipeline instead of final cancel
+    order.orderStatus = 'returnToWarehouse';
+    // Initialize return stages
+    if (!order.orderStages.returnInitiated || !order.orderStages.returnInitiated.isCompleted) {
+      order.orderStages.returnInitiated = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Business canceled from waiting — moved to return flow',
+        initiatedBy: 'business',
+        reason: 'customer_canceled'
+      };
+    }
+    // Mark forward delivery stages inactive
+    order.orderStages.outForDelivery.isCompleted = false;
+    order.orderStages.inProgress.isCompleted = false;
+    await order.save();
+    return res.status(200).json({ message: 'Order moved to return pipeline' });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to cancel order' });
+  }
+}
+
+// Enhanced Return Flow Functions
+
+// Calculate return fees based on order type and conditions
+const calculateReturnFees = (orderType, government, isExpress, returnCondition = 'good') => {
+  const baseFees = {
+    'Deliver': 0,
+    'Return': 15, // Base return fee
+    'Exchange': 20, // Exchange fee
+    'Cash Collection': 0
+  };
+
+  const expressMultiplier = isExpress ? 1.5 : 1;
+  const conditionMultiplier = {
+    'excellent': 1.0,
+    'good': 1.0,
+    'fair': 1.2,
+    'poor': 1.5,
+    'damaged': 2.0
+  };
+
+  const governmentMultiplier = {
+    'Cairo': 1.0,
+    'Giza': 1.0,
+    'Alexandria': 1.2,
+    'Other': 1.5
+  };
+
+  const baseFee = baseFees[orderType] || 0;
+  const conditionFee = baseFee * (conditionMultiplier[returnCondition] || 1.0);
+  const expressFee = conditionFee * expressMultiplier;
+  const finalFee = expressFee * (governmentMultiplier[government] || 1.5);
+
+  return {
+    baseFee,
+    conditionFee,
+    expressFee: isExpress ? expressFee - conditionFee : 0,
+    processingFee: finalFee * 0.1, // 10% processing fee
+    inspectionFee: orderType === 'Return' ? 5 : 0,
+    total: Math.round(finalFee + (finalFee * 0.1) + (orderType === 'Return' ? 5 : 0))
+  };
+};
+
+// API endpoint for calculating return fees
+const calculateReturnFeesAPI = async (req, res) => {
+  try {
+    const { orderType, government, isExpress, returnCondition } = req.body;
+
+    // Validate inputs
+    if (!orderType || !government) {
+      return res.status(400).json({ error: 'Order type and government are required' });
+    }
+
+    // Calculate the return fees
+    const fees = calculateReturnFees(
+      orderType, 
+      government, 
+      isExpress === 'true' || isExpress === true,
+      returnCondition || 'good'
+    );
+
+    res.json({ 
+      success: true,
+      fees: fees
+    });
+  } catch (error) {
+    console.error('Error calculating return fees:', error);
+    res.status(500).json({ error: 'Failed to calculate return fees' });
+  }
+};
+
+
+
+// Get available return orders for linking
+const getAvailableReturnOrders = async (req, res) => {
+  try {
+    const returnOrders = await Order.find({
+      business: req.userData._id,
+      'orderShipping.orderType': 'Return',
+      'orderShipping.linkedDeliverOrder': { $exists: false },
+      // Only return orders that have been picked up from customer
+      orderStatus: { $in: ['returnPickedUp', 'returnAtWarehouse', 'returnToBusiness', 'returnCompleted'] }
+    }).sort({ orderDate: -1 });
+
+    res.status(200).json(returnOrders);
+  } catch (error) {
+    console.error('Error fetching return orders:', error);
+    res.status(500).json({ error: 'Failed to fetch return orders' });
+  }
+};
+
+// Get comprehensive return order details
+const getReturnOrderDetails = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    const returnOrder = await Order.findOne({
+      _id: orderId,
+      business: req.userData._id,
+      'orderShipping.orderType': 'Return'
+    }).populate('deliveryMan', 'name phone email')
+      .populate('business', 'businessName email phone');
+
+    if (!returnOrder) {
+      return res.status(404).json({ error: 'Return order not found' });
+    }
+
+    // Calculate progress percentage
+    const returnStages = [
+      'returnInitiated', 'returnAssigned', 'returnPickedUp', 
+      'returnAtWarehouse', 'returnInspection', 'returnProcessing', 
+      'returnToBusiness', 'returnCompleted'
+    ];
+    
+    const completedStages = returnStages.filter(stage => 
+      returnOrder.orderStages[stage]?.isCompleted
+    ).length;
+    
+    const progressPercentage = Math.round((completedStages / returnStages.length) * 100);
+
+    // Get stage timeline
+    const stageTimeline = returnStages.map(stage => ({
+      stage,
+      isCompleted: returnOrder.orderStages[stage]?.isCompleted || false,
+      completedAt: returnOrder.orderStages[stage]?.completedAt || null,
+      notes: returnOrder.orderStages[stage]?.notes || '',
+      ...returnOrder.orderStages[stage]?.toObject()
+    }));
+
+    res.status(200).json({
+      order: returnOrder,
+      progressPercentage,
+      stageTimeline,
+      feeBreakdown: returnOrder.feeBreakdown
+    });
+  } catch (error) {
+    console.error('Error fetching return order details:', error);
+    res.status(500).json({ error: 'Failed to fetch return order details' });
+  }
+};
+
+// Mark deliver order as returned when return process is completed
+const markDeliverOrderAsReturned = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    // Find the deliver order
+    const deliverOrder = await Order.findById(orderId);
+    if (!deliverOrder) {
+      return res.status(404).json({ error: 'Deliver order not found' });
+    }
+    
+    if (deliverOrder.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    // Check if order is linked to a return order
+    if (!deliverOrder.orderShipping.linkedReturnOrder) {
+      return res.status(400).json({ error: 'Order is not linked to a return order' });
+    }
+    
+    // Find the linked return order
+    const returnOrder = await Order.findById(deliverOrder.orderShipping.linkedReturnOrder);
+    if (!returnOrder) {
+      return res.status(404).json({ error: 'Linked return order not found' });
+    }
+    
+    // Check if return order is completed
+    if (returnOrder.orderStatus !== 'returnCompleted') {
+      return res.status(400).json({ 
+        error: 'Return order must be completed before marking deliver order as returned',
+        returnOrderStatus: returnOrder.orderStatus
+      });
+    }
+    
+    // Mark deliver order as returned
+    deliverOrder.orderStatus = 'returnCompleted';
+    deliverOrder.completedDate = new Date();
+    
+    // Update return stages
+    deliverOrder.orderStages.returned = {
+      isCompleted: true,
+      completedAt: new Date(),
+      notes: `Order marked as returned. Return order ${returnOrder.orderNumber} completed.`,
+      returnOrderCompleted: true,
+      returnOrderCompletedAt: returnOrder.orderStages.returnCompleted.completedAt
+    };
+    
+    await deliverOrder.save();
+    
+    res.status(200).json({ 
+      message: 'Deliver order marked as returned successfully',
+      order: deliverOrder,
+      returnOrder: returnOrder
+    });
+  } catch (error) {
+    console.error('Error marking deliver order as returned:', error);
+    res.status(500).json({ error: 'Failed to mark deliver order as returned' });
+  }
+};
+
+// Get all return orders with filtering and pagination
+const getReturnOrders = async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      status, 
+      dateFrom, 
+      dateTo,
+      search 
+    } = req.query;
+
+    const query = {
+      business: req.userData._id,
+      'orderShipping.orderType': 'Return'
+    };
+
+    // Add status filter
+    if (status && status !== 'all') {
+      query.orderStatus = status;
+    }
+
+    // Add date range filter
+    if (dateFrom || dateTo) {
+      query.orderDate = {};
+      if (dateFrom) query.orderDate.$gte = new Date(dateFrom);
+      if (dateTo) query.orderDate.$lte = new Date(dateTo);
+    }
+
+    // Add search filter
+    if (search) {
+      query.$or = [
+        { orderNumber: { $regex: search, $options: 'i' } },
+        { 'orderCustomer.fullName': { $regex: search, $options: 'i' } },
+        { 'orderCustomer.phoneNumber': { $regex: search, $options: 'i' } },
+        { 'orderShipping.returnReason': { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const returnOrders = await Order.find(query)
+      .populate('deliveryMan', 'name phone')
+      .sort({ orderDate: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const totalCount = await Order.countDocuments(query);
+
+    res.status(200).json({
+      orders: returnOrders,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalCount,
+        hasNext: skip + returnOrders.length < totalCount,
+        hasPrev: parseInt(page) > 1
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching return orders:', error);
+    res.status(500).json({ error: 'Failed to fetch return orders' });
+  }
+};
+
+// Legacy initiate return request (kept for backward compatibility)
+const initiateReturn = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { returnReason, returnNotes } = req.body;
+    
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.business.toString() !== req.userData._id.toString()) return res.status(403).json({ error: 'Forbidden' });
+    
+    // Only allow returns for completed orders
+    if (order.orderStatus !== 'completed') {
+      return res.status(400).json({ error: 'Only completed orders can be returned' });
+    }
+    
+    // Check if return already initiated
+    if (order.orderStatus === 'returnInitiated') {
+      return res.status(400).json({ error: 'Return already initiated for this order' });
+    }
+    
+    // Update order status and stages
+    order.orderStatus = 'returnInitiated';
+    order.orderShipping.orderType = 'Return';
+    order.orderShipping.returnReason = returnReason;
+    order.orderShipping.returnNotes = returnNotes;
+    
+    // Update return stages
+    order.orderStages.returnInitiated.isCompleted = true;
+    order.orderStages.returnInitiated.completedAt = new Date();
+    order.orderStages.returnInitiated.notes = `Return initiated by business. Reason: ${returnReason}`;
+    
+    await order.save();
+    
+    return res.status(200).json({ 
+      message: 'Return request initiated successfully. Admin will assign a courier for pickup.',
+      order: order
+    });
+  } catch (error) {
+    console.error('Error initiating return:', error);
+    return res.status(500).json({ error: 'Failed to initiate return' });
+  }
+}
+
 
 
 
@@ -1070,26 +1966,38 @@ const get_pickupPage = (req, res) => {
 
 const get_pickups = async (req, res) => {
   try {
-    const { pickupType } = req.query;
-    let pickups = [];
+    const { pickupType, statusCategory } = req.query;
+    let query = { business: req.userData._id };
+    
+    // Handle legacy pickupType parameter for backward compatibility
     if (pickupType === 'Upcoming') {
-      pickups = await Pickup.find({
-        business: req.userData._id,
-        picikupStatus: { $ne: 'Completed' },
-      })
-        .sort({ createdAt: -1 })
-        .populate('business')
-        .populate('assignedDriver');
+      query.statusCategory = { $in: [statusHelper.STATUS_CATEGORIES.NEW, statusHelper.STATUS_CATEGORIES.PROCESSING] };
     } else if (pickupType === 'Completed') {
-      pickups = await Pickup.find({
-        business: req.userData._id,
-        picikupStatus: 'Completed',
-      }).sort({createdAt:-1})
-        .populate('business')
-        .populate('assignedDriver');
+      query.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
     }
-
-    res.status(200).json(pickups || []);
+    
+    // Override with direct status category if provided
+    if (statusCategory && statusHelper.STATUS_CATEGORIES[statusCategory]) {
+      query.statusCategory = statusCategory;
+    }
+    
+    // Get pickups with filters
+    const pickups = await Pickup.find(query)
+      .sort({ createdAt: -1 })
+      .populate('business')
+      .populate('assignedDriver');
+    
+    // Enhance pickups with status information
+    const enhancedPickups = pickups.map(pickup => {
+      const pickupObj = pickup.toObject();
+      pickupObj.statusLabel = statusHelper.getPickupStatusLabel(pickup.picikupStatus);
+      pickupObj.statusDescription = statusHelper.getPickupStatusDescription(pickup.picikupStatus);
+      pickupObj.categoryClass = statusHelper.getCategoryClass(pickup.statusCategory);
+      pickupObj.categoryColor = statusHelper.getCategoryColor(pickup.statusCategory);
+      return pickupObj;
+    });
+    
+    res.status(200).json(enhancedPickups || []);
   } catch (error) {
     console.error('Error in pickups:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -1115,7 +2023,45 @@ const createPickup = async (req, res) => {
         .json({ error: 'All pickup info fields are required.' });
     }
     console.log(req.body);
-    // ✅ 2. Create Pickup
+    // ✅ 2. Compute pickup fee based on business zone/city and number of picked orders rule
+    const business = await User.findById(req.userData._id);
+    const businessCity = business?.pickUpAdress?.city || '';
+
+    const governmentCategories = {
+      'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
+      'Alexandria': ['Alexandria', 'Beheira', 'Matrouh'],
+      'Delta-Canal': [
+        'Dakahlia', 'Sharqia', 'Monufia', 'Gharbia',
+        'Kafr el-Sheikh', 'Damietta', 'Port Said', 'Ismailia', 'Suez'
+      ],
+      'Upper-RedSea': [
+        'Fayoum', 'Beni Suef', 'Minya', 'Asyut',
+        'Sohag', 'Qena', 'Luxor', 'Aswan', 'Red Sea',
+        'North Sinai', 'South Sinai', 'New Valley'
+      ]
+    };
+
+    function getPickupBaseFeeByCity(city){
+      let category = 'Cairo';
+      for (const [cat, govs] of Object.entries(governmentCategories)) {
+        if (govs.includes(city)) { category = cat; break; }
+      }
+      // Base pickup fees by category (tunable)
+      const baseByCategory = {
+        'Cairo': 50,
+        'Alexandria': 55,
+        'Delta-Canal': 60,
+        'Upper-RedSea': 80,
+      };
+      return baseByCategory[category] || 50;
+    }
+
+    const basePickupFee = getPickupBaseFeeByCity(businessCity);
+    // Initially 0 picked orders, so apply < 3 rule
+    const initialPickedCount = 0;
+    const computedPickupFee = initialPickedCount < 3 ? Math.round(basePickupFee * 1.3) : basePickupFee;
+
+    // ✅ 3. Create Pickup
     const newPickup = new Pickup({
       business: req.userData._id,
       pickupNumber: `${
@@ -1127,7 +2073,8 @@ const createPickup = async (req, res) => {
       isFragileItems: isFragileItems === 'true',
       isLargeItems: isLargeItems === 'true',
       picikupStatus: 'new',
-      pickupNotes, 
+      pickupNotes,
+      pickupFees: computedPickupFee,
     });
     newPickup.pickupStages.push({
       stageName: 'Pickup Created',
@@ -1254,18 +2201,85 @@ const deletePickup  = async (req, res) => {
 //================================================END Pickup  ================================================= //
 
 
-  const get_totalBalancePage  = (req, res) => {
-      const now = new Date();
+  // Function to recalculate user balance from all transactions
+const recalculateUserBalance = async (userId) => {
+  try {
+    // Get all transactions for the user (both settled and unsettled)
+    const allTransactions = await Transaction.find({
+      business: userId
+    }).sort({ createdAt: 1 }); // Sort by creation date to maintain chronological order
+
+    // Calculate balance from all transactions
+    let calculatedBalance = 0;
+    console.log(`Recalculating balance for user ${userId}. Found ${allTransactions.length} transactions:`);
+    allTransactions.forEach(transaction => {
+      console.log(`  - ${transaction.transactionId} (${transaction.transactionType}): ${transaction.transactionAmount} EGP`);
+      calculatedBalance += (transaction.transactionAmount || 0);
+    });
+    console.log(`Total calculated balance: ${calculatedBalance} EGP`);
+
+    // Update user balance
+    const user = await User.findById(userId);
+    if (user) {
+      const previousBalance = user.balance || 0;
+      user.balance = calculatedBalance;
+      await user.save();
+      
+      console.log(`Balance recalculated for user ${user.name}: ${previousBalance} -> ${calculatedBalance}`);
+      return {
+        previousBalance,
+        newBalance: calculatedBalance,
+        transactionCount: allTransactions.length,
+        unsettledCount: allTransactions.filter(t => !t.settled).length
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error recalculating user balance:', error);
+    throw error;
+  }
+};
+
+const get_totalBalancePage  = async (req, res) => {
+  try {
+    // Recalculate balance from all transactions before rendering
+    const balanceInfo = await recalculateUserBalance(req.userData._id);
+    
+    // Refresh user data to get updated balance
+    const updatedUser = await User.findById(req.userData._id);
+    req.userData = updatedUser; // Update the user data with fresh balance
+    
+    const now = new Date();
     const daysUntilWednesday = (3 - now.getDay() + 7) % 7; // Calculate days until next Wednesday
     const nextWednesday = new Date(now.setDate(now.getDate() + daysUntilWednesday));
     const weeklyWithdrawDate = nextWednesday.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); // Format the date to show as Wednesday with full date
-  res.render('business/total-balance' , {
-    title: "Total Balance",
-    page_title: 'Total Balance',
-    folder: 'Pages',
-    userData :req.userData,
-    weeklyWithdrawDate,
-  });
+    
+    res.render('business/total-balance' , {
+      title: "Total Balance",
+      page_title: 'Total Balance',
+      folder: 'Pages',
+      userData: updatedUser, // Use the updated user data with recalculated balance
+      weeklyWithdrawDate,
+      balanceRecalculated: balanceInfo // Pass balance info for debugging/logging
+    });
+  } catch (error) {
+    console.error('Error in get_totalBalancePage:', error);
+    // Fallback to original behavior if recalculation fails
+    const now = new Date();
+    const daysUntilWednesday = (3 - now.getDay() + 7) % 7;
+    const nextWednesday = new Date(now.setDate(now.getDate() + daysUntilWednesday));
+    const weeklyWithdrawDate = nextWednesday.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    
+    res.render('business/total-balance' , {
+      title: "Total Balance",
+      page_title: 'Total Balance',
+      folder: 'Pages',
+      userData: req.userData,
+      weeklyWithdrawDate,
+      error: 'Failed to recalculate balance'
+    });
+  }
 }
 const get_allTransactionsByDate = async (req, res) => {
   try {
@@ -1274,51 +2288,58 @@ const get_allTransactionsByDate = async (req, res) => {
     const now = new Date();
     console.log('Time Period:', timePeriod);
     console.log(now, timePeriod);
+    
     // Set date filter based on time period
     switch (timePeriod) {
       case 'today':
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
         dateFilter = {
           createdAt: {
-            $gte: new Date(now.setHours(0, 0, 0, 0)),
-            $lt: new Date(now.setHours(23, 59, 59, 999))
+            $gte: todayStart,
+            $lte: todayEnd
           }
         };
         break;
       case 'week':
-        const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
-        const weekEnd = new Date(now);
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
         dateFilter = {
           createdAt: {
-            $gte: new Date(weekStart.setHours(0, 0, 0, 0)),
-            $lt: new Date(weekEnd.setHours(23, 59, 59, 999))
+            $gte: weekStart,
+            $lte: weekEnd
           }
         };
-        // console.log(`Week from ${weekStart.toLocaleDateString()} to ${weekEnd.toLocaleDateString()}`);
+        console.log(`Week from ${weekStart.toLocaleDateString()} to ${weekEnd.toLocaleDateString()}`);
         break;
       case 'month':
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         dateFilter = {
           createdAt: {
-            $gte: new Date(now.getFullYear(), now.getMonth(), 1),
-            $lt: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+            $gte: monthStart,
+            $lte: monthEnd
           }
         };
         break;
       case 'year':
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+        const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
         dateFilter = {
           createdAt: {
-            $gte: new Date(now.getFullYear(), 0, 1),
-            $lt: new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+            $gte: yearStart,
+            $lte: yearEnd
           }
         };
         break;
       case 'all':
-        dateFilter = {
-          createdAt: {
-            $gte: new Date(0), // Start of time
-            $lt: new Date() // Current date
-          }
-        };
+        dateFilter = {}; // No date filter for all time
         break;
       default:
         dateFilter = {};
@@ -1327,13 +2348,444 @@ const get_allTransactionsByDate = async (req, res) => {
     const transactions = await Transaction.find({
       ...dateFilter,
       business: req.userData._id,
+      transactionType: { $in: ['cashCycle', 'fees', 'pickupFees', 'refund', 'deposit', 'withdrawal'] },
     })
-    console.log(transactions);
-    res.status(200).json(transactions || []);
+    .populate('orderReferences.orderId', 'orderNumber orderShipping orderFees completedDate')
+    .populate('pickupReferences.pickupId', 'pickupNumber pickupFees')
+    .sort({ createdAt: -1 });
+    
+    console.log('Transactions found:', transactions.length);
+    
+    // Enhance transactions with better data structure
+    const enhancedTransactions = transactions.map(transaction => ({
+      _id: transaction._id,
+      transactionId: transaction.transactionId,
+      transactionType: transaction.transactionType,
+      transactionAmount: transaction.transactionAmount,
+      transactionNotes: transaction.transactionNotes,
+      createdAt: transaction.createdAt,
+      updatedAt: transaction.updatedAt,
+      ordersDetails: transaction.ordersDetails,
+      orderReferences: transaction.orderReferences || [],
+      pickupReferences: transaction.pickupReferences || [],
+      totalCashCycleOrders: transaction.totalCashCycleOrders,
+      settled: transaction.settled || false,
+      settlementStatus: transaction.settlementStatus || 'pending',
+      // Calculate summary data
+      orderCount: transaction.orderReferences ? transaction.orderReferences.length : 0,
+      pickupCount: transaction.pickupReferences ? transaction.pickupReferences.length : 0,
+      totalOrderAmount: transaction.orderReferences ? 
+        transaction.orderReferences.reduce((sum, ref) => sum + (ref.orderAmount || 0), 0) : 0,
+      totalOrderFees: transaction.orderReferences ? 
+        transaction.orderReferences.reduce((sum, ref) => sum + (ref.orderFees || 0), 0) : 0,
+      totalPickupFees: transaction.pickupReferences ? 
+        transaction.pickupReferences.reduce((sum, ref) => sum + (ref.pickupFees || 0), 0) : 0
+    }));
+    
+    res.status(200).json(enhancedTransactions || []);
   } catch (error) {
     console.error('Error in get_allTransactionsByDate:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
+}
+
+// Get single transaction details
+const getTransactionDetails = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+    
+    const transaction = await Transaction.findById(transactionId)
+      .populate('orderReferences.orderId', 'orderNumber orderShipping orderFees completedDate')
+      .populate('pickupReferences.pickupId', 'pickupNumber pickupFees completedDate');
+
+    if (!transaction) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    // Check if transaction belongs to the requesting user
+    if (transaction.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    res.status(200).json(transaction);
+  } catch (error) {
+    console.error('Error in getTransactionDetails:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+}
+
+// API endpoint to manually recalculate balance
+const recalculateBalanceAPI = async (req, res) => {
+  try {
+    const balanceInfo = await recalculateUserBalance(req.userData._id);
+    
+    if (balanceInfo) {
+      res.status(200).json({
+        status: 'success',
+        message: 'Balance recalculated successfully',
+        balanceInfo: balanceInfo,
+        currentBalance: balanceInfo.newBalance
+      });
+    } else {
+      res.status(404).json({
+        status: 'error',
+        message: 'User not found'
+      });
+    }
+  } catch (error) {
+    console.error('Error in recalculateBalanceAPI:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to recalculate balance',
+      error: error.message
+    });
+  }
+}
+
+// Professional Excel Export for Transactions
+const exportTransactionsToExcel = async (req, res) => {
+  try {
+    const { timePeriod, statusFilter, dateFrom, dateTo, transactionType } = req.query;
+    
+    // Build query based on filters
+    let query = { business: req.userData._id };
+    let dateFilter = {};
+    
+    // Date filtering
+    if (dateFrom && dateTo) {
+      dateFilter = {
+        createdAt: {
+          $gte: new Date(dateFrom),
+          $lte: new Date(dateTo)
+        }
+      };
+    } else if (timePeriod && timePeriod !== 'all') {
+      const now = new Date();
+      switch (timePeriod) {
+        case 'today':
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const todayEnd = new Date();
+          todayEnd.setHours(23, 59, 59, 999);
+          dateFilter = { createdAt: { $gte: todayStart, $lte: todayEnd } };
+          break;
+        case 'week':
+          const weekStart = new Date();
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+          weekStart.setHours(0, 0, 0, 0);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          weekEnd.setHours(23, 59, 59, 999);
+          dateFilter = { createdAt: { $gte: weekStart, $lte: weekEnd } };
+          break;
+        case 'month':
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+          dateFilter = { createdAt: { $gte: monthStart, $lte: monthEnd } };
+          break;
+        case 'year':
+          const yearStart = new Date(now.getFullYear(), 0, 1);
+          const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+          dateFilter = { createdAt: { $gte: yearStart, $lte: yearEnd } };
+          break;
+      }
+    }
+    
+    // Status filtering
+    if (statusFilter && statusFilter !== 'all') {
+      query.settled = statusFilter === 'settled';
+    }
+    
+    // Transaction type filtering
+    if (transactionType && transactionType !== 'all') {
+      query.transactionType = transactionType;
+    }
+    
+    // Combine filters
+    query = { ...query, ...dateFilter };
+    
+    // Get transactions
+    const transactions = await Transaction.find(query)
+      .populate('orderReferences.orderId', 'orderNumber orderShipping orderFees completedDate')
+      .populate('pickupReferences.pickupId', 'pickupNumber pickupFees completedDate')
+      .sort({ createdAt: -1 });
+    
+    // Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Transaction History');
+    
+    // Define columns
+    worksheet.columns = [
+      { header: 'Transaction ID', key: 'transactionId', width: 15 },
+      { header: 'Date', key: 'date', width: 12 },
+      { header: 'Type', key: 'type', width: 15 },
+      { header: 'Amount (EGP)', key: 'amount', width: 15 },
+      { header: 'Status', key: 'status', width: 12 },
+      { header: 'Notes', key: 'notes', width: 30 },
+      { header: 'Orders Count', key: 'ordersCount', width: 12 },
+      { header: 'Pickups Count', key: 'pickupsCount', width: 12 }
+    ];
+    
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '2A3950' }
+    };
+    worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // Add data rows
+    transactions.forEach(transaction => {
+      const isPositive = ['cashCycle', 'refund', 'deposit'].includes(transaction.transactionType);
+      const status = transaction.settled ? 'Settled' : 'Pending';
+      
+      worksheet.addRow({
+        transactionId: transaction.transactionId,
+        date: new Date(transaction.createdAt).toLocaleDateString(),
+        type: getTransactionTypeLabel(transaction.transactionType),
+        amount: transaction.transactionAmount,
+        status: status,
+        notes: transaction.transactionNotes || '',
+        ordersCount: transaction.orderReferences ? transaction.orderReferences.length : 0,
+        pickupsCount: transaction.pickupReferences ? transaction.pickupReferences.length : 0
+      });
+    });
+    
+    // Style data rows
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber > 1) {
+        row.alignment = { vertical: 'middle' };
+        
+        // Color code amounts
+        const amountCell = row.getCell('amount');
+        if (amountCell.value > 0) {
+          amountCell.font = { color: { argb: '10B981' } };
+        } else {
+          amountCell.font = { color: { argb: 'EF4444' } };
+        }
+        
+        // Color code status
+        const statusCell = row.getCell('status');
+        if (statusCell.value === 'Settled') {
+          statusCell.font = { color: { argb: '10B981' } };
+        } else {
+          statusCell.font = { color: { argb: 'F59E0B' } };
+        }
+      }
+    });
+    
+    // Add borders
+    worksheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+    
+    // Set response headers
+    const filename = `transactions_${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
+    
+  } catch (error) {
+    console.error('Error exporting transactions to Excel:', error);
+    res.status(500).json({ error: 'Failed to export transactions' });
+  }
+}
+
+// Professional Excel Export for Cash Cycles
+const exportCashCyclesToExcel = async (req, res) => {
+  try {
+    const { timePeriod, dateFrom, dateTo, orderStatus } = req.query;
+    
+    // Build query based on filters
+    let query = { business: req.userData._id, orderStatus: 'completed' };
+    let dateFilter = {};
+    
+    // Date filtering
+    if (dateFrom && dateTo) {
+      dateFilter = {
+        completedDate: {
+          $gte: new Date(dateFrom),
+          $lte: new Date(dateTo)
+        }
+      };
+    } else if (timePeriod && timePeriod !== 'all') {
+      const now = new Date();
+      switch (timePeriod) {
+        case 'today':
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const todayEnd = new Date();
+          todayEnd.setHours(23, 59, 59, 999);
+          dateFilter = { completedDate: { $gte: todayStart, $lte: todayEnd } };
+          break;
+        case 'week':
+          const weekStart = new Date();
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+          weekStart.setHours(0, 0, 0, 0);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          weekEnd.setHours(23, 59, 59, 999);
+          dateFilter = { completedDate: { $gte: weekStart, $lte: weekEnd } };
+          break;
+        case 'month':
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+          dateFilter = { completedDate: { $gte: monthStart, $lte: monthEnd } };
+          break;
+        case 'year':
+          const yearStart = new Date(now.getFullYear(), 0, 1);
+          const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+          dateFilter = { completedDate: { $gte: yearStart, $lte: yearEnd } };
+          break;
+      }
+    }
+    
+    // Combine filters
+    query = { ...query, ...dateFilter };
+    
+    // Get orders
+    const orders = await Order.find(query)
+      .populate('deliveryMan', 'name phone')
+      .sort({ completedDate: -1 });
+    
+    // Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Cash Cycles Report');
+    
+    // Define columns
+    worksheet.columns = [
+      { header: 'Order ID', key: 'orderNumber', width: 15 },
+      { header: 'Order Date', key: 'orderDate', width: 12 },
+      { header: 'Completed Date', key: 'completedDate', width: 15 },
+      { header: 'Order Type', key: 'orderType', width: 15 },
+      { header: 'Customer', key: 'customer', width: 20 },
+      { header: 'Location', key: 'location', width: 20 },
+      { header: 'Order Value (EGP)', key: 'orderValue', width: 18 },
+      { header: 'Service Fee (EGP)', key: 'serviceFee', width: 18 },
+      { header: 'Net Amount (EGP)', key: 'netAmount', width: 18 },
+      { header: 'Delivery Man', key: 'deliveryMan', width: 20 },
+      { header: 'Release Status', key: 'releaseStatus', width: 15 }
+    ];
+    
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '2A3950' }
+    };
+    worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // Add data rows
+    orders.forEach(order => {
+      const orderValue = order.orderShipping.amount || 0;
+      const serviceFee = order.orderFees || 0;
+      const netAmount = orderValue - serviceFee;
+      
+      worksheet.addRow({
+        orderNumber: order.orderNumber,
+        orderDate: new Date(order.orderDate).toLocaleDateString(),
+        completedDate: new Date(order.completedDate).toLocaleDateString(),
+        orderType: order.orderShipping.orderType,
+        customer: order.orderCustomer.fullName,
+        location: `${order.orderCustomer.government}, ${order.orderCustomer.zone}`,
+        orderValue: orderValue,
+        serviceFee: serviceFee,
+        netAmount: netAmount,
+        deliveryMan: order.deliveryMan ? order.deliveryMan.name : 'N/A',
+        releaseStatus: order.moneyReleaseDate ? 'Released' : 'Pending'
+      });
+    });
+    
+    // Add summary row
+    const totalRow = worksheet.addRow({});
+    totalRow.getCell('orderNumber').value = 'TOTAL';
+    totalRow.getCell('orderNumber').font = { bold: true };
+    totalRow.getCell('orderValue').value = orders.reduce((sum, order) => sum + (order.orderShipping.amount || 0), 0);
+    totalRow.getCell('serviceFee').value = orders.reduce((sum, order) => sum + (order.orderFees || 0), 0);
+    totalRow.getCell('netAmount').value = totalRow.getCell('orderValue').value - totalRow.getCell('serviceFee').value;
+    
+    // Style summary row
+    totalRow.font = { bold: true };
+    totalRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'F3F4F6' }
+    };
+    
+    // Style data rows
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber > 1 && rowNumber < worksheet.rowCount) {
+        row.alignment = { vertical: 'middle' };
+        
+        // Color code amounts
+        const orderValueCell = row.getCell('orderValue');
+        const serviceFeeCell = row.getCell('serviceFee');
+        const netAmountCell = row.getCell('netAmount');
+        
+        orderValueCell.font = { color: { argb: '10B981' } };
+        serviceFeeCell.font = { color: { argb: 'EF4444' } };
+        netAmountCell.font = { color: { argb: '3B82F6' } };
+        
+        // Color code release status
+        const releaseStatusCell = row.getCell('releaseStatus');
+        if (releaseStatusCell.value === 'Released') {
+          releaseStatusCell.font = { color: { argb: '10B981' } };
+        } else {
+          releaseStatusCell.font = { color: { argb: 'F59E0B' } };
+        }
+      }
+    });
+    
+    // Add borders
+    worksheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+    
+    // Set response headers
+    const filename = `cash_cycles_${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
+    
+  } catch (error) {
+    console.error('Error exporting cash cycles to Excel:', error);
+    res.status(500).json({ error: 'Failed to export cash cycles' });
+  }
+}
+
+// Helper function for transaction type labels
+const getTransactionTypeLabel = (type) => {
+  const labels = {
+    'cashCycle': 'Cash Cycle',
+    'fees': 'Service Fees',
+    'pickupFees': 'Pickup Fees',
+    'refund': 'Refund',
+    'deposit': 'Deposit',
+    'withdrawal': 'Withdrawal'
+  };
+  return labels[type] || type;
 }
 // ================================================= Cash Cycles ================================================= //
 
@@ -1352,84 +2804,263 @@ const get_totalCashCycleByDate = async (req, res) => {
     const { timePeriod } = req.query;
     let dateFilter = {};
     const now = new Date();
-    console.log(now,timePeriod);
+    
+    // Ensure business ID is properly formatted
+    const businessId = req.userData._id;
+
     // Set date filter based on time period
     switch(timePeriod) {
       case 'today':
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
         dateFilter = {
           completedDate: {
-            $gte: new Date(now.setHours(0,0,0,0)),
-            $lt: new Date(now.setHours(23,59,59,999))
+            $gte: todayStart,
+            $lte: todayEnd
           }
         };
         break;
       case 'week':
-        const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
-        const weekEnd = new Date(now);
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
         dateFilter = {
           completedDate: {
-            $gte: new Date(weekStart.setHours(0,0,0,0)),
-            $lt: new Date(weekEnd.setHours(23,59,59,999))
+            $gte: weekStart,
+            $lte: weekEnd
           }
         };
         console.log(`Week from ${weekStart.toLocaleDateString()} to ${weekEnd.toLocaleDateString()}`);
         break;
       case 'month':
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         dateFilter = {
           completedDate: {
-            $gte: new Date(now.getFullYear(), now.getMonth(), 1),
-            $lt: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+            $gte: monthStart,
+            $lte: monthEnd
           }
         };
         break;
       case 'year':
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+        const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
         dateFilter = {
           completedDate: {
-            $gte: new Date(now.getFullYear(), 0, 1),
-            $lt: new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+            $gte: yearStart,
+            $lte: yearEnd
           }
         };
         break;
       case 'all':
-        dateFilter = {
-          completedDate: {
-            $gte: new Date(0), // Start of time
-            $lt: new Date() // Current date
-          }
-        };
+        dateFilter = {}; // No date filter for all time
         break;
       default:
         dateFilter = {};
     }
-    console.log(dateFilter.completedDate);
-    const orders = await Order.find({ 
-      business: req.userData._id,
-      orderStatus: 'completed',
-      completedDate: dateFilter.completedDate
+    
+    console.log('Date filter:', dateFilter);
+    console.log('Business ID:', req.userData._id);
+    
+    // Get all processed orders with enhanced data (completed, returned, canceled, returnCompleted)
+    let orders = [];
+    
+    // Get all order types that need financial processing
+    const orderStatusesToProcess = ['completed', 'returned', 'canceled', 'returnCompleted'];
+    
+    // First try with all relevant statuses and date filter
+    orders = await Order.find({ 
+      business: businessId,
+      orderStatus: { $in: orderStatusesToProcess },
+      ...dateFilter
+    }).populate('deliveryMan', 'name phone')
+      .sort({ completedDate: -1 });
+    
+    console.log('Processed orders found with date filter:', orders.length);
+    
+    // If no orders found, try without date filter to see if there are any processed orders at all
+    if (orders.length === 0) {
+      const allProcessedOrders = await Order.find({ 
+        business: businessId,
+        orderStatus: { $in: orderStatusesToProcess }
+      }).populate('deliveryMan', 'name phone')
+        .sort({ completedDate: -1 });
+      
+      console.log('Total processed orders for business:', allProcessedOrders.length);
+      
+      // If there are processed orders but none in the date range, show them anyway
+      if (allProcessedOrders.length > 0) {
+        console.log('No orders in date range, showing all processed orders');
+        orders = allProcessedOrders;
+      }
+    }
+    
+    console.log('Final orders to return:', orders.length);
+
+    // Debug: Check if there are any orders at all for this business
+    const totalOrdersForBusiness = await Order.countDocuments({
+      business: businessId
     });
-    console.log(orders);
+    console.log('Total orders for business (any status):', totalOrdersForBusiness);
+    
+    // Get all order statuses for this business
+    const orderStatuses = await Order.aggregate([
+      { $match: { business: businessId } },
+      { $group: { _id: '$orderStatus', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    console.log('Order statuses for business:', orderStatuses);
+
+    // Get in-progress orders count
     const inProgressCount = await Order.countDocuments({
-      business: req.userData._id,
-      orderStatus: { $in: ['headingToCustomer', 'headingToYou'] },
-      completedDate: dateFilter.completedDate
+      business: businessId,
+      orderStatus: { $in: ['headingToCustomer', 'returnToBusiness', 'inProgress'] }
     });
 
-    const totalIncome = orders.reduce((acc, order) => acc + order.orderShipping.amount, 0);
-    const totalFees = orders.reduce((acc, order) => acc + order.orderFees, 0);
+    // Calculate totals for all order types
+    const totalIncome = orders.reduce((acc, order) => {
+      // Only completed orders generate positive income
+      if (order.orderStatus === 'completed') {
+        return acc + (order.orderShipping.amount || 0);
+      }
+      return acc;
+    }, 0);
 
-    console.log(inProgressCount, totalIncome, totalFees, orders.length);
-    res.status(200).json({ 
+    const totalFees = orders.reduce((acc, order) => {
+      let orderFees = order.orderFees || 0;
+      
+      // Add return fees for returned orders
+      if (order.orderStatus === 'returned' && order.returnFees) {
+        orderFees += order.returnFees;
+      }
+      
+      // Add cancellation fees for canceled orders
+      if (order.orderStatus === 'canceled' && order.totalFees) {
+        orderFees += order.totalFees;
+      }
+      
+      // Add return fees for return completed orders
+      if (order.orderStatus === 'returnCompleted' && order.returnFees) {
+        orderFees += order.returnFees;
+      }
+      
+      return acc + orderFees;
+    }, 0);
+
+    const netTotal = totalIncome - totalFees;
+
+    // Calculate order counts by status
+    const completedCount = orders.filter(o => o.orderStatus === 'completed').length;
+    const returnedCount = orders.filter(o => o.orderStatus === 'returned').length;
+    const canceledCount = orders.filter(o => o.orderStatus === 'canceled').length;
+    const returnCompletedCount = orders.filter(o => o.orderStatus === 'returnCompleted').length;
+
+    // Get transaction data for better insights (include all transaction types)
+    const transactions = await Transaction.find({
+      business: businessId,
+      transactionType: { $in: ['cashCycle', 'fees', 'pickupFees', 'returnFees', 'cancellationFees', 'returnCompletedFees'] },
+      ...dateFilter
+    }).sort({ createdAt: -1 });
+    
+    console.log('Transactions found:', transactions.length);
+
+    // Calculate transaction totals
+    const transactionIncome = transactions
+      .filter(t => t.transactionType === 'cashCycle')
+      .reduce((acc, t) => acc + (t.transactionAmount || 0), 0);
+    
+    const transactionFees = transactions
+      .filter(t => ['fees', 'pickupFees', 'returnFees', 'cancellationFees', 'returnCompletedFees'].includes(t.transactionType))
+      .reduce((acc, t) => acc + Math.abs(t.transactionAmount || 0), 0);
+
+    console.log('Orders found:', orders.length, 'Total income:', totalIncome, 'Total fees:', totalFees);
+    
+    // Get release information for each order to determine money release status
+    const Release = require('../models/releases');
+    const releases = await Release.find({
+      business: businessId,
+      releaseStatus: { $in: ['pending', 'scheduled', 'released'] }
+    });
+
+    // Create a map of release status by order reference
+    const releaseStatusMap = {};
+    releases.forEach(release => {
+      if (release.ordersDetails && release.ordersDetails.orderCount) {
+        // This is a cash cycle release, mark all orders in that period as having this release status
+        orders.forEach(order => {
+          if (order.completedDate >= release.ordersDetails.dateRange?.from && 
+              order.completedDate <= release.ordersDetails.dateRange?.to) {
+            releaseStatusMap[order._id.toString()] = release.releaseStatus;
+          }
+        });
+      }
+    });
+
+    // Always return data, even if empty
+    const responseData = { 
       totalIncome, 
       totalFees,
-      orders,
+      transactionFees, // Include transaction fees separately
+      netTotal,
+      orders: orders.map(order => ({
+        _id: order._id,
+        orderNumber: order.orderNumber,
+        orderDate: order.orderDate,
+        completedDate: order.completedDate,
+        orderStatus: order.orderStatus,
+        orderCustomer: order.orderCustomer,
+        orderShipping: order.orderShipping,
+        orderFees: order.orderFees,
+        deliveryMan: order.deliveryMan,
+        moneyReleaseDate: order.moneyReleaseDate || null,
+        releaseStatus: releaseStatusMap[order._id.toString()] || 'pending'
+      })),
       inProgressCount, 
-      completedCount: orders.length 
-    });
+      completedCount: orders.length,
+      completedOrdersCount: completedCount,
+      returnedOrdersCount: returnedCount,
+      canceledOrdersCount: canceledCount,
+      returnCompletedOrdersCount: returnCompletedCount,
+      transactions: transactions.map(t => ({
+        _id: t._id,
+        transactionId: t.transactionId,
+        transactionType: t.transactionType,
+        transactionAmount: t.transactionAmount,
+        transactionNotes: t.transactionNotes,
+        createdAt: t.createdAt,
+        orderReferences: t.orderReferences || [],
+        pickupReferences: t.pickupReferences || [],
+        ordersDetails: t.ordersDetails
+      })),
+      debug: {
+        totalOrdersForBusiness,
+        orderStatuses,
+        timePeriod,
+        dateFilter,
+        releases: releases.map(r => ({
+          id: r._id,
+          status: r.releaseStatus,
+          amount: r.amount,
+          dateRange: r.ordersDetails?.dateRange
+        }))
+      }
+    };
+    
+    console.log('Sending response:', responseData);
+    res.status(200).json(responseData);
 
   } catch (error) {
-    console.error('Error in get_totalBalanceData:', error);
-    res.status(500).json({ error: 'Internal server error. Please try again.' });
+    console.error('Error in get_totalCashCycleByDate:', error);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again.',
+      details: error.message,
+      stack: error.stack
+    });
   }
 }
 
@@ -1574,6 +3205,131 @@ const calculateOrderFees = async (req, res) => {
   }
 };
 
+// Validate original order for return
+const validateOriginalOrder = async (req, res) => {
+  try {
+    const { orderNumber } = req.body;
+    
+    if (!orderNumber) {
+      return res.status(400).json({ error: 'Order number is required' });
+    }
+
+    // Find the original order
+    const originalOrder = await Order.findOne({ 
+      orderNumber: orderNumber,
+      business: req.userData._id,
+      orderStatus: 'completed',
+      'orderShipping.orderType': 'Deliver'
+    }).select('orderNumber orderCustomer orderShipping orderStatus');
+
+    // Debug: If not found, try to find the order without the orderType restriction
+    if (!originalOrder) {
+      console.log('Order not found with Deliver type, searching without type restriction...');
+      const debugOrder = await Order.findOne({ 
+        orderNumber: orderNumber,
+        business: req.userData._id
+      }).select('orderNumber orderCustomer orderShipping orderStatus business');
+      
+      if (debugOrder) {
+        console.log('Debug - Found order:', {
+          orderNumber: debugOrder.orderNumber,
+          orderStatus: debugOrder.orderStatus,
+          orderType: debugOrder.orderShipping.orderType,
+          business: debugOrder.business,
+          requestedBusiness: req.userData._id
+        });
+        
+        return res.status(404).json({ 
+          error: 'Order found but not eligible for return',
+          message: `Order status: ${debugOrder.orderStatus}, Order type: ${debugOrder.orderShipping.orderType}. Only completed deliver orders can be returned.`,
+          debug: {
+            foundOrderStatus: debugOrder.orderStatus,
+            foundOrderType: debugOrder.orderShipping.orderType,
+            expectedStatus: 'completed',
+            expectedType: 'Deliver'
+          }
+        });
+      }
+    }
+
+    if (!originalOrder) {
+      return res.status(404).json({ 
+        error: 'Order not found or not eligible for return',
+        message: 'Only completed deliver orders can be returned'
+      });
+    }
+
+    // Check if this order is already linked to a return
+    const existingReturn = await Order.findOne({
+      'orderShipping.originalOrderNumber': orderNumber,
+      business: req.userData._id
+    });
+
+    if (existingReturn) {
+      return res.status(400).json({ 
+        error: 'Order already has a return request',
+        message: 'This order already has an associated return order'
+      });
+    }
+
+    // Check if order has multiple items (eligible for partial return)
+    const hasMultipleItems = originalOrder.orderShipping.numberOfItems > 1;
+
+    res.json({ 
+      success: true, 
+      order: {
+        ...originalOrder.toObject(),
+        hasMultipleItems: hasMultipleItems,
+        itemCount: originalOrder.orderShipping.numberOfItems
+      }
+    });
+  } catch (error) {
+    console.error('Error validating original order:', error);
+    res.status(500).json({ error: 'Failed to validate order' });
+  }
+};
+
+// Calculate pickup fee (server-side) based on user's city and number of orders (<3 => 1.3x)
+const calculatePickupFee = async (req, res) => {
+  try {
+    const { numberOfOrders } = req.body;
+    const user = await User.findById(req.userData._id);
+    const city = user?.pickUpAdress?.city || '';
+
+    const governmentCategories = {
+      'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
+      'Alexandria': ['Alexandria', 'Beheira', 'Matrouh'],
+      'Delta-Canal': [
+        'Dakahlia', 'Sharqia', 'Monufia', 'Gharbia', 
+        'Kafr el-Sheikh', 'Damietta', 'Port Said', 'Ismailia', 'Suez'
+      ],
+      'Upper-RedSea': [
+        'Fayoum', 'Beni Suef', 'Minya', 'Asyut', 
+        'Sohag', 'Qena', 'Luxor', 'Aswan', 'Red Sea', 
+        'North Sinai', 'South Sinai', 'New Valley'
+      ]
+    };
+
+    let category = 'Cairo';
+    for (const [cat, govs] of Object.entries(governmentCategories)) {
+      if (govs.includes(city)) { category = cat; break; }
+    }
+    const baseByCategory = {
+      'Cairo': 50,
+      'Alexandria': 55,
+      'Delta-Canal': 60,
+      'Upper-RedSea': 80,
+    };
+    const base = baseByCategory[category] || 50;
+    const count = parseInt(numberOfOrders || '0');
+    const fee = (isNaN(count) || count < 3) ? Math.round(base * 1.3) : base;
+    return res.json({ fee });
+  } catch (error) {
+    console.error('Error calculating pickup fee:', error);
+    return res.status(500).json({ error: 'Failed to calculate pickup fee' });
+  }
+}
+
 
 // ================================================= Edit Profile ================================================= //
 
@@ -1608,8 +3364,65 @@ const editProfile = async (req, res) => {
   }
 }
 
+// Recovery function for orders that lost courier assignment
+const recoverOrderCourier = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { courierId } = req.body;
 
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
 
+    // Check if business owns this order
+    if (order.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    // Check if order is in return process
+    if (order.orderStatus !== 'returnToWarehouse') {
+      return res.status(400).json({ error: 'Order is not in return process' });
+    }
+
+    // Find the courier
+    const Courier = require('../models/courier');
+    const courier = await Courier.findById(courierId);
+    if (!courier) {
+      return res.status(404).json({ error: 'Courier not found' });
+    }
+
+    // Assign the courier
+    order.deliveryMan = courierId;
+
+    // Add to courier history
+    order.courierHistory.push({
+      courier: courierId,
+      assignedAt: new Date(),
+      action: 'assigned',
+      notes: 'Courier assigned during recovery process'
+    });
+
+    // Update return stages
+    order.orderStages.returnAssigned = {
+      isCompleted: true,
+      completedAt: new Date(),
+      notes: `Courier ${courier.name} assigned for return process`,
+      courier: courierId
+    };
+
+    await order.save();
+
+    return res.status(200).json({ 
+      message: `Courier ${courier.name} successfully assigned to order`,
+      order: order
+    });
+
+  } catch (error) {
+    console.error('Error recovering order courier:', error);
+    return res.status(500).json({ error: 'Failed to recover order courier' });
+  }
+};
 
 module.exports = {
   getDashboardPage,
@@ -1626,8 +3439,18 @@ module.exports = {
   get_editOrderPage,
   get_orderDetailsPage,
   editOrder,
+  cancelOrder,
   deleteOrder,
   printPolicy,
+  initiateReturn,
+
+  // Enhanced Return Flow
+  getAvailableReturnOrders,
+  getReturnOrderDetails,
+  getReturnOrders,
+  calculateReturnFees,
+  calculateReturnFeesAPI,
+  markDeliverOrderAsReturned,
 
   // Pickup
   get_pickupPage,
@@ -1640,6 +3463,10 @@ module.exports = {
 
   get_totalBalancePage,
   get_allTransactionsByDate,
+  getTransactionDetails,
+  recalculateBalanceAPI,
+  exportTransactionsToExcel,
+  exportCashCyclesToExcel,
 
   // Cash Cycles
   get_cashCyclesPage,
@@ -1657,4 +3484,14 @@ module.exports = {
   logOut,
 
   calculateOrderFees,
+  validateOriginalOrder,
+  // expose pickup fee calculator
+  calculatePickupFee,
+  retryTomorrow,
+  retryScheduled,
+  returnToWarehouseFromWaiting,
+  cancelFromWaiting,
+  recoverOrderCourier,
+  
 };
+

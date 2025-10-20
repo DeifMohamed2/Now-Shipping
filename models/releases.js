@@ -35,6 +35,12 @@ const releaseSchema = new mongoose.Schema(
     releaseNotes: {
       type: String,
     },
+    transactionReferences: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Transaction'
+      }
+    ],
   },
   { timestamps: true }
 );

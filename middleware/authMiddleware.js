@@ -21,7 +21,6 @@ const verifyToken = (req, res, next) => {
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    console.log('JWT token decoded:', decoded);
     
     // Add user ID to request object - handle different fields in the token
     if (decoded.id) {
@@ -46,7 +45,6 @@ const verifyToken = (req, res, next) => {
                   (decoded.adminId ? 'admin' : 
                   (decoded.id && decoded.userType === 'courier' ? 'courier' : 'user')));
     
-    console.log(`User authenticated: ID=${req.userId}, Type=${req.userType}`);
     
     next();
   } catch (error) {

@@ -2,6 +2,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
 
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/css/status-styles.css" rel="stylesheet" type="text/css" />
 <%- contentFor('body') %>
 <style>
   /* Fix for dropdown menus in tables */
@@ -147,12 +148,21 @@
                 <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="idStatus">
                   <option value="">Status</option>
                   <option value="all" selected>All</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Inprogress">Inprogress</option>
-                  <option value="Cancelled">Cancelled</option>
-                  <option value="Pickups">Pickups</option>
-                  <option value="Returns">Returns</option>
-                  <option value="Delivered">Delivered</option>
+                  <option value="waitingAction">Waiting Action</option>
+                  <option value="rescheduled">Rescheduled</option>
+                  <option value="new">New</option>
+                  <option value="pickedUp">Picked Up</option>
+                  <option value="inStock">In Stock</option>
+                  <option value="inProgress">In Progress</option>
+                  <option value="headingToCustomer">Heading To Customer</option>
+                  <option value="headingToYou">Heading To You</option>
+                  <option value="completed">Completed</option>
+                  <option value="canceled">Canceled</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="returned">Returned</option>
+                  <option value="returnLinked">Return Linked</option>
+                  <option value="returnToWarehouse">Return to Warehouse</option>
+                  <option value="terminated">Terminated</option>
                 </select>
               </div>
             </div>
@@ -211,6 +221,11 @@
                 <i class="ri-money-dollar-circle-line me-1 align-bottom"></i> Cash Collection
               </button>
             </li>
+            <li class="nav-item">
+              <button class="btn btn-link nav-link py-3 Returned" data-bs-toggle="tab" id="Returned" role="tab" aria-selected="false" onClick="filterReturnedOrders()">
+                <i class="ri-arrow-left-circle-line me-1 align-bottom"></i> Returned Orders
+              </button>
+            </li>
 
           </ul>
 
@@ -229,6 +244,7 @@
                   <th  data-sort="order-Location">Order Location</th>
                   <th  data-sort="amount">Amount</th>
                   <th  data-sort="status">Delivery Status</th>
+                  <th  data-sort="category">Category</th>
                   <th  data-sort="status">Delivery Tries</th>
                   <th  data-sort="date">Order Date</th>
                   <th data-sort="city">Action</th>
@@ -349,6 +365,8 @@
 
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
+<!-- Status helper -->
+<script src="/assets/js/status-helper.js"></script>
 
 <script src="/assets/rJS/business/orders.js"></script>
 
@@ -464,19 +482,28 @@
       });
     }
 
-    // Fix dropdown positioning when dropdown is toggled
-    const dropdownButtons = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-    dropdownButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        setTimeout(() => {
-          const dropdown = this.nextElementSibling;
-          if (dropdown && dropdown.classList.contains('show')) {
-            const rect = this.getBoundingClientRect();
-            dropdown.style.top = `${rect.bottom}px`;
-            dropdown.style.left = `${rect.left}px`;
-          }
-        }, 0);
-      });
+  // Fix dropdown positioning when dropdown is toggled
+  const dropdownButtons = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+  dropdownButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      setTimeout(() => {
+        const dropdown = this.nextElementSibling;
+        if (dropdown && dropdown.classList.contains('show')) {
+          const rect = this.getBoundingClientRect();
+          dropdown.style.top = `${rect.bottom}px`;
+          dropdown.style.left = `${rect.left}px`;
+        }
+      }, 0);
     });
+  });
+
+  // Filter returned orders
+  function filterReturnedOrders() {
+    const returnedOrders = allOrders.filter(order => 
+      order.orderStatus === 'returned' || order.orderStatus === 'returnLinked'
+    );
+    populateOrdersTable(returnedOrders);
+    updatePagination(returnedOrders);
+  }
   });
 </script>

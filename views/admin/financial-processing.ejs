@@ -1,0 +1,693 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+<%- contentFor('body') %>
+<style>
+        .log-entry {
+            background-color: #f8f9fa;
+            border-left: 4px solid #405189;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .log-entry.error {
+            border-left-color: #dc3545;
+            background-color: #fff5f5;
+        }
+        
+        .log-entry.success {
+            border-left-color: #28a745;
+            background-color: #f0fff4;
+        }
+        
+        .reconciliation-table {
+            font-size: 0.9rem;
+        }
+        
+        .discrepancy-high {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+        
+        .discrepancy-medium {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .discrepancy-low {
+            background-color: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+    </style>
+
+<div class="row">
+  <div class="col-12">
+    <div class="h-100">
+      <div class="row mb-3 pb-1">
+        <div class="col-12">
+          <div class="d-flex align-items-lg-center flex-lg-row flex-column">
+            <div class="flex-grow-1">
+              <h4 class="fs-16 mb-1">Financial Processing Management</h4>
+              <p class="text-muted mb-0">Monitor and manage your financial processing operations.</p>
+            </div>
+            <div class="mt-3 mt-lg-0">
+              <button type="button" class="btn btn-soft-primary material-shadow-none" onclick="loadProcessingStatistics()">
+                <i class="ri-refresh-line align-middle me-1"></i> Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Processing Status Overview -->
+      <div class="row">
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-animate">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1 overflow-hidden">
+                  <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Orders</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <h5 class="text-info fs-14 mb-0">
+                    <i class="ri-shopping-cart-line fs-13 align-middle"></i>
+                  </h5>
+                </div>
+              </div>
+              <div class="d-flex align-items-end justify-content-between mt-4">
+                <div>
+                  <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" id="totalOrders">0</span></h4>
+                  <a href="/admin/orders" class="text-decoration-underline">View all orders</a>
+                </div>
+                <div class="avatar-sm flex-shrink-0">
+                  <span class="avatar-title bg-info-subtle rounded fs-3">
+                    <i class="ri-shopping-cart-line text-info"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-animate">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1 overflow-hidden">
+                  <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Processed Orders</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <h5 class="text-success fs-14 mb-0">
+                    <i class="ri-check-line fs-13 align-middle"></i>
+                  </h5>
+                </div>
+              </div>
+              <div class="d-flex align-items-end justify-content-between mt-4">
+                <div>
+                  <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" id="processedOrders">0</span></h4>
+                  <a href="javascript:void(0);" class="text-decoration-underline">View processed</a>
+                </div>
+                <div class="avatar-sm flex-shrink-0">
+                  <span class="avatar-title bg-success-subtle rounded fs-3">
+                    <i class="ri-check-line text-success"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-animate">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1 overflow-hidden">
+                  <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Unprocessed Orders</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <h5 class="text-warning fs-14 mb-0">
+                    <i class="ri-time-line fs-13 align-middle"></i>
+                  </h5>
+                </div>
+              </div>
+              <div class="d-flex align-items-end justify-content-between mt-4">
+                <div>
+                  <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" id="unprocessedOrders">0</span></h4>
+                  <a href="javascript:void(0);" class="text-decoration-underline">View unprocessed</a>
+                </div>
+                <div class="avatar-sm flex-shrink-0">
+                  <span class="avatar-title bg-warning-subtle rounded fs-3">
+                    <i class="ri-time-line text-warning"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="card card-animate">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1 overflow-hidden">
+                  <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Transactions</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <h5 class="text-primary fs-14 mb-0">
+                    <i class="ri-exchange-dollar-line fs-13 align-middle"></i>
+                  </h5>
+                </div>
+              </div>
+              <div class="d-flex align-items-end justify-content-between mt-4">
+                <div>
+                  <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" id="totalTransactions">0</span></h4>
+                  <a href="/admin/release-amounts" class="text-decoration-underline">View transactions</a>
+                </div>
+                <div class="avatar-sm flex-shrink-0">
+                  <span class="avatar-title bg-primary-subtle rounded fs-3">
+                    <i class="ri-exchange-dollar-line text-primary"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header border-0">
+              <div class="row align-items-center gy-3">
+                <div class="col-sm">
+                  <h5 class="card-title mb-0">
+                    <i class="ri-settings-3-line me-2"></i>
+                    Processing Actions
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div class="card-body border border-dashed border-end-0 border-start-0">
+              <div class="row g-3">
+                <div class="col-xxl-3 col-sm-6">
+                  <button class="btn btn-primary w-100" onclick="runDailyProcessing()">
+                    <i class="ri-play-circle-line align-bottom me-1"></i>
+                    Run Daily Processing
+                  </button>
+                </div>
+                <div class="col-xxl-3 col-sm-6">
+                  <button class="btn btn-success w-100" onclick="validateBalances()">
+                    <i class="ri-shield-check-line align-bottom me-1"></i>
+                    Validate Balances
+                  </button>
+                </div>
+                <div class="col-xxl-3 col-sm-6">
+                  <button class="btn btn-warning w-100" onclick="resetOrphanedFlags()">
+                    <i class="ri-refresh-line align-bottom me-1"></i>
+                    Reset Orphaned Flags
+                  </button>
+                </div>
+                <div class="col-xxl-3 col-sm-6">
+                  <button class="btn btn-info w-100" onclick="generateReconciliationReport()">
+                    <i class="ri-file-list-3-line align-bottom me-1"></i>
+                    Reconciliation Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Processing Logs -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header border-0">
+              <div class="row align-items-center gy-3">
+                <div class="col-sm">
+                  <h5 class="card-title mb-0">
+                    <i class="ri-file-list-line me-2"></i>
+                    Processing Logs
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="processingLogs">
+                <div class="text-center text-muted py-4">
+                  <i class="ri-file-list-line" style="font-size: 3rem; opacity: 0.3;"></i>
+                  <p class="mt-2">No processing logs available</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reconciliation Results -->
+      <div class="row" id="reconciliationSection" style="display: none;">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header border-0">
+              <div class="row align-items-center gy-3">
+                <div class="col-sm">
+                  <h5 class="card-title mb-0">
+                    <i class="ri-shield-check-line me-2"></i>
+                    Reconciliation Results
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="reconciliationResults">
+                <!-- Results will be populated here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balance Validation Results -->
+      <div class="row" id="balanceValidationSection" style="display: none;">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header border-0">
+              <div class="row align-items-center gy-3">
+                <div class="col-sm">
+                  <h5 class="card-title mb-0">
+                    <i class="ri-money-dollar-circle-line me-2"></i>
+                    Balance Validation Results
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="balanceValidationResults">
+                <!-- Results will be populated here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+    <!-- Custom JavaScript for Financial Processing -->
+    <script>
+        // Global variables
+        let processingInProgress = false;
+        let currentStats = null;
+
+        // Initialize page
+        $(document).ready(function() {
+            loadProcessingStatistics();
+            loadProcessingLogs();
+        });
+
+        // Load processing statistics
+        async function loadProcessingStatistics() {
+            try {
+                const response = await fetch('/admin/api/processing-statistics?days=30');
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentStats = result.data;
+                    updateStatisticsDisplay(result.data);
+                } else {
+                    showAlert('Error loading statistics: ' + result.error, 'danger');
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                showAlert('Failed to load processing statistics', 'danger');
+            }
+        }
+
+        // Update statistics display
+        function updateStatisticsDisplay(stats) {
+            $('#totalOrders').text(stats.orders.total || 0);
+            $('#processedOrders').text(stats.orders.processed || 0);
+            $('#unprocessedOrders').text(stats.orders.unprocessed || 0);
+            $('#totalTransactions').text(stats.transactions.total || 0);
+        }
+
+        // Run daily processing
+        async function runDailyProcessing() {
+            if (processingInProgress) {
+                showAlert('Processing is already in progress', 'warning');
+                return;
+            }
+
+            processingInProgress = true;
+            addLogEntry('Starting daily processing...', 'info');
+            
+            try {
+                const response = await fetch('/admin/api/run-daily-processing', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLogEntry('Daily processing completed successfully', 'success');
+                    showAlert('Daily processing completed successfully', 'success');
+                } else {
+                    addLogEntry('Daily processing failed: ' + result.error, 'error');
+                    showAlert('Daily processing failed: ' + result.error, 'danger');
+                }
+            } catch (error) {
+                console.error('Error running daily processing:', error);
+                addLogEntry('Error running daily processing: ' + error.message, 'error');
+                showAlert('Failed to run daily processing', 'danger');
+            } finally {
+                processingInProgress = false;
+                loadProcessingStatistics(); // Refresh statistics
+            }
+        }
+
+        // Validate business balances
+        async function validateBalances() {
+            addLogEntry('Validating business balances...', 'info');
+            
+            try {
+                const response = await fetch('/admin/api/validate-business-balances');
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayBalanceValidationResults(result.data);
+                    addLogEntry(`Balance validation completed. Found ${result.data.discrepancies.length} discrepancies`, 'success');
+                } else {
+                    addLogEntry('Balance validation failed: ' + result.error, 'error');
+                    showAlert('Balance validation failed: ' + result.error, 'danger');
+                }
+            } catch (error) {
+                console.error('Error validating balances:', error);
+                addLogEntry('Error validating balances: ' + error.message, 'error');
+                showAlert('Failed to validate balances', 'danger');
+            }
+        }
+
+        // Reset orphaned processing flags
+        async function resetOrphanedFlags() {
+            if (!confirm('Are you sure you want to reset orphaned processing flags? This will mark unprocessed orders for reprocessing.')) {
+                return;
+            }
+
+            addLogEntry('Resetting orphaned processing flags...', 'info');
+            
+            try {
+                const response = await fetch('/admin/api/reset-orphaned-flags');
+                const result = await response.json();
+                
+                if (result.success) {
+                    addLogEntry(`Reset ${result.data.resetCount} orphaned processing flags`, 'success');
+                    showAlert(`Successfully reset ${result.data.resetCount} orphaned processing flags`, 'success');
+                    loadProcessingStatistics(); // Refresh statistics
+                } else {
+                    addLogEntry('Failed to reset orphaned flags: ' + result.error, 'error');
+                    showAlert('Failed to reset orphaned flags: ' + result.error, 'danger');
+                }
+            } catch (error) {
+                console.error('Error resetting orphaned flags:', error);
+                addLogEntry('Error resetting orphaned flags: ' + error.message, 'error');
+                showAlert('Failed to reset orphaned flags', 'danger');
+            }
+        }
+
+        // Generate reconciliation report
+        async function generateReconciliationReport() {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30); // Last 30 days
+
+            addLogEntry('Generating reconciliation report...', 'info');
+            
+            try {
+                const response = await fetch(`/admin/api/reconciliation-report?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayReconciliationResults(result.data);
+                    addLogEntry(`Reconciliation report generated. Found ${result.data.discrepancies.length} discrepancies`, 'success');
+                } else {
+                    addLogEntry('Failed to generate reconciliation report: ' + result.error, 'error');
+                    showAlert('Failed to generate reconciliation report: ' + result.error, 'danger');
+                }
+            } catch (error) {
+                console.error('Error generating reconciliation report:', error);
+                addLogEntry('Error generating reconciliation report: ' + error.message, 'error');
+                showAlert('Failed to generate reconciliation report', 'danger');
+            }
+        }
+
+        // Display balance validation results
+        function displayBalanceValidationResults(data) {
+            const section = $('#balanceValidationSection');
+            const container = $('#balanceValidationResults');
+            
+            let html = `
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h4 class="text-primary">${data.totalBusinesses}</h4>
+                                <p class="mb-0">Total Businesses</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h4 class="text-warning">${data.discrepancies.length}</h4>
+                                <p class="mb-0">Discrepancies Found</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (data.discrepancies.length > 0) {
+                html += `
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Business</th>
+                                    <th>Stored Balance</th>
+                                    <th>Calculated Balance</th>
+                                    <th>Discrepancy</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                data.discrepancies.forEach(discrepancy => {
+                    html += `
+                        <tr>
+                            <td>${discrepancy.businessName}</td>
+                            <td>${discrepancy.storedBalance.toFixed(2)} EGP</td>
+                            <td>${discrepancy.calculatedBalance.toFixed(2)} EGP</td>
+                            <td><span class="badge bg-warning">${discrepancy.discrepancy.toFixed(2)} EGP</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="fixBalanceDiscrepancy('${discrepancy.businessId}')">
+                                    Fix Balance
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-warning-custom" onclick="fixAllBalanceDiscrepancies()">
+                            <i class="ri-tools-line me-2"></i>
+                            Fix All Discrepancies
+                        </button>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="alert alert-success">
+                        <i class="ri-check-circle-line me-2"></i>
+                        All business balances are correct! No discrepancies found.
+                    </div>
+                `;
+            }
+
+            container.html(html);
+            section.show();
+        }
+
+        // Display reconciliation results
+        function displayReconciliationResults(data) {
+            const section = $('#reconciliationSection');
+            const container = $('#reconciliationResults');
+            
+            let html = `
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h4 class="text-primary">${data.summary.totalOrders}</h4>
+                                <p class="mb-0">Total Orders</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h4 class="text-success">${data.summary.processedOrders}</h4>
+                                <p class="mb-0">Processed Orders</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h4 class="text-warning">${data.summary.unprocessedOrders}</h4>
+                                <p class="mb-0">Unprocessed Orders</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h4 class="text-info">${data.summary.totalTransactions}</h4>
+                                <p class="mb-0">Total Transactions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (data.discrepancies.length > 0) {
+                html += `
+                    <h6>Discrepancies Found:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-striped reconciliation-table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Order/Transaction</th>
+                                    <th>Details</th>
+                                    <th>Severity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                data.discrepancies.forEach(discrepancy => {
+                    const severityClass = discrepancy.severity === 'HIGH' ? 'discrepancy-high' : 
+                                        discrepancy.severity === 'MEDIUM' ? 'discrepancy-medium' : 'discrepancy-low';
+                    
+                    html += `
+                        <tr class="${severityClass}">
+                            <td><span class="badge bg-secondary">${discrepancy.type}</span></td>
+                            <td>${discrepancy.orderNumber || discrepancy.transactionId || 'N/A'}</td>
+                            <td>${discrepancy.error || discrepancy.message || 'N/A'}</td>
+                            <td><span class="badge bg-${discrepancy.severity === 'HIGH' ? 'danger' : discrepancy.severity === 'MEDIUM' ? 'warning' : 'success'}">${discrepancy.severity}</span></td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="alert alert-success">
+                        <i class="ri-check-circle-line me-2"></i>
+                        No discrepancies found! All data is consistent.
+                    </div>
+                `;
+            }
+
+            container.html(html);
+            section.show();
+        }
+
+        // Add log entry
+        function addLogEntry(message, type = 'info') {
+            const logsContainer = $('#processingLogs');
+            const timestamp = new Date().toLocaleString();
+            
+            const logEntry = $(`
+                <div class="log-entry ${type}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${timestamp}</strong>
+                            <p class="mb-0 mt-1">${message}</p>
+                        </div>
+                        <span class="badge bg-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'}">${type.toUpperCase()}</span>
+                    </div>
+                </div>
+            `);
+            
+            // Remove the "no logs" message if it exists
+            logsContainer.find('.text-center').remove();
+            
+            // Add new log entry at the top
+            logsContainer.prepend(logEntry);
+            
+            // Keep only last 10 log entries
+            const logEntries = logsContainer.find('.log-entry');
+            if (logEntries.length > 10) {
+                logEntries.slice(10).remove();
+            }
+        }
+
+        // Load processing logs (placeholder - you can implement this based on your needs)
+        function loadProcessingLogs() {
+            // This would typically load from your database
+            // For now, we'll just show a placeholder
+        }
+
+        // Show alert
+        function showAlert(message, type = 'info') {
+            const alertClass = type === 'error' ? 'danger' : type;
+            const alertHtml = `
+                <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            
+            // Add alert to the top of the page
+            $('.container-fluid').prepend(alertHtml);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                $('.alert').fadeOut();
+            }, 5000);
+        }
+
+        // Fix balance discrepancy
+        async function fixBalanceDiscrepancy(businessId) {
+            // Implementation for fixing individual balance discrepancy
+            showAlert('Balance discrepancy fix functionality will be implemented', 'info');
+        }
+
+        // Fix all balance discrepancies
+        async function fixAllBalanceDiscrepancies() {
+            if (!confirm('Are you sure you want to fix all balance discrepancies? This action cannot be undone.')) {
+                return;
+            }
+            
+            showAlert('Fix all discrepancies functionality will be implemented', 'info');
+        }
+    </script>

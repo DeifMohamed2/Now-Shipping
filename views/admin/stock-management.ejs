@@ -765,24 +765,33 @@
     console.log(data);
 
     if(response.ok){
+      let title = 'Added to Stock';
+      let text = `Order #${orderNumber} has been added to stock`;
+      
+      // Check if pickup was completed
+      if (data.pickupCompleted && data.pickup) {
+        title = 'Pickup Completed!';
+        text = `Order #${orderNumber} added to stock. Pickup #${data.pickup.pickupNumber} has been completed and pickup fees have been processed.`;
+      }
+      
       Swal.fire({
         icon: 'success',
-        title: 'Added to Stock',
-        text: `Order #${orderNumber} has been added to stock `,
-        timer: 2000
+        title: title,
+        text: text,
+        timer: 3000
       }).then(() => {
         // Reset form and refresh stock data
         document.getElementById("quickAddForm").reset();
-        // foucs on order number input
+        // focus on order number input
         document.getElementById("orderNumber").focus();
         fetchStockItems();
       });
-    }else{
+    } else {
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
         text: `Order #${orderNumber} ${data.error} `,
-      })
+      });
     }
     } catch (error) {
       console.error("Error adding order to stock:", error);
@@ -921,7 +930,7 @@
         const row = document.createElement('tr');
         
         // Calculate days in stock
-        const arrivalDate = new Date(item.orderStages.find(stage => stage.stageName === 'inStock')?.stageDate);
+        const arrivalDate = new Date(item.orderStages.packed?.completedAt || item.orderStages.orderPlaced?.completedAt);
         const today = new Date();
         const daysInStock = Math.floor((today - arrivalDate) / (1000 * 60 * 60 * 24));
         
@@ -954,7 +963,7 @@
 
         // Handle location
         const address = item.orderCustomer.address;
-        const shouldShowMoreAddress = address && address.length > 20;
+        const shouldShowMoreAddress = address.length > 20;
         const truncatedLocation = shouldShowMoreAddress ? address.substring(0, 20) + '...' : address || '';
         const showMoreAddressBtn = shouldShowMoreAddress ?
           `<button class="btn btn-link btn-sm p-0" onclick="showFullAddress('${address}')">Show More</button>` : '';
@@ -970,6 +979,60 @@
           orderDetails += `<div><strong>Items:</strong> ${item.orderShipping.numberOfItems}</div>`;
         }
         
+        // Add return-specific details if it's a return
+        if (item.orderShipping.orderType === 'Return') {
+          if (item.orderShipping.returnReason) {
+            orderDetails += `<div><strong>Return Reason:</strong> ${item.orderShipping.returnReason}</div>`;
+          }
+        }
+        
+        // Determine appropriate action buttons based on order type and status
+        let actionButtons = '';
+        
+        // Handle Exchange orders based on their status
+        if (item.orderShipping.orderType === 'Exchange') {
+          if (item.orderStatus === 'new') {
+            actionButtons = `
+              <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
+                <i class="ri-user-received-2-line text-success"></i> Assign Courier for Pickup
+              </button>
+            `;
+          } else if (item.orderStatus === 'pickedUp') {
+            actionButtons = `
+              <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
+                <i class="ri-store-2-line text-info"></i> Receive in Stock
+              </button>
+            `;
+          } else if (item.orderStatus === 'inStock') {
+            actionButtons = `
+              <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
+                <i class="ri-user-received-2-line text-success"></i> Assign Courier for Delivery
+              </button>
+            `;
+          } else {
+            actionButtons = `
+              <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
+                <i class="ri-user-received-2-line text-success"></i> Assign to Courier
+              </button>
+            `;
+          }
+        } else if (item.orderStatus === 'inReturnStock') {
+          actionButtons = `
+            <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
+              <i class="ri-user-received-2-line text-success"></i> Assign to Courier (Return)
+            </button>
+          `;
+        }
+        
+        actionButtons += `
+          <a href="/admin/order/${item.orderNumber}" class="dropdown-item">
+            <i class="ri-eye-line text-primary"></i> View Details
+          </a>
+          <button class="dropdown-item" onclick="printLabel('${item.orderNumber}')">
+            <i class="ri-printer-line text-info"></i> Print Label
+          </button>
+        `;
+
         row.innerHTML = `
           <th scope="row">
             <div class="form-check">
@@ -1004,20 +1067,11 @@
           </td>
           <td>
             <div class="custom-dropdown">
-              <button class="custom-dropdown-toggle btn btn-soft-secondary btn-sm" onclick="toggleDropdown('dropdown-menu-${item.orderNumber}', event)">
-                <i class="ri-more-fill align-middle"></i>
+              <button class="custom-dropdown-toggle btn btn-soft-secondary btn-sm" onclick="toggleDropdown('dropdown-${item.orderNumber}', event)">
+                <i class="ri-more-2-fill"></i>
               </button>
-              <div id="dropdown-menu-${item.orderNumber}" class="custom-dropdown-menu">
-                <button class="custom-dropdown-item" onclick="updateStockStatus('${item.orderNumber}')">
-                  <i class="ri-edit-2-fill text-warning"></i> <span>Update Status</span>
-                </button>
-                <button class="custom-dropdown-item" onclick="getCouriers('${item.orderNumber}', '${zone}')">
-                  <i class="ri-user-add-line text-success"></i> <span>Assign to Courier</span>
-                </button>
-         
-                <button class="custom-dropdown-item" onclick="removeFromStock('${item.orderNumber}')">
-                  <i class="ri-delete-bin-6-fill text-danger"></i> <span>Remove from Stock</span>
-                </button>
+              <div id="dropdown-${item.orderNumber}" class="custom-dropdown-menu">
+                ${actionButtons}
               </div>
             </div>
           </td>
@@ -1592,7 +1646,24 @@
     document.getElementById('totalInStock').textContent = stockItems.length;
     document.getElementById('pendingArrivals').textContent = stockItems.filter(item => item.orderStatus === 'pickedUp').length;
     document.getElementById('readyForDispatch').textContent = stockItems.filter(item => item.orderStatus === 'inStock').length;
-    document.getElementById('processingOrders').textContent = stockItems.filter(item => item.orderStatus === 'inProgress').length;
+    document.getElementById('processingOrders').textContent = stockItems.filter(item => 
+      item.orderStatus === 'inProgress' || 
+      item.orderStatus === 'exchangePickup' || 
+      item.orderStatus === 'exchangeDelivery'
+    ).length;
+    
+    // Count Exchange and Cash Collection orders
+    const exchangeOrders = stockItems.filter(item => item.orderShipping?.orderType === 'Exchange').length;
+    const cashCollectionOrders = stockItems.filter(item => item.orderShipping?.orderType === 'Cash Collection').length;
+    
+    // Update additional stats if elements exist
+    if (document.getElementById('exchangeOrders')) {
+      document.getElementById('exchangeOrders').textContent = exchangeOrders;
+    }
+    
+    if (document.getElementById('cashCollectionOrders')) {
+      document.getElementById('cashCollectionOrders').textContent = cashCollectionOrders;
+    }
   }
 
   // Get stock status details (badge class and text)
@@ -1621,6 +1692,15 @@
     } else if (status === 'returned') {
       badgeClass = 'bg-danger-subtle text-danger';
       statusText = 'Returned';
+    } else if (status === 'exchangePickup') {
+      badgeClass = 'bg-info-subtle text-info';
+      statusText = 'Exchange Pickup';
+    } else if (status === 'exchangeDelivery') {
+      badgeClass = 'bg-success-subtle text-success';
+      statusText = 'Exchange Delivery';
+    } else if (status === 'collectionComplete') {
+      badgeClass = 'bg-success-subtle text-success';
+      statusText = 'Collection Complete';
     } else {
       badgeClass = 'bg-secondary-subtle text-secondary';
       statusText = status.charAt(0).toUpperCase() + status.slice(1);

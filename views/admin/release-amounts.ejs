@@ -243,6 +243,96 @@
     text-transform: uppercase;
     font-weight: 500;
   }
+
+  /* Enhanced table styling */
+  .business-details {
+    min-width: 200px;
+  }
+
+  .contact-info {
+    min-width: 150px;
+  }
+
+  .payment-method {
+    min-width: 180px;
+  }
+
+  .payment-details {
+    font-size: 0.85rem;
+  }
+
+  .amount-info {
+    text-align: right;
+  }
+
+  .release-date-info {
+    min-width: 120px;
+  }
+
+  .table td {
+    vertical-align: top;
+    padding: 12px 8px;
+  }
+
+  .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding: 15px 8px;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .table tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .status-badge i {
+    margin-right: 4px;
+    font-size: 12px;
+  }
+
+  .btn-action {
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 1200px) {
+    .table-responsive {
+      font-size: 0.85rem;
+    }
+    
+    .payment-details {
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .table th,
+    .table td {
+      padding: 8px 4px;
+      font-size: 0.8rem;
+    }
+    
+    .btn-action {
+      padding: 2px 6px;
+      font-size: 10px;
+    }
+  }
 </style>
 <%- contentFor('body') %>
 <!-- Page Title -->
@@ -254,8 +344,11 @@
         <p class="text-muted mb-0">Manage and release payments to businesses</p>
       </div>
       <div class="d-flex">
-        <button type="button" class="btn btn-primary">
-          <i class="ri-download-2-line align-middle me-1"></i> Export Report
+        <button type="button" class="btn btn-success" onclick="exportToExcel()">
+          <i class="ri-file-excel-2-line align-middle me-1"></i> Export Excel
+        </button>
+        <button type="button" class="btn btn-primary ms-2" onclick="exportToPDF()">
+          <i class="ri-file-pdf-line align-middle me-1"></i> Export PDF
         </button>
       </div>
     </div>
@@ -444,55 +537,161 @@
   </div>
 </div>
 
-<!-- Filter Section -->
+<!-- Advanced Filter Section -->
 <div class="row mt-4">
   <div class="col-lg-12">
     <div class="card">
-      <div class="card-body filter-section">
-        <form>
-          <div class="row g-3 align-items-center">
-            <div class="col-xxl-3 col-sm-4">
+      <div class="card-header bg-light">
+        <div class="d-flex align-items-center justify-content-between">
+          <h6 class="card-title mb-0">
+            <i class="ri-filter-3-line me-2"></i>Advanced Filters
+          </h6>
+          <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false">
+            <i class="ri-settings-3-line me-1"></i> More Filters
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <form id="filterForm">
+          <!-- Basic Filters Row -->
+          <div class="row g-3 align-items-end">
+            <div class="col-xxl-3 col-lg-4 col-md-6">
+              <label class="form-label fw-semibold">Search</label>
               <div class="search-box">
-                <input type="text" class="form-control search" placeholder="Search for business, order ID...">
+                <input type="text" class="form-control search" id="searchInput" placeholder="Business name, release ID, email...">
                 <i class="ri-search-line search-icon"></i>
               </div>
             </div>
 
-            <div class="col-xxl-3 col-sm-4">
-              <input type="text" class="form-control bg-light border-light flatpickr-input" id="datepicker-range" placeholder="Select release date range">
+            <div class="col-xxl-2 col-lg-3 col-md-6">
+              <label class="form-label fw-semibold">Status</label>
+              <select class="form-select" id="statusFilter">
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="released">Released</option>
+                <option value="canceled">Canceled</option>
+              </select>
             </div>
 
-            <!-- <div class="col-xxl-2 col-sm-4">
-              <div class="input-light">
-                <select class="form-control" data-choices data-choices-search-false name="choices-release-status" id="releaseStatus">
-                  <option value="">Release Status</option>
-                  <option value="all" selected>All</option>
-                  <option value="released">Released</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="pending">Pending</option>
-                  <option value="canceled">Canceled</option>
-                  <option value="rescheduled">Rescheduled</option>
+            <div class="col-xxl-2 col-lg-3 col-md-6">
+              <label class="form-label fw-semibold">Amount Range</label>
+              <select class="form-select" id="amountFilter">
+                <option value="all">All Amounts</option>
+                <option value="0-1000">0 - 1,000 EGP</option>
+                <option value="1000-5000">1,000 - 5,000 EGP</option>
+                <option value="5000-10000">5,000 - 10,000 EGP</option>
+                <option value="10000+">10,000+ EGP</option>
+              </select>
+            </div>
+
+            <div class="col-xxl-2 col-lg-2 col-md-6">
+              <label class="form-label fw-semibold">Date Range</label>
+              <input type="text" class="form-control flatpickr-input" id="datepicker-range" placeholder="Select date range">
+            </div>
+
+            <div class="col-xxl-3 col-lg-12">
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-primary" onclick="applyFilters()">
+                  <i class="ri-search-line me-1"></i> Apply Filters
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                  <i class="ri-refresh-line me-1"></i> Clear
+                </button>
+                <button type="button" class="btn btn-outline-info" onclick="exportFilteredData()">
+                  <i class="ri-download-line me-1"></i> Export Filtered
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Filters (Collapsible) -->
+          <div class="collapse mt-3" id="filterCollapse">
+            <hr>
+            <div class="row g-3">
+              <div class="col-xxl-3 col-lg-4 col-md-6">
+                <label class="form-label fw-semibold">Payment Method</label>
+                <select class="form-select" id="paymentMethodFilter">
+                  <option value="all">All Methods</option>
+                  <option value="instaPay">InstaPay</option>
+                  <option value="mobileWallet">Mobile Wallet</option>
+                  <option value="bankTransfer">Bank Transfer</option>
                 </select>
               </div>
-            </div> -->
 
-            <!-- <div class="col-xxl-2 col-sm-4">
-              <div class="input-light">
-                <select class="form-control" data-choices data-choices-search-false name="choices-amount-range" id="amountRange">
-                  <option value="">Amount Range</option>
-                  <option value="all" selected>All</option>
-                  <option value="0-1000">$0 - $1,000</option>
-                  <option value="1000-5000">$1,000 - $5,000</option>
-                  <option value="5000-10000">$5,000 - $10,000</option>
-                  <option value="10000+">$10,000+</option>
+              <div class="col-xxl-3 col-lg-4 col-md-6">
+                <label class="form-label fw-semibold">Business Type</label>
+                <select class="form-select" id="businessTypeFilter">
+                  <option value="all">All Types</option>
+                  <option value="individual">Individual</option>
+                  <option value="company">Company</option>
+                  <option value="enterprise">Enterprise</option>
                 </select>
               </div>
-            </div> -->
 
-            <div class="col-xxl-2 col-sm-4">
-              <button type="button" class="btn btn-primary w-100" onclick="SearchData();">
-                <i class="ri-equalizer-fill me-1 align-bottom"></i> Apply Filters
-              </button>
+              <div class="col-xxl-3 col-lg-4 col-md-6">
+                <label class="form-label fw-semibold">Industry</label>
+                <select class="form-select" id="industryFilter">
+                  <option value="all">All Industries</option>
+                  <option value="retail">Retail</option>
+                  <option value="food">Food & Beverage</option>
+                  <option value="fashion">Fashion</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="healthcare">Healthcare</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="col-xxl-3 col-lg-4 col-md-6">
+                <label class="form-label fw-semibold">City</label>
+                <select class="form-select" id="cityFilter">
+                  <option value="all">All Cities</option>
+                  <option value="cairo">Cairo</option>
+                  <option value="alexandria">Alexandria</option>
+                  <option value="giza">Giza</option>
+                  <option value="shubra">Shubra</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="col-xxl-3 col-lg-4 col-md-6">
+                <label class="form-label fw-semibold">Release Type</label>
+                <select class="form-select" id="releaseTypeFilter">
+                  <option value="all">All Types</option>
+                  <option value="standard">Standard Release</option>
+                  <option value="express">Express Release</option>
+                  <option value="bulk">Bulk Release</option>
+                </select>
+              </div>
+
+              <div class="col-xxl-3 col-lg-4 col-md-6">
+                <label class="form-label fw-semibold">Sort By</label>
+                <select class="form-select" id="sortByFilter">
+                  <option value="createdAt">Created Date</option>
+                  <option value="amount">Amount</option>
+                  <option value="scheduledReleaseDate">Release Date</option>
+                  <option value="business.name">Business Name</option>
+                  <option value="releaseStatus">Status</option>
+                </select>
+              </div>
+
+              <div class="col-xxl-3 col-lg-4 col-md-6">
+                <label class="form-label fw-semibold">Sort Order</label>
+                <select class="form-select" id="sortOrderFilter">
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
+              </div>
+
+              <div class="col-xxl-3 col-lg-4 col-md-6">
+                <label class="form-label fw-semibold">Records Per Page</label>
+                <select class="form-select" id="recordsPerPageFilter">
+                  <option value="10">10 Records</option>
+                  <option value="25" selected>25 Records</option>
+                  <option value="50">50 Records</option>
+                  <option value="100">100 Records</option>
+                </select>
+              </div>
             </div>
           </div>
         </form>
@@ -507,12 +706,40 @@
     <div class="card" id="releasesList">
       <div class="card-header border-0 bg-white">
         <div class="d-flex align-items-center justify-content-between">
-          <h5 class="card-title mb-0">Payment Releases</h5>
-          <!-- <div>
-            <button type="button" class="btn btn-soft-primary btn-sm" id="bulkReleaseBtn">
-              <i class="ri-money-dollar-circle-line align-middle me-1"></i> Bulk Release
+          <div>
+            <h5 class="card-title mb-0">
+              <i class="ri-money-dollar-circle-line me-2"></i>Payment Releases
+            </h5>
+            <p class="text-muted mb-0 small">Manage and process business payment releases</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="bulkActionsBtn" onclick="showBulkActions()" disabled>
+              <i class="ri-checkbox-multiple-line me-1"></i> Bulk Actions
             </button>
-          </div> -->
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="scheduleBulkRelease()">
+              <i class="ri-calendar-schedule-line me-1"></i> Schedule Bulk
+            </button>
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="ri-more-2-line me-1"></i> More
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="refreshData()">
+                  <i class="ri-refresh-line me-2"></i>Refresh Data
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="exportToExcel()">
+                  <i class="ri-file-excel-2-line me-2"></i>Export Excel
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="exportToPDF()">
+                  <i class="ri-file-pdf-line me-2"></i>Export PDF
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" onclick="viewAnalytics()">
+                  <i class="ri-bar-chart-line me-2"></i>View Analytics
+                </a></li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -527,11 +754,13 @@
                   </div>
                 </th>
                 <th class=" text-uppercase" >Release ID</th>
-                <th class=" text-uppercase" >Business</th>
-                <th class=" text-uppercase" >Amount</th>
+                <th class=" text-uppercase" >Business Details</th>
+                <th class=" text-uppercase" >Contact Info</th>
+                <th class=" text-uppercase" >Payment Method</th>
+                <th class=" text-uppercase" >Amount (EGP)</th>
                 <th class=" text-uppercase" >Release Date</th>
                 <th class=" text-uppercase" >Status</th>
-                <th class=" text-uppercase">Action</th>
+                <th class=" text-uppercase">Actions</th>
               </tr>
             </thead>
             <tbody class="list form-check-all" id="tBodyReleaseList">
@@ -818,7 +1047,7 @@
           <div class="mb-3">
             <label for="releaseAmount" class="form-label">Total Amount to Release</label>
             <div class="input-group">
-              <span class="input-group-text">$</span>
+              <span class="input-group-text">EGP</span>
               <input type="text" class="form-control" id="releaseAmount" name="releaseAmount" placeholder="Enter amount" readonly>
             </div>
           </div>
@@ -833,6 +1062,66 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- View Release Details Modal -->
+<div class="modal fade" id="viewDetailsModal" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="viewDetailsModalLabel">
+          <i class="ri-file-list-3-line me-2"></i>Release Details
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="releaseDetailsContent">
+        <!-- Content will be populated dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="printDetailsBtn">
+          <i class="ri-printer-line me-1"></i> Print Details
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Actions Modal -->
+<div class="modal fade" id="bulkActionsModal" tabindex="-1" aria-labelledby="bulkActionsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bulkActionsModalLabel">Bulk Actions</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <lord-icon src="https://cdn.lordicon.com/akuwjdzh.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:100px;height:100px">
+          </lord-icon>
+          <h4 class="mb-3 mt-4">Bulk Operations</h4>
+          <p class="text-muted mb-4">You have selected <span id="selectedCount" class="fw-semibold text-primary">0</span> releases for bulk operations.</p>
+        </div>
+        <div class="d-grid gap-2">
+          <button type="button" class="btn btn-success" onclick="bulkRelease()">
+            <i class="ri-money-dollar-circle-line me-1"></i> Release Selected
+          </button>
+          <button type="button" class="btn btn-info" onclick="bulkSchedule()">
+            <i class="ri-calendar-line me-1"></i> Schedule Selected
+          </button>
+          <button type="button" class="btn btn-warning" onclick="bulkReschedule()">
+            <i class="ri-time-line me-1"></i> Reschedule Selected
+          </button>
+          <button type="button" class="btn btn-danger" onclick="bulkCancel()">
+            <i class="ri-close-circle-line me-1"></i> Cancel Selected
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -937,37 +1226,37 @@
 
     // Helper function to get action buttons
     function getActionButtons(release) {
+      const showDetailsBtn = `<button type="button" class="btn btn-outline-info btn-sm btn-action" data-release-id="${release._id}" onclick="viewReleaseDetails('${release._id}')">
+        <i class="ri-eye-line me-1"></i> Show Details
+      </button>`;
+
       if (release.releaseStatus === 'pending') {
         return `
+          ${showDetailsBtn}
           <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="${release._id}" onclick="releaseNow('${release._id}', '${release.business.brandInfo.brandName}', '${release.amount}')">
-            Release Now
+            <i class="ri-money-dollar-circle-line me-1"></i> Release Now
           </button>
-          <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="${release._id}" onclick="showRescheduleModal('${release._id}', '${release.business.brandInfo.brandName}', '${release.releaseId}')">
-            Schedule Release
+          <button type="button" class="btn btn-success btn-sm btn-action" data-release-id="${release._id}" onclick="showRescheduleModal('${release._id}', '${release.business.brandInfo.brandName}', '${release.releaseId}')">
+            <i class="ri-calendar-line me-1"></i> Schedule
           </button>
-        
         `;
       } else if (release.releaseStatus === 'scheduled') {
         return `
-            <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="${release._id}" onclick="releaseNow('${release._id}', '${release.business.brandInfo.brandName}', '${release.amount}')">
-              Release Now
-            </button>
-     
-          <button type="button" class="btn btn-soft-secondary btn-sm btn-action" data-release-id="${release._id}" onclick="showRescheduleModal('${release._id}', '${release.business.brandInfo.brandName}', '${release.releaseId}')">
-           Reschedule
+          ${showDetailsBtn}
+          <button type="button" class="btn btn-primary btn-sm btn-action" data-release-id="${release._id}" onclick="releaseNow('${release._id}', '${release.business.brandInfo.brandName}', '${release.amount}')">
+            <i class="ri-money-dollar-circle-line me-1"></i> Release Now
+          </button>
+          <button type="button" class="btn btn-warning btn-sm btn-action" data-release-id="${release._id}" onclick="showRescheduleModal('${release._id}', '${release.business.brandInfo.brandName}', '${release.releaseId}')">
+            <i class="ri-calendar-schedule-line me-1"></i> Reschedule
           </button>
         `;
       } else if (release.releaseStatus === 'released') {
         return `
-          <button type="button" class="btn btn-soft-info btn-sm btn-action" data-release-id="${release._id}">
-            View Details
-          </button>
+          ${showDetailsBtn}
         `;
       } else {
         return `
-          <button type="button" class="btn btn-soft-info btn-sm btn-action" data-release-id="${release._id}">
-            View Details
-          </button>
+          ${showDetailsBtn}
           <button type="button" class="btn btn-soft-success btn-sm btn-action" data-bs-toggle="modal" data-bs-target="#rescheduleModal" data-release-id="${release._id}">
             Reschedule
           </button>
@@ -1127,22 +1416,49 @@
         console.log(release)
         const row = document.createElement('tr');
         console.log(release.business)
+        
+        // Format payment method details
+        const paymentMethod = formatPaymentMethod(release.business.paymentMethod);
+        const contactInfo = formatContactInfo(release.business);
+        const businessDetails = formatBusinessDetails(release.business);
+        
         row.innerHTML = `
               <td>
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox">
+                    <input class="form-check-input" type="checkbox" data-release-id="${release._id}">
                   </div>
                 </td>
-                <td><a href="#" class="fw-medium link-primary">#${release.releaseId}</a></td>
                 <td>
-                  <div class="business-name">
-                    <span>${release.business.brandInfo.brandName}</span>
+                  <div class="fw-medium link-primary">#${release.releaseId}</div>
+                  <small class="text-muted">${release.releaseType || 'Standard Release'}</small>
+                </td>
+                <td>
+                  <div class="business-details">
+                    <div class="fw-semibold">${release.business.brandInfo?.brandName || release.business.name || 'N/A'}</div>
+                    <div class="text-muted small">${businessDetails}</div>
                   </div>
                 </td>
-                <td>$${release.amount.toFixed(2)}</td>
+                <td>
+                  <div class="contact-info">
+                    <div class="small"><i class="ri-mail-line me-1"></i>${release.business.email || 'N/A'}</div>
+                    <div class="small"><i class="ri-phone-line me-1"></i>${release.business.phoneNumber || 'N/A'}</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="payment-method">
+                    ${paymentMethod}
+                  </div>
+                </td>
+                <td>
+                  <div class="amount-info">
+                    <div class="fw-bold text-success">${release.amount.toFixed(2)} EGP</div>
+                    <small class="text-muted">${release.transactionReferences?.length || 0} transactions</small>
+                  </div>
+                </td>
                 <td>
                   <div class="release-date-info">
-                    <i class="ri-calendar-event-line"></i> ${release.scheduledReleaseDate ? new Date(release.scheduledReleaseDate).toLocaleDateString() : 'Pending'}
+                    <i class="ri-calendar-event-line"></i> 
+                    <div>${release.scheduledReleaseDate ? new Date(release.scheduledReleaseDate).toLocaleDateString() : (release.releaseStatus === 'released' ? new Date(release.updatedAt).toLocaleDateString() : (release.releaseStatus === 'scheduled' ? 'Scheduled' : 'Pending'))}</div>
                   </div>
                 </td>
                 <td>
@@ -1151,15 +1467,77 @@
                   </span>
                 </td>
                 <td>
-                  <div class="d-flex gap-2">
+                  <div class="d-flex gap-1 flex-wrap">
                     ${getActionButtons(release)}
                   </div>
                 </td>
               `;
         tableBody.appendChild(row);
       });
+    }
 
+    function formatPaymentMethod(paymentMethod) {
+      if (!paymentMethod || !paymentMethod.paymentChoice) {
+        return '<span class="text-muted">Not Set</span>';
+      }
 
+      const choice = paymentMethod.paymentChoice;
+      const details = paymentMethod.details;
+
+      switch (choice) {
+        case 'instaPay':
+          return `
+            <div class="payment-details">
+              <div class="fw-semibold text-primary">InstaPay</div>
+              <div class="small text-muted">${details?.IPAorPhoneNumber || 'N/A'}</div>
+            </div>
+          `;
+        case 'mobileWallet':
+          return `
+            <div class="payment-details">
+              <div class="fw-semibold text-info">Mobile Wallet</div>
+              <div class="small text-muted">${details?.mobileWalletNumber || 'N/A'}</div>
+            </div>
+          `;
+        case 'bankTransfer':
+          return `
+            <div class="payment-details">
+              <div class="fw-semibold text-success">Bank Transfer</div>
+              <div class="small text-muted">${details?.bankName || 'N/A'}</div>
+              <div class="small text-muted">IBAN: ${details?.IBAN || 'N/A'}</div>
+              <div class="small text-muted">Account: ${details?.accountName || 'N/A'}</div>
+            </div>
+          `;
+        default:
+          return '<span class="text-muted">Unknown</span>';
+      }
+    }
+
+    function formatContactInfo(business) {
+      return `
+        <div class="contact-details">
+          <div><strong>Email:</strong> ${business.email || 'N/A'}</div>
+          <div><strong>Phone:</strong> ${business.phoneNumber || 'N/A'}</div>
+        </div>
+      `;
+    }
+
+    function formatBusinessDetails(business) {
+      const details = [];
+      
+      if (business.brandInfo?.industry) {
+        details.push(`Industry: ${business.brandInfo.industry}`);
+      }
+      
+      if (business.brandType?.brandChoice) {
+        details.push(`Type: ${business.brandType.brandChoice}`);
+      }
+      
+      if (business.pickUpAdress?.city) {
+        details.push(`City: ${business.pickUpAdress.city}`);
+      }
+      
+      return details.join(' • ') || 'No additional details';
     }
 
 
@@ -1194,6 +1572,1116 @@
     document.getElementById('releaseAmount').value = releaseAmount;
     modal.show();
   }
+
+  // Excel Export Function
+  async function exportToExcel() {
+    try {
+      Swal.fire({
+        title: 'Preparing Excel Export',
+        text: 'Please wait while we prepare your data...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch('/admin/export-releases-excel', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `Business_Payments_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        Swal.fire({
+          title: 'Export Successful!',
+          text: 'Excel file has been downloaded successfully.',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        throw new Error('Failed to export data');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      Swal.fire({
+        title: 'Export Failed',
+        text: 'Failed to export data. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  // PDF Export Function
+  async function exportToPDF() {
+    try {
+      Swal.fire({
+        title: 'Preparing PDF Export',
+        text: 'Please wait while we prepare your data...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch('/admin/export-releases-pdf', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `Business_Payments_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        Swal.fire({
+          title: 'Export Successful!',
+          text: 'PDF report has been downloaded successfully.',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        throw new Error('Failed to export data');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      Swal.fire({
+        title: 'Export Failed',
+        text: 'Failed to export data. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  // View Release Details Function
+  async function viewReleaseDetails(releaseId) {
+    try {
+      Swal.fire({
+        title: 'Loading Details',
+        text: 'Please wait while we fetch the release details...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch(`/admin/get-release-details/${releaseId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Release details response:', result);
+        if (result.success && result.data) {
+          console.log('Release data:', result.data);
+          console.log('Business data:', result.data.business);
+          try {
+            populateReleaseDetailsModal(result.data);
+            const modal = new bootstrap.Modal(document.getElementById('viewDetailsModal'));
+            modal.show();
+            Swal.close();
+          } catch (modalError) {
+            console.error('Error populating modal:', modalError);
+            Swal.fire({
+              title: 'Error',
+              text: 'Failed to display release details. Please try again.',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+          }
+        } else {
+          throw new Error(result.error || 'Invalid response format');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch release details');
+      }
+    } catch (error) {
+      console.error('Error fetching release details:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to fetch release details. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  // Populate Release Details Modal
+  function populateReleaseDetailsModal(release) {
+    if (!release) {
+      console.error('Release data is null or undefined');
+      return;
+    }
+    
+    console.log('Populating modal with release:', release);
+    console.log('Business object:', release.business);
+    
+    const content = document.getElementById('releaseDetailsContent');
+    const business = release.business || {};
+    const paymentMethod = business.paymentMethod || null;
+    
+    console.log('Business after fallback:', business);
+    console.log('Payment method:', paymentMethod);
+
+    let paymentDetails = 'Not Set';
+    if (paymentMethod && paymentMethod.paymentChoice) {
+      switch (paymentMethod.paymentChoice) {
+        case 'instaPay':
+          paymentDetails = `InstaPay - ${paymentMethod.details?.IPAorPhoneNumber || 'N/A'}`;
+          break;
+        case 'mobileWallet':
+          paymentDetails = `Mobile Wallet - ${paymentMethod.details?.mobileWalletNumber || 'N/A'}`;
+          break;
+        case 'bankTransfer':
+          paymentDetails = `Bank Transfer - ${paymentMethod.details?.bankName || 'N/A'}, IBAN: ${paymentMethod.details?.IBAN || 'N/A'}`;
+          break;
+      }
+    }
+
+    // Calculate transaction summary
+    let totalCashCycle = 0;
+    let totalFees = 0;
+    let totalPickupFees = 0;
+    let totalReturnFees = 0;
+    let totalCancellationFees = 0;
+    let totalRefunds = 0;
+    
+    if (release.transactionReferences && release.transactionReferences.length > 0) {
+      release.transactionReferences.forEach(transaction => {
+        if (transaction) {
+          switch (transaction.transactionType) {
+            case 'cashCycle':
+              totalCashCycle += transaction.transactionAmount;
+              break;
+            case 'fees':
+              totalFees += Math.abs(transaction.transactionAmount);
+              break;
+            case 'pickupFees':
+              totalPickupFees += Math.abs(transaction.transactionAmount);
+              break;
+            case 'returnFees':
+            case 'returnCompletedFees':
+              totalReturnFees += Math.abs(transaction.transactionAmount);
+              break;
+            case 'cancellationFees':
+              totalCancellationFees += Math.abs(transaction.transactionAmount);
+              break;
+            case 'refund':
+              totalRefunds += transaction.transactionAmount;
+              break;
+          }
+        }
+      });
+    }
+
+    content.innerHTML = `
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card border-0 bg-light">
+            <div class="card-body">
+              <h6 class="card-title text-primary">
+                <i class="ri-file-list-3-line me-2"></i>Release Information
+              </h6>
+              <div class="mb-2">
+                <strong>Release ID:</strong> ${release.releaseId}
+              </div>
+              <div class="mb-2">
+                <strong>Status:</strong> 
+                <span class="badge bg-${getStatusColor(release.releaseStatus)}">${release.releaseStatus}</span>
+              </div>
+              <div class="mb-2">
+                <strong>Total Amount:</strong> <span class="text-success fw-bold">${release.amount.toFixed(2)} EGP</span>
+              </div>
+              <div class="mb-2">
+                <strong>Transactions Count:</strong> ${release.transactionReferences?.length || 0}
+              </div>
+              <div class="mb-2">
+                <strong>Created Date:</strong> ${new Date(release.createdAt).toLocaleDateString()}
+              </div>
+              <div class="mb-2">
+                <strong>Scheduled Date:</strong> ${release.scheduledReleaseDate ? new Date(release.scheduledReleaseDate).toLocaleDateString() : 'Not Scheduled'}
+              </div>
+              ${release.releaseStatus === 'released' ? `<div class="mb-2"><strong>Released Date:</strong> ${new Date(release.updatedAt).toLocaleDateString()}</div>` : ''}
+              ${release.releaseNotes ? `<div class="mb-2"><strong>Notes:</strong> ${release.releaseNotes}</div>` : ''}
+              ${release.reason ? `<div class="mb-2"><strong>Reason:</strong> ${release.reason}</div>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card border-0 bg-light">
+            <div class="card-body">
+              <h6 class="card-title text-primary">
+                <i class="ri-building-line me-2"></i>Business Information
+              </h6>
+              <div class="mb-2">
+                <strong>Business Name:</strong> ${business?.brandInfo?.brandName || business?.name || 'N/A'}
+              </div>
+              <div class="mb-2">
+                <strong>Owner Name:</strong> ${business?.name || 'N/A'}
+              </div>
+              <div class="mb-2">
+                <strong>Email:</strong> ${business?.email || 'N/A'}
+              </div>
+              <div class="mb-2">
+                <strong>Phone:</strong> ${business?.phoneNumber || 'N/A'}
+              </div>
+              <div class="mb-2">
+                <strong>Industry:</strong> ${business?.brandInfo?.industry || 'N/A'}
+              </div>
+              <div class="mb-2">
+                <strong>Business Type:</strong> ${business?.brandType?.brandChoice || 'N/A'}
+              </div>
+              <div class="mb-2">
+                <strong>City:</strong> ${business?.pickUpAdress?.city || 'N/A'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <div class="card border-0 bg-light">
+            <div class="card-body">
+              <h6 class="card-title text-primary">
+                <i class="ri-bank-card-line me-2"></i>Payment Information
+              </h6>
+              <div class="mb-2">
+                <strong>Payment Method:</strong> ${paymentDetails}
+              </div>
+              ${paymentMethod && paymentMethod.details ? `
+                <div class="mt-3">
+                  <h6 class="text-muted">Payment Details:</h6>
+                  ${Object.entries(paymentMethod.details).map(([key, value]) => 
+                    `<div class="mb-1"><strong>${key}:</strong> ${value || 'N/A'}</div>`
+                  ).join('')}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card border-0 bg-light">
+            <div class="card-body">
+              <h6 class="card-title text-primary">
+                <i class="ri-calculator-line me-2"></i>Financial Summary
+              </h6>
+              <div class="mb-2">
+                <strong>Cash Cycle Earnings:</strong> <span class="text-success fw-bold">+${totalCashCycle.toFixed(2)} EGP</span>
+              </div>
+              <div class="mb-2">
+                <strong>Service Fees:</strong> <span class="text-danger fw-bold">-${totalFees.toFixed(2)} EGP</span>
+              </div>
+              <div class="mb-2">
+                <strong>Pickup Fees:</strong> <span class="text-danger fw-bold">-${totalPickupFees.toFixed(2)} EGP</span>
+              </div>
+              <div class="mb-2">
+                <strong>Return Fees:</strong> <span class="text-danger fw-bold">-${totalReturnFees.toFixed(2)} EGP</span>
+              </div>
+              <div class="mb-2">
+                <strong>Cancellation Fees:</strong> <span class="text-danger fw-bold">-${totalCancellationFees.toFixed(2)} EGP</span>
+              </div>
+              ${totalRefunds > 0 ? `<div class="mb-2"><strong>Refunds:</strong> <span class="text-success fw-bold">+${totalRefunds.toFixed(2)} EGP</span></div>` : ''}
+              <hr>
+              <div class="mb-2">
+                <strong>Net Release Amount:</strong> <span class="text-primary fw-bold fs-5">${release.amount.toFixed(2)} EGP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      ${release.transactionReferences && release.transactionReferences.length > 0 ? `
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card border-0 bg-light">
+              <div class="card-body">
+                <h6 class="card-title text-primary mb-3">
+                  <i class="ri-exchange-line me-2"></i>Detailed Transaction Breakdown (${release.transactionReferences.length} transactions)
+                </h6>
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Transaction ID</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Orders</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+      ${release.transactionReferences.map(transaction => {
+        if (!transaction) return '';
+        const isPositive = ['cashCycle', 'refund', 'deposit'].includes(transaction.transactionType);
+        const orderCount = transaction.orderReferences ? transaction.orderReferences.length : 0;
+        const pickupCount = transaction.pickupReferences ? transaction.pickupReferences.length : 0;
+                        
+                        return `
+                          <tr>
+                            <td>
+                              <div class="fw-medium text-primary">${transaction.transactionId}</div>
+                              <small class="text-muted">${transaction.processingBatchId ? `Batch: ${transaction.processingBatchId}` : ''}</small>
+                            </td>
+                            <td>
+                              <span class="badge bg-${isPositive ? 'success' : 'danger'}">
+                                ${getTransactionTypeLabel(transaction.transactionType)}
+                              </span>
+                              ${transaction.transactionNotes ? `<br><small class="text-muted mt-1 d-block">${transaction.transactionNotes.substring(0, 50)}${transaction.transactionNotes.length > 50 ? '...' : ''}</small>` : ''}
+                            </td>
+                            <td>
+                              <span class="fw-bold ${isPositive ? 'text-success' : 'text-danger'}">
+                                ${transaction.transactionAmount > 0 ? '+' : ''}${transaction.transactionAmount} EGP
+                              </span>
+                            </td>
+                            <td>
+                              <div class="small">
+                                ${orderCount > 0 ? `<div><i class="ri-package-line me-1"></i>${orderCount} Orders</div>` : ''}
+                                ${pickupCount > 0 ? `<div><i class="ri-truck-line me-1"></i>${pickupCount} Pickups</div>` : ''}
+                                ${orderCount === 0 && pickupCount === 0 ? '<span class="text-muted">No items</span>' : ''}
+                              </div>
+                            </td>
+                            <td>
+                              <small class="text-muted">${new Date(transaction.createdAt).toLocaleDateString()}</small>
+                              <br><small class="text-muted">${new Date(transaction.createdAt).toLocaleTimeString()}</small>
+                            </td>
+                            <td>
+                              <span class="badge bg-${transaction.settled ? 'success' : 'warning'}">
+                                ${transaction.settled ? 'Settled' : 'Pending'}
+                              </span>
+                            </td>
+                            <td>
+                              <button class="btn btn-sm btn-outline-primary" onclick="viewDetailedTransactionInfo('${transaction._id}')">
+                                <i class="ri-eye-line"></i> Details
+                              </button>
+                            </td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+    `;
+  }
+
+  // Get Status Color
+  function getStatusColor(status) {
+    switch (status.toLowerCase()) {
+      case 'released': return 'success';
+      case 'scheduled': return 'info';
+      case 'pending': return 'warning';
+      case 'canceled': return 'danger';
+      default: return 'secondary';
+    }
+  }
+
+  // Get Transaction Type Label
+  function getTransactionTypeLabel(type) {
+    const labels = {
+      'cashCycle': 'Cash Cycle',
+      'fees': 'Service Fees',
+      'pickupFees': 'Pickup Fees',
+      'flyersFees': 'Flyers Fees',
+      'refund': 'Refund',
+      'deposit': 'Deposit',
+      'withdrawal': 'Withdrawal'
+    };
+    return labels[type] || type;
+  }
+
+  // View Transaction Details (Updated)
+  async function viewTransactionDetails(transactionId) {
+    try {
+      Swal.fire({
+        title: 'Loading Transaction Details',
+        text: 'Please wait while we fetch the transaction details...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch(`/admin/get-transaction-details/${transactionId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.transaction) {
+          showDetailedTransactionModal(result.transaction);
+          Swal.close();
+        } else {
+          throw new Error(result.error || 'Invalid response format');
+        }
+      } else {
+        throw new Error('Failed to fetch transaction details');
+      }
+    } catch (error) {
+      console.error('Error fetching transaction details:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to fetch transaction details. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  // View Detailed Transaction Info (New function)
+  async function viewDetailedTransactionInfo(transactionId) {
+    try {
+      Swal.fire({
+        title: 'Loading Detailed Transaction Information',
+        text: 'Please wait while we fetch comprehensive transaction details...',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch(`/admin/get-detailed-transaction-info/${transactionId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          showComprehensiveTransactionModal(result.data);
+          Swal.close();
+        } else {
+          throw new Error(result.error || 'Invalid response format');
+        }
+      } else {
+        throw new Error('Failed to fetch detailed transaction information');
+      }
+    } catch (error) {
+      console.error('Error fetching detailed transaction info:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to fetch detailed transaction information. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  // Show Transaction Details Modal (Updated for Admin)
+  function showDetailedTransactionModal(transaction) {
+    const isPositive = ['cashCycle', 'refund', 'deposit'].includes(transaction.transactionType);
+    const amountClass = isPositive ? 'text-success' : 'text-danger';
+    const amountSign = transaction.transactionAmount > 0 ? '+' : '';
+    
+    let ordersHtml = '';
+    if (transaction.orderReferences && transaction.orderReferences.length > 0) {
+      ordersHtml = `
+        <div class="mt-3">
+          <h6 class="fw-bold text-primary mb-2">
+            <i class="ri-package-line me-2"></i> Orders (${transaction.orderReferences.length})
+          </h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-borderless">
+              <thead>
+                <tr class="bg-light">
+                  <th>Order ID</th>
+                  <th>Amount</th>
+                  <th>Fees</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${transaction.orderReferences.map(order => `
+                  <tr>
+                    <td class="fw-medium">${order.orderNumber}</td>
+                    <td>${order.orderAmount} EGP</td>
+                    <td>${order.orderFees} EGP</td>
+                    <td class="text-muted">${new Date(order.completedDate).toLocaleDateString()}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    let pickupsHtml = '';
+    if (transaction.pickupReferences && transaction.pickupReferences.length > 0) {
+      pickupsHtml = `
+        <div class="mt-3">
+          <h6 class="fw-bold text-warning mb-2">
+            <i class="ri-truck-line me-2"></i> Pickups (${transaction.pickupReferences.length})
+          </h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-borderless">
+              <thead>
+                <tr class="bg-light">
+                  <th>Pickup ID</th>
+                  <th>Fees</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${transaction.pickupReferences.map(pickup => `
+                  <tr>
+                    <td class="fw-medium">${pickup.pickupNumber}</td>
+                    <td>${pickup.pickupFees} EGP</td>
+                    <td class="text-muted">${new Date(pickup.completedDate).toLocaleDateString()}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    Swal.fire({
+      title: `<i class="ri-exchange-line me-2"></i>Transaction Details`,
+      html: `
+        <div class="transaction-details-modal">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p class="mb-1"><strong>Transaction ID:</strong> ${transaction.transactionId}</p>
+              <p class="mb-1"><strong>Date:</strong> ${new Date(transaction.createdAt).toLocaleString()}</p>
+              <p class="mb-1"><strong>Type:</strong> ${getTransactionTypeLabel(transaction.transactionType)}</p>
+              ${transaction.processingBatchId ? `<p class="mb-1"><strong>Batch ID:</strong> ${transaction.processingBatchId}</p>` : ''}
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1"><strong>Amount:</strong> <span class="${amountClass} fw-bold">${amountSign}${transaction.transactionAmount} EGP</span></p>
+              <p class="mb-1"><strong>Settled:</strong> <span class="badge bg-${transaction.settled ? 'success' : 'warning'}">${transaction.settled ? 'Yes' : 'No'}</span></p>
+              <p class="mb-1"><strong>Updated:</strong> ${new Date(transaction.updatedAt).toLocaleString()}</p>
+            </div>
+          </div>
+          
+          ${transaction.transactionNotes ? `
+            <div class="alert alert-info">
+              <strong>Notes:</strong> ${transaction.transactionNotes}
+            </div>
+          ` : ''}
+          
+          ${ordersHtml}
+          ${pickupsHtml}
+        </div>
+      `,
+      width: '900px',
+      showConfirmButton: true,
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#3B82F6'
+    });
+  }
+
+  // Show Comprehensive Transaction Modal (New function for detailed info)
+  function showComprehensiveTransactionModal(data) {
+    const { transaction, orders, pickups, business } = data;
+    
+    if (!transaction) {
+      Swal.fire({
+        title: 'Error',
+        text: 'Transaction data not found',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    const isPositive = ['cashCycle', 'refund', 'deposit'].includes(transaction.transactionType);
+    const amountClass = isPositive ? 'text-success' : 'text-danger';
+    const amountSign = transaction.transactionAmount > 0 ? '+' : '';
+
+    // Build comprehensive orders section
+    let ordersHtml = '';
+    if (orders && orders.length > 0) {
+      ordersHtml = `
+        <div class="mt-4">
+          <h6 class="fw-bold text-primary mb-3">
+            <i class="ri-package-line me-2"></i> Related Orders (${orders.length})
+          </h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Order Number</th>
+                  <th>Status</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Fees</th>
+                  <th>Customer</th>
+                  <th>Completed Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orders.map(order => `
+                  <tr>
+                    <td class="fw-medium">${order.orderNumber}</td>
+                    <td><span class="badge bg-${getOrderStatusColor(order.orderStatus)}">${order.orderStatus}</span></td>
+                    <td><span class="badge bg-info">${order.orderShipping?.orderType || 'N/A'}</span></td>
+                    <td>${order.orderShipping?.amount || 0} EGP</td>
+                    <td>${order.orderFees} EGP</td>
+                    <td>
+                      <div class="small">
+                        <div><strong>${order.orderCustomer?.fullName || 'N/A'}</strong></div>
+                        <div class="text-muted">${order.orderCustomer?.phoneNumber || 'N/A'}</div>
+                      </div>
+                    </td>
+                    <td>${order.completedDate ? new Date(order.completedDate).toLocaleDateString() : 'N/A'}</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails('${order._id}')">
+                        <i class="ri-eye-line"></i> View
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // Build comprehensive pickups section
+    let pickupsHtml = '';
+    if (pickups && pickups.length > 0) {
+      pickupsHtml = `
+        <div class="mt-4">
+          <h6 class="fw-bold text-warning mb-3">
+            <i class="ri-truck-line me-2"></i> Related Pickups (${pickups.length})
+          </h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Pickup Number</th>
+                  <th>Status</th>
+                  <th>Orders Count</th>
+                  <th>Fees</th>
+                  <th>Courier</th>
+                  <th>Completed Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pickups.map(pickup => `
+                  <tr>
+                    <td class="fw-medium">${pickup.pickupNumber}</td>
+                    <td><span class="badge bg-${getPickupStatusColor(pickup.picikupStatus)}">${pickup.picikupStatus}</span></td>
+                    <td>${pickup.ordersPickedUp?.length || 0}</td>
+                    <td>${pickup.pickupFees} EGP</td>
+                    <td>${pickup.courierAssigned?.name || 'N/A'}</td>
+                    <td>${pickup.completedAt ? new Date(pickup.completedAt).toLocaleDateString() : 'N/A'}</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="viewPickupDetails('${pickup._id}')">
+                        <i class="ri-eye-line"></i> View
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // Business information
+    let businessHtml = '';
+    if (business) {
+      businessHtml = `
+        <div class="mt-4">
+          <h6 class="fw-bold text-info mb-3">
+            <i class="ri-building-line me-2"></i> Business Information
+          </h6>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <div class="mb-2"><strong>Business Name:</strong> ${business.brandInfo?.brandName || business.name || 'N/A'}</div>
+                  <div class="mb-2"><strong>Owner:</strong> ${business.name || 'N/A'}</div>
+                  <div class="mb-2"><strong>Email:</strong> ${business.email || 'N/A'}</div>
+                  <div class="mb-2"><strong>Phone:</strong> ${business.phoneNumber || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <div class="mb-2"><strong>Industry:</strong> ${business.brandInfo?.industry || 'N/A'}</div>
+                  <div class="mb-2"><strong>Type:</strong> ${business.brandType?.brandChoice || 'N/A'}</div>
+                  <div class="mb-2"><strong>City:</strong> ${business.pickUpAdress?.city || 'N/A'}</div>
+                  <div class="mb-2"><strong>Balance:</strong> ${business.balance || 0} EGP</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    Swal.fire({
+      title: `<i class="ri-exchange-line me-2"></i>Comprehensive Transaction Information`,
+      html: `
+        <div class="comprehensive-transaction-modal">
+          <!-- Transaction Overview -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <div class="card bg-primary text-white">
+                <div class="card-body">
+                  <h6 class="card-title">
+                    <i class="ri-exchange-line me-2"></i>Transaction Overview
+                  </h6>
+                  <div class="mb-2"><strong>Transaction ID:</strong> ${transaction.transactionId}</div>
+                  <div class="mb-2"><strong>Type:</strong> ${getTransactionTypeLabel(transaction.transactionType)}</div>
+                  <div class="mb-2"><strong>Amount:</strong> <span class="fw-bold">${amountSign}${transaction.transactionAmount} EGP</span></div>
+                  <div class="mb-2"><strong>Status:</strong> <span class="badge bg-${transaction.settled ? 'success' : 'warning'}">${transaction.settled ? 'Settled' : 'Pending'}</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card bg-info text-white">
+                <div class="card-body">
+                  <h6 class="card-title">
+                    <i class="ri-calendar-line me-2"></i>Timeline
+                  </h6>
+                  <div class="mb-2"><strong>Created:</strong> ${new Date(transaction.createdAt).toLocaleString()}</div>
+                  <div class="mb-2"><strong>Updated:</strong> ${new Date(transaction.updatedAt).toLocaleString()}</div>
+                  ${transaction.processingBatchId ? `<div class="mb-2"><strong>Batch ID:</strong> ${transaction.processingBatchId}</div>` : ''}
+                  ${transaction.settlementStatus ? `<div class="mb-2"><strong>Settlement:</strong> ${transaction.settlementStatus}</div>` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          ${transaction.transactionNotes ? `
+            <div class="alert alert-info">
+              <strong><i class="ri-file-text-line me-2"></i>Transaction Notes:</strong><br>
+              ${transaction.transactionNotes}
+            </div>
+          ` : ''}
+
+          ${businessHtml}
+          ${ordersHtml}
+          ${pickupsHtml}
+        </div>
+      `,
+      width: '1200px',
+      showConfirmButton: true,
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#3B82F6',
+      customClass: {
+        popup: 'swal-wide'
+      }
+    });
+  }
+
+  // Helper functions for status colors
+  function getOrderStatusColor(status) {
+    switch (status) {
+      case 'completed': return 'success';
+      case 'canceled': return 'danger';
+      case 'returned': return 'warning';
+      case 'pendingPickup': return 'info';
+      default: return 'secondary';
+    }
+  }
+
+  function getPickupStatusColor(status) {
+    switch (status) {
+      case 'completed': return 'success';
+      case 'canceled': return 'danger';
+      case 'inProgress': return 'info';
+      case 'assigned': return 'warning';
+      default: return 'secondary';
+    }
+  }
+
+  // Placeholder functions for order and pickup details
+  function viewOrderDetails(orderId) {
+    Swal.fire({
+      title: 'Order Details',
+      text: `Viewing order details for: ${orderId}`,
+      icon: 'info',
+      confirmButtonText: 'OK'
+    });
+  }
+
+  function viewPickupDetails(pickupId) {
+    Swal.fire({
+      title: 'Pickup Details',
+      text: `Viewing pickup details for: ${pickupId}`,
+      icon: 'info',
+      confirmButtonText: 'OK'
+    });
+  }
+
+  // Apply Filters Function
+  function applyFilters() {
+    const filters = {
+      search: document.getElementById('searchInput').value,
+      status: document.getElementById('statusFilter').value,
+      amount: document.getElementById('amountFilter').value,
+      dateRange: document.getElementById('datepicker-range').value,
+      paymentMethod: document.getElementById('paymentMethodFilter').value,
+      businessType: document.getElementById('businessTypeFilter').value,
+      industry: document.getElementById('industryFilter').value,
+      city: document.getElementById('cityFilter').value,
+      releaseType: document.getElementById('releaseTypeFilter').value,
+      sortBy: document.getElementById('sortByFilter').value,
+      sortOrder: document.getElementById('sortOrderFilter').value,
+      recordsPerPage: document.getElementById('recordsPerPageFilter').value
+    };
+
+    // Update the fetchReleases call with filters
+    fetchReleasesWithFilters(filters);
+  }
+
+  // Clear Filters Function
+  function clearFilters() {
+    document.getElementById('filterForm').reset();
+    fetchReleases('all');
+  }
+
+  // Export Filtered Data
+  function exportFilteredData() {
+    const filters = {
+      search: document.getElementById('searchInput').value,
+      status: document.getElementById('statusFilter').value,
+      amount: document.getElementById('amountFilter').value,
+      dateRange: document.getElementById('datepicker-range').value,
+      paymentMethod: document.getElementById('paymentMethodFilter').value,
+      businessType: document.getElementById('businessTypeFilter').value,
+      industry: document.getElementById('industryFilter').value,
+      city: document.getElementById('cityFilter').value,
+      releaseType: document.getElementById('releaseTypeFilter').value
+    };
+
+    // Create query string from filters
+    const queryString = new URLSearchParams(filters).toString();
+    window.open(`/admin/export-releases-excel?${queryString}`, '_blank');
+  }
+
+  // Bulk Actions Functions
+  function showBulkActions() {
+    const selectedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+    if (selectedCount > 0) {
+      document.getElementById('selectedCount').textContent = selectedCount;
+      const modal = new bootstrap.Modal(document.getElementById('bulkActionsModal'));
+      modal.show();
+    }
+  }
+
+  function bulkRelease() {
+    const selectedIds = Array.from(document.querySelectorAll('tbody .form-check-input:checked'))
+      .map(checkbox => checkbox.getAttribute('data-release-id'));
+    
+    if (selectedIds.length > 0) {
+      Swal.fire({
+        title: 'Confirm Bulk Release',
+        text: `Are you sure you want to release funds for ${selectedIds.length} selected releases?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Release All',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Implement bulk release logic
+          console.log('Bulk releasing:', selectedIds);
+        }
+      });
+    }
+  }
+
+  function bulkSchedule() {
+    const selectedIds = Array.from(document.querySelectorAll('tbody .form-check-input:checked'))
+      .map(checkbox => checkbox.getAttribute('data-release-id'));
+    
+    if (selectedIds.length > 0) {
+      // Implement bulk schedule logic
+      console.log('Bulk scheduling:', selectedIds);
+    }
+  }
+
+  function bulkReschedule() {
+    const selectedIds = Array.from(document.querySelectorAll('tbody .form-check-input:checked'))
+      .map(checkbox => checkbox.getAttribute('data-release-id'));
+    
+    if (selectedIds.length > 0) {
+      // Implement bulk reschedule logic
+      console.log('Bulk rescheduling:', selectedIds);
+    }
+  }
+
+  function bulkCancel() {
+    const selectedIds = Array.from(document.querySelectorAll('tbody .form-check-input:checked'))
+      .map(checkbox => checkbox.getAttribute('data-release-id'));
+    
+    if (selectedIds.length > 0) {
+      Swal.fire({
+        title: 'Confirm Bulk Cancel',
+        text: `Are you sure you want to cancel ${selectedIds.length} selected releases?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Cancel All',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Implement bulk cancel logic
+          console.log('Bulk canceling:', selectedIds);
+        }
+      });
+    }
+  }
+
+  // Additional Functions
+  function scheduleBulkRelease() {
+    Swal.fire({
+      title: 'Schedule Bulk Release',
+      text: 'This feature will allow you to schedule multiple releases at once.',
+      icon: 'info',
+      confirmButtonText: 'OK'
+    });
+  }
+
+  function refreshData() {
+    fetchReleases('all');
+  }
+
+  function viewAnalytics() {
+    Swal.fire({
+      title: 'Analytics Dashboard',
+      text: 'This feature will show detailed analytics and reports.',
+      icon: 'info',
+      confirmButtonText: 'OK'
+    });
+  }
+
+  // Enhanced fetchReleases with filters
+  async function fetchReleasesWithFilters(filters) {
+    try {
+      document.querySelector('.noresult').style.display = 'none';
+      tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+      
+      const queryString = new URLSearchParams(filters).toString();
+      const response = await fetch(`/admin/get-release-all-data?${queryString}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data['releases'].length > 0) {
+        // Update stats
+        totalAvailable.textContent = parseFloat(data['totalFundsAvailable']).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        releaseDate.textContent = new Date(data['nextReleaseDate']).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        completeCount.textContent = data['totalPaymentsReleasedCount'];
+        completeFund.textContent = parseFloat(data['totalPaymentsReleased']).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })+ ' EGP';
+        pendingCount.textContent = data['paymentsPendingCount'];
+        pendingFund.textContent = parseFloat(data['paymentsPending']).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })+ ' EGP';
+        scheduledCount.textContent = data['scheduledReleasesCount'];
+        scheduledFund.textContent = parseFloat(data['scheduledReleases']).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })+ ' EGP';
+        
+        populateReleases(data['releases']);
+      } else {
+        tableBody.innerHTML = '';
+        document.querySelector('.noresult').style.display = 'block';
+      }
+    } catch (error) {
+      console.error('Error fetching releases:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to fetch release data. Please try again later.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  // Handle checkbox changes for bulk actions
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('form-check-input')) {
+      const selectedCount = document.querySelectorAll('tbody .form-check-input:checked').length;
+      const bulkActionsBtn = document.getElementById('bulkActionsBtn');
+      
+      if (selectedCount > 0) {
+        bulkActionsBtn.disabled = false;
+        bulkActionsBtn.innerHTML = `<i class="ri-checkbox-multiple-line me-1"></i> Bulk Actions (${selectedCount})`;
+      } else {
+        bulkActionsBtn.disabled = true;
+        bulkActionsBtn.innerHTML = `<i class="ri-checkbox-multiple-line me-1"></i> Bulk Actions`;
+      }
+    }
+  });
+
+  // Handle select all checkbox
+  document.addEventListener('change', function(e) {
+    if (e.target.id === 'checkAll') {
+      const isChecked = e.target.checked;
+      document.querySelectorAll('tbody .form-check-input').forEach(checkbox => {
+        checkbox.checked = isChecked;
+      });
+      
+      const selectedCount = isChecked ? document.querySelectorAll('tbody .form-check-input').length : 0;
+      const bulkActionsBtn = document.getElementById('bulkActionsBtn');
+      
+      if (selectedCount > 0) {
+        bulkActionsBtn.disabled = false;
+        bulkActionsBtn.innerHTML = `<i class="ri-checkbox-multiple-line me-1"></i> Bulk Actions (${selectedCount})`;
+      } else {
+        bulkActionsBtn.disabled = true;
+        bulkActionsBtn.innerHTML = `<i class="ri-checkbox-multiple-line me-1"></i> Bulk Actions`;
+      }
+    }
+  });
 
 
 
@@ -1532,4 +3020,5 @@
       showConfirmButton: false
     });
   }
+</script> -->
 </script> -->

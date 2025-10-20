@@ -1,0 +1,278 @@
+{
+  "info": {
+    "name": "Now-Shipping API - v1",
+    "_postman_id": "now-shipping-collection",
+    "description": "Postman collection for Now-Shipping mobile API (v1).\nVariables: {{baseUrl}} (e.g., http://localhost:6098), {{jwt}} (Bearer token)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:6098/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "jwt",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints (login/register/refresh token) - add as needed",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"business@example.com\",\n  \"password\": \"secret\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth","login"] }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "body": "{\\n  \\\"token\\\": \\\"<jwt-token>\\\",\\n  \\\"user\\\": { \\\"_id\\\": \\\"<id>\\\", \\\"email\\\": \\\"business@example.com\\\" }\\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{ \"message\": \"Invalid credentials\" }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Business - Profile",
+      "item": [
+        {
+          "name": "Get User Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/business/user-data", "host": ["{{baseUrl}}"], "path": ["business","user-data"] }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{\n  \"_id\": \"<id>\",\n  \"name\": \"Business Name\",\n  \"email\": \"biz@example.com\",\n  \"phoneNumber\": \"01000000000\",\n  \"role\": \"business\",\n  \"isVerified\": true\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "code": 401,
+              "body": "{ \"message\": \"Unauthorized\" }"
+            }
+          ]
+        },
+        {
+          "name": "Edit Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Business Name\",\n  \"phoneNumber\": \"0100111222\",\n  \"pickUpAdress\": \"123 Street\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/business/edit-profile", "host": ["{{baseUrl}}"], "path": ["business","edit-profile"] }
+          },
+          "response": [
+            { "name": "200 OK", "code": 200, "body": "{ \"message\": \"Profile updated\" }" },
+            { "name": "400 Bad Request", "code": 400, "body": "{ \"message\": \"Validation error\" }" },
+            { "name": "401 Unauthorized", "code": 401, "body": "{ \"message\": \"Unauthorized\" }" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Business - Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/dashboard", "host": ["{{baseUrl}}"], "path": ["business","dashboard"] }
+          },
+          "response": [
+            { "name": "200 OK", "code": 200, "body": "{ \"pendingOrders\": 12, \"totalBalance\": 4523.5 }" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Business - Orders",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/orders?orderType=Deliver&statusCategory=active&page=1&limit=20", "host": ["{{baseUrl}}"], "query": [
+              { "key": "orderType", "value": "Deliver" },
+              { "key": "statusCategory", "value": "active" },
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "20" }
+            ], "path": ["business","orders"] }
+          },
+          "response": [
+            { "name": "200 OK", "code": 200, "body": "{ \"total\": 2, \"page\": 1, \"orders\": [ { \"orderNumber\": \"ORD123\", \"status\": \"Delivered\" } ] }" }
+          ]
+        },
+        {
+          "name": "Submit Order",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"phoneNumber\": \"0100111222\",\n  \"address\": \"123 Some Street\",\n  \"government\": \"Cairo\",\n  \"zone\": \"Z1\",\n  \"orderType\": \"Deliver\",\n  \"productDescription\": \"T-shirt\",\n  \"numberOfItems\": 1,\n  \"COD\": false,\n  \"amountCOD\": 0\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/business/submit-order", "host": ["{{baseUrl}}"], "path": ["business","submit-order"] }
+          },
+          "response": [
+            { "name": "201 Created", "code": 201, "body": "{ \"message\": \"Order created\", \"orderNumber\": \"ORD123\" }" },
+            { "name": "400 Bad Request", "code": 400, "body": "{ \"message\": \"Validation error: missing address\" }" }
+          ]
+        },
+        {
+          "name": "Order Details",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/order-details/ORD123", "host": ["{{baseUrl}}"], "path": ["business","order-details","ORD123"] }
+          },
+          "response": [
+            { "name": "200 OK", "code": 200, "body": "{ \"orderNumber\": \"ORD123\", \"status\": \"Pending\", \"receiver\": { \"fullName\": \"John Doe\" } }" },
+            { "name": "404 Not Found", "code": 404, "body": "{ \"message\": \"Order not found\" }" }
+          ]
+        },
+        {
+          "name": "Edit Order",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "body": { "mode": "raw", "raw": "{ \"address\": \"New Address\", \"numberOfItems\": 2 }" },
+            "url": { "raw": "{{baseUrl}}/business/orders/edit-order/60f6c8b2a0b9d1001cfa1234", "host": ["{{baseUrl}}"], "path": ["business","orders","edit-order","60f6c8b2a0b9d1001cfa1234"] }
+          },
+          "response": [ { "name": "200 OK", "code": 200, "body": "{ \"message\": \"Order updated\" }" } ]
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "url": { "raw": "{{baseUrl}}/business/orders/delete-order/60f6c8b2a0b9d1001cfa1234", "host": ["{{baseUrl}}"], "path": ["business","orders","delete-order","60f6c8b2a0b9d1001cfa1234"] }
+          },
+          "response": [ { "name": "200 OK", "code": 200, "body": "{ \"message\": \"Order deleted\" }" }, { "name": "404 Not Found", "code": 404, "body": "{ \"message\": \"Order not found\" }" } ]
+        },
+        {
+          "name": "Print Policy (PDF)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "body": { "mode": "raw", "raw": "" },
+            "url": { "raw": "{{baseUrl}}/business/orders/print-policy/ORD123/A4", "host": ["{{baseUrl}}"], "path": ["business","orders","print-policy","ORD123","A4"] }
+          },
+          "response": [ { "name": "200 OK", "code": 200, "body": "<PDF binary stream>" } ]
+        }
+      ]
+    },
+    {
+      "name": "Business - Pickups",
+      "item": [
+        {
+          "name": "Get Pickups",
+          "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/get-pickups", "host": ["{{baseUrl}}"], "path": ["business","get-pickups"] } },
+          "response": [ { "name": "200 OK", "code": 200, "body": "{ \"pickups\": [] }" } ]
+        },
+        {
+          "name": "Create Pickup",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+            "body": { "mode": "raw", "raw": "{ \"pickupDate\": \"2025-10-20\", \"address\": \"123 Street\", \"orders\": [\"ORD123\"] }" },
+            "url": { "raw": "{{baseUrl}}/business/create-pickup", "host": ["{{baseUrl}}"], "path": ["business","create-pickup"] }
+          },
+          "response": [ { "name": "201 Created", "code": 201, "body": "{ \"message\": \"Pickup created\" }" } ]
+        }
+      ]
+    },
+    {
+      "name": "Business - Returns",
+      "item": [
+        {
+          "name": "Get Available Return Orders",
+          "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/return-orders/available", "host": ["{{baseUrl}}"], "path": ["business","return-orders","available"] } ,
+          "response": [ { "name": "200 OK", "code": 200, "body": "{ \"orders\": [] }" }, { "name": "401 Unauthorized", "code": 401, "body": "{ \"message\": \"Unauthorized\" }" } ] },
+        {
+          "name": "Get Return Order Details",
+          "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/return-orders/60f6c8b2a0b9d1001cfa1234", "host": ["{{baseUrl}}"], "path": ["business","return-orders","60f6c8b2a0b9d1001cfa1234"] } ,
+          "response": [ { "name": "200 OK", "code": 200, "body": "{ \"order\": { \"orderNumber\": \"ORD_RET_1\" } }" }, { "name": "404 Not Found", "code": 404, "body": "{ \"message\": \"Return order not found\" }" } ] },
+        {
+          "name": "List Return Orders",
+          "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/return-orders?page=1&limit=20&status=returned", "host": ["{{baseUrl}}"], "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "20" },
+            { "key": "status", "value": "returned" }
+          ], "path": ["business","return-orders"] },
+          "response": [ { "name": "200 OK", "code": 200, "body": "{ \"total\": 1, \"orders\": [] }" } ] },
+        {
+          "name": "Calculate Return Fees",
+          "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "body": { "mode": "raw", "raw": "{ \"orderType\": \"Return\", \"government\": \"Giza\", \"isExpress\": false, \"returnCondition\": \"good\" }" }, "url": { "raw": "{{baseUrl}}/business/return-orders/calculate-fees", "host": ["{{baseUrl}}"], "path": ["business","return-orders","calculate-fees"] },
+          "response": [ { "name": "200 OK", "code": 200, "body": "{ \"fees\": 45 }" }, { "name": "400 Bad Request", "code": 400, "body": "{ \"message\": \"Missing parameters\" }" } ] }
+      ]
+    },
+    {
+      "name": "Business - Waiting Actions",
+      "item": [
+        {
+          "name": "Retry Tomorrow",
+          "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "body": { "mode": "raw", "raw": "{ \"notes\": \"Customer not available\" }" }, "url": { "raw": "{{baseUrl}}/business/orders/60f6c8b2a0b9d1001cfa1234/retry-tomorrow", "host": ["{{baseUrl}}"], "path": ["business","orders","60f6c8b2a0b9d1001cfa1234","retry-tomorrow"] }, "response": [ { "name": "200 OK", "code": 200, "body": "{ \"message\": \"Retry scheduled for tomorrow\" }" } ] }
+      ]
+    },
+    {
+      "name": "Business - Order Management",
+      "item": [
+        {
+          "name": "Cancel Order",
+          "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{ \"reason\": \"Customer canceled\" }" }, "url": { "raw": "{{baseUrl}}/business/orders/60f6c8b2a0b9d1001cfa1234/cancel", "host": ["{{baseUrl}}"], "path": ["business","orders","60f6c8b2a0b9d1001cfa1234","cancel"] }, "response": [ { "name": "200 OK", "code": 200, "body": "{ \"message\": \"Order canceled\" }" }, { "name": "400 Bad Request", "code": 400, "body": "{ \"message\": \"Cannot cancel at current status\" }" } ] }
+      ]
+    },
+    {
+      "name": "Business - Recovery",
+      "item": [
+        {
+          "name": "Recover Courier Assignment",
+          "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{ \"reason\": \"Courier left company\" }" }, "url": { "raw": "{{baseUrl}}/business/orders/60f6c8b2a0b9d1001cfa1234/recover-courier", "host": ["{{baseUrl}}"], "path": ["business","orders","60f6c8b2a0b9d1001cfa1234","recover-courier"] }, "response": [ { "name": "200 OK", "code": 200, "body": "{ \"message\": \"Courier recovered\" }" } ] }
+      ]
+    },
+    {
+      "name": "Business - Transactions & Cash",
+      "item": [
+        {
+          "name": "Get Transactions By Date",
+          "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/transactions?date=2025-10-17", "host": ["{{baseUrl}}"], "query": [ { "key": "date", "value": "2025-10-17" } ], "path": ["business","transactions"] }, "response": [ { "name": "200 OK", "code": 200, "body": "{ \"transactions\": [] }" } ] },
+        {
+          "name": "Get Cash Cycles",
+          "request": { "method": "GET", "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ], "url": { "raw": "{{baseUrl}}/business/cash-cycles?dateFrom=2025-10-01&dateTo=2025-10-17", "host": ["{{baseUrl}}"], "query": [ { "key": "dateFrom", "value": "2025-10-01" }, { "key": "dateTo", "value": "2025-10-17" } ], "path": ["business","cash-cycles"] }, "response": [ { "name": "200 OK", "code": 200, "body": "{ \"total\": 1000 }" } ] }
+      ]
+    }
+  ]
+}

@@ -228,6 +228,23 @@
             </div>
 
             <div class="col-md-12">
+              <label for="returnReason" class="form-label">Return Reason</label>
+              <select class="form-select" id="returnReason">
+                <option value="">Select a reason (optional)</option>
+                <option value="Customer requested return">Customer requested return</option>
+                <option value="Damaged product">Damaged product</option>
+                <option value="Wrong product">Wrong product</option>
+                <option value="Quality issues">Quality issues</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="col-md-12">
+              <label for="returnNotes" class="form-label">Return Notes</label>
+              <textarea class="form-control" id="returnNotes" rows="2" placeholder="Add any additional notes about this return"></textarea>
+            </div>
+
+            <div class="col-md-12">
               <button type="submit" class="btn btn-primary w-100">
                 <i class="ri-add-line me-1"></i> Add Return
               </button>
@@ -602,6 +619,8 @@
     e.preventDefault();
 
     const orderNumber = document.getElementById("orderNumber").value.trim();
+    const returnReason = document.getElementById("returnReason").value;
+    const returnNotes = document.getElementById("returnNotes").value;
 
     // Show loading indicator
     Swal.fire({
@@ -622,6 +641,8 @@
         },
         body: JSON.stringify({
           orderNumber,
+          returnReason,
+          returnNotes
         })
       });
 
@@ -709,8 +730,8 @@
 
         console.log('inProgressReturns');
         populateZoneGroups(itemsByZone);
-        
-        inProgressReturns(returnItems.filter(item => item.orderStatus == 'inReturnStock' && item.deliveryMan));
+
+        inProgressReturns(returnItems.filter(item => (item.orderStatus == 'returnAtWarehouse' || item.orderStatus == 'returnAtWarehouse') && item.deliveryMan));
       } else {
         NoResult.style.display = "block";
         returnItemsByZone.innerHTML = "";
@@ -820,8 +841,28 @@
         const statusDetails = getReturnStatusDetails(item.orderStatus);
         console.log('statusDetails', statusDetails);
 
-        // Get return reason badge class
-        const reasonDetails = getReturnReasonDetails(item.UnavailableReason[0] || 'other');
+        // Get return reason badge class or handle Exchange/Cash Collection
+        let reasonDetails;
+        let returnReasonDisplay = '';
+        
+        if (item.orderShipping.orderType === 'Exchange') {
+          reasonDetails = { badgeClass: 'bg-warning-subtle text-warning', reasonText: 'Exchange' };
+          returnReasonDisplay = `
+            <div><strong>Exchange:</strong> ${item.orderShipping.productDescription || ''} → ${item.orderShipping.productDescriptionReplacement || ''}</div>
+          `;
+        } else if (item.orderShipping.orderType === 'Cash Collection') {
+          reasonDetails = { badgeClass: 'bg-info-subtle text-info', reasonText: 'Cash Collection' };
+          returnReasonDisplay = `
+            <div><strong>Amount:</strong> ${item.orderShipping.amount || 0} EGP</div>
+          `;
+        } else {
+          reasonDetails = getReturnReasonDetails(item.UnavailableReason[0] || 'other');
+          returnReasonDisplay = `
+            <span class="badge ${reasonDetails.badgeClass} return-reason-badge">
+              ${reasonDetails.reasonText}
+            </span>
+          `;
+        }
 
         // Handle product description
         const productDesc = item.orderShipping.productDescription;
@@ -856,9 +897,7 @@
             </small>
           </td>
           <td class="return_reason">
-            <span class="badge ${reasonDetails.badgeClass} return-reason-badge">
-              ${reasonDetails.reasonText}
-            </span>
+            ${returnReasonDisplay}
           </td>
           <td class="return_status">
             <span class="badge ${statusDetails.badgeClass} status-badge">
@@ -909,31 +948,34 @@
   }
 
   // Display in progress returns
-function inProgressReturns(inProgressReturns) {
+  function inProgressReturns(inProgressReturns) {
     try {
-        console.log('inProgressReturns', inProgressReturns);
-        // Group returns by courier
-        const returnsByCourier = {};
-        inProgressReturns.forEach(returnItem => {
-            if (returnItem.deliveryMan && returnItem.orderStatus === 'inReturnStock') {
-                if (!returnsByCourier[returnItem.deliveryMan._id]) {
-                    returnsByCourier[returnItem.deliveryMan._id] = {
-                        courier: returnItem.deliveryMan,
-                        returns: []
-                    };
-                }
-                returnsByCourier[returnItem.deliveryMan._id].returns.push(returnItem);
-            }
-        });
+      console.log('inProgressReturns', inProgressReturns);
+      // Group returns by courier
+      const returnsByCourier = {};
+      inProgressReturns.forEach(returnItem => {
+        if (returnItem.deliveryMan && (returnItem.orderStatus === 'returnAtWarehouse' || returnItem.orderStatus === 'returnAtWarehouse')) {
+          if (!returnsByCourier[returnItem.deliveryMan._id]) {
+            returnsByCourier[returnItem.deliveryMan._id] = {
+              courier: returnItem.deliveryMan,
+              returns: []
+            };
+          }
+          returnsByCourier[returnItem.deliveryMan._id].returns.push(returnItem);
+        }
+      });
 
-        const cardsContainer = document.getElementById('inProgressReturnsCards');
-        cardsContainer.innerHTML = '';
+      const cardsContainer = document.getElementById('inProgressReturnsCards');
+      cardsContainer.innerHTML = '';
 
-        // Create card for each courier and their returns
-        Object.values(returnsByCourier).forEach(({ courier, returns }) => {
-            const cardDiv = document.createElement('div');
-            cardDiv.className = 'col-md-6 col-xl-4';
-            cardDiv.innerHTML = `
+      // Create card for each courier and their returns
+      Object.values(returnsByCourier).forEach(({
+        courier,
+        returns
+      }) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'col-md-6 col-xl-4';
+        cardDiv.innerHTML = `
                 <div class="card border-0 shadow-sm hover-shadow">
                     <div class="card-header bg-danger bg-opacity-10 border-0">
                         <div class="d-flex align-items-center">
@@ -992,23 +1034,23 @@ function inProgressReturns(inProgressReturns) {
                     </div>
                 </div>
             `;
-            cardsContainer.appendChild(cardDiv);
-        });
+        cardsContainer.appendChild(cardDiv);
+      });
 
     } catch (error) {
-        console.error('Error processing in-progress returns:', error);
-        // Show error toast
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to process in-progress returns',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
+      console.error('Error processing in-progress returns:', error);
+      // Show error toast
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to process in-progress returns',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
     }
-}
+  }
 
   // Mark returns as received by courier
   async function markReturnsAsReceived(courierId) {
@@ -1549,7 +1591,28 @@ function inProgressReturns(inProgressReturns) {
     let badgeClass = '';
     let statusText = '';
 
-    if (status === 'pendingPickup') {
+    if (status === 'returnInitiated') {
+      badgeClass = 'bg-secondary-subtle text-secondary';
+      statusText = 'Return Initiated';
+    } else if (status === 'returnAssigned') {
+      badgeClass = 'bg-info-subtle text-info';
+      statusText = 'Return Assigned';
+    } else if (status === 'returnPickedUp') {
+      badgeClass = 'bg-warning-subtle text-warning';
+      statusText = 'Return Picked Up';
+    } else if (status === 'returnAtWarehouse') {
+      badgeClass = 'bg-primary-subtle text-primary';
+      statusText = 'At Warehouse';
+    } else if (status === 'inReturnStock') {
+      badgeClass = 'bg-secondary-subtle text-secondary';
+      statusText = 'In Return Stock';
+    } else if (status === 'returnToBusiness') {
+      badgeClass = 'bg-info-subtle text-info';
+      statusText = 'Returning to Business';
+    } else if (status === 'returnCompleted') {
+      badgeClass = 'bg-success-subtle text-success';
+      statusText = 'Return Completed';
+    } else if (status === 'pendingPickup') {
       badgeClass = 'bg-warning-subtle text-warning';
       statusText = 'Pending Pickup';
     } else if (status === 'inProgress') {
@@ -1570,6 +1633,15 @@ function inProgressReturns(inProgressReturns) {
     } else if (status === 'damaged') {
       badgeClass = 'bg-danger-subtle text-danger';
       statusText = 'Damaged';
+    } else if (status === 'exchangePickup') {
+      badgeClass = 'bg-info-subtle text-info';
+      statusText = 'Exchange Pickup';
+    } else if (status === 'exchangeDelivery') {
+      badgeClass = 'bg-success-subtle text-success';
+      statusText = 'Exchange Delivery';
+    } else if (status === 'collectionComplete') {
+      badgeClass = 'bg-success-subtle text-success';
+      statusText = 'Collection Complete';
     } else {
       badgeClass = 'bg-secondary-subtle text-secondary';
       statusText = status.charAt(0).toUpperCase() + status.slice(1).replace(/([A-Z])/g, ' $1');
@@ -1654,15 +1726,15 @@ function inProgressReturns(inProgressReturns) {
     }
 
     try {
-      const response = await fetch('/admin/return-assign-courier', {
+      // Use the correct endpoint for assigning courier to pick up return from customer
+      const response = await fetch('/admin/assign-courier-to-return-to-business', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           orderNumbers: orderIds.split(','),
-          courierId,
-          zone
+          courierId
         })
       });
 
@@ -1682,7 +1754,7 @@ function inProgressReturns(inProgressReturns) {
         icon: 'success',
         title: 'Assigned to Courier',
         text: isMultiple ?
-          `${orderIds.split(',').length} returns have been assigned to courier for pickup` : `Return #${orderIds} has been assigned to courier for pickup`,
+          `${orderIds.split(',').length} returns have been assigned to courier for delivery to business` : `Return #${orderIds} has been assigned to courier for delivery to business`,
         timer: 2000
       }).then(() => {
         clearSelection();

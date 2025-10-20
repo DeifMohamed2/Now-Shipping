@@ -72,6 +72,15 @@
                   <option value="rejected">Rejected</option>
                   <option value="returned">Returned</option>
                   <option value="terminated">Terminated</option>
+                  <option value="waitingAction">Waiting Action</option>
+                  <option value="returnInitiated">Return Initiated</option>
+                  <option value="returnAssigned">Return Assigned</option>
+                  <option value="returnPickedUp">Return Picked Up</option>
+                  <option value="returnAtWarehouse">At Warehouse</option>
+                  <option value="returnToBusiness">Returning to Business</option>
+                  <option value="inReturnStock">In Return Stock</option>
+                  <option value="returnInProgress">Return In Progress</option>
+                  <option value="returnCompleted">Return Completed</option>
                 </select>
                 </div>
             </div>
@@ -244,7 +253,37 @@
         </div>
       </div>
 
-
+      <!-- Assign Return Courier Modal -->
+      <div class="modal fade" id="assignReturnCourierModal" tabindex="-1" aria-labelledby="assignReturnCourierModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="assignReturnCourierModalLabel">Assign Courier for Return</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div id="returnCourierLoader" class="text-center" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+              <form id="assignReturnCourierForm">
+                <input type="hidden" id="returnOrderId" name="returnOrderId" value="">
+                <div class="mb-3">
+                  <label for="returnCourier" class="form-label">Select Courier</label>
+                  <select class="form-select" id="returnCourier" name="returnCourier" required>
+                    <option value="">Select a courier</option>
+                  </select>
+                </div>
+                <div class="d-flex justify-content-end">
+                  <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Assign</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -304,8 +343,8 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          orderId,
-          deliveryManId
+          orderNumbers: [orderId],
+          courierId: deliveryManId
         }),
       });
 
@@ -396,9 +435,11 @@
       const row = document.createElement("tr");
         // Add highlighting for different important statuses
         if (order.orderStatus === 'new') {
-        row.classList.add('table-warning'); // Yellow highlight for new orders
+          row.classList.add('table-warning'); // Yellow highlight for new orders
         } else if (order.orderStatus === 'rejected' || order.orderStatus === 'returned') {
-        row.classList.add('table-danger'); // Red highlight for problem orders
+          row.classList.add('table-danger'); // Red highlight for problem orders
+        } else if (order.orderStatus === 'inReturnStock' || order.orderStatus === 'returnInProgress' || order.orderStatus === 'returnCompleted' || order.orderShipping.orderType === 'Return') {
+          row.classList.add('table-info'); // Blue highlight for return orders
         }
       row.innerHTML = `
         <th scope="row">
@@ -406,10 +447,20 @@
             <input class="form-check-input" type="checkbox" name="checkAll[]" value="${order.orderNumber}">
           </div>
         </th>
-        <td class="id"><a href="/admin/order-details/${order.orderNumber}" class="fw-medium link-primary">${order.orderNumber}</a></td>
+        <td class="id">
+          <a href="/admin/order-details/${order.orderNumber}" class="fw-medium link-primary">
+            ${order.orderNumber}
+            ${order.orderShipping.orderType === 'Return' ? '<i class="ri-arrow-go-back-line text-warning ms-1" title="Return Order"></i>' : ''}
+          </a>
+        </td>
         <td class="business_name">${order.business.brandInfo.brandName}</td>
         <td class="customer_name">${order.orderCustomer.fullName.split(' ').slice(0, 2).join(' ')}</td>
-        <td class="product_name">${order.orderShipping.orderType}</td>
+        <td class="product_name">
+          ${order.orderShipping.orderType}
+          ${order.orderShipping.orderType === 'Return' && order.orderShipping.returnReason ? 
+            `<small class="d-block text-muted">Reason: ${order.orderShipping.returnReason.substring(0, 15)}${order.orderShipping.returnReason.length > 15 ? '...' : ''}</small>` : ''}
+          ${order.isFastShipping ? '<span class="badge bg-warning text-dark ms-1"><i class="ri-flashlight-line me-1"></i>Fast</span>' : ''}
+        </td>
         <td class="location">
           <div>${order.orderCustomer.government}</div>
           <div class="text-muted">${order.orderCustomer.zone}</div>
@@ -434,8 +485,11 @@
               <i class="ri-more-fill align-middle"></i>
             </button>
             <ul class="dropdown-menu">
-                ${order.orderStatus === 'pickedUp' ? 
-                  `<li><button class="dropdown-item" onclick="assignDeliveryMan('${order.orderNumber}','${order.orderCustomer.zone}')" data-bs-toggle="modal" data-bs-target="#assignDeliveryManModal"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span></button></li>` 
+                ${(order.orderShipping.orderType === 'Exchange' || (order.orderShipping.orderType === 'Deliver' && order.isFastShipping && order.readyForCourierAssignment) || order.orderStatus === 'pickedUp') ? 
+                  `<li><button class="dropdown-item" onclick="assignDeliveryMan('${order.orderNumber}','${order.orderCustomer.zone}')" data-bs-toggle="modal" data-bs-target="#assignDeliveryManModal"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span>${order.isFastShipping ? ' <span class="badge bg-warning text-dark ms-1">Fast</span>' : ''}</button></li>` 
+                  : ''}
+                ${(order.orderStatus === 'inReturnStock' || order.orderStatus === 'returnInitiated' || (order.orderShipping.orderType === 'Return' && order.orderStatus === 'new')) ? 
+                  `<li><button class="dropdown-item" onclick="assignCourierToReturn('${order.orderNumber}','${order.orderCustomer.zone}')"><i class="ri-user-received-2-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Courier (Return)</span></button></li>` 
                   : ''}
                 <li><a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
                 <i class="ri-edit-2-fill align-bottom me-2 text-warning"></i> <span class="fs-6">Edit Order</span>
@@ -505,13 +559,37 @@
       badgeClass = 'bg-danger-subtle text-danger';
       statusText = 'Terminated';
     }else if(status === 'waitingAction'){
-      statusText = 'Wating Action';
+      statusText = 'Waiting Action';
       badgeClass = 'bg-danger-subtle text-danger';
     }else if(status === 'inReturnStock'){
       statusText = 'In Return Stock';
-      badgeClass = 'bg-danger-warning text-warning';
+      badgeClass = 'bg-warning-subtle text-warning';
+    }else if(status === 'returnInitiated'){
+      statusText = 'Return Initiated';
+      badgeClass = 'bg-secondary-subtle text-secondary';
+    }else if(status === 'returnInProgress'){
+      statusText = 'Return In Progress';
+      badgeClass = 'bg-info-subtle text-info';
+    }else if(status === 'returnCompleted'){
+      statusText = 'Return Completed';
+      badgeClass = 'bg-success-subtle text-success';
+    }else if(status === 'returnAssigned'){
+      statusText = 'Return Assigned';
+      badgeClass = 'bg-info-subtle text-info';
+    }else if(status === 'returnPickedUp'){
+      statusText = 'Return Picked Up';
+      badgeClass = 'bg-warning-subtle text-warning';
+    }else if(status === 'returnAtWarehouse'){
+      statusText = 'At Warehouse';
+      badgeClass = 'bg-secondary-subtle text-secondary';
+    }else if(status === 'returnToBusiness'){
+      statusText = 'Returning to Business';
+      badgeClass = 'bg-primary-subtle text-primary';
+    } else {
+      // Default case for unknown statuses
+      statusText = status || 'Unknown';
+      badgeClass = 'bg-light-subtle text-muted';
     }
-
 
     return { badgeClass, statusText };
   }
@@ -562,6 +640,97 @@
       });
   }
 
+  async function assignCourierToReturn(orderNumber, zone) {
+    document.getElementById('returnOrderId').value = orderNumber;
+    const courierSelect = document.getElementById('returnCourier');
+    courierSelect.innerHTML = '<option value="">Select a courier</option>';
+    document.getElementById('returnCourierLoader').style.display = 'block';
+
+    try {
+      // Using the same endpoint to get couriers by zone
+      const response = await fetch(`/admin/get-couriers-by-zone?zone=${zone || ''}`);
+      const couriers = await response.json();
+
+      if (response.ok) {
+        couriers.forEach(courier => {
+          const option = document.createElement('option');
+          option.value = courier._id;
+          option.textContent = courier.name;
+          courierSelect.appendChild(option);
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: `Error fetching couriers: ${couriers.message || 'Unknown error'}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching couriers:', error);
+    } finally {
+      document.getElementById('returnCourierLoader').style.display = 'none';
+    }
+
+    const assignReturnCourierModal = new bootstrap.Modal(document.getElementById('assignReturnCourierModal'));
+    assignReturnCourierModal.show();
+  }
+
+  document.getElementById('assignReturnCourierForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const orderNumber = document.getElementById('returnOrderId').value;
+    const courierId = document.getElementById('returnCourier').value;
+
+    if (!courierId) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Select Courier',
+        text: 'Please select a courier'
+      });
+      return;
+    }
+
+    try {
+      // Assign the courier directly for returnInitiated status
+      const response = await fetch('/admin/return-assign-courier', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderNumbers: [orderNumber],
+          courierId
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to assign courier ' + (data.error || ''));
+      }
+
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('assignReturnCourierModal'));
+      modal.hide();
+
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Assigned to Courier',
+        text: `Return #${orderNumber} has been assigned to courier for pickup`,
+        timer: 2000
+      }).then(() => {
+        window.location.reload();
+      });
+
+    } catch (error) {
+      console.error('Error assigning courier:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to assign courier. Please try again.'
+      });
+    }
+  });
 
 </script>
 

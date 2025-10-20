@@ -15,7 +15,6 @@ async function authenticateCourier(req, res, next) {
 
   try {
     const decode = jwt.verify(token, jwtSecret);
-    console.log('decode:', decode);
     req.courierId = decode.id;
     const courier = await Courier.findOne({ _id: decode.id });
     if (!courier) {
@@ -44,6 +43,10 @@ router.get('/orders', courierController.get_ordersPage);
 
 router.get('/get-orders', courierController.get_orders);
 
+// Returns page
+router.get('/returns', courierController.get_returnsPage);
+router.get('/get-returns', courierController.get_returns);
+
 router.get(
   '/order-details/:orderNumber',
   courierController.get_orderDetailsPage
@@ -52,6 +55,18 @@ router.get(
 router.put('/update-order-status/:orderNumber', courierController.updateOrderStatus);
 
 router.put('/complete-order/:orderNumber', courierController.completeOrder);
+
+// Add new POST endpoint for order completion
+router.post('/orders/:orderNumber/complete', courierController.completeOrder);
+
+// Return handling routes
+router.post('/orders/:orderNumber/pickup-return', courierController.pickupReturn);
+router.post('/orders/:orderNumber/deliver-to-warehouse', courierController.deliverReturnToWarehouse);
+router.post('/orders/:orderNumber/complete-return-to-business', courierController.completeReturnToBusiness);
+router.get('/return-orders/:orderNumber', courierController.getReturnOrderDetails);
+
+// Fast shipping scan route
+router.post('/orders/:orderNumber/scan-fast-shipping', courierController.scanFastShippingOrder);
 
 // Pickups
 

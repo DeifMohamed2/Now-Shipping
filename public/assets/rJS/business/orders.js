@@ -16,8 +16,63 @@ function setOrderId(orderId) {
 const tableBody = document.getElementById('ordersTable');
 const NoResult = document.getElementById('NoResult');
 
+// Global variables for current filters
+let currentOrderType = 'all';
+let currentStatusCategory = 'all';
+
 // Event Listeners
-document.addEventListener("DOMContentLoaded", () => fetchOrders());
+document.addEventListener("DOMContentLoaded", () => {
+  // Load the status helper script dynamically if not already loaded
+  if (!window.StatusHelper) {
+    const script = document.createElement('script');
+    script.src = '/assets/js/status-helper.js';
+    script.onload = () => {
+      console.log('Status helper loaded');
+      fetchOrders();
+    };
+    document.head.appendChild(script);
+  } else {
+    fetchOrders();
+  }
+  
+  // Add status category filter to the UI
+  addStatusCategoryFilter();
+});
+
+// Add status category filter dropdown
+function addStatusCategoryFilter() {
+  const orderTypeFilter = document.querySelector('.nav-tabs');
+  if (orderTypeFilter) {
+    const categoryFilterContainer = document.createElement('div');
+    categoryFilterContainer.className = 'ms-auto d-flex align-items-center';
+    categoryFilterContainer.innerHTML = `
+      <div class="dropdown">
+        <button class="btn btn-soft-primary dropdown-toggle" type="button" id="statusCategoryDropdown" data-bs-toggle="dropdown">
+          <i class="ri-filter-2-line me-1"></i> Status Category
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="statusCategoryDropdown">
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('all')">All</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('NEW')">
+            <span class="status-indicator new"></span> New
+          </a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('PROCESSING')">
+            <span class="status-indicator processing"></span> Processing
+          </a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('PAUSED')">
+            <span class="status-indicator paused"></span> Paused
+          </a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('SUCCESSFUL')">
+            <span class="status-indicator successful"></span> Successful
+          </a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('UNSUCCESSFUL')">
+            <span class="status-indicator unsuccessful"></span> Unsuccessful
+          </a></li>
+        </ul>
+      </div>
+    `;
+    orderTypeFilter.appendChild(categoryFilterContainer);
+  }
+}
 
 const checkAll = document.getElementById("checkAll");
 if (checkAll) {
@@ -29,12 +84,47 @@ if (checkAll) {
   });
 }
 
+// Filter by status category
+function filterByStatusCategory(category) {
+  currentStatusCategory = category;
+  document.getElementById('statusCategoryDropdown').innerHTML = 
+    `<i class="ri-filter-2-line me-1"></i> ${category === 'all' ? 'All' : category}`;
+  fetchOrders(currentOrderType, category);
+}
+
+// Filter by order type
+function filterOrders(orderType) {
+  currentOrderType = orderType;
+  fetchOrders(orderType, currentStatusCategory);
+}
+
+// Filter returned orders
+function filterReturnedOrders() {
+  fetchOrders('Return', currentStatusCategory);
+}
+
 // Fetch Orders
-async function fetchOrders(status = "All") {
+async function fetchOrders(orderType = "all", statusCategory = "all") {
   try {
     showLoadingSpinner();
-    const response = await fetch(`/business/get-orders?orderType=${status}`);
+    
+    // Build the query parameters
+    const params = new URLSearchParams();
+    
+    if (orderType && orderType !== 'all') {
+      params.append('orderType', orderType);
+    }
+    
+    if (statusCategory && statusCategory !== 'all') {
+      params.append('statusCategory', statusCategory);
+    }
+    
+    // Create the URL with query parameters
+    const url = `/business/get-orders${params.toString() ? '?' + params.toString() : ''}`;
+    
+    const response = await fetch(url);
     const orders = await response.json();
+    
     if (response.ok) {
       handleOrdersResponse(orders);
     } else {
@@ -48,7 +138,7 @@ async function fetchOrders(status = "All") {
 function showLoadingSpinner() {
   tableBody.innerHTML = `
     <tr>
-      <td colspan="9" class="text-center">
+      <td colspan="10" class="text-center">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
@@ -72,13 +162,33 @@ function populateOrdersTable(orders) {
   orders.forEach(order => {
     const row = document.createElement("tr");
     
-    // Add highlighting for different important statuses
-    if (order.orderStatus === 'new') {
-      row.classList.add('table-warning'); // Yellow highlight for new orders
-    } else if (order.orderStatus === 'rejected' || order.orderStatus === 'returned') {
-      row.classList.add('table-danger'); // Red highlight for problem orders
-    } 
-      row.innerHTML = `
+    // Add highlighting for different important statuses based on category
+    const categoryClass = order.categoryClass || getStatusCategoryClass(order.statusCategory);
+    if (order.statusCategory === 'NEW') {
+      row.classList.add('table-info');
+      row.style.borderLeft = '4px solid #3498db';
+    } else if (order.statusCategory === 'PROCESSING') {
+      row.classList.add('table-warning');
+      row.style.borderLeft = '4px solid #f39c12';
+    } else if (order.statusCategory === 'PAUSED') {
+      row.classList.add('table-danger');
+      row.style.borderLeft = '4px solid #e74c3c';
+    } else if (order.statusCategory === 'SUCCESSFUL') {
+      row.classList.add('table-success');
+      row.style.borderLeft = '4px solid #2ecc71';
+    } else if (order.statusCategory === 'UNSUCCESSFUL') {
+      row.classList.add('table-secondary');
+      row.style.borderLeft = '4px solid #95a5a6';
+    }
+    
+    // Add special highlighting for fast shipping orders
+    if (order.isFastShipping) {
+      row.style.backgroundColor = '#fff3cd';
+      row.style.borderTop = '2px solid #ffc107';
+      row.style.borderBottom = '2px solid #ffc107';
+    }
+    
+    row.innerHTML = `
       <th scope="row">
         <div class="form-check">
           <input class="form-check-input" type="checkbox" name="checkAll[]" value="${
@@ -90,24 +200,27 @@ function populateOrdersTable(orders) {
         order.orderNumber
       }" class="fw-medium link-primary">${order.orderNumber}</a></td>
       <td class="customer_name">${order.orderCustomer.fullName}</td>
-   <td class="product_name" style="font-size:15px !important;" >
-          ${ order.orderShipping.orderType}
-  
+      <td class="product_name" style="font-size:15px !important;" >
+        ${getOrderTypeWithIcon(order.orderShipping.orderType)}
+        ${order.isFastShipping ? '<span class="badge bg-warning text-dark ms-1"><i class="ri-flashlight-line me-1"></i>Fast</span>' : ''}
       </td>
       <td class="location">
         <div>${order.orderCustomer.government}</div>
         <div class="text-muted">${order.orderCustomer.zone}</div>
       </td>
       <td class="amount">
-        <div>${order.orderShipping.amount || 0} EGP</div>
-        <div class="text-muted">${order.orderShipping.amountType}</div>
+        <div>${getFormattedAmount(order)}</div>
+        <div class="text-muted">${getAmountTypeLabel(order.orderShipping.amountType)}</div>
       </td>
       <td class="status">
-        <span class="badge ${
-          getStatusDetails(order.orderStatus).badgeClass
-        } text-uppercase fs-6">${
-        getStatusDetails(order.orderStatus).statusText
-      }</span>
+        <span class="status-badge ${order.categoryClass || getStatusCategoryClass(order.statusCategory)}">
+          ${order.statusLabel || getStatusLabel(order.orderStatus)}
+        </span>
+      </td>
+      <td class="category">
+        <span class="status-pill ${(order.statusCategory || 'NEW').toLowerCase()}">
+          ${order.statusCategory || 'NEW'}
+        </span>
       </td>
       <td class="tries">
         <div>${order.Attemps || 0}/2</div>
@@ -135,9 +248,10 @@ function populateOrdersTable(orders) {
             }">
               <i class="ri-edit-2-fill align-bottom me-2 text-warning"></i> <span class="fs-6">Edit Order</span>
             </a></li>
-            <li><button class="dropdown-item" onclick="cancelOrder('${
-              order._id
-            }')"><i class="ri-delete-bin-6-fill align-bottom me-2 text-danger"></i> <span class="fs-6">Delete Order</span></button></li>
+            ${!['completed', 'returned', 'returnCompleted', 'canceled', 'terminated'].includes(order.orderStatus) ? 
+              `<li><button class="dropdown-item" onclick="cancelOrder('${
+                order._id
+              }')"><i class="ri-delete-bin-6-fill align-bottom me-2 text-danger"></i> <span class="fs-6">Cancel Order</span></button></li>` : ''}
             <li><a class="dropdown-item" href="/business/order-details/${
               order.orderNumber
             }"><i class="ri-truck-line align-bottom me-2 text-info"></i> <span class="fs-6">Track Order</span></a></li>
@@ -149,7 +263,89 @@ function populateOrdersTable(orders) {
   });
 }
 
+// Get status category class (fallback if StatusHelper not available)
+function getStatusCategoryClass(category) {
+  if (window.StatusHelper) {
+    return StatusHelper.getCategoryClass(category);
+  }
+  
+  // Fallback implementation
+  const classMap = {
+    'NEW': 'status-new',
+    'PROCESSING': 'status-processing',
+    'PAUSED': 'status-paused',
+    'SUCCESSFUL': 'status-successful',
+    'UNSUCCESSFUL': 'status-unsuccessful'
+  };
+  return classMap[category] || 'status-default';
+}
 
+// Get status label (fallback if StatusHelper not available)
+function getStatusLabel(status) {
+  if (window.StatusHelper) {
+    return StatusHelper.getOrderStatusLabel(status);
+  }
+  
+  // Fallback to legacy function
+  return getStatusDetails(status).statusText;
+}
+
+// Get order type with icon
+function getOrderTypeWithIcon(orderType) {
+  switch(orderType) {
+    case 'Deliver':
+      return '<i class="ri-truck-line me-1"></i> Deliver';
+    case 'Return':
+      return '<i class="ri-arrow-go-back-line me-1"></i> Return';
+    case 'Exchange':
+      return '<i class="ri-exchange-line me-1"></i> Exchange';
+    case 'Cash Collection':
+      return '<i class="ri-money-dollar-box-line me-1"></i> Cash Collection';
+    default:
+      return orderType;
+  }
+}
+
+// Format amount based on order type
+function getFormattedAmount(order) {
+  if (!order.orderShipping.amount) return '0 EGP';
+  
+  const amount = order.orderShipping.amount;
+  const amountType = order.orderShipping.amountType;
+  const orderType = order.orderShipping.orderType;
+  
+  if (orderType === 'Cash Collection') {
+    return `<span class="text-success fw-medium">${amount} EGP</span>`;
+  } else if (orderType === 'Exchange') {
+    if (amountType === 'CD') {
+      return `<span class="text-warning">${amount} EGP</span>`;
+    } else {
+      return `<span>${amount} EGP</span>`;
+    }
+  } else if (amountType === 'COD') {
+    return `<span class="text-primary">${amount} EGP</span>`;
+  } else {
+    return `${amount} EGP`;
+  }
+}
+
+// Get readable amount type label
+function getAmountTypeLabel(amountType) {
+  switch(amountType) {
+    case 'COD':
+      return 'Cash on Delivery';
+    case 'CD':
+      return 'Cash Difference';
+    case 'CC':
+      return 'Cash Collection';
+    case 'NA':
+      return 'No Payment';
+    default:
+      return amountType;
+  }
+}
+
+// Legacy status details function (for backward compatibility)
 function getStatusDetails(status) {
   let badgeClass = '';
   let statusText = '';
@@ -182,7 +378,7 @@ function getStatusDetails(status) {
     badgeClass = 'bg-danger-subtle text-danger';
     statusText = 'Rejected';
   } else if (status === 'returned') {
-    badgeClass = 'bg-danger-subtle text-danger';
+    badgeClass = 'bg-warning text-dark';
     statusText = 'Returned';
   } else if (status === 'terminated') {
     badgeClass = 'bg-danger-subtle text-danger';
@@ -190,19 +386,39 @@ function getStatusDetails(status) {
   } else if(status === 'waitingAction') {
     badgeClass = 'bg-warning-subtle text-warning';
     statusText = 'Waiting Action';
-   
-  }else{
+  } else if (status === 'rescheduled') {
+    badgeClass = 'bg-warning-subtle text-warning';
+    statusText = 'Rescheduled'; 
+  } else if (status === 'returnInitiated') {
+    badgeClass = 'bg-secondary-subtle text-secondary';
+    statusText = 'Return Initiated';
+  } else if (status === 'returnToWarehouse') {
+    badgeClass = 'bg-warning-subtle text-warning';
+    statusText = 'Return to Warehouse';
+  } else if (status === 'returnLinked') {
+    badgeClass = 'bg-info text-white';
+    statusText = 'Return Linked';
+  } else if (status === 'returnAssigned') {
+    badgeClass = 'bg-info-subtle text-info';
+    statusText = 'Return Assigned';
+  } else if (status === 'returnPickedUp') {
+    badgeClass = 'bg-warning-subtle text-warning';
+    statusText = 'Return Picked Up';
+  } else if (status === 'returnAtWarehouse') {
+    badgeClass = 'bg-primary-subtle text-primary';
+    statusText = 'At Warehouse';
+  } else if (status === 'returnToBusiness') {
+    badgeClass = 'bg-info-subtle text-info';
+    statusText = 'Returning to Business';
+  } else if (status === 'returnCompleted') {
+    badgeClass = 'bg-success-subtle text-success';
+    statusText = 'Return Completed';
+  } else {
     badgeClass = 'bg-secondary-subtle text-secondary';
     statusText = 'Unknown';
   }
 
   return { badgeClass, statusText };
-}
-
-
-async function filterOrders(status) {
-  console.log("Filtering orders by status:", status);
-  await fetchOrders(status);
 }
 
 // Print Policy

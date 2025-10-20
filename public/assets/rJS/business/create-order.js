@@ -3,7 +3,7 @@ document.querySelectorAll('input[name="orderType"]').forEach(function(element) {
         // Hide all sections initially
         document.getElementById('deliver-section').style.display = 'none';
         document.getElementById('exchange-section').style.display = 'none';
-        // document.getElementById('return-section').style.display = 'none';
+        document.getElementById('return-section').style.display = 'none';
         document.getElementById('cash-collection-section').style.display = 'none';
         document.getElementById('cash-on-delivery-section').style.display = 'none';
         document.getElementById('cash-difference-section').style.display = 'none';
@@ -18,7 +18,7 @@ document.querySelectorAll('input[name="orderType"]').forEach(function(element) {
             document.getElementById('cash-difference-section').style.display = 'block';
             document.getElementById('orderCanbeOpened').style.display = 'block';
         } else if (this.id === 'paymentMethod03') {
-            document.getElementById('deliver-section').style.display = 'block';
+            document.getElementById('return-section').style.display = 'block';
         } else if (this.id === 'paymentMethod04') {
             document.getElementById('cash-collection-section').style.display = 'block';
             document.getElementById('orderCanbeOpened').style.display = 'none';
@@ -95,6 +95,11 @@ function filterZonesByGovernment(governmentSelect, zoneSelect) {
     
     // If no government is selected, just leave the empty dropdown
     if (!selectedGovernment) {
+        // If Choices is attached, sync it
+        if (zoneSelect && zoneSelect.choices) {
+            zoneSelect.choices.clearChoices();
+            zoneSelect.choices.setChoices([{ value: '', label: 'Select Area', selected: true }], 'value', 'label', true);
+        }
         return;
     }
     
@@ -124,6 +129,17 @@ function filterZonesByGovernment(governmentSelect, zoneSelect) {
     
     // Clean up the temporary element
     document.body.removeChild(sourceElement);
+
+    // If Choices.js is enhancing the zone select, update its choices
+    if (zoneSelect && zoneSelect.choices) {
+        // Build a flat choices list from the resulting options
+        const flatOptions = Array.from(zoneSelect.querySelectorAll('option'))
+            .filter(opt => opt.value !== '')
+            .map(opt => ({ value: opt.value, label: opt.textContent }));
+        // Reset and set new choices
+        zoneSelect.choices.clearChoices();
+        zoneSelect.choices.setChoices([{ value: '', label: 'Select Area', selected: true }].concat(flatOptions), 'value', 'label', true);
+    }
 }
 
 // Handle form submission
@@ -132,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const orderTypeRadios = document.querySelectorAll('input[name="orderType"]');
     const deliverSection = document.getElementById('deliver-section');
     const exchangeSection = document.getElementById('exchange-section');
+    const returnSection = document.getElementById('return-section');
     const cashCollectionSection = document.getElementById('cash-collection-section');
     const completeOrderBTN = document.getElementById('completeOrderBTN');
     const feeDisplay = document.getElementById('totalFee');
@@ -142,6 +159,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const zoneSelect = form.querySelector('select[name="zone"]');
     
     if (governmentSelect && zoneSelect) {
+        // Initialize Choices if available and not already initialized
+        if (window.Choices) {
+            if (!governmentSelect.choices) {
+                try { governmentSelect.choices = new Choices(governmentSelect, { searchEnabled: true, shouldSort: false }); } catch (e) { /* noop */ }
+            }
+            if (!zoneSelect.choices) {
+                try { zoneSelect.choices = new Choices(zoneSelect, { searchEnabled: true, shouldSort: false }); } catch (e) { /* noop */ }
+            }
+        }
         // Initialize filtering on page load - only when government is already selected
         if (governmentSelect.value) {
             filterZonesByGovernment(governmentSelect, zoneSelect);
@@ -190,6 +216,12 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 console.error('Error calculating fees:', data.error);
                 feeDisplay.textContent = '0';
+                
+                // Handle authentication errors for fee calculation
+                if (response.status === 401) {
+                    console.warn('Authentication expired during fee calculation');
+                    // Don't show popup for fee calculation errors, just log them
+                }
             }
         } catch (error) {
             console.error('Error calculating fees:', error);
@@ -271,9 +303,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         console.log(selectedOrderType);
         if (selectedOrderType.id === 'paymentMethod01') {
-            // Deliver
-            const productDescription = form.querySelector('textarea[name="productDescription"]');
-            const numberOfItems = form.querySelector('input[name="numberOfItems"]');
+            // Deliver (scope to deliver section)
+            const productDescription = document.querySelector('#deliver-section textarea[name="productDescription"]');
+            const numberOfItems = document.querySelector('#deliver-section input[name="numberOfItems"]');
             if (!productDescription.value.trim() || !numberOfItems.value || parseInt(numberOfItems.value) <= 0) {
                 Swal.fire({
                     icon: 'warning',
@@ -297,17 +329,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 return false;
             }
-        } else if(selectedOrderType.id === 'paymentMethod03') {
-            // Deliver
-            const productDescription = form.querySelector('textarea[name="productDescription"]');
-            const numberOfItems = form.querySelector('input[name="numberOfItems"]');
-            if (!productDescription.value.trim() || !numberOfItems.value || parseInt(numberOfItems.value) <= 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Missing Information',
-                    text: 'Please fill out all required fields in the Deliver section with valid values.',
-                });
-                return false;
+        } else if (selectedOrderType.id === 'paymentMethod03') {
+            // Return (scope to return section)
+            const originalOrderNumber = document.querySelector('#return-section input[name="originalOrderNumber"]');
+            
+            // Check if this is a partial return
+            const returnTypeRadios = document.querySelectorAll('input[name="returnType"]');
+            const isPartialReturn = Array.from(returnTypeRadios).find(radio => radio.checked && radio.value === 'partial');
+            
+            if (isPartialReturn) {
+                // For partial returns, validate standard fields plus partial return item count
+                const partialReturnItemCount = document.querySelector('#return-section input[name="partialReturnItemCount"]');
+                const productDescription = document.querySelector('#return-section textarea[name="productDescription"]');
+                const returnReason = document.querySelector('#return-section select[name="returnReason"]');
+                
+                if (!originalOrderNumber.value.trim() || !partialReturnItemCount.value || parseInt(partialReturnItemCount.value) <= 0 || !productDescription.value.trim() || !returnReason.value) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Information',
+                        text: 'Please fill out all required fields in the Return section with valid values.',
+                    });
+                    return false;
+                }
+            } else {
+                // For full returns, validate standard fields
+                const productDescription = document.querySelector('#return-section textarea[name="productDescription"]');
+                const numberOfItems = document.querySelector('#return-section input[name="numberOfItems"]');
+                const returnReason = document.querySelector('#return-section select[name="returnReason"]');
+                
+                if (!productDescription.value.trim() || !numberOfItems.value || parseInt(numberOfItems.value) <= 0 ||
+                    !originalOrderNumber.value.trim() || !returnReason.value) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Information',
+                        text: 'Please fill out all required fields in the Return section with valid values.',
+                    });
+                    return false;
+                }
             }
         }
         else if (selectedOrderType.id === 'paymentMethod04') {
@@ -338,7 +396,27 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const formData = new FormData(form);
             const formObject = Object.fromEntries(formData.entries());
-            console.log(formObject);
+            console.log('Form data being submitted:', formObject);
+            
+            // Handle partial return: automatically set numberOfItems from partialReturnItemCount
+            if (formObject.orderType === 'Return' && formObject.returnType === 'partial') {
+              formObject.numberOfItems = formObject.partialReturnItemCount;
+              formObject.isPartialReturn = 'true'; // Ensure this flag is explicitly set
+              console.log('Partial return detected - setting numberOfItems to:', formObject.partialReturnItemCount);
+            } else if (formObject.orderType === 'Return') {
+              formObject.isPartialReturn = 'false'; // Explicitly set for full returns
+            }
+            
+            // Debug: Check if partial return fields are properly included
+            if (formObject.orderType === 'Return') {
+              console.log('Return order detected');
+              console.log('returnType:', formObject.returnType);
+              console.log('isPartialReturn:', formObject.isPartialReturn);
+              console.log('partialReturnItemCount:', formObject.partialReturnItemCount);
+              console.log('numberOfItems (final):', formObject.numberOfItems);
+              console.log('productDescription:', formObject.productDescription);
+              console.log('returnReason:', formObject.returnReason);
+            }
             const response = await fetch('/business/submit-order', {
                 method: 'POST',
                 headers: {
@@ -359,11 +437,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     tab.classList.add('disabled');
                   });
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.error,
-                });
+                // Handle authentication errors specifically
+                if (response.status === 401) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Session Expired',
+                        text: 'Your session has expired. Please log in again.',
+                        confirmButtonText: 'Go to Login'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/login';
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'An error occurred while creating the order.',
+                    });
+                }
             }
         } catch (error) {
             console.error('An error occurred:', error);
@@ -378,14 +470,25 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Function to show/hide sections based on order type
+    // Helper to show/hide sections based on selected order type
+    function syncSections() {
+        const checked = form.querySelector('input[name="orderType"]:checked');
+        const id = checked ? checked.id : '';
+        deliverSection.style.display = id === 'paymentMethod01' ? 'block' : 'none';
+        exchangeSection.style.display = id === 'paymentMethod02' ? 'block' : 'none';
+        returnSection.style.display = id === 'paymentMethod03' ? 'block' : 'none';
+        cashCollectionSection.style.display = id === 'paymentMethod04' ? 'block' : 'none';
+    }
+
+    // Wire change handlers
     orderTypeRadios.forEach((radio) => {
         radio.addEventListener('change', function () {
-            deliverSection.style.display = this.id === 'paymentMethod01' || this.id === 'paymentMethod03' ? 'block' : 'none';
-            exchangeSection.style.display = this.id === 'paymentMethod02' ? 'block' : 'none';
-            cashCollectionSection.style.display = this.id === 'paymentMethod04' ? 'block' : 'none';
+            syncSections();
         });
     });
+
+    // Initial sync on page load
+    syncSections();
     
     // Initialize fees calculation
     updateFees();

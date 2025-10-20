@@ -311,6 +311,50 @@
         <div class="row g-4">
           <!-- Left Column -->
           <div class="col-lg-8">
+            <!-- Business Location Section (for Fast Shipping) -->
+            <% if (order.orderShipping.isExpressShipping && order.orderStatus === 'inProgress') { %>
+            <div class="info-section">
+              <div class="info-header">
+                <i class="ri-building-line text-warning"></i>
+                <h6 class="mb-0">Business Location - Pickup Required</h6>
+              </div>
+              <div class="info-body">
+                <div class="alert alert-warning d-flex align-items-center mb-3">
+                  <i class="ri-map-pin-line me-2"></i>
+                  <div>
+                    <strong>Pickup Required</strong><br>
+                    <small>Go to business location first to pickup this fast shipping order</small>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="info-item">
+                      <div class="info-label">Business Name:</div>
+                      <div class="info-value"><%= order.business?.name || 'N/A' %></div>
+                    </div>
+                    <div class="info-item">
+                      <div class="info-label">Contact Phone:</div>
+                      <div class="info-value"><%= order.business?.phoneNumber || 'N/A' %></div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="address-box">
+                      <h6 class="mb-2"><i class="ri-map-pin-line me-2 text-primary"></i>Business Address</h6>
+                      <p class="mb-2"><%= order.business?.pickUpAdress?.adressDetails || 'N/A' %></p>
+                      <p class="mb-2"><%= order.business?.pickUpAdress?.city || 'N/A' %>, <%= order.business?.pickUpAdress?.country || 'N/A' %></p>
+                      <% if (order.business?.pickUpAdress?.nearbyLandmark) { %>
+                      <p class="text-muted small mb-2">Nearby: <%= order.business.pickUpAdress.nearbyLandmark %></p>
+                      <% } %>
+                      <a href="https://maps.google.com/?q=<%= encodeURIComponent((order.business?.pickUpAdress?.adressDetails || '') + ', ' + (order.business?.pickUpAdress?.city || '') + ', ' + (order.business?.pickUpAdress?.country || '')) %>" target="_blank" class="btn btn-sm btn-primary">
+                        <i class="ri-navigation-line me-1"></i> Navigate to Business
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
             <!-- Customer & Order Information -->
             <div class="info-section">
               <div class="info-header">
@@ -359,6 +403,104 @@
               </div>
             </div>
 
+            <!-- Customer Information -->
+            <div class="info-section mb-4">
+              <div class="info-header">
+                <i class="ri-user-line text-primary"></i>
+                <h5 class="mb-0">Customer Information</h5>
+              </div>
+              <div class="info-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="info-item">
+                      <div class="info-label">Full Name:</div>
+                      <div class="info-value"><%= order.orderCustomer.fullName %></div>
+                    </div>
+                    <div class="info-item">
+                      <div class="info-label">Phone Number:</div>
+                      <div class="info-value"><%= order.orderCustomer.phoneNumber %></div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="address-box">
+                      <div class="mb-1 text-muted">Shipping Address:</div>
+                      <div class="fw-bold"><%= order.orderCustomer.address %></div>
+                      <div class="mt-1">
+                        <span class="badge bg-light text-dark border"><%= order.orderCustomer.zone %></span>
+                        <span class="badge bg-light text-dark border"><%= order.orderCustomer.government %></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Courier History Section -->
+            <% if (order.courierHistory && order.courierHistory.length > 0) { %>
+            <div class="info-section mb-4">
+              <div class="info-header">
+                <i class="ri-history-line text-primary"></i>
+                <h5 class="mb-0">Courier History</h5>
+              </div>
+              <div class="info-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-bordered mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th scope="col" style="width:20%">Date</th>
+                        <th scope="col" style="width:15%">Courier</th>
+                        <th scope="col" style="width:20%">Action</th>
+                        <th scope="col" style="width:45%">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% order.courierHistory.sort((a, b) => new Date(b.assignedAt) - new Date(a.assignedAt)).forEach(history => { %>
+                      <tr>
+                        <td><%= new Date(history.assignedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></td>
+                        <td>
+                          <% if (history.courier && history.courier.name) { %>
+                            <%= history.courier.name %>
+                          <% } else { %>
+                            <span class="text-muted">Unknown</span>
+                          <% } %>
+                        </td>
+                        <td>
+                          <% 
+                            let badgeClass = 'bg-secondary-subtle text-secondary';
+                            let actionText = history.action;
+                            
+                            if (history.action === 'assigned') {
+                              badgeClass = 'bg-info-subtle text-info';
+                              actionText = 'Assigned';
+                            } else if (history.action === 'pickup_from_customer') {
+                              badgeClass = 'bg-warning-subtle text-warning';
+                              actionText = 'Pickup from Customer';
+                            } else if (history.action === 'delivered_to_warehouse') {
+                              badgeClass = 'bg-success-subtle text-success';
+                              actionText = 'Delivered to Warehouse';
+                            } else if (history.action === 'pickup_from_warehouse') {
+                              badgeClass = 'bg-warning-subtle text-warning';
+                              actionText = 'Pickup from Warehouse';
+                            } else if (history.action === 'delivered_to_business') {
+                              badgeClass = 'bg-success-subtle text-success';
+                              actionText = 'Delivered to Business';
+                            } else if (history.action === 'completed') {
+                              badgeClass = 'bg-success-subtle text-success';
+                              actionText = 'Completed';
+                            }
+                          %>
+                          <span class="badge <%= badgeClass %>"><%= actionText %></span>
+                        </td>
+                        <td><%= history.notes || 'No notes' %></td>
+                      </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
             <!-- Order Items -->
             <div class="info-section">
               <div class="info-header">
@@ -366,6 +508,39 @@
                 <h6 class="mb-0">Order Items</h6>
               </div>
               <div class="info-body">
+                <% if (order.orderShipping.isPartialReturn) { %>                
+                <!-- Partial Return Information -->
+                <div class="alert alert-warning mb-3">
+                  <div class="d-flex align-items-center">
+                    <i class="ri-information-line me-2"></i>
+                    <div>
+                      <strong>Partial Return Order</strong><br>
+                      <small>Returning <%= order.orderShipping.partialReturnItemCount %> of <%= order.orderShipping.originalOrderItemCount %> items from original order</small>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="product-box">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="ri-arrow-go-back-line me-2 text-warning"></i>
+                    <h6 class="mb-0">Items Being Returned</h6>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-8">
+                      <p class="text-muted small mb-1">Return Description:</p>
+                      <p class="mb-0 fw-semibold"><%= order.orderShipping.productDescription %></p>
+                    </div>
+                    <div class="col-md-4">
+                      <p class="text-muted small mb-1">Items to Return:</p>
+                      <span class="badge bg-warning text-dark border px-3 py-2 rounded-pill">
+                        <%= order.orderShipping.partialReturnItemCount %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <% } else { %>
+                <!-- Regular Order Items -->
                 <div class="product-box">
                   <div class="d-flex align-items-center mb-2">
                     <i class="ri-shopping-bag-line me-2 text-primary"></i>
@@ -384,6 +559,7 @@
                     </div>
                   </div>
                 </div>
+                <% } %>
 
                 <% if (order.orderShipping.productDescriptionReplacement) { %>
                 <div class="product-box replacement">
@@ -484,8 +660,45 @@
               </div>
             </div>
 
+            <!-- Fast Shipping Scan Section -->
+            <% if (order.orderShipping.isExpressShipping && order.orderStatus === 'inProgress' && !order.orderStages.packed.isCompleted) { %>
+            <div class="info-section">
+              <div class="info-header">
+                <i class="ri-barcode-line text-warning"></i>
+                <h6 class="mb-0">Fast Shipping - Scan Order</h6>
+              </div>
+              <div class="info-body">
+                <div class="alert alert-warning d-flex align-items-center mb-3">
+                  <i class="ri-flashlight-line me-2"></i>
+                  <div>
+                    <strong>Fast Shipping Order</strong><br>
+                    <small>Scan this order to mark stages as completed and proceed to delivery</small>
+                  </div>
+                </div>
+                <div class="scan-section">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="fastOrderScanInput" placeholder="Scan or enter order ID" value="<%= order.orderNumber %>">
+                        <button class="btn btn-warning" type="button" id="scanFastOrderBtn" onclick="scanFastShippingOrder('<%= order.orderNumber %>')">
+                          <i class="ri-camera-line me-1"></i> Scan & Process
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="d-flex align-items-center">
+                        <i class="ri-information-line text-info me-2"></i>
+                        <small class="text-muted">This will mark packed, shipping, and inProgress stages as completed</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } %>
+
             <!-- Order Actions -->
-            <% if (order.orderStatus !== 'completed' && order.orderStatus !== 'canceled' && order.orderStatus !== 'rejected' && order.orderStatus !== 'returned' && order.orderStatus !== 'terminated' ) { %>
+            <% if (['headingToCustomer', 'headingToYou', 'inProgress', 'returnInProgress', 'exchangePickup', 'exchangeDelivery', 'collectionComplete', 'waitingAction', 'rescheduled'].includes(order.orderStatus)) { %>
             <div class="info-section">
               <div class="info-header">
                 <i class="ri-settings-4-line text-primary"></i>
@@ -493,15 +706,31 @@
               </div>
               <div class="info-body">
                 <div class="action-buttons">
-                  <button class="btn btn-success" id="completeOrderBtn" onclick="completeOrder('<%= order.orderNumber %>')">
-                    <i class="ri-check-double-line"></i> Complete Delivery
-                  </button>
-                  <button class="btn btn-warning" id="customerUnavailableBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'Unavailable', 'customer_not_available')">
-                    <i class="ri-user-unfollow-line"></i> Customer Unavailable
-                  </button>
-                  <button class="btn btn-danger" id="rejectOrderBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'rejected')">
-                    <i class="ri-close-circle-line"></i> Reject Delivery
-                  </button>
+                  <% if (order.orderShipping.orderType === 'Return' && order.orderStatus === 'returnInProgress') { %>
+                    <!-- Return from customer pickup actions -->
+                    <button class="btn btn-success" id="completeOrderBtn" onclick="completeReturn('<%= order.orderNumber %>')">
+                      <i class="ri-check-double-line"></i> Complete Return Pickup
+                    </button>
+                    <button class="btn btn-warning" id="customerUnavailableBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'Unavailable', 'customer_not_available')">
+                      <i class="ri-user-unfollow-line"></i> Customer Unavailable
+                    </button>
+                  <% } else if (order.orderStatus === 'headingToYou') { %>
+                    <!-- Return to business actions -->
+                    <button class="btn btn-success" id="completeOrderBtn" onclick="completeOrder('<%= order.orderNumber %>')">
+                      <i class="ri-check-double-line"></i> Complete Return to Business
+                    </button>
+                  <% } else { %>
+                    <!-- Regular delivery actions -->
+                    <button class="btn btn-success" id="completeOrderBtn" onclick="completeOrder('<%= order.orderNumber %>')">
+                      <i class="ri-check-double-line"></i> Complete <%= order.orderShipping.orderType === 'Return' ? 'Return' : 'Delivery' %>
+                    </button>
+                    <button class="btn btn-warning" id="customerUnavailableBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'Unavailable', 'customer_not_available')">
+                      <i class="ri-user-unfollow-line"></i> Customer Unavailable
+                    </button>
+                    <button class="btn btn-danger" id="rejectOrderBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'rejected')">
+                      <i class="ri-close-circle-line"></i> Reject Delivery
+                    </button>
+                  <% } %>
                 </div>
               </div>
             </div>
@@ -613,6 +842,39 @@
                 <h6 class="mb-0">Order Items</h6>
               </div>
               <div class="info-body">
+                <% if (order.orderShipping.isPartialReturn) { %>
+                <!-- Partial Return Information -->
+                <div class="alert alert-warning mb-3">
+                  <div class="d-flex align-items-center">
+                    <i class="ri-information-line me-2"></i>
+                    <div>
+                      <strong>Partial Return Order</strong><br>
+                      <small>Returning <%= order.orderShipping.partialReturnItemCount %> of <%= order.orderShipping.originalOrderItemCount %> items from original order</small>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="product-box">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="ri-arrow-go-back-line me-2 text-warning"></i>
+                    <h6 class="mb-0">Items Being Returned</h6>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-8">
+                      <p class="text-muted small mb-1">Return Description:</p>
+                      <p class="mb-0 fw-semibold"><%= order.orderShipping.productDescription %></p>
+                    </div>
+                    <div class="col-md-4">
+                      <p class="text-muted small mb-1">Items to Return:</p>
+                      <span class="badge bg-warning text-dark border px-3 py-2 rounded-pill">
+                        <%= order.orderShipping.partialReturnItemCount %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <% } else { %>
+                <!-- Regular Order Items -->
                 <div class="product-box">
                   <div class="d-flex align-items-center mb-2">
                     <i class="ri-shopping-bag-line me-2 text-primary"></i>
@@ -631,6 +893,7 @@
                     </div>
                   </div>
                 </div>
+                <% } %>
 
                 <% if (order.orderShipping.productDescriptionReplacement) { %>
                 <div class="product-box replacement">
@@ -720,7 +983,7 @@
             </div>
 
             <!-- Order Actions -->
-            <% if (order.orderStatus !== 'completed' && order.orderStatus !== 'canceled' && order.orderStatus !== 'rejected' && order.orderStatus !== 'returned' && order.orderStatus !== 'terminated') { %>
+            <% if (order.orderStatus !== 'completed' && order.orderStatus !== 'canceled' && order.orderStatus !== 'rejected' && order.orderStatus !== 'returned' && order.orderStatus !== 'terminated' && order.orderStatus !== 'returnCompleted') { %>
             <div class="info-section">
               <div class="info-header">
                 <i class="ri-settings-4-line text-primary"></i>
@@ -728,11 +991,31 @@
               </div>
               <div class="info-body">
                 <div class="action-buttons">
-                  <button class="btn btn-success" id="completeOrderBtn" onclick="completeOrder('<%= order.orderNumber %>')">
-                    <i class="ri-check-double-line"></i> Complete Return
-                  </button>
-      
-              
+                  <% if (order.orderShipping.orderType === 'Return' && order.orderStatus === 'returnInProgress') { %>
+                    <!-- Return from customer pickup actions -->
+                    <button class="btn btn-success" id="completeOrderBtn" onclick="completeReturn('<%= order.orderNumber %>')">
+                      <i class="ri-check-double-line"></i> Complete Return Pickup
+                    </button>
+                    <button class="btn btn-warning" id="customerUnavailableBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'Unavailable', 'customer_not_available')">
+                      <i class="ri-user-unfollow-line"></i> Customer Unavailable
+                    </button>
+                  <% } else if (order.orderStatus === 'headingToYou') { %>
+                    <!-- Return to business actions -->
+                    <button class="btn btn-success" id="completeOrderBtn" onclick="completeOrder('<%= order.orderNumber %>')">
+                      <i class="ri-check-double-line"></i> Complete Return to Business
+                    </button>
+                  <% } else { %>
+                    <!-- Regular delivery actions -->
+                    <button class="btn btn-success" id="completeOrderBtn" onclick="completeOrder('<%= order.orderNumber %>')">
+                      <i class="ri-check-double-line"></i> Complete <%= order.orderShipping.orderType === 'Return' ? 'Return' : 'Delivery' %>
+                    </button>
+                    <button class="btn btn-warning" id="customerUnavailableBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'Unavailable', 'customer_not_available')">
+                      <i class="ri-user-unfollow-line"></i> Customer Unavailable
+                    </button>
+                    <button class="btn btn-danger" id="rejectOrderBtn" onclick="showOrderActions('<%= order.orderNumber %>', 'rejected')">
+                      <i class="ri-close-circle-line"></i> Reject Delivery
+                    </button>
+                  <% } %>
                 </div>
               </div>
             </div>
@@ -807,68 +1090,97 @@
     });
   });
 
-  // Complete order
-  function completeOrder(orderNumber) {
-    Swal.fire({
-      title: 'Complete Delivery',
-      text: `Mark this order #${orderNumber} as completed`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#28a745',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, complete it!'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          // Show loading
-          Swal.fire({
-            title: 'Processing...',
-            text: 'Completing delivery',
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.showLoading();
-            }
-          });
-
-          // Make API call to complete order
-          const response = await fetch(`/courier/complete-order/${orderNumber}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          });
-
-          const data = await response.json();
-
-          Swal.close();
-
-          if (response.ok) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Delivery Completed',
-              text: 'Order has been marked as delivered successfully.',
-              timer: 2000
-            }).then(() => {
-              window.location.reload();
-            });
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: data.message || 'Failed to complete delivery. Please try again.'
-            });
-          }
-
-        } catch (error) {
-          console.error('Error completing order:', error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An unexpected error occurred. Please try again.'
-          });
+  // Complete order delivery
+  async function completeOrder(orderNumber) {
+    try {
+      const response = await fetch(`/courier/orders/${orderNumber}/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
         }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Order has been marked as completed.',
+          confirmButtonText: 'OK',
+          timer: 2000
+        }).then(() => {
+          window.location.href = '/courier/orders';
+        });
+      } else {
+        throw new Error(data.message || 'Could not complete order');
       }
-    });
+    } catch (error) {
+      console.error('Error completing order:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to complete order. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+  
+  // Complete return pickup
+  async function completeReturn(orderNumber) {
+    try {
+      // Show popup for notes
+      const { value: notes } = await Swal.fire({
+        title: 'Return Pickup',
+        input: 'textarea',
+        inputLabel: 'Additional Notes (Optional)',
+        inputPlaceholder: 'Add any notes about the return pickup...',
+        showCancelButton: true,
+        confirmButtonText: 'Complete Pickup',
+        inputValidator: (value) => {
+          // Notes are optional
+          return null;
+        }
+      });
+      
+      if (notes === undefined) {
+        // User cancelled
+        return;
+      }
+      
+      // Process the return pickup
+      const response = await fetch(`/api/v1/courier/orders/${orderNumber}/pickup-return`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Return has been picked up and marked as in return stock.',
+          confirmButtonText: 'OK',
+          timer: 2000
+        }).then(() => {
+          window.location.href = '/courier/orders';
+        });
+      } else {
+        throw new Error(data.message || 'Could not complete return pickup');
+      }
+    } catch (error) {
+      console.error('Error completing return pickup:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to complete return pickup. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
   }
 
   // Show order actions modal
@@ -972,5 +1284,210 @@
       });
     }
 
+  }
+
+  // New return flow functions
+  async function pickupReturn(orderNumber) {
+    try {
+      const { value: notes } = await Swal.fire({
+        title: 'Pick Up Return',
+        input: 'textarea',
+        inputLabel: 'Additional Notes (Optional)',
+        inputPlaceholder: 'Add any notes about the return pickup...',
+        showCancelButton: true,
+        confirmButtonText: 'Pick Up Return',
+        inputValidator: (value) => {
+          return null; // Notes are optional
+        }
+      });
+      
+      if (notes === undefined) {
+        return; // User cancelled
+      }
+      
+      const response = await fetch(`/api/v1/courier/orders/${orderNumber}/pickup-return`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Return has been picked up successfully.',
+          confirmButtonText: 'OK',
+          timer: 2000
+        }).then(() => {
+          window.location.href = '/courier/orders';
+        });
+      } else {
+        throw new Error(data.message || 'Could not pick up return');
+      }
+    } catch (error) {
+      console.error('Error picking up return:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to pick up return. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  async function deliverToWarehouse(orderNumber) {
+    try {
+      const { value: notes } = await Swal.fire({
+        title: 'Deliver to Warehouse',
+        input: 'textarea',
+        inputLabel: 'Additional Notes (Optional)',
+        inputPlaceholder: 'Add any notes about the warehouse delivery...',
+        showCancelButton: true,
+        confirmButtonText: 'Deliver to Warehouse',
+        inputValidator: (value) => {
+          return null; // Notes are optional
+        }
+      });
+      
+      if (notes === undefined) {
+        return; // User cancelled
+      }
+      
+      const response = await fetch(`/api/v1/courier/orders/${orderNumber}/deliver-to-warehouse`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Return has been delivered to warehouse successfully.',
+          confirmButtonText: 'OK',
+          timer: 2000
+        }).then(() => {
+          window.location.href = '/courier/orders';
+        });
+      } else {
+        throw new Error(data.message || 'Could not deliver to warehouse');
+      }
+    } catch (error) {
+      console.error('Error delivering to warehouse:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to deliver to warehouse. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  async function completeReturnToBusiness(orderNumber) {
+    try {
+      const { value: notes } = await Swal.fire({
+        title: 'Complete Return to Business',
+        input: 'textarea',
+        inputLabel: 'Additional Notes (Optional)',
+        inputPlaceholder: 'Add any notes about the return completion...',
+        showCancelButton: true,
+        confirmButtonText: 'Complete Return',
+        inputValidator: (value) => {
+          return null; // Notes are optional
+        }
+      });
+      
+      if (notes === undefined) {
+        return; // User cancelled
+      }
+      
+      const response = await fetch(`/api/v1/courier/orders/${orderNumber}/complete-return-to-business`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Return has been completed successfully.',
+          confirmButtonText: 'OK',
+          timer: 2000
+        }).then(() => {
+          window.location.href = '/courier/orders';
+        });
+      } else {
+        throw new Error(data.message || 'Could not complete return');
+      }
+    } catch (error) {
+      console.error('Error completing return:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to complete return. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+
+  // Fast shipping scan function
+  async function scanFastShippingOrder(orderNumber) {
+    try {
+      // Show loading
+      Swal.fire({
+        title: 'Processing Fast Shipping...',
+        text: `Scanning order #${orderNumber} and updating stages`,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const response = await fetch(`/courier/orders/${orderNumber}/scan-fast-shipping`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        Swal.close();
+        Swal.fire({
+          icon: 'success',
+          title: 'Fast Shipping Processed!',
+          text: 'Order stages have been marked as completed. You can now proceed to delivery.',
+          confirmButtonText: 'OK',
+          timer: 3000
+        }).then(() => {
+          // Reload the page to show updated status
+          window.location.reload();
+        });
+      } else {
+        throw new Error(data.message || 'Could not process fast shipping order');
+      }
+    } catch (error) {
+      console.error('Error processing fast shipping order:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to process fast shipping order. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
   }
 </script>

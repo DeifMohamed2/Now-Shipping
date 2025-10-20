@@ -229,6 +229,7 @@
                  <th class="sort" data-sort="contact_info">Contact Info</th>
                  <th class="sort" data-sort="pickup_date">Pickup Date</th>
                  <th class="sort" data-sort="number_of_items">Number of Items</th>
+                 <th class="sort" data-sort="pickup_fee">Pickup Fee</th>
                  <th class="sort" data-sort="status">Status</th>
                  <th class="sort" data-sort="delivery_man">Delivery Man</th>
                  <th data-sort="action">Action</th>
@@ -278,6 +279,10 @@
                   <input type="number" min="1" id="numberOfOrders" name="numberOfOrders" class="form-control" placeholder="Enter number of orders" required />
                   <div id="orderWarning" class="order-warning">
                     <i class="ri-information-line me-1"></i> For efficiency, we recommend at least 3 orders per pickup.
+                  </div>
+                  <div id="pickupFeeHint" class="mt-2 small text-muted">
+                    <i class="ri-money-dollar-circle-line me-1"></i>
+                    Estimated Pickup Fee: <strong id="estimatedPickupFee">--</strong>
                   </div>
                 </div>
 
@@ -382,6 +387,7 @@
   const tableBody = document.getElementById('TBody');
   const NoResult = document.querySelector('.noresult');
   const checkAll = document.getElementById('checkAll');
+  const estimatedPickupFeeEl = document.getElementById('estimatedPickupFee');
 
   async function fetchPickups(status = "Upcoming") {
     try {
@@ -444,6 +450,7 @@
           ${new Date(pickup.pickupDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
         </td>
         <td class="number_of_items text-center">${pickup.numberOfOrders}</td>
+        <td class="pickup_fee"><strong>${formatCurrency(pickup.pickupFees)}</strong></td>
         <td class="status">
             <span class="badge ${getPickupStatusDetails(pickup.picikupStatus).badgeClass} text-uppercase fs-6">${getPickupStatusDetails(pickup.picikupStatus).statusText}</span>
         </td>
@@ -514,7 +521,11 @@
       } else {
         orderWarning.style.display = 'none';
       }
+      updateEstimatedPickupFee(value);
     });
+
+    // Initialize estimated fee on open
+    updateEstimatedPickupFee(parseInt(numberOfOrdersInput.value || '0'));
 
     // Form submission
     const createPickupForm = document.querySelector('.tablelist-form');
@@ -598,6 +609,30 @@
     }
 
     return { badgeClass, statusText };
+  }
+
+  // Removed client-side base fee logic; get from server
+
+  function formatCurrency(value){
+    try { return new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP' }).format(value || 0); } catch { return `${value || 0} EGP`; }
+  }
+
+  async function updateEstimatedPickupFee(numOrders){
+    try {
+      const response = await fetch('/business/pickup/calculate-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numberOfOrders: numOrders })
+      });
+      const data = await response.json();
+      if (response.ok && data && typeof data.fee !== 'undefined') {
+        estimatedPickupFeeEl.textContent = formatCurrency(data.fee);
+      } else {
+        estimatedPickupFeeEl.textContent = '--';
+      }
+    } catch (e) {
+      estimatedPickupFeeEl.textContent = '--';
+    }
   }
 
 

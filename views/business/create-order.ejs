@@ -1,5 +1,6 @@
 <%- contentFor('HeaderCss') %>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 
 <style>
   :root {
@@ -571,6 +572,116 @@
                 </div>
               </div>
 
+              <!-- Return Section -->
+              <div id="return-section" class="card mb-4 hover-effect" style="display: none;">
+                <div class="card-header">
+                  <h6 class="mb-0">Return Details</h6>
+                </div>
+                <div class="card-body">
+                  <div class="alert alert-info mb-4">
+                    <i class="ri-information-line me-2"></i>
+                    <strong>Return Process:</strong> Create a return order for an existing delivered order. The original order will be automatically linked when the return is picked up.
+                  </div>
+                  
+                  <div class="mb-4">
+                    <label for="original-order-number" class="form-label">Original Order Number *</label>
+                    <input type="text" class="form-control" name="originalOrderNumber" id="original-order-number" placeholder="Enter the order number of the delivered order to return" required>
+                    <div class="form-text">
+                      Enter the order number of the completed order that needs to be returned.
+                    </div>
+                    <div id="original-order-preview" class="alert alert-success mt-2" style="display: none;">
+                      <h6>Original Order Found:</h6>
+                      <div id="original-order-details"></div>
+                    </div>
+                  </div>
+
+                  <!-- Partial Return Section -->
+                  <div id="partial-return-section" class="card mb-4" style="display: none;">
+                    <div class="card-header">
+                      <h6 class="mb-0">Return Type Selection</h6>
+                    </div>
+                    <div class="card-body">
+                      <div class="alert alert-info mb-3">
+                        <i class="ri-information-line me-2"></i>
+                        <strong>Multiple Items Detected:</strong> This order contains multiple items. Choose whether to return all items or just specific ones.
+                      </div>
+                      
+                      <div class="mb-3">
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="returnType" id="full-return" value="full" checked>
+                          <label class="form-check-label" for="full-return">
+                            <strong>Full Return</strong> - Return all items from the original order
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="returnType" id="partial-return" value="partial">
+                          <label class="form-check-label" for="partial-return">
+                            <strong>Partial Return</strong> - Return only specific items
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- Partial Return Details -->
+                      <div id="partial-return-details" style="display: none;">
+                        <div class="row g-3">
+                          <div class="col-md-6">
+                            <label for="partial-return-count" class="form-label">Number of Items to Return</label>
+                            <div class="input-group">
+                              <button type="button" class="btn" id="decrement-partial">-</button>
+                              <input type="number" name="partialReturnItemCount" class="form-control text-center" id="partial-return-count" value="1" min="1">
+                              <button type="button" class="btn" id="increment-partial">+</button>
+                            </div>
+                            <div class="form-text">Maximum: <span id="max-items"></span> items</div>
+                          </div>
+                          <div class="col-md-6">
+                            <label for="remaining-count" class="form-label">Items Remaining with Customer</label>
+                            <div class="form-control text-center" id="remaining-count" style="background-color: #f8f9fa;">0</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Standard Return Fields (hidden for partial returns) -->
+                  <div id="standard-return-fields">
+                    <div class="mb-4">
+                      <label for="return-description" class="form-label">Product Description</label>
+                      <textarea class="form-control" name="productDescription" id="return-description" placeholder="Describe the products being returned" rows="3"></textarea>
+                    </div>
+                    <div class="mb-4 col-md-4" id="standard-return-number-of-items">
+                      <label for="return-count" class="form-label">Number of Items</label>
+                      <div class="input-group">
+                        <button type="button" class="btn" id="decrement-return">-</button>
+                        <input type="number" name="numberOfItems" class="form-control text-center" id="return-count" value="1" min="1">
+                        <button type="button" class="btn" id="increment-return">+</button>
+                      </div>
+                    </div>
+                    <div class="mb-4">
+                      <label for="return-reason" class="form-label">Return Reason *</label>
+                      <select class="form-select" name="returnReason" id="return-reason" required>
+                        <option value="">Select a reason</option>
+                        <option value="Customer requested return">Customer requested return</option>
+                        <option value="Damaged product">Damaged product</option>
+                        <option value="Wrong product">Wrong product</option>
+                        <option value="Quality issues">Quality issues</option>
+                        <option value="Size/Color mismatch">Size/Color mismatch</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div class="mb-4">
+                      <label for="return-notes" class="form-label">Return Notes</label>
+                      <textarea class="form-control" name="returnNotes" id="return-notes" placeholder="Provide any additional details about the return..." rows="3"></textarea>
+                    </div>
+                  </div>
+                  <div class="form-check mb-3">
+                    <input class="form-check-input" name="isExpressShipping" type="checkbox" id="express-shipping-return-checkbox">
+                    <label class="form-check-label" for="express-shipping-return-checkbox">
+                      Express Return <i class="ri-information-line text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Same day return service. Doubles the shipping fee but ensures faster pickup."></i>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               <!-- Cash Collection Section -->
               <div id="cash-collection-section" class="card mb-4 hover-effect" style="display: none;">
                 <div class="card-header">
@@ -828,6 +939,265 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script>
+// Enhanced order type handling with return section
+document.addEventListener('DOMContentLoaded', function() {
+  // Handle order type selection
+  const orderTypeRadios = document.querySelectorAll('input[name="orderType"]');
+  const deliverSection = document.getElementById('deliver-section');
+  const exchangeSection = document.getElementById('exchange-section');
+  const returnSection = document.getElementById('return-section');
+  const cashCollectionSection = document.getElementById('cash-collection-section');
+
+  // Utility to enable/disable a section's inputs so hidden sections don't block HTML5 validation
+  function setSectionDisabled(sectionEl, shouldDisable) {
+    if (!sectionEl) return;
+    const fields = sectionEl.querySelectorAll('input, select, textarea, button');
+    fields.forEach(function(field) {
+      if (shouldDisable) {
+        field.setAttribute('disabled', 'disabled');
+        field.removeAttribute('required');
+      } else {
+        field.removeAttribute('disabled');
+      }
+    });
+  }
+
+  function hideAllSections() {
+    // Hide
+    deliverSection.style.display = 'none';
+    exchangeSection.style.display = 'none';
+    returnSection.style.display = 'none';
+    cashCollectionSection.style.display = 'none';
+    // Disable all so they don't trigger validation
+    setSectionDisabled(deliverSection, true);
+    setSectionDisabled(exchangeSection, true);
+    setSectionDisabled(returnSection, true);
+    setSectionDisabled(cashCollectionSection, true);
+  }
+
+  function activateDeliver() {
+    deliverSection.style.display = 'block';
+    setSectionDisabled(deliverSection, false);
+  }
+
+  function activateExchange() {
+    exchangeSection.style.display = 'block';
+    setSectionDisabled(exchangeSection, false);
+  }
+
+  function activateReturn() {
+    returnSection.style.display = 'block';
+    setSectionDisabled(returnSection, false);
+    // Apply required attributes only for return-critical fields
+    const originalOrderInput = document.querySelector('input[name="originalOrderNumber"]');
+    const returnReasonSelect = document.querySelector('select[name="returnReason"]');
+    if (originalOrderInput) originalOrderInput.setAttribute('required', 'required');
+    if (returnReasonSelect) returnReasonSelect.setAttribute('required', 'required');
+  }
+
+  function activateCashCollection() {
+    cashCollectionSection.style.display = 'block';
+    setSectionDisabled(cashCollectionSection, false);
+  }
+
+  orderTypeRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      hideAllSections();
+      // Show relevant section
+      if (this.value === 'Deliver') {
+        activateDeliver();
+      } else if (this.value === 'Exchange') {
+        activateExchange();
+      } else if (this.value === 'Return') {
+        activateReturn();
+      } else if (this.value === 'Cash Collection') {
+        activateCashCollection();
+      }
+    });
+  });
+
+  // On initial load, make sure hidden sections are disabled to avoid native validation errors
+  hideAllSections();
+  const initiallyChecked = Array.from(orderTypeRadios).find(r => r.checked);
+  if (initiallyChecked) {
+    if (initiallyChecked.value === 'Deliver') activateDeliver();
+    else if (initiallyChecked.value === 'Exchange') activateExchange();
+    else if (initiallyChecked.value === 'Return') activateReturn();
+    else if (initiallyChecked.value === 'Cash Collection') activateCashCollection();
+  }
+
+  // Handle return order number validation
+  const originalOrderInput = document.getElementById('original-order-number');
+  const originalOrderPreview = document.getElementById('original-order-preview');
+  const originalOrderDetails = document.getElementById('original-order-details');
+
+  if (originalOrderInput) {
+    originalOrderInput.addEventListener('input', async function() {
+      const orderNumber = this.value.trim();
+      
+      if (orderNumber.length < 6) {
+        originalOrderPreview.style.display = 'none';
+        return;
+      }
+
+      try {
+        const response = await fetch('/business/validate-original-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ orderNumber })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.order) {
+          originalOrderDetails.innerHTML = `
+            <div class="row">
+              <div class="col-6"><strong>Order Number:</strong></div>
+              <div class="col-6">${data.order.orderNumber}</div>
+              <div class="col-6"><strong>Customer:</strong></div>
+              <div class="col-6">${data.order.orderCustomer.fullName}</div>
+              <div class="col-6"><strong>Status:</strong></div>
+              <div class="col-6"><span class="badge bg-success">${data.order.orderStatus}</span></div>
+              <div class="col-6"><strong>Product:</strong></div>
+              <div class="col-6">${data.order.orderShipping.productDescription}</div>
+              <div class="col-6"><strong>Items:</strong></div>
+              <div class="col-6">${data.order.orderShipping.numberOfItems} item(s)</div>
+            </div>
+          `;
+          originalOrderPreview.className = 'alert alert-success mt-2';
+          originalOrderPreview.style.display = 'block';
+          
+          // Show partial return section if order has multiple items
+          const partialReturnSection = document.getElementById('partial-return-section');
+          if (data.order.hasMultipleItems) {
+            partialReturnSection.style.display = 'block';
+            document.getElementById('max-items').textContent = data.order.itemCount;
+            
+            // Set max value for partial return count
+            const partialReturnCount = document.getElementById('partial-return-count');
+            partialReturnCount.max = data.order.itemCount;
+            
+            // Update remaining count when partial return count changes
+            updateRemainingCount();
+          } else {
+            partialReturnSection.style.display = 'none';
+          }
+        } else {
+          originalOrderDetails.innerHTML = '<div class="text-danger">Order not found or not eligible for return.</div>';
+          originalOrderPreview.className = 'alert alert-warning mt-2';
+          originalOrderPreview.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error validating original order:', error);
+        originalOrderDetails.innerHTML = '<div class="text-danger">Error validating order. Please try again.</div>';
+        originalOrderPreview.className = 'alert alert-warning mt-2';
+        originalOrderPreview.style.display = 'block';
+      }
+    });
+  }
+
+  // Handle return item count increment/decrement
+  const decrementReturn = document.getElementById('decrement-return');
+  const incrementReturn = document.getElementById('increment-return');
+  const returnCount = document.getElementById('return-count');
+
+  if (decrementReturn && incrementReturn && returnCount) {
+    decrementReturn.addEventListener('click', function() {
+      const currentValue = parseInt(returnCount.value);
+      if (currentValue > 1) {
+        returnCount.value = currentValue - 1;
+      }
+    });
+
+    incrementReturn.addEventListener('click', function() {
+      const currentValue = parseInt(returnCount.value);
+      returnCount.value = currentValue + 1;
+    });
+  }
+
+  // Handle partial return functionality
+  const returnTypeRadios = document.querySelectorAll('input[name="returnType"]');
+  const partialReturnDetails = document.getElementById('partial-return-details');
+  const decrementPartial = document.getElementById('decrement-partial');
+  const incrementPartial = document.getElementById('increment-partial');
+  const partialReturnCount = document.getElementById('partial-return-count');
+
+  // Function to update remaining count
+  function updateRemainingCount() {
+    const maxItems = parseInt(document.getElementById('max-items').textContent);
+    const partialCount = parseInt(partialReturnCount.value);
+    const remaining = maxItems - partialCount;
+    document.getElementById('remaining-count').textContent = remaining;
+  }
+
+  // Handle return type selection
+  if (returnTypeRadios.length > 0) {
+    returnTypeRadios.forEach(radio => {
+      radio.addEventListener('change', function() {
+        const standardReturnFields = document.getElementById('standard-return-fields');
+        
+        if (this.value === 'partial') {
+          partialReturnDetails.style.display = 'block';
+          standardReturnFields.style.display = 'block';
+          // Hide the standard Number of Items field for partial returns
+          document.getElementById('standard-return-number-of-items').style.display = 'none';
+          updateRemainingCount();
+          
+          // Keep required attributes on standard fields for partial returns
+          document.getElementById('return-reason').setAttribute('required', 'required');
+        } else {
+          partialReturnDetails.style.display = 'none';
+          standardReturnFields.style.display = 'block';
+          // Show the standard Number of Items field for full returns
+          document.getElementById('standard-return-number-of-items').style.display = 'block';
+          
+          // Keep required attributes on standard fields
+          document.getElementById('return-reason').setAttribute('required', 'required');
+        }
+      });
+    });
+  }
+
+  // Handle partial return count increment/decrement
+  if (decrementPartial && incrementPartial && partialReturnCount) {
+    decrementPartial.addEventListener('click', function() {
+      const currentValue = parseInt(partialReturnCount.value);
+      if (currentValue > 1) {
+        partialReturnCount.value = currentValue - 1;
+        updateRemainingCount();
+      }
+    });
+
+    incrementPartial.addEventListener('click', function() {
+      const maxItems = parseInt(document.getElementById('max-items').textContent);
+      const currentValue = parseInt(partialReturnCount.value);
+      if (currentValue < maxItems) {
+        partialReturnCount.value = currentValue + 1;
+        updateRemainingCount();
+      }
+    });
+
+    // Handle manual input changes
+    partialReturnCount.addEventListener('input', function() {
+      const maxItems = parseInt(document.getElementById('max-items').textContent);
+      const value = parseInt(this.value);
+      
+      if (value > maxItems) {
+        this.value = maxItems;
+      } else if (value < 1) {
+        this.value = 1;
+      }
+      
+      updateRemainingCount();
+    });
+  }
+});
+</script>
 
 <script src="/assets/rJS/business/create-order.js"></script>
 

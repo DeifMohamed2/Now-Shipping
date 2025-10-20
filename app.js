@@ -28,8 +28,12 @@ const assistantRouterApi = require('./routes/api/v1/assistant');
 const courierRouterApi = require('./routes/api/v1/courier');
 
 // Import jobs
-const dailyOrderProcessing = require('./jobs/dailyOrderProcessing');
+const { dailyOrderProcessing } = require('./jobs/dailyOrderProcessing');
 const releasesProccessing = require('./jobs/releasesProccessing');
+
+// dailyOrderProcessing();
+// releasesProccessing();
+
 
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
@@ -76,9 +80,18 @@ app.use(express.static(__dirname + '/public'));
 /* ---------for Local database connection---------- */
 const DB = process.env.DATABASE_URL;
 
+// Connect to database first, then start server
 mongoose.connect(DB, {
     useNewUrlParser: true
-}).then((con) => console.log("DB connection successfully..!"));
+}).then((con) => {
+    console.log("DB connection successfully..!");
+    
+    // Start server after successful database connection
+    server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
+}).catch(err => {
+    console.error("Database connection failed:", err);
+    process.exit(1);
+});
 
 // for i18 use
 app.use(i18n({
@@ -130,5 +143,4 @@ app.all("*", function (req, res) {
     });
 });
 
-
-server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
+// Server is now started inside the mongoose.connect().then() callback

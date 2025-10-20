@@ -6,6 +6,7 @@ const courierSchema = new Schema(
     courierID: {
       type: String,
       required: true,
+      unique: true,
     },
     name: {
       type: String,
@@ -75,7 +76,8 @@ const courierSchema = new Schema(
     },
     allPapers: {
       type: [String],
-      required: true,
+      required: false,
+      default: [],
     },
     assignedZones: {
       type: [String],

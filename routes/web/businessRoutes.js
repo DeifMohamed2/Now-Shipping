@@ -12,6 +12,10 @@ async function authenticateUser(req, res, next) {
   const token = req.cookies.token;
   if (!token) {
     console.log('Token not found');
+    // For API requests, return JSON error instead of redirect
+    if (req.path.startsWith('/api/') || req.headers['content-type'] === 'application/json') {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
     return res.status(401).redirect('/login');
   }
 
@@ -53,6 +57,8 @@ router.post('/submit-order', businessController.submitOrder);
 
 // Add new route for calculating fees
 router.post('/calculate-fees', businessController.calculateOrderFees);
+// Pickup fee estimation
+router.post('/pickup/calculate-fee', businessController.calculatePickupFee);
 
 router.post(
   '/orders/print-policy/:orderNumber/:pageSize',
@@ -68,6 +74,8 @@ router.get('/edit-order/:orderNumber', businessController.get_editOrderPage);
 
 router.put('/orders/edit-order/:orderId', businessController.editOrder);
 
+router.post('/orders/cancel-order/:orderId', businessController.cancelOrder);
+router.post('/orders/:orderId/recover-courier', businessController.recoverOrderCourier);
 router.delete('/orders/delete-order/:orderId', businessController.deleteOrder);
 
 // pickups
@@ -92,6 +100,23 @@ router.post(
 
 router.post('/pickup/create-pickup', businessController.createPickup);
 
+// waitingAction actions
+router.post('/orders/:orderId/retry-tomorrow', businessController.retryTomorrow);
+router.post('/orders/:orderId/retry-scheduled', businessController.retryScheduled);
+router.post('/orders/:orderId/return-to-warehouse', businessController.returnToWarehouseFromWaiting);
+router.post('/orders/:orderId/cancel', businessController.cancelFromWaiting);
+
+// return actions
+router.post('/orders/:orderId/initiate-return', businessController.initiateReturn); // 
+
+// Enhanced Return Flow routes
+router.post('/validate-original-order', businessController.validateOriginalOrder);
+router.get('/available-return-orders', businessController.getAvailableReturnOrders); // 
+router.get('/return-orders', businessController.getReturnOrders); // 
+router.get('/return-orders/:orderId', businessController.getReturnOrderDetails); // 
+router.get('/return-fees', businessController.calculateReturnFees); //
+router.post('/orders/:orderId/mark-returned', businessController.markDeliverOrderAsReturned); // 
+
 router.delete(
   '/pickup/delete-pickup/:pickupId',
   businessController.deletePickup
@@ -107,6 +132,18 @@ router.get(
   businessController.get_allTransactionsByDate
 );
 
+router.get(
+  '/wallet/get-transaction-details/:transactionId',
+  businessController.getTransactionDetails
+);
+
+// Balance recalculation API
+router.post('/wallet/recalculate-balance', businessController.recalculateBalanceAPI);
+
+// Excel Export routes
+router.get('/wallet/export-transactions', businessController.exportTransactionsToExcel);
+router.get('/wallet/export-cash-cycles', businessController.exportCashCyclesToExcel);
+
 // cash cycle
 router.get('/wallet/cash-cycles', businessController.get_cashCyclesPage);
 
@@ -114,6 +151,9 @@ router.get(
   '/wallet/get-total-cashCycle-by-data',
   businessController.get_totalCashCycleByDate
 );
+
+// Test route
+// router.get('/test-orders', businessController.testOrders);
 
 router.get('/shop', businessController.get_shopPage);
 

@@ -54,6 +54,27 @@
 
   <%- include ('../partials/vendor-scripts') %>
   <%- FooterJs %>
+  
+  <!-- Handle session errors -->
+  <script>
+    // Check for token errors
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add global error handling for API calls
+      window.handleApiError = function(error) {
+        console.error('API Error:', error);
+        if (error.status === 401 || error.message?.includes('token')) {
+          Swal.fire({
+            title: 'Session Expired',
+            text: 'Your session has expired. Please log in again.',
+            icon: 'warning',
+            confirmButtonText: 'Log In'
+          }).then(() => {
+            window.location.href = '/courier-login';
+          });
+        }
+      };
+    });
+  </script>
 </body>
 
 </html>

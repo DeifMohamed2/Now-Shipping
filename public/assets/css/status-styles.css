@@ -1,0 +1,378 @@
+/**
+ * Status Styles - Professional status styling for Order Company
+ * Inspired by Bosta.co status styling
+ */
+
+/* Status Category Colors */
+:root {
+    --status-new-color: #3498db;
+    /* Blue */
+    --status-processing-color: #f39c12;
+    /* Orange */
+    --status-paused-color: #e74c3c;
+    /* Red */
+    --status-successful-color: #2ecc71;
+    /* Green */
+    --status-unsuccessful-color: #95a5a6;
+    /* Gray */
+
+    --status-new-bg: #ebf5fb;
+    --status-processing-bg: #fef5e7;
+    --status-paused-bg: #fdedec;
+    --status-successful-bg: #eafaf1;
+    --status-unsuccessful-bg: #f2f3f4;
+}
+
+/* Status Badge Base Styles */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.status-badge::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+/* Status Category Badges */
+.status-new {
+    background-color: var(--status-new-bg);
+    color: var(--status-new-color);
+}
+
+.status-new::before {
+    background-color: var(--status-new-color);
+}
+
+.status-processing {
+    background-color: var(--status-processing-bg);
+    color: var(--status-processing-color);
+}
+
+.status-processing::before {
+    background-color: var(--status-processing-color);
+}
+
+.status-paused {
+    background-color: var(--status-paused-bg);
+    color: var(--status-paused-color);
+}
+
+.status-paused::before {
+    background-color: var(--status-paused-color);
+}
+
+.status-successful {
+    background-color: var(--status-successful-bg);
+    color: var(--status-successful-color);
+}
+
+.status-successful::before {
+    background-color: var(--status-successful-color);
+}
+
+.status-unsuccessful {
+    background-color: var(--status-unsuccessful-bg);
+    color: var(--status-unsuccessful-color);
+}
+
+.status-unsuccessful::before {
+    background-color: var(--status-unsuccessful-color);
+}
+
+/* Status Progress Bar */
+.status-progress-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.status-progress-container::before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #e0e0e0;
+    z-index: 1;
+}
+
+.status-step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid #e0e0e0;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.status-step.active {
+    border-color: var(--status-processing-color);
+    background-color: var(--status-processing-color);
+    color: white;
+}
+
+.status-step.completed {
+    border-color: var(--status-successful-color);
+    background-color: var(--status-successful-color);
+    color: white;
+}
+
+.status-step-label {
+    position: absolute;
+    top: 35px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 10px;
+    color: #777;
+}
+
+.status-step.active .status-step-label,
+.status-step.completed .status-step-label {
+    font-weight: 500;
+    color: #333;
+}
+
+/* Status Timeline */
+.status-timeline {
+    position: relative;
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 2px solid #e0e0e0;
+}
+
+.status-timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.status-timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -26px;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+}
+
+.status-timeline-item.active::before {
+    background-color: var(--status-processing-color);
+    width: 14px;
+    height: 14px;
+    left: -28px;
+}
+
+.status-timeline-item.completed::before {
+    background-color: var(--status-successful-color);
+}
+
+.status-timeline-date {
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 4px;
+}
+
+.status-timeline-title {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.status-timeline-description {
+    font-size: 13px;
+    color: #555;
+}
+
+/* Status Table Styles */
+.status-cell {
+    position: relative;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.status-indicator.new {
+    background-color: var(--status-new-color);
+}
+
+.status-indicator.processing {
+    background-color: var(--status-processing-color);
+}
+
+.status-indicator.paused {
+    background-color: var(--status-paused-color);
+}
+
+.status-indicator.successful {
+    background-color: var(--status-successful-color);
+}
+
+.status-indicator.unsuccessful {
+    background-color: var(--status-unsuccessful-color);
+}
+
+/* Status Action Buttons */
+.status-action-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.status-action-btn.primary {
+    background-color: var(--status-new-color);
+    color: white;
+}
+
+.status-action-btn.primary:hover {
+    background-color: #2980b9;
+}
+
+.status-action-btn.success {
+    background-color: var(--status-successful-color);
+    color: white;
+}
+
+.status-action-btn.success:hover {
+    background-color: #27ae60;
+}
+
+.status-action-btn.warning {
+    background-color: var(--status-processing-color);
+    color: white;
+}
+
+.status-action-btn.warning:hover {
+    background-color: #e67e22;
+}
+
+.status-action-btn.danger {
+    background-color: var(--status-paused-color);
+    color: white;
+}
+
+.status-action-btn.danger:hover {
+    background-color: #c0392b;
+}
+
+/* Status Filter Dropdown */
+.status-filter-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.status-filter-dropdown select {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: white;
+    appearance: none;
+    padding-right: 30px;
+    cursor: pointer;
+}
+
+.status-filter-dropdown::after {
+    content: "▼";
+    font-size: 10px;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Status Category Pills */
+.status-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-pill.new {
+    background-color: var(--status-new-bg);
+    color: var(--status-new-color);
+}
+
+.status-pill.processing {
+    background-color: var(--status-processing-bg);
+    color: var(--status-processing-color);
+}
+
+.status-pill.paused {
+    background-color: var(--status-paused-bg);
+    color: var(--status-paused-color);
+}
+
+.status-pill.successful {
+    background-color: var(--status-successful-bg);
+    color: var(--status-successful-color);
+}
+
+.status-pill.unsuccessful {
+    background-color: var(--status-unsuccessful-bg);
+    color: var(--status-unsuccessful-color);
+}
+
+/* Status Icons */
+.status-icon {
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+/* Responsive Status Styles */
+@media (max-width: 768px) {
+    .status-badge {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+
+    .status-progress-container {
+        display: none;
+    }
+
+    .status-timeline {
+        margin-left: 10px;
+        padding-left: 15px;
+    }
+
+    .status-timeline-item::before {
+        left: -21px;
+    }
+
+    .status-timeline-item.active::before {
+        left: -23px;
+    }
+}
+

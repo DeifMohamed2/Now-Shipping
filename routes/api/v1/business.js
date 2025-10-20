@@ -20,7 +20,6 @@ async function authenticateUser(req, res, next) {
     try {
         const decode = jwt.verify(token, jwtSecret);
         req.userId = decode.userId;
-        console.log('decode:', new Date(decode.exp * 1000).toISOString());
         const user = await User.findOne({ _id: decode.userId });
         req.userData = user; // Attach user data to request object
         if (!user) {
@@ -109,5 +108,62 @@ router.delete('/pickup-details/:pickupNumber/delete-pickup', businessController.
 
 // edit profile
 router.put('/edit-profile', businessController.editProfile);
+
+// ==================== RETURN FLOW APIs ==================== //
+
+// // Get available return orders for linking
+// router.get('/return-orders/available', businessController.getAvailableReturnOrders);
+
+// Get comprehensive return order details
+// router.get('/return-orders/:orderId', businessController.getReturnOrderDetails);
+
+// Get all return orders with filtering and pagination
+// router.get('/return-orders', businessController.getReturnOrders);
+
+// Calculate return fees
+// router.post('/return-orders/calculate-fees', businessController.calculateReturnFeesAPI);
+
+// // Mark deliver order as returned when return process is completed
+// router.put('/orders/:orderId/mark-returned', businessController.markDeliverOrderAsReturned);
+
+// ==================== WAITING ACTION APIs ==================== //
+
+// Retry order tomorrow
+router.post('/orders/:orderId/retry-tomorrow', businessController.retryTomorrow);
+
+// Schedule retry for specific date
+router.post('/orders/:orderId/retry-scheduled', businessController.retryScheduled);
+
+// Return to warehouse from waiting action
+router.post('/orders/:orderId/return-to-warehouse', businessController.returnToWarehouseFromWaiting);
+
+// Cancel from waiting action
+// router.post('/orders/:orderId/cancel-from-waiting', businessController.cancelFromWaiting);
+
+// ==================== ORDER MANAGEMENT APIs ==================== //
+
+// Cancel order with proper status transition
+router.post('/orders/:orderId/cancel', businessController.cancelOrder);
+
+// Validate original order for return
+router.post('/orders/validate-original', businessController.validateOriginalOrder);
+
+// Calculate pickup fee
+router.post('/pickups/calculate-fee', businessController.calculatePickupFee);
+
+// ==================== RECOVERY APIs ==================== //
+
+// Recover order courier assignment
+// router.post('/orders/:orderId/recover-courier', businessController.recoverOrderCourier);
+
+// ==================== TRANSACTION APIs ==================== //
+
+// Get all transactions by date
+router.get('/transactions', businessController.get_allTransactionsByDate);
+
+// ==================== CASH CYCLE APIs ==================== //
+
+// Get total cash cycle by date
+router.get('/cash-cycles', businessController.get_totalCashCycleByDate);
 
 module.exports = router;

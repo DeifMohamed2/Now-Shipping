@@ -11,9 +11,9 @@ async function cancelOrder(orderId) {
     .then(async (result) => {
       if (result.isConfirmed) {
         const response = await fetch(
-          `/business/orders/delete-order/${orderId}`,
+          `/business/orders/cancel-order/${orderId}`,
           {
-            method: 'DELETE',
+            method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },

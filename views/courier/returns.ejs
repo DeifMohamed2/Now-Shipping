@@ -1,0 +1,327 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+<%- contentFor('body') %>
+
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">Return Orders</h4>
+      <div class="page-title-right">
+        <ol class="breadcrumb m-0">
+          <li class="breadcrumb-item"><a href="javascript:void(0);">Dashboard</a></li>
+          <li class="breadcrumb-item active">Return Orders</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card" id="orderList">
+      <div class="card-header border-0">
+        <div class="row align-items-center gy-3">
+          <div class="col-sm">
+            <h5 class="card-title mb-0">Return Orders</h5>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row" id="returnContainer">
+          <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading return orders...</p>
+          </div>
+        </div>
+        <div class="row" id="noReturnOrders" style="display: none;">
+          <div class="col-12 text-center py-5">
+            <div>
+              <i class="ri-inbox-archive-line" style="font-size: 3rem; color: #ccc;"></i>
+              <h5 class="mt-2">No Return Orders</h5>
+              <p class="text-muted">You don't have any return orders assigned to you at this time.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    await fetchReturnOrders();
+  });
+
+  async function fetchReturnOrders() {
+    try {
+      const response = await fetch('/courier/get-returns');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch returns');
+      }
+      
+      // Extract orders from the response object
+      const orders = data.orders || data;
+      renderReturnOrders(orders);
+    } catch (error) {
+      console.error('Error fetching return orders:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load return orders. Please try again.',
+      });
+    }
+  }
+
+  function renderReturnOrders(orders) {
+    const container = document.getElementById('returnContainer');
+    const noOrdersElement = document.getElementById('noReturnOrders');
+    
+    // Clear loading indicator
+    container.innerHTML = '';
+    
+    if (!orders || orders.length === 0) {
+      noOrdersElement.style.display = 'block';
+      return;
+    }
+    
+    noOrdersElement.style.display = 'none';
+    
+    orders.forEach(order => {
+      const orderCard = document.createElement('div');
+      orderCard.className = 'col-md-6 col-lg-4 mb-4';
+      
+      // Determine the card style based on status
+      let statusBadge = '';
+      let actionButtons = '';
+      
+      if (order.orderStatus === 'returnAssigned') {
+        statusBadge = '<span class="badge bg-info">Return Assigned</span>';
+        actionButtons = `
+          <div class="d-flex gap-2">
+            <button class="btn btn-success w-100" onclick="pickupReturn('${order.orderNumber}')">
+              <i class="ri-truck-line me-1"></i> Pick Up Return
+            </button>
+          </div>
+        `;
+      } else if (order.orderStatus === 'returnPickedUp') {
+        statusBadge = '<span class="badge bg-warning">Return Picked Up</span>';
+        actionButtons = `
+          <div class="d-flex gap-2">
+            <button class="btn btn-success w-100" onclick="deliverToWarehouse('${order.orderNumber}')">
+              <i class="ri-store-2-line me-1"></i> Deliver to Warehouse
+            </button>
+          </div>
+        `;
+      } else if (order.orderStatus === 'returnAtWarehouse') {
+        statusBadge = '<span class="badge bg-secondary">At Warehouse</span>';
+        actionButtons = `
+          <div class="d-flex gap-2">
+            <a href="/courier/order-details/${order.orderNumber}" class="btn btn-primary w-100">
+              <i class="ri-eye-line me-1"></i> View Details
+            </a>
+          </div>
+        `;
+      } else if (order.orderStatus === 'returnToBusiness') {
+        statusBadge = '<span class="badge bg-primary">Returning to Business</span>';
+        actionButtons = `
+          <div class="d-flex gap-2">
+            <button class="btn btn-success w-100" onclick="completeReturnToBusiness('${order.orderNumber}')">
+              <i class="ri-check-double-line me-1"></i> Complete Return
+            </button>
+          </div>
+        `;
+      }
+      
+      orderCard.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title mb-0">#${order.orderNumber}</h5>
+              ${statusBadge}
+            </div>
+            
+            <div class="customer-info mb-3">
+              <p class="mb-1"><i class="ri-user-line me-1 text-muted"></i> ${order.orderCustomer.fullName}</p>
+              <p class="mb-1"><i class="ri-phone-line me-1 text-muted"></i> ${order.orderCustomer.phoneNumber}</p>
+              <p class="mb-1"><i class="ri-map-pin-line me-1 text-muted"></i> ${order.orderCustomer.address}, ${order.orderCustomer.zone}, ${order.orderCustomer.government}</p>
+            </div>
+            
+            <div class="order-info mb-3">
+              ${order.orderShipping.isPartialReturn ? `
+                <div class="alert alert-warning mb-2">
+                  <i class="ri-information-line me-1"></i>
+                  <strong>Partial Return:</strong> ${order.orderShipping.partialReturnItemCount} of ${order.orderShipping.originalOrderItemCount} items
+                </div>
+                <p class="mb-1"><i class="ri-shopping-bag-line me-1 text-muted"></i> Items to Return: ${order.orderShipping.partialReturnItemCount}</p>
+                ${order.orderShipping.productDescription ? `<p class="mb-1"><i class="ri-file-text-line me-1 text-muted"></i> Product: ${order.orderShipping.productDescription}</p>` : ''}
+              ` : `
+                <p class="mb-1"><i class="ri-shopping-bag-line me-1 text-muted"></i> Items: ${order.orderShipping.numberOfItems}</p>
+              `}
+              <p class="mb-1"><i class="ri-store-2-line me-1 text-muted"></i> Business: ${order.business.brandInfo.brandName}</p>
+              ${order.orderShipping.returnReason ? `<p class="mb-1"><i class="ri-information-line me-1 text-muted"></i> Reason: ${order.orderShipping.returnReason}</p>` : ''}
+            </div>
+            
+            ${actionButtons}
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(orderCard);
+    });
+  }
+
+  async function pickupReturn(orderNumber) {
+    try {
+      // Show popup for notes
+      const { value: notes, isConfirmed } = await Swal.fire({
+        title: 'Pick Up Return',
+        input: 'textarea',
+        inputLabel: 'Additional Notes (Optional)',
+        inputPlaceholder: 'Add any notes about the return pickup...',
+        showCancelButton: true,
+        confirmButtonText: 'Pick Up Return',
+      });
+      
+      if (!isConfirmed) return;
+      
+      // Process the return pickup
+      const response = await fetch(`/courier/orders/${orderNumber}/pickup-return`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Could not complete return pickup');
+      }
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Return has been picked up from customer',
+        confirmButtonText: 'OK',
+        timer: 2000
+      }).then(() => {
+        fetchReturnOrders();
+      });
+    } catch (error) {
+      console.error('Error completing return pickup:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to complete return pickup. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+  
+  async function deliverToWarehouse(orderNumber) {
+    try {
+      // Show popup for notes
+      const { value: notes, isConfirmed } = await Swal.fire({
+        title: 'Deliver to Warehouse',
+        input: 'textarea',
+        inputLabel: 'Additional Notes (Optional)',
+        inputPlaceholder: 'Add any notes about delivering the return to warehouse...',
+        showCancelButton: true,
+        confirmButtonText: 'Deliver to Warehouse',
+      });
+      
+      if (!isConfirmed) return;
+      
+      // Process the return delivery to warehouse
+      const response = await fetch(`/courier/orders/${orderNumber}/deliver-to-warehouse`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Could not complete warehouse delivery');
+      }
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Return has been delivered to the warehouse',
+        confirmButtonText: 'OK',
+        timer: 2000
+      }).then(() => {
+        fetchReturnOrders();
+      });
+    } catch (error) {
+      console.error('Error delivering to warehouse:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to deliver to warehouse. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+  
+  async function completeReturnToBusiness(orderNumber) {
+    try {
+      // Show popup for notes
+      const { value: notes, isConfirmed } = await Swal.fire({
+        title: 'Complete Return to Business',
+        input: 'textarea',
+        inputLabel: 'Additional Notes (Optional)',
+        inputPlaceholder: 'Add any notes about completing the return to business...',
+        showCancelButton: true,
+        confirmButtonText: 'Complete Return',
+      });
+      
+      if (!isConfirmed) return;
+      
+      // Process the return completion
+      const response = await fetch(`/courier/orders/${orderNumber}/complete-return-to-business`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Could not complete return');
+      }
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Return has been completed and delivered to business',
+        confirmButtonText: 'OK',
+        timer: 2000
+      }).then(() => {
+        fetchReturnOrders();
+      });
+    } catch (error) {
+      console.error('Error completing return:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to complete return. Please try again.',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+</script> 
