@@ -78,7 +78,10 @@ router.post('/submit-order', businessController.submitOrder);
 
 router.post('/orders/print-policy/:orderNumber/:pageSize', businessController.printPolicy);
 
-router.get('/order-details/:orderNumber', businessController.get_orderDetailsPage);
+// router.get('/order-details/:orderNumber', businessController.get_orderDetailsPage);
+
+// API route for mobile - returns JSON data
+router.get('/order-details/:orderNumber', businessController.get_orderDetailsAPI);
 
 router.put('/orders/edit-order/:orderId', businessController.editOrder);
 

@@ -1187,12 +1187,112 @@ const get_orderDetailsPage = async (req, res) => {
   }
 };
 
+// API function for mobile - returns JSON data instead of rendering page
+const get_orderDetailsAPI = async (req, res) => {
+  try {
+    const { orderNumber } = req.params;
+    const userData = req.userData;
+    
+    if (!userData || !userData._id) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Unauthorized access'
+      });
+    }
+
+    const order = await Order.findOne({ orderNumber: orderNumber, business: userData._id })
+      .populate('deliveryMan', 'name phone email')
+      .populate({
+        path: 'courierHistory.courier',
+        model: 'courier',
+        select: 'name phone email'
+      })
+      .populate('business', 'name email phone brandInfo');
+
+    if (!order) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Order not found'
+      });
+    }
+
+    // Enhance order with status information
+    const orderObj = order.toObject();
+    orderObj.statusLabel = statusHelper.getOrderStatusLabel(order.orderStatus);
+    orderObj.statusDescription = statusHelper.getOrderStatusDescription(order.orderStatus);
+    orderObj.categoryClass = statusHelper.getCategoryClass(order.statusCategory);
+    orderObj.categoryColor = statusHelper.getCategoryColor(order.statusCategory);
+    
+    // Add fast shipping indicator
+    orderObj.isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
+
+    // Calculate progress percentage for order stages
+    const orderStages = [
+      'orderPlaced', 'packed', 'shipping', 'inProgress', 
+      'outForDelivery', 'delivered'
+    ];
+    
+    const completedStages = orderStages.filter(stage => 
+      order.orderStages[stage]?.isCompleted
+    ).length;
+    
+    const progressPercentage = Math.round((completedStages / orderStages.length) * 100);
+
+    // Get stage timeline
+    const stageTimeline = orderStages.map(stage => ({
+      stage,
+      isCompleted: order.orderStages[stage]?.isCompleted || false,
+      completedAt: order.orderStages[stage]?.completedAt || null,
+      notes: order.orderStages[stage]?.notes || '',
+      ...order.orderStages[stage]?.toObject()
+    }));
+
+    // Prepare response data
+    const responseData = {
+      status: 'success',
+      message: 'Order details retrieved successfully',
+      order: {
+        _id: orderObj._id,
+        orderNumber: orderObj.orderNumber,
+        orderDate: orderObj.orderDate,
+        completedDate: orderObj.completedDate,
+        orderStatus: orderObj.orderStatus,
+        statusLabel: orderObj.statusLabel,
+        statusDescription: orderObj.statusDescription,
+        categoryClass: orderObj.categoryClass,
+        categoryColor: orderObj.categoryColor,
+        isFastShipping: orderObj.isFastShipping,
+        orderCustomer: orderObj.orderCustomer,
+        orderShipping: orderObj.orderShipping,
+        orderFees: orderObj.orderFees,
+        orderNotes: orderObj.orderNotes,
+        referralNumber: orderObj.referralNumber,
+        isOrderAvailableForPreview: orderObj.isOrderAvailableForPreview,
+        deliveryMan: orderObj.deliveryMan,
+        courierHistory: orderObj.courierHistory,
+        orderStages: orderObj.orderStages,
+        progressPercentage,
+        stageTimeline,
+        business: orderObj.business,
+        createdAt: orderObj.createdAt,
+        updatedAt: orderObj.updatedAt
+      }
+    };
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error('Error in get_orderDetailsAPI:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
 
 
 
-/**
- * Cancel an order with proper status transition validation
- */
+
 const cancelOrder = async (req, res) => {
   const { orderId } = req.params;
 
@@ -3438,6 +3538,7 @@ module.exports = {
   submitOrder,
   get_editOrderPage,
   get_orderDetailsPage,
+  get_orderDetailsAPI,
   editOrder,
   cancelOrder,
   deleteOrder,
