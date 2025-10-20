@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 
 //================================================= Landing Page =========================================================
 const index = (req, res) => {
-  res.render('landing/comingsoon', { title: 'Home', layout: 'layouts/layout-without-nav' });
+  res.render('landing/index', { title: 'Home', layout: 'layouts/layout-without-nav' });
 };
 
 
