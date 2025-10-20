@@ -2602,178 +2602,6 @@ const exportTransactionsToExcel = async (req, res) => {
   }
 }
 
-// Professional Excel Export for Cash Cycles
-const exportCashCyclesToExcel = async (req, res) => {
-  try {
-    const { timePeriod, dateFrom, dateTo, orderStatus } = req.query;
-    
-    // Build query based on filters
-    let query = { business: req.userData._id, orderStatus: 'completed' };
-    let dateFilter = {};
-    
-    // Date filtering
-    if (dateFrom && dateTo) {
-      dateFilter = {
-        completedDate: {
-          $gte: new Date(dateFrom),
-          $lte: new Date(dateTo)
-        }
-      };
-    } else if (timePeriod && timePeriod !== 'all') {
-      const now = new Date();
-      switch (timePeriod) {
-        case 'today':
-          const todayStart = new Date();
-          todayStart.setHours(0, 0, 0, 0);
-          const todayEnd = new Date();
-          todayEnd.setHours(23, 59, 59, 999);
-          dateFilter = { completedDate: { $gte: todayStart, $lte: todayEnd } };
-          break;
-        case 'week':
-          const weekStart = new Date();
-          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-          weekStart.setHours(0, 0, 0, 0);
-          const weekEnd = new Date(weekStart);
-          weekEnd.setDate(weekStart.getDate() + 6);
-          weekEnd.setHours(23, 59, 59, 999);
-          dateFilter = { completedDate: { $gte: weekStart, $lte: weekEnd } };
-          break;
-        case 'month':
-          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-          dateFilter = { completedDate: { $gte: monthStart, $lte: monthEnd } };
-          break;
-        case 'year':
-          const yearStart = new Date(now.getFullYear(), 0, 1);
-          const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-          dateFilter = { completedDate: { $gte: yearStart, $lte: yearEnd } };
-          break;
-      }
-    }
-    
-    // Combine filters
-    query = { ...query, ...dateFilter };
-    
-    // Get orders
-    const orders = await Order.find(query)
-      .populate('deliveryMan', 'name phone')
-      .sort({ completedDate: -1 });
-    
-    // Create Excel workbook
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Cash Cycles Report');
-    
-    // Define columns
-    worksheet.columns = [
-      { header: 'Order ID', key: 'orderNumber', width: 15 },
-      { header: 'Order Date', key: 'orderDate', width: 12 },
-      { header: 'Completed Date', key: 'completedDate', width: 15 },
-      { header: 'Order Type', key: 'orderType', width: 15 },
-      { header: 'Customer', key: 'customer', width: 20 },
-      { header: 'Location', key: 'location', width: 20 },
-      { header: 'Order Value (EGP)', key: 'orderValue', width: 18 },
-      { header: 'Service Fee (EGP)', key: 'serviceFee', width: 18 },
-      { header: 'Net Amount (EGP)', key: 'netAmount', width: 18 },
-      { header: 'Delivery Man', key: 'deliveryMan', width: 20 },
-      { header: 'Release Status', key: 'releaseStatus', width: 15 }
-    ];
-    
-    // Style header row
-    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: '2A3950' }
-    };
-    worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
-    
-    // Add data rows
-    orders.forEach(order => {
-      const orderValue = order.orderShipping.amount || 0;
-      const serviceFee = order.orderFees || 0;
-      const netAmount = orderValue - serviceFee;
-      
-      worksheet.addRow({
-        orderNumber: order.orderNumber,
-        orderDate: new Date(order.orderDate).toLocaleDateString(),
-        completedDate: new Date(order.completedDate).toLocaleDateString(),
-        orderType: order.orderShipping.orderType,
-        customer: order.orderCustomer.fullName,
-        location: `${order.orderCustomer.government}, ${order.orderCustomer.zone}`,
-        orderValue: orderValue,
-        serviceFee: serviceFee,
-        netAmount: netAmount,
-        deliveryMan: order.deliveryMan ? order.deliveryMan.name : 'N/A',
-        releaseStatus: order.moneyReleaseDate ? 'Released' : 'Pending'
-      });
-    });
-    
-    // Add summary row
-    const totalRow = worksheet.addRow({});
-    totalRow.getCell('orderNumber').value = 'TOTAL';
-    totalRow.getCell('orderNumber').font = { bold: true };
-    totalRow.getCell('orderValue').value = orders.reduce((sum, order) => sum + (order.orderShipping.amount || 0), 0);
-    totalRow.getCell('serviceFee').value = orders.reduce((sum, order) => sum + (order.orderFees || 0), 0);
-    totalRow.getCell('netAmount').value = totalRow.getCell('orderValue').value - totalRow.getCell('serviceFee').value;
-    
-    // Style summary row
-    totalRow.font = { bold: true };
-    totalRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'F3F4F6' }
-    };
-    
-    // Style data rows
-    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-      if (rowNumber > 1 && rowNumber < worksheet.rowCount) {
-        row.alignment = { vertical: 'middle' };
-        
-        // Color code amounts
-        const orderValueCell = row.getCell('orderValue');
-        const serviceFeeCell = row.getCell('serviceFee');
-        const netAmountCell = row.getCell('netAmount');
-        
-        orderValueCell.font = { color: { argb: '10B981' } };
-        serviceFeeCell.font = { color: { argb: 'EF4444' } };
-        netAmountCell.font = { color: { argb: '3B82F6' } };
-        
-        // Color code release status
-        const releaseStatusCell = row.getCell('releaseStatus');
-        if (releaseStatusCell.value === 'Released') {
-          releaseStatusCell.font = { color: { argb: '10B981' } };
-        } else {
-          releaseStatusCell.font = { color: { argb: 'F59E0B' } };
-        }
-      }
-    });
-    
-    // Add borders
-    worksheet.eachRow((row, rowNumber) => {
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
-        };
-      });
-    });
-    
-    // Set response headers
-    const filename = `cash_cycles_${new Date().toISOString().split('T')[0]}.xlsx`;
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    
-    // Write to response
-    await workbook.xlsx.write(res);
-    res.end();
-    
-  } catch (error) {
-    console.error('Error exporting cash cycles to Excel:', error);
-    res.status(500).json({ error: 'Failed to export cash cycles' });
-  }
-}
 
 // Helper function for transaction type labels
 const getTransactionTypeLabel = (type) => {
@@ -3065,6 +2893,178 @@ const get_totalCashCycleByDate = async (req, res) => {
 }
 
 
+// Professional Excel Export for Cash Cycles
+const exportCashCyclesToExcel = async (req, res) => {
+  try {
+    const { timePeriod, dateFrom, dateTo, orderStatus } = req.query;
+    
+    // Build query based on filters
+    let query = { business: req.userData._id, orderStatus: 'completed' };
+    let dateFilter = {};
+    
+    // Date filtering
+    if (dateFrom && dateTo) {
+      dateFilter = {
+        completedDate: {
+          $gte: new Date(dateFrom),
+          $lte: new Date(dateTo)
+        }
+      };
+    } else if (timePeriod && timePeriod !== 'all') {
+      const now = new Date();
+      switch (timePeriod) {
+        case 'today':
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const todayEnd = new Date();
+          todayEnd.setHours(23, 59, 59, 999);
+          dateFilter = { completedDate: { $gte: todayStart, $lte: todayEnd } };
+          break;
+        case 'week':
+          const weekStart = new Date();
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+          weekStart.setHours(0, 0, 0, 0);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          weekEnd.setHours(23, 59, 59, 999);
+          dateFilter = { completedDate: { $gte: weekStart, $lte: weekEnd } };
+          break;
+        case 'month':
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+          dateFilter = { completedDate: { $gte: monthStart, $lte: monthEnd } };
+          break;
+        case 'year':
+          const yearStart = new Date(now.getFullYear(), 0, 1);
+          const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+          dateFilter = { completedDate: { $gte: yearStart, $lte: yearEnd } };
+          break;
+      }
+    }
+    
+    // Combine filters
+    query = { ...query, ...dateFilter };
+    
+    // Get orders
+    const orders = await Order.find(query)
+      .populate('deliveryMan', 'name phone')
+      .sort({ completedDate: -1 });
+    
+    // Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Cash Cycles Report');
+    
+    // Define columns
+    worksheet.columns = [
+      { header: 'Order ID', key: 'orderNumber', width: 15 },
+      { header: 'Order Date', key: 'orderDate', width: 12 },
+      { header: 'Completed Date', key: 'completedDate', width: 15 },
+      { header: 'Order Type', key: 'orderType', width: 15 },
+      { header: 'Customer', key: 'customer', width: 20 },
+      { header: 'Location', key: 'location', width: 20 },
+      { header: 'Order Value (EGP)', key: 'orderValue', width: 18 },
+      { header: 'Service Fee (EGP)', key: 'serviceFee', width: 18 },
+      { header: 'Net Amount (EGP)', key: 'netAmount', width: 18 },
+      { header: 'Delivery Man', key: 'deliveryMan', width: 20 },
+      { header: 'Release Status', key: 'releaseStatus', width: 15 }
+    ];
+    
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '2A3950' }
+    };
+    worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // Add data rows
+    orders.forEach(order => {
+      const orderValue = order.orderShipping.amount || 0;
+      const serviceFee = order.orderFees || 0;
+      const netAmount = orderValue - serviceFee;
+      
+      worksheet.addRow({
+        orderNumber: order.orderNumber,
+        orderDate: new Date(order.orderDate).toLocaleDateString(),
+        completedDate: new Date(order.completedDate).toLocaleDateString(),
+        orderType: order.orderShipping.orderType,
+        customer: order.orderCustomer.fullName,
+        location: `${order.orderCustomer.government}, ${order.orderCustomer.zone}`,
+        orderValue: orderValue,
+        serviceFee: serviceFee,
+        netAmount: netAmount,
+        deliveryMan: order.deliveryMan ? order.deliveryMan.name : 'N/A',
+        releaseStatus: order.moneyReleaseDate ? 'Released' : 'Pending'
+      });
+    });
+    
+    // Add summary row
+    const totalRow = worksheet.addRow({});
+    totalRow.getCell('orderNumber').value = 'TOTAL';
+    totalRow.getCell('orderNumber').font = { bold: true };
+    totalRow.getCell('orderValue').value = orders.reduce((sum, order) => sum + (order.orderShipping.amount || 0), 0);
+    totalRow.getCell('serviceFee').value = orders.reduce((sum, order) => sum + (order.orderFees || 0), 0);
+    totalRow.getCell('netAmount').value = totalRow.getCell('orderValue').value - totalRow.getCell('serviceFee').value;
+    
+    // Style summary row
+    totalRow.font = { bold: true };
+    totalRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'F3F4F6' }
+    };
+    
+    // Style data rows
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber > 1 && rowNumber < worksheet.rowCount) {
+        row.alignment = { vertical: 'middle' };
+        
+        // Color code amounts
+        const orderValueCell = row.getCell('orderValue');
+        const serviceFeeCell = row.getCell('serviceFee');
+        const netAmountCell = row.getCell('netAmount');
+        
+        orderValueCell.font = { color: { argb: '10B981' } };
+        serviceFeeCell.font = { color: { argb: 'EF4444' } };
+        netAmountCell.font = { color: { argb: '3B82F6' } };
+        
+        // Color code release status
+        const releaseStatusCell = row.getCell('releaseStatus');
+        if (releaseStatusCell.value === 'Released') {
+          releaseStatusCell.font = { color: { argb: '10B981' } };
+        } else {
+          releaseStatusCell.font = { color: { argb: 'F59E0B' } };
+        }
+      }
+    });
+    
+    // Add borders
+    worksheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+    
+    // Set response headers
+    const filename = `cash_cycles_${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
+    
+  } catch (error) {
+    console.error('Error exporting cash cycles to Excel:', error);
+    res.status(500).json({ error: 'Failed to export cash cycles' });
+  }
+}
 
 
 

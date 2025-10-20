@@ -4,7 +4,7 @@ mongoose.set('strictQuery', false);
 const express = require('express');
 const app = express();
 const path = require('path');
-const http = require("http");
+const http = require('http');
 const server = http.createServer(app);
 const socketController = require('./controllers/socketController');
 
@@ -34,17 +34,16 @@ const releasesProccessing = require('./jobs/releasesProccessing');
 // dailyOrderProcessing();
 // releasesProccessing();
 
-
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const upload = require('express-fileupload');
 
-const flash = require("connect-flash");
-var i18n = require("i18n-express");
+const flash = require('connect-flash');
+var i18n = require('i18n-express');
 var bodyParser = require('body-parser');
 var urlencodeParser = bodyParser.urlencoded({
-    extended: true
+  extended: true,
 });
 app.use(urlencodeParser);
 
@@ -53,24 +52,26 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(upload());
 
 app.use(express.json());
-app.use(session({
+app.use(
+  session({
     resave: false,
     saveUninitialized: true,
-    secret: 'nodedemo'
-}));
+    secret: 'nodedemo',
+  })
+);
 app.use(cookieParser());
 
 app.use((req, res, next) => {
-    if (req.path.startsWith('/admin')) {
-        app.set('layout', 'layouts/admin-layout');
-    }  else if (req.path.startsWith('/courier')) {
-        app.set('layout', 'layouts/courier-layout');
-    } else if (req.path.startsWith('/business')) {
-        app.set('layout', 'layouts/layout');
-    }else{
-        // No layout is set for paths that don't match the specified prefixes
-    }
-    next();
+  if (req.path.startsWith('/admin')) {
+    app.set('layout', 'layouts/admin-layout');
+  } else if (req.path.startsWith('/courier')) {
+    app.set('layout', 'layouts/courier-layout');
+  } else if (req.path.startsWith('/business')) {
+    app.set('layout', 'layouts/layout');
+  } else {
+    // No layout is set for paths that don't match the specified prefixes
+  }
+  next();
 });
 app.use(expressLayouts);
 app.use(flash());
@@ -81,45 +82,51 @@ app.use(express.static(__dirname + '/public'));
 const DB = process.env.DATABASE_URL;
 
 // Connect to database first, then start server
-mongoose.connect(DB, {
-    useNewUrlParser: true
-}).then((con) => {
-    console.log("DB connection successfully..!");
-    
+mongoose
+  .connect(DB, {
+    useNewUrlParser: true,
+  })
+  .then((con) => {
+    console.log('DB connection successfully..!');
+
     // Start server after successful database connection
-    server.listen(process.env.PORT, () => console.log(`Server running on port ${process.env.PORT}`));
-}).catch(err => {
-    console.error("Database connection failed:", err);
+    server.listen(process.env.PORT, () =>
+      console.log(`Server running on port ${process.env.PORT}`)
+    );
+  })
+  .catch((err) => {
+    console.error('Database connection failed:', err);
     process.exit(1);
-});
+  });
 
 // for i18 use
-app.use(i18n({
+app.use(
+  i18n({
     translationsPath: path.join(__dirname, 'i18n'), // <--- use here. Specify translations files path.
-    siteLangs: ["ar", "ch", "en", "fr", "ru", "it", "gr", "sp"],
-    textsVarName: 'translation'
-}));
+    siteLangs: ['ar', 'ch', 'en', 'fr', 'ru', 'it', 'gr', 'sp'],
+    textsVarName: 'translation',
+  })
+);
 
 app.use((err, req, res, next) => {
-    let error = {
-        err
-    }
-    if (error.name === 'JsonWebTokenError') {
-        err.message = "please login again";
-        err.statusCode = 401;
-        return res.status(401).redirect('views/auth/login');
-    }
-    err.statusCode = err.statusCode || 500;
-    err.status = err.status || 'errors';
+  let error = {
+    err,
+  };
+  if (error.name === 'JsonWebTokenError') {
+    err.message = 'please login again';
+    err.statusCode = 401;
+    return res.status(401).redirect('views/auth/login');
+  }
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'errors';
 
-    res.status(err.statusCode).json({
-        status: err.status,
-        message: err.message,
-
-    })
+  res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message,
+  });
 });
 
-// Define All Route 
+// Define All Route
 app.use('/', authRouter);
 app.use('/admin', adminRouter);
 app.use('/business', businessRouter);
@@ -132,15 +139,15 @@ app.use('/api/v1/business', businessRouterApi);
 app.use('/api/v1/assistant', assistantRouterApi);
 app.use('/api/v1/courier', courierRouterApi);
 
-
-
-app.all("*", function (req, res) {
-    res.locals = {
-        title: "Error 404"
-    };
-    res.render("auth/auth-404", {
-        layout: "layouts/layout-without-nav"
-    });
+// Catch-all 404 handler (use app.use to avoid path-to-regexp parsing issues)
+app.use(function (req, res) {
+  res.status(404);
+  res.locals = {
+    title: 'Error 404',
+  };
+  res.render('auth/auth-404', {
+    layout: 'layouts/layout-without-nav',
+  });
 });
 
 // Server is now started inside the mongoose.connect().then() callback

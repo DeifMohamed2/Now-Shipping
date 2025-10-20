@@ -105,26 +105,32 @@ router.post('/pickup-details/:pickupNumber/rate-pickup', businessController.rate
 
 router.delete('/pickup-details/:pickupNumber/delete-pickup', businessController.deletePickup);
 
+// Delete pickup by ID (alternative endpoint)
+router.delete('/pickups/:pickupId', businessController.deletePickup);
+
 
 // edit profile
 router.put('/edit-profile', businessController.editProfile);
 
 // ==================== RETURN FLOW APIs ==================== //
 
-// // Get available return orders for linking
-// router.get('/return-orders/available', businessController.getAvailableReturnOrders);
+// Get available return orders for linking
+router.get('/return-orders/available', businessController.getAvailableReturnOrders);
 
 // Get comprehensive return order details
-// router.get('/return-orders/:orderId', businessController.getReturnOrderDetails);
+router.get('/return-orders/:orderId', businessController.getReturnOrderDetails);
 
 // Get all return orders with filtering and pagination
-// router.get('/return-orders', businessController.getReturnOrders);
+router.get('/return-orders', businessController.getReturnOrders);
 
 // Calculate return fees
 // router.post('/return-orders/calculate-fees', businessController.calculateReturnFeesAPI);
 
-// // Mark deliver order as returned when return process is completed
+// Mark deliver order as returned when return process is completed
 // router.put('/orders/:orderId/mark-returned', businessController.markDeliverOrderAsReturned);
+
+// // Initiate return request
+// router.post('/orders/:orderId/initiate-return', businessController.initiateReturn);
 
 // ==================== WAITING ACTION APIs ==================== //
 
@@ -138,7 +144,7 @@ router.post('/orders/:orderId/retry-scheduled', businessController.retrySchedule
 router.post('/orders/:orderId/return-to-warehouse', businessController.returnToWarehouseFromWaiting);
 
 // Cancel from waiting action
-// router.post('/orders/:orderId/cancel-from-waiting', businessController.cancelFromWaiting);
+router.post('/orders/:orderId/cancel-from-waiting', businessController.cancelFromWaiting);
 
 // ==================== ORDER MANAGEMENT APIs ==================== //
 
@@ -154,16 +160,30 @@ router.post('/pickups/calculate-fee', businessController.calculatePickupFee);
 // ==================== RECOVERY APIs ==================== //
 
 // Recover order courier assignment
-// router.post('/orders/:orderId/recover-courier', businessController.recoverOrderCourier);
+router.post('/orders/:orderId/recover-courier', businessController.recoverOrderCourier);
 
 // ==================== TRANSACTION APIs ==================== //
 
 // Get all transactions by date
 router.get('/transactions', businessController.get_allTransactionsByDate);
 
+// Get single transaction details
+router.get('/transactions/:transactionId', businessController.getTransactionDetails);
+
+// Recalculate user balance
+router.post('/wallet/recalculate-balance', businessController.recalculateBalanceAPI);
+
+// Export transactions to Excel
+router.get('/wallet/export-transactions', businessController.exportTransactionsToExcel);
+
+
 // ==================== CASH CYCLE APIs ==================== //
 
 // Get total cash cycle by date
 router.get('/cash-cycles', businessController.get_totalCashCycleByDate);
+
+// Export cash cycles to Excel
+router.get('/wallet/export-cash-cycles', businessController.exportCashCyclesToExcel);
+
 
 module.exports = router;
