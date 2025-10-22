@@ -135,10 +135,26 @@
           </div>
         </li>
         <li class="nav-item">
-          <a class="nav-link menu-link" href="/business/shop" role="button">
-            <i class="ri-store-line" style="color: #F39720;"></i>
-            <span data-key="t-shop" style="color: #212529; font-size: 15px;">Shop</span>
+          <a class="nav-link menu-link" href="#sidebarShop" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarShop">
+            <i class="ri-store-2-line" style="color: #F39720;"></i>
+            <span data-key="t-shop" style="color: #212529; font-size: 15px;">Shop Management</span>
           </a>
+          <div class="collapse ms-3" id="sidebarShop">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link" href="/admin/shop/products">
+                  <i class="ri-product-hunt-line" style="color: #F39720;"></i>
+                  <span data-key="" style="color: #212529; font-size: 14px;">Products</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/admin/shop/orders">
+                  <i class="ri-shopping-bag-line" style="color: #F39720;"></i>
+                  <span data-key="" style="color: #212529; font-size: 14px;">Shop Orders</span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/businesses" role="button">

@@ -37,6 +37,11 @@
     overflow-x: hidden;
   }
 
+  /* Arabic font support */
+  [dir="rtl"] body {
+    font-family: 'Cairo', 'Tajawal', 'Amiri', 'Noto Sans Arabic', sans-serif;
+  }
+
   /* Top Navbar Styles */
   .top-navbar {
     background-color: var(--white);
@@ -318,6 +323,14 @@
     text-align: center;
   }
 
+  /* RTL text alignment */
+  [dir="rtl"] .verify-card,
+  [dir="rtl"] .verify-title,
+  [dir="rtl"] .verify-subtitle,
+  [dir="rtl"] .verify-steps {
+    text-align: center;
+  }
+
   .verify-icon {
     width: 80px;
     height: 80px;
@@ -570,51 +583,8 @@
 </style>
 
 <%- contentFor('body') %>
-<!-- Top Navbar -->
-<nav class="top-navbar">
-  <div class="navbar-container">
-    <a href="/" class="navbar-brand">
-      <div class="navbar-logo">
-        <svg viewBox="0 0 100 100">
-          <path d="M50,15 L60,25 L75,20 L75,40 L90,50 L75,60 L75,80 L60,75 L50,85 L40,75 L25,80 L25,60 L10,50 L25,40 L25,20 L40,25 Z M50,35 C41.7,35 35,41.7 35,50 C35,58.3 41.7,65 50,65 C58.3,65 65,58.3 65,50 C65,41.7 58.3,35 50,35 Z"></path>
-        </svg>
-      </div>
-      <h1 class="navbar-title">Now Shipping</h1>
-    </a>
-
-    <div class="navbar-links">
-      <!-- <a href="#" class="nav-link">Home</a>
-      <a href="#" class="nav-link">Services</a>
-      <a href="#" class="nav-link">Tracking</a>
-      <a href="#" class="nav-link">About Us</a>
-      <a href="#" class="nav-link">Contact</a> -->
-    </div>
-
-    <div class="navbar-actions">
-      <a href="#" class="btn-outline">Help</a>
-      <a href="#" class="btn-primary">Get Started</a>
-    </div>
-
-    <button class="mobile-menu-btn" id="mobile-menu-toggle">
-      <i class="ri-menu-line"></i>
-    </button>
-  </div>
-</nav>
-
-<!-- Mobile menu -->
-<div class="mobile-menu" id="mobile-menu">
-  <div class="mobile-menu-links">
-    <!-- <a href="#" class="nav-link">Home</a>
-    <a href="#" class="nav-link">Services</a>
-    <a href="#" class="nav-link">Tracking</a>
-    <a href="#" class="nav-link">About Us</a>
-    <a href="#" class="nav-link">Contact</a> -->
-  </div>
-  <div class="mobile-menu-actions">
-    <a href="#" class="btn-outline">Help</a>
-    <a href="#" class="btn-primary">Get Started</a>
-  </div>
-</div>
+<!-- Auth Navbar -->
+<%- include('../partials/auth-navbar') %>
 
 <!-- Animated Background -->
 <div class="animated-background">
@@ -643,28 +613,26 @@
       </svg>
     </div>
 
-    <h1 class="verify-title">Verify Your Email</h1>
+    <h1 class="verify-title"><%= translation.auth.messages.emailSent %></h1>
     <p class="verify-subtitle">
-      We've sent a verification link to your email address:
+      <%= translation.auth.messages.verificationSent %>
       <span class="email-highlight" id="userEmail">user@example.com</span>
-      <br>
-      Please check your inbox and click the link to verify your account.
     </p>
 
     <div class="verify-steps">
-      <h2 class="verify-steps-title">Next Steps:</h2>
+      <h2 class="verify-steps-title"><%= translation.auth.register.verifyOtp %></h2>
       <ul class="verify-steps-list">
         <li>
           <span class="step-number">1</span>
-          <span class="step-text">Check your email inbox (and spam folder)</span>
+          <span class="step-text"><%= translation.auth.messages.emailSent %></span>
         </li>
         <li>
           <span class="step-number">2</span>
-          <span class="step-text">Click the verification link in the email</span>
+          <span class="step-text"><%= translation.auth.messages.otpSent %></span>
         </li>
         <li>
           <span class="step-number">3</span>
-          <span class="step-text">Once verified, you can log in to your account</span>
+          <span class="step-text"><%= translation.auth.messages.otpVerified %></span>
         </li>
       </ul>
     </div>
@@ -673,22 +641,22 @@
       <div class="alert-icon">
         <i class="ri-check-line"></i>
       </div>
-      <div>Verification email sent successfully!</div>
+      <div><%= translation.auth.messages.emailSent %></div>
     </div>
 
     <div class="resend-container">
       <p class="resend-text">
-        Didn't receive the email?
+        <%= translation.auth.messages.emailNotVerified %>
         <span id="resendTimer" class="resend-timer" style="display: none;">
-          Resend in <span id="timerCount">60</span>s
+          <%= translation.auth.register.sendOtp %> <span id="timerCount">60</span>s
         </span>
       </p>
       <button id="resendBtn" class="btn-resend">
-        Resend Verification Email
+        <%= translation.auth.register.sendOtp %>
       </button>
     </div>
 
-    <a href="/login" class="btn-login">Back to Login</a>
+    <a href="/login" class="btn-login"><%= translation.auth.login.signIn %></a>
   </div>
 </div>
 

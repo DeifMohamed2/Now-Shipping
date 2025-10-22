@@ -1,0 +1,538 @@
+<!-- Professional Auth Navbar Partial -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<header id="auth-header">
+  <!-- Logo positioned on the right for Arabic, left for English -->
+  <a href="/" class="auth-logo">
+    <img src="/assets/rImages/logo.png" alt="ShipFast Logo">
+  </a>
+
+  <!-- Mobile menu button -->
+  <div class="auth-mobile-menu-btn" id="auth-mobile-menu-toggle">
+    <i class="fas fa-bars"></i>
+  </div>
+
+  <!-- Navigation container -->
+  <div class="auth-nav-container" id="auth-main-nav">
+    <!-- Navigation links positioned on the left for Arabic, right for English -->
+    <nav class="auth-nav">
+      <ul>
+        <li class="<%= typeof activePage !== 'undefined' && activePage === 'about' ? 'active' : '' %>">
+          <a href="/aboutus">
+            <i class="fas fa-info-circle"></i>
+            <span><%= translation.navigation.about %></span>
+          </a>
+        </li>
+        <li class="<%= typeof activePage !== 'undefined' && activePage === 'faq' ? 'active' : '' %>">
+          <a href="/faq">
+            <i class="fas fa-question-circle"></i>
+            <span><%= translation.navigation.faq %></span>
+          </a>
+        </li>
+        <li class="<%= typeof activePage !== 'undefined' && activePage === 'mobileApp' ? 'active' : '' %>">
+          <a href="/mobileApp">
+            <i class="fas fa-mobile-alt"></i>
+            <span><%= translation.navigation.mobileApp %></span>
+          </a>
+        </li>
+        <li class="<%= typeof activePage !== 'undefined' && activePage === 'pricing' ? 'active' : '' %>">
+          <a href="/pricing">
+            <i class="fas fa-tag"></i>
+            <span><%= translation.navigation.pricing %></span>
+          </a>
+        </li>
+        <li class="<%= typeof activePage !== 'undefined' && activePage === 'tracking' ? 'active' : '' %>">
+          <a href="/tracking">
+            <i class="fas fa-search"></i>
+            <span><%= translation.navigation.tracking %></span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Auth buttons -->
+    <div class="auth-buttons">
+      <a href="/login" class="btn btn-secondary">
+        <i class="fas fa-sign-in-alt"></i>
+        <span><%= translation.navigation.login %></span>
+      </a>
+      <a href="/register" class="btn btn-primary">
+        <i class="fas fa-user-plus"></i>
+        <span><%= translation.navigation.register %></span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<style>
+/* Professional Auth Navbar Styles */
+:root {
+  --primary: #F39720;
+  --secondary: #FDB614;
+  --accent: #8FCAE5;
+  --accent-dark: #3D9BC5;
+  --dark: #1E293B;
+  --light: #F8FAFC;
+  --white: #FFFFFF;
+  --border-radius: 0.5rem;
+  --border-radius-full: 9999px;
+  --transition: all 0.3s ease;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+#auth-header {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
+  transition: all 0.3s ease;
+  height: 70px;
+  min-height: 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+}
+
+#auth-header.scrolled {
+  background-color: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.auth-logo {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  font-size: 1.75rem;
+  color: var(--primary);
+  text-decoration: none;
+  position: relative;
+  z-index: 1001;
+  flex-shrink: 0;
+  order: 2; /* Logo on right for Arabic by default */
+}
+
+.auth-logo img {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  transition: all 0.3s ease;
+}
+
+#auth-header.scrolled .auth-logo img {
+  height: 45px;
+}
+
+/* Navigation container */
+.auth-nav-container {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  height: auto;
+  flex: 1;
+  justify-content: space-between;
+  order: 1; /* Nav on left for Arabic by default */
+}
+
+.auth-nav {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start; /* Start from left for Arabic */
+}
+
+.auth-nav ul {
+  display: flex;
+  list-style: none;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  justify-content: flex-start; /* Start from left for Arabic */
+  flex-wrap: nowrap;
+}
+
+.auth-nav ul li {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.auth-nav ul li a {
+  text-decoration: none;
+  color: var(--dark);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--border-radius);
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 44px;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.auth-nav ul li a::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
+  background-color: var(--primary);
+  transition: width 0.3s ease;
+  border-radius: 3px 3px 0 0;
+}
+
+.auth-nav ul li a:hover::before,
+.auth-nav ul li.active a::before {
+  width: 70%;
+}
+
+.auth-nav ul li a i {
+  font-size: 1.1rem;
+  color: var(--primary);
+  transition: transform 0.3s ease;
+}
+
+.auth-nav ul li a:hover i {
+  transform: translateY(-3px);
+}
+
+.auth-nav ul li a:hover {
+  color: var(--primary);
+  background-color: rgba(243, 151, 32, 0.05);
+}
+
+.auth-nav ul li.active a {
+  color: var(--primary);
+  background-color: rgba(243, 151, 32, 0.08);
+  font-weight: 700;
+}
+
+/* Auth Buttons */
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-full);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  border: none;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  bottom: -50%;
+  left: -10%;
+  width: 120%;
+  height: 200%;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 40%;
+  transform: scale(0);
+  transition: transform 0.6s ease;
+  z-index: -1;
+}
+
+.btn:hover::after {
+  transform: scale(1);
+}
+
+.btn i {
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.btn:hover i {
+  transform: translateY(-3px);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  border: 2px solid var(--primary);
+  box-shadow: 0 4px 15px rgba(243, 151, 32, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(243, 151, 32, 0.4);
+}
+
+.btn-secondary {
+  background-color: var(--accent);
+  color: white;
+  border: 2px solid var(--accent);
+}
+
+.btn-secondary:hover {
+  background-color: var(--accent-dark);
+  border-color: var(--accent-dark);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow);
+}
+
+/* Mobile Menu Button */
+.auth-mobile-menu-btn {
+  display: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--dark);
+  width: 50px;
+  height: 50px;
+  border-radius: var(--border-radius);
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  background-color: transparent;
+  position: relative;
+  z-index: 1001;
+}
+
+.auth-mobile-menu-btn:hover {
+  background-color: rgba(243, 151, 32, 0.1);
+  color: var(--primary);
+}
+
+.auth-mobile-menu-btn.active {
+  color: var(--primary);
+}
+
+/* RTL Support */
+[dir="rtl"] .auth-logo {
+  order: 1; /* Logo on left for RTL */
+}
+
+[dir="rtl"] .auth-nav-container {
+  order: 2; /* Nav on right for RTL */
+}
+
+[dir="rtl"] .auth-nav {
+  justify-content: flex-end; /* End from right for RTL */
+}
+
+[dir="rtl"] .auth-nav ul {
+  justify-content: flex-end; /* End from right for RTL */
+}
+
+/* Responsive Styles */
+@media (max-width: 1280px) {
+  #auth-header {
+    padding: 0.75rem 2rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  #auth-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .auth-logo img {
+    height: 45px;
+  }
+}
+
+@media (max-width: 768px) {
+  #auth-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .auth-logo img {
+    height: 45px;
+  }
+
+  .auth-nav-container {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    height: 100vh;
+    background-color: white;
+    flex-direction: column;
+    padding: 5rem 2rem 2rem;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+    justify-content: flex-start;
+    order: unset;
+  }
+
+  .auth-nav-container.active {
+    right: 0;
+  }
+
+  /* RTL mobile menu */
+  [dir="rtl"] .auth-nav-container {
+    right: auto;
+    left: -100%;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+  }
+
+  [dir="rtl"] .auth-nav-container.active {
+    right: auto;
+    left: 0;
+  }
+
+  .auth-mobile-menu-btn {
+    display: flex;
+  }
+
+  .auth-nav {
+    margin-right: 0;
+    margin-bottom: 2rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .auth-nav ul {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .auth-nav ul li {
+    width: 100%;
+  }
+
+  .auth-nav ul li a {
+    width: 100%;
+    padding: 1rem;
+    justify-content: flex-start;
+  }
+
+  .auth-nav ul li a::before {
+    bottom: auto;
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 3px;
+    height: 0;
+  }
+
+  .auth-nav ul li a:hover::before,
+  .auth-nav ul li.active a::before {
+    width: 3px;
+    height: 70%;
+  }
+
+  .auth-buttons {
+    width: 100% !important;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  #auth-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .auth-nav-container {
+    width: 85%;
+    padding: 5rem 1.5rem 2rem;
+  }
+
+  .auth-nav ul li a {
+    padding: 1rem 1.25rem;
+  }
+}
+</style>
+
+<script>
+// Auth Mobile Menu Toggle
+const authMobileMenuBtn = document.getElementById('auth-mobile-menu-toggle');
+const authNavContainer = document.getElementById('auth-main-nav');
+const authHeader = document.getElementById('auth-header');
+
+if (authMobileMenuBtn && authNavContainer) {
+  authMobileMenuBtn.addEventListener('click', () => {
+    authNavContainer.classList.toggle('active');
+
+    // Toggle icon between bars and times
+    const icon = authMobileMenuBtn.querySelector('i');
+    if (icon.classList.contains('fa-bars')) {
+      icon.classList.remove('fa-bars');
+      icon.classList.add('fa-times');
+    } else {
+      icon.classList.remove('fa-times');
+      icon.classList.add('fa-bars');
+    }
+  });
+}
+
+// Header scroll effect
+if (authHeader) {
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      authHeader.classList.add('scrolled');
+    } else {
+      authHeader.classList.remove('scrolled');
+    }
+  });
+}
+
+// Make sure the navbar is responsive on mobile
+function checkAuthMobileView() {
+  if (window.innerWidth <= 768) {
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (authNavContainer && authMobileMenuBtn && !authNavContainer.contains(e.target) && !authMobileMenuBtn.contains(e.target) && authNavContainer.classList.contains('active')) {
+        authNavContainer.classList.remove('active');
+        const icon = authMobileMenuBtn.querySelector('i');
+        if (icon) {
+          icon.classList.remove('fa-times');
+          icon.classList.add('fa-bars');
+        }
+      }
+    });
+
+    // Close menu when clicking on a nav link
+    const navLinks = document.querySelectorAll('.auth-nav ul li a');
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (authNavContainer) {
+          authNavContainer.classList.remove('active');
+          const icon = authMobileMenuBtn?.querySelector('i');
+          if (icon) {
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+          }
+        }
+      });
+    });
+  }
+}
+
+// Check on load and resize
+checkAuthMobileView();
+window.addEventListener('resize', checkAuthMobileView);
+</script>

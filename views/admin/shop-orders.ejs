@@ -1,0 +1,719 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
+<%- contentFor('body') %>
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">Shop Orders</h4>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-3">
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <p class="text-uppercase fw-medium text-muted mb-0">Pending Orders</p>
+          </div>
+          <div class="flex-shrink-0">
+            <h5 class="text-warning mb-0" id="pendingCount">0</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <p class="text-uppercase fw-medium text-muted mb-0">Processing</p>
+          </div>
+          <div class="flex-shrink-0">
+            <h5 class="text-info mb-0" id="processingCount">0</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <p class="text-uppercase fw-medium text-muted mb-0">In Transit</p>
+          </div>
+          <div class="flex-shrink-0">
+            <h5 class="text-primary mb-0" id="inTransitCount">0</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <p class="text-uppercase fw-medium text-muted mb-0">Delivered</p>
+          </div>
+          <div class="flex-shrink-0">
+            <h5 class="text-success mb-0" id="deliveredCount">0</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="statusFilter">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="processing">Processing</option>
+              <option value="ready">Ready</option>
+              <option value="assigned">Assigned</option>
+              <option value="picked_up">Picked Up</option>
+              <option value="in_transit">In Transit</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="returned">Returned</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Payment Status</label>
+            <select class="form-select" id="paymentFilter">
+              <option value="">All</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="refunded">Refunded</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Date From</label>
+            <input type="date" class="form-control" id="startDate">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Date To</label>
+            <input type="date" class="form-control" id="endDate">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Orders Table -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Order #</th>
+                <th>Business</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Courier</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+              <tr>
+                <td colspan="9" class="text-center">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Order Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="orderDetailsBody">
+        <!-- Order details will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Update Order Status</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="statusForm">
+        <div class="modal-body">
+          <input type="hidden" id="updateOrderId">
+          <div class="mb-3">
+            <label class="form-label">New Status</label>
+            <select class="form-select" id="newStatus" required>
+              <option value="confirmed">Confirmed</option>
+              <option value="processing">Processing</option>
+              <option value="ready">Ready for Pickup</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="mb-3" id="packagingSection" style="display: none;">
+            <label class="form-label">Packaging Details</label>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <input type="number" class="form-control" id="numberOfBoxes" placeholder="Number of Boxes" min="1">
+              </div>
+              <div class="col-md-6">
+                <input type="number" class="form-control" id="weight" placeholder="Weight (kg)" step="0.1" min="0">
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" id="statusNotes" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Status</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Courier Modal -->
+<div class="modal fade" id="courierModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Assign Courier</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="courierForm">
+        <div class="modal-body">
+          <input type="hidden" id="assignOrderId">
+          <div class="mb-3">
+            <label class="form-label">Select Courier</label>
+            <select class="form-select" id="courierId" required>
+              <option value="">Choose courier...</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Assign Courier</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script>
+  let ordersData = [];
+  let couriers = [];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadOrders();
+    loadCouriers();
+
+    // Event listeners
+    document.getElementById('statusFilter').addEventListener('change', loadOrders);
+    document.getElementById('paymentFilter').addEventListener('change', loadOrders);
+    document.getElementById('startDate').addEventListener('change', loadOrders);
+    document.getElementById('endDate').addEventListener('change', loadOrders);
+    document.getElementById('statusForm').addEventListener('submit', handleStatusUpdate);
+    document.getElementById('courierForm').addEventListener('submit', handleCourierAssignment);
+    document.getElementById('newStatus').addEventListener('change', function() {
+      const packagingSection = document.getElementById('packagingSection');
+      packagingSection.style.display = this.value === 'ready' ? 'block' : 'none';
+    });
+  });
+
+  async function loadOrders() {
+    const status = document.getElementById('statusFilter').value;
+    const paymentStatus = document.getElementById('paymentFilter').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (paymentStatus) params.append('paymentStatus', paymentStatus);
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
+    try {
+      const response = await fetch(`/api/admin/shop/orders?${params}`);
+      const orders = await response.json();
+      ordersData = orders;
+      renderOrders(orders);
+      updateStats(orders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      showError('Failed to load orders');
+    }
+  }
+
+  function renderOrders(orders) {
+    const tbody = document.getElementById('ordersTableBody');
+
+    if (orders.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center">No orders found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = orders.map(order => {
+      const statusBadge = getStatusBadge(order.status);
+      const paymentBadge = getPaymentBadge(order.paymentStatus);
+
+      return `
+      <tr>
+        <td>
+          <a href="javascript:void(0)" onclick="viewOrder('${order._id}')" class="fw-medium link-primary">
+            ${order.orderNumber}
+          </a>
+        </td>
+        <td>
+          <div>
+            <strong>${order.business.brandInfo.brandName}</strong>
+            <br><small class="text-muted">${order.business.phone || ''}</small>
+          </div>
+        </td>
+        <td>
+          <span class="badge badge-soft-info">${order.items.length} items</span>
+        </td>
+        <td>
+          <strong>EGP ${order.totalAmount.toFixed(2)}</strong>
+        </td>
+        <td>${statusBadge}</td>
+        <td>${paymentBadge}</td>
+        <td>
+          ${order.courierName ? `
+            <div>
+              <i class="ri-user-line me-1"></i>${order.courierName}
+            </div>
+          ` : '<span class="text-muted">Not assigned</span>'}
+        </td>
+        <td>
+          <small>${new Date(order.createdAt).toLocaleDateString()}</small>
+        </td>
+        <td>
+          <div class="hstack gap-1">
+            <button class="btn btn-sm btn-soft-primary" onclick="viewOrder('${order._id}')" title="View">
+              <i class="ri-eye-line"></i>
+            </button>
+            ${['pending', 'confirmed', 'processing'].includes(order.status) ? `
+              <button class="btn btn-sm btn-soft-info" onclick="updateStatus('${order._id}')" title="Update Status">
+                <i class="ri-refresh-line"></i>
+              </button>
+            ` : ''}
+            ${order.status === 'ready' && !order.courier ? `
+              <button class="btn btn-sm btn-soft-success" onclick="assignCourier('${order._id}')" title="Assign Courier">
+                <i class="ri-user-add-line"></i>
+              </button>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+    }).join('');
+  }
+
+  function getStatusBadge(status) {
+    const statusConfig = {
+      pending: {
+        color: 'warning',
+        text: 'Pending'
+      },
+      confirmed: {
+        color: 'info',
+        text: 'Confirmed'
+      },
+      processing: {
+        color: 'primary',
+        text: 'Processing'
+      },
+      ready: {
+        color: 'secondary',
+        text: 'Ready'
+      },
+      assigned: {
+        color: 'dark',
+        text: 'Assigned'
+      },
+      picked_up: {
+        color: 'info',
+        text: 'Picked Up'
+      },
+      in_transit: {
+        color: 'primary',
+        text: 'In Transit'
+      },
+      delivered: {
+        color: 'success',
+        text: 'Delivered'
+      },
+      cancelled: {
+        color: 'danger',
+        text: 'Cancelled'
+      },
+      returned: {
+        color: 'warning',
+        text: 'Returned'
+      }
+    };
+
+    const config = statusConfig[status] || {
+      color: 'secondary',
+      text: status
+    };
+    return `<span class="badge bg-${config.color}">${config.text}</span>`;
+  }
+
+  function getPaymentBadge(status) {
+    const config = {
+      pending: {
+        color: 'warning',
+        text: 'Pending'
+      },
+      paid: {
+        color: 'success',
+        text: 'Paid'
+      },
+      refunded: {
+        color: 'info',
+        text: 'Refunded'
+      }
+    };
+
+    const badge = config[status] || {
+      color: 'secondary',
+      text: status
+    };
+    return `<span class="badge badge-soft-${badge.color}">${badge.text}</span>`;
+  }
+
+  function updateStats(orders) {
+    const stats = {
+      pending: 0,
+      processing: 0,
+      inTransit: 0,
+      delivered: 0
+    };
+
+    orders.forEach(order => {
+      if (order.status === 'pending') stats.pending++;
+      if (['processing', 'ready'].includes(order.status)) stats.processing++;
+      if (['assigned', 'picked_up', 'in_transit'].includes(order.status)) stats.inTransit++;
+      if (order.status === 'delivered') stats.delivered++;
+    });
+
+    document.getElementById('pendingCount').textContent = stats.pending;
+    document.getElementById('processingCount').textContent = stats.processing;
+    document.getElementById('inTransitCount').textContent = stats.inTransit;
+    document.getElementById('deliveredCount').textContent = stats.delivered;
+  }
+
+  async function viewOrder(orderId) {
+    try {
+      const response = await fetch(`/api/admin/shop/orders/${orderId}`);
+      const order = await response.json();
+
+      const detailsHtml = `
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <p><strong>Order Number:</strong> ${order.orderNumber}</p>
+          <p><strong>Status:</strong> ${getStatusBadge(order.status)}</p>
+          <p><strong>Payment:</strong> ${getPaymentBadge(order.paymentStatus)}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+          <p><strong>Business:</strong> ${order.business.brandInfo.brandName}</p>
+          <p><strong>Phone:</strong> ${order.business.phone}</p>
+        </div>
+      </div>
+      
+      <h6 class="mb-3">Order Items</h6>
+      <div class="table-responsive mb-3">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${order.items.map(item => `
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center">
+                    ${item.product && item.product.images && item.product.images[0] ? 
+                      `<img src="${item.product.images[0]}" alt="${item.productName}" style="width: 40px; height: 40px; object-fit: cover;" class="rounded me-2">` : ''}
+                    <div>
+                      ${item.productName}
+                      ${item.discount > 0 ? `<br><small class="text-success">Discount: ${item.discount}%</small>` : ''}
+                    </div>
+                  </div>
+                </td>
+                <td>${item.quantity}</td>
+                <td>EGP ${item.unitPrice.toFixed(2)}</td>
+                <td>EGP ${item.subtotal.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+              <td><strong>EGP ${order.subtotal.toFixed(2)}</strong></td>
+            </tr>
+            ${order.discount > 0 ? `
+            <tr>
+              <td colspan="3" class="text-end">Discount:</td>
+              <td>- EGP ${order.discount.toFixed(2)}</td>
+            </tr>
+            ` : ''}
+            ${order.tax > 0 ? `
+            <tr>
+              <td colspan="3" class="text-end">Tax:</td>
+              <td>EGP ${order.tax.toFixed(2)}</td>
+            </tr>
+            ` : ''}
+            <tr>
+              <td colspan="3" class="text-end">Delivery Fee:</td>
+              <td>EGP ${order.deliveryFee.toFixed(2)}</td>
+            </tr>
+            <tr class="table-active">
+              <td colspan="3" class="text-end"><strong>Total:</strong></td>
+              <td><strong>EGP ${order.totalAmount.toFixed(2)}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      
+      <h6 class="mb-3">Delivery Information</h6>
+      <div class="mb-3">
+        <p><strong>Address:</strong> ${order.deliveryAddress.fullAddress}</p>
+        <p><strong>Contact:</strong> ${order.contactInfo.name} - ${order.contactInfo.phone}</p>
+        ${order.courier ? `<p><strong>Courier:</strong> ${order.courierName} - ${order.courierPhone}</p>` : ''}
+      </div>
+      
+      ${order.trackingHistory.length > 0 ? `
+        <h6 class="mb-3">Tracking History</h6>
+        <div class="timeline">
+          ${order.trackingHistory.map(track => `
+            <div class="timeline-item">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <p class="mb-1"><strong>${track.description}</strong></p>
+                <small class="text-muted">${new Date(track.timestamp).toLocaleString()}</small>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+
+      document.getElementById('orderDetailsBody').innerHTML = detailsHtml;
+      new bootstrap.Modal(document.getElementById('orderModal')).show();
+    } catch (error) {
+      console.error('Error loading order details:', error);
+      showError('Failed to load order details');
+    }
+  }
+
+  function updateStatus(orderId) {
+    document.getElementById('updateOrderId').value = orderId;
+    document.getElementById('statusForm').reset();
+    new bootstrap.Modal(document.getElementById('statusModal')).show();
+  }
+
+  async function handleStatusUpdate(e) {
+    e.preventDefault();
+
+    const orderId = document.getElementById('updateOrderId').value;
+    const status = document.getElementById('newStatus').value;
+    const notes = document.getElementById('statusNotes').value;
+
+    const data = {
+      status,
+      notes
+    };
+
+    if (status === 'ready') {
+      const numberOfBoxes = document.getElementById('numberOfBoxes').value;
+      const weight = document.getElementById('weight').value;
+
+      if (numberOfBoxes || weight) {
+        data.packagingDetails = {
+          numberOfBoxes: numberOfBoxes ? parseInt(numberOfBoxes) : undefined,
+          weight: weight ? parseFloat(weight) : undefined
+        };
+      }
+    }
+
+    try {
+      const response = await fetch(`/api/admin/shop/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        showSuccess(result.message);
+        bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide();
+        loadOrders();
+      } else {
+        showError(result.error);
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      showError('Failed to update status');
+    }
+  }
+
+  async function loadCouriers() {
+    try {
+      const response = await fetch('/api/admin/couriers');
+      couriers = await response.json();
+
+      const select = document.getElementById('courierId');
+      select.innerHTML = '<option value="">Choose courier...</option>' +
+        couriers.map(courier => `
+        <option value="${courier._id}">${courier.name} - ${courier.phone}</option>
+      `).join('');
+    } catch (error) {
+      console.error('Error loading couriers:', error);
+    }
+  }
+
+  function assignCourier(orderId) {
+    document.getElementById('assignOrderId').value = orderId;
+    document.getElementById('courierForm').reset();
+    new bootstrap.Modal(document.getElementById('courierModal')).show();
+  }
+
+  async function handleCourierAssignment(e) {
+    e.preventDefault();
+
+    const orderId = document.getElementById('assignOrderId').value;
+    const courierId = document.getElementById('courierId').value;
+
+    try {
+      const response = await fetch(`/api/admin/shop/orders/${orderId}/assign-courier`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          courierId
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        showSuccess(result.message);
+        bootstrap.Modal.getInstance(document.getElementById('courierModal')).hide();
+        loadOrders();
+      } else {
+        showError(result.error);
+      }
+    } catch (error) {
+      console.error('Error assigning courier:', error);
+      showError('Failed to assign courier');
+    }
+  }
+
+  function showSuccess(message) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: message,
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  function showError(message) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error!',
+      text: message
+    });
+  }
+</script>
+
+<style>
+  .timeline {
+    position: relative;
+    padding-left: 30px;
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+  }
+
+  .timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #405189;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #405189;
+  }
+
+  .timeline-item:before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 12px;
+    width: 2px;
+    height: 100%;
+    background-color: #e9ecef;
+  }
+
+  .timeline-item:last-child:before {
+    display: none;
+  }
+</style>

@@ -17,152 +17,193 @@ const transporter = nodemailer.createTransport({
 });
 
 //================================================ Dashboard  ================================================= //
+// Simple in-memory cache for dashboard data
+const dashboardCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const getDashboardPage = async (req, res) => {
   try {
     // Only load data if user has completed account setup
     let dashboardData = {};
 
     if (req.userData.isCompleted) {
-      // Get today's date range
-      const today = new Date();
-      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+      // Check cache first
+      const cacheKey = `dashboard_${req.userData._id}`;
+      const cachedData = dashboardCache.get(cacheKey);
+      
+      if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION) {
+        dashboardData = cachedData.data;
+      } else {
+      // Use aggregation pipeline for optimal performance
+      const businessId = req.userData._id;
+      
+      // Single aggregation query to get all order statistics
+      const orderStatsPipeline = [
+        { $match: { business: businessId } },
+        {
+          $group: {
+            _id: null,
+            totalOrders: { $sum: 1 },
+            inProgressCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'inProgress'] }, 1, 0] }
+            },
+            headingToCustomerCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'headingToCustomer'] }, 1, 0] }
+            },
+            completedCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, 1, 0] }
+            },
+            awaitingActionCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'waitingAction'] }, 1, 0] }
+            },
+            headingToYouCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'returnToBusiness'] }, 1, 0] }
+            },
+            newOrdersCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'new'] }, 1, 0] }
+            }
+          }
+        }
+      ];
 
-      // Get order statistics
-      const inProgressCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'inProgress',
-      });
+      // Financial data aggregation
+      const financialStatsPipeline = [
+        { $match: { business: businessId } },
+        {
+          $group: {
+            _id: null,
+            expectedCash: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $in: ['$orderShipping.amountType', ['COD', 'CD', 'CC']] },
+                      { $in: ['$orderStatus', ['headingToCustomer', 'inProgress']] }
+                    ]
+                  },
+                  { $ifNull: ['$orderShipping.amount', 0] },
+                  0
+                ]
+              }
+            },
+            collectedCash: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $eq: ['$orderShipping.amountType', 'COD'] },
+                      { $eq: ['$orderStatus', 'completed'] },
+                      {
+                        $gte: ['$completedDate', new Date(new Date().setHours(0, 0, 0, 0))]
+                      },
+                      {
+                        $lte: ['$completedDate', new Date(new Date().setHours(23, 59, 59, 999))]
+                      }
+                    ]
+                  },
+                  { $ifNull: ['$orderShipping.amount', 0] },
+                  0
+                ]
+              }
+            }
+          }
+        }
+      ];
 
-      const headingToCustomerCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'headingToCustomer',
-      });
+      // Monthly chart data aggregation (single query)
+      const chartDataPipeline = [
+        { $match: { business: businessId } },
+        {
+          $addFields: {
+            orderMonth: {
+              $dateToString: {
+                format: "%Y-%m",
+                date: "$orderDate"
+              }
+            },
+            completedMonth: {
+              $dateToString: {
+                format: "%Y-%m",
+                date: "$completedDate"
+              }
+            }
+          }
+        },
+        {
+          $group: {
+            _id: "$orderMonth",
+            orderCount: { $sum: 1 },
+            completedRevenue: {
+              $sum: {
+                $cond: [
+                  { $eq: ['$orderStatus', 'completed'] },
+                  { $ifNull: ['$orderShipping.amount', 0] },
+                  0
+                ]
+              }
+            }
+          }
+        },
+        { $sort: { _id: 1 } },
+        { $limit: 9 }
+      ];
 
-      const completedCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'completed',
-      });
-
-      const totalOrders = await Order.countDocuments({
-        business: req.userData._id,
-      });
-
-      const awaitingActionCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'waitingAction',
-      });
-
-      const headingToYouCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'returnToBusiness',
-      });
-
-      const newOrdersCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'new',
-      });
-
-      // Financial statistics
-      const ordersWithCOD = await Order.find({
-        business: req.userData._id,
-        'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] },
-        orderStatus: { $in: ['headingToCustomer', 'inProgress'] },
-      });
-
-      const expectedCash = ordersWithCOD.reduce((total, order) => {
-        return total + (order.orderShipping.amount || 0);
-      }, 0);
-
-      const collectedOrders = await Order.find({
-        business: req.userData._id,
-        'orderShipping.amountType': 'COD',
-        orderStatus: 'completed',
-        completedDate: { $gte: startOfDay, $lte: endOfDay },
-      });
-
-      const collectedCash = collectedOrders.reduce((total, order) => {
-        return total + (order.orderShipping.amount || 0);
-      }, 0);
-
-      // Get recent orders and pickups
-      const recentOrders = await Order.find({
-        business: req.userData._id,
-      })
+      // Execute all queries in parallel
+      const [orderStats, financialStats, chartData, recentOrders, recentPickups] = await Promise.all([
+        Order.aggregate(orderStatsPipeline),
+        Order.aggregate(financialStatsPipeline),
+        Order.aggregate(chartDataPipeline),
+        Order.find({ business: businessId })
         .sort({ orderDate: -1 })
-        .limit(5);
-
-      const recentPickups = await Pickup.find({
-        business: req.userData._id,
-      })
+          .limit(5)
+          .select('orderNumber orderCustomer.fullName orderStatus')
+          .lean(),
+        Pickup.find({ business: businessId })
         .sort({ pickupDate: -1 })
-        .limit(4);
+          .limit(4)
+          .select('pickupNumber pickupDate numberOfOrders picikupStatus')
+          .lean()
+      ]);
 
-      // Calculate completion rate
-      const completionRate =
-        totalOrders > 0 ? Math.round((completedCount / totalOrders) * 100) : 0;
+      // Process results
+      const stats = orderStats[0] || {};
+      const financial = financialStats[0] || {};
+      
+      const completionRate = stats.totalOrders > 0 
+        ? Math.round((stats.completedCount / stats.totalOrders) * 100) 
+        : 0;
 
-      const collectionRate =
-        expectedCash > 0 ? Math.round((collectedCash / expectedCash) * 100) : 0;
+      const collectionRate = financial.expectedCash > 0 
+        ? Math.round((financial.collectedCash / financial.expectedCash) * 100) 
+        : 0;
 
-      // Monthly data for charts (last 9 months)
-      const monthlyData = [];
+      // Process chart data
       const monthlyLabels = [];
+      const monthlyRevenue = [];
       const monthlyOrderCounts = [];
 
-      for (let i = 8; i >= 0; i--) {
-        const monthDate = new Date();
-        monthDate.setMonth(monthDate.getMonth() - i);
-        const monthName = monthDate.toLocaleString('default', {
-          month: 'short',
-        });
-
-        const firstDay = new Date(
-          monthDate.getFullYear(),
-          monthDate.getMonth(),
-          1
-        );
-        const lastDay = new Date(
-          monthDate.getFullYear(),
-          monthDate.getMonth() + 1,
-          0
-        );
-
-        const monthlyCompleted = await Order.find({
-          business: req.userData._id,
-          orderStatus: 'completed',
-          completedDate: { $gte: firstDay, $lte: lastDay },
-        });
-
-        const monthlyRevenue = monthlyCompleted.reduce((total, order) => {
-          return total + (order.orderShipping.amount || 0);
-        }, 0);
-
-        const monthlyOrderCount = await Order.countDocuments({
-          business: req.userData._id,
-          orderDate: { $gte: firstDay, $lte: lastDay },
-        });
-
-        monthlyData.push(monthlyRevenue);
-        monthlyOrderCounts.push(monthlyOrderCount);
-        monthlyLabels.push(monthName);
-      }
+      chartData.forEach(item => {
+        const date = new Date(item._id + '-01');
+        monthlyLabels.push(date.toLocaleString('default', { month: 'short' }));
+        monthlyRevenue.push(item.completedRevenue);
+        monthlyOrderCounts.push(item.orderCount);
+      });
 
       // Compile all dashboard data
       dashboardData = {
         orderStats: {
-          inProgressCount,
-          headingToCustomerCount,
-          completedCount,
-          awaitingActionCount,
-          headingToYouCount,
-          newOrdersCount,
-          totalOrders,
+          inProgressCount: stats.inProgressCount || 0,
+          headingToCustomerCount: stats.headingToCustomerCount || 0,
+          completedCount: stats.completedCount || 0,
+          awaitingActionCount: stats.awaitingActionCount || 0,
+          headingToYouCount: stats.headingToYouCount || 0,
+          newOrdersCount: stats.newOrdersCount || 0,
+          totalOrders: stats.totalOrders || 0,
           completionRate,
         },
         financialStats: {
-          expectedCash,
-          collectedCash,
+          expectedCash: financial.expectedCash || 0,
+          collectedCash: financial.collectedCash || 0,
           collectionRate,
         },
         recentData: {
@@ -171,14 +212,25 @@ const getDashboardPage = async (req, res) => {
         },
         chartData: {
           monthlyLabels,
-          monthlyRevenue: monthlyData,
+          monthlyRevenue,
           monthlyOrderCounts,
         },
       };
+      
+      // Cache the data
+      dashboardCache.set(cacheKey, {
+        data: dashboardData,
+        timestamp: Date.now()
+      });
+      
+      // Clean old cache entries (keep only last 100 entries)
+      if (dashboardCache.size > 100) {
+        const oldestKey = dashboardCache.keys().next().value;
+        dashboardCache.delete(oldestKey);
+      }
+    }
     }
 
-
-    console.log(dashboardData);
     res.render('business/dashboard', {
       title: 'Dashboard',
       page_title: 'Overview',
@@ -205,115 +257,121 @@ const getDashboardData = async (req, res) => {
     let dashboardData = {};
 
     if (req.userData.isCompleted) {
-      // Get today's date range
-      const today = new Date();
-      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+      const businessId = req.userData._id;
+      
+      // Single optimized aggregation query for all statistics
+      const statsPipeline = [
+        { $match: { business: businessId } },
+        {
+          $group: {
+            _id: null,
+            totalOrders: { $sum: 1 },
+            inProgressCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'inProgress'] }, 1, 0] }
+            },
+            headingToCustomerCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'headingToCustomer'] }, 1, 0] }
+            },
+            inStockCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'inStock'] }, 1, 0] }
+            },
+            completedCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, 1, 0] }
+            },
+            unsuccessfulCount: {
+              $sum: {
+                $cond: [
+                  { $in: ['$orderStatus', ['cancelled', 'rejected', 'returnCompleted', 'terminated', 'failed']] },
+                  1,
+                  0
+                ]
+              }
+            },
+            awaitingActionCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'waitingAction'] }, 1, 0] }
+            },
+            headingToYouCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'returnToBusiness'] }, 1, 0] }
+            },
+            newOrdersCount: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'new'] }, 1, 0] }
+            },
+            expectedCash: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $in: ['$orderShipping.amountType', ['COD', 'CD', 'CC']] },
+                      { $in: ['$orderStatus', ['headingToCustomer', 'inProgress']] }
+                    ]
+                  },
+                  { $ifNull: ['$orderShipping.amount', 0] },
+                  0
+                ]
+              }
+            },
+            collectedCash: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $eq: ['$orderShipping.amountType', 'COD'] },
+                      { $eq: ['$orderStatus', 'completed'] },
+                      {
+                        $gte: ['$completedDate', new Date(new Date().setHours(0, 0, 0, 0))]
+                      },
+                      {
+                        $lte: ['$completedDate', new Date(new Date().setHours(23, 59, 59, 999))]
+                      }
+                    ]
+                  },
+                  { $ifNull: ['$orderShipping.amount', 0] },
+                  0
+                ]
+              }
+            }
+          }
+        }
+      ];
 
-      // Get order statistics
-      const inProgressCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'inProgress',
-      });
+      const [stats] = await Order.aggregate(statsPipeline);
+      const result = stats || {};
 
-      const headingToCustomerCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'headingToCustomer',
-      });
+      // Calculate rates
+      const completionRate = result.totalOrders > 0 
+        ? Math.round((result.completedCount / result.totalOrders) * 100) 
+        : 0;
 
-      const inStockCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'inStock',
-      });
+      const unsuccessfulRate = result.totalOrders > 0 
+        ? Math.round((result.unsuccessfulCount / result.totalOrders) * 100) 
+        : 0;
 
-      const completedCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'completed',
-      });
-
-      const unsuccessfulCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: { $in: ['cancelled', 'rejected', 'returnCompleted', 'terminated', 'failed'] },
-      });
-
-      const totalOrders = await Order.countDocuments({
-        business: req.userData._id,
-      });
-
-      const awaitingActionCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'waitingAction',
-      });
-
-      const headingToYouCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'returnToBusiness',
-      });
-
-      const newOrdersCount = await Order.countDocuments({
-        business: req.userData._id,
-        orderStatus: 'new',
-      });
-
-      // Financial statistics
-      const ordersWithCOD = await Order.find({
-        business: req.userData._id,
-        'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] },
-        orderStatus: { $in: ['headingToCustomer', 'inProgress'] },
-      });
-
-      const expectedCash = ordersWithCOD.reduce((total, order) => {
-        return total + (order.orderShipping.amount || 0);
-      }, 0);
-
-      const collectedOrders = await Order.find({
-        business: req.userData._id,
-        'orderShipping.amountType': 'COD',
-        orderStatus: 'completed',
-        completedDate: { $gte: startOfDay, $lte: endOfDay },
-      });
-
-      const collectedCash = collectedOrders.reduce((total, order) => {
-        return total + (order.orderShipping.amount || 0);
-      }, 0);
-
-      // Calculate completion rate
-      const completionRate =
-        totalOrders > 0 ? Math.round((completedCount / totalOrders) * 100) : 0;
-
-      // Calculate unsuccessful rate
-      const unsuccessfulRate =
-        unsuccessfulCount > 0
-          ? Math.round((unsuccessfulCount / totalOrders) * 100)
-          : 0;
-
-      const collectionRate =
-        expectedCash > 0 ? Math.round((collectedCash / expectedCash) * 100) : 0;
+      const collectionRate = result.expectedCash > 0 
+        ? Math.round((result.collectedCash / result.expectedCash) * 100) 
+        : 0;
 
       // Compile all dashboard data
       dashboardData = {
         orderStats: {
-          inProgressCount,
-          headingToCustomerCount,
-          completedCount,
-          awaitingActionCount,
-          headingToYouCount,
-          newOrdersCount,
-          inStockCount,
-          totalOrders,
+          inProgressCount: result.inProgressCount || 0,
+          headingToCustomerCount: result.headingToCustomerCount || 0,
+          completedCount: result.completedCount || 0,
+          awaitingActionCount: result.awaitingActionCount || 0,
+          headingToYouCount: result.headingToYouCount || 0,
+          newOrdersCount: result.newOrdersCount || 0,
+          inStockCount: result.inStockCount || 0,
+          totalOrders: result.totalOrders || 0,
           completionRate,
-          unsuccessfulCount,
+          unsuccessfulCount: result.unsuccessfulCount || 0,
           unsuccessfulRate,
         },
         financialStats: {
-          expectedCash,
-          collectedCash,
+          expectedCash: result.expectedCash || 0,
+          collectedCash: result.collectedCash || 0,
           collectionRate,
         },
       };
     }
-
-    console.log(dashboardData);
 
     res.status(200).json({
       status: 'success',
@@ -1274,6 +1332,7 @@ const get_orderDetailsAPI = async (req, res) => {
         progressPercentage,
         stageTimeline,
         business: orderObj.business,
+        scheduledRetryAt: orderObj.scheduledRetryAt,
         createdAt: orderObj.createdAt,
         updatedAt: orderObj.updatedAt
       }

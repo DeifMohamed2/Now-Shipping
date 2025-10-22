@@ -3,6 +3,24 @@ const router = express.Router();
 
 const authController = require('../../controllers/authController2.js');
 
+// Timeout middleware for login routes
+const loginTimeout = (req, res, next) => {
+  const timeout = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(408).json({
+        status: 'error',
+        message: 'Request timeout. Please try again.'
+      });
+    }
+  }, 10000); // 10 second timeout
+
+  res.on('finish', () => {
+    clearTimeout(timeout);
+  });
+
+  next();
+};
+
 
 // Landing page route
 router.get('/', authController.index);
@@ -24,16 +42,16 @@ router.get('/register', authController.registerPage);
 
 router.post('/signup', authController.signup);
 router.post('/send-otp', authController.sendOTP);
-router.post('/login', authController.login);
+router.post('/login', loginTimeout, authController.login);
 
 router.get('/verify-email', authController.verifyEmailBytoken);
 
 router.get('/admin-login', authController.adminLogin);
-router.post('/admin-login', authController.loginAsAdmin);
+router.post('/admin-login', loginTimeout, authController.loginAsAdmin);
 router.post('/create-admin', authController.createAdminAccount);
 
 router.get('/courier-login', authController.courierLogin);
 
-router.post('/courier-login', authController.loginAsCourier);
+router.post('/courier-login', loginTimeout, authController.loginAsCourier);
 
 module.exports = router;

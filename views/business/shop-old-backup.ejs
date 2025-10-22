@@ -1,0 +1,993 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/assets/rCSS/business.css">
+<link rel="stylesheet" href="/assets/rCSS/shop.css">
+<%- contentFor('body') %>
+<style>
+  :root {
+    --primary-color: #2A3950;
+    --accent-color: #FF7A00;
+    --accent-gradient: linear-gradient(135deg, #FF7A00, #FF5500);
+    --hover-color: #E56A00;
+    --text-dark: #2C3E50;
+    --text-light: #95A5A6;
+    --border-color: #E8E8E8;
+    --bg-light: #F9FAFC;
+    --bg-card: #FFFFFF;
+  }
+
+  body {
+    background-color: #F5F7FA;
+  }
+
+  .products-column {
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  }
+
+  .product-card {
+    display: grid;
+    grid-template-columns: auto 1fr 120px 100px;
+    align-items: center;
+    gap: 15px;
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px;
+    transition: all 0.3s ease;
+  }
+
+  .product-card:hover {
+    background-color: #FFF8F2;
+  }
+
+  .product-card:last-child {
+    border-bottom: none;
+  }
+
+  .product-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  .price-tag {
+    color: var(--accent-color);
+    font-weight: 700;
+    font-size: 16px;
+    text-align: center;
+  }
+
+  .add-btn {
+    background: var(--accent-gradient);
+    color: white;
+    border-radius: 8px;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(255, 122, 0, 0.2);
+  }
+
+  .add-btn:hover {
+    background: var(--hover-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 122, 0, 0.3);
+  }
+
+  .add-btn:disabled {
+    background: #CCCCCC;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  .cart-column {
+    background: var(--bg-light);
+    border-left: 1px solid var(--border-color);
+    height: calc(100vh - 80px);
+    position: relative;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.03);
+  }
+
+  .cart-item {
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #F8F9FA;
+    border-radius: 8px;
+    padding: 6px 12px;
+  }
+
+  .total-section {
+    background: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+  }
+
+  .products-header {
+    background-color: #FFFFFF;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 12px 12px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  }
+
+  .category-header {
+    background: linear-gradient(135deg, #FFF8F2, #FFF0E6);
+    padding: 12px 15px;
+    margin: 15px 0 0 0;
+    font-weight: 600;
+    color: var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid var(--accent-color);
+  }
+
+  .new-badge {
+    background: var(--accent-gradient);
+    color: white;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-left: 10px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(255, 122, 0, 0.3);
+  }
+
+  .out-of-stock {
+    color: #e74c3c;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .product-info {
+    padding-right: 10px;
+  }
+
+  .product-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-dark);
+  }
+
+  .product-size {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 2px;
+  }
+
+  .product-pack {
+    font-size: 13px;
+    color: var(--text-dark);
+    font-weight: 500;
+  }
+
+  .category-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 15px 15px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .category-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-tab {
+    padding: 8px 16px;
+    background-color: #f1f1f1;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .category-tab.active {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 3px 8px rgba(255, 122, 0, 0.2);
+  }
+
+  .category-tab:hover:not(.active) {
+    background-color: #e0e0e0;
+  }
+
+  .empty-cart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-light);
+  }
+
+  .empty-cart i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #d1d1d1;
+  }
+
+  .search-container {
+    display: flex;
+    gap: 10px;
+  }
+
+  .search-container .form-control {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 8px 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+  }
+
+  .search-container .form-control:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
+  }
+
+  .checkout-btn {
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(255, 122, 0, 0.2);
+  }
+
+  .checkout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 122, 0, 0.3);
+  }
+
+  .cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .cart-badge {
+    background: var(--accent-gradient);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 5px;
+  }
+
+  .cart-icon-container {
+    display: flex;
+    align-items: center;
+  }
+
+  .product-grid-header {
+    display: grid;
+    grid-template-columns: auto 1fr 120px 100px;
+    align-items: center;
+    gap: 15px;
+    padding: 0 15px 10px 15px;
+    font-weight: 600;
+    color: var(--text-light);
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .product-grid-header span:nth-child(3) {
+    text-align: center;
+  }
+
+  .product-grid-header span:last-child {
+    text-align: center;
+  }
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--text-light);
+  }
+</style>
+
+<div class="container-fluid">
+  <div class="row g-0">
+    <!-- Products Column -->
+    <div class="col-md-7 p-3">
+      <div class="products-column">
+        <div class="products-header">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h4 class="page-title">امور التغليف</h4>
+              <p class="page-subtitle">Select packaging materials for your orders</p>
+            </div>
+            <div class="search-container">
+              <input type="text" class="form-control" placeholder="Search products..." id="searchInput">
+              <select class="form-control" id="categoryFilter">
+                <option value="all">All</option>
+                <option value="normal-flyers">Normal Flyers</option>
+                <option value="smart-flyers">Smart Flyers</option>
+                <option value="boxes">Boxes</option>
+                <option value="stickers">Stickers</option>
+                <option value="labels">Labels</option>
+                <option value="tapes">Tapes</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="category-tabs">
+            <div class="category-tab active" data-category="all">All Products</div>
+            <div class="category-tab" data-category="normal-flyers">Normal Flyers</div>
+            <div class="category-tab" data-category="smart-flyers">Smart Flyers</div>
+            <div class="category-tab" data-category="boxes">Boxes</div>
+            <div class="category-tab" data-category="stickers">Stickers</div>
+            <div class="category-tab" data-category="labels">Labels</div>
+            <div class="category-tab" data-category="tapes">Tapes</div>
+          </div>
+        </div>
+
+        <div class="product-grid-header">
+          <span></span>
+          <span>Product</span>
+          <span>Price</span>
+          <span>Action</span>
+        </div>
+
+        <!-- NORMAL FLYERS -->
+        <div class="category-header">NORMAL FLYERS</div>
+        
+        <div class="product-card" data-category="normal-flyers">
+          <img src="/assets/images/small-flyer.jpg" alt="Small flyers" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Small flyers</h5>
+            <div class="product-size">Size: 30 X 25</div>
+            <div class="product-pack">Pack of 10</div>
+          </div>
+          <div class="price-tag">
+            EGP 2.5
+          </div>
+          <div>
+            <button class="add-btn" data-product="Small flyers" data-price="2.5" data-category="normal-flyers" data-pack="10">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="normal-flyers">
+          <img src="/assets/images/medium-flyer.jpg" alt="Medium flyers" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Medium flyers</h5>
+            <div class="product-size">Size: 40 X 35</div>
+            <div class="product-pack">Pack of 10</div>
+          </div>
+          <div class="price-tag">
+            EGP 3
+          </div>
+          <div>
+            <button class="add-btn" data-product="Medium flyers" data-price="3" data-category="normal-flyers" data-pack="10">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="normal-flyers">
+          <img src="/assets/images/large-flyer.jpg" alt="Large flyers" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Large flyers</h5>
+            <div class="product-size">Size: 50 X 45</div>
+            <div class="product-pack">Pack of 10</div>
+          </div>
+          <div class="price-tag">
+            EGP 4
+          </div>
+          <div>
+            <button class="add-btn" data-product="Large flyers" data-price="4" data-category="normal-flyers" data-pack="10">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="normal-flyers">
+          <img src="/assets/images/xlarge-flyer.jpg" alt="X-Large flyers" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">X-Large flyers</h5>
+            <div class="product-size">Size: 60 X 50</div>
+            <div class="product-pack">Pack of 10</div>
+          </div>
+          <div class="price-tag">
+            EGP 5
+          </div>
+          <div>
+            <button class="add-btn" data-product="X-Large flyers" data-price="5" data-category="normal-flyers" data-pack="10">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="normal-flyers">
+          <img src="/assets/images/white-bag.jpg" alt="White bags flyers" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">White bags flyers</h5>
+            <div class="product-size">Size: 50 X 100</div>
+            <div class="product-pack">Pack of 10</div>
+          </div>
+          <div class="price-tag">
+            EGP 6
+          </div>
+          <div>
+            <button class="add-btn" data-product="White bags flyers" data-price="6" data-category="normal-flyers" data-pack="10">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- SMART FLYERS -->
+        <div class="category-header">
+          <span>SMART FLYERS</span>
+          <span class="new-badge">NEW</span>
+        </div>
+        
+        <div class="product-card" data-category="smart-flyers">
+          <img src="/assets/images/smart-flyer-small.jpg" alt="Small Smart Flyer" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Small Smart Flyer</h5>
+            <div class="product-size">Size: 35 X 25</div>
+            <div class="product-pack">Pack of 10</div>
+            <div class="out-of-stock">Out of stock</div>
+          </div>
+          <div class="price-tag">
+            EGP 45
+          </div>
+          <div>
+            <button class="add-btn" data-product="Small Smart Flyer" data-price="45" data-category="smart-flyers" data-pack="10" disabled>
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="smart-flyers">
+          <img src="/assets/images/smart-flyer-medium.jpg" alt="Medium Smart Flyer" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Medium Smart Flyer</h5>
+            <div class="product-size">Size: 40 X 35</div>
+            <div class="product-pack">Pack of 10</div>
+            <div class="out-of-stock">Out of stock</div>
+          </div>
+          <div class="price-tag">
+            EGP 50
+          </div>
+          <div>
+            <button class="add-btn" data-product="Medium Smart Flyer" data-price="50" data-category="smart-flyers" data-pack="10" disabled>
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="smart-flyers">
+          <img src="/assets/images/smart-flyer-large.jpg" alt="Large Smart Flyer" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Large Smart Flyer</h5>
+            <div class="product-size">Size: 50 X 45</div>
+            <div class="product-pack">Pack of 10</div>
+            <div class="out-of-stock">Out of stock</div>
+          </div>
+          <div class="price-tag">
+            EGP 60
+          </div>
+          <div>
+            <button class="add-btn" data-product="Large Smart Flyer" data-price="60" data-category="smart-flyers" data-pack="10" disabled>
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="smart-flyers">
+          <img src="/assets/images/smart-flyer-xlarge.jpg" alt="X-Large Smart Flyer" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">X-Large Smart Flyer</h5>
+            <div class="product-size">Size: 60 X 50</div>
+            <div class="product-pack">Pack of 10</div>
+            <div class="out-of-stock">Out of stock</div>
+          </div>
+          <div class="price-tag">
+            EGP 70
+          </div>
+          <div>
+            <button class="add-btn" data-product="X-Large Smart Flyer" data-price="70" data-category="smart-flyers" data-pack="10" disabled>
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- BOXES -->
+        <div class="category-header">BOXES</div>
+        
+        <div class="product-card" data-category="boxes">
+          <img src="/assets/images/small-box.jpg" alt="Small Packing box" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Small Packing box</h5>
+            <div class="product-size">Size: 20 X 13 X 9</div>
+            <div class="out-of-stock">Out of stock</div>
+          </div>
+          <div class="price-tag">
+            EGP 3.5
+          </div>
+          <div>
+            <button class="add-btn" data-product="Small Packing box" data-price="3.5" data-category="boxes" data-pack="1" disabled>
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="boxes">
+          <img src="/assets/images/medium-box.jpg" alt="Medium Packing box" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Medium Packing box</h5>
+            <div class="product-size">Size: 24 X 20 X 11</div>
+          </div>
+          <div class="price-tag">
+            EGP 4.75
+          </div>
+          <div>
+            <button class="add-btn" data-product="Medium Packing box" data-price="4.75" data-category="boxes" data-pack="1">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="boxes">
+          <img src="/assets/images/large-box.jpg" alt="Large Packing box" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Large Packing box</h5>
+            <div class="product-size">Size: 35 X 22 X 12</div>
+          </div>
+          <div class="price-tag">
+            EGP 6
+          </div>
+          <div>
+            <button class="add-btn" data-product="Large Packing box" data-price="6" data-category="boxes" data-pack="1">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="boxes">
+          <img src="/assets/images/xlarge-box.jpg" alt="X.Large Packing box" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">X.Large Packing box</h5>
+            <div class="product-size">Size: 35 X 27 X 15</div>
+          </div>
+          <div class="price-tag">
+            EGP 8
+          </div>
+          <div>
+            <button class="add-btn" data-product="X.Large Packing box" data-price="8" data-category="boxes" data-pack="1">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- STICKERS -->
+        <div class="category-header">STICKERS</div>
+        
+        <div class="product-card" data-category="stickers">
+          <img src="/assets/images/fragile-sticker.jpg" alt="Fragile Sticker" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Fragile Sticker</h5>
+            <div class="product-pack">Pack of 50</div>
+          </div>
+          <div class="price-tag">
+            EGP 50
+          </div>
+          <div>
+            <button class="add-btn" data-product="Fragile Sticker" data-price="50" data-category="stickers" data-pack="50">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="stickers">
+          <img src="/assets/images/security-sticker.jpg" alt="Security Sticker" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Security Sticker</h5>
+            <div class="product-pack">Pack of 50</div>
+          </div>
+          <div class="price-tag">
+            EGP 25
+          </div>
+          <div>
+            <button class="add-btn" data-product="Security Sticker" data-price="25" data-category="stickers" data-pack="50">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div class="product-card" data-category="stickers">
+          <img src="/assets/images/smart-sticker.jpg" alt="Smart Sticker" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Smart Sticker</h5>
+            <div class="product-pack">Pack of 10</div>
+          </div>
+          <div class="price-tag">
+            EGP 50
+          </div>
+          <div>
+            <button class="add-btn" data-product="Smart Sticker" data-price="50" data-category="stickers" data-pack="10">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- LABELS -->
+        <div class="category-header">LABELS</div>
+        
+        <div class="product-card" data-category="labels">
+          <img src="/assets/images/thermal-label.jpg" alt="Thermal Adhesive Stickers" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Thermal Adhesive Stickers</h5>
+            <div class="product-size">Barcode Roll Label (10cm X 15cm)</div>
+            <div class="product-pack">500 stickers per roll</div>
+          </div>
+          <div class="price-tag">
+            EGP 350
+          </div>
+          <div>
+            <button class="add-btn" data-product="Thermal Adhesive Stickers" data-price="350" data-category="labels" data-pack="1">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- TAPES -->
+        <div class="category-header">PLASTER TAPE</div>
+        
+        <div class="product-card" data-category="tapes">
+          <img src="/assets/images/plaster-tape.jpg" alt="Tape carton" class="product-image" >
+          <div class="product-info">
+            <h5 class="product-title">Tape carton</h5>
+            <div class="product-size">Width: 4.2 cm, Length: 40 meters</div>
+            <div class="product-size">Thickness: 43 microns</div>
+          </div>
+          <div class="price-tag">
+            EGP 15
+          </div>
+          <div>
+            <button class="add-btn" data-product="Tape carton" data-price="15" data-category="tapes" data-pack="1">
+              <i class="bi bi-plus-lg"></i>
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart Column -->
+    <div class="col-md-5 p-4 cart-column d-flex flex-column">
+      <div class="cart-header">
+        <h4 class="mb-0">Order Summary</h4>
+        <div class="cart-icon-container">
+          <i class="bi bi-cart3 fs-4"></i>
+          <div class="cart-badge" id="cartCount">0</div>
+        </div>
+      </div>
+
+      <div id="cartItems" class="flex-grow-1 overflow-auto mb-3">
+        <div class="empty-cart" id="emptyCart">
+          <i class="bi bi-box"></i>
+          <p>Your cart is empty</p>
+          <small>Add items to get started</small>
+        </div>
+      </div>
+
+      <div class="total-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5>Total:</h5>
+          <h4 class="mb-0" id="totalAmount">EGP 0.00</h4>
+        </div>
+        <button class="checkout-btn w-100 py-3" onclick="calculateTotal()">
+          Checkout (EGP <span id="displayTotal">0.00</span>)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    class CartManager {
+      constructor() {
+        this.cart = new Map();
+        this.initEventListeners();
+        this.updateUI();
+      }
+
+      initEventListeners() {
+        // Add to cart buttons
+        document.querySelectorAll('.add-btn').forEach(btn => {
+          if (!btn.disabled) {
+            btn.addEventListener('click', () => {
+              const product = btn.dataset.product;
+              const price = parseFloat(btn.dataset.price);
+              const category = btn.dataset.category;
+              const pack = btn.dataset.pack;
+              if (!isNaN(price)) {
+                this.addItem(product, price, category, pack);
+                // Add animation effect
+                btn.classList.add('animate__animated', 'animate__pulse');
+                setTimeout(() => {
+                  btn.classList.remove('animate__animated', 'animate__pulse');
+                }, 500);
+              } else {
+                console.error('Invalid price:', btn.dataset.price);
+              }
+            });
+          }
+        });
+
+        // Search and filter
+        document.getElementById('searchInput').addEventListener('input', this.filterProducts.bind(this));
+        document.getElementById('categoryFilter').addEventListener('change', this.filterByCategory.bind(this));
+        
+        // Category tabs
+        document.querySelectorAll('.category-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            this.filterByCategory(tab.dataset.category);
+          });
+        });
+      }
+
+      addItem(product, price, category, pack) {
+        const item = this.cart.get(product) || {
+          qty: 0,
+          price: price,
+          category: category,
+          pack: pack
+        };
+        item.qty++;
+        this.cart.set(product, item);
+        this.updateUI();
+        
+        // Show toast notification
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `${product} added to cart`,
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true
+        });
+      }
+
+      removeItem(product) {
+        const item = this.cart.get(product);
+        if (item && item.qty > 1) {
+          item.qty--;
+          this.cart.set(product, item);
+        } else {
+          this.cart.delete(product);
+        }
+        this.updateUI();
+      }
+
+      calculateTotal() {
+        return Array.from(this.cart.values()).reduce((total, item) => {
+          return total + (item.qty * item.price);
+        }, 0);
+      }
+
+      updateUI() {
+        const cartItems = document.getElementById('cartItems');
+        const emptyCart = document.getElementById('emptyCart');
+        const cartCount = document.getElementById('cartCount');
+        
+        // Clear current cart items
+        cartItems.innerHTML = '';
+        cartItems.appendChild(emptyCart);
+        
+        // Update cart count
+        const totalItems = Array.from(this.cart.values()).reduce((count, item) => count + item.qty, 0);
+        cartCount.textContent = totalItems;
+        
+        // Show/hide empty cart message
+        if (this.cart.size === 0) {
+          emptyCart.style.display = 'flex';
+        } else {
+          emptyCart.style.display = 'none';
+          
+          this.cart.forEach((item, product) => {
+            if (item && typeof item.price === 'number') {
+              const cartItem = document.createElement('div');
+              cartItem.className = 'cart-item mb-3 p-3';
+              cartItem.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 class="mb-1">${product}</h5>
+                    <p class="text-muted mb-0">EGP ${item.price.toFixed(2)} each</p>
+                    <small>${item.pack > 1 ? `Pack of ${item.pack}` : ''}</small>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="quantity-control">
+                      <button class="btn btn-sm text-danger" 
+                              onclick="cartManager.removeItem('${product}')">−</button>
+                      <span class="fw-bold mx-2">${item.qty}</span>
+                      <button class="btn btn-sm text-success" 
+                              onclick="cartManager.addItem('${product}', ${item.price}, '${item.category}', '${item.pack}')">+</button>
+                    </div>
+                    <div class="text-dark fw-bold">
+                      EGP ${(item.qty * item.price).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              `;
+              cartItems.appendChild(cartItem);
+            }
+          });
+        }
+
+        const total = this.calculateTotal();
+        document.getElementById('totalAmount').textContent = `EGP ${total.toFixed(2)}`;
+        document.getElementById('displayTotal').textContent = total.toFixed(2);
+      }
+
+      filterProducts() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const categoryFilter = document.getElementById('categoryFilter').value;
+
+        document.querySelectorAll('.product-card').forEach(card => {
+          const productName = card.querySelector('h5').textContent.toLowerCase();
+          const productCategory = card.dataset.category;
+
+          const matchesSearch = productName.includes(searchInput);
+          const matchesCategory = categoryFilter === 'all' || productCategory === categoryFilter;
+
+          if (matchesSearch && matchesCategory) {
+            card.style.display = 'grid';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        
+        this.updateCategoryHeaders();
+      }
+
+      filterByCategory(category) {
+        if (typeof category === 'object') {
+          // If called from event listener
+          category = document.getElementById('categoryFilter').value;
+        }
+        
+        document.querySelectorAll('.product-card').forEach(card => {
+          if (category === 'all' || card.dataset.category === category) {
+            card.style.display = 'grid';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        
+        this.updateCategoryHeaders();
+      }
+      
+      updateCategoryHeaders() {
+        // Update category headers visibility
+        document.querySelectorAll('.category-header').forEach(header => {
+          const nextCategory = header.nextElementSibling;
+          let hasVisibleProducts = false;
+          
+          // Check if any products in this category are visible
+          let current = nextCategory;
+          while (current && !current.classList.contains('category-header')) {
+            if (current.classList.contains('product-card') && 
+                current.style.display !== 'none') {
+              hasVisibleProducts = true;
+              break;
+            }
+            current = current.nextElementSibling;
+          }
+          
+          header.style.display = hasVisibleProducts ? 'flex' : 'none';
+        });
+      }
+    }
+
+    window.cartManager = new CartManager();
+  });
+
+  function calculateTotal() {
+    const total = cartManager.calculateTotal();
+    if (total <= 0) {
+      Swal.fire({
+        title: 'Empty Cart',
+        text: 'Please add items to your cart before checkout',
+        icon: 'info',
+        confirmButtonColor: '#FF7A00',
+        confirmButtonText: 'Continue Shopping'
+      });
+      return;
+    }
+    
+    Swal.fire({
+      title: 'Order Total',
+      html: `
+        <h3 style="color: #FF7A00;">EGP ${total.toFixed(2)}</h3>
+        <p class="mt-3">Proceed to payment?</p>
+      `,
+      icon: 'success',
+      showCancelButton: true,
+      confirmButtonColor: '#FF7A00',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Confirm Order',
+      cancelButtonText: 'Continue Shopping'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Order Placed!',
+          text: 'Your order has been successfully placed.',
+          icon: 'success',
+          confirmButtonColor: '#FF7A00'
+        });
+      }
+    });
+  }
+</script>

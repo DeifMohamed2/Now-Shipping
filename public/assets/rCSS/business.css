@@ -8,6 +8,7 @@
   border-radius: 1.9rem 1.9rem 0 0 !important;
   padding: 1.5rem !important;
 }
+
 .payment-option {
   cursor: pointer;
   border: 2px solid transparent;
@@ -16,7 +17,8 @@
 }
 
 .payment-option:hover {
-  border-color: #0d6efd; /* Bootstrap primary color */
+  border-color: #0d6efd;
+  /* Bootstrap primary color */
   background-color: rgba(13, 110, 253, 0.1);
 }
 
@@ -64,10 +66,13 @@
 #dropdownMenuButton::after {
   display: none;
 }
+
 .dropdown-menu {
   position: fixed !important;
-  z-index: 1050 !important; /* Ensure the dropdown is above other elements */
+  z-index: 1050 !important;
+  /* Ensure the dropdown is above other elements */
 }
+
 /* Filterazon Styles */
 /* Filterazon Styles */
 .filterazon-bar {
@@ -190,9 +195,11 @@
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(0.95);
   }
+
   100% {
     transform: scale(1);
   }
@@ -259,8 +266,7 @@
 }
 
 
-.card{
+.card {
   border-radius: 1.3rem !important;
   box-shadow: 1px 1px 10px 1px #0000002f !important;
 }
-

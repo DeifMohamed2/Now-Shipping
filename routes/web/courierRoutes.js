@@ -5,6 +5,7 @@ const Courier = require('../../models/courier.js');
 const jwtSecret = process.env.JWT_SECRET;
 
 const courierController = require('../../controllers/courierController.js');
+const shopController = require('../../controllers/shopController.js');
 
 async function authenticateCourier(req, res, next) {
   const token = req.cookies.token;
@@ -52,7 +53,10 @@ router.get(
   courierController.get_orderDetailsPage
 );
 
-router.put('/update-order-status/:orderNumber', courierController.updateOrderStatus);
+router.put(
+  '/update-order-status/:orderNumber',
+  courierController.updateOrderStatus
+);
 
 router.put('/complete-order/:orderNumber', courierController.completeOrder);
 
@@ -60,13 +64,28 @@ router.put('/complete-order/:orderNumber', courierController.completeOrder);
 router.post('/orders/:orderNumber/complete', courierController.completeOrder);
 
 // Return handling routes
-router.post('/orders/:orderNumber/pickup-return', courierController.pickupReturn);
-router.post('/orders/:orderNumber/deliver-to-warehouse', courierController.deliverReturnToWarehouse);
-router.post('/orders/:orderNumber/complete-return-to-business', courierController.completeReturnToBusiness);
-router.get('/return-orders/:orderNumber', courierController.getReturnOrderDetails);
+router.post(
+  '/orders/:orderNumber/pickup-return',
+  courierController.pickupReturn
+);
+router.post(
+  '/orders/:orderNumber/deliver-to-warehouse',
+  courierController.deliverReturnToWarehouse
+);
+router.post(
+  '/orders/:orderNumber/complete-return-to-business',
+  courierController.completeReturnToBusiness
+);
+router.get(
+  '/return-orders/:orderNumber',
+  courierController.getReturnOrderDetails
+);
 
 // Fast shipping scan route
-router.post('/orders/:orderNumber/scan-fast-shipping', courierController.scanFastShippingOrder);
+router.post(
+  '/orders/:orderNumber/scan-fast-shipping',
+  courierController.scanFastShippingOrder
+);
 
 // Pickups
 
@@ -95,6 +114,9 @@ router.delete(
 );
 
 router.put('/complete-pickup/:pickupNumber', courierController.completePickup);
+
+// Shop deliveries routes
+router.get('/shop-orders', shopController.getCourierShopOrdersPage);
 
 //logout
 

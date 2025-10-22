@@ -37,6 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Add status category filter to the UI
   addStatusCategoryFilter();
+  
+  // Initialize professional dropdown system
+  initializeDropdownSystem();
 });
 
 // Add status category filter dropdown
@@ -232,29 +235,37 @@ function populateOrdersTable(orders) {
         day: 'numeric',
       })}</td>
       <td>
-        <div class="dropdown dropdown-fix">
-          <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="ri-more-fill align-middle"></i>
+        <div class="orders-table-dropdown" data-order-id="${order.orderNumber}">
+          <button class="dropdown-toggle" type="button" aria-expanded="false" data-dropdown-toggle>
+            <i class="ri-more-fill"></i>
           </button>
           <ul class="dropdown-menu">
-            <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#printPolicyModal" onclick="setOrderId('${
-              order.orderNumber
-            }')">
-              <i class="ri-printer-fill align-bottom me-2 text-primary"></i> <span class="fs-6">Print Delivery Policy</span>
-            </button></li>
-            <li><button class="dropdown-item"><i class="ri-barcode-fill align-bottom me-2 text-success"></i> <span class="fs-6">Smart Sticker Scan</span></button></li>
-            <li><a class="dropdown-item" href="/business/edit-order/${
-              order.orderNumber
-            }">
-              <i class="ri-edit-2-fill align-bottom me-2 text-warning"></i> <span class="fs-6">Edit Order</span>
-            </a></li>
+            <li>
+              <button class="dropdown-item" onclick="handlePrintPolicy('${order.orderNumber}')">
+                <i class="ri-printer-fill text-primary"></i>Print Delivery Policy
+              </button>
+            </li>
+            <li>
+              <button class="dropdown-item" onclick="handleSmartStickerScan('${order.orderNumber}')">
+                <i class="ri-barcode-fill text-success"></i>Smart Sticker Scan
+              </button>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
+                <i class="ri-edit-2-fill text-warning"></i>Edit Order
+              </a>
+            </li>
             ${!['completed', 'returned', 'returnCompleted', 'canceled', 'terminated'].includes(order.orderStatus) ? 
-              `<li><button class="dropdown-item" onclick="cancelOrder('${
-                order._id
-              }')"><i class="ri-delete-bin-6-fill align-bottom me-2 text-danger"></i> <span class="fs-6">Cancel Order</span></button></li>` : ''}
-            <li><a class="dropdown-item" href="/business/order-details/${
-              order.orderNumber
-            }"><i class="ri-truck-line align-bottom me-2 text-info"></i> <span class="fs-6">Track Order</span></a></li>
+              `<li>
+                <button class="dropdown-item" onclick="handleCancelOrder('${order._id}', '${order.orderNumber}')">
+                  <i class="ri-delete-bin-6-fill text-danger"></i>Cancel Order
+                </button>
+              </li>` : ''}
+            <li>
+              <a class="dropdown-item" href="/business/order-details/${order.orderNumber}">
+                <i class="ri-truck-line text-info"></i>Track Order
+              </a>
+            </li>
           </ul>
         </div>
       </td>
@@ -453,6 +464,146 @@ async function printPolicy() {
   let modal = bootstrap.Modal.getInstance(document.getElementById('printPolicyModal'));
   modal.hide();
 }
+
+// Professional Dropdown System - Global Variables
+let dropdownSystemInitialized = false;
+
+// Professional Dropdown System
+function initializeDropdownSystem() {
+  // Only initialize once
+  if (dropdownSystemInitialized) {
+    return;
+  }
+  
+  dropdownSystemInitialized = true;
+  
+
+  // Close all dropdowns when clicking outside
+  document.addEventListener('click', function(event) {
+    const dropdowns = document.querySelectorAll('.orders-table-dropdown');
+    dropdowns.forEach(dropdown => {
+      if (!dropdown.contains(event.target)) {
+        closeDropdown(dropdown);
+      }
+    });
+  });
+
+  // Handle dropdown toggle clicks
+  document.addEventListener('click', function(event) {
+    if (event.target.closest('[data-dropdown-toggle]')) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const dropdown = event.target.closest('.orders-table-dropdown');
+      if (!dropdown) return;
+      
+      const isOpen = dropdown.classList.contains('show');
+      
+      // Close all other dropdowns
+      document.querySelectorAll('.orders-table-dropdown.show').forEach(d => {
+        if (d !== dropdown) closeDropdown(d);
+      });
+      
+      // Toggle current dropdown
+      if (isOpen) {
+        closeDropdown(dropdown);
+      } else {
+        openDropdown(dropdown);
+      }
+    }
+  });
+
+  // Handle escape key
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      document.querySelectorAll('.orders-table-dropdown.show').forEach(dropdown => {
+        closeDropdown(dropdown);
+      });
+    }
+  });
+
+  // Handle window resize
+  window.addEventListener('resize', function() {
+    document.querySelectorAll('.orders-table-dropdown.show').forEach(dropdown => {
+      adjustDropdownPosition(dropdown);
+    });
+  });
+
+  // Reposition dropdowns during scroll to maintain correct position
+  window.addEventListener('scroll', function() {
+    document.querySelectorAll('.orders-table-dropdown.show').forEach(dropdown => {
+      adjustDropdownPosition(dropdown);
+    });
+  });
+
+  
+}
+
+function openDropdown(dropdown) {
+  dropdown.classList.add('show');
+  const toggle = dropdown.querySelector('[data-dropdown-toggle]');
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+  adjustDropdownPosition(dropdown);
+}
+
+function closeDropdown(dropdown) {
+  dropdown.classList.remove('show');
+  const toggle = dropdown.querySelector('[data-dropdown-toggle]');
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function adjustDropdownPosition(dropdown) {
+  const menu = dropdown.querySelector('.dropdown-menu');
+  if (!menu) return;
+  
+  const rect = dropdown.getBoundingClientRect();
+  const viewportHeight = window.innerHeight;
+  const menuHeight = menu.offsetHeight || 200; // fallback height
+  
+  // Calculate available space below the dropdown button
+  const spaceBelow = viewportHeight - rect.bottom;
+  const spaceAbove = rect.top;
+  
+  // If there's not enough space below and more space above, position dropdown above
+  if (spaceBelow < menuHeight && spaceAbove > menuHeight) {
+    dropdown.classList.add('dropdown-up');
+  } else {
+    dropdown.classList.remove('dropdown-up');
+  }
+  
+  // Ensure dropdown stays within viewport bounds
+  const tableContainer = dropdown.closest('.table-responsive');
+  if (tableContainer) {
+    const tableRect = tableContainer.getBoundingClientRect();
+    
+    // If dropdown would go outside table container, adjust position
+    if (rect.bottom + menuHeight > tableRect.bottom) {
+      dropdown.classList.add('dropdown-up');
+    }
+  }
+}
+
+// Dropdown Action Handlers
+function handlePrintPolicy(orderNumber) {
+  setOrderId(orderNumber);
+  const modal = new bootstrap.Modal(document.getElementById('printPolicyModal'));
+  modal.show();
+}
+
+function handleSmartStickerScan(orderNumber) {
+  // Open the Smart Sticker Scan modal
+  const modal = new bootstrap.Modal(document.getElementById('smartStickerModal'));
+  modal.show();
+}
+
+function handleCancelOrder(orderId, orderNumber) {
+  cancelOrder(orderId);
+}
+
 
 // Cancel Order
 async function cancelOrder(orderId) {

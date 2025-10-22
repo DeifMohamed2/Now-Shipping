@@ -22,28 +22,58 @@ const transporter = nodemailer.createTransport({
 
 //================================================= Landing Page =========================================================
 const index = (req, res) => {
-  res.render('landing/index', { title: 'Home', layout: 'layouts/layout-without-nav' });
+  const lang = req.query.lang || req.cookies.language || 'en';
+  res.render('landing/index', { 
+    title: 'Home', 
+    layout: 'layouts/layout-without-nav',
+    currentLang: lang
+  });
 };
 
 
 const mobileAppPage = (req, res) => {
-  res.render('landing/mobileApp', { title: 'Home', layout: 'layouts/layout-without-nav' });
+  const lang = req.query.lang || req.cookies.language || 'en';
+  res.render('landing/mobileApp', { 
+    title: 'Mobile App', 
+    layout: 'layouts/layout-without-nav',
+    currentLang: lang
+  });
 };
 
 const pricingPage = (req, res) => {
-  res.render('landing/pricing', { title: 'Home', layout: 'layouts/layout-without-nav' });
+  const lang = req.query.lang || req.cookies.language || 'en';
+  res.render('landing/pricing', { 
+    title: 'Pricing', 
+    layout: 'layouts/layout-without-nav',
+    currentLang: lang
+  });
 };
 
 const aboutusPage = (req, res) => {
-  res.render('landing/aboutus', { title: 'Home', layout: 'layouts/layout-without-nav' });
+  const lang = req.query.lang || req.cookies.language || 'en';
+  res.render('landing/aboutus', { 
+    title: 'About Us', 
+    layout: 'layouts/layout-without-nav',
+    currentLang: lang
+  });
 };
 
 const faqPage = (req, res) => {
-  res.render('landing/faq', { title: 'Home', layout: 'layouts/layout-without-nav' });
+  const lang = req.query.lang || req.cookies.language || 'en';
+  res.render('landing/faq', { 
+    title: 'FAQ', 
+    layout: 'layouts/layout-without-nav',
+    currentLang: lang
+  });
 };
 
 const privacyPolicyPage = (req, res) => {
-  res.render('landing/privacy-policy', { title: 'Privacy Policy', layout: 'layouts/layout-without-nav' });
+  const lang = req.query.lang || req.cookies.language || 'en';
+  res.render('landing/privacy-policy', { 
+    title: 'Privacy Policy', 
+    layout: 'layouts/layout-without-nav',
+    currentLang: lang
+  });
 };
 
 
@@ -101,29 +131,38 @@ const verifyEmailBytoken = async (req, res) => {
 }
 
 const loginPage = (req, res) => {
+    const lang = req.query.lang || req.cookies.language || 'en';
     return res.render('auth/login', {
       title: 'Login',
       layout: 'layouts/layout-without-nav',
       message: req.flash('message'),
       error: req.flash('error'),
+      currentLang: lang,
+      translation: res.locals.translation // Ensure translation is passed
     });
 };
 
 const adminLogin = (req, res) => {
+    const lang = req.query.lang || req.cookies.language || 'en';
     return res.render('auth/admin-login', {
       title: 'Admin Login',
       layout: 'layouts/layout-without-nav',
         message: req.flash('message'),
         error: req.flash('error'),
+        currentLang: lang,
+        translation: res.locals.translation // Ensure translation is passed
     });
 };
 
 const registerPage = (req, res) => {
+    const lang = req.query.lang || req.cookies.language || 'en';
     return res.render('auth/register', {
       title: 'Register',
       layout: 'layouts/layout-without-nav',
       message: req.flash('message'),
       error: req.flash('error'),
+      currentLang: lang,
+      translation: res.locals.translation // Ensure translation is passed
     });
 }
 
@@ -290,7 +329,9 @@ const verifyOTP = async (phoneNumber, otp) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
+  
   try {
+    // Input validation
     if (!email || !password) {
       return res.status(400).json({
         status: 'error',
@@ -298,17 +339,25 @@ const login = async (req, res) => {
       });
     }
 
-    // Check if the user exists in the User collection
-    let user = await User.findOne({ email });
-    let role = 'Business';
-
-    // If not found, check in the Courier collection
-    if (!user) {
-      user = await Courier.findOne({ email });
-      role = 'Courier';
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please enter a valid email address',
+      });
     }
 
-    // If still not found, return an error
+    // Use Promise.all to check both collections simultaneously for better performance
+    const [businessUser, courierUser] = await Promise.all([
+      User.findOne({ email }).select('+password'),
+      Courier.findOne({ email }).select('+password')
+    ]);
+
+    let user = businessUser || courierUser;
+    let role = businessUser ? 'Business' : 'Courier';
+
+    // If no user found, return error
     if (!user) {
       return res.status(400).json({
         status: 'error',
@@ -316,8 +365,8 @@ const login = async (req, res) => {
       });
     }
 
+    // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
       return res.status(400).json({
         status: 'error',
@@ -325,50 +374,46 @@ const login = async (req, res) => {
       });
     }
 
+    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, role },
       process.env.JWT_SECRET,
-      {
-        expiresIn: '365d',
-      }
+      { expiresIn: '365d' }
     );
 
+    // Set secure cookie
     res.cookie('token', token, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000 // 365 days
     });
 
-    if(role === 'Courier') {
-      return res.status(200).json({
-        status: 'success',
-        message: 'Login successful',
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role,
-        },
-      });
-    }else{
-      res.status(200).json({
-        status: 'success',
-        message: 'Login successful',
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role,
-          isCompleted: user.isCompleted,
-        },
-      });
+    // Prepare user data (exclude password)
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role
+    };
+
+    // Add role-specific data
+    if (role === 'Business') {
+      userData.isCompleted = user.isCompleted;
     }
 
+    return res.status(200).json({
+      status: 'success',
+      message: 'Login successful',
+      token,
+      user: userData
+    });
 
   } catch (err) {
-    res.status(500).json({
+    console.error('Login error:', err);
+    return res.status(500).json({
       status: 'error',
-      message: 'An error occurred',
+      message: 'An error occurred during login',
     });
   }
 };
@@ -422,9 +467,9 @@ const createAdminAccount = async (req, res) => {
 
 const loginAsAdmin = async (req, res) => {
     const { email, password } = req.body;
+    
     try {
-        console.log('email:', email);
-        console.log('password :', password);
+        // Input validation
         if (!email || !password) {
             return res.status(400).json({
                 status: 'error',
@@ -432,16 +477,27 @@ const loginAsAdmin = async (req, res) => {
             });
         }
 
-        const admin = await Admin.findOne({ email, role: 'admin' });
-        if (!admin) {
-          return res.status(400).json({
-            status: 'error',
-            message: 'Email or password is incorrect',
-          });
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Please enter a valid email address',
+            });
         }
 
-        const isMatch = await bcrypt.compare(password, admin.password);
+        // Find admin with password field
+        const admin = await Admin.findOne({ email, role: 'admin' }).select('+password');
+        
+        if (!admin) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Email or password is incorrect',
+            });
+        }
 
+        // Verify password
+        const isMatch = await bcrypt.compare(password, admin.password);
         if (!isMatch) {
             return res.status(400).json({
                 status: 'error',
@@ -449,99 +505,129 @@ const loginAsAdmin = async (req, res) => {
             });
         }
 
-        const token = jwt.sign({ adminId: admin._id }, process.env.JWT_SECRET, {
-          expiresIn: '1d',
-        });
+        // Generate JWT token
+        const token = jwt.sign(
+            { adminId: admin._id, role: 'admin' }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '1d' }
+        );
 
+        // Set secure cookie
         res.cookie('token', token, {
             httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
 
-        res.status(200).json({
-          status: 'success',
-          user: {
-            id: admin._id,
-            name: admin.name,
-            email: admin.email,
-            role: admin.role,
-            isNeedStorage: admin.isNeedStorage,
-          },
+        return res.status(200).json({
+            status: 'success',
+            message: 'Login successful',
+            token,
+            user: {
+                id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.role,
+                isNeedStorage: admin.isNeedStorage,
+            },
         });
     } catch (err) {
-        res.status(500).json({
+        console.error('Admin login error:', err);
+        return res.status(500).json({
             status: 'error',
-            message: 'An error occurred',
+            message: 'An error occurred during login',
         });
     }
 };
 
 const courierLogin = (req, res) => {
+    const lang = req.query.lang || req.cookies.language || 'en';
     return res.render('auth/courier-login', {
       title: 'Courier Login',
       layout: 'layouts/layout-without-nav',
         message: req.flash('message'),
         error: req.flash('error'),
+        currentLang: lang,
+        translation: res.locals.translation // Ensure translation is passed
     });
 }
 
-const loginAsCourier  = async (req, res) => {
+const loginAsCourier = async (req, res) => {
     const { email, password } = req.body;
-    try{
-    if (!email || !password) {
-        return res.status(400).json({
-            status: 'error',
-            message: 'Please fill all the fields'
-        });
-    }
-
-    const courier = await Courier.findOne({ email });
-
-    if (!courier) {
-        return res.status(400).json({
-            status: 'error',
-            message: 'Email or password is incorrect'
-        });
-    }
-
-    const isMatch = await bcrypt.compare(password, courier.password);
-
-    if (!isMatch) {
-        return res.status(400).json({
-            status: 'error',
-            message: 'Email or password is incorrect'
-        });
-    }
-
-    const token = jwt.sign({ id: courier._id, userType: 'courier' }, process.env.JWT_SECRET, {
-          expiresIn: '365d',
-    });
-
-    res.cookie('token', token, {
-        httpOnly: true,
-    });
-
-
-    console.log('token:', token);
-    res.status(200).json({
-        status: 'success',
-        token: token,
-        user: {
-            id: courier._id,
-            name: courier.name,
-            email: courier.email,
-            role: 'courier',
+    
+    try {
+        // Input validation
+        if (!email || !password) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Please fill all the fields'
+            });
         }
-    });
 
-}
-catch(err){
-    console.error('Error in loginAsCourier:', err);
-    res.status(500).json({
-        status: 'error',
-        message: 'An error occurred'
-    });
-}
-}
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Please enter a valid email address'
+            });
+        }
+
+        // Find courier with password field
+        const courier = await Courier.findOne({ email }).select('+password');
+
+        if (!courier) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Email or password is incorrect'
+            });
+        }
+
+        // Verify password
+        const isMatch = await bcrypt.compare(password, courier.password);
+        if (!isMatch) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Email or password is incorrect'
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: courier._id, userType: 'courier' }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '365d' }
+        );
+
+        // Set secure cookie
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 365 * 24 * 60 * 60 * 1000 // 365 days
+        });
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Login successful',
+            token,
+            user: {
+                id: courier._id,
+                name: courier.name,
+                email: courier.email,
+                role: 'courier',
+            }
+        });
+
+    } catch (err) {
+        console.error('Courier login error:', err);
+        return res.status(500).json({
+            status: 'error',
+            message: 'An error occurred during login'
+        });
+    }
+};
 
 
 // request for onther verification

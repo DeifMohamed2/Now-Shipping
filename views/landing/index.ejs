@@ -4,6 +4,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Arabic Font Support -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<!-- RTL Support CSS -->
+<link rel="stylesheet" href="/assets/css/rtl-support.css">
 <style>
   /* Reset and Base Styles */
   * {
@@ -359,135 +363,7 @@
     transform: translateY(-2px);
   }
 
-  /* Header Styles */
-  header {
-    background-color: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    width: 100%;
-    transition: all 0.3s ease;
-  }
-
-  header.scrolled {
-    background-color: rgba(255, 255, 255, 0.98);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  }
-
-  .header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    width: 100%;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    font-weight: 700;
-    font-size: 1.75rem;
-    color: var(--primary);
-    text-decoration: none;
-    position: relative;
-    z-index: 101;
-  }
-
-  .logo img {
-    height: 60px;
-    width: auto;
-    object-fit: contain;
-    transition: all 0.3s ease;
-  }
-
-  header.scrolled .logo img {
-    height: 50px;
-  }
-
-  /* Navigation */
-  .nav-container {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-  }
-
-  nav {
-    margin-right: 1rem;
-  }
-
-  nav ul {
-    display: flex;
-    list-style: none;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0;
-  }
-
-  nav ul li {
-    position: relative;
-  }
-
-  nav ul li a {
-    text-decoration: none;
-    color: var(--dark);
-    font-weight: 600;
-    padding: 0.75rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-radius: var(--border-radius);
-    transition: all 0.3s ease;
-    position: relative;
-  }
-
-  nav ul li a::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 3px;
-    background-color: var(--primary);
-    transition: width 0.3s ease;
-    border-radius: 3px 3px 0 0;
-  }
-
-  nav ul li a:hover::before,
-  nav ul li.active a::before {
-    width: 70%;
-  }
-
-  nav ul li a i {
-    font-size: 1.1rem;
-    color: var(--primary);
-    transition: transform 0.3s ease;
-  }
-
-  nav ul li a:hover i {
-    transform: translateY(-3px);
-  }
-
-  nav ul li a:hover {
-    color: var(--primary);
-    background-color: rgba(243, 151, 32, 0.05);
-  }
-
-  nav ul li.active a {
-    color: var(--primary);
-    background-color: rgba(243, 151, 32, 0.08);
-    font-weight: 700;
-  }
-
-  /* Auth Buttons */
-  .auth-buttons {
-    display: flex;
-    gap: 1rem;
-  }
-
+  /* Button Styles */
   .btn {
     padding: 0.75rem 1.5rem;
     border-radius: var(--border-radius-full);
@@ -611,32 +487,6 @@
     border-color: var(--dark-secondary);
     transform: translateY(-5px);
     box-shadow: var(--shadow);
-  }
-
-  /* Mobile Menu Button */
-  .mobile-menu-btn {
-    display: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--dark);
-    width: 50px;
-    height: 50px;
-    border-radius: var(--border-radius);
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    background-color: transparent;
-    position: relative;
-    z-index: 101;
-  }
-
-  .mobile-menu-btn:hover {
-    background-color: rgba(243, 151, 32, 0.1);
-    color: var(--primary);
-  }
-
-  .mobile-menu-btn.active {
-    color: var(--primary);
   }
 
   /* ENHANCED PROFESSIONAL HERO SECTION */
@@ -1783,66 +1633,8 @@
 <!-- Animation Canvas for Moving Trucks -->
 <canvas id="animationCanvas"></canvas>
 
-<!-- Header -->
-<header id="main-header">
-  <div class="container header-container">
-    <a href="/" class="logo">
-      <img src="assets/rImages/logo.png" alt="ShipFast Logo">
-    </a>
-
-    <div class="mobile-menu-btn" id="mobile-menu-toggle">
-      <i class="fas fa-bars"></i>
-    </div>
-
-    <div class="nav-container" id="main-nav">
-      <nav>
-        <ul>
-          <li class="active">
-            <a href="/aboutus">
-              <i class="fas fa-info-circle"></i>
-              <span>About Us</span>
-            </a>
-          </li>
-          <li>
-            <a href="/faq">
-              <i class="fas fa-question-circle"></i>
-              <span>FAQ</span>
-            </a>
-          </li>
-          <li>
-            <a href="/mobileApp">
-              <i class="fas fa-mobile-alt"></i>
-              <span>Mobile App</span>
-            </a>
-          </li>
-          <li>
-            <a href="/pricing">
-              <i class="fas fa-tag"></i>
-              <span>Pricing</span>
-            </a>
-          </li>
-          <li>
-            <a href="/tracking">
-              <i class="fas fa-search"></i>
-              <span>Tracking</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      <div class="auth-buttons">
-        <a href="/login" class="btn btn-secondary">
-          <i class="fas fa-sign-in-alt"></i>
-          <span>Login</span>
-        </a>
-        <a href="/register" class="btn btn-primary">
-          <i class="fas fa-user-plus"></i>
-          <span>Sign Up</span>
-        </a>
-      </div>
-    </div>
-  </div>
-</header>
+<!-- Professional Navbar -->
+<%- include('../partials/navbar', { activePage: 'home' }) %>
 
 <!-- Enhanced Professional Hero Section -->
 <section class="hero">
@@ -1850,19 +1642,19 @@
     <div class="hero-content">
       <div class="hero-subtitle">
         <i class="fas fa-truck"></i>
-        <span>Fast & Reliable Logistics</span>
+        <span><%= translation.landing.hero.subtitle %></span>
       </div>
-      <h1 class="hero-title">Modern Solutions for <span>Shipping & Logistics</span></h1>
-      <p class="hero-description">Streamline your shipping operations with our AI-powered logistics platform. We provide end-to-end solutions for businesses of all sizes, ensuring your packages arrive safely and on time.</p>
+      <h1 class="hero-title"><%= translation.landing.hero.title %></h1>
+      <p class="hero-description"><%= translation.landing.hero.description %></p>
 
       <div class="hero-buttons">
         <a href="/register" class="btn btn-primary btn-lg">
           <i class="fas fa-rocket"></i>
-          <span>Get Started</span>
+          <span><%= translation.landing.hero.cta %></span>
         </a>
         <a href="/login" class="btn btn-outline btn-lg">
           <i class="fas fa-sign-in-alt"></i>
-          <span>Login</span>
+          <span><%= translation.navigation.login %></span>
         </a>
       </div>
       </div>
@@ -2082,8 +1874,8 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
 <section class="services">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Our Services</h2>
-      <p class="section-subtitle">Empowering businesses with our comprehensive logistics solutions</p>
+      <h2 class="section-title"><%= translation.landing.services.title %></h2>
+      <p class="section-subtitle"><%= translation.landing.descriptions.services %></p>
     </div>
 
     <div class="features">
@@ -2091,24 +1883,24 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
         <div class="feature-icon">
           <i class="fas fa-truck-fast"></i>
         </div>
-        <h3 class="feature-title">Overnight Delivery</h3>
-        <p class="feature-description">Get orders delivered on the very next day! Guaranteed with a success rate of 98%, one of the highest rates in the industry.</p>
+        <h3 class="feature-title"><%= translation.landing.services.overnight.title %></h3>
+        <p class="feature-description"><%= translation.landing.descriptions.overnight %></p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
           <i class="fas fa-chart-line"></i>
         </div>
-        <h3 class="feature-title">Full Financial Visibility</h3>
-        <p class="feature-description">Have live updates day by day about your financials through our Wallet available in our dashboard.</p>
+        <h3 class="feature-title"><%= translation.landing.services.visibility.title %></h3>
+        <p class="feature-description"><%= translation.landing.descriptions.visibility %></p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">
           <i class="fas fa-globe"></i>
         </div>
-        <h3 class="feature-title">Nationwide Coverage</h3>
-        <p class="feature-description">Our extensive network covers all major cities and remote areas, ensuring your packages reach every corner of the country.</p>
+        <h3 class="feature-title"><%= translation.landing.services.coverage.title %></h3>
+        <p class="feature-description"><%= translation.landing.descriptions.coverage %></p>
       </div>
     </div>
   </div>
@@ -2118,33 +1910,33 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
 <section class="how-it-works">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">How It Works</h2>
-      <p class="section-subtitle">Simple, efficient, and reliable shipping process</p>
+      <h2 class="section-title"><%= translation.landing.howItWorks.title %></h2>
+      <p class="section-subtitle"><%= translation.landing.descriptions.howItWorks %></p>
     </div>
 
     <div class="steps">
       <div class="step">
         <div class="step-number">1</div>
-        <h3 class="step-title">Create an Account</h3>
-        <p class="step-description">Sign up for free and set up your business profile in minutes.</p>
+        <h3 class="step-title"><%= translation.landing.steps.createAccount %></h3>
+        <p class="step-description"><%= translation.landing.descriptions.createAccount %></p>
       </div>
 
       <div class="step">
         <div class="step-number">2</div>
-        <h3 class="step-title">Book a Shipment</h3>
-        <p class="step-description">Enter shipment details and choose your preferred delivery option.</p>
+        <h3 class="step-title"><%= translation.landing.steps.bookShipment %></h3>
+        <p class="step-description"><%= translation.landing.descriptions.bookShipment %></p>
       </div>
 
       <div class="step">
         <div class="step-number">3</div>
-        <h3 class="step-title">Package Pickup</h3>
+        <h3 class="step-title"><%= translation.landing.howItWorks.step1.title %></h3>
         <p class="step-description">Our courier will pick up your package from your specified location.</p>
       </div>
 
       <div class="step">
         <div class="step-number">4</div>
-        <h3 class="step-title">Track & Deliver</h3>
-        <p class="step-description">Track your shipment in real-time until it reaches its destination.</p>
+        <h3 class="step-title"><%= translation.landing.steps.trackDeliver %></h3>
+        <p class="step-description"><%= translation.landing.descriptions.trackDeliver %></p>
       </div>
     </div>
   </div>
@@ -2156,22 +1948,22 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
     <div class="stats-container">
       <div class="stat">
         <div class="stat-number" data-count="5000">0</div>
-        <div class="stat-label">Daily Shipments</div>
+        <div class="stat-label"><%= translation.landing.statistics.dailyShipments %></div>
       </div>
 
       <div class="stat">
         <div class="stat-number" data-count="98">0</div>
-        <div class="stat-label">Success Rate %</div>
+        <div class="stat-label"><%= translation.landing.statistics.successRate %></div>
       </div>
 
       <div class="stat">
         <div class="stat-number" data-count="250">0</div>
-        <div class="stat-label">Cities Covered</div>
+        <div class="stat-label"><%= translation.landing.statistics.citiesCovered %></div>
       </div>
 
       <div class="stat">
         <div class="stat-number" data-count="1500">0</div>
-        <div class="stat-label">Business Partners</div>
+        <div class="stat-label"><%= translation.landing.statistics.businessPartners %></div>
       </div>
     </div>
   </div>
@@ -2181,8 +1973,8 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
 <section class="business-solutions">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Business Solutions</h2>
-      <p class="section-subtitle">Tailored logistics solutions for businesses of all sizes</p>
+      <h2 class="section-title"><%= translation.landing.businessSolutions.title %></h2>
+      <p class="section-subtitle"><%= translation.landing.businessSolutions.subtitle %></p>
     </div>
 
     <div class="solutions">
@@ -2191,8 +1983,8 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
           <i class="fas fa-store"></i>
         </div>
         <div class="solution-content">
-          <h3>E-commerce Integration</h3>
-          <p>Seamlessly integrate with your online store and automate your shipping process. Compatible with all major e-commerce platforms.</p>
+          <h3><%= translation.landing.businessSolutions.ecommerce.title %></h3>
+          <p><%= translation.landing.businessSolutions.ecommerce.description %></p>
         </div>
       </div>
 
@@ -2201,8 +1993,8 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
           <i class="fas fa-warehouse"></i>
         </div>
         <div class="solution-content">
-          <h3>Warehousing & Fulfillment</h3>
-          <p>Store your inventory in our strategically located warehouses and let us handle the picking, packing, and shipping.</p>
+          <h3><%= translation.landing.businessSolutions.warehousing.title %></h3>
+          <p><%= translation.landing.businessSolutions.warehousing.description %></p>
         </div>
       </div>
 
@@ -2212,8 +2004,8 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
           <i class="fas fa-box"></i>
         </div>
         <div class="solution-content">
-          <h3>Bulk Shipping</h3>
-          <p>Special rates and dedicated support for high-volume shippers. Save more as you ship more.</p>
+          <h3><%= translation.landing.businessSolutions.bulkShipping.title %></h3>
+          <p><%= translation.landing.businessSolutions.bulkShipping.description %></p>
         </div>
       </div>
     </div>
@@ -2224,31 +2016,31 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
 <section class="calculator">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Shipping Calculator</h2>
-      <p class="section-subtitle">Get an instant estimate for your shipment</p>
+      <h2 class="section-title"><%= translation.landing.calculator.title %></h2>
+      <p class="section-subtitle"><%= translation.landing.calculator.subtitle %></p>
     </div>
 
     <div class="calculator-container">
       <div class="calculator-info">
-        <h2>Calculate Shipping Costs</h2>
-        <p>Get accurate shipping rates for your packages. Our transparent pricing ensures you know exactly what you're paying for.</p>
+        <h2><%= translation.landing.calculator.calculateTitle %></h2>
+        <p><%= translation.landing.calculator.description %></p>
 
         <div class="calculator-features">
           <div class="calculator-feature">
             <i class="fas fa-check-circle"></i>
-            <span>Instant price calculation</span>
+            <span><%= translation.landing.calculator.features.instant %></span>
           </div>
           <div class="calculator-feature">
             <i class="fas fa-check-circle"></i>
-            <span>Multiple service options</span>
+            <span><%= translation.landing.calculator.features.multiple %></span>
           </div>
           <div class="calculator-feature">
             <i class="fas fa-check-circle"></i>
-            <span>Accurate delivery estimates</span>
+            <span><%= translation.landing.calculator.features.accurate %></span>
           </div>
           <div class="calculator-feature">
             <i class="fas fa-check-circle"></i>
-            <span>No hidden fees</span>
+            <span><%= translation.landing.calculator.features.noHidden %></span>
           </div>
         </div>
       </div>
@@ -2256,53 +2048,53 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
       <form class="calculator-form">
         <div class="form-row">
           <div class="form-group">
-            <label for="origin">Origin</label>
+            <label for="origin"><%= translation.footer.tracking.origin %></label>
             <input type="text" id="origin" placeholder="Enter origin city">
           </div>
           <div class="form-group">
-            <label for="destination">Destination</label>
+            <label for="destination"><%= translation.footer.tracking.destination %></label>
             <input type="text" id="destination" placeholder="Enter destination city">
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="weight">Weight (kg)</label>
+            <label for="weight"><%= translation.landing.calculator.form.weight %></label>
             <input type="number" id="weight" placeholder="Package weight" min="0.1" step="0.1">
           </div>
           <div class="form-group">
-            <label for="dimensions">Dimensions (cm)</label>
+            <label for="dimensions"><%= translation.landing.calculator.form.dimensions %></label>
             <input type="text" id="dimensions" placeholder="L x W x H">
           </div>
         </div>
 
         <div class="form-group">
-          <label for="service-type">Service Type</label>
+          <label for="service-type"><%= translation.landing.calculator.form.serviceType %></label>
           <select id="service-type">
-            <option value="standard">Standard Delivery (2-3 days)</option>
-            <option value="express">Express Delivery (Next day)</option>
-            <option value="same-day">Same Day Delivery</option>
-            <option value="international">International Shipping</option>
+            <option value="standard"><%= translation.landing.calculator.services.standard %></option>
+            <option value="express"><%= translation.landing.calculator.services.express %></option>
+            <option value="same-day"><%= translation.landing.calculator.services.sameDay %></option>
+            <option value="international"><%= translation.landing.calculator.services.international %></option>
           </select>
         </div>
 
         <button type="button" id="calculate-btn" class="btn btn-primary">
           <i class="fas fa-calculator"></i>
-          <span>Calculate Shipping</span>
+          <span><%= translation.landing.calculator.form.calculate %></span>
         </button>
 
         <div class="calculator-result" id="shipping-result">
-          <div class="result-title">Shipping Estimate</div>
+          <div class="result-title"><%= translation.landing.calculator.result.title %></div>
           <div class="result-details">
-            <div class="result-label">Shipping Cost:</div>
+            <div class="result-label"><%= translation.landing.calculator.result.cost %></div>
             <div class="result-value">$24.99</div>
           </div>
           <div class="result-details">
-            <div class="result-label">Estimated Delivery:</div>
+            <div class="result-label"><%= translation.landing.calculator.result.delivery %></div>
             <div class="result-value">Apr 22 - Apr 23</div>
           </div>
           <div class="result-details">
-            <div class="result-label">Service Type:</div>
+            <div class="result-label"><%= translation.landing.calculator.result.service %></div>
             <div class="result-value">Express Delivery</div>
           </div>
         </div>
@@ -2316,7 +2108,7 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
   <div class="container">
     <div class="footer-content">
       <div class="footer-column">
-        <h3>Company</h3>
+        <h3><%= translation.footer.company.title %></h3>
         <ul>
           <li><a href="#"><i class="fas fa-angle-right"></i> About Us</a></li>
           <li><a href="#"><i class="fas fa-angle-right"></i> Careers About Us</a></li>
@@ -2328,7 +2120,7 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
       </div>
 
       <div class="footer-column">
-        <h3>Services</h3>
+        <h3><%= translation.footer.services.title %></h3>
         <ul>
           <li><a href="#"><i class="fas fa-angle-right"></i> Express Delivery</a></li>
           <li><a href="#"><i class="fas fa-angle-right"></i> International Shipping</a></li>
@@ -2339,7 +2131,7 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
       </div>
 
       <div class="footer-column">
-        <h3>Resources</h3>
+        <h3><%= translation.footer.resources.title %></h3>
         <ul>
           <li><a href="#"><i class="fas fa-angle-right"></i> Help Center</a></li>
           <li><a href="#"><i class="fas fa-angle-right"></i> API Documentation</a></li>
@@ -2350,8 +2142,8 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
       </div>
 
       <div class="footer-column">
-        <h3>Connect With Us</h3>
-        <p>Follow us on social media for updates and promotions</p>
+        <h3><%= translation.landing.footer.connect %></h3>
+        <p><%= translation.landing.footer.connectDescription %></p>
         <div class="social-icons">
           <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
           <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
@@ -2371,33 +2163,6 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
 
 <!-- JavaScript -->
 <script>
-  // Mobile Menu Toggle
-  const mobileMenuBtn = document.getElementById('mobile-menu-toggle');
-  const navContainer = document.getElementById('main-nav');
-  const header = document.getElementById('main-header');
-
-  mobileMenuBtn.addEventListener('click', () => {
-    navContainer.classList.toggle('active');
-
-    // Toggle icon between bars and times
-    const icon = mobileMenuBtn.querySelector('i');
-    if (icon.classList.contains('fa-bars')) {
-      icon.classList.remove('fa-bars');
-      icon.classList.add('fa-times');
-    } else {
-      icon.classList.remove('fa-times');
-      icon.classList.add('fa-bars');
-    }
-  });
-
-  // Header scroll effect
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-      header.classList.add('scrolled');
-    } else {
-      header.classList.remove('scrolled');
-    }
-  });
 
   // Animated Trucks Background
   const canvas = document.getElementById('animationCanvas');
@@ -2535,33 +2300,7 @@ box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
     shippingResult.classList.add('active');
   });
 
-  // Make sure the navbar is responsive on mobile
-  function checkMobileView() {
-    if (window.innerWidth <= 768) {
-      // Close menu when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!navContainer.contains(e.target) && !mobileMenuBtn.contains(e.target) && navContainer.classList.contains('active')) {
-          navContainer.classList.remove('active');
-          const icon = mobileMenuBtn.querySelector('i');
-          icon.classList.remove('fa-times');
-          icon.classList.add('fa-bars');
-        }
-      });
-
-      // Close menu when clicking on a nav link
-      const navLinks = document.querySelectorAll('nav ul li a');
-      navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-          navContainer.classList.remove('active');
-          const icon = mobileMenuBtn.querySelector('i');
-          icon.classList.remove('fa-times');
-          icon.classList.add('fa-bars');
-        });
-      });
-    }
-  }
-
-  // Check on load and resize
-  checkMobileView();
-  window.addEventListener('resize', checkMobileView);
 </script>
+
+<!-- Multilingual Support Scripts -->
+<script src="/assets/rJS/multilingual.js"></script>

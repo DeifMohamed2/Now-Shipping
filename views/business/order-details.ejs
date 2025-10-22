@@ -7,7 +7,8 @@
 
   <div class="col-xl-9">
       <div class="col-xl-12">
-<% if (order.orderStatus === 'waitingAction') { %>
+<% const isRescheduled = !!order.scheduledRetryAt || (order.orderStages && order.orderStages.inProgress && order.orderStages.inProgress.notes && order.orderStages.inProgress.notes.includes('rescheduled')); %>
+<% if (order.orderStatus === 'waitingAction' || isRescheduled) { %>
 <div class="card border-0 shadow-sm mb-4">
   <div class="card-body bg-warning-subtle rounded">
     <div class="d-flex align-items-center">
@@ -15,7 +16,7 @@
         <i class="ri-alert-line fs-3 text-warning"></i>
       </div>
       <div class="flex-grow-1">
-        <h5 class="card-title mb-2 text-dark">Action Required</h5>
+        <h5 class="card-title mb-2 text-dark"><%= isRescheduled ? 'Retry Scheduled' : 'Action Required' %></h5>
         <div class="d-flex align-items-center mb-1">
         </div>
         <% if (order.UnavailableReason) { %>
@@ -37,11 +38,57 @@
         <% } else { %>
            <p class="card-text mb-0 text-muted fst-italic">No additional notes provided for this order.</p>
         <% } %>
+        <div class="mt-3 d-flex gap-2">
+          <% if (order.orderStatus !== 'rescheduled') { %>
+          <form method="post" action="/business/orders/<%= order._id %>/retry-tomorrow" data-ajax>
+            <button type="submit" class="btn btn-sm btn-primary">Retry Tomorrow</button>
+          </form>
+          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#scheduleRetryModal">Schedule Retry</button>
+          <form method="post" action="/business/orders/<%= order._id %>/return-to-warehouse" data-ajax>
+            <button type="submit" class="btn btn-sm btn-warning">Return to Warehouse</button>
+          </form>
+          <% } %>
+          <form method="post" action="/business/orders/cancel-order/<%= order._id %>" onsubmit="return confirm('Cancel this order?');" data-ajax>
+            <button type="submit" class="btn btn-sm btn-danger">Cancel Order</button>
+          </form>
+        </div>
+        <% if (order.scheduledRetryAt) { %>
+          <div class="mt-2">
+            <div class="alert alert-success d-flex align-items-center py-2 px-3 mb-0">
+              <i class="ri-time-line me-2 fs-5"></i>
+              <div>
+                Retry scheduled for: <strong><%= new Date(order.scheduledRetryAt).toLocaleString() %></strong>
+              </div>
+            </div>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>
 </div>
 <% } %>
+
+<!-- Schedule Retry Modal -->
+<div class="modal fade" id="scheduleRetryModal" tabindex="-1" aria-labelledby="scheduleRetryLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scheduleRetryLabel">Schedule Retry</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="/business/orders/<%= order._id %>/retry-scheduled" data-ajax>
+        <div class="modal-body">
+          <label for="retryDate" class="form-label">Retry Date</label>
+          <input type="datetime-local" id="retryDate" name="date" class="form-control" required />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+ </div>
       </div>
     <div class="card">
       <div class="card-header">
@@ -49,6 +96,12 @@
           <h5 class="card-title flex-grow-1 mb-0">Order Status - <span style="color: #007bff;"><strong><%= order.orderNumber %></strong></span></h5>
           <div class="flex-shrink-0 mt-2 mt-sm-0">
             <a href="/business/edit-order/<%= order.orderNumber %>" class="btn btn-soft-info material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-map-pin-line align-middle me-1"></i> Change Address</a>
+            <% if (order.orderStatus === 'completed' && order.orderShipping.orderType !== 'Return') { %>
+            <a href="/business/create-order" class="btn btn-soft-warning material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-arrow-go-back-line align-middle me-1"></i> Create Return Order</a>
+            <% } %>
+            <% if (order.orderStatus === 'returnLinked') { %>
+            <button class="btn btn-soft-success material-shadow-none btn-sm mt-2 mt-sm-0" onclick="markOrderAsReturned('<%= order._id %>')"><i class="ri-check-double-line align-middle me-1"></i> Mark as Returned</button>
+            <% } %>
             <button class="btn btn-soft-danger material-shadow-none btn-sm mt-2 mt-sm-0" onclick="cancelOrder('<%= order._id %>')"><i class="mdi mdi-archive-remove-outline align-middle me-1"></i> Cancel Order</button>
           </div>
         </div>
@@ -82,12 +135,13 @@
                 </div>
               </div> -->
             </div>
-            <!-- order Packed -->
+            <!-- order Packed (only for non-return orders) -->
+            <% if (order.orderShipping.orderType !== 'Return') { %>
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingTwo">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
 
-                  <% if (order.orderStages[1]) { %>
+                  <% if (order.orderStages.packed.isCompleted) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -95,7 +149,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Packed - <span class="fw-normal"><%= new Date(order.orderStages[1].stageDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold">Packed - <span class="fw-normal"><%= new Date(order.orderStages.packed.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
                   <% } else{%>
@@ -122,12 +176,14 @@
               </div> -->
 
             </div>
-            <!-- order shipping -->
+            <% } %>
+            <!-- order shipping (only for non-return orders) -->
+            <% if (order.orderShipping.orderType !== 'Return') { %>
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingThree">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
 
-                  <% if (order.orderStages[2]) { %>
+                  <% if (order.orderStages.shipping.isCompleted) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -135,7 +191,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Shipping - <span class="fw-normal"><%= new Date(order.orderStages[2].stageDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold">Shipping - <span class="fw-normal"><%= new Date(order.orderStages.shipping.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
                   <% } else{%>
@@ -162,11 +218,45 @@
               </div>
               </div> -->
             </div>
-            <!-- order out forDelivery -->
+            <% } %>
+            <!-- order In Progress (only for non-return orders) -->
+            <% if (order.orderShipping.orderType !== 'Return') { %>
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingFour">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                  <% if (order.orderStages[3]) { %>
+                  <% if (order.orderStages.inProgress.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-warning rounded-circle material-shadow">
+                        <i class="ri-time-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">In Progress - <span class="fw-normal"><%= new Date(order.orderStages.inProgress.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else{%>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="ri-time-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">In Progress </h6>
+                    </div>
+                  </div>
+                  <% } %>
+                </a>
+              </div>
+            </div>
+            <% } %>
+            <!-- order out forDelivery (only for non-return orders) -->
+            <% if (order.orderShipping.orderType !== 'Return') { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingFive">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                  <% if (order.orderStages.outForDelivery.isCompleted) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -174,7 +264,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Out For Delivery - <span class="fw-normal"><%= new Date(order.orderStages[3].stageDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold">Out For Delivery - <span class="fw-normal"><%= new Date(order.orderStages.outForDelivery.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
                   <% } else{%>
@@ -192,11 +282,13 @@
                 </a>
               </div>
             </div>
-            <!-- order Delivered -->
+            <% } %>
+            <!-- order Delivered (only for non-return orders) -->
+            <% if (order.orderShipping.orderType !== 'Return') { %>
             <div class="accordion-item border-0">
-              <div class="accordion-header" id="headingFive">
-                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                  <% if (order.orderStages[4]) { %>
+              <div class="accordion-header" id="headingSix">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                  <% if (order.orderStages.delivered.isCompleted) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -204,7 +296,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Delivered - <span class="fw-normal"><%= new Date(order.orderStages[4].stageDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold">Delivered - <span class="fw-normal"><%= new Date(order.orderStages.delivered.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
                   <% } else{%>
@@ -222,6 +314,230 @@
                 </a>
               </div>
             </div>
+            <% } %>
+
+            <!-- Canceled Stage (only show if order is canceled) -->
+            <% if (order.orderStatus === 'canceled') { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingCanceled">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseCanceled" aria-expanded="false" aria-controls="collapseCanceled">
+                  <% if (order.orderStages.canceled && order.orderStages.canceled.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-danger rounded-circle material-shadow">
+                        <i class="ri-close-circle-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Order Canceled - <span class="fw-normal"><%= new Date(order.orderStages.canceled.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-danger rounded-circle material-shadow">
+                        <i class="ri-close-circle-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Order Canceled</h6>
+                    </div>
+                  </div>
+                  <% } %>
+                </a>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Return Stages (only show if order is a return) -->
+            <% if (order.orderShipping.orderType === 'Return' || order.orderStatus.includes('return')) { %>
+            <!-- Return Initiated -->
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingReturnInitiated">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseReturnInitiated" aria-expanded="false" aria-controls="collapseReturnInitiated">
+                  <% if (order.orderStages.returnInitiated && order.orderStages.returnInitiated.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-warning rounded-circle material-shadow">
+                        <i class="ri-arrow-go-back-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Return Initiated - <span class="fw-normal"><%= new Date(order.orderStages.returnInitiated.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="ri-arrow-go-back-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Return Initiated</h6>
+                    </div>
+                  </div>
+                  <% } %>
+                </a>
+              </div>
+            </div>
+
+
+            <!-- Return Assigned -->
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingReturnAssigned">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseReturnAssigned" aria-expanded="false" aria-controls="collapseReturnAssigned">
+                  <% if (order.orderStages.returnAssigned && order.orderStages.returnAssigned.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-primary rounded-circle material-shadow">
+                        <i class="ri-user-add-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Courier Assigned - <span class="fw-normal"><%= new Date(order.orderStages.returnAssigned.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="ri-user-add-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Courier Assigned</h6>
+                    </div>
+                  </div>
+                  <% } %>
+                </a>
+              </div>
+            </div>
+
+            <!-- Return Picked Up -->
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingReturnPickedUp">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseReturnPickedUp" aria-expanded="false" aria-controls="collapseReturnPickedUp">
+                  <% if (order.orderStages.returnPickedUp && order.orderStages.returnPickedUp.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-warning rounded-circle material-shadow">
+                        <i class="ri-truck-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Return Picked Up - <span class="fw-normal"><%= new Date(order.orderStages.returnPickedUp.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="ri-truck-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Return Picked Up</h6>
+                    </div>
+                  </div>
+                  <% } %>
+                </a>
+              </div>
+            </div>
+
+            <!-- Return At Warehouse -->
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingReturnAtWarehouse">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseReturnAtWarehouse" aria-expanded="false" aria-controls="collapseReturnAtWarehouse">
+                  <% if (order.orderStages.returnAtWarehouse && order.orderStages.returnAtWarehouse.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-info rounded-circle material-shadow">
+                        <i class="ri-store-2-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">At Warehouse - <span class="fw-normal"><%= new Date(order.orderStages.returnAtWarehouse.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="ri-store-2-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">At Warehouse</h6>
+                    </div>
+                  </div>
+                  <% } %>
+                </a>
+              </div>
+            </div>
+
+            <!-- Return To Business -->
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingReturnToBusiness">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseReturnToBusiness" aria-expanded="false" aria-controls="collapseReturnToBusiness">
+                  <% if (order.orderStages.returnToBusiness && order.orderStages.returnToBusiness.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-primary rounded-circle material-shadow">
+                        <i class="ri-truck-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Returning to Business - <span class="fw-normal"><%= new Date(order.orderStages.returnToBusiness.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="ri-truck-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Returning to Business</h6>
+                    </div>
+                  </div>
+                  <% } %>
+                </a>
+              </div>
+            </div>
+
+            <!-- Return Completed -->
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingReturnCompleted">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseReturnCompleted" aria-expanded="false" aria-controls="collapseReturnCompleted">
+                  <% if (order.orderStages.returnCompleted && order.orderStages.returnCompleted.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-success rounded-circle material-shadow">
+                        <i class="ri-check-double-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Return Completed - <span class="fw-normal"><%= new Date(order.orderStages.returnCompleted.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
+                        <i class="ri-check-double-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Return Completed</h6>
+                    </div>
+                  </div>
+                  <% } %>
+                </a>
+              </div>
+            </div>
+            <% } %>
           </div>
           <!--end accordion-->
         </div>
@@ -404,26 +720,56 @@
         </div>
       </div>
       <div class="card-body">
-        <% if (order.orderStatus!='completed') { %>
+        <% if (order.orderStatus === 'canceled') { %>
           <div class="text-center">
-          <% if (order.orderStages[3]) { %>
-          <lord-icon src="https://cdn.lordicon.com/uetqnvvg.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">Out For Delivery </h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
-          <% } else if (order.orderStages[2]) { %>
-          <lord-icon src="https://cdn.lordicon.com/dxjqoygy.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">Shipping</h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
-          <% } else if (order.orderStages[1]) { %>
-          <lord-icon src="https://cdn.lordicon.com/ndydpcaq.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">Packed</h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
-          <% }else if(order.orderStatus=='completed') { %>
+            <lord-icon src="https://cdn.lordicon.com/etwtznjn.json" trigger="loop" colors="primary:#dc3545,secondary:#fd7e14" style="width:80px;height:80px"></lord-icon>
+            <h5 class="fs-16 mt-2 text-danger">Order Canceled</h5>
+            <p class="text-muted mb-0">This order has been canceled</p>
+            <% if (order.orderStages.canceled && order.orderStages.canceled.completedAt) { %>
+            <p class="text-muted mb-0">Canceled on: <%= new Date(order.orderStages.canceled.completedAt).toLocaleDateString() %></p>
+            <% } %>
+          </div>
+        <% } else if (order.orderStatus === 'returned') { %>
+          <div class="text-center">
+            <lord-icon src="https://cdn.lordicon.com/etwtznjn.json" trigger="loop" colors="primary:#fd7e14,secondary:#ffc107" style="width:80px;height:80px"></lord-icon>
+            <h5 class="fs-16 mt-2 text-warning">Order Returned</h5>
+            <p class="text-muted mb-0">This order has been returned to the business</p>
+            <% if (order.orderStages.returned && order.orderStages.returned.completedAt) { %>
+            <p class="text-muted mb-0">Returned on: <%= new Date(order.orderStages.returned.completedAt).toLocaleDateString() %></p>
+            <% } %>
+          </div>
+        <% } else if (order.orderStatus === 'returnLinked') { %>
+          <div class="text-center">
+            <lord-icon src="https://cdn.lordicon.com/etwtznjn.json" trigger="loop" colors="primary:#0dcaf0,secondary:#6f42c1" style="width:80px;height:80px"></lord-icon>
+            <h5 class="fs-16 mt-2 text-info">Return Linked</h5>
+            <p class="text-muted mb-0">This order is linked to a return order</p>
+            <% if (order.orderShipping.returnOrderCode) { %>
+            <p class="text-muted mb-0">Return Order: <%= order.orderShipping.returnOrderCode %></p>
+            <% } %>
+          </div>
+        <% } else if (order.orderStatus!='completed') { %>
+          <div class="text-center">
+          <% if (order.orderStages.delivered.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/tkkkkkdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2">Order Delivered</h5>
           <p class="text-muted mb-0">ID: MFDS1400457854</p>
-       
-          <%} else { %>
+          <% } else if (order.orderStages.outForDelivery.isCompleted) { %>
+          <lord-icon src="https://cdn.lordicon.com/uetqnvvg.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
+          <h5 class="fs-16 mt-2">Out For Delivery </h5>
+          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <% } else if (order.orderStages.inProgress.isCompleted) { %>
+          <lord-icon src="https://cdn.lordicon.com/ndydpcaq.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
+          <h5 class="fs-16 mt-2">In Progress</h5>
+          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <% } else if (order.orderStages.shipping.isCompleted) { %>
+          <lord-icon src="https://cdn.lordicon.com/dxjqoygy.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
+          <h5 class="fs-16 mt-2">Shipping</h5>
+          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <% } else if (order.orderStages.packed.isCompleted) { %>
+          <lord-icon src="https://cdn.lordicon.com/ndydpcaq.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
+          <h5 class="fs-16 mt-2">Packed</h5>
+          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <% } else { %>
           <lord-icon src="https://cdn.lordicon.com/tdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2">Order Placed</h5>
           <p class="text-muted mb-0">ID: MFDS1400457854</p>
@@ -474,6 +820,74 @@
   <!--end col-->
 </div>
 
+<!-- Courier History Section -->
+<% if (order.courierHistory && order.courierHistory.length > 0) { %>
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header bg-light py-3">
+    <h5 class="card-title mb-0">
+      <i class="ri-history-line align-middle me-2 text-primary"></i>
+      Courier History
+    </h5>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col" style="width:20%">Date</th>
+            <th scope="col" style="width:15%">Courier</th>
+            <th scope="col" style="width:20%">Action</th>
+            <th scope="col" style="width:45%">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% order.courierHistory.sort((a, b) => new Date(b.assignedAt) - new Date(a.assignedAt)).forEach(history => { %>
+          <tr>
+            <td><%= new Date(history.assignedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></td>
+            <td>
+              <% if (history.courier && history.courier.name) { %>
+                <%= history.courier.name %>
+              <% } else { %>
+                <span class="text-muted">Unknown</span>
+              <% } %>
+            </td>
+            <td>
+              <% 
+                let badgeClass = 'bg-secondary-subtle text-secondary';
+                let actionText = history.action;
+                
+                if (history.action === 'assigned') {
+                  badgeClass = 'bg-info-subtle text-info';
+                  actionText = 'Assigned';
+                } else if (history.action === 'pickup_from_customer') {
+                  badgeClass = 'bg-warning-subtle text-warning';
+                  actionText = 'Pickup from Customer';
+                } else if (history.action === 'delivered_to_warehouse') {
+                  badgeClass = 'bg-success-subtle text-success';
+                  actionText = 'Delivered to Warehouse';
+                } else if (history.action === 'pickup_from_warehouse') {
+                  badgeClass = 'bg-warning-subtle text-warning';
+                  actionText = 'Pickup from Warehouse';
+                } else if (history.action === 'delivered_to_business') {
+                  badgeClass = 'bg-success-subtle text-success';
+                  actionText = 'Delivered to Business';
+                } else if (history.action === 'completed') {
+                  badgeClass = 'bg-success-subtle text-success';
+                  actionText = 'Completed';
+                }
+              %>
+              <span class="badge <%= badgeClass %>"><%= actionText %></span>
+            </td>
+            <td><%= history.notes || 'No notes' %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<% } %>
+
 <% } else{%>
 
 <div class="row">
@@ -491,10 +905,86 @@
 </div>
 
 <% } %>
+
 <!--end row-->
 <%- contentFor('FooterJs') %>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script src="/assets/rJS/business/order-details.js"></script>
+<script>
+  // Intercept forms with data-ajax to show toaster based on JSON response
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('form[data-ajax]').forEach(function(form){
+      form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        try {
+          const resp = await fetch(form.action, { method: form.method || 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+          const data = await resp.json().catch(()=>({}));
+          if (resp.ok) {
+            Swal.fire({ icon: 'success', title: 'Success', text: data.message || 'Action completed successfully', timer: 1800, showConfirmButton: false });
+            setTimeout(()=>window.location.reload(), 900);
+          } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message || 'Something went wrong' });
+          }
+        } catch (err) {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Network error' });
+        }
+      });
+    });
+  });
+
+
+  // Mark order as returned
+  async function markOrderAsReturned(orderId) {
+    try {
+      const result = await Swal.fire({
+        title: 'Mark Order as Returned',
+        text: 'Are you sure you want to mark this order as returned? This action cannot be undone.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, mark as returned',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        const response = await fetch(`/business/orders/${orderId}/mark-returned`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Order Marked as Returned',
+            text: data.message || 'Order has been successfully marked as returned.',
+            timer: 3000
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.error || 'Failed to mark order as returned. Please try again.'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error marking order as returned:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'An unexpected error occurred. Please try again.'
+      });
+    }
+  }
+
+</script>
 <!-- App js -->

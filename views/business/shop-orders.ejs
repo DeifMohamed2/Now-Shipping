@@ -1,0 +1,562 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/assets/rCSS/business.css">
+
+<%- contentFor('body') %>
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">Shop Orders</h4>
+      <div class="page-title-right">
+        <a href="/business/shop" class="btn btn-primary">
+          <i class="ri-shopping-bag-line align-middle me-1"></i> Continue Shopping
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-3">
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <p class="text-uppercase fw-medium text-muted mb-0">Active Orders</p>
+          </div>
+          <div class="flex-shrink-0">
+            <h5 class="text-primary mb-0" id="activeCount">0</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <p class="text-uppercase fw-medium text-muted mb-0">In Transit</p>
+          </div>
+          <div class="flex-shrink-0">
+            <h5 class="text-info mb-0" id="inTransitCount">0</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <p class="text-uppercase fw-medium text-muted mb-0">Delivered</p>
+          </div>
+          <div class="flex-shrink-0">
+            <h5 class="text-success mb-0" id="deliveredCount">0</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="card card-animate">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="flex-grow-1">
+            <p class="text-uppercase fw-medium text-muted mb-0">Total Spent</p>
+          </div>
+          <div class="flex-shrink-0">
+            <h5 class="text-warning mb-0" id="totalSpent">EGP 0</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Filter by Status</label>
+            <select class="form-select" id="statusFilter">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="processing">Processing</option>
+              <option value="ready">Ready</option>
+              <option value="assigned">Assigned to Courier</option>
+              <option value="picked_up">Picked Up</option>
+              <option value="in_transit">In Transit</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Orders List -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Order #</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Courier</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+              <tr>
+                <td colspan="7" class="text-center">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Order Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="orderDetailsBody">
+        <!-- Order details will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script>
+  let ordersData = [];
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadOrders();
+
+    // Event listeners
+    document.getElementById('statusFilter').addEventListener('change', loadOrders);
+  });
+
+  async function loadOrders() {
+    const status = document.getElementById('statusFilter').value;
+
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+
+    try {
+      const response = await fetch(`/api/business/shop/orders?${params}`);
+      const orders = await response.json();
+      ordersData = orders;
+      renderOrders(orders);
+      updateStats(orders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      showError('Failed to load orders');
+    }
+  }
+
+  function renderOrders(orders) {
+    const tbody = document.getElementById('ordersTableBody');
+
+    if (orders.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No orders found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = orders.map(order => {
+      const statusBadge = getStatusBadge(order.status);
+
+      return `
+      <tr>
+        <td>
+          <a href="javascript:void(0)" onclick="viewOrder('${order._id}')" class="fw-medium link-primary">
+            ${order.orderNumber}
+          </a>
+        </td>
+        <td>
+          <div>
+            <div>${new Date(order.createdAt).toLocaleDateString()}</div>
+            <small class="text-muted">${new Date(order.createdAt).toLocaleTimeString()}</small>
+          </div>
+        </td>
+        <td>
+          <span class="badge badge-soft-info">${order.items.length} items</span>
+        </td>
+        <td>
+          <strong>EGP ${order.totalAmount.toFixed(2)}</strong>
+        </td>
+        <td>${statusBadge}</td>
+        <td>
+          ${order.courierName ? `
+            <div>
+              <i class="ri-user-line me-1"></i>${order.courierName}
+              <br><small class="text-muted">${order.courierPhone}</small>
+            </div>
+          ` : '<span class="text-muted">Not assigned</span>'}
+        </td>
+        <td>
+          <div class="hstack gap-1">
+            <button class="btn btn-sm btn-soft-primary" onclick="viewOrder('${order._id}')" title="View Details">
+              <i class="ri-eye-line"></i>
+            </button>
+            ${['pending', 'confirmed'].includes(order.status) ? `
+              <button class="btn btn-sm btn-soft-danger" onclick="cancelOrder('${order._id}')" title="Cancel Order">
+                <i class="ri-close-circle-line"></i>
+              </button>
+            ` : ''}
+            ${order.status === 'in_transit' ? `
+              <button class="btn btn-sm btn-soft-success" onclick="trackOrder('${order._id}')" title="Track Order">
+                <i class="ri-map-pin-line"></i>
+              </button>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+    }).join('');
+  }
+
+  function getStatusBadge(status) {
+    const statusConfig = {
+      pending: {
+        color: 'warning',
+        text: 'Pending',
+        icon: 'ri-time-line'
+      },
+      confirmed: {
+        color: 'info',
+        text: 'Confirmed',
+        icon: 'ri-checkbox-circle-line'
+      },
+      processing: {
+        color: 'primary',
+        text: 'Processing',
+        icon: 'ri-loader-4-line'
+      },
+      ready: {
+        color: 'secondary',
+        text: 'Ready',
+        icon: 'ri-check-double-line'
+      },
+      assigned: {
+        color: 'dark',
+        text: 'Assigned',
+        icon: 'ri-user-follow-line'
+      },
+      picked_up: {
+        color: 'info',
+        text: 'Picked Up',
+        icon: 'ri-hand-coin-line'
+      },
+      in_transit: {
+        color: 'primary',
+        text: 'In Transit',
+        icon: 'ri-truck-line'
+      },
+      delivered: {
+        color: 'success',
+        text: 'Delivered',
+        icon: 'ri-check-line'
+      },
+      cancelled: {
+        color: 'danger',
+        text: 'Cancelled',
+        icon: 'ri-close-line'
+      },
+      returned: {
+        color: 'warning',
+        text: 'Returned',
+        icon: 'ri-arrow-go-back-line'
+      }
+    };
+
+    const config = statusConfig[status] || {
+      color: 'secondary',
+      text: status,
+      icon: 'ri-information-line'
+    };
+    return `<span class="badge bg-${config.color}"><i class="${config.icon} me-1"></i>${config.text}</span>`;
+  }
+
+  function updateStats(orders) {
+    const stats = {
+      active: 0,
+      inTransit: 0,
+      delivered: 0,
+      totalSpent: 0
+    };
+
+    orders.forEach(order => {
+      if (['pending', 'confirmed', 'processing', 'ready'].includes(order.status)) {
+        stats.active++;
+      }
+      if (['assigned', 'picked_up', 'in_transit'].includes(order.status)) {
+        stats.inTransit++;
+      }
+      if (order.status === 'delivered') {
+        stats.delivered++;
+        stats.totalSpent += order.totalAmount;
+      }
+    });
+
+    document.getElementById('activeCount').textContent = stats.active;
+    document.getElementById('inTransitCount').textContent = stats.inTransit;
+    document.getElementById('deliveredCount').textContent = stats.delivered;
+    document.getElementById('totalSpent').textContent = `EGP ${stats.totalSpent.toFixed(2)}`;
+  }
+
+  async function viewOrder(orderId) {
+    try {
+      const response = await fetch(`/api/business/shop/orders/${orderId}`);
+      const order = await response.json();
+
+      const detailsHtml = `
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h6 class="text-muted mb-2">Order Information</h6>
+          <p><strong>Order Number:</strong> ${order.orderNumber}</p>
+          <p><strong>Status:</strong> ${getStatusBadge(order.status)}</p>
+          <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+          <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+        </div>
+        <div class="col-md-6">
+          <h6 class="text-muted mb-2">Delivery Information</h6>
+          <p><strong>Name:</strong> ${order.contactInfo.name}</p>
+          <p><strong>Phone:</strong> ${order.contactInfo.phone}</p>
+          <p><strong>Address:</strong> ${order.deliveryAddress.fullAddress}</p>
+          ${order.courierName ? `<p><strong>Courier:</strong> ${order.courierName} - ${order.courierPhone}</p>` : ''}
+        </div>
+      </div>
+      
+      <h6 class="mb-3">Order Items</h6>
+      <div class="table-responsive mb-4">
+        <table class="table table-sm table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Product</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${order.items.map(item => `
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center">
+                    ${item.product && item.product.images && item.product.images[0] ? 
+                      `<img src="${item.product.images[0]}" alt="${item.productName}" 
+                           style="width: 40px; height: 40px; object-fit: cover;" class="rounded me-2">` : ''}
+                    <div>
+                      <strong>${item.productName}</strong>
+                      ${item.discount > 0 ? `<br><small class="text-success">Discount: ${item.discount}%</small>` : ''}
+                    </div>
+                  </div>
+                </td>
+                <td>${item.quantity}</td>
+                <td>EGP ${item.unitPrice.toFixed(2)}</td>
+                <td>EGP ${item.subtotal.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+              <td><strong>EGP ${order.subtotal.toFixed(2)}</strong></td>
+            </tr>
+            ${order.discount > 0 ? `
+            <tr>
+              <td colspan="3" class="text-end">Discount:</td>
+              <td>- EGP ${order.discount.toFixed(2)}</td>
+            </tr>
+            ` : ''}
+            ${order.tax > 0 ? `
+            <tr>
+              <td colspan="3" class="text-end">Tax:</td>
+              <td>EGP ${order.tax.toFixed(2)}</td>
+            </tr>
+            ` : ''}
+            <tr>
+              <td colspan="3" class="text-end">Delivery Fee:</td>
+              <td>EGP ${order.deliveryFee.toFixed(2)}</td>
+            </tr>
+            <tr class="table-active">
+              <td colspan="3" class="text-end"><strong>Total:</strong></td>
+              <td><strong>EGP ${order.totalAmount.toFixed(2)}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      
+      ${order.trackingHistory.length > 0 ? `
+        <h6 class="mb-3">Tracking History</h6>
+        <div class="timeline-container">
+          ${order.trackingHistory.map(track => `
+            <div class="timeline-item">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <p class="mb-1"><strong>${track.description}</strong></p>
+                <small class="text-muted">${new Date(track.timestamp).toLocaleString()}</small>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      
+      ${order.notes ? `
+        <div class="alert alert-info mt-3">
+          <strong>Notes:</strong> ${order.notes}
+        </div>
+      ` : ''}
+    `;
+
+      document.getElementById('orderDetailsBody').innerHTML = detailsHtml;
+      new bootstrap.Modal(document.getElementById('orderModal')).show();
+    } catch (error) {
+      console.error('Error loading order details:', error);
+      showError('Failed to load order details');
+    }
+  }
+
+  async function cancelOrder(orderId) {
+    const {
+      value: reason
+    } = await Swal.fire({
+      title: 'Cancel Order',
+      input: 'textarea',
+      inputLabel: 'Reason for cancellation',
+      inputPlaceholder: 'Please provide a reason...',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Yes, cancel it',
+      cancelButtonText: 'No, keep it',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'You need to provide a reason!';
+        }
+      }
+    });
+
+    if (reason) {
+      try {
+        const response = await fetch(`/api/business/shop/orders/${orderId}/cancel`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            reason
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showSuccess(result.message);
+          loadOrders();
+        } else {
+          showError(result.error);
+        }
+      } catch (error) {
+        console.error('Error cancelling order:', error);
+        showError('Failed to cancel order');
+      }
+    }
+  }
+
+  function trackOrder(orderId) {
+    // This would integrate with a tracking map or similar
+    showInfo('Tracking functionality coming soon!');
+  }
+
+  function showSuccess(message) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: message,
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  function showError(message) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error!',
+      text: message
+    });
+  }
+
+  function showInfo(message) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Info',
+      text: message
+    });
+  }
+</script>
+
+<style>
+  .timeline-container {
+    position: relative;
+    padding-left: 30px;
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+  }
+
+  .timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #405189;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #405189;
+  }
+
+  .timeline-item:before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 12px;
+    width: 2px;
+    height: 100%;
+    background-color: #e9ecef;
+  }
+
+  .timeline-item:last-child:before {
+    display: none;
+  }
+</style>

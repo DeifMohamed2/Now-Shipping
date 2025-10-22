@@ -1,6 +1,11 @@
 <%- contentFor('HeaderCss') %>
+
+<!-- RTL Support CSS -->
+<link rel="stylesheet" href="/assets/css/rtl-support.css">
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap');
 
   :root {
     --primary: #F39720;
@@ -667,54 +672,16 @@
   .shake {
     animation: shake 0.6s cubic-bezier(.36, .07, .19, .97) both;
   }
+
+  /* Error message shake animation */
+  .alert.shake {
+    animation: shake 0.6s cubic-bezier(.36, .07, .19, .97) both;
+  }
 </style>
 
 <%- contentFor('body') %>
-<!-- Top Navbar -->
-<nav class="top-navbar">
-  <div class="navbar-container">
-    <a href="/" class="navbar-brand">
-      <div class="navbar-logo">
-        <svg viewBox="0 0 100 100">
-          <path d="M50,15 L60,25 L75,20 L75,40 L90,50 L75,60 L75,80 L60,75 L50,85 L40,75 L25,80 L25,60 L10,50 L25,40 L25,20 L40,25 Z M50,35 C41.7,35 35,41.7 35,50 C35,58.3 41.7,65 50,65 C58.3,65 65,58.3 65,50 C65,41.7 58.3,35 50,35 Z"></path>
-        </svg>
-      </div>
-      <h1 class="navbar-title">Now Shipping</h1>
-    </a>
-
-    <div class="navbar-links">
-      <!-- <a href="#" class="nav-link active">Home</a>
-      <a href="#" class="nav-link">Services</a>
-      <a href="#" class="nav-link">Tracking</a>
-      <a href="#" class="nav-link">About Us</a>
-      <a href="#" class="nav-link">Contact</a> -->
-    </div>
-
-    <div class="navbar-actions">
-      <a href="#" class="btn-outline">Help</a>
-      <a href="#" class="btn-primary">Get Started</a>
-    </div>
-
-    <button class="mobile-menu-btn" id="mobile-menu-toggle">
-      <i class="ri-menu-line"></i>
-    </button>
-  </div>
-</nav>
-
-<!-- Mobile menu -->
-<div class="mobile-menu" id="mobile-menu">
-  <div class="mobile-menu-links">
-    <!-- <a href="#" class="nav-link active">Home</a>
-    <a href="#" class="nav-link">Services</a>
-    <a href="#" class="nav-link">Tracking</a>
-    <a href="#" class="nav-link">About Us</a>
-    <a href="#" class="nav-link">Contact</a> -->
-  </div>
-  <div class="mobile-menu-actions">
-    <a href="#" class="btn-outline">Help</a>
-    <a href="#" class="btn-primary">Get Started</a>
-  </div>
-</div>
+<!-- Auth Navbar -->
+<%- include('../partials/auth-navbar') %>
 
 <!-- Animated Background -->
 <div class="animated-background">
@@ -743,7 +710,7 @@
           <path d="M50,15 L60,25 L75,20 L75,40 L90,50 L75,60 L75,80 L60,75 L50,85 L40,75 L25,80 L25,60 L10,50 L25,40 L25,20 L40,25 Z M50,35 C41.7,35 35,41.7 35,50 C35,58.3 41.7,65 50,65 C58.3,65 65,58.3 65,50 C65,41.7 58.3,35 50,35 Z"></path>
         </svg>
       </div>
-      <h1 class="login-title">Admin</h1>
+      <h1 class="login-title"><%= translation.auth.admin.title %></h1>
     </div>
 
     <% if(message.length > 0) { %>
@@ -760,15 +727,15 @@
 
     <form id="loginForm" method="post" class="login-form">
       <div class="form-group">
-        <label for="Email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="Email" name="email" value="" placeholder="Enter your email">
+        <label for="Email" class="form-label"><%= translation.auth.admin.email %></label>
+        <input type="email" class="form-control" id="Email" name="email" value="" placeholder="<%= translation.auth.admin.email %>">
         <div class="invalid-feedback" id="email-feedback"></div>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="password-input">Password</label>
+        <label class="form-label" for="password-input"><%= translation.auth.admin.password %></label>
         <div class="password-wrapper">
-          <input type="password" class="form-control" name="password" required minlength="8" value="" placeholder="Enter your password" id="password-input">
+          <input type="password" class="form-control" name="password" required minlength="8" value="" placeholder="<%= translation.auth.admin.password %>" id="password-input">
           <button type="button" class="password-toggle" id="password-addon">
             <i class="ri-eye-fill"></i>
           </button>
@@ -780,14 +747,14 @@
         <div class="form-check">
           <input class="form-check-input" type="checkbox" value="" id="auth-remember-check">
           <label class="form-check-label" for="auth-remember-check">
-            Remember me
+            <%= translation.auth.login.rememberMe %>
           </label>
         </div>
-        <a href="/forgotpassword" class="forgot-password">Forgot password?</a>
+        <a href="/forgotpassword" class="forgot-password"><%= translation.auth.login.forgotPassword %></a>
       </div>
 
       <button type="submit" class="btn-login">
-        <span class="btn-text">Sign In</span>
+        <span class="btn-text"><%= translation.auth.admin.signIn %></span>
       </button>
 
       <div class="alert alert-danger mt-3" style="display: none;" id="errorMessage" role="alert"></div>
@@ -972,3 +939,6 @@
     }
   });
 </script>
+
+<!-- Multilingual Support Scripts -->
+<script src="/assets/rJS/multilingual.js"></script>

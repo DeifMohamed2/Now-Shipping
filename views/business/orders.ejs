@@ -5,24 +5,538 @@
 <link href="/assets/css/status-styles.css" rel="stylesheet" type="text/css" />
 <%- contentFor('body') %>
 <style>
-  /* Fix for dropdown menus in tables */
-  .dropdown-fix .dropdown-menu {
-    /* position: fixed !important; */
-    z-index: 1050 !important;
+  /* Professional Dropdown Styles */
+  .orders-table-dropdown {
+    position: relative;
+    display: inline-block;
   }
 
-  /* Ensure the table doesn't constrain the dropdown */
-  #orderTable {
-    overflow: visible !important;
+  .orders-table-dropdown .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: auto;
+    z-index: 9999;
+    min-width: 200px;
+    padding: 0.5rem 0;
+    margin: 0;
+    font-size: 0.875rem;
+    color: #212529;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+    display: none;
+    transform: translateY(0);
+    transition: none;
   }
 
-      .table-responsive{
-      overflow: scroll !important;
-      }
-  /* Make sure parent containers don't clip the dropdown */
+  .orders-table-dropdown.show .dropdown-menu {
+    display: block;
+  }
+
+  .orders-table-dropdown .dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    color: #212529;
+    text-align: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    transition: background-color 0.15s ease-in-out;
+    cursor: pointer;
+  }
+
+  .orders-table-dropdown .dropdown-item:hover,
+  .orders-table-dropdown .dropdown-item:focus {
+    color: #1e2125;
+    background-color: #e9ecef;
+  }
+
+  .orders-table-dropdown .dropdown-item i {
+    width: 20px;
+    margin-right: 0.5rem;
+    text-align: center;
+  }
+
+  .orders-table-dropdown .dropdown-toggle {
+    background: none;
+    border: none;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.15s ease-in-out;
+    cursor: pointer;
+  }
+
+  .orders-table-dropdown .dropdown-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .orders-table-dropdown .dropdown-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+
+  /* Table container adjustments */
+  .table-responsive {
+    overflow-x: auto;
+    overflow-y: visible;
+    position: relative;
+  }
+
+  /* Ensure dropdowns are visible */
   .card-body,
   .card {
-    overflow: visible !important;
+    overflow: visible;
+    position: relative;
+  }
+
+  /* Ensure table doesn't clip dropdowns */
+  .table {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Ensure dropdown appears above table and other elements */
+  .orders-table-dropdown.show .dropdown-menu {
+    display: block !important;
+    z-index: 9999 !important;
+    position: absolute !important;
+  }
+
+  /* Special positioning for last row dropdowns */
+  .orders-table-dropdown.dropdown-up .dropdown-menu {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-bottom: 5px;
+  }
+
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    .orders-table-dropdown .dropdown-menu {
+      right: 0;
+      left: auto;
+      min-width: 180px;
+    }
+  }
+
+  /* Smart Sticker Modal Professional Styles */
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #fdb614 0%, #f39720 100%);
+  }
+
+  .scan-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scan-icon {
+    font-size: 1.5rem;
+    color: white;
+  }
+
+  .scan-animation {
+    position: relative;
+    display: inline-block;
+  }
+
+  .scan-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    animation: scanPulse 2s ease-in-out infinite;
+  }
+
+  .scan-circle i {
+    font-size: 2rem;
+    color: #fdb614;
+  }
+
+  .scan-circle::before {
+    content: '';
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    border: 2px solid #fdb614;
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: scanRing 2s ease-in-out infinite;
+  }
+
+  @keyframes scanPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  @keyframes scanRing {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(1.2); opacity: 0; }
+  }
+
+  .feature-card, .download-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f8f9fa;
+  }
+
+  .feature-item:last-child {
+    border-bottom: none;
+  }
+
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+
+  .feature-icon i {
+    font-size: 1.25rem;
+  }
+
+  .feature-text h6 {
+    color: #495057;
+    font-size: 0.9rem;
+  }
+
+  .feature-text p {
+    font-size: 0.8rem;
+    color: #6c757d;
+  }
+
+  .download-btn {
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    border: none;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .download-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .download-btn:hover::before {
+    left: 100%;
+  }
+
+  .download-text {
+    text-align: left;
+  }
+
+  .download-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    margin-bottom: 2px;
+  }
+
+  .download-platform {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .steps-container {
+    position: relative;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 40px;
+    width: 2px;
+    height: calc(100% + 0.5rem);
+    background: #e9ecef;
+  }
+
+  .step-indicator {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #fdb614 0%, #f39720 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-number {
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .step-title {
+    color: #495057;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .step-description {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  .modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    padding: 1.5rem 2rem;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #e9ecef;
+  }
+
+  .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #fdb614 0%, #f39720 100%);
+    border: none;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #f39720 0%, #e8851a 100%);
+    color: white;
+  }
+
+  /* Print Policy Modal Professional Styles */
+  .print-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .print-icon {
+    font-size: 1.5rem;
+    color: white;
+  }
+
+  .bg-light-info {
+    background-color: #e3f2fd !important;
+  }
+
+  .paper-size-card {
+    background: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .paper-size-card:hover {
+    border-color: #fdb614;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(253, 182, 20, 0.15);
+  }
+
+  .paper-size-card.selected {
+    border-color: #fdb614;
+    background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+    box-shadow: 0 8px 25px rgba(253, 182, 20, 0.2);
+  }
+
+  .paper-icon-container {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .paper-icon {
+    font-size: 1.75rem;
+    color: #fdb614;
+  }
+
+  .paper-info {
+    flex: 1;
+  }
+
+  .paper-label {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .paper-dimensions {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .paper-description {
+    color: #adb5bd;
+    font-size: 0.8rem;
+  }
+
+  .selection-indicator {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 24px;
+    height: 24px;
+    background: #fdb614;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+  }
+
+  .selection-indicator i {
+    color: white;
+    font-size: 0.75rem;
+  }
+
+  .paper-size-card.selected .selection-indicator {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .preview-container {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+  }
+
+  .preview-document {
+    background: white;
+    border-radius: 6px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .preview-header {
+    border-bottom: 2px solid #fdb614;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .preview-title {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .preview-subtitle {
+    color: #6c757d;
+  }
+
+  .preview-line {
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+
+  .preview-line.short {
+    width: 60%;
+  }
+
+  .preview-line.medium {
+    width: 80%;
+  }
+
+  .preview-line:last-child {
+    margin-bottom: 0;
+  }
+
+  #printBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  #printBtn:disabled:hover {
+    transform: none;
+    box-shadow: none;
   }
 </style>
 <style>
@@ -80,35 +594,6 @@
     color: #6c757d;
   }
 
-  /* Fix for dropdown menus in tables */
-  .dropdown-menu {
-    position: fixed !important;
-    z-index: 1050 !important;
-    margin-top: 0 !important;
-  }
-
-  /* Ensure dropdowns stay visible when scrolling */
-  .dropdown-menu.show {
-    display: block !important;
-  }
-
-  /* Prevent table scroll from hiding dropdowns */
-  .table-responsive {
-    overflow: visible !important;
-  }
-
-  /* Only apply scroll when needed */
-  @media (max-width: 992px) {
-    .table-responsive {
-      overflow-x: auto !important;
-    }
-  }
-
-  /* Make sure parent containers don't clip the dropdown */
-  .card-body,
-  .card {
-    overflow: visible !important;
-  }
 </style>
 <div class="row">
   <div class="col-lg-12">
@@ -281,67 +766,292 @@
 
       <!-- Print Policy Modal -->
     <div class="modal fade" id="printPolicyModal" tabindex="-1" aria-labelledby="printPolicyModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-light">
-            <h5 class="modal-title" id="printPolicyModalLabel">
-              <i class="ri-printer-fill me-2 text-primary"></i>Print Delivery Policy
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-gradient-primary text-white border-0">
+            <div class="d-flex align-items-center">
+              <div class="print-icon-wrapper me-3">
+                <i class="ri-printer-fill print-icon"></i>
+              </div>
+              <div>
+                <h4 class="modal-title mb-0 fw-semibold" id="printPolicyModalLabel">Print Delivery Policy</h4>
+                <small class="text-white-50">Select paper size and format</small>
+              </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <p class="text-muted mb-4">Select the paper size for printing the delivery policy:</p>
+          <div class="modal-body p-4">
+            <div class="print-info-section mb-4">
+              <div class="alert alert-info border-0 bg-light-info">
+                <div class="d-flex align-items-center">
+                  <i class="ri-information-line text-info me-2"></i>
+                  <div>
+                    <h6 class="alert-heading mb-1">Print Delivery Policy</h6>
+                    <p class="mb-0 small">Select the appropriate paper size for printing the delivery policy document.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <form id="printPolicyForm">
               <input type="hidden" id="orderId" name="orderId" value="">
-              <div class="row paper-size-container">
-                <div class="col-4">
-                  <div class="paper-size-option" onclick="selectPaperSize('A4')">
-                    <div class="paper-icon">
-                      <i class="ri-file-text-line"></i>
-                      <span class="size-label">A4</span>
-                    </div>
-                    <div class="paper-details">
-                      <span>210 × 297 mm</span>
+              
+              <div class="paper-selection-section">
+                <h6 class="fw-semibold text-dark mb-3">
+                  <i class="ri-file-copy-line text-primary me-2"></i>Select Paper Size
+                </h6>
+                
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <div class="paper-size-card" onclick="selectPaperSize('A4')">
+                      <div class="paper-icon-container">
+                        <i class="ri-file-text-line paper-icon"></i>
+                      </div>
+                      <div class="paper-info">
+                        <h6 class="paper-label">A4</h6>
+                        <p class="paper-dimensions">210 × 297 mm</p>
+                        <small class="paper-description">Standard size</small>
+                      </div>
+                      <div class="selection-indicator">
+                        <i class="ri-check-line"></i>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-4">
-                  <div class="paper-size-option" onclick="selectPaperSize('A5')">
-                    <div class="paper-icon">
-                      <i class="ri-file-reduce-line"></i>
-                      <span class="size-label">A5</span>
-                    </div>
-                    <div class="paper-details">
-                      <span>148 × 210 mm</span>
+                  
+                  <div class="col-md-4">
+                    <div class="paper-size-card" onclick="selectPaperSize('A5')">
+                      <div class="paper-icon-container">
+                        <i class="ri-file-reduce-line paper-icon"></i>
+                      </div>
+                      <div class="paper-info">
+                        <h6 class="paper-label">A5</h6>
+                        <p class="paper-dimensions">148 × 210 mm</p>
+                        <small class="paper-description">Compact size</small>
+                      </div>
+                      <div class="selection-indicator">
+                        <i class="ri-check-line"></i>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-4">
-                  <div class="paper-size-option" onclick="selectPaperSize('A6')">
-                    <div class="paper-icon">
-                      <i class="ri-file-paper-2-line"></i>
-                      <span class="size-label">A6</span>
-                    </div>
-                    <div class="paper-details">
-                      <span>105 × 148 mm</span>
+                  
+                  <div class="col-md-4">
+                    <div class="paper-size-card" onclick="selectPaperSize('A6')">
+                      <div class="paper-icon-container">
+                        <i class="ri-file-paper-2-line paper-icon"></i>
+                      </div>
+                      <div class="paper-info">
+                        <h6 class="paper-label">A6</h6>
+                        <p class="paper-dimensions">105 × 148 mm</p>
+                        <small class="paper-description">Small format</small>
+                      </div>
+                      <div class="selection-indicator">
+                        <i class="ri-check-line"></i>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+              
               <input type="hidden" id="paperSize" name="paperSize" value="">
-              <div class="d-flex justify-content-end mt-4">
-                <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="printPolicy()">
-                  <i class="ri-printer-fill me-1"></i>Print
-                </button>
+              
+              <div class="print-preview-section mt-4">
+                <h6 class="fw-semibold text-dark mb-3">
+                  <i class="ri-eye-line text-primary me-2"></i>Print Preview
+                </h6>
+                <div class="preview-container">
+                  <div class="preview-document">
+                    <div class="preview-header">
+                      <h6 class="preview-title">Delivery Policy</h6>
+                      <small class="preview-subtitle">Order #<span id="previewOrderId">---</span></small>
+                    </div>
+                    <div class="preview-content">
+                      <div class="preview-line"></div>
+                      <div class="preview-line short"></div>
+                      <div class="preview-line"></div>
+                      <div class="preview-line medium"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </form>
+          </div>
+          <div class="modal-footer bg-light border-0 p-4">
+            <div class="d-flex justify-content-between w-100">
+              <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
+                <i class="ri-close-line me-1"></i>Cancel
+              </button>
+              <button type="button" class="btn btn-primary" onclick="printPolicy()" id="printBtn" disabled>
+                <i class="ri-printer-fill me-1"></i>Print Policy
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-
+    <!-- Smart Sticker Scan Modal -->
+    <div class="modal fade" id="smartStickerModal" tabindex="-1" aria-labelledby="smartStickerModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-gradient-primary text-white border-0">
+            <div class="d-flex align-items-center">
+              <div class="scan-icon-wrapper me-3">
+                <i class="ri-smartphone-line scan-icon"></i>
+              </div>
+              <div>
+                <h4 class="modal-title mb-0 fw-semibold" id="smartStickerModalLabel">Smart Sticker Scan</h4>
+                <small class="text-white-50">Mobile Application Feature</small>
+              </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="row g-4">
+              <div class="col-lg-6">
+                <div class="feature-card h-100">
+                  <div class="text-center mb-4">
+                    <div class="scan-animation mb-3">
+                      <div class="scan-circle">
+                        <i class="ri-qr-scan-line"></i>
+                      </div>
+                    </div>
+                    <h5 class="text-dark fw-semibold mb-2">Mobile App Feature</h5>
+                    <p class="text-muted mb-0">Smart Sticker Scan is available in our mobile application for iOS and Android devices.</p>
+                  </div>
+                  
+                  <div class="features-section">
+                    <h6 class="fw-semibold text-dark mb-3">
+                      <i class="ri-star-fill text-warning me-2"></i>Key Features
+                    </h6>
+                    <div class="feature-list">
+                      <div class="feature-item">
+                        <div class="feature-icon bg-success-subtle">
+                          <i class="ri-flashlight-line text-success"></i>
+                        </div>
+                        <div class="feature-text">
+                          <h6 class="mb-1 fw-medium">Quick Scanning</h6>
+                          <p class="text-muted mb-0 small">Instant order identification</p>
+                        </div>
+                      </div>
+                      <div class="feature-item">
+                        <div class="feature-icon bg-primary-subtle">
+                          <i class="ri-refresh-line text-primary"></i>
+                        </div>
+                        <div class="feature-text">
+                          <h6 class="mb-1 fw-medium">Real-time Updates</h6>
+                          <p class="text-muted mb-0 small">Live status synchronization</p>
+                        </div>
+                      </div>
+                  
+                      <div class="feature-item">
+                        <div class="feature-icon bg-info-subtle">
+                          <i class="ri-notification-3-line text-info"></i>
+                        </div>
+                        <div class="feature-text">
+                          <h6 class="mb-1 fw-medium">Push Notifications</h6>
+                          <p class="text-muted mb-0 small">Instant alerts and updates</p>
+                        </div>
+                      </div>
+               
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-lg-6">
+                <div class="download-card h-100">
+                  <div class="download-section mb-4">
+                    <h6 class="fw-semibold text-dark mb-3">
+                      <i class="ri-download-line text-primary me-2"></i>Download Mobile App
+                    </h6>
+                    
+                    <div class="d-grid gap-3 mb-4">
+                      <button class="btn btn-dark btn-lg download-btn" onclick="downloadApp('ios')">
+                        <i class="ri-apple-line me-2"></i>
+                        <div class="download-text">
+                          <div class="download-label">Download for</div>
+                          <div class="download-platform">iOS</div>
+                        </div>
+                      </button>
+                      <button class="btn btn-success btn-lg download-btn" onclick="downloadApp('android')">
+                        <i class="ri-android-line me-2"></i>
+                        <div class="download-text">
+                          <div class="download-label">Download for</div>
+                          <div class="download-platform">Android</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="how-to-use-section">
+                    <h6 class="fw-semibold text-dark mb-3">
+                      <i class="ri-guide-line text-primary me-2"></i>How to Use Smart Scan
+                    </h6>
+                    <div class="steps-container">
+                      <div class="step-item">
+                        <div class="step-indicator">
+                          <span class="step-number">1</span>
+                        </div>
+                        <div class="step-content">
+                          <h6 class="step-title">Open the App</h6>
+                          <p class="step-description">Launch the mobile app and login to your account</p>
+                        </div>
+                      </div>
+                      <div class="step-item">
+                        <div class="step-indicator">
+                          <span class="step-number">2</span>
+                        </div>
+                        <div class="step-content">
+                          <h6 class="step-title">Navigate to Orders</h6>
+                          <p class="step-description">Go to the Orders section from the main menu</p>
+                        </div>
+                      </div>
+                      <div class="step-item">
+                        <div class="step-indicator">
+                          <span class="step-number">3</span>
+                        </div>
+                        <div class="step-content">
+                          <h6 class="step-title">Tap Scan Icon</h6>
+                          <p class="step-description">Tap the scan icon in the top right corner</p>
+                        </div>
+                      </div>
+                      <div class="step-item">
+                        <div class="step-indicator">
+                          <span class="step-number">4</span>
+                        </div>
+                        <div class="step-content">
+                          <h6 class="step-title">Point Camera</h6>
+                          <p class="step-description">Point your camera at the sticker and wait for scan</p>
+                        </div>
+                      </div>
+                      <div class="step-item">
+                        <div class="step-indicator">
+                          <span class="step-number">5</span>
+                        </div>
+                        <div class="step-content">
+                          <h6 class="step-title">View Details</h6>
+                          <p class="step-description">View order details and update status instantly</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer bg-light border-0 p-4">
+            <div class="d-flex justify-content-between w-100">
+              <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
+                <i class="ri-close-line me-1"></i>Close
+              </button>
+              <button type="button" class="btn btn-primary" onclick="showQRCode()">
+                <i class="ri-qr-code-line me-1"></i>Show QR Code
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     </div>
   </div>
@@ -374,23 +1084,34 @@
   // Function to select paper size
   function selectPaperSize(size) {
     // Remove selected class from all options
-    document.querySelectorAll('.paper-size-option').forEach(option => {
-      option.classList.remove('selected');
+    document.querySelectorAll('.paper-size-card').forEach(card => {
+      card.classList.remove('selected');
     });
 
     // Add selected class to clicked option
-    const selectedOption = document.querySelector(`.paper-size-option[onclick="selectPaperSize('${size}')"]`);
-    if (selectedOption) {
-      selectedOption.classList.add('selected');
+    const selectedCard = document.querySelector(`.paper-size-card[onclick="selectPaperSize('${size}')"]`);
+    if (selectedCard) {
+      selectedCard.classList.add('selected');
     }
 
     // Set the hidden input value
     document.getElementById('paperSize').value = size;
+    
+    // Enable print button
+    const printBtn = document.getElementById('printBtn');
+    if (printBtn) {
+      printBtn.disabled = false;
+    }
   }
 
   // Function to set order ID
   function setOrderId(id) {
     document.getElementById('orderId').value = id;
+    // Update preview with order ID
+    const previewOrderId = document.getElementById('previewOrderId');
+    if (previewOrderId) {
+      previewOrderId.textContent = id;
+    }
   }
 
   // Function to print policy
@@ -465,38 +1186,6 @@
       });
   }
 
-  // Fix dropdown positioning on scroll
-  document.addEventListener('DOMContentLoaded', function() {
-    const tableContainer = document.querySelector('.table-responsive');
-    if (tableContainer) {
-      tableContainer.addEventListener('scroll', function() {
-        const openDropdowns = document.querySelectorAll('.dropdown-menu.show');
-        openDropdowns.forEach(dropdown => {
-          const button = dropdown.previousElementSibling;
-          if (button) {
-            const rect = button.getBoundingClientRect();
-            dropdown.style.top = `${rect.bottom}px`;
-            dropdown.style.left = `${rect.left}px`;
-          }
-        });
-      });
-    }
-
-  // Fix dropdown positioning when dropdown is toggled
-  const dropdownButtons = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-  dropdownButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      setTimeout(() => {
-        const dropdown = this.nextElementSibling;
-        if (dropdown && dropdown.classList.contains('show')) {
-          const rect = this.getBoundingClientRect();
-          dropdown.style.top = `${rect.bottom}px`;
-          dropdown.style.left = `${rect.left}px`;
-        }
-      }, 0);
-    });
-  });
-
   // Filter returned orders
   function filterReturnedOrders() {
     const returnedOrders = allOrders.filter(order => 
@@ -505,5 +1194,29 @@
     populateOrdersTable(returnedOrders);
     updatePagination(returnedOrders);
   }
-  });
+
+  // Download App Functions
+  function downloadApp(platform) {
+    if (platform === 'ios') {
+      // Replace with your actual iOS App Store link
+      window.open('https://apps.apple.com/app/your-app-name', '_blank');
+    } else if (platform === 'android') {
+      // Replace with your actual Google Play Store link
+      window.open('https://play.google.com/store/apps/details?id=com.yourcompany.yourapp', '_blank');
+    }
+  }
+
+  // Show QR Code Function
+  function showQRCode() {
+    Swal.fire({
+      title: 'Download Mobile App',
+      text: 'Scan this QR code with your mobile device to download the app',
+      imageUrl: '/assets/images/qr-code-app-download.png', // Replace with your actual QR code image
+      imageWidth: 200,
+      imageHeight: 200,
+      imageAlt: 'QR Code for App Download',
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#0d6efd'
+    });
+  }
 </script>

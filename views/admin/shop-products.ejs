@@ -1,0 +1,833 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/filepond/filepond.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css" rel="stylesheet" type="text/css" />
+
+<%- contentFor('body') %>
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">Shop Products</h4>
+      <div class="page-title-right">
+        <button class="btn btn-primary" onclick="openProductModal()">
+          <i class="ri-add-line align-middle me-1"></i> Add Product
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Category</label>
+            <select class="form-select" id="categoryFilter">
+              <option value="">All Categories</option>
+              <option value="Packaging">Packaging</option>
+              <option value="Labels">Labels</option>
+              <option value="Boxes">Boxes</option>
+              <option value="Bags">Bags</option>
+              <option value="Tape">Tape</option>
+              <option value="Bubble Wrap">Bubble Wrap</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Availability</label>
+            <select class="form-select" id="availabilityFilter">
+              <option value="">All</option>
+              <option value="true">Available</option>
+              <option value="false">Unavailable</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Search</label>
+            <input type="text" class="form-control" id="searchInput" placeholder="Search products...">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">&nbsp;</label>
+            <button class="btn btn-soft-secondary w-100" onclick="resetFilters()">
+              <i class="ri-refresh-line me-1"></i> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Products Table -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle table-nowrap mb-0" id="productsTable">
+            <thead class="table-light">
+              <tr>
+                <th>Image</th>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody">
+              <tr>
+                <td colspan="7" class="text-center">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productModalTitle">Add Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="productForm" enctype="multipart/form-data">
+        <div class="modal-body">
+          <input type="hidden" id="productId">
+
+          <!-- Product Images -->
+          <div class="mb-3">
+            <label class="form-label">Product Images</label>
+            <input type="file" class="filepond filepond-input-multiple" multiple name="productImages" data-max-file-size="5MB" data-max-files="5" accept="image/*">
+            <div class="upload-progress mt-2" style="display: none;">
+              <div class="upload-progress-bar" style="width: 0%"></div>
+            </div>
+            <input type="hidden" id="productImageUrls" name="productImageUrls">
+          </div>
+
+          <!-- Tabs for Languages -->
+          <ul class="nav nav-tabs nav-tabs-custom nav-justified" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" data-bs-toggle="tab" href="#englishTab" role="tab">
+                <span>English</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" data-bs-toggle="tab" href="#arabicTab" role="tab">
+                <span>العربية</span>
+              </a>
+            </li>
+          </ul>
+
+          <div class="tab-content p-3">
+            <!-- English Tab -->
+            <div class="tab-pane active" id="englishTab" role="tabpanel">
+              <div class="mb-3">
+                <label class="form-label">Product Name (EN) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="name" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Description (EN) <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="description" rows="3" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Category (EN) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="categoryEn" placeholder="e.g., Packaging">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Unit (EN) <span class="text-danger">*</span></label>
+                <select class="form-select" id="unit">
+                  <option value="piece">Piece</option>
+                  <option value="pack">Pack</option>
+                  <option value="roll">Roll</option>
+                  <option value="box">Box</option>
+                  <option value="kg">Kilogram</option>
+                  <option value="meter">Meter</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Arabic Tab -->
+            <div class="tab-pane" id="arabicTab" role="tabpanel">
+              <div class="mb-3">
+                <label class="form-label">اسم المنتج (AR) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="nameAr" dir="rtl" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">الوصف (AR) <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="descriptionAr" rows="3" dir="rtl" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">الفئة (AR) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="categoryAr" dir="rtl" placeholder="مثال: التعبئة والتغليف">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">الوحدة (AR) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="unitAr" dir="rtl" placeholder="مثال: قطعة، علبة، لفة">
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Details -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Category <span class="text-danger">*</span></label>
+                <select class="form-select" id="category" required>
+                  <option value="">Select Category</option>
+                  <option value="Packaging">Packaging</option>
+                  <option value="Labels">Labels</option>
+                  <option value="Boxes">Boxes</option>
+                  <option value="Bags">Bags</option>
+                  <option value="Tape">Tape</option>
+                  <option value="Bubble Wrap">Bubble Wrap</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">SKU</label>
+                <input type="text" class="form-control" id="sku" placeholder="e.g., PKG-001">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Price (EGP) <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="price" step="0.01" min="0" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Stock <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="stock" min="0" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Discount (%)</label>
+                <input type="number" class="form-control" id="discount" min="0" max="100" value="0">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Min Order Qty</label>
+                <input type="number" class="form-control" id="minOrderQuantity" min="1" value="1">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Max Order Qty</label>
+                <input type="number" class="form-control" id="maxOrderQuantity" min="1" value="1000">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label class="form-label">Tax Rate (%)</label>
+                <input type="number" class="form-control" id="taxRate" min="0" max="100" value="0">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="isAvailable" checked>
+                <label class="form-check-label" for="isAvailable">Available</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="isFeatured">
+                <label class="form-check-label" for="isFeatured">Featured Product</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveProductBtn">
+            <i class="ri-save-line me-1"></i> Save Product
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script src="/assets/libs/filepond/filepond.min.js"></script>
+<script src="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js"></script>
+<script src="/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js"></script>
+<script src="/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js"></script>
+<script src="/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js"></script>
+<script>
+  let productsData = [];
+  let uploadedImages = [];
+  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
+  const CLOUDINARY_UPLOAD_PRESET = 'order_project';
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeFilePond();
+    loadProducts();
+
+    // Event listeners
+    document.getElementById('categoryFilter').addEventListener('change', loadProducts);
+    document.getElementById('availabilityFilter').addEventListener('change', loadProducts);
+    document.getElementById('searchInput').addEventListener('input', debounce(loadProducts, 500));
+    document.getElementById('productForm').addEventListener('submit', handleProductSubmit);
+
+    // Initialize nav tabs properly for form validation
+    const tabLinks = document.querySelectorAll('.nav-link');
+    tabLinks.forEach(tab => {
+      tab.addEventListener('click', function() {
+        // Remove validation error styling when switching tabs
+        const allInputs = document.querySelectorAll('.form-control.is-invalid');
+        allInputs.forEach(input => input.classList.remove('is-invalid'));
+      });
+    });
+  });
+
+  function initializeFilePond() {
+    // Register FilePond plugins
+    FilePond.registerPlugin(
+      FilePondPluginImagePreview,
+      FilePondPluginFileValidateSize,
+      FilePondPluginImageExifOrientation,
+      FilePondPluginFileEncode
+    );
+
+    // Get progress elements
+    const progressContainer = document.querySelector('.upload-progress');
+    const progressBar = document.querySelector('.upload-progress-bar');
+
+    // Create FilePond instance
+    const pond = FilePond.create(document.querySelector('.filepond-input-multiple'), {
+      allowMultiple: true,
+      maxFiles: 5,
+      maxFileSize: '5MB',
+      server: {
+        process: (fieldName, file, metadata, load, error, progress, abort) => {
+          // Show progress container
+          progressContainer.style.display = 'block';
+
+          // Create form data
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+          // Create and send XHR request
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', CLOUDINARY_URL, true);
+
+          // Update progress
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const percentComplete = (e.loaded / e.total) * 100;
+              progress(percentComplete, {
+                type: 'upload',
+                value: percentComplete
+              });
+
+              progressBar.style.width = percentComplete + '%';
+            }
+          };
+
+          // Handle response
+          xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const response = JSON.parse(xhr.responseText);
+              uploadedImages.push(response.secure_url);
+
+              // Update hidden input with uploaded URLs
+              document.getElementById('productImageUrls').value = JSON.stringify(uploadedImages);
+
+              load(response.secure_url);
+            } else {
+              error('Upload failed');
+              showError('Image upload failed. Please try again.');
+            }
+          };
+
+          // Handle error
+          xhr.onerror = function() {
+            error('Upload failed');
+            showError('Image upload failed. Please try again.');
+          };
+
+          // Send the form data
+          xhr.send(formData);
+
+          // Return abort function
+          return {
+            abort: () => {
+              xhr.abort();
+              abort();
+            }
+          };
+        }
+      },
+      labelIdle: 'Drag & Drop your product images or <span class="filepond--label-action">Browse</span>'
+    });
+
+    // Store the pond instance for later use
+    window.productImagePond = pond;
+  }
+
+  async function loadProducts() {
+    const category = document.getElementById('categoryFilter').value;
+    const isAvailable = document.getElementById('availabilityFilter').value;
+    const search = document.getElementById('searchInput').value;
+
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (isAvailable) params.append('isAvailable', isAvailable);
+    if (search) params.append('search', search);
+
+    try {
+      const response = await fetch(`/api/admin/shop/products?${params}`);
+      const products = await response.json();
+      productsData = products;
+      renderProducts(products);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      showError('Failed to load products');
+    }
+  }
+
+  function renderProducts(products) {
+    const tbody = document.getElementById('productsTableBody');
+
+    if (products.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center">No products found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = products.map(product => `
+    <tr>
+      <td>
+        <img src="${product.images[0] || '/assets/images/product-placeholder.png'}" 
+             alt="${product.name}" 
+             class="rounded" 
+             style="width: 60px; height: 60px; object-fit: cover;">
+      </td>
+      <td>
+        <h6 class="mb-0">${product.name}</h6>
+        <small class="text-muted">${product.nameAr}</small>
+      </td>
+      <td>
+        <span class="badge badge-soft-primary">${product.category}</span>
+      </td>
+      <td>
+        <strong>EGP ${product.finalPrice.toFixed(2)}</strong>
+        ${product.discount > 0 ? `<br><small class="text-decoration-line-through text-muted">EGP ${product.price.toFixed(2)}</small>` : ''}
+      </td>
+      <td>
+        <span class="badge ${product.stock > 10 ? 'bg-success' : product.stock > 0 ? 'bg-warning' : 'bg-danger'}">
+          ${product.stock} ${product.unit}
+        </span>
+      </td>
+      <td>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" ${product.isAvailable ? 'checked' : ''} 
+                 onchange="toggleAvailability('${product._id}', this.checked)">
+        </div>
+      </td>
+      <td>
+        <div class="hstack gap-2">
+          <button class="btn btn-sm btn-soft-info" onclick="editProduct('${product._id}')" title="Edit">
+            <i class="ri-pencil-line"></i>
+          </button>
+          <button class="btn btn-sm btn-soft-danger" onclick="deleteProduct('${product._id}')" title="Delete">
+            <i class="ri-delete-bin-line"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  }
+
+  function openProductModal() {
+    document.getElementById('productModalTitle').textContent = 'Add Product';
+    document.getElementById('productForm').reset();
+    document.getElementById('productId').value = '';
+    document.getElementById('productImageUrls').value = '';
+    uploadedImages = [];
+
+    // Reset FilePond
+    if (window.productImagePond) {
+      window.productImagePond.removeFiles();
+    }
+
+    // Hide progress bar
+    const progressContainer = document.querySelector('.upload-progress');
+    if (progressContainer) {
+      progressContainer.style.display = 'none';
+      const progressBar = progressContainer.querySelector('.upload-progress-bar');
+      if (progressBar) {
+        progressBar.style.width = '0%';
+      }
+    }
+
+    // Reset validation styling
+    const invalidFields = document.querySelectorAll('.is-invalid');
+    invalidFields.forEach(field => field.classList.remove('is-invalid'));
+
+    // Show the modal
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+  }
+
+  async function editProduct(id) {
+    try {
+      const response = await fetch(`/api/admin/shop/products/${id}`);
+      const product = await response.json();
+
+      document.getElementById('productModalTitle').textContent = 'Edit Product';
+      document.getElementById('productId').value = product._id;
+      document.getElementById('name').value = product.name;
+      document.getElementById('nameAr').value = product.nameAr;
+      document.getElementById('description').value = product.description;
+      document.getElementById('descriptionAr').value = product.descriptionAr;
+      document.getElementById('category').value = product.category;
+      document.getElementById('categoryEn').value = product.category;
+      document.getElementById('categoryAr').value = product.categoryAr;
+      document.getElementById('unit').value = product.unit;
+      document.getElementById('unitAr').value = product.unitAr;
+      document.getElementById('sku').value = product.sku || '';
+      document.getElementById('price').value = product.price;
+      document.getElementById('stock').value = product.stock;
+      document.getElementById('discount').value = product.discount;
+      document.getElementById('minOrderQuantity').value = product.minOrderQuantity;
+      document.getElementById('maxOrderQuantity').value = product.maxOrderQuantity;
+      document.getElementById('taxRate').value = product.taxRate;
+      document.getElementById('isAvailable').checked = product.isAvailable;
+      document.getElementById('isFeatured').checked = product.isFeatured;
+
+      // Reset FilePond
+      if (window.productImagePond) {
+        window.productImagePond.removeFiles();
+      }
+
+      // Pre-populate uploaded images
+      if (product.images && product.images.length > 0) {
+        uploadedImages = [...product.images];
+        document.getElementById('productImageUrls').value = JSON.stringify(uploadedImages);
+
+        // Add existing images to FilePond preview
+        product.images.forEach(imageUrl => {
+          window.productImagePond.addFile(imageUrl, {
+            type: 'local-file'
+          });
+        });
+      } else {
+        uploadedImages = [];
+        document.getElementById('productImageUrls').value = '';
+      }
+
+      new bootstrap.Modal(document.getElementById('productModal')).show();
+    } catch (error) {
+      console.error('Error loading product:', error);
+      showError('Failed to load product details');
+    }
+  }
+
+  async function handleProductSubmit(e) {
+    e.preventDefault();
+
+    // Validate the form before submission
+    if (!validateProductForm()) {
+      return;
+    }
+
+    const productId = document.getElementById('productId').value;
+
+    // Prepare product data as JSON
+    const productData = {
+      name: document.getElementById('name').value,
+      nameAr: document.getElementById('nameAr').value,
+      description: document.getElementById('description').value,
+      descriptionAr: document.getElementById('descriptionAr').value,
+      category: document.getElementById('category').value,
+      categoryAr: document.getElementById('categoryAr').value,
+      unit: document.getElementById('unit').value,
+      unitAr: document.getElementById('unitAr').value,
+      sku: document.getElementById('sku').value,
+      price: parseFloat(document.getElementById('price').value),
+      stock: parseInt(document.getElementById('stock').value),
+      discount: parseFloat(document.getElementById('discount').value),
+      minOrderQuantity: parseInt(document.getElementById('minOrderQuantity').value),
+      maxOrderQuantity: parseInt(document.getElementById('maxOrderQuantity').value),
+      taxRate: parseFloat(document.getElementById('taxRate').value),
+      isAvailable: document.getElementById('isAvailable').checked,
+      isFeatured: document.getElementById('isFeatured').checked,
+      images: uploadedImages
+    };
+
+    try {
+      const url = productId ?
+        `/api/admin/shop/products/${productId}` :
+        '/api/admin/shop/products';
+      const method = productId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(productData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showSuccess(data.message);
+        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+        resetProductForm();
+        loadProducts();
+      } else {
+        showError(data.error || 'Failed to save product');
+      }
+    } catch (error) {
+      console.error('Error saving product:', error);
+      showError('Failed to save product');
+    }
+  }
+
+  // Validate all fields before form submission
+  function validateProductForm() {
+    let isValid = true;
+
+    // English tab fields
+    const englishFields = [{
+        id: 'name',
+        label: 'Product Name (EN)'
+      },
+      {
+        id: 'description',
+        label: 'Description (EN)'
+      }
+    ];
+
+    // Arabic tab fields
+    const arabicFields = [{
+        id: 'nameAr',
+        label: 'Product Name (AR)'
+      },
+      {
+        id: 'descriptionAr',
+        label: 'Description (AR)'
+      }
+    ];
+
+    // Other required fields
+    const otherFields = [{
+        id: 'category',
+        label: 'Category'
+      },
+      {
+        id: 'price',
+        label: 'Price'
+      },
+      {
+        id: 'stock',
+        label: 'Stock'
+      }
+    ];
+
+    // Validate English tab fields
+    englishFields.forEach(field => {
+      const element = document.getElementById(field.id);
+      if (!element.value.trim()) {
+        isValid = false;
+        element.classList.add('is-invalid');
+        // Make sure English tab is active if there's an error
+        document.querySelector('[href="#englishTab"]').click();
+      } else {
+        element.classList.remove('is-invalid');
+      }
+    });
+
+    // Validate Arabic tab fields
+    arabicFields.forEach(field => {
+      const element = document.getElementById(field.id);
+      if (!element.value.trim()) {
+        isValid = false;
+        element.classList.add('is-invalid');
+        // Only show Arabic tab if English tab is valid
+        if (isValidTab('englishTab')) {
+          document.querySelector('[href="#arabicTab"]').click();
+        }
+      } else {
+        element.classList.remove('is-invalid');
+      }
+    });
+
+    // Validate other fields
+    otherFields.forEach(field => {
+      const element = document.getElementById(field.id);
+      if (!element.value) {
+        isValid = false;
+        element.classList.add('is-invalid');
+      } else {
+        element.classList.remove('is-invalid');
+      }
+    });
+
+    // Check if images are uploaded
+    if (uploadedImages.length === 0) {
+      isValid = false;
+      showError('Please upload at least one product image');
+    }
+
+    if (!isValid) {
+      showError('Please fill in all required fields in both English and Arabic tabs');
+    }
+
+    return isValid;
+  }
+
+  // Helper to check if a tab's fields are all valid
+  function isValidTab(tabId) {
+    const tab = document.getElementById(tabId);
+    const requiredFields = tab.querySelectorAll('[required]');
+    return Array.from(requiredFields).every(field => field.value.trim() !== '');
+  }
+
+  // Reset form and uploaded images
+  function resetProductForm() {
+    document.getElementById('productForm').reset();
+    document.getElementById('productId').value = '';
+    document.getElementById('productImageUrls').value = '';
+
+    // Reset FilePond
+    if (window.productImagePond) {
+      window.productImagePond.removeFiles();
+    }
+
+    // Reset uploaded images array
+    uploadedImages = [];
+
+    // Hide progress bar
+    const progressContainer = document.querySelector('.upload-progress');
+    if (progressContainer) {
+      progressContainer.style.display = 'none';
+      const progressBar = progressContainer.querySelector('.upload-progress-bar');
+      if (progressBar) {
+        progressBar.style.width = '0%';
+      }
+    }
+
+    // Reset validation styling
+    const invalidFields = document.querySelectorAll('.is-invalid');
+    invalidFields.forEach(field => field.classList.remove('is-invalid'));
+  }
+
+  async function toggleAvailability(id, isAvailable) {
+    try {
+      const response = await fetch(`/api/admin/shop/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          isAvailable
+        })
+      });
+
+      if (response.ok) {
+        showSuccess('Product availability updated');
+        loadProducts();
+      } else {
+        showError('Failed to update availability');
+      }
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      showError('Failed to update availability');
+    }
+  }
+
+  async function deleteProduct(id) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "This will permanently delete the product!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/api/admin/shop/products/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          showSuccess('Product deleted successfully');
+          loadProducts();
+        } else {
+          showError('Failed to delete product');
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        showError('Failed to delete product');
+      }
+    }
+  }
+
+  function resetFilters() {
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('availabilityFilter').value = '';
+    document.getElementById('searchInput').value = '';
+    loadProducts();
+  }
+
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  function showSuccess(message) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: message,
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  function showError(message) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error!',
+      text: message
+    });
+  }
+</script>

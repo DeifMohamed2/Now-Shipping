@@ -1,6 +1,11 @@
 <%- contentFor('HeaderCss') %>
+
+<!-- RTL Support CSS -->
+<link rel="stylesheet" href="/assets/css/rtl-support.css">
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap');
 
   :root {
     --primary: #F39720;
@@ -33,6 +38,11 @@
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+  }
+
+  /* Arabic font support */
+  [dir="rtl"] body {
+    font-family: 'Cairo', 'Tajawal', 'Amiri', 'Noto Sans Arabic', sans-serif;
   }
 
   /* Top Navbar Styles */
@@ -386,6 +396,11 @@
     margin-bottom: 8px;
   }
 
+  /* RTL form label styles */
+  [dir="rtl"] .form-label {
+    text-align: right;
+  }
+
   .form-control {
     width: 100%;
     height: 44px;
@@ -395,6 +410,12 @@
     border-radius: 8px;
     background-color: var(--white);
     transition: all 0.2s ease;
+  }
+
+  /* RTL form control styles */
+  [dir="rtl"] .form-control {
+    text-align: right;
+    direction: rtl;
   }
 
   .form-control:focus {
@@ -457,12 +478,23 @@
     margin-bottom: 20px;
   }
 
+  /* RTL form check styles */
+  [dir="rtl"] .form-check {
+    flex-direction: row-reverse;
+  }
+
   .form-check-input {
     margin-right: 8px;
     margin-top: 2px;
     width: 16px;
     height: 16px;
     accent-color: var(--primary);
+  }
+
+  /* RTL form check input styles */
+  [dir="rtl"] .form-check-input {
+    margin-right: 0;
+    margin-left: 8px;
   }
 
   .form-check-label {
@@ -803,6 +835,11 @@
     align-items: center;
   }
 
+  /* RTL phone input container styles */
+  [dir="rtl"] .phone-input-container {
+    flex-direction: row-reverse;
+  }
+
   .country-code {
     display: flex;
     align-items: center;
@@ -816,63 +853,38 @@
     font-weight: 500;
   }
 
+  /* RTL country code styles */
+  [dir="rtl"] .country-code {
+    border-right: 1px solid var(--gray-200);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+  }
+
   .country-code img {
     width: 20px;
     height: 15px;
     margin-right: 8px;
   }
 
+  /* RTL country code image styles */
+  [dir="rtl"] .country-code img {
+    margin-right: 0;
+    margin-left: 8px;
+  }
+
   .phone-input {
     border-radius: 0 8px 8px 0;
+  }
+
+  /* RTL phone input styles */
+  [dir="rtl"] .phone-input {
+    border-radius: 8px 0 0 8px;
   }
 </style>
 
 <%- contentFor('body') %>
-<!-- Top Navbar -->
-<nav class="top-navbar">
-  <div class="navbar-container">
-    <a href="/" class="navbar-brand">
-      <div class="navbar-logo">
-        <svg viewBox="0 0 100 100">
-          <path d="M50,15 L60,25 L75,20 L75,40 L90,50 L75,60 L75,80 L60,75 L50,85 L40,75 L25,80 L25,60 L10,50 L25,40 L25,20 L40,25 Z M50,35 C41.7,35 35,41.7 35,50 C35,58.3 41.7,65 50,65 C58.3,65 65,58.3 65,50 C65,41.7 58.3,35 50,35 Z"></path>
-        </svg>
-      </div>
-      <h1 class="navbar-title">Now Shipping</h1>
-    </a>
-
-    <div class="navbar-links">
-      <!-- <a href="#" class="nav-link">Home</a>
-      <a href="#" class="nav-link">Services</a>
-      <a href="#" class="nav-link">Tracking</a>
-      <a href="#" class="nav-link">About Us</a>
-      <a href="#" class="nav-link">Contact</a> -->
-    </div>
-
-    <div class="navbar-actions">
-      <a href="#" class="btn-outline">Help</a>
-      <a href="#" class="btn-primary">Get Started</a>
-    </div>
-
-    <button class="mobile-menu-btn" id="mobile-menu-toggle">
-      <i class="ri-menu-line"></i>
-    </button>
-  </div>
-</nav>
-
-<!-- Mobile menu -->
-<div class="mobile-menu" id="mobile-menu">
-  <div class="mobile-menu-links">
-    <!-- <a href="#" class="nav-link">Home</a>
-    <a href="#" class="nav-link">Services</a>
-    <a href="#" class="nav-link">Tracking</a>
-    <a href="#" class="nav-link">About Us</a>
-    <a href="#" class="nav-link">Contact</a> -->
-  </div>
-  <div class="mobile-menu-actions">
-    <a href="#" class="btn-outline">Help</a>
-    <a href="#" class="btn-primary">Get Started</a>
-  </div>
-</div>
+<!-- Auth Navbar -->
+<%- include('../partials/auth-navbar') %>
 
 <!-- Animated Background -->
 <div class="animated-background">
@@ -899,26 +911,26 @@
       <div class="register-logo">
         <img src="/assets/rimages/logo.png" alt="Now Shipping Logo" height="65">
       </div>
-      <h1 class="register-title">Create Account</h1>
-      <p class="register-subtitle">Sign up to start using Now Shipping</p>
+      <h1 class="register-title"><%= translation.auth.register.title %></h1>
+      <p class="register-subtitle"><%= translation.auth.register.subtitle %></p>
     </div>
 
     <form id="registerForm" class="register-form">
       <div class="form-group">
-        <label for="fullName" class="form-label">Full Name</label>
-        <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Enter your full name" required>
+        <label for="fullName" class="form-label"><%= translation.auth.register.fullName %></label>
+        <input type="text" class="form-control" id="fullName" name="fullName" placeholder="<%= translation.auth.register.fullName %>" required>
         <div class="invalid-feedback" id="fullName-feedback"></div>
       </div>
 
       <div class="form-group">
-        <label for="phoneNumber" class="form-label">Phone Number</label>
+        <label for="phoneNumber" class="form-label"><%= translation.auth.register.phoneNumber %></label>
         <div class="phone-input-container">
           <div class="country-code">
             <img src="assets/images/flags/eg.svg" alt="Egypt flag" height="15">
             <span>+20</span>
           </div>
           <input type="text" class="form-control phone-input" id="phoneNumber" name="phoneNumber" placeholder="01155244145" required>
-          <button type="button" class="verify-btn" id="verifyBtn">Verify</button>
+          <button type="button" class="verify-btn" id="verifyBtn"><%= translation.auth.register.sendOtp %></button>
         </div>
         <div class="invalid-feedback" id="phoneNumber-feedback"></div>
       </div>
@@ -941,14 +953,14 @@
 
 
       <div class="form-group">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+        <label for="email" class="form-label"><%= translation.auth.register.email %></label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="<%= translation.auth.register.email %>" required>
         <div class="invalid-feedback" id="email-feedback"></div>
       </div>
 
       <div class="form-group">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="Create a password" required>
+        <label for="password" class="form-label"><%= translation.auth.register.password %></label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="<%= translation.auth.register.password %>" required>
         <div class="invalid-feedback" id="password-feedback"></div>
       </div>
 
@@ -972,25 +984,25 @@
       <div class="form-check">
         <input class="form-check-input" type="checkbox" name="storageCheck" id="storageOption">
         <label class="form-check-label" for="storageOption">
-          I want storage
+          <%= translation.auth.register.storageCheck %>
         </label>
       </div>
 
       <div class="form-check">
         <input class="form-check-input" type="checkbox" name="termsCheck" id="termsCheck" required>
         <label class="form-check-label" for="termsCheck">
-          I agree to the <a href="/terms" target="_blank">terms and conditions</a>
+          <%= translation.auth.register.termsCheck %>
         </label>
         <div class="invalid-feedback" id="terms-feedback"></div>
       </div>
 
       <button type="submit" class="btn-register" id="submitBtn">
-        <span class="btn-text">Create Account</span>
+        <span class="btn-text"><%= translation.auth.register.createAccount %></span>
       </button>
     </form>
 
     <div class="login-link">
-      Already have an account? <a href="/login">Sign in</a>
+      <%= translation.auth.register.haveAccount %> <a href="/login"><%= translation.auth.register.signIn %></a>
     </div>
   </div>
 </div>
@@ -1198,7 +1210,8 @@
 
         // Full name validation
         if (fullNameInput.value.trim() === '') {
-          showInputError(fullNameInput, fullNameFeedback, 'Please enter your full name');
+          const errorMsg = '<%= translation.auth.validation.nameRequired %>';
+          showInputError(fullNameInput, fullNameFeedback, errorMsg);
           isValid = false;
         } else {
           clearInputError(fullNameInput, fullNameFeedback);
@@ -1206,7 +1219,8 @@
 
         // Phone number validation
         if (phoneNumberInput.value.trim() === '' || !/^\d{11}$/.test(phoneNumberInput.value.trim())) {
-          showInputError(phoneNumberInput, phoneNumberFeedback, 'Plekase enter a valid 11-digit phone number');
+          const errorMsg = '<%= translation.auth.validation.phoneInvalid %>';
+          showInputError(phoneNumberInput, phoneNumberFeedback, errorMsg);
           isValid = false;
         } else {
           clearInputError(phoneNumberInput, phoneNumberFeedback);
@@ -1214,7 +1228,8 @@
 
         // Email validation
         if (!validateEmail(emailInput.value)) {
-          showInputError(emailInput, emailFeedback, 'Please enter a valid email address');
+          const errorMsg = '<%= translation.auth.validation.emailInvalid %>';
+          showInputError(emailInput, emailFeedback, errorMsg);
           isValid = false;
         } else {
           clearInputError(emailInput, emailFeedback);
@@ -1222,7 +1237,8 @@
 
         // Password validation
         if (passwordInput.value.length < 8) {
-          showInputError(passwordInput, passwordFeedback, 'Password must be at least 8 characters');
+          const errorMsg = '<%= translation.auth.validation.passwordMinLength %>';
+          showInputError(passwordInput, passwordFeedback, errorMsg);
           isValid = false;
         } else {
           clearInputError(passwordInput, passwordFeedback);
@@ -1232,7 +1248,7 @@
         if (!termsCheck.checked) {
           termsCheck.classList.add('is-invalid');
           if (termsFeedback) {
-            termsFeedback.textContent = 'You must agree to the terms and conditions';
+            termsFeedback.textContent = '<%= translation.auth.validation.termsRequired %>';
             termsFeedback.style.display = 'block';
           }
           isValid = false;
@@ -1313,7 +1329,8 @@
       // Input validation on blur
       fullNameInput.addEventListener('blur', function() {
         if (this.value.trim() === '') {
-          showInputError(this, fullNameFeedback, 'Please enter your full name');
+          const errorMsg = '<%= translation.auth.validation.nameRequired %>';
+          showInputError(this, fullNameFeedback, errorMsg);
         } else {
           clearInputError(this, fullNameFeedback);
         }
@@ -1321,7 +1338,8 @@
 
       phoneNumberInput.addEventListener('blur', function() {
         if (this.value.trim() === '' || !/^\d{11}$/.test(this.value.trim())) {
-          showInputError(this, phoneNumberFeedback, 'Please enter a valid 11-digit phone number');
+          const errorMsg = '<%= translation.auth.validation.phoneInvalid %>';
+          showInputError(this, phoneNumberFeedback, errorMsg);
         } else {
           clearInputError(this, phoneNumberFeedback);
         }
@@ -1329,7 +1347,8 @@
 
       emailInput.addEventListener('blur', function() {
         if (this.value && !validateEmail(this.value)) {
-          showInputError(this, emailFeedback, 'Please enter a valid email address');
+          const errorMsg = '<%= translation.auth.validation.emailInvalid %>';
+          showInputError(this, emailFeedback, errorMsg);
         } else {
           clearInputError(this, emailFeedback);
         }
@@ -1337,7 +1356,8 @@
 
       passwordInput.addEventListener('blur', function() {
         if (this.value && this.value.length < 8) {
-          showInputError(this, passwordFeedback, 'Password must be at least 8 characters');
+          const errorMsg = '<%= translation.auth.validation.passwordMinLength %>';
+          showInputError(this, passwordFeedback, errorMsg);
         } else {
           clearInputError(this, passwordFeedback);
         }
@@ -1424,3 +1444,6 @@
     }
   });
 </script>
+
+<!-- Multilingual Support Scripts -->
+<script src="/assets/rJS/multilingual.js"></script>

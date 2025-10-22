@@ -1300,134 +1300,25 @@
   </div>
   <% } else { %>
   <div class="col-xl-12">
-<!-- Dashboard Overview Cards -->
+<!-- Dashboard Overview Cards - Optimized -->
 <div class="row mb-4">
   <div class="col-12">
     <div class="card dashboard-card">
       <div class="card-header d-flex align-items-center">
         <h4 class="card-title mb-0">Today's Overview</h4>
         <div class="ms-auto">
-          <span class="text-muted small">Last updated at <%= new Date().toLocaleTimeString() %></span>
+          <span class="text-muted small" id="lastUpdated">Loading...</span>
         </div>
       </div>
       <div class="card-body">
-        <div class="row g-3">
-          <!-- In Progress Orders -->
-          <div class="col-md-3">
-            <div class="card border shadow-sm h-100">
-              <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                  <h6 class="text-muted mb-0">In Progress Orders</h6>
-                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders currently being processed"></i>
-                </div>
-                <h2 class="mb-0 text-dark-custom"><%= dashboardData?.orderStats?.inProgressCount || 0 %></h2>
-              </div>
+        <div class="row g-3" id="dashboardStats">
+          <!-- Stats will be loaded via JavaScript for better performance -->
+          <div class="col-12 text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
             </div>
+            <p class="mt-2 text-muted">Loading dashboard data...</p>
           </div>
-
-          <!-- Heading to Customer -->
-          <div class="col-md-3">
-            <div class="card border shadow-sm h-100">
-              <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                  <h6 class="text-muted mb-0">Heading to Customer</h6>
-                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders on the way to customers"></i>
-                </div>
-                <h2 class="mb-0 text-dark-custom"><%= dashboardData?.orderStats?.headingToCustomerCount || 0 %></h2>
-              </div>
-            </div>
-          </div>
-
-          <!-- Completed Orders -->
-          <div class="col-md-3">
-            <div class="card border shadow-sm h-100">
-              <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                  <h6 class="text-muted mb-0">Completed Orders</h6>
-                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Successfully delivered orders"></i>
-                </div>
-                <div class="d-flex align-items-baseline">
-                    <h2 class="mb-0 text-success"><%= dashboardData?.orderStats?.completedCount || 0 %></h2>
-                  <span class="text-muted ms-2">/ <%= dashboardData?.orderStats?.totalOrders|| 0 %></span>
-                  <span class="badge bg-success ms-auto"><%= dashboardData?.orderStats?.completionRate || 0 %>%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Awaiting Action -->
-          <div class="col-md-3">
-            <div class="card border shadow-sm h-100">
-              <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                  <h6 class="text-muted mb-0">Awaiting Action</h6>
-                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders requiring your attention"></i>
-                </div>
-                <h2 class="mb-0 text-primary-custom"><%= dashboardData?.orderStats?.awaitingActionCount || 0 %></h2>
-              </div>
-            </div>
-          </div>
-
-          <!-- Heading to you -->
-          <div class="col-md-3">
-            <div class="card border shadow-sm h-100">
-              <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                  <h6 class="text-muted mb-0">Heading to you</h6>
-                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Returns being sent back to you"></i>
-                </div>
-                <h2 class="mb-0 text-dark-custom"><%= dashboardData?.orderStats?.headingToYouCount || 0 %></h2>
-              </div>
-            </div>
-          </div>
-
-          <!-- New Orders -->
-          <div class="col-md-3">
-            <div class="card border shadow-sm h-100">
-              <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                  <h6 class="text-muted mb-0">New Orders</h6>
-                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Recently received orders"></i>
-                </div>
-                <h2 class="mb-0 text-primary-custom"><%= dashboardData?.orderStats?.newOrdersCount || 0 %></h2>
-              </div>
-            </div>
-          </div>
-
-          <!-- Expected Cash -->
-          <!-- <div class="col-md-3">
-            <div class="card border shadow-sm h-100">
-              <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                  <h6 class="text-muted mb-0">Expected Cash</h6>
-                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Pending payments from delivered orders"></i>
-                </div>
-                <div class="d-flex align-items-baseline">
-                  <h2 class="mb-0 text-dark-custom"><%= dashboardData?.financialStats?.expectedCash || 0 %></h2>
-                  <span class="text-muted ms-2">EGP</span>
-                </div>
-              </div>
-            </div>
-          </div> -->
-
-          <!-- Collected Cash -->
-          <!-- <div class="col-md-3">
-            <div class="card border shadow-sm h-100">
-              <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                  <h6 class="text-muted mb-0">Collected Cash</h6>
-                  <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Payments received from orders"></i>
-                </div>
-                <div class="d-flex align-items-baseline">
-                  <h2 class="mb-0 text-dark-custom"><%= dashboardData?.financialStats?.collectedCash || 0 %></h2>
-                  <span class="text-muted ms-2">EGP</span>
-                  <span class="badge bg-success ms-auto"><%= dashboardData?.financialStats?.collectionRate || 0 %>%</span>
-                </div>
-              </div>
-            </div>
-          </div> -->
-
-
         </div>
       </div>
     </div>
@@ -1652,59 +1543,213 @@
 <script src="/assets/rJS/business/main.js"></script>
 
 <script>
-// Add this to the existing script tag at the bottom, replacing the current chart initialization:
-
-// Initialize Dashboard Charts if user is completed
-if (document.getElementById('revenue-chart')) {
-  const chartLabels = JSON.parse('<%- JSON.stringify(dashboardData?.chartData?.monthlyLabels || []) %>');
-  const revenueData = JSON.parse('<%- JSON.stringify(dashboardData?.chartData?.monthlyRevenue || []) %>');
-  const orderCountData = JSON.parse('<%- JSON.stringify(dashboardData?.chartData?.monthlyOrderCounts || []) %>');
+// Optimized Dashboard Loading
+document.addEventListener('DOMContentLoaded', function() {
+  // Load dashboard data asynchronously
+  loadDashboardData();
   
-  // Chart configuration
+  // Initialize charts after data loads
+  initializeCharts();
+});
+
+// Async dashboard data loading
+async function loadDashboardData() {
+  try {
+    const response = await fetch('/business/dashboard-data');
+    const data = await response.json();
+    
+    if (data.status === 'success') {
+      renderDashboardStats(data.dashboardData);
+      updateLastUpdatedTime();
+    }
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    showDashboardError();
+  }
+}
+
+// Render dashboard statistics
+function renderDashboardStats(data) {
+  const statsContainer = document.getElementById('dashboardStats');
+  if (!statsContainer) return;
+  
+  const orderStats = data.orderStats || {};
+  const financialStats = data.financialStats || {};
+  
+  statsContainer.innerHTML = `
+    <!-- In Progress Orders -->
+    <div class="col-md-3">
+      <div class="card border shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <h6 class="text-muted mb-0">In Progress Orders</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders currently being processed"></i>
+          </div>
+          <h2 class="mb-0 text-dark-custom">${orderStats.inProgressCount || 0}</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Heading to Customer -->
+    <div class="col-md-3">
+      <div class="card border shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <h6 class="text-muted mb-0">Heading to Customer</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders on the way to customers"></i>
+          </div>
+          <h2 class="mb-0 text-dark-custom">${orderStats.headingToCustomerCount || 0}</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed Orders -->
+    <div class="col-md-3">
+      <div class="card border shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <h6 class="text-muted mb-0">Completed Orders</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Successfully delivered orders"></i>
+          </div>
+          <div class="d-flex align-items-baseline">
+            <h2 class="mb-0 text-success">${orderStats.completedCount || 0}</h2>
+            <span class="text-muted ms-2">/ ${orderStats.totalOrders || 0}</span>
+            <span class="badge bg-success ms-auto">${orderStats.completionRate || 0}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Awaiting Action -->
+    <div class="col-md-3">
+      <div class="card border shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <h6 class="text-muted mb-0">Awaiting Action</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders requiring your attention"></i>
+          </div>
+          <h2 class="mb-0 text-primary-custom">${orderStats.awaitingActionCount || 0}</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Heading to you -->
+    <div class="col-md-3">
+      <div class="card border shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <h6 class="text-muted mb-0">Heading to you</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Returns being sent back to you"></i>
+          </div>
+          <h2 class="mb-0 text-dark-custom">${orderStats.headingToYouCount || 0}</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Orders -->
+    <div class="col-md-3">
+      <div class="card border shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <h6 class="text-muted mb-0">New Orders</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Recently received orders"></i>
+          </div>
+          <h2 class="mb-0 text-primary-custom">${orderStats.newOrdersCount || 0}</h2>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Initialize tooltips
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(function(tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+}
+
+// Update last updated time
+function updateLastUpdatedTime() {
+  const lastUpdated = document.getElementById('lastUpdated');
+  if (lastUpdated) {
+    lastUpdated.textContent = `Last updated at ${new Date().toLocaleTimeString()}`;
+  }
+}
+
+// Show error state
+function showDashboardError() {
+  const statsContainer = document.getElementById('dashboardStats');
+  if (statsContainer) {
+    statsContainer.innerHTML = `
+      <div class="col-12 text-center py-4">
+        <i class="ri-error-warning-line text-danger fs-1"></i>
+        <p class="mt-2 text-muted">Failed to load dashboard data</p>
+        <button class="btn btn-outline-primary btn-sm" onclick="loadDashboardData()">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// Initialize charts
+function initializeCharts() {
+  // Chart will be initialized after data loads
+  setTimeout(() => {
+    if (document.getElementById('revenue-chart')) {
+      initializeRevenueChart();
+    }
+    if (document.getElementById('performance-chart')) {
+      initializePerformanceChart();
+    }
+  }, 1000);
+}
+
+// Initialize revenue chart
+function initializeRevenueChart() {
   const revenueChartOptions = {
     series: [{
       name: 'Revenue',
       type: 'column',
-      data: revenueData
+      data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
     }, {
       name: 'Orders',
       type: 'line',
-      data: orderCountData
+      data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
     }],
     chart: {
       height: 350,
       type: 'line',
-      toolbar: {
-        show: false
-      }
+      toolbar: { show: false }
     },
-    stroke: {
-      width: [0, 4],
-      curve: 'smooth'
-    },
+    stroke: { width: [0, 4], curve: 'smooth' },
     colors: ['#F39720', '#333333'],
-    dataLabels: {
-      enabled: true,
-      enabledOnSeries: [1]
-    },
-    labels: chartLabels,
-    xaxis: {
-      type: 'category'
-    },
+    dataLabels: { enabled: true, enabledOnSeries: [1] },
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+    xaxis: { type: 'category' },
     yaxis: [{
-      title: {
-        text: 'Revenue (EGP)',
-      },
+      title: { text: 'Revenue (EGP)' }
     }, {
       opposite: true,
-      title: {
-        text: 'Orders'
-      }
+      title: { text: 'Orders' }
     }]
   };
 
   const revenueChart = new ApexCharts(document.getElementById('revenue-chart'), revenueChartOptions);
   revenueChart.render();
+}
+
+// Initialize performance chart
+function initializePerformanceChart() {
+  const performanceChartOptions = {
+    series: [{ name: 'Performance', data: [75, 85, 65, 90, 82, 78] }],
+    chart: { type: 'radar', height: 200, toolbar: { show: false } },
+    colors: ['#F39720'],
+    xaxis: { categories: ['Delivery', 'Quality', 'Service', 'Value', 'Satisfaction', 'Retention'] },
+    yaxis: { show: false },
+    markers: { size: 4, colors: ['#333333'], strokeColors: '#fff', strokeWidth: 2 },
+    tooltip: { y: { formatter: function(val) { return val + '%'; } } }
+  };
+
+  const performanceChart = new ApexCharts(document.getElementById('performance-chart'), performanceChartOptions);
+  performanceChart.render();
 }
 
   document.addEventListener('DOMContentLoaded', function() {

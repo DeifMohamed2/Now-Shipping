@@ -4,6 +4,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Arabic Font Support -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<!-- RTL Support CSS -->
+<link rel="stylesheet" href="/assets/css/rtl-support.css">
 <style>
   /* Reset and Base Styles */
   * {
@@ -1587,87 +1591,8 @@
 <!-- Animation Canvas for Moving Trucks -->
 <canvas id="animationCanvas"></canvas>
 
-<!-- Header -->
-<header>
-  <div class="container header-container">
-    <a href="#" class="logo">
-      <i class="fas fa-truck-fast logo-icon"></i>
-      <span>ShipFast</span>
-    </a>
-
-    <div class="mobile-menu-btn">
-      <i class="fas fa-bars"></i>
-    </div>
-
-    <div class="nav-container">
-      <nav>
-        <ul>
-          <li>
-            <a href="index.html">
-              <i class="fas fa-home"></i>
-              <span>Home</span>
-            </a>
-          </li>
-          <li class="active">
-            <a href="about-us.html">
-              <i class="fas fa-info-circle"></i>
-              <span>About Us</span>
-            </a>
-          </li>
-          <li>
-            <div class="dropdown-toggle">
-              <i class="fas fa-box"></i>
-              <span>Services</span>
-              <i class="fas fa-chevron-down dropdown-arrow"></i>
-            </div>
-            <ul class="dropdown-menu">
-              <li><a href="#"><i class="fas fa-truck-fast"></i> Express Delivery</a></li>
-              <li><a href="#"><i class="fas fa-clock"></i> Same Day Delivery</a></li>
-              <li><a href="#"><i class="fas fa-globe"></i> International Shipping</a></li>
-              <li><a href="#"><i class="fas fa-warehouse"></i> Warehousing</a></li>
-              <li><a href="#"><i class="fas fa-boxes-stacked"></i> Fulfillment</a></li>
-            </ul>
-          </li>
-          <li>
-            <a href="mobile-app.html">
-              <i class="fas fa-mobile-alt"></i>
-              <span>Mobile App</span>
-            </a>
-          </li>
-          <li>
-            <a href="pricing.html">
-              <i class="fas fa-tag"></i>
-              <span>Pricing</span>
-            </a>
-          </li>
-          <li>
-            <a href="faq.html">
-              <i class="fas fa-question-circle"></i>
-              <span>FAQ</span>
-            </a>
-          </li>
-          <li>
-            <a href="#contact">
-              <i class="fas fa-headset"></i>
-              <span>Contact</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      <div class="auth-buttons">
-        <a href="#" class="btn btn-outline">
-          <i class="fas fa-sign-in-alt"></i>
-          <span>Sign In</span>
-        </a>
-        <a href="#" class="btn btn-primary">
-          <i class="fas fa-user-plus"></i>
-          <span>Sign Up</span>
-        </a>
-      </div>
-    </div>
-  </div>
-</header>
+<!-- Professional Navbar -->
+<%- include('../partials/navbar', { activePage: 'about' }) %>
 
 <!-- About Hero Section -->
 <section class="about-hero">
@@ -1675,12 +1600,12 @@
   <div class="container">
     <div class="about-hero-content">
       <div class="about-hero-text">
-        <h1>About ShipFast</h1>
-        <p>ShipFast is a leading logistics and shipping company dedicated to providing fast, reliable, and cost-effective shipping solutions for businesses of all sizes. With our innovative technology and extensive network, we're transforming the logistics industry.</p>
-        <p>Founded in 2015, we've grown from a small local courier service to a nationwide logistics provider, serving thousands of businesses across the country. Our mission is to simplify shipping and logistics for our clients, allowing them to focus on growing their business.</p>
+        <h1><%= translation.pages.aboutus.title %></h1>
+        <p><%= translation.pages.aboutus.missionText %></p>
+        <p><%= translation.pages.aboutus.visionText %></p>
         <a href="#contact" class="btn btn-primary">
           <i class="fas fa-headset"></i>
-          <span>Contact Us</span>
+          <span><%= translation.navigation.contact %></span>
         </a>
       </div>
       <div class="about-hero-image">
@@ -1694,8 +1619,8 @@
 <section class="about-features">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Why Choose Us</h2>
-      <p class="section-subtitle">What sets ShipFast apart from other logistics providers</p>
+      <h2 class="section-title"><%= translation.landing.about.title %></h2>
+      <p class="section-subtitle"><%= translation.landing.about.subtitle %></p>
     </div>
 
     <div class="about-features-grid">
@@ -1703,32 +1628,32 @@
         <div class="about-feature-icon">
           <i class="fas fa-rocket"></i>
         </div>
-        <h3 class="about-feature-title">Speed & Efficiency</h3>
-        <p class="about-feature-description">Our advanced routing algorithms and extensive network enable us to deliver packages faster than traditional carriers, with a 98% on-time delivery rate.</p>
+        <h3 class="about-feature-title"><%= translation.landing.about.features.speed.title %></h3>
+        <p class="about-feature-description"><%= translation.landing.about.features.speed.description %></p>
       </div>
 
       <div class="about-feature">
         <div class="about-feature-icon">
           <i class="fas fa-shield-alt"></i>
         </div>
-        <h3 class="about-feature-title">Reliability & Security</h3>
-        <p class="about-feature-description">Your shipments are in safe hands with our secure handling procedures and real-time tracking technology that monitors every package from pickup to delivery.</p>
+        <h3 class="about-feature-title"><%= translation.landing.about.features.reliability.title %></h3>
+        <p class="about-feature-description"><%= translation.landing.about.features.reliability.description %></p>
       </div>
 
       <div class="about-feature">
         <div class="about-feature-icon">
           <i class="fas fa-hand-holding-usd"></i>
         </div>
-        <h3 class="about-feature-title">Cost-Effective Solutions</h3>
-        <p class="about-feature-description">Our optimized operations and volume-based pricing allow us to offer competitive rates without compromising on service quality or delivery speed.</p>
+        <h3 class="about-feature-title"><%= translation.landing.about.features.cost.title %></h3>
+        <p class="about-feature-description"><%= translation.landing.about.features.cost.description %></p>
       </div>
 
       <div class="about-feature">
         <div class="about-feature-icon">
           <i class="fas fa-headset"></i>
         </div>
-        <h3 class="about-feature-title">Exceptional Support</h3>
-        <p class="about-feature-description">Our dedicated customer service team is available 7 days a week to assist with any questions or concerns, ensuring a smooth shipping experience.</p>
+        <h3 class="about-feature-title"><%= translation.landing.about.features.support.title %></h3>
+        <p class="about-feature-description"><%= translation.landing.about.features.support.description %></p>
       </div>
     </div>
   </div>
@@ -2224,3 +2149,5 @@
     });
   });
 </script>
+<!-- Multilingual Support Scripts -->
+<script src="/assets/rJS/multilingual.js"></script>

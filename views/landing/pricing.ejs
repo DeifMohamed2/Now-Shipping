@@ -1109,87 +1109,8 @@
 <!-- Animation Canvas for Moving Trucks -->
 <canvas id="animationCanvas"></canvas>
 
-<!-- Header -->
-<header>
-  <div class="container header-container">
-    <a href="#" class="logo">
-      <i class="fas fa-truck-fast logo-icon"></i>
-      <span>ShipFast</span>
-    </a>
-
-    <div class="mobile-menu-btn">
-      <i class="fas fa-bars"></i>
-    </div>
-
-    <div class="nav-container">
-      <nav>
-        <ul>
-          <li>
-            <a href="index.html">
-              <i class="fas fa-home"></i>
-              <span>Home</span>
-            </a>
-          </li>
-          <li>
-            <a href="about-us.html">
-              <i class="fas fa-info-circle"></i>
-              <span>About Us</span>
-            </a>
-          </li>
-          <li>
-            <div class="dropdown-toggle">
-              <i class="fas fa-box"></i>
-              <span>Services</span>
-              <i class="fas fa-chevron-down dropdown-arrow"></i>
-            </div>
-            <ul class="dropdown-menu">
-              <li><a href="#"><i class="fas fa-truck-fast"></i> Express Delivery</a></li>
-              <li><a href="#"><i class="fas fa-clock"></i> Same Day Delivery</a></li>
-              <li><a href="#"><i class="fas fa-globe"></i> International Shipping</a></li>
-              <li><a href="#"><i class="fas fa-warehouse"></i> Warehousing</a></li>
-              <li><a href="#"><i class="fas fa-boxes-stacked"></i> Fulfillment</a></li>
-            </ul>
-          </li>
-          <li>
-            <a href="mobile-app.html">
-              <i class="fas fa-mobile-alt"></i>
-              <span>Mobile App</span>
-            </a>
-          </li>
-          <li class="active">
-            <a href="pricing.html">
-              <i class="fas fa-tag"></i>
-              <span>Pricing</span>
-            </a>
-          </li>
-          <li>
-            <a href="faq.html">
-              <i class="fas fa-question-circle"></i>
-              <span>FAQ</span>
-            </a>
-          </li>
-          <li>
-            <a href="#contact">
-              <i class="fas fa-headset"></i>
-              <span>Contact</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      <div class="auth-buttons">
-        <a href="#" class="btn btn-outline">
-          <i class="fas fa-sign-in-alt"></i>
-          <span>Sign In</span>
-        </a>
-        <a href="#" class="btn btn-primary">
-          <i class="fas fa-user-plus"></i>
-          <span>Sign Up</span>
-        </a>
-      </div>
-    </div>
-  </div>
-</header>
+<!-- Professional Navbar -->
+<%- include('../partials/navbar', { activePage: 'pricing' }) %>
 
 <!-- Pricing Hero Section -->
 <section class="pricing-hero">
