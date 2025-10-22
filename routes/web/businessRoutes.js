@@ -7,7 +7,6 @@ const jwtSecret = process.env.JWT_SECRET;
 
 const businessController = require('../../controllers/businessController.js');
 const assistantController = require('../../controllers/assistantController.js');
-const shopController = require('../../controllers/shopController.js');
 
 async function authenticateUser(req, res, next) {
   const token = req.cookies.token;
@@ -30,12 +29,27 @@ async function authenticateUser(req, res, next) {
     req.userData = user; // Attach user data to request object
     if (!user) {
       res.clearCookie('token');
+      // For API requests, return JSON error instead of redirect
+      if (
+        req.path.startsWith('/api/') ||
+        req.headers['content-type'] === 'application/json'
+      ) {
+        return res.status(401).json({ error: 'User not found' });
+      }
       return res.status(401).redirect('/login');
     }
 
     next(); // Move to the next middleware
   } catch (error) {
+    console.error('Authentication error:', error);
     res.clearCookie('token');
+    // For API requests, return JSON error instead of redirect
+    if (
+      req.path.startsWith('/api/') ||
+      req.headers['content-type'] === 'application/json'
+    ) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
     return res.status(401).redirect('/login');
   }
 }
@@ -194,8 +208,16 @@ router.get(
 // router.get('/test-orders', businessController.testOrders);
 
 // Shop routes
-router.get('/shop', shopController.getBusinessShopPage);
-router.get('/shop/orders', shopController.getBusinessShopOrdersPage);
+router.get('/shop', businessController.getBusinessShopPage);
+router.get('/shop/orders', businessController.getBusinessShopOrdersPage);
+router.get('/shop/orders/:id', businessController.getBusinessShopOrderDetailsPage);
+
+// Shop API routes
+router.get('/api/shop/products', businessController.getAvailableProducts);
+router.post('/api/shop/orders', businessController.createShopOrder);
+router.get('/api/shop/orders', businessController.getBusinessShopOrders);
+router.get('/api/shop/orders/:id', businessController.getBusinessShopOrderDetails);
+router.put('/api/shop/orders/:id/cancel', businessController.cancelShopOrder);
 
 // tickets
 router.get('/tickets', businessController.get_ticketsPage);

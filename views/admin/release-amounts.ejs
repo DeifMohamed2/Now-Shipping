@@ -1947,9 +1947,10 @@
                     <tbody>
       ${release.transactionReferences.map(transaction => {
         if (!transaction) return '';
-        const isPositive = ['cashCycle', 'refund', 'deposit'].includes(transaction.transactionType);
+        const isPositive = ['cashCycle', 'refund', 'deposit', 'shopOrderDelivery'].includes(transaction.transactionType);
         const orderCount = transaction.orderReferences ? transaction.orderReferences.length : 0;
         const pickupCount = transaction.pickupReferences ? transaction.pickupReferences.length : 0;
+        const shopOrderCount = transaction.shopOrderReferences ? transaction.shopOrderReferences.length : 0;
                         
                         return `
                           <tr>
@@ -1972,7 +1973,8 @@
                               <div class="small">
                                 ${orderCount > 0 ? `<div><i class="ri-package-line me-1"></i>${orderCount} Orders</div>` : ''}
                                 ${pickupCount > 0 ? `<div><i class="ri-truck-line me-1"></i>${pickupCount} Pickups</div>` : ''}
-                                ${orderCount === 0 && pickupCount === 0 ? '<span class="text-muted">No items</span>' : ''}
+                                ${shopOrderCount > 0 ? `<div><i class="ri-shopping-bag-line me-1"></i>${shopOrderCount} Shop Orders</div>` : ''}
+                                ${orderCount === 0 && pickupCount === 0 && shopOrderCount === 0 ? '<span class="text-muted">No items</span>' : ''}
                               </div>
                             </td>
                             <td>
@@ -2023,7 +2025,8 @@
       'flyersFees': 'Flyers Fees',
       'refund': 'Refund',
       'deposit': 'Deposit',
-      'withdrawal': 'Withdrawal'
+      'withdrawal': 'Withdrawal',
+      'shopOrderDelivery': 'Shop Order Delivery'
     };
     return labels[type] || type;
   }

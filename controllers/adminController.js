@@ -4,6 +4,8 @@ const Pickup = require('../models/pickup');
 const Release = require('../models/releases');
 const User = require('../models/user');
 const Transaction = require('../models/transactions');
+const ShopProduct = require('../models/shopProduct');
+const ShopOrder = require('../models/shopOrder');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const statusHelper = require('../utils/statusHelper');
@@ -11,6 +13,9 @@ const FinancialReconciliation = require('../utils/financialReconciliation');
 const { dailyOrderProcessing, recoverFailedProcessing, processSpecificOrders } = require('../jobs/dailyOrderProcessing');
 const JWT_SECRET = process.env.JWT_SECRET
 const ExcelJS = require('exceljs');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const getDashboardPage = (req, res) => {
   res.render('admin/dashboard', {
     title: 'Dashboard',
@@ -2797,6 +2802,19 @@ const getDetailedTransactionInfo = async (req, res) => {
       }
     }
 
+    // Get related shop orders
+    let shopOrders = [];
+    if (transaction.shopOrderReferences && transaction.shopOrderReferences.length > 0) {
+      const shopOrderIds = transaction.shopOrderReferences.map(ref => ref.shopOrderId).filter(id => id);
+      if (shopOrderIds.length > 0) {
+
+        shopOrders = await ShopOrder.find({ _id: { $in: shopOrderIds } })
+          .populate('business', 'name brandInfo')
+          .populate('assignedCourier', 'name phoneNumber')
+          .lean();
+      }
+    }
+
 
     res.json({
       success: true,
@@ -2804,6 +2822,7 @@ const getDetailedTransactionInfo = async (req, res) => {
         transaction,
         orders,
         pickups,
+        shopOrders,
         business: transaction.business
       }
     });
@@ -2813,6 +2832,626 @@ const getDetailedTransactionInfo = async (req, res) => {
       success: false,
       error: 'Failed to fetch detailed transaction information'
     });
+  }
+};
+
+// ======================================== SHOP PRODUCT MANAGEMENT ======================================== //
+
+// Get shop products management page
+const getShopProductsPage = (req, res) => {
+  res.render('admin/shop-products', {
+    title: 'Shop Products',
+    page_title: 'Shop Products Management',
+    folder: 'Shop',
+  });
+};
+
+// Get all products
+const getProducts = async (req, res) => {
+  try {
+    const {
+      category,
+      isAvailable,
+      search,
+      sortBy = 'createdAt',
+      order = 'desc',
+    } = req.query;
+
+    const query = {};
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (isAvailable !== undefined) {
+      query.isAvailable = isAvailable === 'true';
+    }
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { nameAr: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { sku: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const sortOrder = order === 'desc' ? -1 : 1;
+    const sortOptions = { [sortBy]: sortOrder };
+
+    const products = await ShopProduct.find(query)
+      .populate('createdBy', 'name email')
+      .populate('updatedBy', 'name email')
+      .sort(sortOptions);
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
+};
+
+// Get single product
+const getProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await ShopProduct.findById(id)
+      .populate('createdBy', 'name email')
+      .populate('updatedBy', 'name email');
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.status(200).json(product);
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({ error: 'Failed to fetch product' });
+  }
+};
+
+// Create product
+const createProduct = async (req, res) => {
+  try {
+    // Parse request body if it's a string (from form submission)
+    let data = req.body;
+    if (typeof req.body === 'string') {
+      data = JSON.parse(req.body);
+    }
+
+    // Parse images from JSON string if needed
+    let images = [];
+    if (data.images) {
+      // If images is a JSON string, parse it
+      if (typeof data.images === 'string') {
+        try {
+          images = JSON.parse(data.images);
+        } catch (e) {
+          console.error('Error parsing images JSON:', e);
+          images = [];
+        }
+      } else {
+        // If images is already an array
+        images = data.images;
+      }
+    }
+
+    // Create product data object
+    const productData = {
+      ...data,
+      createdBy: req.adminData._id,
+      images: images,
+    };
+
+    // Parse specifications if sent as JSON string
+    if (typeof productData.specifications === 'string') {
+      productData.specifications = JSON.parse(productData.specifications);
+    }
+    if (typeof productData.specificationsAr === 'string') {
+      productData.specificationsAr = JSON.parse(productData.specificationsAr);
+    }
+
+    const product = new ShopProduct(productData);
+    await product.save();
+
+    res.status(201).json({
+      message: 'Product created successfully',
+      product,
+    });
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(500).json({ error: 'Failed to create product' });
+  }
+};
+
+// Update product
+const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Parse request body if it's a string (from form submission)
+    let data = req.body;
+    if (typeof req.body === 'string') {
+      data = JSON.parse(req.body);
+    }
+
+    // Parse images from JSON string if needed
+    let images = [];
+    if (data.images) {
+      // If images is a JSON string, parse it
+      if (typeof data.images === 'string') {
+        try {
+          images = JSON.parse(data.images);
+        } catch (e) {
+          console.error('Error parsing images JSON:', e);
+          images = [];
+        }
+      } else {
+        // If images is already an array
+        images = data.images;
+      }
+    }
+
+    const updateData = {
+      ...data,
+      updatedBy: req.adminData._id,
+      images: images,
+    };
+
+    // Parse specifications if sent as JSON string
+    if (typeof updateData.specifications === 'string') {
+      updateData.specifications = JSON.parse(updateData.specifications);
+    }
+    if (typeof updateData.specificationsAr === 'string') {
+      updateData.specificationsAr = JSON.parse(updateData.specificationsAr);
+    }
+
+    const product = await ShopProduct.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.status(200).json({
+      message: 'Product updated successfully',
+      product,
+    });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+};
+
+// Delete product
+const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await ShopProduct.findByIdAndDelete(id);
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Delete product images
+    product.images.forEach((imagePath) => {
+      const fullPath = path.join(__dirname, '..', 'public', imagePath);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    });
+
+    res.status(200).json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({ error: 'Failed to delete product' });
+  }
+};
+
+// Bulk update stock
+const bulkUpdateStock = async (req, res) => {
+  try {
+    const { updates } = req.body; // Array of { productId, stock }
+
+    const updatePromises = updates.map(async ({ productId, stock }) => {
+      // Set isAvailable based on stock
+      const isAvailable = stock > 0;
+
+      // Find the product first
+      const product = await ShopProduct.findById(productId);
+      if (product) {
+        // Log stock change
+        console.log(
+          `Updating product ${product.name} (${productId}) stock: ${product.stock} -> ${stock} (isAvailable: ${isAvailable})`
+        );
+
+        // Update with new values
+        return ShopProduct.findByIdAndUpdate(
+          productId,
+          {
+            stock,
+            isAvailable,
+            updatedBy: req.adminData._id,
+          },
+          { new: true }
+        );
+      }
+      return null;
+    });
+
+    const updatedProducts = await Promise.all(updatePromises);
+
+    res.status(200).json({
+      message: 'Stock updated successfully',
+      updatedCount: updatedProducts.filter((p) => p !== null).length,
+    });
+  } catch (error) {
+    console.error('Error updating stock:', error);
+    res.status(500).json({ error: 'Failed to update stock' });
+  }
+};
+
+// ======================================== SHOP ORDERS MANAGEMENT ======================================== //
+
+// Get shop orders management page
+const getShopOrdersPage = (req, res) => {
+  res.render('admin/shop-orders', {
+    title: 'Shop Orders',
+    page_title: 'Shop Orders Management',
+    folder: 'Shop',
+  });
+};
+
+// Get shop order details page for admin
+const getShopOrderDetailsPage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const order = await ShopOrder.findOne({ _id: id })
+      .populate('business', 'brandInfo phone email')
+      .populate('courier', 'name phone')
+      .populate('items.product')
+      .populate('trackingHistory.updatedBy', 'name');
+
+    if (!order) {
+      req.flash('error', 'Order not found');
+      return res.redirect('/admin/shop/orders');
+    }
+
+    // Enhance order with consistent data structure
+    const enhancedOrder = {
+      ...order.toObject(),
+      // Ensure all required fields are present
+      orderNumber: order.orderNumber || 'N/A',
+      status: order.status || 'pending',
+      createdAt: order.createdAt || new Date(),
+      contactInfo: order.contactInfo || {},
+      orderCustomer: order.orderCustomer || {},
+      items: order.items || [],
+      trackingHistory: order.trackingHistory || [],
+      subtotal: order.subtotal || 0,
+      discount: order.discount || 0,
+      tax: order.tax || 0,
+      deliveryFee: order.deliveryFee || 0,
+      totalAmount: order.totalAmount || 0
+    };
+
+    res.render('admin/shop-order-details', {
+      title: 'Shop Order Details',
+      page_title: 'Order Details',
+      folder: 'Shop',
+      order: enhancedOrder
+    });
+  } catch (error) {
+    console.error('Error loading admin shop order details:', error);
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/admin/shop/orders');
+  }
+};
+
+// Get all shop orders
+const getShopOrders = async (req, res) => {
+  try {
+    const { status, paymentStatus, business, courier, startDate, endDate } =
+      req.query;
+
+    const query = {};
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (paymentStatus) {
+      query.paymentStatus = paymentStatus;
+    }
+
+    if (business) {
+      query.business = business;
+    }
+
+    if (courier) {
+      query.courier = courier;
+    }
+
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        query.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        query.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    const orders = await ShopOrder.find(query)
+      .populate('business', 'brandInfo email phone')
+      .populate('courier', 'name phone')
+      .populate('items.product', 'name nameAr images')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error fetching shop orders:', error);
+    res.status(500).json({ error: 'Failed to fetch shop orders' });
+  }
+};
+
+// Get single shop order
+const getShopOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log(`Admin fetching order details for order ID: ${id}`);
+
+    const order = await ShopOrder.findById(id)
+      .populate('business', 'brandInfo email phone')
+      .populate({
+        path: 'courier',
+        model: 'courier',
+        select: 'name phone'
+      })
+      .populate('items.product')
+      .populate({
+        path: 'trackingHistory.updatedBy',
+        model: 'users',
+        select: 'name'
+      });
+
+    if (!order) {
+      console.log(`Admin: Order not found for ID: ${id}`);
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    console.log(`Admin: Order found: ${order.orderNumber}`);
+    
+    // Enhance order with consistent data structure like business controller
+    const enhancedOrder = {
+      ...order.toObject(),
+      // Ensure all required fields are present
+      orderNumber: order.orderNumber || 'N/A',
+      status: order.status || 'pending',
+      createdAt: order.createdAt || new Date(),
+      contactInfo: order.contactInfo || {},
+      orderCustomer: order.orderCustomer || {},
+      items: order.items || [],
+      trackingHistory: order.trackingHistory || [],
+      subtotal: order.subtotal || 0,
+      discount: order.discount || 0,
+      tax: order.tax || 0,
+      deliveryFee: order.deliveryFee || 0,
+      totalAmount: order.totalAmount || 0
+    };
+
+    res.status(200).json(enhancedOrder);
+  } catch (error) {
+    console.error('Error fetching shop order:', error);
+    res.status(500).json({ error: 'Failed to fetch shop order' });
+  }
+};
+
+// Update shop order status
+const updateShopOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, notes, packagingDetails } = req.body;
+
+    const order = await ShopOrder.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    order.status = status;
+    order.updatedBy = req.adminData._id;
+    order.updatedByModel = 'Admin';
+
+    if (notes) {
+      order.adminNotes = notes;
+    }
+
+    if (packagingDetails) {
+      order.packagingDetails = packagingDetails;
+    }
+
+    // Set specific timestamps
+    if (status === 'ready') {
+      order.estimatedDeliveryDate = new Date(
+        Date.now() + 2 * 24 * 60 * 60 * 1000
+      ); // 2 days
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      message: 'Order status updated successfully',
+      order,
+    });
+  } catch (error) {
+    console.error('Error updating shop order status:', error);
+    res.status(500).json({ error: 'Failed to update order status' });
+  }
+};
+
+// Assign courier to shop order
+const assignCourierToShopOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { courierId } = req.body;
+
+    const order = await ShopOrder.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const courier = await Courier.findById(courierId);
+
+    if (!courier) {
+      return res.status(404).json({ error: 'Courier not found' });
+    }
+
+    // Check if courier is already assigned to this order
+    const alreadyAssigned = order.assignedCouriers.some(ac => ac.courier.toString() === courierId);
+    if (alreadyAssigned) {
+      return res.status(400).json({ error: 'Courier is already assigned to this order' });
+    }
+
+    // Add courier to assigned couriers array
+    order.assignedCouriers.push({
+      courier: courierId,
+      courierName: courier.name,
+      courierPhone: courier.phoneNumber,
+      assignedBy: req.adminData._id,
+      assignedByModel: 'Admin',
+    });
+
+    // Set primary courier if not set
+    if (!order.courier) {
+      order.courier = courierId;
+      order.courierName = courier.name;
+      order.courierPhone = courier.phoneNumber;
+    }
+
+    order.status = 'assigned';
+    order.assignedAt = new Date();
+    order.updatedBy = req.adminData._id;
+    order.updatedByModel = 'Admin';
+
+    await order.save();
+
+    // Update courier's assigned shop orders
+    await Courier.findByIdAndUpdate(courierId, {
+      $addToSet: { assignedShopOrders: order._id }
+    });
+
+    res.status(200).json({
+      message: 'Courier assigned successfully',
+      order,
+    });
+  } catch (error) {
+    console.error('Error assigning courier:', error);
+    res.status(500).json({ error: 'Failed to assign courier' });
+  }
+};
+
+// Assign multiple couriers to shop orders
+const assignMultipleCouriersToShopOrders = async (req, res) => {
+  try {
+    const { orderIds, courierId } = req.body;
+
+    if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+      return res.status(400).json({ error: 'Order IDs are required' });
+    }
+
+    if (!courierId) {
+      return res.status(400).json({ error: 'Courier ID is required' });
+    }
+
+    const courier = await Courier.findById(courierId);
+    if (!courier) {
+      return res.status(404).json({ error: 'Courier not found' });
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (const orderId of orderIds) {
+      try {
+        const order = await ShopOrder.findById(orderId);
+        
+        if (!order) {
+          errors.push({ orderId, error: 'Order not found' });
+          continue;
+        }
+
+        // Check if courier is already assigned
+        const alreadyAssigned = order.assignedCouriers.some(ac => ac.courier.toString() === courierId);
+        if (alreadyAssigned) {
+          errors.push({ orderId, error: 'Courier already assigned' });
+          continue;
+        }
+
+        // Add courier to assigned couriers array
+        order.assignedCouriers.push({
+          courier: courierId,
+          courierName: courier.name,
+          courierPhone: courier.phoneNumber,
+          assignedBy: req.adminData._id,
+          assignedByModel: 'Admin',
+        });
+
+        // Set primary courier if not set
+        if (!order.courier) {
+          order.courier = courierId;
+          order.courierName = courier.name;
+          order.courierPhone = courier.phoneNumber;
+        }
+
+        order.status = 'assigned';
+        order.assignedAt = new Date();
+        order.updatedBy = req.adminData._id;
+        order.updatedByModel = 'Admin';
+
+        await order.save();
+
+        // Update courier's assigned shop orders
+        await Courier.findByIdAndUpdate(courierId, {
+          $addToSet: { assignedShopOrders: order._id }
+        });
+
+        results.push({ orderId, success: true });
+      } catch (error) {
+        console.error(`Error assigning courier to order ${orderId}:`, error);
+        errors.push({ orderId, error: error.message });
+      }
+    }
+
+    res.status(200).json({
+      message: `Processed ${orderIds.length} orders`,
+      results,
+      errors,
+      successCount: results.length,
+      errorCount: errors.length,
+    });
+  } catch (error) {
+    console.error('Error assigning multiple couriers:', error);
+    res.status(500).json({ error: 'Failed to assign couriers' });
+  }
+};
+
+// Get all couriers for assignment
+const getAllCouriers = async (req, res) => {
+  try {
+    const couriers = await Courier.find({ isActive: true }).select(
+      'name phone'
+    );
+    res.status(200).json(couriers);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load couriers' });
   }
 };
 
@@ -2903,4 +3542,23 @@ module.exports = {
   // Transaction Details Management
   ,getTransactionDetails
   ,getDetailedTransactionInfo
+
+  // Shop Product Management
+  ,getShopProductsPage
+  ,getProducts
+  ,getProduct
+  ,createProduct
+  ,updateProduct
+  ,deleteProduct
+  ,bulkUpdateStock
+
+  // Shop Orders Management
+  ,getShopOrdersPage
+  ,getShopOrderDetailsPage
+  ,getShopOrders
+  ,getShopOrder
+  ,updateShopOrderStatus
+  ,assignCourierToShopOrder
+  ,assignMultipleCouriersToShopOrders
+  ,getAllCouriers
 };

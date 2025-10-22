@@ -3,9 +3,17 @@ const Transaction = require('../models/transactions');
 const User = require('../models/user');
 const Order = require('../models/order');
 const Pickup = require('../models/pickup');
+const Courier = require('../models/courier');
+const ShopProduct = require('../models/shopProduct');
+const ShopOrder = require('../models/shopOrder');
 const nodemailer = require('nodemailer');
 const statusHelper = require('../utils/statusHelper');
 const ExcelJS = require('exceljs');
+
+// Ensure all models are properly registered with Mongoose
+require('../models/courier');
+require('../models/shopProduct');
+require('../models/shopOrder');
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: Number(process.env.SMTP_PORT || 465),
@@ -2258,33 +2266,33 @@ const get_pickupDetailsPage = async(req, res) => {
   const pickup = await Pickup.findOne({ pickupNumber }).populate('business').populate('assignedDriver');
   console.log(pickup);  
   if (!pickup) {
-
     // Check if the request is from API or web
     if (req.originalUrl.includes('/api/')) {
       // API request - return JSON response
       return res.status(404).json({ error: 'Pickup not found' });
-    }else{
-    res.render('business/pickup-details', {
-      title: 'Pickup Details',
-      page_title: 'Pickup Details',
-      folder: 'Pages',
-      pickup: null,
-    });
-    return;
-    }
-  }
-
-    if (req.originalUrl.includes('/api/')) {
-      // API request - return JSON response
-      return res.status(404).json({ error: 'Pickup not found' });
-    }else{
+    } else {
       res.render('business/pickup-details', {
         title: 'Pickup Details',
         page_title: 'Pickup Details',
         folder: 'Pages',
-        pickup,
+        pickup: null,
       });
+      return;
     }
+  }
+
+  // Pickup found - render the page with pickup data
+  if (req.originalUrl.includes('/api/')) {
+    // API request - return JSON response
+    return res.status(200).json({ pickup });
+  } else {
+    res.render('business/pickup-details', {
+      title: 'Pickup Details',
+      page_title: 'Pickup Details',
+      folder: 'Pages',
+      pickup,
+    });
+  }
 };
 
 const get_pickedupOrders = async (req, res) => {
@@ -2507,10 +2515,11 @@ const get_allTransactionsByDate = async (req, res) => {
     const transactions = await Transaction.find({
       ...dateFilter,
       business: req.userData._id,
-      transactionType: { $in: ['cashCycle', 'fees', 'pickupFees', 'refund', 'deposit', 'withdrawal'] },
+      transactionType: { $in: ['cashCycle', 'fees', 'pickupFees', 'refund', 'deposit', 'withdrawal', 'shopOrderDelivery'] },
     })
     .populate('orderReferences.orderId', 'orderNumber orderShipping orderFees completedDate')
     .populate('pickupReferences.pickupId', 'pickupNumber pickupFees')
+    .populate('shopOrderReferences.shopOrderId', 'orderNumber totalAmount status deliveredDate')
     .sort({ createdAt: -1 });
     
     console.log('Transactions found:', transactions.length);
@@ -2527,18 +2536,22 @@ const get_allTransactionsByDate = async (req, res) => {
       ordersDetails: transaction.ordersDetails,
       orderReferences: transaction.orderReferences || [],
       pickupReferences: transaction.pickupReferences || [],
+      shopOrderReferences: transaction.shopOrderReferences || [],
       totalCashCycleOrders: transaction.totalCashCycleOrders,
       settled: transaction.settled || false,
       settlementStatus: transaction.settlementStatus || 'pending',
       // Calculate summary data
       orderCount: transaction.orderReferences ? transaction.orderReferences.length : 0,
       pickupCount: transaction.pickupReferences ? transaction.pickupReferences.length : 0,
+      shopOrderCount: transaction.shopOrderReferences ? transaction.shopOrderReferences.length : 0,
       totalOrderAmount: transaction.orderReferences ? 
         transaction.orderReferences.reduce((sum, ref) => sum + (ref.orderAmount || 0), 0) : 0,
       totalOrderFees: transaction.orderReferences ? 
         transaction.orderReferences.reduce((sum, ref) => sum + (ref.orderFees || 0), 0) : 0,
       totalPickupFees: transaction.pickupReferences ? 
-        transaction.pickupReferences.reduce((sum, ref) => sum + (ref.pickupFees || 0), 0) : 0
+        transaction.pickupReferences.reduce((sum, ref) => sum + (ref.pickupFees || 0), 0) : 0,
+      totalShopOrderAmount: transaction.shopOrderReferences ? 
+        transaction.shopOrderReferences.reduce((sum, ref) => sum + (ref.totalAmount || 0), 0) : 0
     }));
     
     res.status(200).json(enhancedTransactions || []);
@@ -2667,6 +2680,7 @@ const exportTransactionsToExcel = async (req, res) => {
     const transactions = await Transaction.find(query)
       .populate('orderReferences.orderId', 'orderNumber orderShipping orderFees completedDate')
       .populate('pickupReferences.pickupId', 'pickupNumber pickupFees completedDate')
+      .populate('shopOrderReferences.shopOrderId', 'orderNumber totalAmount status deliveredDate')
       .sort({ createdAt: -1 });
     
     // Create Excel workbook
@@ -2788,12 +2802,14 @@ const get_cashCyclesPage = (req, res) => {
 
 const get_totalCashCycleByDate = async (req, res) => {
   try {
-    const { timePeriod } = req.query;
+    const { timePeriod, orderType, releaseStatus, searchTerm } = req.query;
     let dateFilter = {};
     const now = new Date();
     
     // Ensure business ID is properly formatted
     const businessId = req.userData._id;
+    
+    console.log('Filter parameters:', { timePeriod, orderType, releaseStatus, searchTerm });
 
     // Set date filter based on time period
     switch(timePeriod) {
@@ -2861,10 +2877,41 @@ const get_totalCashCycleByDate = async (req, res) => {
     const orderStatusesToProcess = ['completed', 'returned', 'canceled', 'returnCompleted'];
     
     // First try with all relevant statuses and date filter
+    // Build additional filters
+    let additionalFilters = {};
+    
+    // Order type filter
+    if (orderType && orderType !== 'all') {
+      additionalFilters['orderShipping.orderType'] = orderType;
+    }
+    
+    // Release status filter
+    if (releaseStatus && releaseStatus !== 'all') {
+      if (releaseStatus === 'released') {
+        additionalFilters.moneyReleaseDate = { $exists: true, $ne: null };
+      } else if (releaseStatus === 'pending') {
+        additionalFilters.moneyReleaseDate = { $exists: false };
+      }
+    }
+    
+    // Search term filter
+    if (searchTerm && searchTerm.trim() !== '') {
+      const searchRegex = new RegExp(searchTerm.trim(), 'i');
+      additionalFilters.$or = [
+        { orderNumber: searchRegex },
+        { 'orderCustomer.fullName': searchRegex },
+        { 'orderCustomer.government': searchRegex },
+        { 'orderCustomer.zone': searchRegex }
+      ];
+    }
+    
+    console.log('Additional filters applied:', additionalFilters);
+    
     orders = await Order.find({ 
       business: businessId,
       orderStatus: { $in: orderStatusesToProcess },
-      ...dateFilter
+      ...dateFilter,
+      ...additionalFilters
     }).populate('deliveryMan', 'name phone')
       .sort({ completedDate: -1 });
     
@@ -2950,7 +2997,7 @@ const get_totalCashCycleByDate = async (req, res) => {
     // Get transaction data for better insights (include all transaction types)
     const transactions = await Transaction.find({
       business: businessId,
-      transactionType: { $in: ['cashCycle', 'fees', 'pickupFees', 'returnFees', 'cancellationFees', 'returnCompletedFees'] },
+      transactionType: { $in: ['cashCycle', 'fees', 'pickupFees', 'returnFees', 'cancellationFees', 'returnCompletedFees', 'shopOrderDelivery'] },
       ...dateFilter
     }).sort({ createdAt: -1 });
     
@@ -2962,7 +3009,7 @@ const get_totalCashCycleByDate = async (req, res) => {
       .reduce((acc, t) => acc + (t.transactionAmount || 0), 0);
     
     const transactionFees = transactions
-      .filter(t => ['fees', 'pickupFees', 'returnFees', 'cancellationFees', 'returnCompletedFees'].includes(t.transactionType))
+      .filter(t => ['fees', 'pickupFees', 'returnFees', 'cancellationFees', 'returnCompletedFees', 'shopOrderDelivery'].includes(t.transactionType))
       .reduce((acc, t) => acc + Math.abs(t.transactionAmount || 0), 0);
 
     console.log('Orders found:', orders.length, 'Total income:', totalIncome, 'Total fees:', totalFees);
@@ -3583,6 +3630,440 @@ const recoverOrderCourier = async (req, res) => {
   }
 };
 
+// ======================================== SHOP FUNCTIONS ======================================== //
+
+// Get shop page for business
+const getBusinessShopPage = async (req, res) => {
+  try {
+    // Find products with stock > 0 and are available
+    console.log('Searching for products with isAvailable: true and stock > 0');
+    let products = await ShopProduct.find({
+      isAvailable: true,
+      stock: { $gt: 0 },
+    })
+      .select(
+        'name nameAr category price discount stock unit images description descriptionAr isAvailable sku'
+      )
+      .sort({ category: 1, name: 1 });
+
+    console.log(
+      `Found ${products.length} available products with isAvailable=true and stock > 0`
+    );
+
+    // If no products found, check if there are any products with stock but may not be marked as available
+    if (products.length === 0) {
+      console.log(
+        'No products with isAvailable=true, checking for products with stock > 0'
+      );
+      products = await ShopProduct.find({ stock: { $gt: 0 } })
+        .select(
+          'name nameAr category price discount stock unit images description descriptionAr isAvailable sku'
+        )
+        .sort({ category: 1, name: 1 });
+
+      console.log(
+        `Found ${products.length} total products with stock > 0 regardless of availability flag`
+      );
+
+      // If still no products, log a sample of all products for debugging
+      if (products.length === 0) {
+        const allProducts = await ShopProduct.find({}).limit(5);
+        console.log(
+          'Sample of all products in database:',
+          allProducts.map((p) => ({
+            id: p._id,
+            name: p.name,
+            isAvailable: p.isAvailable,
+            stock: p.stock,
+          }))
+        );
+      }
+    }
+
+    // Convert to plain objects with virtuals
+    const productsWithVirtuals = products.map((product) => {
+      const plainProduct = product.toObject({ virtuals: true });
+      // Add additional fields that may be expected by the template
+      plainProduct.packQuantity = plainProduct.packQuantity || 1; // Default pack quantity if not defined
+
+      // Ensure finalPrice is calculated correctly
+      if (typeof plainProduct.finalPrice === 'undefined') {
+        if (plainProduct.discount > 0) {
+          plainProduct.finalPrice =
+            plainProduct.price -
+            (plainProduct.price * plainProduct.discount) / 100;
+        } else {
+          plainProduct.finalPrice = plainProduct.price;
+        }
+      }
+
+      console.log(
+        `Product ${plainProduct.name}: category=${plainProduct.category}, price=${plainProduct.price}, discount=${plainProduct.discount}, finalPrice=${plainProduct.finalPrice}, isAvailable=${plainProduct.isAvailable}, stock=${plainProduct.stock}`
+      );
+      return plainProduct;
+    });
+
+    // Group products with virtuals by category
+    const productsByCategory = productsWithVirtuals.reduce((acc, product) => {
+      if (!acc[product.category]) {
+        acc[product.category] = [];
+      }
+      acc[product.category].push(product);
+      return acc;
+    }, {});
+
+    // Define all available categories whether they have products or not
+    const allCategories = [
+      'Packaging',
+      'Labels',
+      'Boxes',
+      'Bags',
+      'Tape',
+      'Bubble Wrap',
+      'Other',
+    ];
+
+    res.render('business/shop', {
+      title: 'Shop',
+      page_title: 'Shop Products',
+      folder: 'Shop',
+      products: productsWithVirtuals,
+      productsByCategory: productsByCategory,
+      allCategories: allCategories,
+      user: req.userData,
+      userData: req.userData, // Make sure userData is available for the template
+    });
+  } catch (error) {
+    console.error('Error loading shop page:', error);
+    res.status(500).render('error', { message: 'Error loading shop page' });
+  }
+};
+
+// Get available products for business
+const getAvailableProducts = async (req, res) => {
+  try {
+    const {
+      category,
+      search,
+      sortBy = 'createdAt',
+      order = 'desc',
+    } = req.query;
+
+    const query = { isAvailable: true, stock: { $gt: 0 } };
+
+    if (category && category !== 'all') {
+      query.category = category;
+    }
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { nameAr: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const sortOrder = order === 'desc' ? -1 : 1;
+    const sortOptions = { [sortBy]: sortOrder };
+
+    const products = await ShopProduct.find(query)
+      .select('-createdBy -updatedBy')
+      .sort(sortOptions);
+
+    // Convert to plain objects with virtuals
+    const productsWithVirtuals = products.map((product) =>
+      product.toObject({ virtuals: true })
+    );
+
+    res.status(200).json(productsWithVirtuals);
+  } catch (error) {
+    console.error('Error fetching available products:', error);
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
+};
+
+// Create shop order from business
+const createShopOrder = async (req, res) => {
+  try {
+    const { items, fullName, phoneNumber, address, government, zone, notes } =
+      req.body;
+    const businessId = req.userData._id;
+
+    // Validate required delivery information
+    if (!fullName || !phoneNumber || !address || !government || !zone) {
+      return res.status(400).json({
+        error: 'All delivery information fields are required',
+      });
+    }
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ error: 'Cart is empty' });
+    }
+
+    // Validate and prepare order items
+    const orderItems = [];
+    let subtotal = 0;
+    let totalTax = 0;
+
+    for (const item of items) {
+      const product = await ShopProduct.findById(item.productId);
+
+      if (!product) {
+        return res
+          .status(404)
+          .json({ error: `Product ${item.productId} not found` });
+      }
+
+      if (!product.isInStock(item.quantity)) {
+        return res.status(400).json({
+          error: `Product ${product.name} is out of stock or insufficient quantity`,
+        });
+      }
+
+      const unitPrice = product.finalPrice;
+      const itemSubtotal = unitPrice * item.quantity;
+      const itemTax = (itemSubtotal * product.taxRate) / 100;
+
+      orderItems.push({
+        product: product._id,
+        productName: product.name,
+        productNameAr: product.nameAr,
+        quantity: item.quantity,
+        unitPrice: unitPrice,
+        discount: product.discount,
+        tax: itemTax,
+        subtotal: itemSubtotal,
+      });
+
+      subtotal += itemSubtotal;
+      totalTax += itemTax;
+
+      // Reduce stock
+      await product.reduceStock(item.quantity);
+    }
+
+    // Get business info
+    const business = await User.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    // Calculate delivery fee using the same logic as normal orders
+    const { calculateOrderFee } = require('../utils/fees');
+    const deliveryFee = calculateOrderFee(government, 'Deliver', false);
+
+    // Create shop order
+    const shopOrder = new ShopOrder({
+      business: businessId,
+      businessName: business.brandInfo?.brandName || business.name,
+      items: orderItems,
+      subtotal,
+      tax: totalTax,
+      deliveryFee,
+      totalAmount: subtotal + totalTax + deliveryFee,
+      orderCustomer: {
+        fullName,
+        phoneNumber,
+        address,
+        government,
+        zone,
+      },
+      contactInfo: {
+        name: fullName,
+        phone: phoneNumber,
+      },
+      notes,
+      createdBy: businessId,
+    });
+
+    await shopOrder.save();
+
+    res.status(201).json({
+      message: 'Order placed successfully',
+      order: shopOrder,
+    });
+  } catch (error) {
+    console.error('Error creating shop order:', error);
+    res.status(500).json({ error: 'Failed to create order' });
+  }
+};
+
+// Get business shop orders page
+const getBusinessShopOrdersPage = (req, res) => {
+  res.render('business/shop-orders', {
+    title: 'Shop Orders',
+    page_title: 'My Shop Orders',
+    folder: 'Shop',
+  });
+};
+
+// Get business shop order details page
+const getBusinessShopOrderDetailsPage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userData = req.userData;
+    
+    if (!userData || !userData._id) {
+      req.flash('error', 'Unauthorized');
+      return res.redirect('/business/shop/orders');
+    }
+
+    const order = await ShopOrder.findOne({ _id: id, business: userData._id })
+      .populate('items.product')
+      .populate({
+        path: 'courier',
+        model: 'courier',
+        select: 'name phone'
+      })
+      .populate({
+        path: 'trackingHistory.updatedBy',
+        model: 'users',
+        select: 'name'
+      });
+
+    if (!order) {
+      req.flash('error', 'Order not found');
+      return res.redirect('/business/shop/orders');
+    }
+
+    // Enhance order with consistent data structure
+    const enhancedOrder = {
+      ...order.toObject(),
+      // Ensure all required fields are present
+      orderNumber: order.orderNumber || 'N/A',
+      status: order.status || 'pending',
+      createdAt: order.createdAt || new Date(),
+      contactInfo: order.contactInfo || {},
+      orderCustomer: order.orderCustomer || {},
+      items: order.items || [],
+      trackingHistory: order.trackingHistory || [],
+      subtotal: order.subtotal || 0,
+      discount: order.discount || 0,
+      tax: order.tax || 0,
+      deliveryFee: order.deliveryFee || 0,
+      totalAmount: order.totalAmount || 0
+    };
+
+    res.render('business/shop-order-details', {
+      title: 'Shop Order Details',
+      page_title: 'Order Details',
+      folder: 'Shop',
+      order: enhancedOrder,
+      userData: userData
+    });
+  } catch (error) {
+    console.error('Error loading shop order details:', error);
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/business/shop/orders');
+  }
+};
+
+// Get business shop orders
+const getBusinessShopOrders = async (req, res) => {
+  try {
+    const businessId = req.userData._id;
+    const { status } = req.query;
+
+    const query = { business: businessId };
+
+    if (status) {
+      query.status = status;
+    }
+
+    const orders = await ShopOrder.find(query)
+      .populate('items.product', 'name nameAr images')
+      .populate({
+        path: 'courier',
+        model: 'courier',
+        select: 'name phone'
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error fetching business shop orders:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+};
+
+// Get business shop order details
+const getBusinessShopOrderDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const businessId = req.userData._id;
+
+    console.log(`Fetching order details for order ID: ${id}, business ID: ${businessId}`);
+
+    const order = await ShopOrder.findOne({ _id: id, business: businessId })
+      .populate('items.product')
+      .populate({
+        path: 'courier',
+        model: 'courier',
+        select: 'name phone'
+      })
+      .populate({
+        path: 'trackingHistory.updatedBy',
+        model: 'users',
+        select: 'name'
+      });
+
+    if (!order) {
+      console.log(`Order not found for ID: ${id}, business: ${businessId}`);
+      return res.status(404).json({ error: 'Order not found or you do not have permission to view this order' });
+    }
+
+    console.log(`Order found: ${order.orderNumber}`);
+    res.status(200).json(order);
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    res.status(500).json({ error: 'Failed to fetch order details' });
+  }
+};
+
+// Cancel shop order
+const cancelShopOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const businessId = req.userData._id;
+
+    const order = await ShopOrder.findOne({ _id: id, business: businessId });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (!['pending', 'confirmed'].includes(order.status)) {
+      return res.status(400).json({
+        error: 'Order cannot be cancelled at this stage',
+      });
+    }
+
+    // Restore stock
+    for (const item of order.items) {
+      const product = await ShopProduct.findById(item.product);
+      if (product) {
+        await product.increaseStock(item.quantity);
+      }
+    }
+
+    order.status = 'cancelled';
+    order.cancellationReason = reason;
+    order.updatedBy = businessId;
+    order.updatedByModel = 'User';
+
+    await order.save();
+
+    res.status(200).json({
+      message: 'Order cancelled successfully',
+      order,
+    });
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    res.status(500).json({ error: 'Failed to cancel order' });
+  }
+};
+
 module.exports = {
   getDashboardPage,
   getDashboardData,
@@ -3652,6 +4133,16 @@ module.exports = {
   returnToWarehouseFromWaiting,
   cancelFromWaiting,
   recoverOrderCourier,
+  
+  // Shop functions
+  getBusinessShopPage,
+  getAvailableProducts,
+  createShopOrder,
+  getBusinessShopOrdersPage,
+  getBusinessShopOrderDetailsPage,
+  getBusinessShopOrders,
+  getBusinessShopOrderDetails,
+  cancelShopOrder,
   
 };
 

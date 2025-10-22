@@ -5,7 +5,6 @@ const Courier = require('../../models/courier.js');
 const jwtSecret = process.env.JWT_SECRET;
 
 const courierController = require('../../controllers/courierController.js');
-const shopController = require('../../controllers/shopController.js');
 
 async function authenticateCourier(req, res, next) {
   const token = req.cookies.token;
@@ -116,7 +115,13 @@ router.delete(
 router.put('/complete-pickup/:pickupNumber', courierController.completePickup);
 
 // Shop deliveries routes
-router.get('/shop-orders', shopController.getCourierShopOrdersPage);
+router.get('/shop-orders', courierController.getCourierShopOrdersPage);
+router.get('/shop-orders/:id', courierController.getCourierShopOrderDetailsPage);
+
+// Shop API routes
+router.get('/api/shop/orders', courierController.getCourierShopOrders);
+router.get('/api/shop/orders/:id', courierController.getCourierShopOrderDetails);
+router.put('/api/shop/orders/:id/status', courierController.updateCourierShopOrderStatus);
 
 //logout
 

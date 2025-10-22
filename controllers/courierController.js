@@ -2,6 +2,7 @@ const Order = require('../models/order');
 const Courier = require('../models/courier');
 const Pickup = require('../models/pickup');
 const User = require('../models/user');
+const ShopOrder = require('../models/shopOrder');
 const statusHelper = require('../utils/statusHelper');
 const { calculatePickupFee } = require('../utils/fees');
 
@@ -1498,6 +1499,182 @@ const scanFastShippingOrder = async (req, res) => {
   }
 };
 
+// ======================================== SHOP FUNCTIONS ======================================== //
+
+// Get courier shop orders page
+const getCourierShopOrdersPage = (req, res) => {
+  res.render('courier/shop-orders', {
+    title: 'Shop Orders',
+    page_title: 'Shop Deliveries',
+    folder: 'Shop',
+  });
+};
+
+// Get courier shop order details page
+const getCourierShopOrderDetailsPage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const courierId = req.courierData._id;
+    
+    if (!courierId) {
+      req.flash('error', 'Unauthorized');
+      return res.redirect('/courier/shop-orders');
+    }
+
+    const order = await ShopOrder.findOne({ _id: id, courier: courierId })
+      .populate('business', 'brandInfo phone email')
+      .populate('items.product')
+      .populate('trackingHistory.updatedBy', 'name');
+
+    if (!order) {
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/shop-orders');
+    }
+
+    // Enhance order with consistent data structure
+    const enhancedOrder = {
+      ...order.toObject(),
+      // Ensure all required fields are present
+      orderNumber: order.orderNumber || 'N/A',
+      status: order.status || 'pending',
+      createdAt: order.createdAt || new Date(),
+      contactInfo: order.contactInfo || {},
+      orderCustomer: order.orderCustomer || {},
+      items: order.items || [],
+      trackingHistory: order.trackingHistory || [],
+      subtotal: order.subtotal || 0,
+      discount: order.discount || 0,
+      tax: order.tax || 0,
+      deliveryFee: order.deliveryFee || 0,
+      totalAmount: order.totalAmount || 0
+    };
+
+    res.render('courier/shop-order-details', {
+      title: 'Shop Order Details',
+      page_title: 'Delivery Details',
+      folder: 'Shop',
+      order: enhancedOrder,
+      courierData: req.courierData
+    });
+  } catch (error) {
+    console.error('Error loading courier shop order details:', error);
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/shop-orders');
+  }
+};
+
+// Get courier shop orders
+const getCourierShopOrders = async (req, res) => {
+  try {
+    const courierId = req.courierData._id;
+    const { status } = req.query;
+
+    const query = { courier: courierId };
+
+    if (status) {
+      query.status = status;
+    }
+
+    const orders = await ShopOrder.find(query)
+      .populate('business', 'brandInfo phone')
+      .populate('items.product', 'name nameAr images')
+      .sort({ assignedAt: -1 });
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error fetching courier shop orders:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+};
+
+// Get courier shop order details
+const getCourierShopOrderDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const courierId = req.courierData._id;
+
+    const order = await ShopOrder.findOne({ _id: id, courier: courierId })
+      .populate('business', 'brandInfo phone email')
+      .populate('items.product');
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.status(200).json(order);
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    res.status(500).json({ error: 'Failed to fetch order details' });
+  }
+};
+
+// Update courier shop order status
+const updateCourierShopOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, location, notes } = req.body;
+    const courierId = req.courierData._id;
+
+    const order = await ShopOrder.findOne({ _id: id, courier: courierId });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Validate status transition with professional error handling
+    const validTransitions = {
+      assigned: ['in_transit'],
+      in_transit: ['delivered', 'returned'],
+    };
+
+    if (!validTransitions[order.status]?.includes(status)) {
+      return res.status(400).json({
+        error: `Invalid status transition from '${order.status}' to '${status}'. Valid transitions: ${validTransitions[order.status]?.join(', ') || 'none'}`,
+      });
+    }
+
+    // Update order status with professional handling
+    const previousStatus = order.status;
+    order.status = status;
+    order.updatedBy = courierId;
+    order.updatedByModel = 'Courier';
+
+    // Set specific timestamps based on status
+    if (status === 'in_transit') {
+      order.pickedUpAt = new Date();
+    } else if (status === 'delivered') {
+      order.deliveredAt = new Date();
+      order.paymentStatus = 'paid';
+    }
+
+    // Add location to tracking if provided
+    if (location && order.trackingHistory.length > 0) {
+      order.trackingHistory[order.trackingHistory.length - 1].location = location;
+    }
+
+    // Add courier notes professionally
+    if (notes) {
+      const timestamp = new Date().toISOString();
+      order.notes = (order.notes ? order.notes + '\n' : '') + `[${timestamp}] [Courier] ${notes}`;
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      message: `Order status successfully updated from '${previousStatus}' to '${status}'`,
+      order: {
+        _id: order._id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        updatedAt: order.updatedAt
+      },
+    });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ error: 'Failed to update order status' });
+  }
+};
+
 module.exports = {
   getDashboardPage,
   get_ordersPage,
@@ -1523,4 +1700,11 @@ module.exports = {
   getCurrentReturnStage,
   getNextReturnAction,
   scanFastShippingOrder,
+
+  // Shop functions
+  getCourierShopOrdersPage,
+  getCourierShopOrderDetailsPage,
+  getCourierShopOrders,
+  getCourierShopOrderDetails,
+  updateCourierShopOrderStatus,
 };

@@ -23,6 +23,7 @@ const transactionSchema = new Schema(
         'returnFees',
         'cancellationFees',
         'returnCompletedFees',
+        'shopOrderDelivery',
       ],
     },
     ordersDetails: {
@@ -67,6 +68,25 @@ const transactionSchema = new Schema(
         required: false
       },
       completedDate: {
+        type: Date,
+        required: false
+      }
+    }],
+    shopOrderReferences: [{
+      shopOrderId: {
+        type: Schema.Types.ObjectId,
+        ref: 'ShopOrder',
+        required: false
+      },
+      orderNumber: {
+        type: String,
+        required: false
+      },
+      totalAmount: {
+        type: Number,
+        required: false
+      },
+      deliveredDate: {
         type: Date,
         required: false
       }

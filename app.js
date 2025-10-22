@@ -26,7 +26,6 @@ const AuthRouterApi = require('./routes/api/v1/auth');
 const businessRouterApi = require('./routes/api/v1/business');
 const assistantRouterApi = require('./routes/api/v1/assistant');
 const courierRouterApi = require('./routes/api/v1/courier');
-const shopRouterApi = require('./routes/api/v1/shop');
 
 // Import jobs
 const { dailyOrderProcessing } = require('./jobs/dailyOrderProcessing');
@@ -147,9 +146,6 @@ app.use('/api/v1/auth', AuthRouterApi);
 app.use('/api/v1/business', businessRouterApi);
 app.use('/api/v1/assistant', assistantRouterApi);
 app.use('/api/v1/courier', courierRouterApi);
-
-// Shop API routes
-app.use('/api', shopRouterApi);
 
 // Catch-all 404 handler (use app.use to avoid path-to-regexp parsing issues)
 app.use(function (req, res) {

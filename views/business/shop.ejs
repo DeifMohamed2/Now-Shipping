@@ -443,40 +443,18 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Government <span class="text-danger">*</span></label>
-            <select id="government" class="swal2-input" style="width: 100%;">
+            <select id="government" class="swal2-input" style="width: 100%;" onchange="updateZoneOptions()">
               <option value="">Select Government</option>
               <option value="Cairo">Cairo</option>
               <option value="Giza">Giza</option>
               <option value="Alexandria">Alexandria</option>
-              <option value="Qalyubia">Qalyubia</option>
-              <option value="Dakahlia">Dakahlia</option>
-              <option value="Sharqia">Sharqia</option>
-              <option value="Gharbia">Gharbia</option>
-              <option value="Monufia">Monufia</option>
-              <option value="Beheira">Beheira</option>
-              <option value="Kafr el-Sheikh">Kafr el-Sheikh</option>
-              <option value="Damietta">Damietta</option>
-              <option value="Port Said">Port Said</option>
-              <option value="Ismailia">Ismailia</option>
-              <option value="Suez">Suez</option>
-              <option value="Fayoum">Fayoum</option>
-              <option value="Beni Suef">Beni Suef</option>
-              <option value="Minya">Minya</option>
-              <option value="Asyut">Asyut</option>
-              <option value="Sohag">Sohag</option>
-              <option value="Qena">Qena</option>
-              <option value="Luxor">Luxor</option>
-              <option value="Aswan">Aswan</option>
-              <option value="Red Sea">Red Sea</option>
-              <option value="Matrouh">Matrouh</option>
-              <option value="North Sinai">North Sinai</option>
-              <option value="South Sinai">South Sinai</option>
-              <option value="New Valley">New Valley</option>
             </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Zone <span class="text-danger">*</span></label>
-            <input type="text" id="zone" class="swal2-input" placeholder="Enter zone/area" style="width: 100%;">
+            <select id="zone" class="swal2-input" style="width: 100%;">
+              <option value="">Select Zone</option>
+            </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Address <span class="text-danger">*</span></label>
@@ -588,7 +566,7 @@
 
     // Submit order
     try {
-      const response = await fetch('/api/shop/orders', {
+      const response = await fetch('/business/api/shop/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -632,4 +610,94 @@
       });
     }
   }
+
+  // Zone options data (same as create-order.ejs)
+  const zoneOptions = {
+    'Cairo': [
+      { group: 'Cairo - Downtown & Central', zones: ['Downtown', 'Garden City', 'Zamalek', 'Dokki', 'Mohandessin', 'Agouza', 'Bulaq', 'Azbakeya', 'Abdeen', 'Attaba', 'Ramses', 'Qasr El Nil', 'Talaat Harb', 'Tahrir Square'] },
+      { group: 'Cairo - East', zones: ['Nasr City', 'Nasr City - First Zone', 'Nasr City - Second Zone', 'Nasr City - Third Zone', 'Nasr City - Fourth Zone', 'Nasr City - Seventh Zone', 'Nasr City - Eighth Zone', 'Nasr City - Tenth Zone', 'Heliopolis', 'Heliopolis - Korba', 'Heliopolis - Triumph', 'Heliopolis - Cleopatra', 'Heliopolis - Almaza', 'Masr El Gedida', 'El Nozha', 'El Nozha El Gedida', 'El Zeitoun', 'Ain Shams', 'Ain Shams - Ezbet El Nakhl', 'El Marg', 'El Marg El Gedida'] },
+      { group: 'Cairo - South & New Cairo', zones: ['Maadi', 'New Cairo', 'Fifth Settlement', 'First Settlement', 'Katameya', 'El Mokattam', 'El Basateen', 'Dar El Salam', 'El Rehab', 'El Tagamoa', 'El Shorouk', 'Badr City', 'Helwan', '15th of May City', 'Hadayek Helwan'] },
+      { group: 'Cairo - West', zones: ['Mohandessin', 'Dokki', 'Boulaq El Dakrour', 'Imbaba', 'Agouza', 'Warraq', 'Rod El Farag', 'Shobra', 'Shobra El Kheima'] }
+    ],
+    'Giza': [
+      { group: 'Giza - Central & East', zones: ['Giza Square', 'Dokki', 'Mohandessin', 'Agouza', 'Haram', 'Faisal', 'Imbaba', 'Kit Kat', 'El Manial', 'Boulaq El Dakrour', 'El Saff', 'El Hawamdeya'] },
+      { group: 'Giza - West & 6th October', zones: ['Sheikh Zayed', '6th of October', 'Hadayek Al Ahram', 'Al Wahat Road', 'Smart Village', 'Egyptian Media Production City'] }
+    ],
+    'Alexandria': [
+      { group: 'Alexandria - East', zones: ['Sidi Gaber', 'Sporting', 'Camp Caesar', 'Smouha', 'Victoria', 'Bolkly', 'Ibrahimia', 'Laurent', 'Loran'] },
+      { group: 'Alexandria - Central & West', zones: ['Bahary', 'Anfushi', 'Manshiya', 'Attarin', 'Gomrok', 'Karmouz', 'Moharam Bek', 'Dekhela', 'Agami', 'Amreya', 'Borg El Arab', 'King Mariout', 'Wardian', 'Bacos'] },
+      { group: 'Alexandria - East & Montaza', zones: ['Sidi Bishr', 'Miami', 'Asafra', 'Mandara', 'Montaza', 'Abu Qir', 'El Maamoura', 'El Max', 'Aboukir', 'Semouha', 'Fleming', 'El Zahria', 'Gianaclis'] }
+    ]
+  };
+
+  // Function to update zone options based on selected government
+  function updateZoneOptions() {
+    const governmentSelect = document.getElementById('government');
+    const zoneSelect = document.getElementById('zone');
+    const selectedGovernment = governmentSelect.value;
+
+    // Clear existing options
+    zoneSelect.innerHTML = '<option value="">Select Zone</option>';
+
+    if (selectedGovernment && zoneOptions[selectedGovernment]) {
+      const governmentZones = zoneOptions[selectedGovernment];
+      
+      governmentZones.forEach(group => {
+        // Add optgroup
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = group.group;
+        
+        // Add zone options
+        group.zones.forEach(zone => {
+          const option = document.createElement('option');
+          option.value = zone;
+          option.textContent = zone;
+          optgroup.appendChild(option);
+        });
+        
+        zoneSelect.appendChild(optgroup);
+      });
+    }
+  }
+
+  // Get user's pickup address data and pre-fill form
+  function prefillDeliveryForm() {
+    const userData = <%- JSON.stringify(userData) %>;
+    const pickupAddress = userData.pickUpAdress || {};
+    
+    if (pickupAddress.city) {
+      const governmentSelect = document.getElementById('government');
+      const zoneSelect = document.getElementById('zone');
+      
+      // Set government
+      governmentSelect.value = pickupAddress.city;
+      
+      // Update zone options and set zone
+      updateZoneOptions();
+      
+      // Set zone after a short delay to ensure options are loaded
+      setTimeout(() => {
+        zoneSelect.value = pickupAddress.zone || '';
+      }, 100);
+    }
+  }
+
+  // Call prefill function when the modal is shown
+  document.addEventListener('DOMContentLoaded', function() {
+    // Override the SweetAlert2 show event to prefill form
+    const originalSwalFire = window.Swal.fire;
+    window.Swal.fire = function(options) {
+      if (options.title === 'Delivery Information') {
+        const result = originalSwalFire.call(this, options);
+        
+        // Prefill form after modal is shown
+        setTimeout(() => {
+          prefillDeliveryForm();
+        }, 100);
+        
+        return result;
+      }
+      return originalSwalFire.call(this, options);
+    };
+  });
 </script>

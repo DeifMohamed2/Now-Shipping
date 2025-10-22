@@ -6,7 +6,6 @@ const Notification = require('../../models/notification.js');
 
 const adminController = require('../../controllers/adminController.js');
 const notificationController = require('../../controllers/notificationController.js');
-const shopController = require('../../controllers/shopController.js');
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -267,8 +266,25 @@ router.get(
   adminController.getDetailedTransactionInfo
 );
 
-// Shop Management routes
-router.get('/shop/products', shopController.getShopProductsPage);
-router.get('/shop/orders', shopController.getShopOrdersPage);
+// Admin Shop API routes (must come before page routes to avoid conflicts)
+router.get('/api/shop/products', adminController.getProducts);
+router.post('/api/shop/products', adminController.createProduct);
+router.get('/api/shop/products/:id', adminController.getProduct);
+router.put('/api/shop/products/:id', adminController.updateProduct);
+router.delete('/api/shop/products/:id', adminController.deleteProduct);
+
+router.get('/api/shop/orders', adminController.getShopOrders);
+router.get('/api/shop/orders/:id', adminController.getShopOrder);
+router.put('/api/shop/orders/:id/status', adminController.updateShopOrderStatus);
+router.put('/api/shop/orders/:id/assign-courier', adminController.assignCourierToShopOrder);
+router.post('/api/shop/orders/assign-multiple-couriers', adminController.assignMultipleCouriersToShopOrders);
+router.get('/api/shop/couriers-by-zone', adminController.get_deliveryMenByZone);
+router.get('/api/couriers', adminController.get_couriers);
+router.get('/api/admin/couriers', adminController.getAllCouriers);
+
+// Shop Management page routes
+router.get('/shop/products', adminController.getShopProductsPage);
+router.get('/shop/orders', adminController.getShopOrdersPage);
+router.get('/shop/orders/:id', adminController.getShopOrderDetailsPage);
 
 module.exports = router;

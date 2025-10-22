@@ -53,6 +53,16 @@ const courierSchema = new Schema(
       ref: 'pickup',
       required: false,
     },
+    assignedShopOrders: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'ShopOrder',
+      required: false,
+    },
+    shopOrdersHistory: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'ShopOrder',
+      required: false,
+    },
     vehicleType: {
       type: String,
       required: true,
@@ -91,7 +101,7 @@ const courierSchema = new Schema(
       type: {
         type: String,
         enum: ['Point'],
-        default: 'Point'
+        default: 'Point',
       },
       coordinates: {
         type: [Number], // [longitude, latitude]

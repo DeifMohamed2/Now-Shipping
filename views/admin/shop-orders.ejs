@@ -82,10 +82,7 @@
               <option value="">All Status</option>
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
-              <option value="processing">Processing</option>
-              <option value="ready">Ready</option>
               <option value="assigned">Assigned</option>
-              <option value="picked_up">Picked Up</option>
               <option value="in_transit">In Transit</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
@@ -181,8 +178,6 @@
             <label class="form-label">New Status</label>
             <select class="form-select" id="newStatus" required>
               <option value="confirmed">Confirmed</option>
-              <option value="processing">Processing</option>
-              <option value="ready">Ready for Pickup</option>
               <option value="cancelled">Cancelled</option>
             </select>
           </div>
@@ -227,6 +222,16 @@
             <select class="form-select" id="courierId" required>
               <option value="">Choose courier...</option>
             </select>
+          </div>
+          <div class="alert alert-info">
+            <i class="ri-information-line me-2"></i>
+            <strong>Note:</strong> Only couriers assigned to the delivery zone are shown.
+          </div>
+          <div id="courierLoadingIndicator" class="text-center" style="display: none;">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Loading couriers...</span>
+            </div>
+            <span class="ms-2">Loading couriers...</span>
           </div>
         </div>
         <div class="modal-footer">
@@ -274,7 +279,7 @@
     if (endDate) params.append('endDate', endDate);
 
     try {
-      const response = await fetch(`/api/admin/shop/orders?${params}`);
+      const response = await fetch(`/admin/api/shop/orders?${params}`);
       const orders = await response.json();
       ordersData = orders;
       renderOrders(orders);
@@ -330,16 +335,19 @@
         </td>
         <td>
           <div class="hstack gap-1">
-            <button class="btn btn-sm btn-soft-primary" onclick="viewOrder('${order._id}')" title="View">
+            <button class="btn btn-sm btn-soft-primary" onclick="viewOrder('${order._id}')" title="Quick View">
               <i class="ri-eye-line"></i>
             </button>
-            ${['pending', 'confirmed', 'processing'].includes(order.status) ? `
-              <button class="btn btn-sm btn-soft-info" onclick="updateStatus('${order._id}')" title="Update Status">
+            <a href="/admin/shop/orders/${order._id}" class="btn btn-sm btn-soft-info" title="Full Details">
+              <i class="ri-external-link-line"></i>
+            </a>
+            ${['pending', 'confirmed'].includes(order.status) ? `
+              <button class="btn btn-sm btn-soft-warning" onclick="updateStatus('${order._id}')" title="Update Status">
                 <i class="ri-refresh-line"></i>
               </button>
             ` : ''}
-            ${order.status === 'ready' && !order.courier ? `
-              <button class="btn btn-sm btn-soft-success" onclick="assignCourier('${order._id}')" title="Assign Courier">
+            ${['confirmed', 'assigned'].includes(order.status) ? `
+              <button class="btn btn-sm btn-soft-success" onclick="assignCourier('${order._id}', '${order.orderCustomer.zone}')" title="Assign Courier">
                 <i class="ri-user-add-line"></i>
               </button>
             ` : ''}
@@ -360,21 +368,9 @@
         color: 'info',
         text: 'Confirmed'
       },
-      processing: {
-        color: 'primary',
-        text: 'Processing'
-      },
-      ready: {
-        color: 'secondary',
-        text: 'Ready'
-      },
       assigned: {
-        color: 'dark',
-        text: 'Assigned'
-      },
-      picked_up: {
         color: 'info',
-        text: 'Picked Up'
+        text: 'Assigned'
       },
       in_transit: {
         color: 'primary',
@@ -434,8 +430,8 @@
 
     orders.forEach(order => {
       if (order.status === 'pending') stats.pending++;
-      if (['processing', 'ready'].includes(order.status)) stats.processing++;
-      if (['assigned', 'picked_up', 'in_transit'].includes(order.status)) stats.inTransit++;
+      if (['confirmed'].includes(order.status)) stats.processing++;
+      if (['assigned', 'in_transit'].includes(order.status)) stats.inTransit++;
       if (order.status === 'delivered') stats.delivered++;
     });
 
@@ -447,7 +443,13 @@
 
   async function viewOrder(orderId) {
     try {
-      const response = await fetch(`/api/admin/shop/orders/${orderId}`);
+      const response = await fetch(`/admin/api/shop/orders/${orderId}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      
       const order = await response.json();
 
       const detailsHtml = `
@@ -459,8 +461,8 @@
         </div>
         <div class="col-md-6">
           <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
-          <p><strong>Business:</strong> ${order.business.brandInfo.brandName}</p>
-          <p><strong>Phone:</strong> ${order.business.phone}</p>
+          <p><strong>Business:</strong> ${order.business?.brandInfo?.brandName || 'N/A'}</p>
+          <p><strong>Phone:</strong> ${order.business?.phone || 'N/A'}</p>
         </div>
       </div>
       
@@ -476,48 +478,48 @@
             </tr>
           </thead>
           <tbody>
-            ${order.items.map(item => `
+            ${order.items && order.items.length > 0 ? order.items.map(item => `
               <tr>
                 <td>
                   <div class="d-flex align-items-center">
                     ${item.product && item.product.images && item.product.images[0] ? 
-                      `<img src="${item.product.images[0]}" alt="${item.productName}" style="width: 40px; height: 40px; object-fit: cover;" class="rounded me-2">` : ''}
+                      `<img src="${item.product.images[0]}" alt="${item.productName || 'Product'}" style="width: 40px; height: 40px; object-fit: cover;" class="rounded me-2">` : ''}
                     <div>
-                      ${item.productName}
+                      <strong>${item.productName || 'Unknown Product'}</strong>
                       ${item.discount > 0 ? `<br><small class="text-success">Discount: ${item.discount}%</small>` : ''}
                     </div>
                   </div>
                 </td>
-                <td>${item.quantity}</td>
-                <td>EGP ${item.unitPrice.toFixed(2)}</td>
-                <td>EGP ${item.subtotal.toFixed(2)}</td>
+                <td>${item.quantity || 0}</td>
+                <td>EGP ${(item.unitPrice || 0).toFixed(2)}</td>
+                <td>EGP ${(item.subtotal || 0).toFixed(2)}</td>
               </tr>
-            `).join('')}
+            `).join('') : '<tr><td colspan="4" class="text-center">No items found</td></tr>'}
           </tbody>
           <tfoot>
             <tr>
               <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-              <td><strong>EGP ${order.subtotal.toFixed(2)}</strong></td>
+              <td><strong>EGP ${(order.subtotal || 0).toFixed(2)}</strong></td>
             </tr>
-            ${order.discount > 0 ? `
+            ${(order.discount || 0) > 0 ? `
             <tr>
               <td colspan="3" class="text-end">Discount:</td>
-              <td>- EGP ${order.discount.toFixed(2)}</td>
+              <td>- EGP ${(order.discount || 0).toFixed(2)}</td>
             </tr>
             ` : ''}
-            ${order.tax > 0 ? `
+            ${(order.tax || 0) > 0 ? `
             <tr>
               <td colspan="3" class="text-end">Tax:</td>
-              <td>EGP ${order.tax.toFixed(2)}</td>
+              <td>EGP ${(order.tax || 0).toFixed(2)}</td>
             </tr>
             ` : ''}
             <tr>
               <td colspan="3" class="text-end">Delivery Fee:</td>
-              <td>EGP ${order.deliveryFee.toFixed(2)}</td>
+              <td>EGP ${(order.deliveryFee || 0).toFixed(2)}</td>
             </tr>
             <tr class="table-active">
               <td colspan="3" class="text-end"><strong>Total:</strong></td>
-              <td><strong>EGP ${order.totalAmount.toFixed(2)}</strong></td>
+              <td><strong>EGP ${(order.totalAmount || 0).toFixed(2)}</strong></td>
             </tr>
           </tfoot>
         </table>
@@ -525,20 +527,20 @@
       
       <h6 class="mb-3">Delivery Information</h6>
       <div class="mb-3">
-        <p><strong>Address:</strong> ${order.deliveryAddress.fullAddress}</p>
-        <p><strong>Contact:</strong> ${order.contactInfo.name} - ${order.contactInfo.phone}</p>
-        ${order.courier ? `<p><strong>Courier:</strong> ${order.courierName} - ${order.courierPhone}</p>` : ''}
+        <p><strong>Address:</strong> ${order.orderCustomer?.address || 'N/A'}</p>
+        <p><strong>Contact:</strong> ${order.contactInfo?.name || 'N/A'} - ${order.contactInfo?.phone || 'N/A'}</p>
+        ${order.courier ? `<p><strong>Courier:</strong> ${order.courier?.name || 'N/A'} - ${order.courier?.phone || 'N/A'}</p>` : ''}
       </div>
       
-      ${order.trackingHistory.length > 0 ? `
+      ${order.trackingHistory && order.trackingHistory.length > 0 ? `
         <h6 class="mb-3">Tracking History</h6>
         <div class="timeline">
           ${order.trackingHistory.map(track => `
             <div class="timeline-item">
               <div class="timeline-marker"></div>
               <div class="timeline-content">
-                <p class="mb-1"><strong>${track.description}</strong></p>
-                <small class="text-muted">${new Date(track.timestamp).toLocaleString()}</small>
+                <p class="mb-1"><strong>${track.description || 'Status update'}</strong></p>
+                <small class="text-muted">${track.timestamp ? new Date(track.timestamp).toLocaleString() : 'Unknown time'}</small>
               </div>
             </div>
           `).join('')}
@@ -585,7 +587,7 @@
     }
 
     try {
-      const response = await fetch(`/api/admin/shop/orders/${orderId}/status`, {
+      const response = await fetch(`/admin/api/shop/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -610,22 +612,60 @@
 
   async function loadCouriers() {
     try {
-      const response = await fetch('/api/admin/couriers');
+      const response = await fetch('/admin/api/couriers');
       couriers = await response.json();
 
       const select = document.getElementById('courierId');
       select.innerHTML = '<option value="">Choose courier...</option>' +
         couriers.map(courier => `
-        <option value="${courier._id}">${courier.name} - ${courier.phone}</option>
+        <option value="${courier._id}">${courier.name} - ${courier.phoneNumber}</option>
       `).join('');
     } catch (error) {
       console.error('Error loading couriers:', error);
     }
   }
 
-  function assignCourier(orderId) {
+  async function assignCourier(orderId, zone) {
     document.getElementById('assignOrderId').value = orderId;
     document.getElementById('courierForm').reset();
+    
+    // Show loading indicator
+    document.getElementById('courierLoadingIndicator').style.display = 'block';
+    document.getElementById('courierId').innerHTML = '<option value="">Loading couriers...</option>';
+    
+    // Load couriers for the specific zone using the exact same endpoint as regular orders
+    try {
+      console.log('Loading couriers for zone:', zone);
+      const response = await fetch(`/admin/get-delivery-men?orderId=${orderId}&zone=${encodeURIComponent(zone)}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const zoneCouriers = await response.json();
+      console.log('Received couriers:', zoneCouriers);
+
+      const select = document.getElementById('courierId');
+      if (zoneCouriers && zoneCouriers.length > 0) {
+        select.innerHTML = '<option value="">Choose courier...</option>' +
+          zoneCouriers.map(courier => `
+          <option value="${courier._id}">${courier.name} - ${courier.phoneNumber} (${courier.courierID})</option>
+        `).join('');
+      } else {
+        select.innerHTML = '<option value="">No couriers available for this zone</option>';
+        showError('No couriers available for this zone');
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading couriers by zone:', error);
+      showError('Failed to load couriers for this zone: ' + error.message);
+      document.getElementById('courierId').innerHTML = '<option value="">Error loading couriers</option>';
+      return;
+    } finally {
+      // Hide loading indicator
+      document.getElementById('courierLoadingIndicator').style.display = 'none';
+    }
+    
     new bootstrap.Modal(document.getElementById('courierModal')).show();
   }
 
@@ -635,25 +675,31 @@
     const orderId = document.getElementById('assignOrderId').value;
     const courierId = document.getElementById('courierId').value;
 
+    if (!courierId) {
+      showError('Please select a courier');
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/admin/shop/orders/${orderId}/assign-courier`, {
+      // Use the shop-specific assignment endpoint
+      const response = await fetch(`/admin/api/shop/orders/${orderId}/assign-courier`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          courierId
+          courierId: courierId
         })
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        showSuccess(result.message);
+        showSuccess('Courier assigned successfully');
         bootstrap.Modal.getInstance(document.getElementById('courierModal')).hide();
         loadOrders();
       } else {
-        showError(result.error);
+        showError(result.error || 'Failed to assign courier');
       }
     } catch (error) {
       console.error('Error assigning courier:', error);
@@ -681,6 +727,97 @@
 </script>
 
 <style>
+  /* Table styling improvements */
+  .table td, .table th {
+    color: #212529 !important;
+    background-color: transparent !important;
+    border-color: #dee2e6;
+    vertical-align: middle;
+  }
+
+  .table tbody tr:hover {
+    background-color: #f8f9fa !important;
+  }
+
+  .table tbody tr:hover td {
+    color: #212529 !important;
+    background-color: transparent !important;
+  }
+
+  /* Ensure all text is visible */
+  .table td a, .table td strong, .table td span, .table td div, .table td p, .table td small {
+    color: #212529 !important;
+  }
+
+  .table td .text-muted {
+    color: #6c757d !important;
+  }
+
+  .table td .text-warning {
+    color: #f0ad4e !important;
+  }
+
+  .table td .text-info {
+    color: #5bc0de !important;
+  }
+
+  .table td .text-primary {
+    color: #337ab7 !important;
+  }
+
+  .table td .text-success {
+    color: #5cb85c !important;
+  }
+
+  .table td .text-danger {
+    color: #d9534f !important;
+  }
+
+  /* Badge styling */
+  .badge {
+    color: #fff !important;
+  }
+
+  .badge-soft-info {
+    background-color: rgba(91, 192, 222, 0.1) !important;
+    color: #5bc0de !important;
+  }
+
+  .badge-soft-warning {
+    background-color: rgba(240, 173, 78, 0.1) !important;
+    color: #f0ad4e !important;
+  }
+
+  .badge-soft-success {
+    background-color: rgba(92, 184, 92, 0.1) !important;
+    color: #5cb85c !important;
+  }
+
+  .badge-soft-danger {
+    background-color: rgba(217, 83, 79, 0.1) !important;
+    color: #d9534f !important;
+  }
+
+  /* Button styling */
+  .btn-soft-primary {
+    background-color: rgba(51, 122, 183, 0.1) !important;
+    color: #337ab7 !important;
+    border: 1px solid rgba(51, 122, 183, 0.2) !important;
+  }
+
+  .btn-soft-info {
+    background-color: rgba(91, 192, 222, 0.1) !important;
+    color: #5bc0de !important;
+    border: 1px solid rgba(91, 192, 222, 0.2) !important;
+  }
+
+  .btn-soft-success {
+    background-color: rgba(92, 184, 92, 0.1) !important;
+    color: #5cb85c !important;
+    border: 1px solid rgba(92, 184, 92, 0.2) !important;
+  }
+
+  /* Timeline styling */
   .timeline {
     position: relative;
     padding-left: 30px;
@@ -715,5 +852,41 @@
 
   .timeline-item:last-child:before {
     display: none;
+  }
+
+  /* Form styling */
+  .form-control, .form-select {
+    color: #212529 !important;
+    background-color: #fff !important;
+    border: 1px solid #ced4da !important;
+  }
+
+  .form-control:focus, .form-select:focus {
+    color: #212529 !important;
+    background-color: #fff !important;
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+  }
+
+  /* Modal styling */
+  .modal-content {
+    color: #212529 !important;
+  }
+
+  .modal-title {
+    color: #212529 !important;
+  }
+
+  .modal-body p, .modal-body strong {
+    color: #212529 !important;
+  }
+
+  /* Stats cards */
+  .card-body h5 {
+    color: #212529 !important;
+  }
+
+  .card-body p {
+    color: #6c757d !important;
   }
 </style>

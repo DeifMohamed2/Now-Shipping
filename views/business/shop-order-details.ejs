@@ -1,0 +1,626 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/assets/rCSS/business.css">
+
+<%- contentFor('body') %>
+
+<% if (order) { %>
+
+<div class="row">
+  <div class="col-12">
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+      <h4 class="mb-sm-0">Shop Order Details</h4>
+      <div class="page-title-right">
+        <a href="/business/shop/orders" class="btn btn-light">
+          <i class="ri-arrow-left-line align-middle me-1"></i> Back to Orders
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Status Card -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <div class="d-sm-flex align-items-center">
+          <h5 class="card-title flex-grow-1 mb-0">Order Status - <span style="color: #007bff;"><strong><%= order.orderNumber %></strong></span></h5>
+          <div class="flex-shrink-0 mt-2 mt-sm-0">
+            <% if (['pending', 'confirmed'].includes(order.status)) { %>
+            <button class="btn btn-soft-danger material-shadow-none btn-sm mt-2 mt-sm-0" onclick="cancelOrder('<%= order._id %>')">
+              <i class="ri-close-circle-line align-middle me-1"></i> Cancel Order
+            </button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="profile-timeline">
+          <div class="accordion accordion-flush" id="accordionFlushExample">
+            <!-- Order Placed -->
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingOne">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-success rounded-circle material-shadow">
+                        <i class="ri-shopping-bag-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-0 fw-semibold">Order Placed - <span class="fw-normal"><%= new Date(order.createdAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <!-- Order Confirmed -->
+            <% if (['confirmed', 'processing', 'ready', 'assigned', 'picked_up', 'in_transit', 'delivered'].includes(order.status)) { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingTwo">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-success rounded-circle material-shadow">
+                        <i class="ri-checkbox-circle-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Order Confirmed</h6>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Processing -->
+            <% if (['processing', 'ready', 'assigned', 'picked_up', 'in_transit', 'delivered'].includes(order.status)) { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingThree">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-primary rounded-circle material-shadow">
+                        <i class="ri-loader-4-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Processing</h6>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Ready for Pickup -->
+            <% if (['ready', 'assigned', 'picked_up', 'in_transit', 'delivered'].includes(order.status)) { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingFour">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-info rounded-circle material-shadow">
+                        <i class="ri-check-double-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Ready for Pickup</h6>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Assigned to Courier -->
+            <% if (['assigned', 'picked_up', 'in_transit', 'delivered'].includes(order.status)) { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingFive">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-warning rounded-circle material-shadow">
+                        <i class="ri-user-follow-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Assigned to Courier</h6>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Picked Up -->
+            <% if (['picked_up', 'in_transit', 'delivered'].includes(order.status)) { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingSix">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-warning rounded-circle material-shadow">
+                        <i class="ri-hand-coin-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Picked Up</h6>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- In Transit -->
+            <% if (['in_transit', 'delivered'].includes(order.status)) { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingSeven">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-primary rounded-circle material-shadow">
+                        <i class="ri-truck-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">In Transit</h6>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Delivered -->
+            <% if (order.status === 'delivered') { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingEight">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseEight" aria-expanded="false" aria-controls="collapseEight">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-success rounded-circle material-shadow">
+                        <i class="ri-check-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Delivered</h6>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <% } %>
+
+            <!-- Cancelled -->
+            <% if (order.status === 'cancelled') { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingCancelled">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseCancelled" aria-expanded="false" aria-controls="collapseCancelled">
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-danger rounded-circle material-shadow">
+                        <i class="ri-close-circle-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Order Cancelled</h6>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Information Card -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="ri-user-line me-2"></i>Customer Information
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Customer Name</label>
+              <p class="mb-0"><%= order.contactInfo?.name || order.orderCustomer?.fullName || 'Not specified' %></p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Phone Number</label>
+              <p class="mb-0"><%= order.contactInfo?.phone || order.orderCustomer?.phoneNumber || 'Not specified' %></p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Delivery Address</label>
+              <p class="mb-0"><%= order.orderCustomer?.address || 'Not specified' %></p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Zone</label>
+              <p class="mb-0"><%= order.orderCustomer?.zone || 'Not specified' %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Items Card -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="ri-shopping-cart-line me-2"></i>Order Items
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Discount</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (order.items && order.items.length > 0) { %>
+                <% order.items.forEach(function(item) { %>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <% if (item.product && item.product.images && item.product.images[0]) { %>
+                        <img src="<%= item.product.images[0] %>" alt="<%= item.productName %>" 
+                             style="width: 40px; height: 40px; object-fit: cover;" class="rounded me-2">
+                      <% } %>
+                      <div>
+                        <strong><%= item.productName %></strong>
+                        <% if (item.productNameAr) { %>
+                          <br><small class="text-muted"><%= item.productNameAr %></small>
+                        <% } %>
+                      </div>
+                    </div>
+                  </td>
+                  <td><%= item.quantity %></td>
+                  <td>EGP <%= item.unitPrice.toFixed(2) %></td>
+                  <td><%= item.discount > 0 ? item.discount + '%' : 'No discount' %></td>
+                  <td>EGP <%= item.subtotal.toFixed(2) %></td>
+                </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="5" class="text-center">No items found</td>
+                </tr>
+              <% } %>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                <td><strong>EGP <%= order.subtotal.toFixed(2) %></strong></td>
+              </tr>
+              <% if (order.discount > 0) { %>
+              <tr>
+                <td colspan="4" class="text-end">Discount:</td>
+                <td>- EGP <%= order.discount.toFixed(2) %></td>
+              </tr>
+              <% } %>
+              <% if (order.tax > 0) { %>
+              <tr>
+                <td colspan="4" class="text-end">Tax:</td>
+                <td>EGP <%= order.tax.toFixed(2) %></td>
+              </tr>
+              <% } %>
+              <tr>
+                <td colspan="4" class="text-end">Delivery Fee:</td>
+                <td>EGP <%= order.deliveryFee.toFixed(2) %></td>
+              </tr>
+              <tr class="table-active">
+                <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                <td><strong>EGP <%= order.totalAmount.toFixed(2) %></strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tracking History Card -->
+<% if (order.trackingHistory && order.trackingHistory.length > 0) { %>
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="ri-map-pin-line me-2"></i>Tracking History
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="timeline-container">
+          <% order.trackingHistory.forEach(function(track, index) { %>
+            <div class="timeline-item <%= index === 0 ? 'timeline-item-active' : '' %>">
+              <div class="timeline-marker <%= index === 0 ? 'timeline-marker-active' : '' %>">
+                <i class="ri-check-line"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <h6 class="timeline-title mb-1"><%= track.description %></h6>
+                  <span class="timeline-time">
+                    <i class="ri-time-line me-1"></i><%= new Date(track.timestamp).toLocaleString() %>
+                  </span>
+                </div>
+                <% if (track.location) { %>
+                  <div class="timeline-location mt-2">
+                    <i class="ri-map-pin-line me-1 text-primary"></i>
+                    <span class="text-muted">Location: <%= track.location.lat %>, <%= track.location.lng %></span>
+                  </div>
+                <% } %>
+                <% if (track.notes) { %>
+                  <div class="timeline-notes mt-2">
+                    <small class="text-muted"><%= track.notes %></small>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<!-- Business Actions Card -->
+<% if (['pending', 'confirmed'].includes(order.status)) { %>
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="ri-settings-line me-2"></i>Order Actions
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex gap-2">
+          <button class="btn btn-danger" onclick="cancelOrder('<%= order._id %>')">
+            <i class="ri-close-circle-line me-1"></i>Cancel Order
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<% } else { %>
+
+<div class="row">
+  <div class="col-xl-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-center">
+          <img src="/assets/images/empty.svg" alt="" class="img-fluid" style="max-width: 220px;">
+          <h4 class="mt-4">No Order Found</h4>
+          <p class="text-muted mb-0">We couldn't find the order you are looking for.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% } %>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script>
+  async function cancelOrder(orderId) {
+    const { value: reason } = await Swal.fire({
+      title: 'Cancel Order',
+      input: 'textarea',
+      inputLabel: 'Reason for cancellation',
+      inputPlaceholder: 'Please provide a reason...',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Yes, cancel it',
+      cancelButtonText: 'No, keep it',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'You need to provide a reason!';
+        }
+      }
+    });
+
+    if (reason) {
+      try {
+        const response = await fetch(`/business/api/shop/orders/${orderId}/cancel`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ reason })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: result.message,
+            timer: 2000,
+            showConfirmButton: false
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: result.error || 'Failed to cancel order'
+          });
+        }
+      } catch (error) {
+        console.error('Error cancelling order:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Failed to cancel order'
+        });
+      }
+    }
+  }
+</script>
+
+<style>
+  .timeline-container {
+    position: relative;
+    padding-left: 40px;
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-bottom: 25px;
+    transition: all 0.3s ease;
+  }
+
+  .timeline-item:hover {
+    transform: translateX(5px);
+  }
+
+  .timeline-marker {
+    position: absolute;
+    left: -40px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .timeline-marker-active {
+    background-color: #28a745;
+    box-shadow: 0 0 0 3px #28a745;
+    animation: pulse 2s infinite;
+  }
+
+  .timeline-item-active .timeline-marker {
+    background-color: #28a745;
+    box-shadow: 0 0 0 3px #28a745;
+  }
+
+  .timeline-item:before {
+    content: '';
+    position: absolute;
+    left: -31px;
+    top: 20px;
+    width: 2px;
+    height: calc(100% - 5px);
+    background: linear-gradient(to bottom, #28a745, #6c757d);
+  }
+
+  .timeline-item:last-child:before {
+    display: none;
+  }
+
+  .timeline-content {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #28a745;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
+
+  .timeline-item:hover .timeline-content {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+  }
+
+  .timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .timeline-title {
+    color: #212529;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .timeline-time {
+    color: #6c757d;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  .timeline-location {
+    background: #e3f2fd;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #2196f3;
+  }
+
+  .timeline-notes {
+    background: #fff3cd;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #ffc107;
+  }
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 3px #28a745;
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(40, 167, 69, 0.3);
+    }
+    100% {
+      box-shadow: 0 0 0 3px #28a745;
+    }
+  }
+
+  .card-title {
+    color: #212529;
+  }
+
+  .form-label {
+    color: #212529;
+  }
+
+  .table td, .table th {
+    color: #212529;
+    border-color: #dee2e6;
+  }
+
+  .badge {
+    color: #fff;
+  }
+</style>

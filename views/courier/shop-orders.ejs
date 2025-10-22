@@ -207,14 +207,15 @@
     if (status) params.append('status', status);
 
     try {
-      const response = await fetch(`/api/courier/shop/orders?${params}`);
+      const response = await fetch(`/courier/api/shop/orders?${params}`);
       const orders = await response.json();
       ordersData = orders;
       renderOrders(orders);
       updateStats(orders);
     } catch (error) {
       console.error('Error loading orders:', error);
-      showError('Failed to load orders');
+      const errorMessage = error.message || 'Failed to load orders';
+      showError(`Error: ${errorMessage}`);
     }
   }
 
@@ -250,22 +251,25 @@
         </td>
         <td>
           <div class="text-truncate" style="max-width: 200px;">
-            ${order.deliveryAddress.fullAddress}
+            ${order.orderCustomer.address}
           </div>
           <small class="text-muted">${order.contactInfo.phone}</small>
         </td>
         <td>${statusBadge}</td>
         <td>
           <div class="hstack gap-1">
-            <button class="btn btn-sm btn-soft-primary" onclick="viewOrder('${order._id}')" title="View Details">
+            <button class="btn btn-sm btn-soft-primary" onclick="viewOrder('${order._id}')" title="Quick View">
               <i class="ri-eye-line"></i>
             </button>
+            <a href="/courier/shop/orders/${order._id}" class="btn btn-sm btn-soft-info" title="Full Details">
+              <i class="ri-external-link-line"></i>
+            </a>
             ${canUpdateStatus(order.status) ? `
               <button class="btn btn-sm btn-soft-success" onclick="updateStatus('${order._id}', '${order.status}')" title="Update Status">
                 <i class="ri-refresh-line"></i>
               </button>
             ` : ''}
-            <button class="btn btn-sm btn-soft-info" onclick="callCustomer('${order.contactInfo.phone}')" title="Call Customer">
+            <button class="btn btn-sm btn-soft-warning" onclick="callCustomer('${order.contactInfo.phone}')" title="Call Customer">
               <i class="ri-phone-line"></i>
             </button>
           </div>
@@ -276,7 +280,7 @@
   }
 
   function canUpdateStatus(status) {
-    return ['assigned', 'picked_up', 'in_transit'].includes(status);
+    return ['assigned', 'in_transit'].includes(status);
   }
 
   function getStatusBadge(status) {
@@ -285,11 +289,6 @@
         color: 'warning',
         text: 'Assigned',
         icon: 'ri-user-follow-line'
-      },
-      picked_up: {
-        color: 'info',
-        text: 'Picked Up',
-        icon: 'ri-hand-coin-line'
       },
       in_transit: {
         color: 'primary',
@@ -327,7 +326,7 @@
 
     orders.forEach(order => {
       if (order.status === 'assigned') stats.assigned++;
-      if (['picked_up', 'in_transit'].includes(order.status)) stats.inTransit++;
+      if (['in_transit'].includes(order.status)) stats.inTransit++;
       if (order.status === 'delivered' && new Date(order.deliveredAt).toDateString() === today) {
         stats.delivered++;
       }
@@ -340,7 +339,7 @@
 
   async function viewOrder(orderId) {
     try {
-      const response = await fetch(`/api/courier/shop/orders/${orderId}`);
+      const response = await fetch(`/courier/api/shop/orders/${orderId}`);
       const order = await response.json();
 
       const detailsHtml = `
@@ -366,14 +365,14 @@
       
       <div class="alert alert-info">
         <h6 class="alert-heading"><i class="ri-map-pin-line me-2"></i>Delivery Address</h6>
-        <p class="mb-1"><strong>${order.deliveryAddress.fullAddress}</strong></p>
+        <p class="mb-1"><strong>${order.orderCustomer.address}</strong></p>
         <p class="mb-1">Contact: <strong>${order.contactInfo.name}</strong></p>
         <p class="mb-0">Phone: 
           <a href="tel:${order.contactInfo.phone}" class="text-primary">
             <i class="ri-phone-line"></i> ${order.contactInfo.phone}
           </a>
         </p>
-        ${order.deliveryAddress.landmark ? `<p class="mb-0 mt-2"><small><i class="ri-information-line me-1"></i>Landmark: ${order.deliveryAddress.landmark}</small></p>` : ''}
+        <p class="mb-0 mt-2"><small><i class="ri-map-pin-line me-1"></i>Zone: ${order.orderCustomer.zone}</small></p>
       </div>
       
       <h6 class="mb-3">Package Items</h6>
@@ -424,12 +423,29 @@
       ${order.trackingHistory.length > 0 ? `
         <h6 class="mb-3">Tracking History</h6>
         <div class="timeline-container">
-          ${order.trackingHistory.map(track => `
-            <div class="timeline-item">
-              <div class="timeline-marker"></div>
+          ${order.trackingHistory.map((track, index) => `
+            <div class="timeline-item ${index === 0 ? 'timeline-item-active' : ''}">
+              <div class="timeline-marker ${index === 0 ? 'timeline-marker-active' : ''}">
+                <i class="ri-check-line"></i>
+              </div>
               <div class="timeline-content">
-                <p class="mb-1"><strong>${track.description}</strong></p>
-                <small class="text-muted">${new Date(track.timestamp).toLocaleString()}</small>
+                <div class="timeline-header">
+                  <h6 class="timeline-title mb-1">${track.description}</h6>
+                  <span class="timeline-time">
+                    <i class="ri-time-line me-1"></i>${new Date(track.timestamp).toLocaleString()}
+                  </span>
+                </div>
+                ${track.location ? `
+                  <div class="timeline-location mt-2">
+                    <i class="ri-map-pin-line me-1 text-primary"></i>
+                    <span class="text-muted">Location: ${track.location.lat}, ${track.location.lng}</span>
+                  </div>
+                ` : ''}
+                ${track.notes ? `
+                  <div class="timeline-notes mt-2">
+                    <small class="text-muted">${track.notes}</small>
+                  </div>
+                ` : ''}
               </div>
             </div>
           `).join('')}
@@ -454,7 +470,8 @@
       new bootstrap.Modal(document.getElementById('orderModal')).show();
     } catch (error) {
       console.error('Error loading order details:', error);
-      showError('Failed to load order details');
+      const errorMessage = error.message || 'Failed to load order details';
+      showError(`Error: ${errorMessage}`);
     }
   }
 
@@ -466,18 +483,9 @@
     const statusSelect = document.getElementById('newStatus');
     const statusOptions = {
       'assigned': [{
-        value: 'picked_up',
-        text: 'Mark as Picked Up'
+        value: 'in_transit',
+        text: 'Start Delivery (In Transit)'
       }],
-      'picked_up': [{
-          value: 'in_transit',
-          text: 'Start Delivery (In Transit)'
-        },
-        {
-          value: 'returned',
-          text: 'Mark as Returned'
-        }
-      ],
       'in_transit': [{
           value: 'delivered',
           text: 'Mark as Delivered'
@@ -512,17 +520,34 @@
     const notes = document.getElementById('statusNotes').value;
     const useLocation = document.getElementById('useCurrentLocation').checked;
 
+    // Validate required fields
+    if (!orderId) {
+      showError('Order ID is required');
+      return;
+    }
+
+    if (!status) {
+      showError('Please select a status');
+      return;
+    }
+
     const data = {
       status,
-      notes
+      notes: notes.trim()
     };
 
     if (useLocation && currentLocation) {
       data.location = currentLocation;
     }
 
+    // Show loading state
+    const submitButton = document.querySelector('#statusForm button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Updating...';
+
     try {
-      const response = await fetch(`/api/courier/shop/orders/${orderId}/status`, {
+      const response = await fetch(`/courier/api/shop/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -533,15 +558,20 @@
       const result = await response.json();
 
       if (response.ok) {
-        showSuccess(result.message);
+        showSuccess(result.message || 'Status updated successfully');
         bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide();
         loadOrders();
       } else {
-        showError(result.error);
+        const errorMessage = result.error || result.message || 'Failed to update status';
+        showError(errorMessage);
       }
     } catch (error) {
       console.error('Error updating status:', error);
       showError('Failed to update status');
+    } finally {
+      // Reset button state
+      submitButton.disabled = false;
+      submitButton.textContent = originalText;
     }
   }
 
@@ -571,37 +601,118 @@
 <style>
   .timeline-container {
     position: relative;
-    padding-left: 30px;
+    padding-left: 40px;
   }
 
   .timeline-item {
     position: relative;
-    padding-bottom: 20px;
+    padding-bottom: 25px;
+    transition: all 0.3s ease;
+  }
+
+  .timeline-item:hover {
+    transform: translateX(5px);
   }
 
   .timeline-marker {
     position: absolute;
-    left: -30px;
+    left: -40px;
     top: 0;
-    width: 12px;
-    height: 12px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
-    background-color: #405189;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 2px #405189;
+    background-color: #6c757d;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+    transition: all 0.3s ease;
+  }
+
+  .timeline-marker-active {
+    background-color: #28a745;
+    box-shadow: 0 0 0 3px #28a745;
+    animation: pulse 2s infinite;
+  }
+
+  .timeline-item-active .timeline-marker {
+    background-color: #28a745;
+    box-shadow: 0 0 0 3px #28a745;
   }
 
   .timeline-item:before {
     content: '';
     position: absolute;
-    left: -24px;
-    top: 12px;
+    left: -31px;
+    top: 20px;
     width: 2px;
-    height: 100%;
-    background-color: #e9ecef;
+    height: calc(100% - 5px);
+    background: linear-gradient(to bottom, #28a745, #6c757d);
   }
 
   .timeline-item:last-child:before {
     display: none;
+  }
+
+  .timeline-content {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #28a745;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
+
+  .timeline-item:hover .timeline-content {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+  }
+
+  .timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .timeline-title {
+    color: #212529;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .timeline-time {
+    color: #6c757d;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  .timeline-location {
+    background: #e3f2fd;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #2196f3;
+  }
+
+  .timeline-notes {
+    background: #fff3cd;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #ffc107;
+  }
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 3px #28a745;
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(40, 167, 69, 0.3);
+    }
+    100% {
+      box-shadow: 0 0 0 3px #28a745;
+    }
   }
 </style>

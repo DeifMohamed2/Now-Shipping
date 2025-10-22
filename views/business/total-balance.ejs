@@ -608,7 +608,7 @@
     <% if (typeof balanceRecalculated !== 'undefined' && balanceRecalculated) { %>
       <small class="text-muted">
         <i data-feather="refresh-cw" style="width: 12px; height: 12px;"></i>
-        Balance recalculated from <%= balanceRecalculated.transactionCount %> unsettled transactions
+        Balance recalculated from <%= balanceRecalculated.unsettledCount %> unsettled transactions
       </small>
     <% } %>
   </div>
@@ -648,6 +648,9 @@
     </div>
   </div>
   <div class="filter-group">
+    <div class="export-btn" id="clearFiltersBtn" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); margin-right: 10px;">
+      <i data-feather="x-circle"></i> Clear Filters
+    </div>
     <div class="export-btn" id="exportTransactionsBtn">
       <i data-feather="download"></i> Export Excel
     </div>
@@ -878,7 +881,8 @@
         'pickupFees': 'Pickup Fees',
         'refund': 'Refund',
         'deposit': 'Deposit',
-        'withdrawal': 'Withdrawal'
+        'withdrawal': 'Withdrawal',
+        'shopOrderDelivery': 'Shop Order Delivery'
       };
       return labels[type] || type;
     }
@@ -923,13 +927,21 @@
     async function getTransactions(timePeriod, statusFilter = 'all', typeFilter = 'all') {
       try { 
         const noResultDiv = document.querySelector('.noresult');
+        const tableBody = document.querySelector('#transactionTable tbody');
+        
+        // Show loading state
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><i class="ri-loader-4-line ri-spin"></i> Loading transactions...</td></tr>';
+        
         const response = await fetch(`/business/wallet/get-all-transactions-by-date?timePeriod=${timePeriod}`);
         const data = await response.json();
-        console.log(data);
+        console.log('Raw transaction data:', data);
+        
         if(response.ok) {
           if (data.length > 0) {
             // Filter by status and type if needed
             let filteredData = data;
+            
+            // Apply status filter
             if (statusFilter !== 'all') {
               if (statusFilter === 'settled') {
                 filteredData = filteredData.filter(transaction => transaction.settlementStatus === 'settled');
@@ -939,9 +951,14 @@
                 filteredData = filteredData.filter(transaction => transaction.settlementStatus === 'included_in_release');
               }
             }
+            
+            // Apply type filter
             if (typeFilter !== 'all') {
               filteredData = filteredData.filter(transaction => transaction.transactionType === typeFilter);
             }
+            
+            console.log(`Filtered ${data.length} transactions to ${filteredData.length} after applying filters`);
+            console.log('Applied filters:', { timePeriod, statusFilter, typeFilter });
             
             populateTransactions(filteredData);
             noResultDiv.style.display = 'none'; // Hide the no result message
@@ -951,9 +968,12 @@
           }
         } else {
           console.error('Error fetching transactions:', data.message);
+          tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error loading transactions</td></tr>';
         }
       } catch (error) {
         console.error('Error in getTransactions:', error);
+        const tableBody = document.querySelector('#transactionTable tbody');
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error loading transactions</td></tr>';
       }
     }
     getTransactions('month', 'all', 'all');
@@ -961,39 +981,66 @@
 
     // Add click handler for date filter
     document.querySelector('.date-filter').addEventListener('click', function() {
-  Swal.fire({
-  title: 'Select Date Range',
-  html: `
-  <div class="mb-3">
-    <select class="form-select" id="dateRangeSelect">
-      <option value="today">Today</option>
-      <option value="week">This Week</option>
-      <option value="month">This Month</option>
-      <option value="year">This Year</option>
-      <option value="all">All Time</option>
-    </select>
-  </div>
-  `,
-  showCancelButton: true,
-  confirmButtonText: 'Apply',
-  confirmButtonColor: '#3B82F6'
-  }).then((result) => {
-  if (result.isConfirmed) {
-  const selectedValue = document.getElementById('dateRangeSelect').value;
-  currentTimePeriod = selectedValue;
-  
-  // Update filter button text
-  const dateFilterBtn = document.querySelector('.date-filter .filter-text');
-  const dateText = selectedValue === 'all' ? 'All Time' : 
-                  selectedValue === 'today' ? 'Today' :
-                  selectedValue === 'week' ? 'This Week' :
-                  selectedValue === 'month' ? 'This Month' : 'This Year';
-  dateFilterBtn.textContent = dateText;
-  
-  getTransactions(selectedValue, currentStatusFilter, currentTypeFilter);
-  }
-  });
-  });
+      Swal.fire({
+        title: 'Select Date Range',
+        html: `
+        <div class="mb-3">
+          <select class="form-select" id="dateRangeSelect">
+            <option value="today" ${currentTimePeriod === 'today' ? 'selected' : ''}>Today</option>
+            <option value="week" ${currentTimePeriod === 'week' ? 'selected' : ''}>This Week</option>
+            <option value="month" ${currentTimePeriod === 'month' ? 'selected' : ''}>This Month</option>
+            <option value="year" ${currentTimePeriod === 'year' ? 'selected' : ''}>This Year</option>
+            <option value="all" ${currentTimePeriod === 'all' ? 'selected' : ''}>All Time</option>
+          </select>
+        </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Apply Filter',
+        confirmButtonColor: '#3B82F6',
+        cancelButtonText: 'Cancel',
+        cancelButtonColor: '#6c757d'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const selectedValue = document.getElementById('dateRangeSelect').value;
+          currentTimePeriod = selectedValue;
+          
+          // Update filter button text
+          const dateFilterBtn = document.querySelector('.date-filter .filter-text');
+          const dateText = selectedValue === 'all' ? 'All Time' : 
+                          selectedValue === 'today' ? 'Today' :
+                          selectedValue === 'week' ? 'This Week' :
+                          selectedValue === 'month' ? 'This Month' : 'This Year';
+          dateFilterBtn.textContent = dateText;
+          
+          // Show loading toast
+          const loadingToast = Swal.fire({
+            title: 'Loading...',
+            text: `Fetching transactions for ${dateText}`,
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+          
+          getTransactions(selectedValue, currentStatusFilter, currentTypeFilter)
+            .then(() => {
+              loadingToast.close();
+              Swal.fire({
+                title: 'Filter Applied!',
+                text: `Showing transactions for ${dateText}`,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+              });
+            })
+            .catch(() => {
+              loadingToast.close();
+            });
+        }
+      });
+    });
 
 
 
@@ -1058,20 +1105,28 @@
     // Add click handler for status filter
     document.querySelector('.status-filter').addEventListener('click', function() {
       Swal.fire({
-        title: 'Filter by Status',
+        title: 'Filter by Settlement Status',
         html: `
         <div class="mb-3">
           <select class="form-select" id="statusSelect">
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="in_release">In Release</option>
-            <option value="settled">Settled</option>
+            <option value="all" ${currentStatusFilter === 'all' ? 'selected' : ''}>All Status</option>
+            <option value="pending" ${currentStatusFilter === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="in_release" ${currentStatusFilter === 'in_release' ? 'selected' : ''}>In Release</option>
+            <option value="settled" ${currentStatusFilter === 'settled' ? 'selected' : ''}>Settled</option>
           </select>
+        </div>
+        <div class="text-muted small">
+          <strong>Status Types:</strong><br>
+          • <strong>Pending:</strong> Awaiting release<br>
+          • <strong>In Release:</strong> Included in pending release<br>
+          • <strong>Settled:</strong> Released to account
         </div>
         `,
         showCancelButton: true,
-        confirmButtonText: 'Apply',
-        confirmButtonColor: '#3B82F6'
+        confirmButtonText: 'Apply Filter',
+        confirmButtonColor: '#3B82F6',
+        cancelButtonText: 'Cancel',
+        cancelButtonColor: '#6c757d'
       }).then((result) => {
         if (result.isConfirmed) {
           const selectedStatus = document.getElementById('statusSelect').value;
@@ -1084,7 +1139,32 @@
                            selectedStatus === 'in_release' ? 'In Release Only' : 'Settled Only';
           statusFilterBtn.textContent = statusText;
           
-          getTransactions(currentTimePeriod, selectedStatus, currentTypeFilter);
+          // Show loading toast
+          const loadingToast = Swal.fire({
+            title: 'Loading...',
+            text: `Filtering transactions by ${statusText}`,
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+          
+          getTransactions(currentTimePeriod, selectedStatus, currentTypeFilter)
+            .then(() => {
+              loadingToast.close();
+              Swal.fire({
+                title: 'Filter Applied!',
+                text: `Showing ${statusText} transactions`,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+              });
+            })
+            .catch(() => {
+              loadingToast.close();
+            });
         }
       });
     });
@@ -1096,19 +1176,32 @@
         html: `
         <div class="mb-3">
           <select class="form-select" id="typeSelect">
-            <option value="all">All Types</option>
-            <option value="cashCycle">Cash Cycle</option>
-            <option value="fees">Service Fees</option>
-            <option value="pickupFees">Pickup Fees</option>
-            <option value="refund">Refund</option>
-            <option value="deposit">Deposit</option>
-            <option value="withdrawal">Withdrawal</option>
+            <option value="all" ${currentTypeFilter === 'all' ? 'selected' : ''}>All Types</option>
+            <option value="cashCycle" ${currentTypeFilter === 'cashCycle' ? 'selected' : ''}>Cash Cycle</option>
+            <option value="fees" ${currentTypeFilter === 'fees' ? 'selected' : ''}>Service Fees</option>
+            <option value="pickupFees" ${currentTypeFilter === 'pickupFees' ? 'selected' : ''}>Pickup Fees</option>
+            <option value="shopOrderDelivery" ${currentTypeFilter === 'shopOrderDelivery' ? 'selected' : ''}>Shop Order Delivery</option>
+            <option value="refund" ${currentTypeFilter === 'refund' ? 'selected' : ''}>Refund</option>
+            <option value="deposit" ${currentTypeFilter === 'deposit' ? 'selected' : ''}>Deposit</option>
+            <option value="withdrawal" ${currentTypeFilter === 'withdrawal' ? 'selected' : ''}>Withdrawal</option>
           </select>
+        </div>
+        <div class="text-muted small">
+          <strong>Transaction Types:</strong><br>
+          • <strong>Cash Cycle:</strong> Order earnings<br>
+          • <strong>Service Fees:</strong> Platform fees<br>
+          • <strong>Pickup Fees:</strong> Pickup service charges<br>
+          • <strong>Shop Order Delivery:</strong> Shop order earnings<br>
+          • <strong>Refund:</strong> Money returned<br>
+          • <strong>Deposit:</strong> Money added<br>
+          • <strong>Withdrawal:</strong> Money released
         </div>
         `,
         showCancelButton: true,
-        confirmButtonText: 'Apply',
-        confirmButtonColor: '#3B82F6'
+        confirmButtonText: 'Apply Filter',
+        confirmButtonColor: '#3B82F6',
+        cancelButtonText: 'Cancel',
+        cancelButtonColor: '#6c757d'
       }).then((result) => {
         if (result.isConfirmed) {
           const selectedType = document.getElementById('typeSelect').value;
@@ -1120,11 +1213,91 @@
                           selectedType === 'cashCycle' ? 'Cash Cycle Only' :
                           selectedType === 'fees' ? 'Service Fees Only' :
                           selectedType === 'pickupFees' ? 'Pickup Fees Only' :
+                          selectedType === 'shopOrderDelivery' ? 'Shop Orders Only' :
                           selectedType === 'refund' ? 'Refunds Only' :
                           selectedType === 'deposit' ? 'Deposits Only' : 'Withdrawals Only';
           typeFilterBtn.textContent = typeText;
           
-          getTransactions(currentTimePeriod, currentStatusFilter, selectedType);
+          // Show loading toast
+          const loadingToast = Swal.fire({
+            title: 'Loading...',
+            text: `Filtering transactions by ${typeText}`,
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+          
+          getTransactions(currentTimePeriod, currentStatusFilter, selectedType)
+            .then(() => {
+              loadingToast.close();
+              Swal.fire({
+                title: 'Filter Applied!',
+                text: `Showing ${typeText} transactions`,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+              });
+            })
+            .catch(() => {
+              loadingToast.close();
+            });
+        }
+      });
+    });
+
+    // Add click handler for clear filters button
+    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+      Swal.fire({
+        title: 'Clear All Filters?',
+        text: 'This will reset all filters and show all transactions',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Clear All',
+        confirmButtonColor: '#6c757d',
+        cancelButtonText: 'Cancel',
+        cancelButtonColor: '#3B82F6'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Reset all filters
+          currentTimePeriod = 'month';
+          currentStatusFilter = 'all';
+          currentTypeFilter = 'all';
+          
+          // Update filter button texts
+          document.querySelector('.date-filter .filter-text').textContent = 'This Month';
+          document.querySelector('.status-filter .filter-text').textContent = 'All Status';
+          document.querySelector('.type-filter .filter-text').textContent = 'All Types';
+          
+          // Show loading toast
+          const loadingToast = Swal.fire({
+            title: 'Loading...',
+            text: 'Clearing filters and refreshing data',
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+          
+          // Refresh data
+          getTransactions(currentTimePeriod, currentStatusFilter, currentTypeFilter)
+            .then(() => {
+              loadingToast.close();
+              Swal.fire({
+                title: 'Filters Cleared!',
+                text: 'All filters have been reset and data refreshed',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+              });
+            })
+            .catch(() => {
+              loadingToast.close();
+            });
         }
       });
     });
@@ -1156,7 +1329,7 @@
           // Show success message
           Swal.fire({
             title: 'Balance Refreshed!',
-            text: `Balance recalculated from ${data.balanceInfo.transactionCount} unsettled transactions`,
+            text: `Balance recalculated from ${data.balanceInfo.unsettledCount} unsettled transactions`,
             icon: 'success',
             confirmButtonColor: '#3B82F6',
             timer: 3000,

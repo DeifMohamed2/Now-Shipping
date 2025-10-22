@@ -309,6 +309,11 @@
           </div>
 
           <div class="col-xxl-2 col-sm-2">
+            <button type="button" class="btn btn-outline-secondary w-100 me-2" onclick="clearFilters();">
+              <i class="ri-close-circle-line me-1 align-bottom"></i> Clear
+            </button>
+          </div>
+          <div class="col-xxl-2 col-sm-2">
             <button type="button" class="btn btn-primary w-100" onclick="applyFilters();">
               <i class="ri-equalizer-fill me-1 align-bottom"></i> Apply Filters
             </button>
@@ -635,15 +640,102 @@
     
     console.log('Applying filters:', currentFilters);
     
-    // Refresh data with new filters
-    getOrdersAndTotals(currentFilters.timePeriod);
+    // Show loading state
+    const loadingToast = Swal.fire({
+      title: 'Loading...',
+      text: 'Applying filters and refreshing data',
+      icon: 'info',
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
     
+    // Refresh data with new filters
+    getOrdersAndTotals(currentFilters.timePeriod)
+      .then(() => {
+        loadingToast.close();
+        Swal.fire({
+          title: 'Filters Applied!',
+          text: 'The cash cycles list has been filtered according to your criteria',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      })
+      .catch((error) => {
+        loadingToast.close();
+        console.error('Error applying filters:', error);
+        Swal.fire({
+          title: 'Filter Error',
+          text: 'Failed to apply filters. Please try again.',
+          icon: 'error',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      });
+  }
+
+  // Clear filters function
+  function clearFilters() {
     Swal.fire({
-      title: 'Filters Applied',
-      text: 'The cash cycles list has been filtered according to your criteria',
-      icon: 'success',
-      timer: 1500,
-      showConfirmButton: false
+      title: 'Clear All Filters?',
+      text: 'This will reset all filters and show all orders',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Clear All',
+      confirmButtonColor: '#6c757d',
+      cancelButtonText: 'Cancel',
+      cancelButtonColor: '#3B82F6'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Reset all filters
+        currentFilters.orderType = 'all';
+        currentFilters.releaseStatus = 'all';
+        currentFilters.searchTerm = '';
+        
+        // Reset form elements
+        document.getElementById('orderTypeFilter').value = 'all';
+        document.getElementById('releaseStatusFilter').value = 'all';
+        document.querySelector('.search').value = '';
+        
+        // Show loading toast
+        const loadingToast = Swal.fire({
+          title: 'Loading...',
+          text: 'Clearing filters and refreshing data',
+          icon: 'info',
+          showConfirmButton: false,
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        // Refresh data
+        getOrdersAndTotals(currentFilters.timePeriod)
+          .then(() => {
+            loadingToast.close();
+            Swal.fire({
+              title: 'Filters Cleared!',
+              text: 'All filters have been reset and data refreshed',
+              icon: 'success',
+              timer: 1500,
+              showConfirmButton: false
+            });
+          })
+          .catch((error) => {
+            loadingToast.close();
+            console.error('Error clearing filters:', error);
+            Swal.fire({
+              title: 'Error',
+              text: 'Failed to clear filters. Please try again.',
+              icon: 'error',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          });
+      }
     });
   }
 
@@ -653,48 +745,93 @@
     async function getOrdersAndTotals(timePeriod) {
         try {
           console.log('Fetching data for time period:', timePeriod);
-            const response = await fetch(`/business/wallet/get-total-cashCycle-by-data?timePeriod=${timePeriod}`);
-            console.log('Response status:', response.status);
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to fetch orders');
-            }
-            console.log('Data received:', data);
-            console.log('Orders array:', data.orders);
-            console.log('Orders length:', data.orders ? data.orders.length : 'undefined');
-            console.log('Debug info:', data.debug);
-            
-            // Update summary stats with enhanced formatting
-            const totalIncome = data.totalIncome || 0;
-            const totalFees = data.totalFees || 0;
-            const netTotal = data.netTotal || (totalIncome - totalFees);
-            const completedCount = data.completedOrdersCount || 0;
-            const returnedCount = data.returnedOrdersCount || 0;
-            const canceledCount = data.canceledOrdersCount || 0;
-            const returnCompletedCount = data.returnCompletedOrdersCount || 0;
-            const totalOrdersCount = data.completedCount || 0; // Total processed orders
+          console.log('Current filters:', currentFilters);
+          
+          // Build query parameters
+          const params = new URLSearchParams({
+            timePeriod: timePeriod,
+            orderType: currentFilters.orderType,
+            releaseStatus: currentFilters.releaseStatus,
+            searchTerm: currentFilters.searchTerm
+          });
+          
+          const response = await fetch(`/business/wallet/get-total-cashCycle-by-data?${params.toString()}`);
+          console.log('Response status:', response.status);
+          const data = await response.json();
+          
+          if (!response.ok) {
+              throw new Error(data.message || 'Failed to fetch orders');
+          }
+          console.log('Data received:', data);
+          console.log('Orders array:', data.orders);
+          console.log('Orders length:', data.orders ? data.orders.length : 'undefined');
+          console.log('Debug info:', data.debug);
+          
+          // Update summary stats with enhanced formatting
+          const totalIncome = data.totalIncome || 0;
+          const totalFees = data.totalFees || 0;
+          const netTotal = data.netTotal || (totalIncome - totalFees);
+          const completedCount = data.completedOrdersCount || 0;
+          const returnedCount = data.returnedOrdersCount || 0;
+          const canceledCount = data.canceledOrdersCount || 0;
+          const returnCompletedCount = data.returnCompletedOrdersCount || 0;
+          const totalOrdersCount = data.completedCount || 0; // Total processed orders
 
-            document.getElementById('totalIncome').innerHTML = `${totalIncome.toFixed(2)}`;
-            document.getElementById('totalIncome').setAttribute('data-target', totalIncome);
-            document.getElementById('totalFees').innerHTML = `${totalFees.toFixed(2)}`;
-            document.getElementById('totalFees').setAttribute('data-target', totalFees);
-            document.getElementById('netTotal').innerHTML = `${netTotal.toFixed(2)}`;
-            document.getElementById('netTotal').setAttribute('data-target', netTotal);
-            document.getElementById('totalOrdersCount').innerHTML = totalOrdersCount;
-            document.getElementById('totalOrdersCount').setAttribute('data-target', totalOrdersCount);
-            
-            // Update order count displays
-            document.getElementById('completedCountDisplay').innerHTML = completedCount;
-            document.getElementById('returnedCountDisplay').innerHTML = returnedCount;
+          document.getElementById('totalIncome').innerHTML = `${totalIncome.toFixed(2)}`;
+          document.getElementById('totalIncome').setAttribute('data-target', totalIncome);
+          document.getElementById('totalFees').innerHTML = `${totalFees.toFixed(2)}`;
+          document.getElementById('totalFees').setAttribute('data-target', totalFees);
+          document.getElementById('netTotal').innerHTML = `${netTotal.toFixed(2)}`;
+          document.getElementById('netTotal').setAttribute('data-target', netTotal);
+          document.getElementById('totalOrdersCount').innerHTML = totalOrdersCount;
+          document.getElementById('totalOrdersCount').setAttribute('data-target', totalOrdersCount);
+          
+          // Update order count displays
+          document.getElementById('completedCountDisplay').innerHTML = completedCount;
+          document.getElementById('returnedCountDisplay').innerHTML = returnedCount;
 
-            // Populate table with orders
-            populateTable(data.orders);
+          // Apply client-side filtering if needed
+          let filteredOrders = data.orders || [];
+          
+          // Apply search filter
+          if (currentFilters.searchTerm && currentFilters.searchTerm.trim() !== '') {
+            const searchTerm = currentFilters.searchTerm.toLowerCase();
+            filteredOrders = filteredOrders.filter(order => 
+              order.orderNumber.toLowerCase().includes(searchTerm) ||
+              order.orderCustomer.fullName.toLowerCase().includes(searchTerm) ||
+              order.orderCustomer.government.toLowerCase().includes(searchTerm) ||
+              order.orderCustomer.zone.toLowerCase().includes(searchTerm)
+            );
+          }
+          
+          // Apply order type filter
+          if (currentFilters.orderType && currentFilters.orderType !== 'all') {
+            filteredOrders = filteredOrders.filter(order => 
+              order.orderShipping.orderType === currentFilters.orderType
+            );
+          }
+          
+          // Apply release status filter
+          if (currentFilters.releaseStatus && currentFilters.releaseStatus !== 'all') {
+            filteredOrders = filteredOrders.filter(order => {
+              if (currentFilters.releaseStatus === 'released') {
+                return order.moneyReleaseDate;
+              } else if (currentFilters.releaseStatus === 'pending') {
+                return !order.moneyReleaseDate;
+              }
+              return true;
+            });
+          }
+          
+          console.log(`Filtered ${data.orders ? data.orders.length : 0} orders to ${filteredOrders.length} after applying filters`);
 
-            // Log transaction data if available
-            if (data.transactions && data.transactions.length > 0) {
-                console.log('Transaction data available:', data.transactions.length, 'transactions');
-            }
+          // Populate table with filtered orders
+          populateTable(filteredOrders);
+
+          // Log transaction data if available
+          if (data.transactions && data.transactions.length > 0) {
+              console.log('Transaction data available:', data.transactions.length, 'transactions');
+          }
 
         } catch (error) {
             console.error('Error fetching orders:', error);

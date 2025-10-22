@@ -40,7 +40,7 @@ const shopOrderSchema = new mongoose.Schema(
     },
     business: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'users',
       required: true,
     },
     businessName: String,
@@ -70,10 +70,7 @@ const shopOrderSchema = new mongoose.Schema(
       enum: [
         'pending', // New order
         'confirmed', // Admin confirmed
-        'processing', // Being prepared/packaged
-        'ready', // Ready for pickup
         'assigned', // Assigned to courier
-        'picked_up', // Courier picked up
         'in_transit', // On the way
         'delivered', // Delivered successfully
         'cancelled', // Cancelled
@@ -91,18 +88,26 @@ const shopOrderSchema = new mongoose.Schema(
       enum: ['cash', 'wallet', 'card', 'bank_transfer'],
       default: 'wallet',
     },
-    deliveryAddress: {
-      fullAddress: String,
-      city: String,
-      area: String,
-      street: String,
-      building: String,
-      floor: String,
-      apartment: String,
-      landmark: String,
-      coordinates: {
-        lat: Number,
-        lng: Number,
+    orderCustomer: {
+      fullName: {
+        type: String,
+        required: true,
+      },
+      phoneNumber: {
+        type: String,
+        required: true,
+      },
+      address: {
+        type: String,
+        required: true,
+      },
+      government: {
+        type: String,
+        required: true,
+      },
+      zone: {
+        type: String,
+        required: true,
       },
     },
     contactInfo: {
@@ -112,10 +117,30 @@ const shopOrderSchema = new mongoose.Schema(
     },
     courier: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Courier',
+      ref: 'courier',
     },
     courierName: String,
     courierPhone: String,
+    assignedCouriers: [{
+      courier: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'courier',
+      },
+      courierName: String,
+      courierPhone: String,
+      assignedAt: {
+        type: Date,
+        default: Date.now,
+      },
+      assignedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        refPath: 'assignedCouriers.assignedByModel',
+      },
+      assignedByModel: {
+        type: String,
+        enum: ['Admin', 'User'],
+      },
+    }],
     assignedAt: Date,
     pickedUpAt: Date,
     deliveredAt: Date,
@@ -168,7 +193,7 @@ const shopOrderSchema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'users',
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -237,18 +262,9 @@ shopOrderSchema.pre('save', function (next) {
         en: 'Order confirmed by admin',
         ar: 'تم تأكيد الطلب من قبل المسؤول',
       },
-      processing: {
-        en: 'Order is being prepared and packaged',
-        ar: 'يتم تحضير وتعبئة الطلب',
-      },
-      ready: { en: 'Order is ready for pickup', ar: 'الطلب جاهز للاستلام' },
       assigned: {
         en: 'Order assigned to courier',
         ar: 'تم تعيين الطلب للمندوب',
-      },
-      picked_up: {
-        en: 'Order picked up by courier',
-        ar: 'تم استلام الطلب من قبل المندوب',
       },
       in_transit: {
         en: 'Order is on the way to delivery',
@@ -276,6 +292,62 @@ shopOrderSchema.pre('save', function (next) {
     }
   }
   next();
+});
+
+// Add post-save hook to create transaction when shop order is delivered
+shopOrderSchema.post('save', async function(doc) {
+  if (doc.status === 'delivered' && doc.paymentStatus === 'paid') {
+    try {
+      console.log('Shop order delivered, checking for existing transaction for order:', doc.orderNumber);
+      
+      const Transaction = require('./transactions');
+      
+      // Check if transaction already exists for this shop order
+      const existingTransaction = await Transaction.findOne({
+        'shopOrderReferences.shopOrderId': doc._id,
+        transactionType: 'shopOrderDelivery'
+      });
+      
+      if (existingTransaction) {
+        console.log(`Transaction already exists for shop order ${doc.orderNumber}`);
+        return;
+      }
+      
+      console.log('Creating new transaction for shop order:', doc.orderNumber);
+      
+      // Create shop order delivery transaction
+      const shopOrderTransaction = new Transaction({
+        transactionId: `${Math.floor(100000 + Math.random() * 900000)}`,
+        transactionType: 'shopOrderDelivery',
+        transactionAmount: doc.totalAmount, // Shop order amount is added to business balance
+        transactionNotes: `Shop order delivery for order ${doc.orderNumber}`,
+        ordersDetails: {
+          orderNumber: doc.orderNumber,
+          totalAmount: doc.totalAmount,
+          deliveryFee: doc.deliveryFee,
+          subtotal: doc.subtotal,
+          tax: doc.tax,
+          discount: doc.discount,
+          deliveredDate: new Date(),
+          itemsCount: doc.items.length,
+          businessName: doc.businessName
+        },
+        shopOrderReferences: [{
+          shopOrderId: doc._id,
+          orderNumber: doc.orderNumber,
+          totalAmount: doc.totalAmount,
+          deliveredDate: new Date()
+        }],
+        business: doc.business,
+      });
+
+      await shopOrderTransaction.save();
+      console.log(`Shop order transaction created successfully for order ${doc.orderNumber}`);
+      
+    } catch (error) {
+      console.error('Error creating shop order transaction in post-save hook:', error);
+    }
+  }
 });
 
 // Calculate totals

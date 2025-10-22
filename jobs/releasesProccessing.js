@@ -75,7 +75,7 @@ async function processPendingReleases() {
             const Transaction = require('../models/transactions');
             const userTransactions = await Transaction.find({
                 business: user._id,
-                transactionType: { $in: ['cashCycle', 'fees', 'pickupFees', 'flyersFees', 'returnFees', 'cancellationFees', 'returnCompletedFees'] },
+                transactionType: { $in: ['cashCycle', 'fees', 'pickupFees', 'flyersFees', 'returnFees', 'cancellationFees', 'returnCompletedFees', 'shopOrderDelivery'] },
                 settlementStatus: 'pending',
                 createdAt: { $gte: weekStart, $lte: weekEnd }
             }).sort({ createdAt: -1 });
