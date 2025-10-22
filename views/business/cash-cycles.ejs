@@ -291,9 +291,20 @@
             <div class="input-light">
               <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="orderTypeFilter">
                 <option value="all" selected>All Order Types</option>
-                <option value="Standard">Standard</option>
-                <option value="Express">Express</option>
-                <option value="Premium">Premium</option>
+                <option value="Deliver">Deliver</option>
+                <option value="Return">Return</option>
+                <option value="Exchange">Exchange</option>
+                <option value="Cash Collection">Cash Collection</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-xxl-2 col-sm-3">
+            <div class="input-light">
+              <select class="form-control" data-choices data-choices-search-false name="choices-shipping-default" id="shippingTypeFilter">
+                <option value="all" selected>All Shipping Types</option>
+                <option value="standard">Standard</option>
+                <option value="express">Express</option>
               </select>
             </div>
           </div>
@@ -605,6 +616,7 @@
   let currentFilters = {
     timePeriod: 'week',
     orderType: 'all',
+    shippingType: 'all',
     releaseStatus: 'all',
     searchTerm: ''
   };
@@ -631,10 +643,12 @@
   // Apply filters function
   function applyFilters() {
     const orderType = document.getElementById('orderTypeFilter').value;
+    const shippingType = document.getElementById('shippingTypeFilter').value;
     const releaseStatus = document.getElementById('releaseStatusFilter').value;
     const searchTerm = document.querySelector('.search').value;
     
     currentFilters.orderType = orderType;
+    currentFilters.shippingType = shippingType;
     currentFilters.releaseStatus = releaseStatus;
     currentFilters.searchTerm = searchTerm;
     
@@ -692,11 +706,13 @@
       if (result.isConfirmed) {
         // Reset all filters
         currentFilters.orderType = 'all';
+        currentFilters.shippingType = 'all';
         currentFilters.releaseStatus = 'all';
         currentFilters.searchTerm = '';
         
         // Reset form elements
         document.getElementById('orderTypeFilter').value = 'all';
+        document.getElementById('shippingTypeFilter').value = 'all';
         document.getElementById('releaseStatusFilter').value = 'all';
         document.querySelector('.search').value = '';
         
@@ -751,6 +767,7 @@
           const params = new URLSearchParams({
             timePeriod: timePeriod,
             orderType: currentFilters.orderType,
+            shippingType: currentFilters.shippingType,
             releaseStatus: currentFilters.releaseStatus,
             searchTerm: currentFilters.searchTerm
           });
@@ -809,6 +826,18 @@
             filteredOrders = filteredOrders.filter(order => 
               order.orderShipping.orderType === currentFilters.orderType
             );
+          }
+          
+          // Apply shipping type filter
+          if (currentFilters.shippingType && currentFilters.shippingType !== 'all') {
+            filteredOrders = filteredOrders.filter(order => {
+              if (currentFilters.shippingType === 'express') {
+                return order.orderShipping.isExpressShipping === true;
+              } else if (currentFilters.shippingType === 'standard') {
+                return order.orderShipping.isExpressShipping === false;
+              }
+              return true;
+            });
           }
           
           // Apply release status filter

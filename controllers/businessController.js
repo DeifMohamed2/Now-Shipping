@@ -2802,7 +2802,7 @@ const get_cashCyclesPage = (req, res) => {
 
 const get_totalCashCycleByDate = async (req, res) => {
   try {
-    const { timePeriod, orderType, releaseStatus, searchTerm } = req.query;
+    const { timePeriod, orderType, shippingType, releaseStatus, searchTerm } = req.query;
     let dateFilter = {};
     const now = new Date();
     
@@ -2883,6 +2883,15 @@ const get_totalCashCycleByDate = async (req, res) => {
     // Order type filter
     if (orderType && orderType !== 'all') {
       additionalFilters['orderShipping.orderType'] = orderType;
+    }
+    
+    // Shipping type filter
+    if (shippingType && shippingType !== 'all') {
+      if (shippingType === 'express') {
+        additionalFilters['orderShipping.isExpressShipping'] = true;
+      } else if (shippingType === 'standard') {
+        additionalFilters['orderShipping.isExpressShipping'] = false;
+      }
     }
     
     // Release status filter
