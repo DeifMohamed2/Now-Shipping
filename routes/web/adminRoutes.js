@@ -219,6 +219,10 @@ router.get(
   notificationController.getRecentNotifications
 );
 
+// FCM Token Management routes
+router.post('/notifications/cleanup-tokens', notificationController.cleanupInvalidTokens);
+router.post('/notifications/test-token', notificationController.testUserToken);
+
 // Financial Processing Management routes
 router.get(
   '/financial-processing',

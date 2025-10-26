@@ -6,6 +6,7 @@ const User = require('../../../models/user.js');
 const jwtSecret = process.env.JWT_SECRET;
 
 const businessController = require('../../../controllers/businessController.js');
+const notificationController = require('../../../controllers/notificationController.js');
 
 
 async function authenticateUser(req, res, next) {
@@ -188,5 +189,23 @@ router.get('/cash-cycles', businessController.get_totalCashCycleByDate);
 // Export cash cycles to Excel
 router.get('/wallet/export-cash-cycles', businessController.exportCashCyclesToExcel);
 
+// ==================== NOTIFICATION APIs ==================== //
+
+// Update FCM token for push notifications
+router.post('/update-fcm-token', notificationController.updateBusinessFcmToken);
+
+// Get business notifications
+router.get('/notifications', notificationController.getBusinessNotifications);
+
+// Mark notification as read
+router.put('/notifications/:notificationId/read', notificationController.markNotificationAsRead);
+
+// ==================== SMART FLYER BARCODE APIs ==================== //
+
+// Scan and assign Smart Flyer barcode to an order
+router.post('/orders/scan-smart-flyer-barcode', businessController.scanSmartFlyerBarcode);
+
+// Get order details by Smart Flyer barcode or order number
+router.get('/orders/search/:searchValue', businessController.getOrderBySmartBarcode);
 
 module.exports = router;

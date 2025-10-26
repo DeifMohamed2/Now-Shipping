@@ -5,6 +5,8 @@ const Pickup = require('../models/pickup');
 const User = require('../models/user');
 const JobLog = require('../models/JobLog');
 const mongoose = require('mongoose');
+const { emailService } = require('../utils/email');
+const firebase = require('../config/firebase');
 
 /**
  * Enhanced Daily Order Processing with Robust Duplicate Prevention
@@ -272,6 +274,34 @@ async function processBusinessOrders(businessId, businessOrders, batchId) {
       
       await Promise.all(orderUpdatePromises);
       
+      // Send daily cash cycle email to business
+      try {
+        const business = await User.findById(businessId).select('email brandInfo name');
+        if (business && business.email) {
+          const ordersForEmail = allBusinessOrders.map(order => ({
+            orderNumber: order.orderNumber,
+            customerName: order.orderCustomer?.fullName || 'N/A',
+            orderType: order.orderShipping?.orderType || 'Standard',
+            amount: order.orderShipping?.amount || 0,
+            fees: order.orderFees || 0,
+            status: order.orderStatus,
+            completedDate: order.completedDate
+          }));
+
+          const businessData = {
+            email: business.email,
+            businessName: business.brandInfo?.brandName || business.name || 'Business',
+            businessId: businessId
+          };
+
+          await emailService.sendDailyCashCycleSummary(businessData, ordersForEmail);
+          console.log(`📧 Daily cash cycle email sent to business ${businessId}`);
+        }
+      } catch (emailError) {
+        console.error(`❌ Failed to send email to business ${businessId}:`, emailError);
+        // Don't fail the entire process if email fails
+      }
+      
       console.log(`Successfully processed ${allBusinessOrders.length} orders for business ${businessId}`);
     });
   } catch (error) {
@@ -356,6 +386,34 @@ async function dailyOrderProcessing() {
     });
     
     console.log(`Daily order processing completed. Processed ${totalProcessed} orders across ${Object.keys(ordersByBusiness).length} businesses.`);
+    
+    // Send push notifications to all businesses about daily processing completion
+    try {
+      const businesses = await User.find({ 
+        _id: { $in: Object.keys(ordersByBusiness) },
+        fcmToken: { $ne: null }
+      });
+      
+      for (const business of businesses) {
+        const businessOrders = ordersByBusiness[business._id] || [];
+        const totalAmount = businessOrders.reduce((sum, order) => sum + (order.orderShipping?.amount || 0), 0);
+        
+        await firebase.sendFinancialProcessingNotification(
+          business._id,
+          'daily_processing',
+          {
+            ordersProcessed: businessOrders.length,
+            totalAmount: totalAmount,
+            processedAt: new Date(),
+            batchId: batchId
+          }
+        );
+        console.log(`📱 Push notification sent to business ${business._id} about daily processing completion`);
+      }
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notifications for daily processing:`, notificationError);
+      // Don't fail the processing if notifications fail
+    }
     
     if (errors.length > 0) {
       console.error(`Errors occurred in ${errors.length} businesses:`, errors);

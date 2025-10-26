@@ -22,7 +22,17 @@ const notificationSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ['broadcast', 'personal'],
+      enum: [
+        'broadcast', 
+        'personal', 
+        'order_status', 
+        'pickup_status', 
+        'shop_order_status', 
+        'courier_assignment', 
+        'pickup_assignment', 
+        'shop_order_assignment', 
+        'financial_processing'
+      ],
       required: true,
     },
     data: {

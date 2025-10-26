@@ -133,6 +133,13 @@ const orderSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    smartFlyerBarcode: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true, // Allows multiple null values
+      default: null,
+    },
     orderDate: {
       type: Date,
       required: true,

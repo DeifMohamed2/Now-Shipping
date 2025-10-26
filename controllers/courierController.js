@@ -5,6 +5,8 @@ const User = require('../models/user');
 const ShopOrder = require('../models/shopOrder');
 const statusHelper = require('../utils/statusHelper');
 const { calculatePickupFee } = require('../utils/fees');
+const { emailService } = require('../utils/email');
+const firebase = require('../config/firebase');
 
 const getDashboardPage = (req, res) => {
   res.render('courier/dashboard', {
@@ -501,9 +503,46 @@ const updateOrderStatus = async (req, res) => {
         order.scheduledRetryAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
       }
       await order.save();
+
+      // Send push notification to business about order status change
+      try {
+        await firebase.sendOrderStatusNotification(
+          order.business._id,
+          order.orderNumber,
+          order.orderStatus,
+          {
+            courierName: order.deliveryMan.name,
+            reason: reason,
+            attempts: order.Attemps,
+            updatedAt: new Date()
+          }
+        );
+        console.log(`📱 Push notification sent to business ${order.business._id} about order ${order.orderNumber} status change to ${order.orderStatus}`);
+      } catch (notificationError) {
+        console.error(`❌ Failed to send push notification to business ${order.business._id}:`, notificationError);
+        // Don't fail the status update if notification fails
+      }
     } else if (status === 'rejected') {
       // Courier rejected the order - initiate full return process
       await fullInitiationReturn(order, status);
+
+      // Send push notification to business about order rejection
+      try {
+        await firebase.sendOrderStatusNotification(
+          order.business._id,
+          order.orderNumber,
+          'rejected',
+          {
+            courierName: order.deliveryMan.name,
+            reason: reason || 'Order rejected by courier',
+            updatedAt: new Date()
+          }
+        );
+        console.log(`📱 Push notification sent to business ${order.business._id} about order ${order.orderNumber} rejection`);
+      } catch (notificationError) {
+        console.error(`❌ Failed to send push notification to business ${order.business._id}:`, notificationError);
+        // Don't fail the status update if notification fails
+      }
     }
 
     res.status(200).json({ message: 'Order status updated successfully' });
@@ -747,6 +786,48 @@ const completeOrder = async (req, res) => {
     }
 
     await order.save();
+    
+    // Send professional order delivery notification to business
+    try {
+      const business = await User.findById(order.business).select('email brandInfo name');
+      if (business && business.email) {
+        const orderData = {
+          orderNumber: order.orderNumber,
+          orderId: order._id,
+          customerName: order.orderCustomer?.fullName || 'N/A',
+          orderType: order.orderShipping?.orderType || 'Standard',
+          amount: order.orderShipping?.amount || 0,
+          deliveryDate: order.completedDate,
+          courierName: req.courierData.name,
+          status: order.orderStatus
+        };
+
+        await emailService.sendOrderDeliveryNotification(orderData, business.email);
+        console.log(`📧 Order delivery notification sent to business ${business._id} for order ${order.orderNumber}`);
+      }
+    } catch (emailError) {
+      console.error(`❌ Failed to send order delivery email for order ${order.orderNumber}:`, emailError);
+      // Don't fail the order completion if email fails
+    }
+
+    // Send push notification to business about order completion
+    try {
+      await firebase.sendOrderStatusNotification(
+        order.business,
+        order.orderNumber,
+        'completed',
+        {
+          courierName: req.courierData.name,
+          completedAt: order.completedDate,
+          orderType: order.orderShipping?.orderType || 'Standard'
+        }
+      );
+      console.log(`📱 Push notification sent to business ${order.business} about order ${order.orderNumber} completion`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification for order ${order.orderNumber}:`, notificationError);
+      // Don't fail the order completion if notification fails
+    }
+    
     res.status(200).json({ message: 'Order completed successfully' });
   } catch (error) {
     console.log(error.message);
@@ -867,6 +948,25 @@ const pickupReturn = async (req, res) => {
     }
 
     await order.save();
+
+    // Send push notification to business about return pickup
+    try {
+      await firebase.sendOrderStatusNotification(
+        order.business,
+        order.orderNumber,
+        'returnPickedUp',
+        {
+          courierName: req.courierData.name,
+          pickedUpAt: new Date(),
+          returnReason: order.orderShipping?.returnReason || 'Customer return'
+        }
+      );
+      console.log(`📱 Push notification sent to business ${order.business} about return pickup for order ${order.orderNumber}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification for return pickup ${order.orderNumber}:`, notificationError);
+      // Don't fail the pickup if notification fails
+    }
+
     res.status(200).json({
       message: 'Return picked up successfully',
       order: order,
@@ -994,6 +1094,24 @@ const completeReturnToBusiness = async (req, res) => {
     });
 
     await order.save();
+
+    // Send push notification to business about return completion
+    try {
+      await firebase.sendOrderStatusNotification(
+        order.business,
+        order.orderNumber,
+        'returnCompleted',
+        {
+          courierName: req.courierData.name,
+          completedAt: order.completedDate,
+          returnReason: order.orderShipping?.returnReason || 'Customer return'
+        }
+      );
+      console.log(`📱 Push notification sent to business ${order.business} about return completion for order ${order.orderNumber}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification for return completion ${order.orderNumber}:`, notificationError);
+      // Don't fail the return completion if notification fails
+    }
 
     // If this return order is linked to a deliver order, mark the deliver order as returned
     if (order.orderShipping.linkedDeliverOrder) {
@@ -1375,6 +1493,25 @@ const completePickup = async (req, res) => {
 
     await pickup.save();
 
+    // Send push notification to business about pickup completion
+    try {
+      await firebase.sendOrderStatusNotification(
+        pickup.business,
+        pickup.pickupNumber,
+        'pickedUp',
+        {
+          courierName: req.courierData.name,
+          pickedUpAt: new Date(),
+          ordersCount: pickup.ordersPickedUp.length,
+          pickupFees: pickup.pickupFees
+        }
+      );
+      console.log(`📱 Push notification sent to business ${pickup.business} about pickup completion for pickup ${pickup.pickupNumber}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification for pickup completion ${pickup.pickupNumber}:`, notificationError);
+      // Don't fail the pickup completion if notification fails
+    }
+
     res.status(200).json({ message: 'Pickup completed successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1659,6 +1796,26 @@ const updateCourierShopOrderStatus = async (req, res) => {
     }
 
     await order.save();
+
+    // Send push notification to business about shop order status change
+    try {
+      await firebase.sendShopOrderStatusNotification(
+        order.business,
+        order.orderNumber,
+        status,
+        {
+          courierName: req.courierData.name,
+          previousStatus: previousStatus,
+          updatedAt: new Date(),
+          notes: notes || '',
+          location: location || null
+        }
+      );
+      console.log(`📱 Push notification sent to business ${order.business} about shop order ${order.orderNumber} status change to ${status}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to business ${order.business}:`, notificationError);
+      // Don't fail the status update if notification fails
+    }
 
     res.status(200).json({
       message: `Order status successfully updated from '${previousStatus}' to '${status}'`,

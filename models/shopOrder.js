@@ -210,7 +210,6 @@ const shopOrderSchema = new mongoose.Schema(
 );
 
 // Indexes
-shopOrderSchema.index({ orderNumber: 1 });
 shopOrderSchema.index({ business: 1 });
 shopOrderSchema.index({ courier: 1 });
 shopOrderSchema.index({ status: 1 });

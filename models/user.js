@@ -192,6 +192,10 @@ const UserSchema = new mongoose.Schema(
     verificationTokenExpires: {
       type: Date,
     },
+    fcmToken: {
+      type: String,
+      default: null
+    }
   },
   {
     timestamps: true,

@@ -91,9 +91,7 @@ const DB = process.env.DATABASE_URL;
 
 // Connect to database first, then start server
 mongoose
-  .connect(DB, {
-    useNewUrlParser: true,
-  })
+  .connect(DB)
   .then((con) => {
     console.log('DB connection successfully..!');
 
@@ -140,6 +138,10 @@ app.use('/admin', adminRouter);
 app.use('/business', businessRouter);
 app.use('/manage', manageRouter);
 app.use('/courier', courierRouter);
+
+// Emergency FCM token cleanup route (public, no auth required)
+const notificationController = require('./controllers/notificationController');
+app.get('/emergency-cleanup/:courierId', notificationController.emergencyCleanupCourier);
 
 // Mobile app routes V1
 app.use('/api/v1/auth', AuthRouterApi);

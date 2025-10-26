@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const User = require('../models/user');
 const Release = require('../models/releases');
 const JobLog = require('../models/JobLog');
+const firebase = require('../config/firebase');
 
 
 async function checkIfJobAlreadyRun(today) {
@@ -116,6 +117,24 @@ async function processPendingReleases() {
             });
 
             await pendingRelease.save();
+
+            // Send push notification to business about release processing
+            try {
+                await firebase.sendFinancialProcessingNotification(
+                    user._id,
+                    'release_processing',
+                    {
+                        amount: totalAmount,
+                        releaseId: pendingRelease.releaseId,
+                        transactionsCount: userTransactions.length,
+                        balance: user.balance
+                    }
+                );
+                console.log(`📱 Push notification sent to business ${user._id} about release processing for amount ${totalAmount} EGP`);
+            } catch (notificationError) {
+                console.error(`❌ Failed to send push notification to business ${user._id}:`, notificationError);
+                // Don't fail the release processing if notification fails
+            }
 
             // Mark all transactions as included in release
             await Transaction.updateMany(

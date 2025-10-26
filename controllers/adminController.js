@@ -11,6 +11,8 @@ const jwt = require('jsonwebtoken');
 const statusHelper = require('../utils/statusHelper');
 const FinancialReconciliation = require('../utils/financialReconciliation');
 const { dailyOrderProcessing, recoverFailedProcessing, processSpecificOrders } = require('../jobs/dailyOrderProcessing');
+const { emailService } = require('../utils/email');
+const firebase = require('../config/firebase');
 const JWT_SECRET = process.env.JWT_SECRET
 const ExcelJS = require('exceljs');
 const multer = require('multer');
@@ -684,7 +686,7 @@ const get_pickupMenByZone = async (req, res) => {
 const assignPickupMan = async (req, res) => {
   const { pickupId, courierId } = req.body;
   try {
-    const pickup = await Pickup.findOne({ _id: pickupId });
+    const pickup = await Pickup.findOne({ _id: pickupId }).populate('business');
     if (!pickup) {
       return res.status(404).json({ error: 'Pickup not found' });
     }
@@ -711,10 +713,82 @@ console.log('courier assig');
     // courier.isAvailable = false;
 
     await pickup.save();
+
+    // Send push notification to courier about pickup assignment
+    try {
+      await firebase.sendPickupAssignmentNotification(
+        courierId,
+        pickup.pickupNumber,
+        {
+          pickupId: pickup._id,
+          businessName: pickup.business?.brandInfo?.brandName || pickup.business?.name || 'Business',
+          assignedBy: 'Admin'
+        }
+      );
+      console.log(`📱 Push notification sent to courier ${courierId} about pickup assignment ${pickup.pickupNumber}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError.message);
+      console.error('🔍 Pickup assignment notification error context:', {
+        courierId,
+        pickupNumber: pickup.pickupNumber,
+        pickupId: pickup._id,
+        errorCode: notificationError.code || 'N/A',
+        errorType: notificationError.constructor.name,
+        errorStack: notificationError.stack?.split('\n')[0] || 'N/A',
+        timestamp: new Date().toISOString()
+      });
+      console.error('💡 This is a non-critical error - pickup assignment will still succeed');
+      // Don't fail the assignment if notification fails
+    }
+
+    // Send push notification to business about pickup assignment
+    try {
+      await firebase.sendPickupStatusNotification(
+        pickup.business._id,
+        pickup.pickupNumber,
+        'driverAssigned',
+        {
+          courierName: courier.name,
+          assignedAt: new Date(),
+          assignedBy: 'Admin'
+        }
+      );
+      console.log(`📱 Push notification sent to business ${pickup.business._id} about pickup assignment ${pickup.pickupNumber}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to business ${pickup.business._id}:`, notificationError.message);
+      console.error('🔍 Business notification error context:', {
+        businessId: pickup.business._id,
+        businessName: pickup.business?.brandInfo?.brandName || pickup.business?.name || 'Business',
+        pickupNumber: pickup.pickupNumber,
+        pickupId: pickup._id,
+        courierName: courier.name,
+        errorCode: notificationError.code || 'N/A',
+        errorType: notificationError.constructor.name,
+        errorStack: notificationError.stack?.split('\n')[0] || 'N/A',
+        timestamp: new Date().toISOString()
+      });
+      console.error('💡 This is a non-critical error - pickup assignment will still succeed');
+      // Don't fail the assignment if notification fails
+    }
+
     res.status(200).json({ message: 'Pickup man assigned successfully' });
   } catch (error) {
-    console.error('Error assigning pickup Man:', error);
-    res.status(500).json({ error: 'Internal server error. Please try again.' });
+    console.error('❌ Error assigning pickup Man:', error.message);
+    console.error('🔍 Pickup assignment error context:', {
+      courierId,
+      pickupId: req.params.pickupId,
+      errorCode: error.code || 'N/A',
+      errorType: error.constructor.name,
+      errorStack: error.stack?.split('\n')[0] || 'N/A',
+      timestamp: new Date().toISOString(),
+      requestBody: req.body,
+      requestParams: req.params
+    });
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again.',
+      errorCode: error.code || 'N/A',
+      message: error.message
+    });
   }
 };
 
@@ -776,7 +850,7 @@ const cancelPickup = async (req, res) => {
   try {
     const pickup = await Pickup.findById(pickupId).populate(
       'assignedDriver'
-    );
+    ).populate('business');
 
     if (!pickup) {
       return res.status(404).json({ error: 'Pickup not found' });
@@ -797,6 +871,43 @@ const cancelPickup = async (req, res) => {
     // pickup.assignedDriver.isAvailable = true;
 
     await pickup.save();
+
+    // Send push notification to business about pickup cancellation
+    try {
+      await firebase.sendPickupStatusNotification(
+        pickup.business._id,
+        pickup.pickupNumber,
+        'canceled',
+        {
+          cancelledAt: new Date(),
+          cancelledBy: 'Admin'
+        }
+      );
+      console.log(`📱 Push notification sent to business ${pickup.business._id} about pickup cancellation ${pickup.pickupNumber}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to business ${pickup.business._id}:`, notificationError);
+      // Don't fail the cancellation if notification fails
+    }
+
+    // Send push notification to courier about pickup cancellation (if assigned)
+    if (pickup.assignedDriver) {
+      try {
+        await firebase.sendPickupStatusNotification(
+          pickup.assignedDriver._id,
+          pickup.pickupNumber,
+          'canceled',
+          {
+            cancelledAt: new Date(),
+            cancelledBy: 'Admin'
+          }
+        );
+        console.log(`📱 Push notification sent to courier ${pickup.assignedDriver._id} about pickup cancellation ${pickup.pickupNumber}`);
+      } catch (notificationError) {
+        console.error(`❌ Failed to send push notification to courier ${pickup.assignedDriver._id}:`, notificationError);
+        // Don't fail the cancellation if notification fails
+      }
+    }
+
     res.status(200).json({ message: 'Pickup cancelled successfully' });
   } catch (error) {
     console.error('Error in cancelPickup:', error);
@@ -1107,6 +1218,24 @@ const assignCourierToStock = async (req, res) => {
 
     await Promise.all(updatePromises);
 
+    // Send push notification to courier about new assignments
+    try {
+      await firebase.sendCourierAssignmentNotification(
+        courierId,
+        orders.length > 1 ? `${orders.length} orders` : orders[0].orderNumber,
+        'assigned',
+        {
+          ordersCount: orders.length,
+          orderNumbers: orderNumbers,
+          assignedBy: 'Admin'
+        }
+      );
+      console.log(`📱 Push notification sent to courier ${courierId} about ${orders.length} new order assignments`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError);
+      // Don't fail the assignment if notification fails
+    }
+
     res.status(200).json({ message: 'Orders assigned to courier successfully' });
   } catch (error) {
     console.error('Error in assignCourierToStock:', error);
@@ -1389,6 +1518,24 @@ const assignCourierToReturn = async (req, res) => {
     }
 
     await Promise.all(orders.map(order => order.save()));
+
+    // Send push notification to courier about return assignments
+    try {
+      await firebase.sendCourierAssignmentNotification(
+        courierId,
+        orders.length > 1 ? `${orders.length} returns` : orders[0].orderNumber,
+        'return_pickup',
+        {
+          ordersCount: orders.length,
+          orderNumbers: orderNumbers,
+          assignedBy: 'Admin'
+        }
+      );
+      console.log(`📱 Push notification sent to courier ${courierId} about ${orders.length} return pickup assignments`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError);
+      // Don't fail the assignment if notification fails
+    }
 
     res.status(200).json({ 
       message: 'Courier assigned to return orders successfully',
@@ -1799,6 +1946,24 @@ const assignCourierToReturnToBusiness = async (req, res) => {
 
     await Promise.all(orders.map(order => order.save()));
 
+    // Send push notification to courier about return delivery assignments
+    try {
+      await firebase.sendCourierAssignmentNotification(
+        courierId,
+        orders.length > 1 ? `${orders.length} returns` : orders[0].orderNumber,
+        'return_delivery',
+        {
+          ordersCount: orders.length,
+          orderNumbers: orderNumbers,
+          assignedBy: 'Admin'
+        }
+      );
+      console.log(`📱 Push notification sent to courier ${courierId} about ${orders.length} return delivery assignments`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError);
+      // Don't fail the assignment if notification fails
+    }
+
     res.status(200).json({ message: 'Courier assigned to deliver returns to business successfully' });
 
   } catch (error) {
@@ -2018,6 +2183,24 @@ const releaseFunds = async (req, res) => {
     });
 
     await transaction.save();
+
+    // Send professional money release email to business
+    try {
+      const releaseData = {
+        releaseId: release.releaseId,
+        amount: release.amount,
+        releaseDate: new Date(),
+        paymentMethod: business.paymentMethod?.paymentChoice || 'Bank Transfer',
+        transactionCount: release.transactionReferences.length,
+        businessName: business.brandInfo?.brandName || business.name || 'Business'
+      };
+
+      await emailService.sendMoneyReleaseNotification(releaseData, business.email);
+      console.log(`📧 Money release email sent to business ${business._id}`);
+    } catch (emailError) {
+      console.error(`❌ Failed to send money release email to business ${business._id}:`, emailError);
+      // Don't fail the release process if email fails
+    }
 
     console.log(`Funds released successfully for business ${release.business._id}. Amount: ${release.amount} EGP`);
 
@@ -3259,12 +3442,13 @@ const updateShopOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status, notes, packagingDetails } = req.body;
 
-    const order = await ShopOrder.findById(id);
+    const order = await ShopOrder.findById(id).populate('business');
 
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    const previousStatus = order.status;
     order.status = status;
     order.updatedBy = req.adminData._id;
     order.updatedByModel = 'Admin';
@@ -3286,6 +3470,26 @@ const updateShopOrderStatus = async (req, res) => {
 
     await order.save();
 
+    // Send push notification to business about shop order status change
+    try {
+      await firebase.sendShopOrderStatusNotification(
+        order.business._id,
+        order.orderNumber,
+        status,
+        {
+          previousStatus: previousStatus,
+          updatedAt: new Date(),
+          updatedBy: 'Admin',
+          notes: notes || '',
+          packagingDetails: packagingDetails || null
+        }
+      );
+      console.log(`📱 Push notification sent to business ${order.business._id} about shop order ${order.orderNumber} status change to ${status}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to business ${order.business._id}:`, notificationError);
+      // Don't fail the status update if notification fails
+    }
+
     res.status(200).json({
       message: 'Order status updated successfully',
       order,
@@ -3302,7 +3506,7 @@ const assignCourierToShopOrder = async (req, res) => {
     const { id } = req.params;
     const { courierId } = req.body;
 
-    const order = await ShopOrder.findById(id);
+    const order = await ShopOrder.findById(id).populate('business');
 
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
@@ -3347,6 +3551,43 @@ const assignCourierToShopOrder = async (req, res) => {
     await Courier.findByIdAndUpdate(courierId, {
       $addToSet: { assignedShopOrders: order._id }
     });
+
+    // Send push notification to courier about shop order assignment
+    try {
+      await firebase.sendShopOrderAssignmentNotification(
+        courierId,
+        order.orderNumber,
+        {
+          orderId: order._id,
+          businessName: order.business?.brandInfo?.brandName || order.business?.name || 'Business',
+          assignedBy: 'Admin',
+          totalAmount: order.totalAmount
+        }
+      );
+      console.log(`📱 Push notification sent to courier ${courierId} about shop order assignment ${order.orderNumber}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError);
+      // Don't fail the assignment if notification fails
+    }
+
+    // Send push notification to business about shop order assignment
+    try {
+      await firebase.sendShopOrderStatusNotification(
+        order.business._id,
+        order.orderNumber,
+        'assigned',
+        {
+          courierName: courier.name,
+          courierPhone: courier.phoneNumber,
+          assignedAt: new Date(),
+          assignedBy: 'Admin'
+        }
+      );
+      console.log(`📱 Push notification sent to business ${order.business._id} about shop order assignment ${order.orderNumber}`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification to business ${order.business._id}:`, notificationError);
+      // Don't fail the assignment if notification fails
+    }
 
     res.status(200).json({
       message: 'Courier assigned successfully',

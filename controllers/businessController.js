@@ -9,6 +9,7 @@ const ShopOrder = require('../models/shopOrder');
 const nodemailer = require('nodemailer');
 const statusHelper = require('../utils/statusHelper');
 const ExcelJS = require('exceljs');
+const { emailService } = require('../utils/email');
 
 // Ensure all models are properly registered with Mongoose
 require('../models/courier');
@@ -1400,6 +1401,27 @@ const cancelOrder = async (req, res) => {
         canceledBy: 'business'
       };
       await order.save();
+
+      // Send push notification to courier about order cancellation (if assigned)
+      if (order.deliveryMan) {
+        try {
+          await firebase.sendOrderStatusNotification(
+            order.deliveryMan,
+            order.orderNumber,
+            'canceled',
+            {
+              cancelledBy: 'Business',
+              cancelledAt: new Date(),
+              reason: 'Order canceled by business before pickup'
+            }
+          );
+          console.log(`📱 Push notification sent to courier ${order.deliveryMan} about order ${order.orderNumber} cancellation`);
+        } catch (notificationError) {
+          console.error(`❌ Failed to send push notification to courier ${order.deliveryMan}:`, notificationError);
+          // Don't fail the cancellation if notification fails
+        }
+      }
+
       return res.status(200).json({ message: 'Order canceled successfully.' });
     }
 
@@ -4073,6 +4095,151 @@ const cancelShopOrder = async (req, res) => {
   }
 };
 
+// ================================================= Smart Flyer Barcode ================================================= //
+
+
+const scanSmartFlyerBarcode = async (req, res) => {
+  try {
+    const { orderNumber, smartFlyerBarcode } = req.body;
+
+    // Validate required fields
+    if (!orderNumber || !smartFlyerBarcode) {
+      return res.status(400).json({ 
+        error: 'Order number and Smart Flyer barcode are required' 
+      });
+    }
+
+    // Validate barcode format (adjust regex as needed for your barcode format)
+    const barcodeRegex = /^[A-Z0-9]+$/;
+    if (!barcodeRegex.test(smartFlyerBarcode)) {
+      return res.status(400).json({ 
+        error: 'Invalid Smart Flyer barcode format' 
+      });
+    }
+
+    // Find the order
+    const order = await Order.findOne({ 
+      orderNumber: orderNumber,
+      business: req.userData._id 
+    });
+
+    if (!order) {
+      return res.status(404).json({ 
+        error: 'Order not found or does not belong to your business' 
+      });
+    }
+
+    // Check if order already has a barcode
+    if (order.smartFlyerBarcode) {
+      return res.status(400).json({ 
+        error: 'Order already has a Smart Flyer barcode assigned',
+        existingBarcode: order.smartFlyerBarcode,
+        message: `This order already has barcode: ${order.smartFlyerBarcode}`
+      });
+    }
+
+    // Check if barcode is already assigned to another order
+    const existingOrderWithBarcode = await Order.findOne({ 
+      smartFlyerBarcode: smartFlyerBarcode 
+    });
+
+    if (existingOrderWithBarcode && existingOrderWithBarcode.orderNumber !== orderNumber) {
+      return res.status(400).json({ 
+        error: 'Barcode already assigned to another order',
+        conflictingOrder: existingOrderWithBarcode.orderNumber,
+        message: `This barcode is already assigned to order: ${existingOrderWithBarcode.orderNumber}`
+      });
+    }
+
+    // Assign barcode to order
+    order.smartFlyerBarcode = smartFlyerBarcode;
+    await order.save();
+
+    // Add to order notes if needed
+    if (order.orderNotes) {
+      order.orderNotes += `\nSmart Flyer barcode assigned: ${smartFlyerBarcode} at ${new Date().toISOString()}`;
+    } else {
+      order.orderNotes = `Smart Flyer barcode assigned: ${smartFlyerBarcode} at ${new Date().toISOString()}`;
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Smart Flyer barcode assigned successfully',
+      order: {
+        orderNumber: order.orderNumber,
+        smartFlyerBarcode: order.smartFlyerBarcode,
+        assignedAt: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error scanning Smart Flyer barcode:', error);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again.',
+      details: error.message 
+    });
+  }
+};
+
+const getOrderBySmartBarcode = async (req, res) => {
+  try {
+    const { searchValue } = req.params;
+
+    if (!searchValue) {
+      return res.status(400).json({ 
+        error: 'Order number or Smart Flyer barcode is required' 
+      });
+    }
+
+    // Search in both orderNumber and smartFlyerBarcode fields
+    const order = await Order.findOne({
+      business: req.userData._id,
+      $or: [
+        { orderNumber: searchValue },
+        { smartFlyerBarcode: searchValue }
+      ]
+    })
+    .populate('deliveryMan', 'name phone email')
+    .populate({
+      path: 'courierHistory.courier',
+      model: 'courier',
+      select: 'name phone email'
+    })
+    .populate('business', 'name email phone brandInfo');
+
+    if (!order) {
+      return res.status(404).json({ 
+        error: 'Order not found or does not belong to your business'
+      });
+    }
+
+    // Enhance order with status information
+    const orderObj = order.toObject();
+    orderObj.statusLabel = statusHelper.getOrderStatusLabel(order.orderStatus);
+    orderObj.statusDescription = statusHelper.getOrderStatusDescription(order.orderStatus);
+    orderObj.categoryClass = statusHelper.getCategoryClass(order.statusCategory);
+    orderObj.categoryColor = statusHelper.getCategoryColor(order.statusCategory);
+    
+    // Add fast shipping indicator
+    orderObj.isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Order found successfully',
+      order: orderObj
+    });
+
+  } catch (error) {
+    console.error('Error fetching order by Smart Flyer barcode or order number:', error);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again.',
+      details: error.message 
+    });
+  }
+};
+
 module.exports = {
   getDashboardPage,
   getDashboardData,
@@ -4152,6 +4319,10 @@ module.exports = {
   getBusinessShopOrders,
   getBusinessShopOrderDetails,
   cancelShopOrder,
+  
+  // Smart Flyer Barcode functions
+  scanSmartFlyerBarcode,
+  getOrderBySmartBarcode,
   
 };
 
