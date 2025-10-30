@@ -2,6 +2,7 @@
 <link rel="stylesheet" href="/assets/rCSS/business.css">
 <link rel="stylesheet" href="/assets/libs/filepond/filepond.min.css" type="text/css" />
 <link rel="stylesheet" href="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
+<link rel="stylesheet" href="/assets/css/area-selection-modal.css">
 <style>
   /* Map styles */
   #previewMap {
@@ -850,206 +851,14 @@
                             
                             <!-- Location Details Section -->
                             <div class="row">
-                              <div class="col-md-5">
-                                <label for="region" class="form-label text-muted small fw-medium">Governorate</label>
-                                <select class="form-select form-select-lg mb-3" name="city" id="region" required>
-                                  <option value="">Select Governorate</option>
-                                  <option value="Cairo">Cairo</option>
-                                  <option value="Giza">Giza</option>
-                                  <option value="Alexandria">Alexandria</option>
-                                </select>
-                              </div>
-                              
-                              <div class="col-md-7">
-                                <label for="zone" class="form-label text-muted small fw-medium">Zone</label>
-                                <div class="zone-select-wrapper position-relative">
-                                  <select class="form-select form-select-lg custom-zone-select" name="zone" id="zone" required>
-                                    <option value="">Select Zone</option>
-                                    
-                                    <!-- Cairo zones - Comprehensive list organized by areas -->
-                                    <optgroup label="Cairo - Downtown & Central" class="zone-group" data-city="Cairo">
-                                      <option value="Downtown">Downtown Cairo</option>
-                                      <option value="Garden City">Garden City</option>
-                                      <option value="Zamalek">Zamalek</option>
-                                      <option value="Dokki">Dokki</option>
-                                      <option value="Mohandessin">Mohandessin</option>
-                                      <option value="Agouza">Agouza</option>
-                                      <option value="Bulaq">Bulaq</option>
-                                      <option value="Azbakeya">Azbakeya</option>
-                                      <option value="Abdeen">Abdeen</option>
-                                      <option value="Attaba">Attaba</option>
-                                      <option value="Ramses">Ramses</option>
-                                      <option value="Qasr El Nil">Qasr El Nil</option>
-                                      <option value="Talaat Harb">Talaat Harb</option>
-                                      <option value="Tahrir Square">Tahrir Square</option>
-                                    </optgroup>
-                                    
-                                    <optgroup label="Cairo - East" class="zone-group" data-city="Cairo">
-                                      <option value="Nasr City">Nasr City</option>
-                                      <option value="Nasr City - First Zone">Nasr City - First Zone</option>
-                                      <option value="Nasr City - Second Zone">Nasr City - Second Zone</option>
-                                      <option value="Nasr City - Third Zone">Nasr City - Third Zone</option>
-                                      <option value="Nasr City - Fourth Zone">Nasr City - Fourth Zone</option>
-                                      <option value="Nasr City - Seventh Zone">Nasr City - Seventh Zone</option>
-                                      <option value="Nasr City - Eighth Zone">Nasr City - Eighth Zone</option>
-                                      <option value="Nasr City - Tenth Zone">Nasr City - Tenth Zone</option>
-                                      <option value="Heliopolis">Heliopolis</option>
-                                      <option value="Heliopolis - Korba">Heliopolis - Korba</option>
-                                      <option value="Heliopolis - Triumph">Heliopolis - Triumph</option>
-                                      <option value="Heliopolis - Cleopatra">Heliopolis - Cleopatra</option>
-                                      <option value="Heliopolis - Almaza">Heliopolis - Almaza</option>
-                                      <option value="Masr El Gedida">Masr El Gedida</option>
-                                      <option value="El Nozha">El Nozha</option>
-                                      <option value="El Nozha El Gedida">El Nozha El Gedida</option>
-                                      <option value="El Zeitoun">El Zeitoun</option>
-                                      <option value="Ain Shams">Ain Shams</option>
-                                      <option value="Ain Shams - Ezbet El Nakhl">Ain Shams - Ezbet El Nakhl</option>
-                                      <option value="El Marg">El Marg</option>
-                                      <option value="El Marg El Gedida">El Marg El Gedida</option>
-                                      <option value="El Salam City">El Salam City</option>
-                                      <option value="El Matariya">El Matariya</option>
-                                      <option value="Hadayek El Qobba">Hadayek El Qobba</option>
-                                      <option value="El Waili">El Waili</option>
-                                      <option value="Gesr El Suez">Gesr El Suez</option>
-                                      <option value="Cairo Airport">Cairo Airport</option>
-                                      <option value="Sheraton">Sheraton</option>
-                                      <option value="Sheraton Heliopolis">Sheraton Heliopolis</option>
-                                    </optgroup>
-                                    
-                                    <optgroup label="Cairo - South & New Cairo" class="zone-group" data-city="Cairo">
-                                      <option value="Maadi">Maadi</option>
-                                      <option value="New Cairo">New Cairo</option>
-                                      <option value="Fifth Settlement">Fifth Settlement</option>
-                                      <option value="First Settlement">First Settlement</option>
-                                      <option value="Katameya">Katameya</option>
-                                      <option value="El Mokattam">El Mokattam</option>
-                                      <option value="El Basateen">El Basateen</option>
-                                      <option value="Dar El Salam">Dar El Salam</option>
-                                      <option value="El Rehab">El Rehab</option>
-                                      <option value="El Tagamoa">El Tagamoa</option>
-                                      <option value="El Shorouk">El Shorouk</option>
-                                      <option value="Badr City">Badr City</option>
-                                      <option value="Helwan">Helwan</option>
-                                      <option value="15th of May City">15th of May City</option>
-                                      <option value="Hadayek Helwan">Hadayek Helwan</option>
-                                    </optgroup>
-                                    
-                                    <optgroup label="Cairo - West" class="zone-group" data-city="Cairo">
-                                      <option value="Mohandessin">Mohandessin</option>
-                                      <option value="Dokki">Dokki</option>
-                                      <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
-                                      <option value="Imbaba">Imbaba</option>
-                                      <option value="Agouza">Agouza</option>
-                                      <option value="Warraq">Warraq</option>
-                                      <option value="Rod El Farag">Rod El Farag</option>
-                                      <option value="Shobra">Shobra</option>
-                                      <option value="Shobra El Kheima">Shobra El Kheima</option>
-                                    </optgroup>
-                                    
-                                    <!-- Giza zones - Comprehensive list organized by areas -->
-                                    <optgroup label="Giza - Central & East" class="zone-group" data-city="Giza">
-                                      <option value="Giza Square">Giza Square</option>
-                                      <option value="Dokki">Dokki</option>
-                                      <option value="Mohandessin">Mohandessin</option>
-                                      <option value="Agouza">Agouza</option>
-                                      <option value="Haram">Haram</option>
-                                      <option value="Faisal">Faisal</option>
-                                      <option value="Imbaba">Imbaba</option>
-                                      <option value="Kit Kat">Kit Kat</option>
-                                      <option value="El Manial">El Manial</option>
-                                      <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
-                                      <option value="El Saff">El Saff</option>
-                                      <option value="El Hawamdeya">El Hawamdeya</option>
-                                    </optgroup>
-                                    
-                                    <optgroup label="Giza - West" class="zone-group" data-city="Giza">
-                                      <option value="6th of October">6th of October City</option>
-                                      <option value="Sheikh Zayed">Sheikh Zayed City</option>
-                                      <option value="Smart Village">Smart Village</option>
-                                      <option value="El Moatamadeya">El Moatamadeya</option>
-                                      <option value="Dahshur">Dahshur</option>
-                                      <option value="Kirdasah">Kirdasah</option>
-                                      <option value="Remaya Square">Remaya Square</option>
-                                      <option value="Hadayek El Ahram">Hadayek El Ahram</option>
-                                      <option value="El Wahat Road">El Wahat Road</option>
-                                      <option value="El Mansuriya">El Mansuriya</option>
-                                      <option value="El Haram">El Haram</option>
-                                      <option value="Mariotiya">Mariotiya</option>
-                                      <option value="Abu Rawash">Abu Rawash</option>
-                                    </optgroup>
-                                    
-                                    <!-- Alexandria zones - Comprehensive list organized by areas -->
-                                    <optgroup label="Alexandria - Downtown & East" class="zone-group" data-city="Alexandria">
-                                      <option value="Raml Station">Raml Station</option>
-                                      <option value="Raml Station - Azarita">Raml Station - Azarita</option>
-                                      <option value="Raml Station - Mansheya">Raml Station - Mansheya</option>
-                                      <option value="Sidi Gaber">Sidi Gaber</option>
-                                      <option value="Sidi Gaber - Mostafa Kamel">Sidi Gaber - Mostafa Kamel</option>
-                                      <option value="Sidi Gaber Station">Sidi Gaber Station</option>
-                                      <option value="Cleopatra">Cleopatra</option>
-                                      <option value="Cleopatra - Tram Station">Cleopatra - Tram Station</option>
-                                      <option value="Sporting">Sporting</option>
-                                      <option value="Sporting - El Bostan">Sporting - El Bostan</option>
-                                      <option value="Stanley">Stanley</option>
-                                      <option value="Stanley - El Asafra">Stanley - El Asafra</option>
-                                      <option value="Stanley Bridge">Stanley Bridge</option>
-                                      <option value="San Stefano">San Stefano</option>
-                                      <option value="San Stefano Mall">San Stefano Mall</option>
-                                      <option value="Gleem">Gleem</option>
-                                      <option value="Gleem Bay">Gleem Bay</option>
-                                      <option value="Rushdy">Rushdy</option>
-                                      <option value="Saba Pasha">Saba Pasha</option>
-                                      <option value="Kafr Abdo">Kafr Abdo</option>
-                                      <option value="Camp Caesar">Camp Caesar</option>
-                                      <option value="Smouha">Smouha</option>
-                                      <option value="Victoria">Victoria</option>
-                                      <option value="Bolkly">Bolkly</option>
-                                      <option value="Ibrahimia">Ibrahimia</option>
-                                      <option value="Laurent">Laurent</option>
-                                      <option value="Loran">Loran</option>
-                                    </optgroup>
-                                    
-                                    <optgroup label="Alexandria - Central & West" class="zone-group" data-city="Alexandria">
-                                      <option value="Bahary">Bahary</option>
-                                      <option value="Anfushi">Anfushi</option>
-                                      <option value="Manshiya">Manshiya</option>
-                                      <option value="Attarin">Attarin</option>
-                                      <option value="Gomrok">Gomrok</option>
-                                      <option value="Karmouz">Karmouz</option>
-                                      <option value="Moharam Bek">Moharam Bek</option>
-                                      <option value="Dekhela">Dekhela</option>
-                                      <option value="Agami">Agami</option>
-                                      <option value="Amreya">Amreya</option>
-                                      <option value="Borg El Arab">Borg El Arab</option>
-                                      <option value="King Mariout">King Mariout</option>
-                                      <option value="Wardian">Wardian</option>
-                                      <option value="Bacos">Bacos</option>
-                                    </optgroup>
-                                    
-                                    <optgroup label="Alexandria - East & Montaza" class="zone-group" data-city="Alexandria">
-                                      <option value="Sidi Bishr">Sidi Bishr</option>
-                                      <option value="Miami">Miami</option>
-                                      <option value="Asafra">Asafra</option>
-                                      <option value="Mandara">Mandara</option>
-                                      <option value="Montaza">Montaza</option>
-                                      <option value="Abu Qir">Abu Qir</option>
-                                      <option value="El Maamoura">El Maamoura</option>
-                                      <option value="El Max">El Max</option>
-                                      <option value="Aboukir">Aboukir</option>
-                                      <option value="Semouha">Semouha</option>
-                                      <option value="Fleming">Fleming</option>
-                                      <option value="El Zahria">El Zahria</option>
-                                      <option value="Gianaclis">Gianaclis</option>
-                                    </optgroup>
-                                    
-                                    <optgroup label="Other Regions" class="zone-group" data-city="Other">
-                                      <option value="Other Region">Other Region</option>
-                                    </optgroup>
-                                  </select>
-                                  <div class="zone-select-arrow">
+                              <div class="col-md-12">
+                                <label for="pickup-area" class="form-label text-muted small fw-medium">Governorate and Area</label>
+                                <button type="button" class="btn btn-outline-secondary w-100 text-start" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
+                                  <span id="selectedAreaDisplay">Select Area</span>
                                     <i class="ri-arrow-down-s-line"></i>
-                                  </div>
-                                </div>
+                                </button>
+                                <input type="hidden" name="city" id="government-value">
+                                <input type="hidden" name="zone" id="zone-value">
                               </div>
                             </div>
                           </div>
@@ -1528,8 +1337,9 @@
 </div>
 <% } %>
 
-
 <%- contentFor('FooterJs') %>
+<!-- Include Area Selection Modal -->
+<%- include('../partials/area-selection-modal') %>
 <script src="/assets/libs/filepond/filepond.min.js"></script>
 <script src="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js"></script>
 <script src="/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js"></script>
@@ -1541,6 +1351,7 @@
 
 <script src="/assets/js/pages/form-file-upload.init.js"></script>
 <script src="/assets/rJS/business/main.js"></script>
+<script src="/assets/js/area-selection-modal.js"></script>
 
 <script>
 // Optimized Dashboard Loading

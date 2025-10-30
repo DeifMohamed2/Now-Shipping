@@ -130,6 +130,13 @@
       margin-top: 0.25em;
       vertical-align: top;
     }
+
+.table-responsive.table-card {
+  max-height: 70vh;
+  overflow-y: auto;
+  min-height: 300px;
+}
+.pagination-wrap { padding-top: 10px; }
 </style>
 <div class="row">
   <div class="col-lg-12">
@@ -381,6 +388,25 @@
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
 <script>
+  (function initPickupFilterDate(){
+    function init() {
+      var el = document.getElementById('demo-datepicker');
+      if (!el) return;
+      try {
+        flatpickr(el, { mode: 'range', dateFormat: 'd M, Y', allowInput: true });
+        el.addEventListener('focus', function(){ if (el._flatpickr) { el._flatpickr.open(); } });
+      } catch (e) { console.error('Flatpickr init error:', e); }
+    }
+    if (typeof window.flatpickr === 'undefined') {
+      var s = document.createElement('script');
+      s.src = '/assets/libs/flatpickr/flatpickr.min.js';
+      s.onload = init;
+      document.head.appendChild(s);
+    } else { init(); }
+  })();
+</script>
+
+<script>
 
 
 
@@ -389,101 +415,116 @@
   const checkAll = document.getElementById('checkAll');
   const estimatedPickupFeeEl = document.getElementById('estimatedPickupFee');
 
-  async function fetchPickups(status = "Upcoming") {
-    try {
+  // Replace client-side listing with server-side pagination version
+  const PICKUPS_PER_PAGE = 30;
+  let currentPage = 1;
+  let lastPaginationData = { currentPage: 1, totalPages: 1, totalCount: 0 };
 
-      // Show loading spinner
+  function getFiltersFromUI() {
+    const searchInput = document.querySelector('.search-box .search');
+    const dateInput = document.getElementById('demo-datepicker');
+    const statusSelect = document.getElementById('idStatus');
+    let dateFrom = '', dateTo = '';
+    if (dateInput && dateInput.value) {
+      if (dateInput.value.includes('to')) {
+        const parts = dateInput.value.split('to').map(s => s.trim());
+        dateFrom = parts[0];
+        dateTo = parts[1];
+      } else {
+        dateFrom = dateInput.value.trim();
+        dateTo = dateInput.value.trim();
+      }
+    }
+    return {
+      search: (searchInput && searchInput.value ? searchInput.value.trim() : ''),
+      status: (statusSelect && statusSelect.value ? statusSelect.value : 'all'),
+      dateFrom,
+      dateTo
+    };
+  }
+
+  async function fetchPickups(tabType = 'Upcoming', page = 1) {
+    try {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="9" class="text-center">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+          <td colspan="10" class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
           </td>
         </tr>
       `;
+      const filters = getFiltersFromUI();
+      const params = new URLSearchParams();
+      params.append('limit', PICKUPS_PER_PAGE);
+      params.append('page', page);
+      params.append('pickupType', tabType);
+      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters.dateTo) params.append('dateTo', filters.dateTo);
 
-      const response = await fetch(`/business/get-pickups?pickupType=${status}`);
-      const pickups = await response.json();
-      if(response.ok){
-        tableBody.innerHTML = ""; // Clear existing rows
-        NoResult.style.display = "none";
-        if (pickups.length === 0) {
-          NoResult.style.display = "block";
-          return;
-        }
-        populatePickupsTable(pickups);
-      }else{
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: `Error fetching pickups: ${pickups.message || 'Unknown error'}`,
-        });
+      const url = `/business/get-pickups?${params.toString()}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (response.ok && data.pickups) {
+        lastPaginationData = data.pagination;
+        populatePickupsTable(data.pickups);
+        updatePaginationBar();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Oops...', text: `Error fetching pickups: ${data.message || 'Unknown error'}` });
       }
     } catch (error) {
-      console.error("Error fetching pickups:", error);
+      console.error('Error fetching pickups:', error);
     }
   }
 
-
-
-  function populatePickupsTable(pickups) {
-    tableBody.innerHTML = ""; // Clear existing rows
-
-    pickups.forEach(pickup => {
-      const row = document.createElement("tr");
-
-      row.innerHTML = `
-        <th scope="row">
-          <div class="form-check">
-        <input class="form-check-input" type="checkbox" name="checkAll[]" value="${pickup.pickupNumber}">
-          </div>
-        </th>
-        <td class="id"><a href="/business/pickup-details/${pickup.pickupNumber}" class="fw-medium link-primary">${pickup.pickupNumber}</a></td>
-        <td class="pickup_address">
-          ${pickup.business.pickUpAdress.adressDetails}<br>
-            <span class="text-muted">${pickup.business.pickUpAdress.city}</span><br>
-        </td>
-        <td class="contact_info">${pickup.phoneNumber}</td>
-        <td class="pickup_date">
-          ${new Date(pickup.pickupDate).toLocaleDateString('en-US', { weekday: 'long' })}<br>
-          ${new Date(pickup.pickupDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </td>
-        <td class="number_of_items text-center">${pickup.numberOfOrders}</td>
-        <td class="pickup_fee"><strong>${formatCurrency(pickup.pickupFees)}</strong></td>
-        <td class="status">
-            <span class="badge ${getPickupStatusDetails(pickup.picikupStatus).badgeClass} text-uppercase fs-6">${getPickupStatusDetails(pickup.picikupStatus).statusText}</span>
-        </td>
-        <td class="delivery_man">
-          ${pickup.assignedDriver ? `<strong>${pickup.assignedDriver.name.split(' ').slice(0, 2).join(' ')}</strong><br><small>ID#${pickup.assignedDriver.courierID}</small>` : 'Not Assigned'}
-        </td>
-        <td>
-          <div class="dropdown dropdown-fix">
-        <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="ri-more-fill align-middle"></i>
-        </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="/business/pickup-details/${pickup.pickupNumber}">
-          <i class="ri-eye-fill align-bottom me-2 text-primary"></i> <span class="fs-6">View Details</span>
-            </a></li>
-          <li><button class="dropdown-item" onclick="deletePickup('${pickup._id}')">
-          <i class="ri-delete-bin-6-fill align-bottom me-2 text-danger"></i> <span class="fs-6">Delete Pickup</span>
-            </button></li>
-        </ul>
-          </div>
-        </td>
-      `;
-
-      tableBody.appendChild(row);
-    });
+  function filterPickups(tabType) {
+    currentPage = 1;
+    fetchPickups(tabType, currentPage);
   }
 
-  async function filterPickups(status) {
-    console.log("Filtering pickups by status:", status);
-    await fetchPickups(status);
+  function gotoPage(page) {
+    if (page < 1 || page > lastPaginationData.totalPages) return;
+    currentPage = page;
+    fetchPickups('Upcoming', currentPage);
   }
-  
-  document.addEventListener("DOMContentLoaded", () => filterPickups());
+
+  function updatePaginationBar() {
+    const prev = document.querySelector('.pagination-prev');
+    const next = document.querySelector('.pagination-next');
+    const ul = document.querySelector('.listjs-pagination');
+    if (!ul) return;
+    ul.innerHTML = '';
+    const { currentPage, totalPages } = lastPaginationData;
+    if (totalPages > 1 || totalPages === 0) {
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, currentPage + 2);
+      if (currentPage <= 3) endPage = Math.min(totalPages, 5);
+      if (currentPage + 2 > totalPages) startPage = Math.max(1, totalPages - 4);
+      for (let p = startPage; p <= endPage; p++) {
+        const li = document.createElement('li');
+        li.className = `page-item${p === currentPage ? ' active' : ''}`;
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.textContent = p;
+        a.href = 'javascript:void(0);';
+        a.onclick = () => gotoPage(p);
+        li.appendChild(a);
+        ul.appendChild(li);
+      }
+    }
+    if (prev) { prev.classList.toggle('disabled', currentPage === 1); prev.onclick = () => gotoPage(currentPage - 1); }
+    if (next) { next.classList.toggle('disabled', currentPage === totalPages); next.onclick = () => gotoPage(currentPage + 1); }
+  }
+
+  function SearchData() {
+    currentPage = 1;
+    fetchPickups('Upcoming', currentPage);
+  }
+
+  // On load
+  document.addEventListener('DOMContentLoaded', () => fetchPickups('Upcoming', 1));
 
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -635,10 +676,53 @@
     }
   }
 
+  if (typeof populatePickupsTable !== 'function') {
+    function populatePickupsTable(pickups) {
+      tableBody.innerHTML = "";
+      (pickups || []).forEach(pickup => {
+        const row = document.createElement('tr');
+        if (pickup.picikupStatus === 'new') {
+          row.classList.add('table-warning');
+        } else if (pickup.picikupStatus === 'rejected' || pickup.picikupStatus === 'returned') {
+          row.classList.add('table-danger');
+        }
+        const details = typeof getPickupStatusDetails === 'function' ? getPickupStatusDetails(pickup.picikupStatus) : { badgeClass: '', statusText: pickup.statusLabel || pickup.picikupStatus };
+        row.innerHTML = `
+          <th scope="row">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="checkAll[]" value="${pickup.pickupNumber}">
+            </div>
+          </th>
+          <td class="id"><a href="/business/pickup-details/${pickup.pickupNumber}" class="fw-medium link-primary">${pickup.pickupNumber}</a></td>
+          <td class="pickup_address">
+            ${pickup.business?.pickUpAdress?.adressDetails || ''}<br>
+            <span class="text-muted">${pickup.business?.pickUpAdress?.city || ''}</span>
+          </td>
+          <td class="contact_info">${pickup.phoneNumber || ''}</td>
+          <td class="pickup_date">
+            ${pickup.pickupDate ? new Date(pickup.pickupDate).toLocaleDateString('en-US', { weekday: 'long' }) : ''}<br>
+            ${pickup.pickupDate ? new Date(pickup.pickupDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+          </td>
+          <td class="number_of_items text-center">${pickup.numberOfOrders || 0}</td>
+          <td class="pickup_fee"><strong>${(pickup.pickupFees || 0)} EGP</strong></td>
+          <td class="status"><span class="badge text-uppercase fs-6 ${details.badgeClass}">${details.statusText}</span></td>
+          <td class="delivery_man">${pickup.assignedDriver ? `<strong>${(pickup.assignedDriver.name || '').split(' ').slice(0, 2).join(' ')}</strong>` : 'Not Assigned'}</td>
+          <td>
+            <div class="dropdown dropdown-fix">
+              <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="ri-more-fill align-middle"></i>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="/business/pickup-details/${pickup.pickupNumber}"><i class="ri-eye-fill align-bottom me-2 text-primary"></i> <span class="fs-6">View Details</span></a></li>
+              </ul>
+            </div>
+          </td>`;
+        tableBody.appendChild(row);
+      });
+    }
+  }
 
 
-  
-  
 </script>
 
 <!-- ecommerce-order init js -->

@@ -1,6 +1,7 @@
 <%- contentFor('HeaderCss') %>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<link rel="stylesheet" href="/assets/css/area-selection-modal.css">
 
 <style>
   :root {
@@ -318,6 +319,7 @@
     opacity: 0.3;
   }
 
+  /* Additional styles specific to create-order page if needed */
 </style>
 
 <%- contentFor('body') %>
@@ -382,28 +384,14 @@
                     <h5 class="section-title mb-3">Location Details</h5>
                   </div>
 
-                  <div class="mb-3 col-md-6">
-                    <label for="state" class="form-label">Government</label>
-                    <div class="select-container">
-                      <select class="form-select" id="state" name="government" data-plugin="choices">
-                        <option value="">Select Government</option>
-                        <option value="Cairo">Cairo</option>
-                        <option value="Giza">Giza</option>
-                        <option value="Alexandria">Alexandria</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="mb-3 col-md-6">
-                    <label for="zone" class="form-label">Area</label>
-                    <div class="zone-select-wrapper">
-                      <select class="form-select custom-zone-select" name="zone" id="zone" data-plugin="choices">
-                        <option value="">Select Area</option>
-                      </select>
-                      <div class="zone-select-arrow">
-                        <i class="ri-arrow-down-s-line"></i>
-                      </div>
-                    </div>
+                  <div class="mb-3 col-md-12">
+                    <label for="governorate-area" class="form-label">Governorate and Area</label>
+                    <button type="button" class="btn btn-outline-secondary w-100 text-start" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
+                      <span id="selectedAreaDisplay">Select Area</span>
+                      <i class="ri-arrow-down-s-line"></i>
+                    </button>
+                    <input type="hidden" name="government" id="government-value">
+                    <input type="hidden" name="zone" id="zone-value">
                   </div>
                 </div>
 
@@ -797,6 +785,8 @@
 </div>
 
 <%- contentFor('FooterJs') %>
+<!-- Include Area Selection Modal -->
+<%- include('../partials/area-selection-modal') %>
 
 <!-- Hidden template for zone options -->
 <script type="text/template" id="zone-options-template">
@@ -940,6 +930,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="/assets/js/area-selection-modal.js"></script>
 
 <script>
 // Enhanced order type handling with return section

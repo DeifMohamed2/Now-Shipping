@@ -1096,8 +1096,10 @@
       const response = await fetch(`/courier/orders/${orderNumber}/complete`, {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'same-origin'
       });
       
       const data = await response.json();
@@ -1248,8 +1250,10 @@
       const response = await fetch(`/courier/update-order-status/${orderId}`, {
         method: 'PUT',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
           status: actionType,
           reason: reason === 'other' ? otherReason : reason

@@ -20,6 +20,69 @@ const NoResult = document.getElementById('NoResult');
 let currentOrderType = 'all';
 let currentStatusCategory = 'all';
 
+const ORDERS_PER_PAGE = 30;
+let currentPage = 1;
+let lastPaginationData = { currentPage: 1, totalPages: 1, totalCount: 0 };
+
+// Helper: parse 'd M, Y' (e.g., '30 Oct, 2025') to ISO 'YYYY-MM-DD'
+function parseFlatpickrDateToISO(dateStr) {
+  if (!dateStr) return '';
+  const months = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+  };
+  const parts = dateStr.replace(',', '').split(' ').map(s => s.trim()).filter(Boolean);
+  // Expecting [day, Mon, Year]
+  if (parts.length !== 3) {
+    // Fallback to native parse and return ISO if possible
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    return '';
+  }
+  const dayNum = parseInt(parts[0], 10);
+  const monIdx = months[parts[1]];
+  const yearNum = parseInt(parts[2], 10);
+  if (isNaN(dayNum) || isNaN(monIdx) || isNaN(yearNum)) return '';
+  const d = new Date(yearNum, monIdx, dayNum);
+  if (isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Helper to fetch current filter values from UI
+function getFiltersFromUI() {
+  const searchInput = document.querySelector('.search-box .search');
+  const dateInput = document.getElementById('demo-datepicker');
+  const statusSelect = document.getElementById('idStatus');
+  const paymentSelect = document.getElementById('idPayment');
+  let dateFrom = '', dateTo = '';
+  if (dateInput && dateInput.value) {
+    if (dateInput.value.includes('to')) {
+      const [from, to] = dateInput.value.split('to').map(s => s.trim());
+      dateFrom = parseFlatpickrDateToISO(from);
+      dateTo = parseFlatpickrDateToISO(to);
+    } else {
+      const iso = parseFlatpickrDateToISO(dateInput.value.trim());
+      dateFrom = iso;
+      dateTo = iso;
+    }
+  }
+  return {
+    search: (searchInput && searchInput.value ? searchInput.value.trim() : ''),
+    status: (statusSelect && statusSelect.value ? statusSelect.value : 'all'),
+    paymentType: (paymentSelect && paymentSelect.value ? paymentSelect.value : 'all'),
+    dateFrom,
+    dateTo
+  };
+}
+
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
   // Load the status helper script dynamically if not already loaded
@@ -106,32 +169,44 @@ function filterReturnedOrders() {
   fetchOrders('Return', currentStatusCategory);
 }
 
-// Fetch Orders
-async function fetchOrders(orderType = "all", statusCategory = "all") {
+// Replace fetchOrders to always fetch from server with pagination/filters
+async function fetchOrders(orderType = "all", statusCategory = "all", page = 1) {
   try {
     showLoadingSpinner();
-    
-    // Build the query parameters
+    const filters = getFiltersFromUI();
     const params = new URLSearchParams();
-    
+    params.append('limit', ORDERS_PER_PAGE);
+    params.append('page', page);
     if (orderType && orderType !== 'all') {
       params.append('orderType', orderType);
     }
-    
     if (statusCategory && statusCategory !== 'all') {
       params.append('statusCategory', statusCategory);
     }
-    
-    // Create the URL with query parameters
-    const url = `/business/get-orders${params.toString() ? '?' + params.toString() : ''}`;
-    
+    if (filters.status && filters.status !== 'all') {
+      params.append('status', filters.status);
+    }
+    if (filters.paymentType && filters.paymentType !== 'all') {
+      params.append('paymentType', filters.paymentType);
+    }
+    if (filters.search) {
+      params.append('search', filters.search);
+    }
+    if (filters.dateFrom) {
+      params.append('dateFrom', filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      params.append('dateTo', filters.dateTo);
+    }
+    const url = `/business/get-orders?${params}`;
     const response = await fetch(url);
-    const orders = await response.json();
-    
-    if (response.ok) {
-      handleOrdersResponse(orders);
+    const data = await response.json();
+    if (response.ok && data.orders) {
+      lastPaginationData = data.pagination;
+      handleOrdersResponse(data.orders);
+      updatePaginationBar();
     } else {
-      showError(`Error fetching orders: ${orders.message || 'Unknown error'}`);
+      showError(`Error fetching orders: ${data.error || 'Unknown error'}`);
     }
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -153,7 +228,9 @@ function showLoadingSpinner() {
 function handleOrdersResponse(orders) {
   tableBody.innerHTML = ""; // Clear existing rows
   NoResult.style.display = "none";
-  if (orders.length === 0) {
+  // Cache globally for client-side filtering
+  window.allOrders = Array.isArray(orders) ? orders.slice() : [];
+  if (!orders || orders.length === 0) {
     NoResult.style.display = "block";
     return;
   }
@@ -644,4 +721,53 @@ async function cancelOrder(orderId) {
       confirmButtonText: 'OK',
     });
   });
+}
+
+// Filters event
+function SearchData() {
+  currentPage = 1; // reset to first page
+  fetchOrders(currentOrderType, currentStatusCategory, 1);
+}
+
+// Pagination event handler
+function gotoPage(page) {
+  if (page < 1 || page > lastPaginationData.totalPages) return;
+  currentPage = page;
+  fetchOrders(currentOrderType, currentStatusCategory, currentPage);
+}
+
+// Enhance updatePagination to show professional pagination
+function updatePaginationBar() {
+  const prev = document.querySelector('.pagination-prev');
+  const next = document.querySelector('.pagination-next');
+  const ul = document.querySelector('.listjs-pagination');
+  if (!ul) return;
+  ul.innerHTML = '';
+  const { currentPage, totalPages } = lastPaginationData;
+  // Only render pagination buttons if more than 1 page
+  if (totalPages > 1 || totalPages === 0) {
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
+    if (currentPage <= 3) {
+      endPage = Math.min(totalPages, 5);
+    }
+    if (currentPage + 2 > totalPages) {
+      startPage = Math.max(1, totalPages - 4);
+    }
+    for (let p = startPage; p <= endPage; p++) {
+      const li = document.createElement('li');
+      li.className = `page-item${p === currentPage ? ' active' : ''}`;
+      const a = document.createElement('a');
+      a.className = 'page-link';
+      a.textContent = p;
+      a.href = 'javascript:void(0);';
+      a.onclick = () => gotoPage(p);
+      li.appendChild(a);
+      ul.appendChild(li);
+    }
+  }
+  if (prev) prev.classList.toggle('disabled', currentPage === 1);
+  if (prev) prev.onclick = () => gotoPage(currentPage - 1);
+  if (next) next.classList.toggle('disabled', currentPage === totalPages);
+  if (next) next.onclick = () => gotoPage(currentPage + 1);
 }

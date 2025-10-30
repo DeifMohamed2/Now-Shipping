@@ -649,7 +649,14 @@
         }
       });
 
-      const response = await fetch(`/courier/getAndSet-order-details/<%= pickup.pickupNumber %>/${orderNumber}`);
+      const response = await fetch(`/courier/getAndSet-order-details/<%= pickup.pickupNumber %>/${orderNumber}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
       const orders = await response.json();
 
       Swal.close();
@@ -689,7 +696,14 @@
   async function loadPickedUpOrders() {
     // Fetch picked up orders from the server
     try {
-      const response = await fetch('/courier/get-picked-up-orders/<%= pickup.pickupNumber %>')
+      const response = await fetch('/courier/get-picked-up-orders/<%= pickup.pickupNumber %>', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
 
       if (response.ok) {
         const orders = await response.json();
@@ -837,7 +851,12 @@
           // Make deletion request
           const respnse = await fetch(`/courier/remove-picked-up-order/<%= pickup.pickupNumber %>/${orderNumber}`, {
             method: 'DELETE',
-          })
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+          });
 
           const result = await respnse.json();
           if (respnse.ok) {

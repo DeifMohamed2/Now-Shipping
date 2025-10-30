@@ -10,6 +10,10 @@ async function authenticateCourier(req, res, next) {
   const token = req.cookies.token;
   if (!token) {
     console.log('Token not found');
+    // Check if this is an API request (fetch request from JavaScript)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
     return res.status(401).redirect('/courier-login');
   }
 
@@ -19,12 +23,20 @@ async function authenticateCourier(req, res, next) {
     const courier = await Courier.findOne({ _id: decode.id });
     if (!courier) {
       res.clearCookie('token');
+      // Check if this is an API request (fetch request from JavaScript)
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(401).json({ message: 'Invalid authentication token' });
+      }
       return res.status(401).redirect('/courier-login');
     }
     req.courierData = courier; // Attach courier data to request object
     next(); // Move to the next middleware
   } catch (error) {
     res.clearCookie('token');
+    // Check if this is an API request (fetch request from JavaScript)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Authentication failed' });
+    }
     return res.status(401).redirect('/courier-login');
   }
 }
@@ -49,7 +61,7 @@ router.get('/get-returns', courierController.get_returns);
 
 router.get(
   '/order-details/:orderNumber',
-  courierController.get_orderDetailsPage
+  courierController.get_orderDetails
 );
 
 router.put(
@@ -94,12 +106,12 @@ router.get('/get-pickups', courierController.get_pickups);
 
 router.get(
   '/pickup-details/:pickupNumber',
-  courierController.get_pickupDetailsPage
+  courierController.get_pickupDetails
 );
 
 router.get(
   '/getAndSet-order-details/:pickupNumber/:orderNumber',
-  courierController.getAndSet_orderDetails
+  courierController.getAndSet_order_To_Pickup
 );
 
 router.get(

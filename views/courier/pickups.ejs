@@ -314,7 +314,14 @@
       showLoadingSpinner();
       currentFilter = status;
 
-      const response = await fetch(`/courier/get-pickups?pickupType=${status}`);
+      const response = await fetch(`/courier/get-pickups?pickupType=${status}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
       const pickups = await response.json();
 
       if (response.ok) {

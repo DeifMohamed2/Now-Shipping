@@ -1,4 +1,5 @@
 <%- contentFor('HeaderCss') %>
+<link rel="stylesheet" href="/assets/css/area-selection-modal.css">
 <%- contentFor('body') %>
   <style>
     /* Enhanced Design */
@@ -199,25 +200,14 @@
                         <textarea class="form-control" name="address" id="address" placeholder="Enter address" rows="2"><%= order.orderCustomer.address %></textarea>
                       </div>
                       <div class="row">
-                        <div class="mb-3 col-md-6">
-                          <label for="government" class="form-label">Select Government</label>
-                          <select class="form-select" id="government" name="government">
-                            <option value="">Select Government...</option>
-                            <option value="Cairo" <%= order.orderCustomer.government === 'Cairo' ? 'selected' : '' %>>Cairo</option>
-                            <option value="Giza" <%= order.orderCustomer.government === 'Giza' ? 'selected' : '' %>>Giza</option>
-                            <option value="Alexandria" <%= order.orderCustomer.government === 'Alexandria' ? 'selected' : '' %>>Alexandria</option>
-                          </select>
-                        </div>
-                        <div class="mb-3 col-md-6">
-                          <label for="zone" class="form-label">Select Area</label>
-                          <div class="zone-select-wrapper">
-                            <select class="form-select custom-zone-select" id="zone" name="zone" data-selected-zone="<%= order.orderCustomer.zone %>">
-                              <option value="">Select Area</option>
-                            </select>
-                            <div class="zone-select-arrow">
-                              <i class="ri-arrow-down-s-line"></i>
-                            </div>
-                          </div>
+                        <div class="mb-3 col-md-12">
+                          <label for="edit-area" class="form-label">Governorate and Area</label>
+                          <button type="button" class="btn btn-outline-secondary w-100 text-start" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
+                            <span id="selectedAreaDisplay"><%= order.orderCustomer.zone ? order.orderCustomer.zone + ', ' + order.orderCustomer.government : 'Select Area' %></span>
+                            <i class="ri-arrow-down-s-line"></i>
+                          </button>
+                          <input type="hidden" name="government" id="government-value" value="<%= order.orderCustomer.government || '' %>">
+                          <input type="hidden" name="zone" id="zone-value" value="<%= order.orderCustomer.zone || '' %>">
                         </div>
                       </div>
                     </div>
@@ -467,6 +457,8 @@
 
 
 <%- contentFor('FooterJs') %>
+<!-- Include Area Selection Modal -->
+<%- include('../partials/area-selection-modal') %>
 
 <!-- Hidden template for zone options -->
 <script type="text/template" id="zone-options-template">
@@ -608,6 +600,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script src="/assets/rJS/business/edit-order.js"></script>
+<script src="/assets/js/area-selection-modal.js"></script>
 
 <!-- init js -->
 <script src="/assets/js/pages/ecommerce-product-checkout.init.js"></script>

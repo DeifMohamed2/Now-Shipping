@@ -207,7 +207,14 @@
     if (status) params.append('status', status);
 
     try {
-      const response = await fetch(`/courier/api/shop/orders?${params}`);
+      const response = await fetch(`/courier/api/shop/orders?${params}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
       const orders = await response.json();
       ordersData = orders;
       renderOrders(orders);
@@ -339,7 +346,14 @@
 
   async function viewOrder(orderId) {
     try {
-      const response = await fetch(`/courier/api/shop/orders/${orderId}`);
+      const response = await fetch(`/courier/api/shop/orders/${orderId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
       const order = await response.json();
 
       const detailsHtml = `

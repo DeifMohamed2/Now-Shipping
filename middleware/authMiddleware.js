@@ -25,8 +25,13 @@ const verifyToken = (req, res, next) => {
     // Add user ID to request object - handle different fields in the token
     if (decoded.id) {
       req.userId = decoded.id;
+      // If this is a courier token, also set courierId for compatibility
+      if (decoded.userType === 'courier') {
+        req.courierId = decoded.id;
+      }
     } else if (decoded.courierId) {
       req.userId = decoded.courierId;
+      req.courierId = decoded.courierId;
     } else if (decoded.adminId) {
       req.userId = decoded.adminId;
     } else if (decoded.userId) {

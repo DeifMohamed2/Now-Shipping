@@ -3,6 +3,7 @@
 
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <link href="/assets/css/status-styles.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 <%- contentFor('body') %>
 <style>
   /* Professional Dropdown Styles */
@@ -1219,4 +1220,32 @@
       confirmButtonColor: '#0d6efd'
     });
   }
+</script>
+
+<script>
+  (function initDatePicker(){
+    function init() {
+      var el = document.getElementById('demo-datepicker');
+      if (!el) return;
+      try {
+        flatpickr(el, {
+          mode: 'range',
+          dateFormat: 'd M, Y',
+          allowInput: true
+        });
+        // Open on focus for better UX
+        el.addEventListener('focus', function(){ if (el._flatpickr) { el._flatpickr.open(); } });
+      } catch (e) {
+        console.error('Flatpickr init error:', e);
+      }
+    }
+    if (typeof window.flatpickr === 'undefined') {
+      var s = document.createElement('script');
+      s.src = '/assets/libs/flatpickr/flatpickr.min.js';
+      s.onload = init;
+      document.head.appendChild(s);
+    } else {
+      init();
+    }
+  })();
 </script>

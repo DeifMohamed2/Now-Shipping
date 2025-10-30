@@ -1,16 +1,6 @@
 const nodemailer = require('nodemailer');
 const emailTemplates = require('./emailTemplates');
 
-/**
- * Professional Email Utility for Order Company Platform
- * 
- * Features:
- * - Professional HTML templates
- * - Anti-spam optimization
- * - Responsive design
- * - Company branding
- * - Multiple email types
- */
 
 class EmailService {
   constructor() {

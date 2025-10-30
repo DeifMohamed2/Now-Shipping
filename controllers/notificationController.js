@@ -3,9 +3,7 @@ const User = require('../models/user');
 const Notification = require('../models/notification');
 const firebase = require('../config/firebase');
 
-/**
- * Send a notification to a specific courier
- */
+
 const sendNotificationToCourier = async (req, res) => {
   try {
     const { courierId, title, body, data } = req.body;

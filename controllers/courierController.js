@@ -26,7 +26,13 @@ const get_ordersPage = (req, res) => {
 };
 
 const get_orders = async (req, res) => {
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    return res.status(401).json({ message: 'Courier ID not found in request' });
+  }
+  
   const { statusCategory, orderType } = req.query;
   try {
     // Build query with courier ID
@@ -88,7 +94,13 @@ const get_orders = async (req, res) => {
 
 // Enhanced function to get return orders with comprehensive details
 const get_returns = async (req, res) => {
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    return res.status(401).json({ message: 'Courier ID not found in request' });
+  }
+  
   const { status, page = 1, limit = 10 } = req.query;
 
   try {
@@ -126,7 +138,6 @@ const get_returns = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit))
       .exec();
-      console.log(orders);
     const totalCount = await Order.countDocuments(query);
 
     // Add progress calculation for each order
@@ -164,8 +175,7 @@ const get_returns = async (req, res) => {
         } : null
       };
     });
-    console.log(ordersWithProgress);
-    res.status(200).json({
+    return res.status(200).json({
       orders: ordersWithProgress,
       pagination: {
         currentPage: parseInt(page),
@@ -176,7 +186,7 @@ const get_returns = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+   return res.status(500).json({ message: error.message });
   }
 };
 
@@ -216,7 +226,16 @@ const get_returnsPage = async (req, res) => {
 // Get detailed return order information for courier
 const getReturnOrderDetails = async (req, res) => {
   const { orderNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/returns');
+  }
 
   try {
     const order = await Order.findOne({
@@ -232,7 +251,11 @@ const getReturnOrderDetails = async (req, res) => {
       );
 
     if (!order) {
-      return res.status(404).json({ message: 'Return order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Return order not found' });
+      }
+      req.flash('error', 'Return order not found');
+      return res.redirect('/courier/returns');
     }
 
     // Calculate progress percentage
@@ -264,23 +287,50 @@ const getReturnOrderDetails = async (req, res) => {
       ...order.orderStages[stage]?.toObject(),
     }));
 
-    res.status(200).json({
+    const responseData = {
       order: order,
       progressPercentage,
       stageTimeline,
       currentStage: getCurrentReturnStage(order.orderStatus),
       nextAction: getNextReturnAction(order.orderStatus),
       feeBreakdown: order.feeBreakdown,
+    };
+
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json(responseData);
+    }
+    
+    // Render page for web requests
+    res.render('courier/return-details', {
+      title: 'Return Order Details',
+      page_title: 'Return Details',
+      folder: 'Pages',
+      ...responseData,
+      courierData: req.courierData
     });
   } catch (error) {
     console.error('Error fetching return order details:', error);
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/returns');
   }
 };
 
-const get_orderDetailsPage = async (req, res) => {
+const get_orderDetails= async (req, res) => {
   const { orderNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/orders');
+  }
   try {
     const order = await Order.findOne({
       orderNumber: orderNumber,
@@ -290,7 +340,11 @@ const get_orderDetailsPage = async (req, res) => {
       .populate('business')
       .exec();
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/orders');
     }
     // Enhance order with partial return information
     const enhancedOrder = {
@@ -304,14 +358,25 @@ const get_orderDetailsPage = async (req, res) => {
       } : null
     };
 
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({ order: enhancedOrder });
+    }
+    
+    // Render page for web requests
     res.render('courier/order-details', {
       title: 'Order Details',
       page_title: 'Order Details',
       folder: 'Pages',
       order: enhancedOrder,
+      courierData: req.courierData
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/orders');
   }
 };
 
@@ -448,7 +513,16 @@ const fullInitiationReturn = async (order, status) => {
 const updateOrderStatus = async (req, res) => {
   const { orderNumber } = req.params;
   const { status, reason } = req.body;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/orders');
+  }
   try {
     const order = await Order.findOne({
       orderNumber: orderNumber,
@@ -458,7 +532,11 @@ const updateOrderStatus = async (req, res) => {
       .populate('business')
       .exec();
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/orders');
     }
     // Check if order status allows actions
     if (
@@ -479,11 +557,13 @@ const updateOrderStatus = async (req, res) => {
         'returnToBusiness'
       ].includes(order.orderStatus)
     ) {
-      return res
-        .status(400)
-        .json({
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
           message: `Order status '${order.orderStatus}' does not allow status updates`,
         });
+      }
+      req.flash('error', `Order status '${order.orderStatus}' does not allow status updates`);
+      return res.redirect(`/courier/order-details/${orderNumber}`);
     }
     if (status === 'Unavailable' && reason) {
       order.Attemps += 1;
@@ -545,10 +625,21 @@ const updateOrderStatus = async (req, res) => {
       }
     }
 
-    res.status(200).json({ message: 'Order status updated successfully' });
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({ message: 'Order status updated successfully' });
+    }
+    
+    // For web requests, redirect back to order details
+    req.flash('success', 'Order status updated successfully');
+    res.redirect(`/courier/order-details/${orderNumber}`);
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: error.message });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/orders');
   }
 };
 
@@ -557,7 +648,17 @@ const updateOrderStatus = async (req, res) => {
  */
 const completeOrder = async (req, res) => {
   const { orderNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/orders');
+  }
+  
   const { collectionReceipt, exchangePhotos } = req.body; // Added parameters for Exchange and Cash Collection
   
   try {
@@ -566,7 +667,11 @@ const completeOrder = async (req, res) => {
       deliveryMan: courierId,
     });
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/orders');
     }
 
     // Check if order can be completed based on status
@@ -588,11 +693,13 @@ const completeOrder = async (req, res) => {
         'returnToBusiness'
       ].includes(order.orderStatus)
     ) {
-      return res
-        .status(400)
-        .json({
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
           message: `Order status '${order.orderStatus}' does not allow completion`,
         });
+      }
+      req.flash('error', `Order status '${order.orderStatus}' does not allow completion`);
+      return res.redirect(`/courier/order-details/${orderNumber}`);
     }
 
     // For regular deliveries
@@ -610,11 +717,13 @@ const completeOrder = async (req, res) => {
       ].includes(order.orderStatus) &&
       order.orderStatus !== 'returnInProgress'
     ) {
-      return res
-        .status(400)
-        .json({
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
           message: `Order status ${order.orderStatus} is not valid for completion`,
         });
+      }
+      req.flash('error', `Order status ${order.orderStatus} is not valid for completion`);
+      return res.redirect(`/courier/order-details/${orderNumber}`);
     }
 
     // Handle different completion types based on order type and status
@@ -828,17 +937,38 @@ const completeOrder = async (req, res) => {
       // Don't fail the order completion if notification fails
     }
     
-    res.status(200).json({ message: 'Order completed successfully' });
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({ message: 'Order completed successfully' });
+    }
+    
+    // For web requests, redirect back to order details
+    req.flash('success', 'Order completed successfully');
+    res.redirect(`/courier/order-details/${orderNumber}`);
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: error.message });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/orders');
   }
 };
 
 // Enhanced pick up return from customer with comprehensive tracking
 const pickupReturn = async (req, res) => {
   const { orderNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/returns');
+  }
+  
   const {
     notes,
     pickupLocation,
@@ -849,20 +979,30 @@ const pickupReturn = async (req, res) => {
   } = req.body;
 
   try {
+    // Find the order by orderNumber or smartFlyerBarcode
     const order = await Order.findOne({
-      orderNumber: orderNumber,
+      $or: [
+        { orderNumber: orderNumber },
+        { smartFlyerBarcode: orderNumber }
+      ],
       deliveryMan: courierId,
     });
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/returns');
     }
 
     if (order.orderStatus !== 'returnAssigned') {
-      return res
-        .status(400)
-        .json({
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
           message: `Order status ${order.orderStatus} is not valid for return pickup`,
         });
+      }
+      req.flash('error', `Order status ${order.orderStatus} is not valid for return pickup`);
+      return res.redirect(`/courier/return-orders/${orderNumber}`);
     }
 
     order.orderStatus = 'returnPickedUp';
@@ -967,38 +1107,68 @@ const pickupReturn = async (req, res) => {
       // Don't fail the pickup if notification fails
     }
 
-    res.status(200).json({
-      message: 'Return picked up successfully',
-      order: order,
-      nextAction: 'Deliver to warehouse',
-    });
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({
+        message: 'Return picked up successfully',
+        order: order,
+        nextAction: 'Deliver to warehouse',
+      });
+    }
+    
+    // For web requests, redirect back to return details
+    req.flash('success', 'Return picked up successfully');
+    res.redirect(`/courier/return-orders/${orderNumber}`);
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: error.message });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/returns');
   }
 };
 
 // Enhanced deliver return to warehouse with comprehensive tracking
 const deliverReturnToWarehouse = async (req, res) => {
   const { orderNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/returns');
+  }
+  
   const { notes, warehouseLocation, conditionNotes, deliveryPhotos } = req.body;
 
   try {
     const order = await Order.findOne({
-      orderNumber: orderNumber,
+      $or: [
+        { orderNumber: orderNumber },
+        { smartFlyerBarcode: orderNumber }
+      ],
       deliveryMan: courierId,
     });
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/returns');
     }
 
     if (order.orderStatus !== 'returnPickedUp') {
-      return res
-        .status(400)
-        .json({
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
           message: `Order status ${order.orderStatus} is not valid for warehouse delivery`,
         });
+      }
+      req.flash('error', `Order status ${order.orderStatus} is not valid for warehouse delivery`);
+      return res.redirect(`/courier/return-orders/${orderNumber}`);
     }
 
     order.orderStatus = 'returnAtWarehouse';
@@ -1031,39 +1201,70 @@ const deliverReturnToWarehouse = async (req, res) => {
     });
 
     await order.save();
-    res.status(200).json({
-      message: 'Return delivered to warehouse successfully',
-      order: order,
-      nextAction: 'Wait for admin inspection and processing',
-    });
+    
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({
+        message: 'Return delivered to warehouse successfully',
+        order: order,
+        nextAction: 'Wait for admin inspection and processing',
+      });
+    }
+    
+    // For web requests, redirect back to return details
+    req.flash('success', 'Return delivered to warehouse successfully');
+    res.redirect(`/courier/return-orders/${orderNumber}`);
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: error.message });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/returns');
   }
 };
 
 // Enhanced complete return delivery to business with comprehensive tracking
 const completeReturnToBusiness = async (req, res) => {
   const { orderNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/returns');
+  }
+  
   const { notes, deliveryLocation, businessSignature, deliveryPhotos } =
     req.body;
 
   try {
     const order = await Order.findOne({
-      orderNumber: orderNumber,
+      $or: [
+        { orderNumber: orderNumber },
+        { smartFlyerBarcode: orderNumber }
+      ],
       deliveryMan: courierId,
     });
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/returns');
     }
 
     if (order.orderStatus !== 'returnToBusiness') {
-      return res
-        .status(400)
-        .json({
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
           message: `Order status ${order.orderStatus} is not valid for business delivery`,
         });
+      }
+      req.flash('error', `Order status ${order.orderStatus} is not valid for business delivery`);
+      return res.redirect(`/courier/return-orders/${orderNumber}`);
     }
 
     order.orderStatus = 'returnCompleted';
@@ -1142,14 +1343,26 @@ const completeReturnToBusiness = async (req, res) => {
         console.error('Error marking linked deliver order as returned:', error);
       }
     }
-    res.status(200).json({
-      message: 'Return completed successfully',
-      order: order,
-      completionDate: order.completedDate,
-    });
+    
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({
+        message: 'Return completed successfully',
+        order: order,
+        completionDate: order.completedDate,
+      });
+    }
+    
+    // For web requests, redirect back to return details
+    req.flash('success', 'Return completed successfully');
+    res.redirect(`/courier/return-orders/${orderNumber}`);
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: error.message });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/returns');
   }
 };
 
@@ -1164,42 +1377,89 @@ const get_pickupsPage = (req, res) => {
 };
 
 const get_pickups = async (req, res) => {
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    return res.status(401).json({ message: 'Courier ID not found in request' });
+  }
+  
   try {
     const pickups = await Pickup.find({ assignedDriver: courierId })
       .sort({ createdAt: -1 })
       .populate('assignedDriver')
       .populate('business')
       .exec();
-    res.status(200).json(pickups);
+    return res.status(200).json(pickups);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-const get_pickupDetailsPage = async (req, res) => {
+const get_pickupDetails = async (req, res) => {
   const { pickupNumber } = req.params;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/pickups');
+  }
   try {
     const pickup = await Pickup.findOne({
       pickupNumber: pickupNumber,
+      assignedDriver: courierId,
     })
       .populate('assignedDriver')
       .populate('business')
       .exec();
+
+    if (!pickup) {
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Pickup not found' });
+      }
+      req.flash('error', 'Pickup not found');
+      return res.redirect('/courier/pickups');
+    }
+    
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({ pickup: pickup });
+    }
+    
+    // Render page for web requests
     res.render('courier/pickup-details', {
       title: 'Pickup Details',
       page_title: 'Pickup Details',
       folder: 'Pages',
       pickup: pickup,
+      courierData: req.courierData
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.log(error.message);
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/pickups');
   }
-};
+}; 
 
 const get_picked_up_orders = async (req, res) => {
   const { pickupNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/pickups');
+  }
   try {
     const pickup = await Pickup.findOne({
       pickupNumber: pickupNumber,
@@ -1213,17 +1473,48 @@ const get_picked_up_orders = async (req, res) => {
       })
       .exec();
     if (!pickup) {
-      return res.status(404).json({ message: 'Pickup not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Pickup not found' });
+      }
+      req.flash('error', 'Pickup not found');
+      return res.redirect('/courier/pickups');
     }
-    res.status(200).json({ orders: pickup.ordersPickedUp });
+    
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({ orders: pickup.ordersPickedUp });
+    }
+    
+    // For web requests, render the pickup details page with orders
+    res.render('courier/pickup-details', {
+      title: 'Pickup Details',
+      page_title: 'Pickup Details',
+      folder: 'Pages',
+      pickup: pickup,
+      orders: pickup.ordersPickedUp,
+      courierData: req.courierData
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: error.message });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/pickups');
   }
 };
 
-const getAndSet_orderDetails = async (req, res) => {
+const getAndSet_order_To_Pickup = async (req, res) => {
   const { orderNumber, pickupNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/pickups');
+  }
   try {
     console.log(orderNumber, pickupNumber);
     const pickup = await Pickup.findOne({ pickupNumber: pickupNumber })
@@ -1236,13 +1527,19 @@ const getAndSet_orderDetails = async (req, res) => {
       .exec();
 
     if (!pickup) {
-      return res.status(404).json({ message: 'Pickup not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Pickup not found' });
+      }
+      req.flash('error', 'Pickup not found');
+      return res.redirect('/courier/pickups');
     }
 
     if (pickup.ordersPickedUp.length === pickup.numberOfOrders) {
-      return res
-        .status(400)
-        .json({ message: 'Maximum number of orders reached for this pickup' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'Maximum number of orders reached for this pickup' });
+      }
+      req.flash('error', 'Maximum number of orders reached for this pickup');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     if (
@@ -1252,27 +1549,39 @@ const getAndSet_orderDetails = async (req, res) => {
       pickup.picikupStatus === 'canceled' ||
       pickup.picikupStatus === 'rejected'
     ) {
-      return res
-        .status(400)
-        .json({ message: 'You cannot add a pickup order at this moment.' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'You cannot add a pickup order at this moment.' });
+      }
+      req.flash('error', 'You cannot add a pickup order at this moment.');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     if (pickup.assignedDriver._id.toString() !== courierId) {
-      return res
-        .status(403)
-        .json({ message: 'You are not authorized to view this order' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(403).json({ message: 'You are not authorized to view this order' });
+      }
+      req.flash('error', 'You are not authorized to view this order');
+      return res.redirect('/courier/pickups');
     }
 
+    // Search in both orderNumber and smartFlyerBarcode fields
     const order = await Order.findOne({
-      orderNumber: orderNumber,
       business: pickup.business,
+      $or: [
+        { orderNumber: orderNumber },
+        { smartFlyerBarcode: orderNumber }
+      ]
     })
       .populate('deliveryMan')
       .populate('business')
       .exec();
 
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     if (!pickup.ordersPickedUp.includes(order._id)) {
@@ -1292,25 +1601,47 @@ const getAndSet_orderDetails = async (req, res) => {
       })
       .exec();
 
-    res
-      .status(200)
-      .json({
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({
         orders: populatedPickup.ordersPickedUp,
         message: 'Order picked up successfully',
       });
+    }
+    
+    // For web requests, redirect back to pickup details
+    req.flash('success', 'Order picked up successfully');
+    res.redirect(`/courier/pickup-details/${pickupNumber}`);
   } catch (error) {
     console.log(error.message);
     if (error.name === 'ValidationError' && error.errors.ordersPickedUp) {
-      res.status(400).json({ message: 'Order is already picked up' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'Order is already picked up' });
+      }
+      req.flash('error', 'Order is already picked up');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     } else {
-      res.status(500).json({ message: error.message });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(500).json({ message: error.message });
+      }
+      req.flash('error', 'Internal Server Error');
+      res.redirect('/courier/pickups');
     }
   }
 };
 
 const removePickedUpOrder = async (req, res) => {
   const { orderNumber, pickupNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/pickups');
+  }
   try {
     const pickup = await Pickup.findOne({
       pickupNumber: pickupNumber,
@@ -1320,7 +1651,11 @@ const removePickedUpOrder = async (req, res) => {
       .populate('business')
       .exec();
     if (!pickup) {
-      return res.status(404).json({ message: 'Pickup not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Pickup not found' });
+      }
+      req.flash('error', 'Pickup not found');
+      return res.redirect('/courier/pickups');
     }
     const order = await Order.findOne({
       orderNumber: orderNumber,
@@ -1339,16 +1674,26 @@ const removePickedUpOrder = async (req, res) => {
       pickup.picikupStatus === 'returned' ||
       pickup.picikupStatus === 'terminated'
     ) {
-      return res
-        .status(400)
-        .json({ message: 'You Cannot delete it at this moment' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'You Cannot delete it at this moment' });
+      }
+      req.flash('error', 'You Cannot delete it at this moment');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
     if (!pickup.ordersPickedUp.includes(order._id)) {
-      return res.status(400).json({ message: 'Order is not picked up' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'Order is not picked up' });
+      }
+      req.flash('error', 'Order is not picked up');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     const index = pickup.ordersPickedUp.indexOf(order._id);
@@ -1410,18 +1755,37 @@ const removePickedUpOrder = async (req, res) => {
     // );
     await pickup.save();
     // await order.save();
-    res.status(200).json({ message: 'Order removed successfully' });
+    
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({ message: 'Order removed successfully' });
+    }
+    
+    // For web requests, redirect back to pickup details
+    req.flash('success', 'Order removed successfully');
+    res.redirect(`/courier/pickup-details/${pickupNumber}`);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: error.message });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/pickups');
   }
 };
 
-/**
- * Complete a pickup with proper status transition
- */
+
 const completePickup = async (req, res) => {
   const { pickupNumber } = req.params;
-  const { courierId } = req;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/pickups');
+  }
   try {
     const pickup = await Pickup.findOne({
       pickupNumber: pickupNumber,
@@ -1435,31 +1799,59 @@ const completePickup = async (req, res) => {
       })
       .exec();
     if (!pickup) {
-      return res.status(404).json({ message: 'Pickup not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Pickup not found' });
+      }
+      req.flash('error', 'Pickup not found');
+      return res.redirect('/courier/pickups');
     }
 
     if (pickup.picikupStatus === 'canceled') {
-      return res.status(400).json({ message: 'Pickup is canceled' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'Pickup is canceled' });
+      }
+      req.flash('error', 'Pickup is canceled');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     if (pickup.picikupStatus === 'rejected') {
-      return res.status(400).json({ message: 'Pickup is already rejected' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'Pickup is already rejected' });
+      }
+      req.flash('error', 'Pickup is already rejected');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     if (pickup.picikupStatus === 'completed') {
-      return res.status(400).json({ message: 'Pickup is already completed' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'Pickup is already completed' });
+      }
+      req.flash('error', 'Pickup is already completed');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     if (pickup.picikupStatus === 'inStock') {
-      return res.status(400).json({ message: 'Pickup is in stock' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'Pickup is in stock' });
+      }
+      req.flash('error', 'Pickup is in stock');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     if (pickup.picikupStatus === 'pickedUp') {
-      return res.status(400).json({ message: 'Pickup is already Completed' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'Pickup is already Completed' });
+      }
+      req.flash('error', 'Pickup is already Completed');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     if (pickup.ordersPickedUp.length === 0) {
-      return res.status(400).json({ message: 'No orders picked up' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({ message: 'No orders picked up' });
+      }
+      req.flash('error', 'No orders picked up');
+      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
     }
 
     pickup.picikupStatus = 'pickedUp';
@@ -1512,15 +1904,33 @@ const completePickup = async (req, res) => {
       // Don't fail the pickup completion if notification fails
     }
 
-    res.status(200).json({ message: 'Pickup completed successfully' });
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({ message: 'Pickup completed successfully' });
+    }
+    
+    // For web requests, redirect back to pickup details
+    req.flash('success', 'Pickup completed successfully');
+    res.redirect(`/courier/pickup-details/${pickupNumber}`);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: error.message });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/pickups');
   }
 };
 
 const logOut = (req, res) => {
   req.session.destroy();
   res.clearCookie('token');
+  
+  // Check if request expects JSON response (API call)
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    return res.status(200).json({ message: 'Logged out successfully' });
+  }
+  
+  // For web requests, redirect to login page
   res.redirect('/courier-login');
 };
 
@@ -1531,15 +1941,20 @@ const scanFastShippingOrder = async (req, res) => {
     // Handle both API (JWT) and web (session) authentication
     const courierId = req.user?.id || req.courierId;
 
-    // Find the order
-    const order = await Order.findOne({ orderNumber })
+    // Find the order by orderNumber or smartFlyerBarcode
+    const order = await Order.findOne({
+      $or: [
+        { orderNumber: orderNumber },
+        { smartFlyerBarcode: orderNumber }
+      ]
+    })
       .populate('business', 'name email phoneNumber')
       .populate('deliveryMan', 'name phoneNumber');
 
     if (!order) {
       return res.status(404).json({ 
         success: false, 
-        message: 'Order not found' 
+        message: 'Order not found by order number or smart flyer barcode' 
       });
     }
 
@@ -1616,6 +2031,7 @@ const scanFastShippingOrder = async (req, res) => {
       message: 'Fast shipping order processed successfully',
       order: {
         orderNumber: order.orderNumber,
+        smartFlyerBarcode: order.smartFlyerBarcode,
         orderStatus: order.orderStatus,
         stages: {
           packed: order.orderStages.packed.isCompleted,
@@ -1735,13 +2151,33 @@ const getCourierShopOrderDetails = async (req, res) => {
       .populate('items.product');
 
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/shop-orders');
     }
 
-    res.status(200).json(order);
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json(order);
+    }
+    
+    // For web requests, render the shop order details page
+    res.render('courier/shop-order-details', {
+      title: 'Shop Order Details',
+      page_title: 'Delivery Details',
+      folder: 'Shop',
+      order: order,
+      courierData: req.courierData
+    });
   } catch (error) {
     console.error('Error fetching order details:', error);
-    res.status(500).json({ error: 'Failed to fetch order details' });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ error: 'Failed to fetch order details' });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/shop-orders');
   }
 };
 
@@ -1755,7 +2191,11 @@ const updateCourierShopOrderStatus = async (req, res) => {
     const order = await ShopOrder.findOne({ _id: id, courier: courierId });
 
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/shop-orders');
     }
 
     // Validate status transition with professional error handling
@@ -1765,9 +2205,13 @@ const updateCourierShopOrderStatus = async (req, res) => {
     };
 
     if (!validTransitions[order.status]?.includes(status)) {
-      return res.status(400).json({
-        error: `Invalid status transition from '${order.status}' to '${status}'. Valid transitions: ${validTransitions[order.status]?.join(', ') || 'none'}`,
-      });
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
+          error: `Invalid status transition from '${order.status}' to '${status}'. Valid transitions: ${validTransitions[order.status]?.join(', ') || 'none'}`,
+        });
+      }
+      req.flash('error', `Invalid status transition from '${order.status}' to '${status}'`);
+      return res.redirect(`/courier/shop-orders/${id}`);
     }
 
     // Update order status with professional handling
@@ -1817,18 +2261,29 @@ const updateCourierShopOrderStatus = async (req, res) => {
       // Don't fail the status update if notification fails
     }
 
-    res.status(200).json({
-      message: `Order status successfully updated from '${previousStatus}' to '${status}'`,
-      order: {
-        _id: order._id,
-        orderNumber: order.orderNumber,
-        status: order.status,
-        updatedAt: order.updatedAt
-      },
-    });
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({
+        message: `Order status successfully updated from '${previousStatus}' to '${status}'`,
+        order: {
+          _id: order._id,
+          orderNumber: order.orderNumber,
+          status: order.status,
+          updatedAt: order.updatedAt
+        },
+      });
+    }
+    
+    // For web requests, redirect back to shop order details
+    req.flash('success', `Order status successfully updated from '${previousStatus}' to '${status}'`);
+    res.redirect(`/courier/shop-orders/${id}`);
   } catch (error) {
     console.error('Error updating order status:', error);
-    res.status(500).json({ error: 'Failed to update order status' });
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ error: 'Failed to update order status' });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/shop-orders');
   }
 };
 
@@ -1836,13 +2291,13 @@ module.exports = {
   getDashboardPage,
   get_ordersPage,
   get_orders,
-  get_orderDetailsPage,
+  get_orderDetails,
   completeOrder,
 
   get_pickupsPage,
   get_pickups,
-  get_pickupDetailsPage,
-  getAndSet_orderDetails,
+  get_pickupDetails,
+  getAndSet_order_To_Pickup,
   get_picked_up_orders,
   removePickedUpOrder,
   updateOrderStatus,

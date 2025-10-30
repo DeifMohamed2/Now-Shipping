@@ -1,0 +1,51 @@
+<!-- Area Selection Modal - Reusable Component -->
+<div class="modal fade" id="areaSelectionModal" tabindex="-1" aria-labelledby="areaSelectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius: 16px;">
+      <div class="modal-header" style="border-bottom: 1px solid #e0e0e0;">
+        <h5 class="modal-title" id="areaSelectionModalLabel" style="font-weight: 600;">
+          <i class="ri-map-pin-line me-2"></i>Select Area
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="padding: 1.5rem;">
+        <!-- Search Bar -->
+        <div class="mb-4">
+          <div class="input-group" style="border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+            <span class="input-group-text" style="background-color: white; border-right: none !important;">
+              <i class="ri-search-line text-primary"></i>
+            </span>
+            <input type="text" class="form-control border-0" id="areaSearchInput" 
+                   placeholder="Type your area (e.g., Nasr City)" 
+                   style="background-color: white; font-size: 1rem;"
+                   autocomplete="off">
+            <span class="input-group-text" style="background-color: white; border-left: none !important;">
+              <i class="ri-map-pin-line text-muted"></i>
+            </span>
+          </div>
+        </div>
+        
+        <!-- Instructional Text -->
+        <div class="alert alert-info d-flex align-items-center mb-3" style="background-color: #e7f3ff; border-color: #b3d9ff; color: #0066cc; padding: 0.75rem 1rem; border-radius: 8px;">
+          <i class="ri-information-line me-2 fs-5"></i>
+          <span style="font-size: 0.9rem; font-weight: 500;">Click on any governorate to view and select available areas</span>
+        </div>
+        
+        <!-- Governorate and Area Selection -->
+        <div style="max-height: 450px; overflow-y: auto;">
+          <!-- Governorate List -->
+          <div id="governorateList">
+            <!-- Will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid #e0e0e0;">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmAreaSelection">
+          Confirm Selection
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

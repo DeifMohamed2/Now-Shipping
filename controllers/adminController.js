@@ -10,10 +10,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const statusHelper = require('../utils/statusHelper');
 const FinancialReconciliation = require('../utils/financialReconciliation');
-const { dailyOrderProcessing, recoverFailedProcessing, processSpecificOrders } = require('../jobs/dailyOrderProcessing');
+const {
+  dailyOrderProcessing,
+  recoverFailedProcessing,
+  processSpecificOrders,
+} = require('../jobs/dailyOrderProcessing');
 const { emailService } = require('../utils/email');
 const firebase = require('../config/firebase');
-const JWT_SECRET = process.env.JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET;
 const ExcelJS = require('exceljs');
 const multer = require('multer');
 const path = require('path');
@@ -26,7 +30,6 @@ const getDashboardPage = (req, res) => {
   });
 };
 
-
 // ======================================== Orders Page ======================================== //
 
 const get_ordersPage = (req, res) => {
@@ -38,74 +41,116 @@ const get_ordersPage = (req, res) => {
 };
 
 const get_orders = async (req, res) => {
-  const { orderType, status, statusCategory } = req.query;
   try {
-    console.log(orderType, status, statusCategory);
+    const {
+      page = 1,
+      limit = 30,
+      orderType,
+      status,
+      statusCategory,
+      paymentType,
+      dateFrom,
+      dateTo,
+      search,
+    } = req.query;
+
     const query = {};
 
-    // Filter by order type
     if (orderType && statusHelper.ORDER_TYPES[orderType]) {
       query['orderShipping.orderType'] = orderType;
     }
 
-    // Filter by specific status
-    if (status) {
+    if (status && status !== 'all') {
       query.orderStatus = status;
     }
-    
-    // Filter by status category
+
     if (statusCategory && statusHelper.STATUS_CATEGORIES[statusCategory]) {
       query.statusCategory = statusCategory;
     }
 
-    console.log(query);
+    if (paymentType && paymentType !== 'all') {
+      query['orderShipping.amountType'] = paymentType;
+    }
+
+    if (dateFrom || dateTo) {
+      query.orderDate = {};
+      if (dateFrom) query.orderDate.$gte = new Date(dateFrom);
+      if (dateTo) query.orderDate.$lte = new Date(dateTo);
+    }
+
+    if (search && search.trim() !== '') {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { orderNumber: searchRegex },
+        { 'orderCustomer.fullName': searchRegex },
+        { 'orderCustomer.phoneNumber': searchRegex },
+        { 'orderShipping.productDescription': searchRegex },
+      ];
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
     const orders = await Order.find(query)
       .populate('business', 'brandInfo')
-      .sort({orderDate:-1, createdAt:-1})
-      .populate('deliveryMan');
-      
-    // Enhance orders with status information
-    const enhancedOrders = orders.map(order => {
+      .populate('deliveryMan')
+      .sort({ orderDate: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const totalCount = await Order.countDocuments(query);
+
+    const enhancedOrders = orders.map((order) => {
       const orderObj = order.toObject();
-      orderObj.statusLabel = statusHelper.getOrderStatusLabel(order.orderStatus);
-      orderObj.statusDescription = statusHelper.getOrderStatusDescription(order.orderStatus);
-      orderObj.categoryClass = statusHelper.getCategoryClass(order.statusCategory);
-      orderObj.categoryColor = statusHelper.getCategoryColor(order.statusCategory);
-      orderObj.nextPossibleStatuses = statusHelper.getNextPossibleStatuses(order.orderStatus);
-      
-      // Add fast shipping indicator
-      orderObj.isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
-      
-      // For fast shipping orders, determine if they're ready for courier assignment
+      orderObj.statusLabel = statusHelper.getOrderStatusLabel(
+        order.orderStatus
+      );
+      orderObj.statusDescription = statusHelper.getOrderStatusDescription(
+        order.orderStatus
+      );
+      orderObj.categoryClass = statusHelper.getCategoryClass(
+        order.statusCategory
+      );
+      orderObj.categoryColor = statusHelper.getCategoryColor(
+        order.statusCategory
+      );
+      orderObj.nextPossibleStatuses = statusHelper.getNextPossibleStatuses(
+        order.orderStatus
+      );
+      orderObj.isFastShipping =
+        order.orderShipping && order.orderShipping.isExpressShipping;
       if (orderObj.isFastShipping) {
-        // Fast shipping orders are ready for assignment when they are new (before pickup)
         orderObj.readyForCourierAssignment = order.orderStatus === 'new';
       }
-      
-      // Add order type specific information
       if (order.orderShipping.orderType === 'Exchange') {
         orderObj.isExchange = true;
         orderObj.exchangeDetails = {
           originalProduct: order.orderShipping.productDescription,
           originalCount: order.orderShipping.numberOfItems,
           replacementProduct: order.orderShipping.productDescriptionReplacement,
-          replacementCount: order.orderShipping.numberOfItemsReplacement
+          replacementCount: order.orderShipping.numberOfItemsReplacement,
         };
       } else if (order.orderShipping.orderType === 'Cash Collection') {
         orderObj.isCashCollection = true;
         orderObj.collectionAmount = order.orderShipping.amount;
       }
-      
       return orderObj;
     });
-    
-    res.status(200).json(enhancedOrders || []);
+
+    res.status(200).json({
+      orders: enhancedOrders || [],
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalCount,
+        hasNext: skip + orders.length < totalCount,
+        hasPrev: parseInt(page) > 1,
+      },
+    });
   } catch (error) {
     console.error('Error in orders:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}; 
-
+};
 
 const get_orderDetailsPage = async (req, res) => {
   try {
@@ -116,7 +161,7 @@ const get_orderDetailsPage = async (req, res) => {
       .populate({
         path: 'courierHistory.courier',
         model: 'courier',
-        select: 'name'
+        select: 'name',
       });
 
     if (!order) {
@@ -128,7 +173,7 @@ const get_orderDetailsPage = async (req, res) => {
       title: 'Order Details',
       page_title: 'Order Details',
       folder: 'Orders',
-      order: order
+      order: order,
     });
   } catch (error) {
     console.log(error);
@@ -136,7 +181,6 @@ const get_orderDetailsPage = async (req, res) => {
     res.redirect('/admin/orders');
   }
 };
-
 
 const get_deliveryMenByZone = async (req, res) => {
   const { zone } = req.query;
@@ -152,9 +196,7 @@ const get_deliveryMenByZone = async (req, res) => {
   }
 };
 
-
 // ========================================End Orders ======================================== //
-
 
 const get_couriersPage = (req, res) => {
   res.render('admin/couriers', {
@@ -165,84 +207,86 @@ const get_couriersPage = (req, res) => {
 };
 
 const get_couriers = async (req, res) => {
-    const {status} = req.query;
-    let couriers = [];
-   
-    try {
-        // Get base courier query based on status
-        let courierQuery;
-        if (status === 'active') {
-            courierQuery = Courier.find({ isAvailable: true });
-        } else if (status === 'inactive') {
-            courierQuery = Courier.find({ isAvailable: false }); 
-        } else {
-            courierQuery = Courier.find({});
-        }
+  const { status } = req.query;
+  let couriers = [];
 
-        // Get couriers
-        couriers = await courierQuery;
-
-        // Get additional stats for each courier
-        let courierStats = await Promise.all(couriers.map(async courier => {
-            // Get completed and cancelled/rejected orders
-            const completedOrders = await Order.countDocuments({
-                deliveryMan: courier._id,
-                orderStatus: 'completed'
-            });
-
-            const cancelledOrders = await Order.countDocuments({
-                deliveryMan: courier._id,
-                orderStatus: {$in: ['canceled', 'rejected']}
-            });
-
-            // Calculate success percentage
-            const totalOrders = completedOrders + cancelledOrders;
-            const successPercentage = totalOrders > 0 ? 
-                Math.round((completedOrders / totalOrders) * 100) : 0;
-
-            // Get active orders
-            const activeOrders = await Order.countDocuments({
-                deliveryMan: courier._id,
-                orderStatus: {$in: ['headingToCustomer', 'headingToYou']}
-            });
-
-            // Get active pickups
-            const activePickups = await Pickup.countDocuments({
-                assignedDriver: courier._id,
-                picikupStatus: 'pickedUp'
-            });
-
-            // Get total assigned orders
-            const totalAssignedOrders = await Order.countDocuments({
-                deliveryMan: courier._id
-            });
-
-            // Get total assigned pickups 
-            const totalAssignedPickups = await Pickup.countDocuments({
-                assignedDriver: courier._id
-            });
-
-            return {
-                ...courier.toObject(),
-                successPercentage,
-                activeOrders,
-                activePickups,
-                totalAssignedOrders,
-                totalAssignedPickups
-            };
-        }));
-
-        // Sort couriers by success percentage in descending order
-        courierStats.sort((a, b) => b.successPercentage - a.successPercentage);
-
-        res.status(200).json(courierStats || []);
-
-    } catch (error) {
-        console.error('Error in couriers:', error);
-        res.status(500).json({ error: 'Internal server error. Please try again.' });
+  try {
+    // Get base courier query based on status
+    let courierQuery;
+    if (status === 'active') {
+      courierQuery = Courier.find({ isAvailable: true });
+    } else if (status === 'inactive') {
+      courierQuery = Courier.find({ isAvailable: false });
+    } else {
+      courierQuery = Courier.find({});
     }
-}
 
+    // Get couriers
+    couriers = await courierQuery;
+
+    // Get additional stats for each courier
+    let courierStats = await Promise.all(
+      couriers.map(async (courier) => {
+        // Get completed and cancelled/rejected orders
+        const completedOrders = await Order.countDocuments({
+          deliveryMan: courier._id,
+          orderStatus: 'completed',
+        });
+
+        const cancelledOrders = await Order.countDocuments({
+          deliveryMan: courier._id,
+          orderStatus: { $in: ['canceled', 'rejected'] },
+        });
+
+        // Calculate success percentage
+        const totalOrders = completedOrders + cancelledOrders;
+        const successPercentage =
+          totalOrders > 0
+            ? Math.round((completedOrders / totalOrders) * 100)
+            : 0;
+
+        // Get active orders
+        const activeOrders = await Order.countDocuments({
+          deliveryMan: courier._id,
+          orderStatus: { $in: ['headingToCustomer', 'headingToYou'] },
+        });
+
+        // Get active pickups
+        const activePickups = await Pickup.countDocuments({
+          assignedDriver: courier._id,
+          picikupStatus: 'pickedUp',
+        });
+
+        // Get total assigned orders
+        const totalAssignedOrders = await Order.countDocuments({
+          deliveryMan: courier._id,
+        });
+
+        // Get total assigned pickups
+        const totalAssignedPickups = await Pickup.countDocuments({
+          assignedDriver: courier._id,
+        });
+
+        return {
+          ...courier.toObject(),
+          successPercentage,
+          activeOrders,
+          activePickups,
+          totalAssignedOrders,
+          totalAssignedPickups,
+        };
+      })
+    );
+
+    // Sort couriers by success percentage in descending order
+    courierStats.sort((a, b) => b.successPercentage - a.successPercentage);
+
+    res.status(200).json(courierStats || []);
+  } catch (error) {
+    console.error('Error in couriers:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
 
 const createCourier = async (req, res) => {
   const {
@@ -258,15 +302,26 @@ const createCourier = async (req, res) => {
     address,
     photo,
     zones,
-    allPapers
+    allPapers,
   } = req.body;
-try {
-  console.log(req.body);
-    if (!fullName || !phoneNumber || !nationalId || !dateOfBirth || !vehicleType || !vehiclePlateNumber || !email || !password || !address|| !photo) {
-        return res.status(400).json({
+  try {
+    console.log(req.body);
+    if (
+      !fullName ||
+      !phoneNumber ||
+      !nationalId ||
+      !dateOfBirth ||
+      !vehicleType ||
+      !vehiclePlateNumber ||
+      !email ||
+      !password ||
+      !address ||
+      !photo
+    ) {
+      return res.status(400).json({
         status: 'error',
         error: 'Please fill all the fields',
-        });
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -284,147 +339,201 @@ try {
       email,
       password: hashedPassword,
       address,
-      assignedZones : zones,
+      assignedZones: zones,
       allPapers: Array.isArray(allPapers) ? allPapers : [],
     });
 
-    courier.save().then((courier) => {
+    courier
+      .save()
+      .then((courier) => {
         res.status(201).json({
-            status: 'success',
-            courier: {
+          status: 'success',
+          courier: {
             id: courier._id,
             name: courier.name,
             email: courier.email,
             role: courier.role,
-            },
+          },
         });
-    }).catch((err) => {
+      })
+      .catch((err) => {
         console.log(err);
         if (err.code === 11000) {
-            res.status(400).json({
-                status: 'error',
-                error: 'It looks like a courier with this email or national ID already exists. Please use a different email or national ID.',
-            });
+          res.status(400).json({
+            status: 'error',
+            error:
+              'It looks like a courier with this email or national ID already exists. Please use a different email or national ID.',
+          });
         } else if (err.name === 'ValidationError') {
-            res.status(400).json({
-                status: 'error',
-                error: 'Validation error: ' + err.message,
-            });
+          res.status(400).json({
+            status: 'error',
+            error: 'Validation error: ' + err.message,
+          });
         } else {
-            res.status(500).json({
-                status: 'error',
-                error: 'An internal server error occurred. Please try again.',
-            });
+          res.status(500).json({
+            status: 'error',
+            error: 'An internal server error occurred. Please try again.',
+          });
         }
-    });
-
-
-}catch(err){
-  console.log(err);
+      });
+  } catch (err) {
+    console.log(err);
     res.status(500).json({
-        status: 'error',
-        error: 'An error occurred'
+      status: 'error',
+      error: 'An error occurred',
     });
-}
+  }
+};
 
+// Update courier zones
+const updateCourierZones = async (req, res) => {
+  const { courierId, zones, notes } = req.body;
 
-}
+  try {
+    // Validate input
+    if (!courierId || !zones || !Array.isArray(zones) || zones.length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'Courier ID and at least one zone are required',
+      });
+    }
 
+    // Find the courier
+    const courier = await Courier.findOne({ courierID: courierId });
 
+    if (!courier) {
+      return res.status(404).json({
+        status: 'error',
+        error: 'Courier not found',
+      });
+    }
+
+    // Update assigned zones
+    courier.assignedZones = zones;
+    await courier.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Zones updated successfully',
+      data: {
+        courierID: courier.courierID,
+        name: courier.name,
+        assignedZones: courier.assignedZones,
+      },
+    });
+  } catch (err) {
+    console.error('Error updating courier zones:', err);
+    res.status(500).json({
+      status: 'error',
+      error: 'An error occurred while updating zones',
+    });
+  }
+};
 
 // ========================================= Couriers Follow Up Page ======================================== //
 
-
-const get_couriersFollowUp = async(req, res) => {
-    try {
-
+const get_couriersFollowUp = async (req, res) => {
+  try {
     // Get all couriers
     const couriers = await Courier.find({});
-    
-    // Prepare courier statistics
-    const courierStats = await Promise.all(couriers.map(async courier => {
-      // Get money with courier
-      const moneyWithCourier = await Order.aggregate([
-        {
-          $match: {
-            deliveryMan: courier._id,
-            isMoneyRecivedFromCourier: false,
-            orderStatus: { $in: ['completed', 'headingToCustomer'] },
-            'orderShipping.orderType': { $ne: 'Return' },
-            'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] }, // Cash on Delivery, Cash Difference, Cash Collection
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: '$orderShipping.amount' },
-          },
-        },
-      ]);
-      
-      // Get orders to return count
-      const ordersToReturn = await Order.countDocuments({
-        deliveryMan: courier._id,
-        orderStatus: { $in: ['returnToWarehouse', 'waitingAction'] }
-      });
-      
-      // Get active orders count
-      const activeOrders = await Order.countDocuments({
-        deliveryMan: courier._id,
-        orderStatus: { $in: ['headingToCustomer', 'headingToYou', 'inProgress'] }
-      });
-      
-      // Calculate performance based on completed orders today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const completedToday = await Order.countDocuments({
-        deliveryMan: courier._id,
-        orderStatus: 'completed',
-        completedDate: { $gte: today }
-      });
-      
-      // Assuming each courier has a daily target of 10 orders
-      const dailyTarget = 10;
-      const performance = Math.min(100, (completedToday / dailyTarget) * 100);
-      
-      // Get assigned zones
-      const zones = courier.assignedZones || [];
-      
-      // Determine courier status badge
-      let statusBadge = 'bg-success-subtle text-success';
-      let statusText = 'Active';
-      
-      if (!courier.isAvailable) {
-        statusBadge = 'bg-danger-subtle text-danger';
-        statusText = 'Inactive';
-      } else if (courier.onLeave) {
-        statusBadge = 'bg-warning-subtle text-warning';
-        statusText = 'On Leave';
-      }
-      
-      return {
-        id: courier._id,
-        courierId: courier.courierID,
-        name: courier.name,
-        photo: courier.personalPhoto || '/placeholder.svg?height=70&width=70',
-        status: statusText,
-        statusBadge: statusBadge,
-        moneyWithCourier: (moneyWithCourier[0]?.total || 0),
-        ordersToReturn: ordersToReturn,
-        activeOrders: activeOrders,
-        zones: zones,
-        performance: performance,
-      };
-    }));
-    
-    // Calculate summary statistics
-    const activeCouriersCount = couriers.filter(c => c.isAvailable && !c.onLeave).length;
-    const totalMoneyWithCouriers = courierStats.reduce((sum, courier) => sum + courier.moneyWithCourier, 0);
-    const totalOrdersToReturn = courierStats.reduce((sum, courier) => sum + courier.ordersToReturn, 0);
-    const totalActiveDeliveries = courierStats.reduce((sum, courier) => sum + courier.activeOrders, 0);
-    
 
+    // Prepare courier statistics
+    const courierStats = await Promise.all(
+      couriers.map(async (courier) => {
+        // Get money with courier
+        const moneyWithCourier = await Order.aggregate([
+          {
+            $match: {
+              deliveryMan: courier._id,
+              isMoneyRecivedFromCourier: false,
+              orderStatus: { $in: ['completed', 'headingToCustomer'] },
+              'orderShipping.orderType': { $ne: 'Return' },
+              'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] }, // Cash on Delivery, Cash Difference, Cash Collection
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: '$orderShipping.amount' },
+            },
+          },
+        ]);
+
+        // Get orders to return count
+        const ordersToReturn = await Order.countDocuments({
+          deliveryMan: courier._id,
+          orderStatus: { $in: ['returnToWarehouse', 'waitingAction'] },
+        });
+
+        // Get active orders count
+        const activeOrders = await Order.countDocuments({
+          deliveryMan: courier._id,
+          orderStatus: {
+            $in: ['headingToCustomer', 'headingToYou', 'inProgress'],
+          },
+        });
+
+        // Calculate performance based on completed orders today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const completedToday = await Order.countDocuments({
+          deliveryMan: courier._id,
+          orderStatus: 'completed',
+          completedDate: { $gte: today },
+        });
+
+        // Assuming each courier has a daily target of 10 orders
+        const dailyTarget = 10;
+        const performance = Math.min(100, (completedToday / dailyTarget) * 100);
+
+        // Get assigned zones
+        const zones = courier.assignedZones || [];
+
+        // Determine courier status badge
+        let statusBadge = 'bg-success-subtle text-success';
+        let statusText = 'Active';
+
+        if (!courier.isAvailable) {
+          statusBadge = 'bg-danger-subtle text-danger';
+          statusText = 'Inactive';
+        } else if (courier.onLeave) {
+          statusBadge = 'bg-warning-subtle text-warning';
+          statusText = 'On Leave';
+        }
+
+        return {
+          id: courier._id,
+          courierId: courier.courierID,
+          name: courier.name,
+          photo: courier.personalPhoto || '/placeholder.svg?height=70&width=70',
+          status: statusText,
+          statusBadge: statusBadge,
+          moneyWithCourier: moneyWithCourier[0]?.total || 0,
+          ordersToReturn: ordersToReturn,
+          activeOrders: activeOrders,
+          zones: zones,
+          performance: performance,
+        };
+      })
+    );
+
+    // Calculate summary statistics
+    const activeCouriersCount = couriers.filter(
+      (c) => c.isAvailable && !c.onLeave
+    ).length;
+    const totalMoneyWithCouriers = courierStats.reduce(
+      (sum, courier) => sum + courier.moneyWithCourier,
+      0
+    );
+    const totalOrdersToReturn = courierStats.reduce(
+      (sum, courier) => sum + courier.ordersToReturn,
+      0
+    );
+    const totalActiveDeliveries = courierStats.reduce(
+      (sum, courier) => sum + courier.activeOrders,
+      0
+    );
 
     console.log('active couriers count:', activeCouriersCount);
     console.log('total money with couriers:', totalMoneyWithCouriers);
@@ -433,25 +542,22 @@ const get_couriersFollowUp = async(req, res) => {
 
     console.log('courier stats:', courierStats);
 
-
-    res.render('admin/couriers-follow-up', {  
-    title: 'Couriers Follow Up',
-    page_title: 'Couriers Follow Up',
-    folder: 'Pages',
-       summaryStats: {
+    res.render('admin/couriers-follow-up', {
+      title: 'Couriers Follow Up',
+      page_title: 'Couriers Follow Up',
+      folder: 'Pages',
+      summaryStats: {
         activeCouriersCount,
         totalMoneyWithCouriers,
         totalOrdersToReturn,
-        totalActiveDeliveries
+        totalActiveDeliveries,
       },
-      couriers: courierStats
-    
-  })
+      couriers: courierStats,
+    });
   } catch (error) {
     console.error('Error in get_couriersFollowUp:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-
 };
 
 const get_courierDetailsPage = async (req, res) => {
@@ -579,8 +685,6 @@ const get_courierDetailsPage = async (req, res) => {
 
 // ======================================== Pickups Page ======================================== //
 
-
-
 const get_pickupsPage = (req, res) => {
   res.render('admin/pickups', {
     title: 'Pickups',
@@ -591,82 +695,115 @@ const get_pickupsPage = (req, res) => {
 
 const get_pickups = async (req, res) => {
   try {
-    const { pickupType, statusCategory } = req.query;
+    const { pickupType, statusCategory, dateFrom, dateTo, search } = req.query;
     let match = {};
 
     // Handle legacy pickupType parameter
     if (pickupType === 'Upcoming') {
       match = {
-        statusCategory: { $in: [statusHelper.STATUS_CATEGORIES.NEW, statusHelper.STATUS_CATEGORIES.PROCESSING] }
+        statusCategory: {
+          $in: [
+            statusHelper.STATUS_CATEGORIES.NEW,
+            statusHelper.STATUS_CATEGORIES.PROCESSING,
+          ],
+        },
       };
     } else if (pickupType === 'Completed') {
       match = { statusCategory: statusHelper.STATUS_CATEGORIES.SUCCESSFUL };
     } else if (pickupType === 'Cancelled') {
-      match = { statusCategory: statusHelper.STATUS_CATEGORIES.UNSUCCESSFUL, picikupStatus: 'canceled' };
+      match = {
+        statusCategory: statusHelper.STATUS_CATEGORIES.UNSUCCESSFUL,
+        picikupStatus: 'canceled',
+      };
     } else if (pickupType === 'inStock') {
       match = { picikupStatus: 'inStock' };
     }
-    
+
     // Override with direct status category if provided
     if (statusCategory && statusHelper.STATUS_CATEGORIES[statusCategory]) {
       match.statusCategory = statusCategory;
     }
 
-    const pickups = await Pickup.aggregate([
+    // Date range filter on pickupDate
+    if (dateFrom || dateTo) {
+      match.pickupDate = {};
+      if (dateFrom) match.pickupDate.$gte = new Date(dateFrom);
+      if (dateTo) match.pickupDate.$lte = new Date(dateTo);
+    }
+
+    // Build aggregation pipeline
+    const pipeline = [
       { $match: match },
       {
-      $lookup: {
-      from: 'users',
-      localField: 'business',
-      foreignField: '_id',
-      as: 'business',
-      },
+        $lookup: {
+          from: 'users',
+          localField: 'business',
+          foreignField: '_id',
+          as: 'business',
+        },
       },
       { $unwind: '$business' },
       {
-      $lookup: {
-      from: 'couriers',
-      localField: 'assignedDriver',
-      foreignField: '_id',
-      as: 'assignedDriver',
-      },
-      },
-      { $unwind: { path: '$assignedDriver', preserveNullAndEmptyArrays: true } },
-      {
-      $sort: { pickupTime: -1, pickupDate: -1, createdAt: -1 }
+        $lookup: {
+          from: 'couriers',
+          localField: 'assignedDriver',
+          foreignField: '_id',
+          as: 'assignedDriver',
+        },
       },
       {
+        $unwind: { path: '$assignedDriver', preserveNullAndEmptyArrays: true },
+      },
+    ];
+
+    // Text search filter
+    if (search && search.trim() !== '') {
+      const regex = new RegExp(search.trim(), 'i');
+      pipeline.push({
+        $match: {
+          $or: [
+            { pickupNumber: { $regex: regex } },
+            { phoneNumber: { $regex: regex } },
+            { 'business.brandInfo.brandName': { $regex: regex } },
+            { 'business.name': { $regex: regex } },
+          ],
+        },
+      });
+    }
+
+    pipeline.push({ $sort: { pickupTime: -1, pickupDate: -1, createdAt: -1 } });
+    pipeline.push({
       $group: {
-      _id: '$business.pickUpAdress.city',
-      pickups: { $push: '$$ROOT' },
+        _id: '$business.pickUpAdress.city',
+        pickups: { $push: '$$ROOT' },
       },
-      }
-    ]);
-    
+    });
+
+    const pickups = await Pickup.aggregate(pipeline);
+
     // Add status information to each pickup
-    const enhancedPickups = pickups.map(group => {
+    const enhancedPickups = pickups.map((group) => {
       const enhancedGroup = {
         _id: group._id,
-        pickups: group.pickups.map(pickup => {
-          return {
-            ...pickup,
-            statusLabel: statusHelper.getPickupStatusLabel(pickup.picikupStatus),
-            statusDescription: statusHelper.getPickupStatusDescription(pickup.picikupStatus),
-            categoryClass: statusHelper.getCategoryClass(pickup.statusCategory),
-            categoryColor: statusHelper.getCategoryColor(pickup.statusCategory)
-          };
-        })
+        pickups: group.pickups.map((pickup) => ({
+          ...pickup,
+          statusLabel: statusHelper.getPickupStatusLabel(pickup.picikupStatus),
+          statusDescription: statusHelper.getPickupStatusDescription(
+            pickup.picikupStatus
+          ),
+          categoryClass: statusHelper.getCategoryClass(pickup.statusCategory),
+          categoryColor: statusHelper.getCategoryColor(pickup.statusCategory),
+        })),
       };
       return enhancedGroup;
     });
-    
+
     res.status(200).json(enhancedPickups || []);
   } catch (error) {
     console.error('Error in pickups:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 };
-
 
 const get_pickupMenByZone = async (req, res) => {
   const { city } = req.query;
@@ -696,7 +833,7 @@ const assignPickupMan = async (req, res) => {
     if (!courier) {
       return res.status(404).json({ error: 'Courier not found' });
     }
-console.log('courier assig');
+    console.log('courier assig');
     pickup.assignedDriver = courierId;
     pickup.picikupStatus = 'driverAssigned';
     pickup.pickupStages.push({
@@ -721,13 +858,21 @@ console.log('courier assig');
         pickup.pickupNumber,
         {
           pickupId: pickup._id,
-          businessName: pickup.business?.brandInfo?.brandName || pickup.business?.name || 'Business',
-          assignedBy: 'Admin'
+          businessName:
+            pickup.business?.brandInfo?.brandName ||
+            pickup.business?.name ||
+            'Business',
+          assignedBy: 'Admin',
         }
       );
-      console.log(`📱 Push notification sent to courier ${courierId} about pickup assignment ${pickup.pickupNumber}`);
+      console.log(
+        `📱 Push notification sent to courier ${courierId} about pickup assignment ${pickup.pickupNumber}`
+      );
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError.message);
+      console.error(
+        `❌ Failed to send push notification to courier ${courierId}:`,
+        notificationError.message
+      );
       console.error('🔍 Pickup assignment notification error context:', {
         courierId,
         pickupNumber: pickup.pickupNumber,
@@ -735,9 +880,11 @@ console.log('courier assig');
         errorCode: notificationError.code || 'N/A',
         errorType: notificationError.constructor.name,
         errorStack: notificationError.stack?.split('\n')[0] || 'N/A',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      console.error('💡 This is a non-critical error - pickup assignment will still succeed');
+      console.error(
+        '💡 This is a non-critical error - pickup assignment will still succeed'
+      );
       // Don't fail the assignment if notification fails
     }
 
@@ -750,24 +897,34 @@ console.log('courier assig');
         {
           courierName: courier.name,
           assignedAt: new Date(),
-          assignedBy: 'Admin'
+          assignedBy: 'Admin',
         }
       );
-      console.log(`📱 Push notification sent to business ${pickup.business._id} about pickup assignment ${pickup.pickupNumber}`);
+      console.log(
+        `📱 Push notification sent to business ${pickup.business._id} about pickup assignment ${pickup.pickupNumber}`
+      );
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification to business ${pickup.business._id}:`, notificationError.message);
+      console.error(
+        `❌ Failed to send push notification to business ${pickup.business._id}:`,
+        notificationError.message
+      );
       console.error('🔍 Business notification error context:', {
         businessId: pickup.business._id,
-        businessName: pickup.business?.brandInfo?.brandName || pickup.business?.name || 'Business',
+        businessName:
+          pickup.business?.brandInfo?.brandName ||
+          pickup.business?.name ||
+          'Business',
         pickupNumber: pickup.pickupNumber,
         pickupId: pickup._id,
         courierName: courier.name,
         errorCode: notificationError.code || 'N/A',
         errorType: notificationError.constructor.name,
         errorStack: notificationError.stack?.split('\n')[0] || 'N/A',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      console.error('💡 This is a non-critical error - pickup assignment will still succeed');
+      console.error(
+        '💡 This is a non-critical error - pickup assignment will still succeed'
+      );
       // Don't fail the assignment if notification fails
     }
 
@@ -782,24 +939,22 @@ console.log('courier assig');
       errorStack: error.stack?.split('\n')[0] || 'N/A',
       timestamp: new Date().toISOString(),
       requestBody: req.body,
-      requestParams: req.params
+      requestParams: req.params,
     });
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error. Please try again.',
       errorCode: error.code || 'N/A',
-      message: error.message
+      message: error.message,
     });
   }
 };
 
-
-
-
-
 const get_pickupDetailsPage = async (req, res) => {
   const { pickupNumber } = req.params;
 
-  const pickup = await Pickup.findOne({ pickupNumber }).populate('business').populate('assignedDriver');
+  const pickup = await Pickup.findOne({ pickupNumber })
+    .populate('business')
+    .populate('assignedDriver');
 
   if (!pickup) {
     res.render('admin/pickup-details', {
@@ -843,14 +998,13 @@ const get_pickedupOrders = async (req, res) => {
   }
 };
 
-
 const cancelPickup = async (req, res) => {
   const { pickupId } = req.params;
 
   try {
-    const pickup = await Pickup.findById(pickupId).populate(
-      'assignedDriver'
-    ).populate('business');
+    const pickup = await Pickup.findById(pickupId)
+      .populate('assignedDriver')
+      .populate('business');
 
     if (!pickup) {
       return res.status(404).json({ error: 'Pickup not found' });
@@ -880,12 +1034,17 @@ const cancelPickup = async (req, res) => {
         'canceled',
         {
           cancelledAt: new Date(),
-          cancelledBy: 'Admin'
+          cancelledBy: 'Admin',
         }
       );
-      console.log(`📱 Push notification sent to business ${pickup.business._id} about pickup cancellation ${pickup.pickupNumber}`);
+      console.log(
+        `📱 Push notification sent to business ${pickup.business._id} about pickup cancellation ${pickup.pickupNumber}`
+      );
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification to business ${pickup.business._id}:`, notificationError);
+      console.error(
+        `❌ Failed to send push notification to business ${pickup.business._id}:`,
+        notificationError
+      );
       // Don't fail the cancellation if notification fails
     }
 
@@ -898,12 +1057,17 @@ const cancelPickup = async (req, res) => {
           'canceled',
           {
             cancelledAt: new Date(),
-            cancelledBy: 'Admin'
+            cancelledBy: 'Admin',
           }
         );
-        console.log(`📱 Push notification sent to courier ${pickup.assignedDriver._id} about pickup cancellation ${pickup.pickupNumber}`);
+        console.log(
+          `📱 Push notification sent to courier ${pickup.assignedDriver._id} about pickup cancellation ${pickup.pickupNumber}`
+        );
       } catch (notificationError) {
-        console.error(`❌ Failed to send push notification to courier ${pickup.assignedDriver._id}:`, notificationError);
+        console.error(
+          `❌ Failed to send push notification to courier ${pickup.assignedDriver._id}:`,
+          notificationError
+        );
         // Don't fail the cancellation if notification fails
       }
     }
@@ -915,7 +1079,7 @@ const cancelPickup = async (req, res) => {
   }
 };
 
-const deletePickup  = async (req, res) => {
+const deletePickup = async (req, res) => {
   const { pickupId } = req.params;
 
   try {
@@ -930,11 +1094,9 @@ const deletePickup  = async (req, res) => {
     console.error('Error in deletePickup:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
-
+};
 
 // ========================================End Pickups ======================================== //
-
 
 // ======================================== Stock Managment ======================================== //
 
@@ -944,22 +1106,21 @@ const get_stockManagementPage = (req, res) => {
     page_title: 'Stock Managment',
     folder: 'Pages',
   });
-}
-
+};
 
 const get_stock_orders = async (req, res) => {
-    try {
-        const orders = await Order.find({ orderStatus: { $in: ['inStock', 'inProgress'] } })
-            .populate('business')
-            .populate('deliveryMan')
-        res.status(200).json(orders || []);
-    } catch (error) {
-        console.error('Error in get_stock_orders:', error);
-        res.status(500).json({ error: 'Internal server error. Please try again.' });
-    }
-}
-
-
+  try {
+    const orders = await Order.find({
+      orderStatus: { $in: ['inStock', 'inProgress'] },
+    })
+      .populate('business')
+      .populate('deliveryMan');
+    res.status(200).json(orders || []);
+  } catch (error) {
+    console.error('Error in get_stock_orders:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
 
 const add_to_stock = async (req, res) => {
   const { orderNumber } = req.body;
@@ -969,51 +1130,53 @@ const add_to_stock = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    if(order.orderStatus==='inStock'){
-        return res.status(400).json({ error: 'Order is already in stock' });
+    if (order.orderStatus === 'inStock') {
+      return res.status(400).json({ error: 'Order is already in stock' });
     }
 
-    if(order.orderStatus === 'inProgress'){
+    if (order.orderStatus === 'inProgress') {
       return res.status(400).json({ error: 'Order is already in progress' });
     }
 
-    if(order.Attemps==2){
-      return res.status(400).json({ error: 'Order has exceeded its attempts.' });
+    if (order.Attemps == 2) {
+      return res
+        .status(400)
+        .json({ error: 'Order has exceeded its attempts.' });
     }
 
     let pickupCompleted = false;
     let completedPickup = null;
 
-    if(order.orderStatus === 'pickedUp'){
+    if (order.orderStatus === 'pickedUp') {
       order.orderStatus = 'inStock';
       if (!order.orderStages.packed.isCompleted) {
         order.orderStages.packed.isCompleted = true;
         order.orderStages.packed.completedAt = new Date();
         order.orderStages.packed.notes = 'Order added to stock';
       }
-    
-    }else if (order.orderStatus === 'waitingAction') {
+    } else if (order.orderStatus === 'waitingAction') {
       order.orderStatus = 'inStock';
       if (!order.orderStages.packed.isCompleted) {
         order.orderStages.packed.isCompleted = true;
         order.orderStages.packed.completedAt = new Date();
         order.orderStages.packed.notes = 'Order added to stock';
       }
-    }else{
-      return res.status(400).json({error: 'Order can\'t be added to stock'});
+    } else {
+      return res.status(400).json({ error: "Order can't be added to stock" });
     }
 
     await order.save();
 
     // Check if this order was part of a pickup and if all orders in that pickup are now in stock
-    const pickup = await Pickup.findOne({ 
-      ordersPickedUp: order._id 
+    const pickup = await Pickup.findOne({
+      ordersPickedUp: order._id,
     }).populate('ordersPickedUp');
 
     if (pickup && pickup.picikupStatus !== 'completed') {
       // Check if all orders in this pickup are now in stock
-      const allOrdersInStock = pickup.ordersPickedUp.every(order => 
-        order.orderStatus === 'inStock' || order.orderStatus === 'inProgress'
+      const allOrdersInStock = pickup.ordersPickedUp.every(
+        (order) =>
+          order.orderStatus === 'inStock' || order.orderStatus === 'inProgress'
       );
 
       if (allOrdersInStock) {
@@ -1031,23 +1194,22 @@ const add_to_stock = async (req, res) => {
         });
 
         await pickup.save();
-        
+
         pickupCompleted = true;
         completedPickup = pickup;
       }
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Order added to stock successfully',
       pickupCompleted: pickupCompleted,
-      pickup: pickupCompleted ? completedPickup : null
+      pickup: pickupCompleted ? completedPickup : null,
     });
   } catch (error) {
     console.error('Error in add_to_stock:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
-
+};
 
 const get_couriers_by_zone = async (req, res) => {
   const { zone } = req.query;
@@ -1058,7 +1220,7 @@ const get_couriers_by_zone = async (req, res) => {
     console.error('Error in get_couriers_by_zone:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
+};
 
 /**
  * Assign courier to stock orders with proper status transition
@@ -1079,97 +1241,112 @@ const assignCourierToStock = async (req, res) => {
 
     // Validate all orders before making any changes
     for (const order of orders) {
-      if(order.orderStatus !== 'inProgress'){
+      if (order.orderStatus !== 'inProgress') {
         // Allow assignment for orders in stock, picked up, Exchange orders, or fast shipping orders
         const validStatuses = ['inStock', 'pickedUp'];
-        
+
         // For Exchange orders or fast shipping orders, allow assignment regardless of status
         const isExchangeOrder = order.orderShipping.orderType === 'Exchange';
-        const isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
-        
-        if (!isExchangeOrder && !isFastShipping && !validStatuses.includes(order.orderStatus)) {
-          return res.status(400).json({ error: `Order ${order.orderNumber} is not in stock` });
+        const isFastShipping =
+          order.orderShipping && order.orderShipping.isExpressShipping;
+
+        if (
+          !isExchangeOrder &&
+          !isFastShipping &&
+          !validStatuses.includes(order.orderStatus)
+        ) {
+          return res
+            .status(400)
+            .json({ error: `Order ${order.orderNumber} is not in stock` });
         }
-        
-        if (order.orderStatus === 'headingToCustomer' || order.orderStatus === 'headingToYou') {
-          return res.status(400).json({ error: `Order ${order.orderNumber} Can\'t be assigned to courier because it is on the way to customer` });
+
+        if (
+          order.orderStatus === 'headingToCustomer' ||
+          order.orderStatus === 'headingToYou'
+        ) {
+          return res
+            .status(400)
+            .json({
+              error: `Order ${order.orderNumber} Can\'t be assigned to courier because it is on the way to customer`,
+            });
         }
       }
     }
 
     // Update all orders after validation passes
-    const updatePromises = orders.map(order => {
+    const updatePromises = orders.map((order) => {
       order.deliveryMan = courierId;
-      
+
       // Handle Exchange orders differently based on their current status
       if (order.orderShipping.orderType === 'Exchange') {
         // For new Exchange orders, set status to pickedUp to start the flow
         if (order.orderStatus === 'new') {
           order.orderStatus = 'pickedUp';
           order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
-          
+
           // Update packed stage for pickup
           if (!order.orderStages.packed.isCompleted) {
             order.orderStages.packed.isCompleted = true;
             order.orderStages.packed.completedAt = new Date();
             order.orderStages.packed.notes = `Order assigned to courier ${courier.name} for pickup from business`;
           }
-          
+
           // Add to courier history with specific Exchange pickup note
           order.courierHistory.push({
             courier: courierId,
             assignedAt: new Date(),
             action: 'assigned',
-            notes: `Courier ${courier.name} assigned to pick up replacement item for Exchange order (${order.orderShipping.productDescriptionReplacement})`
+            notes: `Courier ${courier.name} assigned to pick up replacement item for Exchange order (${order.orderShipping.productDescriptionReplacement})`,
           });
-        } 
+        }
         // For Exchange orders in pickedUp status, move to inStock
         else if (order.orderStatus === 'pickedUp') {
           order.orderStatus = 'inStock';
           order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
-          
+
           // Update shipping stage
           if (!order.orderStages.shipping.isCompleted) {
             order.orderStages.shipping.isCompleted = true;
             order.orderStages.shipping.completedAt = new Date();
             order.orderStages.shipping.notes = `Replacement item received in stock for Exchange order`;
           }
-          
+
           // Add to courier history
           order.courierHistory.push({
             courier: courierId,
             assignedAt: new Date(),
             action: 'delivered_to_warehouse',
-            notes: `Courier ${courier.name} delivered replacement item to warehouse`
+            notes: `Courier ${courier.name} delivered replacement item to warehouse`,
           });
         }
         // For Exchange orders in inStock, assign for delivery
         else if (order.orderStatus === 'inStock') {
           order.orderStatus = 'inProgress';
           order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
-          
+
           // Update inProgress stage
           if (!order.orderStages.inProgress.isCompleted) {
             order.orderStages.inProgress.isCompleted = true;
             order.orderStages.inProgress.completedAt = new Date();
             order.orderStages.inProgress.notes = `Order assigned to courier ${courier.name} for delivery to customer`;
           }
-          
+
           // Add to courier history
           order.courierHistory.push({
             courier: courierId,
             assignedAt: new Date(),
             action: 'assigned',
-            notes: `Courier ${courier.name} assigned to deliver Exchange order to customer (${order.orderShipping.productDescription} → ${order.orderShipping.productDescriptionReplacement})`
+            notes: `Courier ${courier.name} assigned to deliver Exchange order to customer (${order.orderShipping.productDescription} → ${order.orderShipping.productDescriptionReplacement})`,
           });
         }
       } else {
         // Handle fast shipping vs standard flow for non-Exchange orders
-        const isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
-        
+        const isFastShipping =
+          order.orderShipping && order.orderShipping.isExpressShipping;
+
         order.orderStatus = 'inProgress';
         order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
-        
+
         if (isFastShipping) {
           // For fast shipping orders, only mark inProgress stage as completed
           if (!order.orderStages.inProgress.isCompleted) {
@@ -1177,13 +1354,13 @@ const assignCourierToStock = async (req, res) => {
             order.orderStages.inProgress.completedAt = new Date();
             order.orderStages.inProgress.notes = `Fast shipping order assigned to courier ${courier.name} - ready for pickup from business`;
           }
-          
+
           // Add to courier history with fast shipping note
           order.courierHistory.push({
             courier: courierId,
             assignedAt: new Date(),
             action: 'assigned',
-            notes: `Fast shipping order assigned to courier ${courier.name} - proceed to business for pickup`
+            notes: `Fast shipping order assigned to courier ${courier.name} - proceed to business for pickup`,
           });
         } else {
           // For regular orders, update shipping stage
@@ -1192,27 +1369,31 @@ const assignCourierToStock = async (req, res) => {
             order.orderStages.shipping.completedAt = new Date();
             order.orderStages.shipping.notes = `Order assigned to courier ${courier.name}`;
           }
-          
+
           // Add to courier history
           order.courierHistory.push({
             courier: courierId,
             assignedAt: new Date(),
             action: 'assigned',
-            notes: `Courier ${courier.name} assigned to deliver ${order.orderShipping.orderType} order`
+            notes: `Courier ${courier.name} assigned to deliver ${order.orderShipping.orderType} order`,
           });
         }
-        
+
         // For Cash Collection orders, add special note
         if (order.orderShipping.orderType === 'Cash Collection') {
-          order.courierHistory[order.courierHistory.length - 1].notes += ` (Amount to collect: ${order.orderShipping.amount} EGP)`;
+          order.courierHistory[
+            order.courierHistory.length - 1
+          ].notes += ` (Amount to collect: ${order.orderShipping.amount} EGP)`;
         }
       }
-      
+
       // For Cash Collection orders, add amount in note
       if (order.orderShipping.orderType === 'Cash Collection') {
-        order.courierHistory[order.courierHistory.length - 1].notes += ` (Amount to collect: ${order.orderShipping.amount})`;
+        order.courierHistory[
+          order.courierHistory.length - 1
+        ].notes += ` (Amount to collect: ${order.orderShipping.amount})`;
       }
-      
+
       return order.save();
     });
 
@@ -1227,16 +1408,23 @@ const assignCourierToStock = async (req, res) => {
         {
           ordersCount: orders.length,
           orderNumbers: orderNumbers,
-          assignedBy: 'Admin'
+          assignedBy: 'Admin',
         }
       );
-      console.log(`📱 Push notification sent to courier ${courierId} about ${orders.length} new order assignments`);
+      console.log(
+        `📱 Push notification sent to courier ${courierId} about ${orders.length} new order assignments`
+      );
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError);
+      console.error(
+        `❌ Failed to send push notification to courier ${courierId}:`,
+        notificationError
+      );
       // Don't fail the assignment if notification fails
     }
 
-    res.status(200).json({ message: 'Orders assigned to courier successfully' });
+    res
+      .status(200)
+      .json({ message: 'Orders assigned to courier successfully' });
   } catch (error) {
     console.error('Error in assignCourierToStock:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -1251,14 +1439,19 @@ const courier_received = async (req, res) => {
       return res.status(404).json({ error: 'Courier not found' });
     }
 
-    const orders = await Order.find({ deliveryMan: courierId, orderStatus: 'inProgress' });
+    const orders = await Order.find({
+      deliveryMan: courierId,
+      orderStatus: 'inProgress',
+    });
     if (!orders.length) {
-      return res.status(404).json({ error: 'No orders found for this courier' });
+      return res
+        .status(404)
+        .json({ error: 'No orders found for this courier' });
     }
 
-    const updatePromises = orders.map(order => {
+    const updatePromises = orders.map((order) => {
       order.orderStatus = 'headingToCustomer';
-      
+
       // Update inProgress stage
       if (!order.orderStages.inProgress.isCompleted) {
         order.orderStages.inProgress.isCompleted = true;
@@ -1271,22 +1464,21 @@ const courier_received = async (req, res) => {
         order.orderStages.outForDelivery.notes = `Order marked as received by courier ${courier.name}`;
       }
 
-
       return order.save();
     });
 
     await Promise.all(updatePromises);
 
-    res.status(200).json({ message: 'Orders marked as received by courier successfully' });
+    res
+      .status(200)
+      .json({ message: 'Orders marked as received by courier successfully' });
   } catch (error) {
     console.error('Error in courier_received:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
+};
 
-
-
-// ================ Stock Returns =================== //  
+// ================ Stock Returns =================== //
 
 const get_stockReturnsPage = (req, res) => {
   res.render('admin/stock-returns', {
@@ -1294,31 +1486,27 @@ const get_stockReturnsPage = (req, res) => {
     page_title: 'Stock Returns',
     folder: 'Pages',
   });
-
-}
-
+};
 
 const getReturnedOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ 
+    const orders = await Order.find({
       $or: [
         { orderStatus: { $in: ['returnAtWarehouse', 'inReturnStock'] } },
-        { 'orderShipping.orderType': 'Return' }
-      ]
+        { 'orderShipping.orderType': 'Return' },
+      ],
     })
       .populate('business', 'brandInfo')
       .populate('deliveryMan')
       .sort({ orderDate: -1, createdAt: -1 });
-      
-    console.log(orders);    
+
+    console.log(orders);
     res.status(200).json(orders || []);
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Error in getReturnedOrders:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
-
+};
 
 // Note: Removed approveReturn and rejectReturn functions as admin no longer needs to approve returns
 
@@ -1335,7 +1523,9 @@ const add_return_to_stock = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
     if (order.orderStatus === 'inReturnStock') {
-      return res.status(400).json({ error: 'Order is already in return stock' });
+      return res
+        .status(400)
+        .json({ error: 'Order is already in return stock' });
     }
 
     if (order.orderStatus === 'inProgress') {
@@ -1343,82 +1533,93 @@ const add_return_to_stock = async (req, res) => {
     }
 
     // ensure order not heading to customer
-    if (order.orderStatus === 'headingToCustomer' || order.orderStatus === 'headingToYou') {
+    if (
+      order.orderStatus === 'headingToCustomer' ||
+      order.orderStatus === 'headingToYou'
+    ) {
       return res.status(400).json({ error: 'Order is on the way to customer' });
     }
 
     // Case 1: Order comes from waitingAction, returnToWarehouse, or rejected status
     // This happens when delivery attempts fail
-    if (order.orderStatus === 'waitingAction' || order.orderStatus === 'returnToWarehouse' || order.orderStatus === 'rejected') { 
+    if (
+      order.orderStatus === 'waitingAction' ||
+      order.orderStatus === 'returnToWarehouse' ||
+      order.orderStatus === 'rejected'
+    ) {
       order.orderStatus = 'inReturnStock';
-      
+
       // If it's not already a return type, change it to a return
       if (order.orderShipping.orderType !== 'Return') {
         order.orderShipping.orderType = 'Return';
       }
-      
+
       // Add return reason if provided
       if (returnReason) {
         order.orderShipping.returnReason = returnReason;
       }
-      
+
       // Add return notes if provided
       if (returnNotes) {
         order.orderShipping.returnNotes = returnNotes;
       }
-      
+
       // Update inProgress stage for return
       if (!order.orderStages.inProgress.isCompleted) {
         order.orderStages.inProgress.isCompleted = true;
         order.orderStages.inProgress.completedAt = new Date();
-        order.orderStages.inProgress.notes = 'Order added to return stock after failed delivery attempt';
+        order.orderStages.inProgress.notes =
+          'Order added to return stock after failed delivery attempt';
       }
-      
+
       // Update returnAtWarehouse stage to mark it as completed
       order.orderStages.returnAtWarehouse.isCompleted = true;
       order.orderStages.returnAtWarehouse.completedAt = new Date();
-      order.orderStages.returnAtWarehouse.notes = 'Order received at warehouse and added to return stock';
-    } 
+      order.orderStages.returnAtWarehouse.notes =
+        'Order received at warehouse and added to return stock';
+    }
     // Case 2: Order is a new return initiated by the business
     else if (order.orderStatus === 'returnInitiated') {
       order.orderStatus = 'returnAtWarehouse';
-      
+
       // Add return reason if provided
       if (returnReason) {
         order.orderShipping.returnReason = returnReason;
       }
-      
+
       // Add return notes if provided
       if (returnNotes) {
         order.orderShipping.returnNotes = returnNotes;
       }
-      
+
       // Update returnAtWarehouse stage
       order.orderStages.returnAtWarehouse.isCompleted = true;
       order.orderStages.returnAtWarehouse.completedAt = new Date();
-      order.orderStages.returnAtWarehouse.notes = 'Return order added to warehouse by admin';
+      order.orderStages.returnAtWarehouse.notes =
+        'Return order added to warehouse by admin';
     }
     // Case 3: Order is completed and needs to be returned
     else if (order.orderStatus === 'completed') {
       order.orderStatus = 'returnAtWarehouse';
-      
+
       // Change order type to return
       order.orderShipping.orderType = 'Return';
-      
+
       // Add return reason if provided
       if (returnReason) {
         order.orderShipping.returnReason = returnReason;
       }
-      
+
       // Add return notes if provided
       if (returnNotes) {
         order.orderShipping.returnNotes = returnNotes;
       }
-      
+
       // Update returnAtWarehouse stage
       order.orderStages.returnAtWarehouse.isCompleted = true;
       order.orderStages.returnAtWarehouse.completedAt = new Date();
-      order.orderStages.returnAtWarehouse.notes = 'Completed order added to return warehouse by admin';
+      order.orderStages.returnAtWarehouse.notes =
+        'Completed order added to return warehouse by admin';
     }
     // Case 4: Order is already at warehouse but needs to be processed as return
     else if (order.orderStatus === 'returnAtWarehouse') {
@@ -1426,32 +1627,35 @@ const add_return_to_stock = async (req, res) => {
       if (returnReason) {
         order.orderShipping.returnReason = returnReason;
       }
-      
+
       if (returnNotes) {
         order.orderShipping.returnNotes = returnNotes;
       }
-      
+
       // Update returnAtWarehouse stage
       order.orderStages.returnAtWarehouse.isCompleted = true;
       order.orderStages.returnAtWarehouse.completedAt = new Date();
-      order.orderStages.returnAtWarehouse.notes = 'Return order details updated by admin';
-    }
-    else {
-      return res.status(400).json({ error: `Order status '${order.orderStatus}' cannot be changed to return stock. Allowed statuses: completed, returnInitiated, waitingAction, returnToWarehouse, rejected` });
+      order.orderStages.returnAtWarehouse.notes =
+        'Return order details updated by admin';
+    } else {
+      return res
+        .status(400)
+        .json({
+          error: `Order status '${order.orderStatus}' cannot be changed to return stock. Allowed statuses: completed, returnInitiated, waitingAction, returnToWarehouse, rejected`,
+        });
     }
 
     await order.save();
 
-    res.status(200).json({ message: 'Order added to return stock successfully' });
-
+    res
+      .status(200)
+      .json({ message: 'Order added to return stock successfully' });
   } catch (error) {
     console.error('Error in add_return_to_stock:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
+};
 
-    
-    
 // Enhanced Assign courier to pick up return from customer
 const assignCourierToReturn = async (req, res) => {
   const { orderNumbers, courierId } = req.body;
@@ -1471,53 +1675,74 @@ const assignCourierToReturn = async (req, res) => {
 
     for (const order of orders) {
       // Enhanced validation for new return flow
-      const validReturnStatuses = ['new', 'returnInitiated', 'inReturnStock', 'returnLinked'];
-      
+      const validReturnStatuses = [
+        'new',
+        'returnInitiated',
+        'inReturnStock',
+        'returnLinked',
+      ];
+
       if (!validReturnStatuses.includes(order.orderStatus)) {
-        return res.status(400).json({ 
-          error: `Order ${order.orderNumber} (${order.orderStatus}) is not ready for courier assignment. Valid statuses: ${validReturnStatuses.join(', ')}` 
+        return res.status(400).json({
+          error: `Order ${order.orderNumber} (${
+            order.orderStatus
+          }) is not ready for courier assignment. Valid statuses: ${validReturnStatuses.join(
+            ', '
+          )}`,
         });
       }
 
-      if (order.orderStatus === 'headingToCustomer' || order.orderStatus === 'headingToYou') {
-        return res.status(400).json({ error: `Order ${order.orderNumber} is already assigned to a courier` });
+      if (
+        order.orderStatus === 'headingToCustomer' ||
+        order.orderStatus === 'headingToYou'
+      ) {
+        return res
+          .status(400)
+          .json({
+            error: `Order ${order.orderNumber} is already assigned to a courier`,
+          });
       }
 
       // Check if this is a Return order type
       if (order.orderShipping.orderType !== 'Return') {
-        return res.status(400).json({ error: `Order ${order.orderNumber} is not a return order` });
+        return res
+          .status(400)
+          .json({ error: `Order ${order.orderNumber} is not a return order` });
       }
 
       order.deliveryMan = courierId;
       order.orderStatus = 'returnAssigned';
-      
+
       // Update return stages
       order.orderStages.returnAssigned.isCompleted = true;
       order.orderStages.returnAssigned.completedAt = new Date();
       order.orderStages.returnAssigned.notes = `Return order assigned to courier ${courier.name} for pickup from customer`;
-      
+
       // Add to courier history
       order.courierHistory.push({
         courier: courierId,
         assignedAt: new Date(),
         action: 'assigned',
-        notes: `Courier ${courier.name} assigned to pick up return order from customer`
+        notes: `Courier ${courier.name} assigned to pick up return order from customer`,
       });
 
       // If this return order is linked to a deliver order, update the deliver order status too
       if (order.orderShipping.linkedDeliverOrder) {
-        const linkedDeliverOrder = await Order.findById(order.orderShipping.linkedDeliverOrder);
+        const linkedDeliverOrder = await Order.findById(
+          order.orderShipping.linkedDeliverOrder
+        );
         if (linkedDeliverOrder) {
           linkedDeliverOrder.orderStatus = 'returnAssigned';
           linkedDeliverOrder.orderStages.returnAssigned.isCompleted = true;
-          linkedDeliverOrder.orderStages.returnAssigned.completedAt = new Date();
+          linkedDeliverOrder.orderStages.returnAssigned.completedAt =
+            new Date();
           linkedDeliverOrder.orderStages.returnAssigned.notes = `Return pickup assigned to courier ${courier.name}`;
           await linkedDeliverOrder.save();
         }
       }
     }
 
-    await Promise.all(orders.map(order => order.save()));
+    await Promise.all(orders.map((order) => order.save()));
 
     // Send push notification to courier about return assignments
     try {
@@ -1528,21 +1753,25 @@ const assignCourierToReturn = async (req, res) => {
         {
           ordersCount: orders.length,
           orderNumbers: orderNumbers,
-          assignedBy: 'Admin'
+          assignedBy: 'Admin',
         }
       );
-      console.log(`📱 Push notification sent to courier ${courierId} about ${orders.length} return pickup assignments`);
+      console.log(
+        `📱 Push notification sent to courier ${courierId} about ${orders.length} return pickup assignments`
+      );
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError);
+      console.error(
+        `❌ Failed to send push notification to courier ${courierId}:`,
+        notificationError
+      );
       // Don't fail the assignment if notification fails
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Courier assigned to return orders successfully',
       assignedOrders: orders.length,
-      courierName: courier.name
+      courierName: courier.name,
     });
-
   } catch (error) {
     console.error('Error in assignCourierToReturn:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -1552,7 +1781,7 @@ const assignCourierToReturn = async (req, res) => {
 // Scenario 2: Automatic Return Conversion for Failed Deliveries
 const convertFailedDeliveryToReturn = async (req, res) => {
   const { orderId, reason } = req.params;
-  
+
   try {
     const deliverOrder = await Order.findById(orderId);
     if (!deliverOrder) {
@@ -1560,16 +1789,24 @@ const convertFailedDeliveryToReturn = async (req, res) => {
     }
 
     // Only allow conversion for failed deliver orders
-    if (deliverOrder.orderStatus !== 'deliveryFailed' && 
-        deliverOrder.orderStatus !== 'rejected' && 
-        deliverOrder.orderStatus !== 'canceled' &&
-        deliverOrder.orderShipping.orderType !== 'Deliver') {
-      return res.status(400).json({ error: 'Order is not eligible for automatic return conversion' });
+    if (
+      deliverOrder.orderStatus !== 'deliveryFailed' &&
+      deliverOrder.orderStatus !== 'rejected' &&
+      deliverOrder.orderStatus !== 'canceled' &&
+      deliverOrder.orderShipping.orderType !== 'Deliver'
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: 'Order is not eligible for automatic return conversion',
+        });
     }
 
     // Create a new Return order (R2) automatically
     const returnOrder = new Order({
-      orderNumber: `${Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000}`,
+      orderNumber: `${
+        Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000
+      }`,
       orderDate: new Date(),
       orderStatus: 'autoReturnInitiated',
       orderFees: deliverOrder.orderFees, // Use same fees
@@ -1590,33 +1827,33 @@ const convertFailedDeliveryToReturn = async (req, res) => {
         orderPlaced: {
           isCompleted: true,
           completedAt: new Date(),
-          notes: 'Automatic return order created due to delivery failure.'
+          notes: 'Automatic return order created due to delivery failure.',
         },
         packed: {
           isCompleted: false,
           completedAt: null,
-          notes: ''
+          notes: '',
         },
         shipping: {
           isCompleted: false,
           completedAt: null,
-          notes: ''
+          notes: '',
         },
         inProgress: {
           isCompleted: false,
           completedAt: null,
-          notes: ''
+          notes: '',
         },
         outForDelivery: {
           isCompleted: false,
           completedAt: null,
-          notes: ''
+          notes: '',
         },
         delivered: {
           isCompleted: false,
           completedAt: null,
-          notes: ''
-        }
+          notes: '',
+        },
       },
       business: deliverOrder.business,
     });
@@ -1630,7 +1867,7 @@ const convertFailedDeliveryToReturn = async (req, res) => {
     deliverOrder.orderStages.returnInitiated = {
       isCompleted: true,
       completedAt: new Date(),
-      notes: `Automatic return initiated due to delivery failure. Return order: ${returnOrder.orderNumber}`
+      notes: `Automatic return initiated due to delivery failure. Return order: ${returnOrder.orderNumber}`,
     };
 
     await Promise.all([returnOrder.save(), deliverOrder.save()]);
@@ -1639,9 +1876,8 @@ const convertFailedDeliveryToReturn = async (req, res) => {
       message: 'Failed delivery automatically converted to return order',
       deliverOrder: deliverOrder,
       returnOrder: returnOrder,
-      returnOrderCode: returnOrder.orderNumber
+      returnOrderCode: returnOrder.orderNumber,
     });
-
   } catch (error) {
     console.error('Error converting failed delivery to return:', error);
     res.status(500).json({ error: 'Failed to convert delivery to return' });
@@ -1651,21 +1887,21 @@ const convertFailedDeliveryToReturn = async (req, res) => {
 // Get all return orders with comprehensive filtering and management
 const getAllReturnOrders = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 20, 
-      status, 
-      dateFrom, 
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      dateFrom,
       dateTo,
       search,
       businessId,
       courierId,
       sortBy = 'orderDate',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
     } = req.query;
 
     const query = {
-      'orderShipping.orderType': 'Return'
+      'orderShipping.orderType': 'Return',
     };
 
     // Add status filter
@@ -1696,14 +1932,14 @@ const getAllReturnOrders = async (req, res) => {
         { orderNumber: { $regex: search, $options: 'i' } },
         { 'orderCustomer.fullName': { $regex: search, $options: 'i' } },
         { 'orderCustomer.phoneNumber': { $regex: search, $options: 'i' } },
-        { 'orderShipping.returnReason': { $regex: search, $options: 'i' } }
+        { 'orderShipping.returnReason': { $regex: search, $options: 'i' } },
       ];
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sortOptions = {};
     sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
-    
+
     const returnOrders = await Order.find(query)
       .populate('business', 'businessName email phone')
       .populate('deliveryMan', 'name phone email')
@@ -1720,9 +1956,9 @@ const getAllReturnOrders = async (req, res) => {
         $group: {
           _id: '$orderStatus',
           count: { $sum: 1 },
-          totalFees: { $sum: '$totalFees' }
-        }
-      }
+          totalFees: { $sum: '$totalFees' },
+        },
+      },
     ]);
 
     res.status(200).json({
@@ -1732,9 +1968,9 @@ const getAllReturnOrders = async (req, res) => {
         totalPages: Math.ceil(totalCount / parseInt(limit)),
         totalCount,
         hasNext: skip + returnOrders.length < totalCount,
-        hasPrev: parseInt(page) > 1
+        hasPrev: parseInt(page) > 1,
       },
-      statistics: stats
+      statistics: stats,
     });
   } catch (error) {
     console.error('Error fetching return orders:', error);
@@ -1746,13 +1982,17 @@ const getAllReturnOrders = async (req, res) => {
 const getReturnOrderDetailsAdmin = async (req, res) => {
   try {
     const { orderId } = req.params;
-    
+
     const returnOrder = await Order.findOne({
       _id: orderId,
-      'orderShipping.orderType': 'Return'
-    }).populate('deliveryMan', 'name phone email')
+      'orderShipping.orderType': 'Return',
+    })
+      .populate('deliveryMan', 'name phone email')
       .populate('business', 'businessName email phone')
-      .populate('orderShipping.linkedDeliverOrder', 'orderNumber orderStatus orderCustomer');
+      .populate(
+        'orderShipping.linkedDeliverOrder',
+        'orderNumber orderStatus orderCustomer'
+      );
 
     if (!returnOrder) {
       return res.status(404).json({ error: 'Return order not found' });
@@ -1760,24 +2000,31 @@ const getReturnOrderDetailsAdmin = async (req, res) => {
 
     // Calculate progress percentage
     const returnStages = [
-      'returnInitiated', 'returnAssigned', 'returnPickedUp', 
-      'returnAtWarehouse', 'returnInspection', 'returnProcessing', 
-      'returnToBusiness', 'returnCompleted'
+      'returnInitiated',
+      'returnAssigned',
+      'returnPickedUp',
+      'returnAtWarehouse',
+      'returnInspection',
+      'returnProcessing',
+      'returnToBusiness',
+      'returnCompleted',
     ];
-    
-    const completedStages = returnStages.filter(stage => 
-      returnOrder.orderStages[stage]?.isCompleted
+
+    const completedStages = returnStages.filter(
+      (stage) => returnOrder.orderStages[stage]?.isCompleted
     ).length;
-    
-    const progressPercentage = Math.round((completedStages / returnStages.length) * 100);
+
+    const progressPercentage = Math.round(
+      (completedStages / returnStages.length) * 100
+    );
 
     // Get stage timeline
-    const stageTimeline = returnStages.map(stage => ({
+    const stageTimeline = returnStages.map((stage) => ({
       stage,
       isCompleted: returnOrder.orderStages[stage]?.isCompleted || false,
       completedAt: returnOrder.orderStages[stage]?.completedAt || null,
       notes: returnOrder.orderStages[stage]?.notes || '',
-      ...returnOrder.orderStages[stage]?.toObject()
+      ...returnOrder.orderStages[stage]?.toObject(),
     }));
 
     res.status(200).json({
@@ -1785,7 +2032,7 @@ const getReturnOrderDetailsAdmin = async (req, res) => {
       progressPercentage,
       stageTimeline,
       feeBreakdown: returnOrder.feeBreakdown,
-      linkedDeliverOrder: returnOrder.orderShipping.linkedDeliverOrder
+      linkedDeliverOrder: returnOrder.orderShipping.linkedDeliverOrder,
     });
   } catch (error) {
     console.error('Error fetching return order details:', error);
@@ -1797,17 +2044,17 @@ const getReturnOrderDetailsAdmin = async (req, res) => {
 const updateReturnInspection = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { 
-      inspectionResult, 
-      inspectionNotes, 
-      inspectionPhotos, 
+    const {
+      inspectionResult,
+      inspectionNotes,
+      inspectionPhotos,
       conditionNotes,
-      returnValue 
+      returnValue,
     } = req.body;
 
     const returnOrder = await Order.findOne({
       _id: orderId,
-      'orderShipping.orderType': 'Return'
+      'orderShipping.orderType': 'Return',
     });
 
     if (!returnOrder) {
@@ -1821,13 +2068,15 @@ const updateReturnInspection = async (req, res) => {
       notes: inspectionNotes || '',
       inspectedBy: req.userData._id,
       inspectionResult: inspectionResult,
-      inspectionPhotos: inspectionPhotos || []
+      inspectionPhotos: inspectionPhotos || [],
     };
 
     // Update return condition and value
     if (returnOrder.orderShipping) {
-      returnOrder.orderShipping.returnCondition = req.body.returnCondition || returnOrder.orderShipping.returnCondition;
-      returnOrder.orderShipping.returnValue = returnValue || returnOrder.orderShipping.returnValue;
+      returnOrder.orderShipping.returnCondition =
+        req.body.returnCondition || returnOrder.orderShipping.returnCondition;
+      returnOrder.orderShipping.returnValue =
+        returnValue || returnOrder.orderShipping.returnValue;
       returnOrder.orderShipping.returnInspectionNotes = inspectionNotes || '';
     }
 
@@ -1839,16 +2088,16 @@ const updateReturnInspection = async (req, res) => {
         notes: 'Return received and inspected at warehouse',
         receivedBy: req.userData._id,
         warehouseLocation: req.body.warehouseLocation || 'Main Warehouse',
-        conditionNotes: conditionNotes || ''
+        conditionNotes: conditionNotes || '',
       };
       returnOrder.orderStatus = 'returnAtWarehouse';
     }
 
     await returnOrder.save();
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Return inspection updated successfully',
-      order: returnOrder
+      order: returnOrder,
     });
   } catch (error) {
     console.error('Error updating return inspection:', error);
@@ -1860,16 +2109,16 @@ const updateReturnInspection = async (req, res) => {
 const updateReturnProcessing = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { 
-      processingType, 
-      processingNotes, 
+    const {
+      processingType,
+      processingNotes,
       refundAmount,
-      exchangeOrderNumber 
+      exchangeOrderNumber,
     } = req.body;
 
     const returnOrder = await Order.findOne({
       _id: orderId,
-      'orderShipping.orderType': 'Return'
+      'orderShipping.orderType': 'Return',
     });
 
     if (!returnOrder) {
@@ -1882,7 +2131,7 @@ const updateReturnProcessing = async (req, res) => {
       completedAt: new Date(),
       notes: processingNotes || '',
       processedBy: req.userData._id,
-      processingType: processingType
+      processingType: processingType,
     };
 
     // Update processing details
@@ -1894,9 +2143,9 @@ const updateReturnProcessing = async (req, res) => {
 
     await returnOrder.save();
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Return processing updated successfully',
-      order: returnOrder
+      order: returnOrder,
     });
   } catch (error) {
     console.error('Error updating return processing:', error);
@@ -1923,28 +2172,35 @@ const assignCourierToReturnToBusiness = async (req, res) => {
 
     for (const order of orders) {
       // Allow returns at warehouse or in return stock to be assigned back to business
-      if (order.orderStatus !== 'returnAtWarehouse' && order.orderStatus !== 'inReturnStock') {
-        return res.status(400).json({ error: `Order ${order.orderNumber} is not at warehouse or in return stock` });
+      if (
+        order.orderStatus !== 'returnAtWarehouse' &&
+        order.orderStatus !== 'inReturnStock'
+      ) {
+        return res
+          .status(400)
+          .json({
+            error: `Order ${order.orderNumber} is not at warehouse or in return stock`,
+          });
       }
 
       order.deliveryMan = courierId;
       order.orderStatus = 'returnToBusiness';
-      
+
       // Update return stages
       order.orderStages.returnToBusiness.isCompleted = true;
       order.orderStages.returnToBusiness.completedAt = new Date();
       order.orderStages.returnToBusiness.notes = `Return assigned to courier ${courier.name} for delivery to business`;
-      
+
       // Add to courier history
       order.courierHistory.push({
         courier: courierId,
         assignedAt: new Date(),
         action: 'pickup_from_warehouse',
-        notes: `Courier ${courier.name} assigned to deliver return to business`
+        notes: `Courier ${courier.name} assigned to deliver return to business`,
       });
     }
 
-    await Promise.all(orders.map(order => order.save()));
+    await Promise.all(orders.map((order) => order.save()));
 
     // Send push notification to courier about return delivery assignments
     try {
@@ -1955,23 +2211,30 @@ const assignCourierToReturnToBusiness = async (req, res) => {
         {
           ordersCount: orders.length,
           orderNumbers: orderNumbers,
-          assignedBy: 'Admin'
+          assignedBy: 'Admin',
         }
       );
-      console.log(`📱 Push notification sent to courier ${courierId} about ${orders.length} return delivery assignments`);
+      console.log(
+        `📱 Push notification sent to courier ${courierId} about ${orders.length} return delivery assignments`
+      );
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError);
+      console.error(
+        `❌ Failed to send push notification to courier ${courierId}:`,
+        notificationError
+      );
       // Don't fail the assignment if notification fails
     }
 
-    res.status(200).json({ message: 'Courier assigned to deliver returns to business successfully' });
-
+    res
+      .status(200)
+      .json({
+        message: 'Courier assigned to deliver returns to business successfully',
+      });
   } catch (error) {
     console.error('Error in assignCourierToReturnToBusiness:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 };
-
 
 const return_courier_received = async (req, res) => {
   const { courierId } = req.body;
@@ -1981,24 +2244,28 @@ const return_courier_received = async (req, res) => {
       return res.status(404).json({ error: 'Courier not found' });
     }
 
-    const orders = await Order.find({ deliveryMan: courierId, orderStatus: 'returnToWarehouse' });
+    const orders = await Order.find({
+      deliveryMan: courierId,
+      orderStatus: 'returnToWarehouse',
+    });
     if (!orders.length) {
-      return res.status(404).json({ error: 'No orders found for this courier' });
+      return res
+        .status(404)
+        .json({ error: 'No orders found for this courier' });
     }
-    const updatePromises = orders.map(order => {
+    const updatePromises = orders.map((order) => {
       order.orderStatus = 'inReturnStock';
       return order.save();
-    }
-
-    );
+    });
     await Promise.all(updatePromises);
-    res.status(200).json({ message: 'Orders marked as received in return warehouse' });
+    res
+      .status(200)
+      .json({ message: 'Orders marked as received in return warehouse' });
   } catch (error) {
     console.error('Error in return_courier_received:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-
-}
+};
 
 // ======================================== Wallet Overview ======================================== //
 
@@ -2008,8 +2275,7 @@ const get_releaseAmountsPage = (req, res) => {
     page_title: 'Release Amounts',
     folder: 'Pages',
   });
-} 
-
+};
 
 const get_releasesAllData = async (req, res) => {
   const { filter } = req.query;
@@ -2021,23 +2287,32 @@ const get_releasesAllData = async (req, res) => {
       query.releaseStatus = 'pending';
     } else if (filter === 'scheduled') {
       query.releaseStatus = 'scheduled';
-    }else if (filter === 'released') {
+    } else if (filter === 'released') {
       query.releaseStatus = 'released';
     } else if (filter === 'all') {
       query = {};
     }
     // Fetch all releases with the specified status and full business details
     const releases = await Release.find(query)
-      .populate('business', 'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress')
+      .populate(
+        'business',
+        'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress'
+      )
       .populate('transactionReferences');
     console.log('Releases found:', releases.length);
-    
+
     // Get all releases for accurate statistics (not filtered)
-    const allReleases = await Release.find({}).populate('business', 'brandInfo name email phone');
-    
+    const allReleases = await Release.find({}).populate(
+      'business',
+      'brandInfo name email phone'
+    );
+
     // Calculate Total Funds Available (from all pending and scheduled releases)
     const totalFundsAvailable = allReleases.reduce((sum, release) => {
-      if (release.releaseStatus === 'pending' || release.releaseStatus === 'scheduled') {
+      if (
+        release.releaseStatus === 'pending' ||
+        release.releaseStatus === 'scheduled'
+      ) {
         return sum + release.amount;
       }
       return sum;
@@ -2046,27 +2321,35 @@ const get_releasesAllData = async (req, res) => {
     // Calculate Next Release Date (always the next Wednesday)
     const today = new Date();
     const nextWednesday = new Date(today);
-    nextWednesday.setDate(today.getDate() + ((3 - today.getDay() + 7) % 7 || 7));
-    
+    nextWednesday.setDate(
+      today.getDate() + ((3 - today.getDay() + 7) % 7 || 7)
+    );
+
     // Calculate Total Payments Released
     const totalPaymentsReleased = allReleases
-      .filter(release => release.releaseStatus === 'released')
+      .filter((release) => release.releaseStatus === 'released')
       .reduce((sum, release) => sum + release.amount, 0);
 
     // Calculate Payments Pending
     const paymentsPending = allReleases
-      .filter(release => release.releaseStatus === 'pending')
+      .filter((release) => release.releaseStatus === 'pending')
       .reduce((sum, release) => sum + release.amount, 0);
 
     // Calculate Scheduled Releases
     const scheduledReleases = allReleases
-      .filter(release => release.releaseStatus === 'scheduled')
+      .filter((release) => release.releaseStatus === 'scheduled')
       .reduce((sum, release) => sum + release.amount, 0);
 
     // Calculate the number of releases for each category
-    const totalPaymentsReleasedCount = allReleases.filter(release => release.releaseStatus === 'released').length;
-    const paymentsPendingCount = allReleases.filter(release => release.releaseStatus === 'pending').length;
-    const scheduledReleasesCount = allReleases.filter(release => release.releaseStatus === 'scheduled').length;
+    const totalPaymentsReleasedCount = allReleases.filter(
+      (release) => release.releaseStatus === 'released'
+    ).length;
+    const paymentsPendingCount = allReleases.filter(
+      (release) => release.releaseStatus === 'pending'
+    ).length;
+    const scheduledReleasesCount = allReleases.filter(
+      (release) => release.releaseStatus === 'scheduled'
+    ).length;
 
     // Send response
     res.status(200).json({
@@ -2086,17 +2369,16 @@ const get_releasesAllData = async (req, res) => {
   }
 };
 
-
 const rescheduleRelease = async (req, res) => {
-  const { releaseId , newDate, reason, notes} = req.body;
+  const { releaseId, newDate, reason, notes } = req.body;
   try {
     const release = await Release.findById(releaseId);
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
     }
     release.scheduledReleaseDate = newDate;
-    release.reason = reason||'';
-    release.releaseNotes = notes||'';
+    release.reason = reason || '';
+    release.releaseNotes = notes || '';
     release.releaseStatus = 'scheduled';
     await release.save();
     res.status(200).json({ message: 'Release rescheduled successfully' });
@@ -2104,15 +2386,15 @@ const rescheduleRelease = async (req, res) => {
     console.error('Error in rescheduleRelease:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
+};
 
 const releaseFunds = async (req, res) => {
-  const {releaseId,notes} = req.body;
+  const { releaseId, notes } = req.body;
   try {
     const release = await Release.findById(releaseId)
       .populate('business')
       .populate('transactionReferences');
-    
+
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
     }
@@ -2124,43 +2406,63 @@ const releaseFunds = async (req, res) => {
     release.releaseStatus = 'released';
     release.scheduledReleaseDate = null;
     release.reason = null;
-    release.releaseNotes = notes||'';
+    release.releaseNotes = notes || '';
     await release.save();
 
     // Mark all transactions included in this release as settled
-    if (release.transactionReferences && release.transactionReferences.length > 0) {
-      const transactionIds = release.transactionReferences.map(transaction => transaction._id);
-      console.log(`Attempting to mark ${transactionIds.length} transactions as settled:`, transactionIds);
-      
+    if (
+      release.transactionReferences &&
+      release.transactionReferences.length > 0
+    ) {
+      const transactionIds = release.transactionReferences.map(
+        (transaction) => transaction._id
+      );
+      console.log(
+        `Attempting to mark ${transactionIds.length} transactions as settled:`,
+        transactionIds
+      );
+
       // First, let's check the current status of these transactions
-      const currentTransactions = await Transaction.find({ _id: { $in: transactionIds } });
-      console.log('Current transaction statuses:', currentTransactions.map(t => ({
-        id: t._id,
-        transactionId: t.transactionId,
-        type: t.transactionType,
-        settlementStatus: t.settlementStatus,
-        settled: t.settled
-      })));
-      
+      const currentTransactions = await Transaction.find({
+        _id: { $in: transactionIds },
+      });
+      console.log(
+        'Current transaction statuses:',
+        currentTransactions.map((t) => ({
+          id: t._id,
+          transactionId: t.transactionId,
+          type: t.transactionType,
+          settlementStatus: t.settlementStatus,
+          settled: t.settled,
+        }))
+      );
+
       // Update each transaction individually to trigger pre-save hooks
       const updatePromises = currentTransactions.map(async (transaction) => {
         transaction.settlementStatus = 'settled';
         // The pre-save hook will automatically set settled = true
         return transaction.save();
       });
-      
+
       await Promise.all(updatePromises);
-      console.log(`Marked ${currentTransactions.length} transactions as settled for release ${release.releaseId}`);
-      
+      console.log(
+        `Marked ${currentTransactions.length} transactions as settled for release ${release.releaseId}`
+      );
+
       // Verify the update worked
-      const updatedTransactions = await Transaction.find({ _id: { $in: transactionIds } });
-      console.log('Updated transaction statuses:', updatedTransactions.map(t => ({
-        id: t._id,
-        transactionId: t.transactionId,
-        type: t.transactionType,
-        settlementStatus: t.settlementStatus,
-        settled: t.settled
-      })));
+      const updatedTransactions = await Transaction.find({
+        _id: { $in: transactionIds },
+      });
+      console.log(
+        'Updated transaction statuses:',
+        updatedTransactions.map((t) => ({
+          id: t._id,
+          transactionId: t.transactionId,
+          type: t.transactionType,
+          settlementStatus: t.settlementStatus,
+          settled: t.settled,
+        }))
+      );
     }
 
     // Create a withdrawal transaction record
@@ -2175,11 +2477,14 @@ const releaseFunds = async (req, res) => {
         releaseType: release.releaseType,
         releaseAmount: release.amount,
         releaseDate: new Date(),
-        businessName: release.business.name || release.business.brandInfo?.brandName || 'Unknown Business',
+        businessName:
+          release.business.name ||
+          release.business.brandInfo?.brandName ||
+          'Unknown Business',
         notes: notes || '',
-        transactionCount: release.transactionReferences.length
+        transactionCount: release.transactionReferences.length,
       },
-      business: release.business._id
+      business: release.business._id,
     });
 
     await transaction.save();
@@ -2192,33 +2497,35 @@ const releaseFunds = async (req, res) => {
         releaseDate: new Date(),
         paymentMethod: business.paymentMethod?.paymentChoice || 'Bank Transfer',
         transactionCount: release.transactionReferences.length,
-        businessName: business.brandInfo?.brandName || business.name || 'Business'
+        businessName:
+          business.brandInfo?.brandName || business.name || 'Business',
       };
 
-      await emailService.sendMoneyReleaseNotification(releaseData, business.email);
+      await emailService.sendMoneyReleaseNotification(
+        releaseData,
+        business.email
+      );
       console.log(`📧 Money release email sent to business ${business._id}`);
     } catch (emailError) {
-      console.error(`❌ Failed to send money release email to business ${business._id}:`, emailError);
+      console.error(
+        `❌ Failed to send money release email to business ${business._id}:`,
+        emailError
+      );
       // Don't fail the release process if email fails
     }
 
-    console.log(`Funds released successfully for business ${release.business._id}. Amount: ${release.amount} EGP`);
+    console.log(
+      `Funds released successfully for business ${release.business._id}. Amount: ${release.amount} EGP`
+    );
 
     res.status(200).json({ message: 'Funds released successfully' });
-
   } catch (error) {
     console.error('Error in releaseFunds:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
-    
-
-
-
+};
 
 // ======================================== End Wallet Overview ======================================== //
-
-
 
 // ======================================== Businesses ======================================== //
 
@@ -2228,12 +2535,9 @@ const get_businessesPage = (req, res) => {
     page_title: 'Businesses',
     folder: 'Pages',
   });
-}
-
-
+};
 
 // ======================================== Logout ======================================== //
-
 
 // ======================================== Tickets ======================================== //
 const get_ticketsPage = (req, res) => {
@@ -2242,14 +2546,13 @@ const get_ticketsPage = (req, res) => {
     page_title: 'Tickets',
     folder: 'Pages',
   });
-}
-
+};
 
 const logOut = (req, res) => {
   req.session.destroy();
   res.clearCookie('token');
   res.redirect('/admin-login');
-}
+};
 
 // ================= WaitingAction Admin Overrides ================= //
 const adminRetryTomorrow = async (req, res) => {
@@ -2257,14 +2560,15 @@ const adminRetryTomorrow = async (req, res) => {
     const { orderId } = req.params;
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
-    order.scheduledRetryAt = new Date(Date.now() + 24*60*60*1000);
+    if (order.orderStatus !== 'waitingAction')
+      return res.status(400).json({ error: 'Order not in waitingAction' });
+    order.scheduledRetryAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await order.save();
     return res.status(200).json({ message: 'Retry scheduled for tomorrow' });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to schedule retry' });
   }
-}
+};
 
 const adminRetryScheduled = async (req, res) => {
   try {
@@ -2272,72 +2576,76 @@ const adminRetryScheduled = async (req, res) => {
     const { date } = req.body;
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
+    if (order.orderStatus !== 'waitingAction')
+      return res.status(400).json({ error: 'Order not in waitingAction' });
     const when = new Date(date);
-    if (isNaN(when.getTime())) return res.status(400).json({ error: 'Invalid date' });
+    if (isNaN(when.getTime()))
+      return res.status(400).json({ error: 'Invalid date' });
     order.scheduledRetryAt = when;
     await order.save();
     return res.status(200).json({ message: 'Retry scheduled' });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to schedule retry' });
   }
-}
+};
 
 const adminReturnToWarehouseFromWaiting = async (req, res) => {
   try {
     const { orderId } = req.params;
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
-    
+    if (order.orderStatus !== 'waitingAction')
+      return res.status(400).json({ error: 'Order not in waitingAction' });
+
     // Update order status to returnToWarehouse
     order.orderStatus = 'returnToWarehouse';
     order.statusCategory = 'PROCESSING';
-    
+
     // Add to status history
     order.orderStatusHistory.push({
       status: 'returnToWarehouse',
       date: new Date(),
-      category: 'PROCESSING'
+      category: 'PROCESSING',
     });
-    
+
     await order.save();
     return res.status(200).json({ message: 'Order moved to return stock' });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to move to return stock' });
   }
-}
+};
 
 const adminCancelFromWaiting = async (req, res) => {
   try {
     const { orderId } = req.params;
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
-    
+    if (order.orderStatus !== 'waitingAction')
+      return res.status(400).json({ error: 'Order not in waitingAction' });
+
     // Update order status to canceled
     order.orderStatus = 'canceled';
     order.statusCategory = 'UNSUCCESSFUL';
-    
+
     // Add to status history
     order.orderStatusHistory.push({
       status: 'canceled',
       date: new Date(),
-      category: 'UNSUCCESSFUL'
+      category: 'UNSUCCESSFUL',
     });
-    
+
     await order.save();
     return res.status(200).json({ message: 'Order canceled' });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to cancel order' });
   }
-}
+};
 
 const adminCancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
     const order = await Order.findById(orderId);
-    
+
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -2350,28 +2658,28 @@ const adminCancelOrder = async (req, res) => {
     // Cancel the order regardless of current status
     order.orderStatus = 'canceled';
     order.statusCategory = 'UNSUCCESSFUL';
-    
+
     // Add to status history
     order.orderStatusHistory.push({
       status: 'canceled',
       date: new Date(),
-      category: 'UNSUCCESSFUL'
+      category: 'UNSUCCESSFUL',
     });
-    
+
     await order.save();
-    
+
     return res.status(200).json({ message: 'Order canceled successfully' });
   } catch (error) {
     console.error('Error in adminCancelOrder:', error);
     return res.status(500).json({ error: 'Failed to cancel order' });
   }
-}
+};
 
 const changeReturnCourier = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { newCourierId } = req.body;
-    
+
     if (!newCourierId) {
       return res.status(400).json({ error: 'New courier ID is required' });
     }
@@ -2387,10 +2695,15 @@ const changeReturnCourier = async (req, res) => {
     }
 
     // Check if order is in a state where courier can be changed
-    const validStatusesForCourierChange = ['returnAssigned', 'returnPickedUp', 'headingToYou', 'returnToBusiness'];
+    const validStatusesForCourierChange = [
+      'returnAssigned',
+      'returnPickedUp',
+      'headingToYou',
+      'returnToBusiness',
+    ];
     if (!validStatusesForCourierChange.includes(order.orderStatus)) {
-      return res.status(400).json({ 
-        error: `Order status ${order.orderStatus} does not allow courier change` 
+      return res.status(400).json({
+        error: `Order status ${order.orderStatus} does not allow courier change`,
       });
     }
 
@@ -2406,14 +2719,16 @@ const changeReturnCourier = async (req, res) => {
 
     // Update courier assignment
     order.deliveryMan = newCourierId;
-    
+
     // Add to courier history
     order.courierHistory.push({
       courier: newCourierId,
       assignedAt: new Date(),
       action: 'courier_changed',
-      notes: `Courier changed from ${previousCourier?.name || 'Unknown'} to ${newCourier.name} by admin`,
-      previousCourier: previousCourierId
+      notes: `Courier changed from ${previousCourier?.name || 'Unknown'} to ${
+        newCourier.name
+      } by admin`,
+      previousCourier: previousCourierId,
     });
 
     // Update relevant stage notes
@@ -2424,103 +2739,109 @@ const changeReturnCourier = async (req, res) => {
     }
 
     await order.save();
-    
-    return res.status(200).json({ 
-      message: `Return courier changed successfully from ${previousCourier?.name || 'Unknown'} to ${newCourier.name}` 
+
+    return res.status(200).json({
+      message: `Return courier changed successfully from ${
+        previousCourier?.name || 'Unknown'
+      } to ${newCourier.name}`,
     });
   } catch (error) {
     console.error('Error in changeReturnCourier:', error);
     return res.status(500).json({ error: 'Failed to change return courier' });
   }
-}
+};
 
 // Courier Tracking Page
 const getCourierTrackingPage = (req, res) => {
-    res.render('admin/courier-tracking', {
-        title: "Courier Tracking",
-        page_title: 'Courier Tracking',
-        folder: 'Pages',
-        breadcrumb: [
-            { title: 'Dashboard', link: '/admin' },
-            { title: 'Courier Tracking', active: true }
-        ]
-    });
+  res.render('admin/courier-tracking', {
+    title: 'Courier Tracking',
+    page_title: 'Courier Tracking',
+    folder: 'Pages',
+    breadcrumb: [
+      { title: 'Dashboard', link: '/admin' },
+      { title: 'Courier Tracking', active: true },
+    ],
+  });
 };
 
 // Courier Tracking
 const courierTracking = (req, res) => {
-    res.render('admin/courier-tracking', {
-        title: 'Courier Tracking',
-        page_title: 'Courier Tracking',
-        folder: 'Pages',
-        googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY
-    });
+  res.render('admin/courier-tracking', {
+    title: 'Courier Tracking',
+    page_title: 'Courier Tracking',
+    folder: 'Pages',
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+  });
 };
 
 // Get all courier locations
 const getCourierLocations = async (req, res) => {
-    try {
-        // Get all couriers with location tracking enabled and have a valid location
-        const couriers = await Courier.find({
-            isLocationTrackingEnabled: true,
-            'currentLocation.coordinates.0': { $ne: 0 },
-            'currentLocation.coordinates.1': { $ne: 0 }
-        }).select('name courierID vehicleType isAvailable currentLocation isLocationTrackingEnabled personalPhoto');
+  try {
+    // Get all couriers with location tracking enabled and have a valid location
+    const couriers = await Courier.find({
+      isLocationTrackingEnabled: true,
+      'currentLocation.coordinates.0': { $ne: 0 },
+      'currentLocation.coordinates.1': { $ne: 0 },
+    }).select(
+      'name courierID vehicleType isAvailable currentLocation isLocationTrackingEnabled personalPhoto'
+    );
 
-        // Process couriers to add photoUrl
-        const processedCouriers = couriers.map(courier => {
-            const courierObj = courier.toObject();
-            if (courierObj.personalPhoto) {
-                courierObj.photoUrl = `/uploads/couriers/${courierObj.personalPhoto}`;
-            }
-            return courierObj;
-        });
-        console.log(processedCouriers)
-        res.json({
-            success: true,
-            couriers: processedCouriers
-        });
-    } catch (error) {
-        console.error('Error getting courier locations:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to get courier locations',
-            error: error.message
-        });
-    }
+    // Process couriers to add photoUrl
+    const processedCouriers = couriers.map((courier) => {
+      const courierObj = courier.toObject();
+      if (courierObj.personalPhoto) {
+        courierObj.photoUrl = `/uploads/couriers/${courierObj.personalPhoto}`;
+      }
+      return courierObj;
+    });
+    console.log(processedCouriers);
+    res.json({
+      success: true,
+      couriers: processedCouriers,
+    });
+  } catch (error) {
+    console.error('Error getting courier locations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get courier locations',
+      error: error.message,
+    });
+  }
 };
 
 // Get a specific courier's location
 const getCourierLocation = async (req, res) => {
-    try {
-        const courierId = req.params.id;
-        const courier = await Courier.findById(courierId).select('name courierID vehicleType isAvailable currentLocation phoneNumber email isLocationTrackingEnabled personalPhoto');
+  try {
+    const courierId = req.params.id;
+    const courier = await Courier.findById(courierId).select(
+      'name courierID vehicleType isAvailable currentLocation phoneNumber email isLocationTrackingEnabled personalPhoto'
+    );
 
-        if (!courier) {
-            return res.status(404).json({
-                success: false,
-                message: 'Courier not found'
-            });
-        }
-
-        // Add photoUrl if personalPhoto exists
-        const courierObj = courier.toObject();
-        if (courierObj.personalPhoto) {
-            courierObj.photoUrl = `/uploads/couriers/${courierObj.personalPhoto}`;
-        }
-
-        res.json({
-            success: true,
-            courier: courierObj
-        });
-    } catch (error) {
-        console.error('Error getting courier location:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to get courier location',
-            error: error.message
-        });
+    if (!courier) {
+      return res.status(404).json({
+        success: false,
+        message: 'Courier not found',
+      });
     }
+
+    // Add photoUrl if personalPhoto exists
+    const courierObj = courier.toObject();
+    if (courierObj.personalPhoto) {
+      courierObj.photoUrl = `/uploads/couriers/${courierObj.personalPhoto}`;
+    }
+
+    res.json({
+      success: true,
+      courier: courierObj,
+    });
+  } catch (error) {
+    console.error('Error getting courier location:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get courier location',
+      error: error.message,
+    });
+  }
 };
 
 // Excel Export Function for Releases
@@ -2528,7 +2849,10 @@ const exportReleasesToExcel = async (req, res) => {
   try {
     // Fetch all releases with full business details
     const releases = await Release.find({})
-      .populate('business', 'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress')
+      .populate(
+        'business',
+        'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress'
+      )
       .sort({ createdAt: -1 });
 
     // Create a new workbook
@@ -2550,7 +2874,7 @@ const exportReleasesToExcel = async (req, res) => {
       { header: 'Release Status', key: 'status', width: 15 },
       { header: 'Scheduled Date', key: 'scheduledDate', width: 20 },
       { header: 'Created Date', key: 'createdDate', width: 20 },
-      { header: 'Release Notes', key: 'notes', width: 30 }
+      { header: 'Release Notes', key: 'notes', width: 30 },
     ];
 
     // Style the header row
@@ -2558,18 +2882,21 @@ const exportReleasesToExcel = async (req, res) => {
     worksheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: '405189' }
+      fgColor: { argb: '405189' },
     };
-    worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(1).alignment = {
+      horizontal: 'center',
+      vertical: 'middle',
+    };
 
     // Add data rows
     releases.forEach((release, index) => {
       const business = release.business;
       const paymentMethod = business.paymentMethod;
-      
+
       let paymentMethodText = 'Not Set';
       let paymentDetails = 'N/A';
-      
+
       if (paymentMethod && paymentMethod.paymentChoice) {
         switch (paymentMethod.paymentChoice) {
           case 'instaPay':
@@ -2582,7 +2909,11 @@ const exportReleasesToExcel = async (req, res) => {
             break;
           case 'bankTransfer':
             paymentMethodText = 'Bank Transfer';
-            paymentDetails = `Bank: ${paymentMethod.details?.bankName || 'N/A'}, IBAN: ${paymentMethod.details?.IBAN || 'N/A'}, Account: ${paymentMethod.details?.accountName || 'N/A'}`;
+            paymentDetails = `Bank: ${
+              paymentMethod.details?.bankName || 'N/A'
+            }, IBAN: ${paymentMethod.details?.IBAN || 'N/A'}, Account: ${
+              paymentMethod.details?.accountName || 'N/A'
+            }`;
             break;
         }
       }
@@ -2599,9 +2930,11 @@ const exportReleasesToExcel = async (req, res) => {
         paymentDetails: paymentDetails,
         amount: release.amount,
         status: release.releaseStatus,
-        scheduledDate: release.scheduledReleaseDate ? new Date(release.scheduledReleaseDate).toLocaleDateString() : 'Pending',
+        scheduledDate: release.scheduledReleaseDate
+          ? new Date(release.scheduledReleaseDate).toLocaleDateString()
+          : 'Pending',
         createdDate: new Date(release.createdAt).toLocaleDateString(),
-        notes: release.releaseNotes || ''
+        notes: release.releaseNotes || '',
       });
 
       // Alternate row colors for better readability
@@ -2609,14 +2942,14 @@ const exportReleasesToExcel = async (req, res) => {
         row.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'F8F9FA' }
+          fgColor: { argb: 'F8F9FA' },
         };
       }
 
       // Format amount column
       row.getCell('amount').numFmt = '#,##0.00';
       row.getCell('amount').alignment = { horizontal: 'right' };
-      
+
       // Make business owner name bold
       row.getCell('businessOwner').font = { bold: true };
     });
@@ -2628,14 +2961,23 @@ const exportReleasesToExcel = async (req, res) => {
     worksheet.getCell(`A${summaryRow}`).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'E3F2FD' }
+      fgColor: { argb: 'E3F2FD' },
     };
 
     // Calculate totals
-    const totalAmount = releases.reduce((sum, release) => sum + release.amount, 0);
-    const pendingAmount = releases.filter(r => r.releaseStatus === 'pending').reduce((sum, release) => sum + release.amount, 0);
-    const scheduledAmount = releases.filter(r => r.releaseStatus === 'scheduled').reduce((sum, release) => sum + release.amount, 0);
-    const releasedAmount = releases.filter(r => r.releaseStatus === 'released').reduce((sum, release) => sum + release.amount, 0);
+    const totalAmount = releases.reduce(
+      (sum, release) => sum + release.amount,
+      0
+    );
+    const pendingAmount = releases
+      .filter((r) => r.releaseStatus === 'pending')
+      .reduce((sum, release) => sum + release.amount, 0);
+    const scheduledAmount = releases
+      .filter((r) => r.releaseStatus === 'scheduled')
+      .reduce((sum, release) => sum + release.amount, 0);
+    const releasedAmount = releases
+      .filter((r) => r.releaseStatus === 'released')
+      .reduce((sum, release) => sum + release.amount, 0);
 
     worksheet.getCell(`A${summaryRow + 1}`).value = 'Total Releases:';
     worksheet.getCell(`B${summaryRow + 1}`).value = releases.length;
@@ -2658,13 +3000,20 @@ const exportReleasesToExcel = async (req, res) => {
     }
 
     // Set response headers
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="Business_Payments_Export_${new Date().toISOString().split('T')[0]}.xlsx"`);
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="Business_Payments_Export_${
+        new Date().toISOString().split('T')[0]
+      }.xlsx"`
+    );
 
     // Write the workbook to response
     await workbook.xlsx.write(res);
     res.end();
-
   } catch (error) {
     console.error('Error exporting to Excel:', error);
     res.status(500).json({ error: 'Failed to export data to Excel' });
@@ -2676,22 +3025,27 @@ const exportReleasesToPDF = async (req, res) => {
   try {
     // Fetch all releases with full business details
     const releases = await Release.find({})
-      .populate('business', 'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress')
+      .populate(
+        'business',
+        'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress'
+      )
       .sort({ createdAt: -1 });
 
     // For now, return a simple JSON response
     // In a real implementation, you would use a PDF library like puppeteer or pdfkit
     res.json({
-      message: 'PDF export functionality will be implemented with a PDF library',
-      data: releases.map(release => ({
+      message:
+        'PDF export functionality will be implemented with a PDF library',
+      data: releases.map((release) => ({
         releaseId: release.releaseId,
-        businessName: release.business.brandInfo?.brandName || release.business.name,
+        businessName:
+          release.business.brandInfo?.brandName || release.business.name,
         amount: release.amount,
         status: release.releaseStatus,
-        paymentMethod: release.business.paymentMethod?.paymentChoice || 'Not Set'
-      }))
+        paymentMethod:
+          release.business.paymentMethod?.paymentChoice || 'Not Set',
+      })),
     });
-
   } catch (error) {
     console.error('Error exporting to PDF:', error);
     res.status(500).json({ error: 'Failed to export data to PDF' });
@@ -2702,12 +3056,13 @@ const exportReleasesToPDF = async (req, res) => {
 const getReleaseDetails = async (req, res) => {
   try {
     const { releaseId } = req.params;
-    
+
     const release = await Release.findById(releaseId)
       .populate({
         path: 'business',
-        select: 'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress',
-        options: { strictPopulate: false }
+        select:
+          'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress',
+        options: { strictPopulate: false },
       })
       .populate('transactionReferences');
 
@@ -2719,12 +3074,12 @@ const getReleaseDetails = async (req, res) => {
       id: release._id,
       releaseId: release.releaseId,
       business: release.business ? 'populated' : 'not populated',
-      businessId: release.business?._id || 'no business ID'
+      businessId: release.business?._id || 'no business ID',
     });
 
     res.json({
       success: true,
-      data: release
+      data: release,
     });
   } catch (error) {
     console.error('Error fetching release details:', error);
@@ -2748,16 +3103,16 @@ const runDailyProcessing = async (req, res) => {
   try {
     console.log('Manual daily processing triggered by admin');
     await dailyOrderProcessing();
-    res.json({ 
-      success: true, 
-      message: 'Daily processing completed successfully' 
+    res.json({
+      success: true,
+      message: 'Daily processing completed successfully',
     });
   } catch (error) {
     console.error('Error in manual daily processing:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to run daily processing',
-      details: error.message 
+      details: error.message,
     });
   }
 };
@@ -2766,16 +3121,18 @@ const runDailyProcessing = async (req, res) => {
 const getProcessingStatistics = async (req, res) => {
   try {
     const { days = 30 } = req.query;
-    const stats = await FinancialReconciliation.getProcessingStatistics(parseInt(days));
-    res.json({ 
-      success: true, 
-      data: stats 
+    const stats = await FinancialReconciliation.getProcessingStatistics(
+      parseInt(days)
+    );
+    res.json({
+      success: true,
+      data: stats,
     });
   } catch (error) {
     console.error('Error getting processing statistics:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to get processing statistics' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get processing statistics',
     });
   }
 };
@@ -2784,28 +3141,28 @@ const getProcessingStatistics = async (req, res) => {
 const generateReconciliationReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    
+
     if (!startDate || !endDate) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Start date and end date are required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Start date and end date are required',
       });
     }
-    
+
     const report = await FinancialReconciliation.generateReconciliationReport(
-      new Date(startDate), 
+      new Date(startDate),
       new Date(endDate)
     );
-    
-    res.json({ 
-      success: true, 
-      data: report 
+
+    res.json({
+      success: true,
+      data: report,
     });
   } catch (error) {
     console.error('Error generating reconciliation report:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to generate reconciliation report' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate reconciliation report',
     });
   }
 };
@@ -2814,16 +3171,18 @@ const generateReconciliationReport = async (req, res) => {
 const resetOrphanedProcessingFlags = async (req, res) => {
   try {
     const { batchId } = req.query;
-    const result = await FinancialReconciliation.resetOrphanedProcessingFlags(batchId);
-    res.json({ 
-      success: true, 
-      data: result 
+    const result = await FinancialReconciliation.resetOrphanedProcessingFlags(
+      batchId
+    );
+    res.json({
+      success: true,
+      data: result,
     });
   } catch (error) {
     console.error('Error resetting orphaned processing flags:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to reset orphaned processing flags' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to reset orphaned processing flags',
     });
   }
 };
@@ -2832,15 +3191,15 @@ const resetOrphanedProcessingFlags = async (req, res) => {
 const validateBusinessBalances = async (req, res) => {
   try {
     const result = await FinancialReconciliation.validateBusinessBalances();
-    res.json({ 
-      success: true, 
-      data: result 
+    res.json({
+      success: true,
+      data: result,
     });
   } catch (error) {
     console.error('Error validating business balances:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to validate business balances' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to validate business balances',
     });
   }
 };
@@ -2849,24 +3208,26 @@ const validateBusinessBalances = async (req, res) => {
 const fixBalanceDiscrepancies = async (req, res) => {
   try {
     const { validationResults } = req.body;
-    
+
     if (!validationResults || !Array.isArray(validationResults)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Validation results array is required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Validation results array is required',
       });
     }
-    
-    const result = await FinancialReconciliation.fixBalanceDiscrepancies(validationResults);
-    res.json({ 
-      success: true, 
-      data: result 
+
+    const result = await FinancialReconciliation.fixBalanceDiscrepancies(
+      validationResults
+    );
+    res.json({
+      success: true,
+      data: result,
     });
   } catch (error) {
     console.error('Error fixing balance discrepancies:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to fix balance discrepancies' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fix balance discrepancies',
     });
   }
 };
@@ -2875,24 +3236,24 @@ const fixBalanceDiscrepancies = async (req, res) => {
 const processSpecificOrdersAdmin = async (req, res) => {
   try {
     const { orderIds, batchId } = req.body;
-    
+
     if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Order IDs array is required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Order IDs array is required',
       });
     }
-    
+
     await processSpecificOrders(orderIds, batchId);
-    res.json({ 
-      success: true, 
-      message: `Successfully processed ${orderIds.length} orders` 
+    res.json({
+      success: true,
+      message: `Successfully processed ${orderIds.length} orders`,
     });
   } catch (error) {
     console.error('Error processing specific orders:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to process specific orders' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to process specific orders',
     });
   }
 };
@@ -2902,15 +3263,15 @@ const recoverFailedProcessingAdmin = async (req, res) => {
   try {
     const { batchId } = req.query;
     await recoverFailedProcessing(batchId);
-    res.json({ 
-      success: true, 
-      message: 'Recovery process completed successfully' 
+    res.json({
+      success: true,
+      message: 'Recovery process completed successfully',
     });
   } catch (error) {
     console.error('Error in recovery process:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to recover failed processing' 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to recover failed processing',
     });
   }
 };
@@ -2919,27 +3280,30 @@ const recoverFailedProcessingAdmin = async (req, res) => {
 const getTransactionDetails = async (req, res) => {
   try {
     const { transactionId } = req.params;
-    
+
     const transaction = await Transaction.findById(transactionId)
-      .populate('business', 'name email phoneNumber brandInfo brandType pickUpAdress balance paymentMethod')
+      .populate(
+        'business',
+        'name email phoneNumber brandInfo brandType pickUpAdress balance paymentMethod'
+      )
       .lean();
 
     if (!transaction) {
       return res.status(404).json({
         success: false,
-        error: 'Transaction not found'
+        error: 'Transaction not found',
       });
     }
 
     res.json({
       success: true,
-      transaction
+      transaction,
     });
   } catch (error) {
     console.error('Error fetching transaction details:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch transaction details'
+      error: 'Failed to fetch transaction details',
     });
   }
 };
@@ -2948,23 +3312,28 @@ const getTransactionDetails = async (req, res) => {
 const getDetailedTransactionInfo = async (req, res) => {
   try {
     const { transactionId } = req.params;
-    
+
     // Get transaction with all related data
     const transaction = await Transaction.findById(transactionId)
-      .populate('business', 'name email phoneNumber brandInfo brandType pickUpAdress balance paymentMethod')
+      .populate(
+        'business',
+        'name email phoneNumber brandInfo brandType pickUpAdress balance paymentMethod'
+      )
       .lean();
 
     if (!transaction) {
       return res.status(404).json({
         success: false,
-        error: 'Transaction not found'
+        error: 'Transaction not found',
       });
     }
 
     // Get related orders
     let orders = [];
     if (transaction.orderReferences && transaction.orderReferences.length > 0) {
-      const orderIds = transaction.orderReferences.map(ref => ref.orderId).filter(id => id);
+      const orderIds = transaction.orderReferences
+        .map((ref) => ref.orderId)
+        .filter((id) => id);
       if (orderIds.length > 0) {
         orders = await Order.find({ _id: { $in: orderIds } })
           .populate('business', 'name brandInfo')
@@ -2975,8 +3344,13 @@ const getDetailedTransactionInfo = async (req, res) => {
 
     // Get related pickups
     let pickups = [];
-    if (transaction.pickupReferences && transaction.pickupReferences.length > 0) {
-      const pickupIds = transaction.pickupReferences.map(ref => ref.pickupId).filter(id => id);
+    if (
+      transaction.pickupReferences &&
+      transaction.pickupReferences.length > 0
+    ) {
+      const pickupIds = transaction.pickupReferences
+        .map((ref) => ref.pickupId)
+        .filter((id) => id);
       if (pickupIds.length > 0) {
         const Pickup = require('../models/pickup');
         pickups = await Pickup.find({ _id: { $in: pickupIds } })
@@ -2987,17 +3361,20 @@ const getDetailedTransactionInfo = async (req, res) => {
 
     // Get related shop orders
     let shopOrders = [];
-    if (transaction.shopOrderReferences && transaction.shopOrderReferences.length > 0) {
-      const shopOrderIds = transaction.shopOrderReferences.map(ref => ref.shopOrderId).filter(id => id);
+    if (
+      transaction.shopOrderReferences &&
+      transaction.shopOrderReferences.length > 0
+    ) {
+      const shopOrderIds = transaction.shopOrderReferences
+        .map((ref) => ref.shopOrderId)
+        .filter((id) => id);
       if (shopOrderIds.length > 0) {
-
         shopOrders = await ShopOrder.find({ _id: { $in: shopOrderIds } })
           .populate('business', 'name brandInfo')
           .populate('assignedCourier', 'name phoneNumber')
           .lean();
       }
     }
-
 
     res.json({
       success: true,
@@ -3006,14 +3383,14 @@ const getDetailedTransactionInfo = async (req, res) => {
         orders,
         pickups,
         shopOrders,
-        business: transaction.business
-      }
+        business: transaction.business,
+      },
     });
   } catch (error) {
     console.error('Error fetching detailed transaction information:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch detailed transaction information'
+      error: 'Failed to fetch detailed transaction information',
     });
   }
 };
@@ -3293,7 +3670,7 @@ const getShopOrdersPage = (req, res) => {
 const getShopOrderDetailsPage = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const order = await ShopOrder.findOne({ _id: id })
       .populate('business', 'brandInfo phone email')
       .populate('courier', 'name phone')
@@ -3320,14 +3697,14 @@ const getShopOrderDetailsPage = async (req, res) => {
       discount: order.discount || 0,
       tax: order.tax || 0,
       deliveryFee: order.deliveryFee || 0,
-      totalAmount: order.totalAmount || 0
+      totalAmount: order.totalAmount || 0,
     };
 
     res.render('admin/shop-order-details', {
       title: 'Shop Order Details',
       page_title: 'Order Details',
       folder: 'Shop',
-      order: enhancedOrder
+      order: enhancedOrder,
     });
   } catch (error) {
     console.error('Error loading admin shop order details:', error);
@@ -3395,13 +3772,13 @@ const getShopOrder = async (req, res) => {
       .populate({
         path: 'courier',
         model: 'courier',
-        select: 'name phone'
+        select: 'name phone',
       })
       .populate('items.product')
       .populate({
         path: 'trackingHistory.updatedBy',
         model: 'users',
-        select: 'name'
+        select: 'name',
       });
 
     if (!order) {
@@ -3410,7 +3787,7 @@ const getShopOrder = async (req, res) => {
     }
 
     console.log(`Admin: Order found: ${order.orderNumber}`);
-    
+
     // Enhance order with consistent data structure like business controller
     const enhancedOrder = {
       ...order.toObject(),
@@ -3426,7 +3803,7 @@ const getShopOrder = async (req, res) => {
       discount: order.discount || 0,
       tax: order.tax || 0,
       deliveryFee: order.deliveryFee || 0,
-      totalAmount: order.totalAmount || 0
+      totalAmount: order.totalAmount || 0,
     };
 
     res.status(200).json(enhancedOrder);
@@ -3481,12 +3858,17 @@ const updateShopOrderStatus = async (req, res) => {
           updatedAt: new Date(),
           updatedBy: 'Admin',
           notes: notes || '',
-          packagingDetails: packagingDetails || null
+          packagingDetails: packagingDetails || null,
         }
       );
-      console.log(`📱 Push notification sent to business ${order.business._id} about shop order ${order.orderNumber} status change to ${status}`);
+      console.log(
+        `📱 Push notification sent to business ${order.business._id} about shop order ${order.orderNumber} status change to ${status}`
+      );
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification to business ${order.business._id}:`, notificationError);
+      console.error(
+        `❌ Failed to send push notification to business ${order.business._id}:`,
+        notificationError
+      );
       // Don't fail the status update if notification fails
     }
 
@@ -3519,9 +3901,13 @@ const assignCourierToShopOrder = async (req, res) => {
     }
 
     // Check if courier is already assigned to this order
-    const alreadyAssigned = order.assignedCouriers.some(ac => ac.courier.toString() === courierId);
+    const alreadyAssigned = order.assignedCouriers.some(
+      (ac) => ac.courier.toString() === courierId
+    );
     if (alreadyAssigned) {
-      return res.status(400).json({ error: 'Courier is already assigned to this order' });
+      return res
+        .status(400)
+        .json({ error: 'Courier is already assigned to this order' });
     }
 
     // Add courier to assigned couriers array
@@ -3549,7 +3935,7 @@ const assignCourierToShopOrder = async (req, res) => {
 
     // Update courier's assigned shop orders
     await Courier.findByIdAndUpdate(courierId, {
-      $addToSet: { assignedShopOrders: order._id }
+      $addToSet: { assignedShopOrders: order._id },
     });
 
     // Send push notification to courier about shop order assignment
@@ -3559,14 +3945,22 @@ const assignCourierToShopOrder = async (req, res) => {
         order.orderNumber,
         {
           orderId: order._id,
-          businessName: order.business?.brandInfo?.brandName || order.business?.name || 'Business',
+          businessName:
+            order.business?.brandInfo?.brandName ||
+            order.business?.name ||
+            'Business',
           assignedBy: 'Admin',
-          totalAmount: order.totalAmount
+          totalAmount: order.totalAmount,
         }
       );
-      console.log(`📱 Push notification sent to courier ${courierId} about shop order assignment ${order.orderNumber}`);
+      console.log(
+        `📱 Push notification sent to courier ${courierId} about shop order assignment ${order.orderNumber}`
+      );
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification to courier ${courierId}:`, notificationError);
+      console.error(
+        `❌ Failed to send push notification to courier ${courierId}:`,
+        notificationError
+      );
       // Don't fail the assignment if notification fails
     }
 
@@ -3580,12 +3974,17 @@ const assignCourierToShopOrder = async (req, res) => {
           courierName: courier.name,
           courierPhone: courier.phoneNumber,
           assignedAt: new Date(),
-          assignedBy: 'Admin'
+          assignedBy: 'Admin',
         }
       );
-      console.log(`📱 Push notification sent to business ${order.business._id} about shop order assignment ${order.orderNumber}`);
+      console.log(
+        `📱 Push notification sent to business ${order.business._id} about shop order assignment ${order.orderNumber}`
+      );
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification to business ${order.business._id}:`, notificationError);
+      console.error(
+        `❌ Failed to send push notification to business ${order.business._id}:`,
+        notificationError
+      );
       // Don't fail the assignment if notification fails
     }
 
@@ -3623,14 +4022,16 @@ const assignMultipleCouriersToShopOrders = async (req, res) => {
     for (const orderId of orderIds) {
       try {
         const order = await ShopOrder.findById(orderId);
-        
+
         if (!order) {
           errors.push({ orderId, error: 'Order not found' });
           continue;
         }
 
         // Check if courier is already assigned
-        const alreadyAssigned = order.assignedCouriers.some(ac => ac.courier.toString() === courierId);
+        const alreadyAssigned = order.assignedCouriers.some(
+          (ac) => ac.courier.toString() === courierId
+        );
         if (alreadyAssigned) {
           errors.push({ orderId, error: 'Courier already assigned' });
           continue;
@@ -3661,7 +4062,7 @@ const assignMultipleCouriersToShopOrders = async (req, res) => {
 
         // Update courier's assigned shop orders
         await Courier.findByIdAndUpdate(courierId, {
-          $addToSet: { assignedShopOrders: order._id }
+          $addToSet: { assignedShopOrders: order._id },
         });
 
         results.push({ orderId, success: true });
@@ -3708,6 +4109,7 @@ module.exports = {
   get_couriersPage,
   get_couriers,
   createCourier,
+  updateCourierZones,
 
   get_couriersFollowUp,
   get_courierDetailsPage,
@@ -3758,48 +4160,48 @@ module.exports = {
   getCourierTrackingPage,
   getCourierLocations,
   getCourierLocation,
-  courierTracking
-  ,adminRetryTomorrow
-  ,adminRetryScheduled
-  ,adminReturnToWarehouseFromWaiting
-  ,adminCancelFromWaiting
-  ,adminCancelOrder
-  ,changeReturnCourier
-  ,assignCourierToReturnToBusiness
-  ,exportReleasesToExcel
-  ,exportReleasesToPDF
+  courierTracking,
+  adminRetryTomorrow,
+  adminRetryScheduled,
+  adminReturnToWarehouseFromWaiting,
+  adminCancelFromWaiting,
+  adminCancelOrder,
+  changeReturnCourier,
+  assignCourierToReturnToBusiness,
+  exportReleasesToExcel,
+  exportReleasesToPDF,
 
   // Financial Processing Management
-  ,get_financialProcessingPage
-  ,runDailyProcessing
-  ,getProcessingStatistics
-  ,generateReconciliationReport
-  ,resetOrphanedProcessingFlags
-  ,validateBusinessBalances
-  ,fixBalanceDiscrepancies
-  ,processSpecificOrdersAdmin
-  ,recoverFailedProcessingAdmin
+  get_financialProcessingPage,
+  runDailyProcessing,
+  getProcessingStatistics,
+  generateReconciliationReport,
+  resetOrphanedProcessingFlags,
+  validateBusinessBalances,
+  fixBalanceDiscrepancies,
+  processSpecificOrdersAdmin,
+  recoverFailedProcessingAdmin,
 
   // Transaction Details Management
-  ,getTransactionDetails
-  ,getDetailedTransactionInfo
+  getTransactionDetails,
+  getDetailedTransactionInfo,
 
   // Shop Product Management
-  ,getShopProductsPage
-  ,getProducts
-  ,getProduct
-  ,createProduct
-  ,updateProduct
-  ,deleteProduct
-  ,bulkUpdateStock
+  getShopProductsPage,
+  getProducts,
+  getProduct,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  bulkUpdateStock,
 
   // Shop Orders Management
-  ,getShopOrdersPage
-  ,getShopOrderDetailsPage
-  ,getShopOrders
-  ,getShopOrder
-  ,updateShopOrderStatus
-  ,assignCourierToShopOrder
-  ,assignMultipleCouriersToShopOrders
-  ,getAllCouriers
+  getShopOrdersPage,
+  getShopOrderDetailsPage,
+  getShopOrders,
+  getShopOrder,
+  updateShopOrderStatus,
+  assignCourierToShopOrder,
+  assignMultipleCouriersToShopOrders,
+  getAllCouriers,
 };

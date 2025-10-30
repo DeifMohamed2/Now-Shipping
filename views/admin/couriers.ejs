@@ -4,264 +4,1050 @@
 
 <!--Swiper slider css-->
 <link href="/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
+<!-- Area Selection Modal CSS -->
+<link rel="stylesheet" href="/assets/css/area-selection-modal.css">
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 <%- contentFor('body') %>
 
-  <!-- Custom CSS -->
-  <style>
+<!-- Custom CSS -->
+<style>
+  :root {
+    --primary-color: #fdb614;
+    --primary-hover: #f39720;
+    --primary-light: #fdde00;
+    --success-color: #0ab39c;
+    --warning-color: #f7b84b;
+    --danger-color: #f06548;
+    --info-color: #299cdb;
+    --text-dark: #212529;
+    --text-medium: #495057;
+    --text-light: #6c757d;
+    --border-color: #e9ecef;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
 
-      /* Fix for dropdown menus in tables */
-      .dropdown-fix .dropdown-menu {
-      position: fixed !important;
-      z-index: 1050 !important;
-      }
+  body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f8f9fa;
+  }
 
-      /* Ensure the table doesn't constrain the dropdown */
-      #orderTable {
-      overflow: scroll !important;
-      }
+  body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f8f9fa;
+  }
 
-      /* Make sure parent containers don't clip the dropdown */
-      .card-body,
-      .card {
-      overflow: visible !important;
-      }
-    .dropdown-fix .dropdown-menu {
-      min-width: 220px;
-    }
+  /* Card Styling */
+  .card {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
 
-    .badge-courier-active {
-      background-color: #0ab39c;
-      color: #fff;
-    }
+  .card:hover {
+    box-shadow: none;
+  }
 
-    .badge-courier-inactive {
-      background-color: #f06548;
-      color: #fff;
-    }
+  .card-header {
+    background: white;
+    color: var(--text-dark);
+    border-radius: 0;
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+  }
 
-    .zone-badge {
-      display: inline-block;
-      margin: 2px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      background-color: #405189;
-      color: white;
-      font-size: 0.75rem;
-    }
+  .card-title {
+    font-weight: 600;
+    font-size: 1.125rem;
+    margin: 0;
+    color: var(--text-dark);
+  }
 
-    .zone-select-container {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #ced4da;
-      border-radius: 0.25rem;
-      padding: 0.5rem;
-    }
+  /* Buttons */
+  .btn {
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
 
-    .zone-select-item {
-      padding: 5px;
-      margin-bottom: 5px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+  .btn-primary {
+    background: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    color: white;
+  }
 
-    .zone-select-item:hover {
-      background-color: #f8f9fa;
-    }
+  .btn-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
 
-    .zone-select-item.selected {
-      background-color: #e9ecef;
-    }
+  .btn-info {
+    background: var(--info-color);
+    border: 1px solid var(--info-color);
+    color: white;
+  }
 
-    .courier-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
+  .btn-soft-danger {
+    background-color: rgba(240, 101, 72, 0.1);
+    color: var(--danger-color);
+    border: 1px solid transparent;
+  }
 
-    .paper-size-option {
-      text-align: center;
-      cursor: pointer;
-      transition: transform 0.3s, background-color 0.3s;
-      padding: 10px;
-      border-radius: 8px;
-      background-color: #f8f9fa;
-    }
+  .btn-soft-danger:hover {
+    background-color: var(--danger-color);
+    color: white;
+  }
 
-    .paper-size-option:hover {
-      transform: scale(1.1);
-      background-color: #e9ecef;
-    }
+  /* Search Box */
+  .search-box {
+    position: relative;
+  }
 
-    .paper-size-option.selected {
-      background-color: #0d6efd;
-      color: white;
-    }
+  .search-box input {
+    border-radius: 12px;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+  }
 
-    .paper-size-option p {
-      margin-top: 10px;
-    }
+  .search-box input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(64, 81, 137, 0.1);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 1.1rem;
+  }
+
+  /* Form Controls */
+  .form-control,
+  .form-select {
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    padding: 0.625rem 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(64, 81, 137, 0.1);
+  }
+
+  /* Navigation Tabs */
+  .nav-tabs-custom {
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .nav-tabs-custom .nav-link {
+    border: none;
+    border-radius: 10px 10px 0 0;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    color: var(--text-medium);
+    transition: all 0.3s ease;
+    margin-right: 0.5rem;
+  }
+
+  .nav-tabs-custom .nav-link:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+  }
+
+  .nav-tabs-custom .nav-link.active {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(64, 81, 137, 0.3);
+  }
+
+  /* Table Styling */
+  .table {
+    margin-bottom: 0;
+  }
+
+  .table thead th {
+    background-color: #f3f6f9;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    border-top: none;
+  }
+
+  .table tbody td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.875rem;
+  }
+
+  .table tbody tr {
+    transition: all 0.2s ease;
+    background: white;
+  }
+
+  .table tbody tr:hover {
+    background-color: #f9f9f9;
+  }
+
+  /* Remove row highlighting */
+  .table tbody tr.table-warning,
+  .table tbody tr.table-success,
+  .table tbody tr.table-danger,
+  .table tbody tr.table-info {
+    background-color: white;
+  }
+
+  .table tbody tr.table-warning:hover,
+  .table tbody tr.table-success:hover,
+  .table tbody tr.table-danger:hover,
+  .table tbody tr.table-info:hover {
+    background-color: #f9f9f9;
+  }
+
+  /* Courier Avatar */
+  .courier-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+  }
+
+  .courier-avatar:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+  }
+
+  /* Badges */
+  .badge {
+    padding: 0.5rem 0.875rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.8rem;
+  }
+
+  .badge-courier-active {
+    background: linear-gradient(135deg, var(--success-color) 0%, #089f8c 100%);
+    color: white;
+  }
+
+  .badge-courier-inactive {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #e05540 100%);
+    color: white;
+  }
+
+  /* Zone Badges */
+  .zone-badge {
+    display: inline-block;
+    margin: 2px;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    background: var(--primary-color);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .zone-badge:hover {
+    background: var(--primary-hover);
+  }
+
+  .zone-badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 60px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px;
+  }
+
+  /* Custom scrollbar for zone container */
+  .zone-badge-container::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .zone-badge-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .zone-badge-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+
+  .zone-badge-container::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+  }
+
+  /* Dropdown */
+  .dropdown-fix .dropdown-menu {
+    position: fixed !important;
+    z-index: 1050 !important;
+    min-width: 240px;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem;
+  }
+
+  .dropdown-item {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-bottom: 0.25rem;
+  }
+
+  .dropdown-item:hover {
+    background-color: var(--primary-light);
+    transform: translateX(5px);
+  }
+
+  .dropdown-item i {
+    width: 20px;
+    font-size: 1rem;
+  }
+
+  /* Modal Styling */
+  .modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-header {
+    border-radius: 16px 16px 0 0;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .modal-body {
+    padding: 2rem;
+  }
+
+  .modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 1.25rem 2rem;
+  }
+
+  /* Selected Zones Display */
+  .selected-zones-container {
+    min-height: 60px;
+    padding: 1rem;
+    background-color: var(--primary-light);
+    border-radius: 12px;
+    border: 2px dashed var(--primary-color);
+    margin-bottom: 1rem;
+  }
+
+  .selected-zone-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: white;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+  }
+
+  .selected-zone-tag:hover {
+    background-color: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+  }
+
+  .selected-zone-tag i {
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  /* Zone Trigger Button */
+  .zone-trigger-btn {
+    width: 100%;
+    padding: 1rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    background-color: white;
+    color: var(--text-medium);
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .zone-trigger-btn:hover {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
+  }
+
+  .zone-trigger-btn i {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+  }
+
+  /* Pagination */
+  .pagination .page {
+    border-radius: 8px;
+    margin: 0 0.25rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .pagination .page:hover {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  .pagination .active .page {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  /* No Result */
+  .noresult {
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .noresult h5 {
+    color: var(--text-medium);
+    font-weight: 600;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
     .zone-badge-container {
-        display: grid;
-        grid-template-columns: repeat(2, 0.8fr);
-        gap: 5px;
+      max-width: 100%;
     }
-  </style>
 
-  <div class="container-fluid">
-    <div class="card" id="courierList">
-      <div class="card-header border-0">
-        <div class="row align-items-center gy-3">
-          <div class="col-sm">
-            <h5 class="card-title mb-0">Couriers Management</h5>
-          </div>
-          <div class="col-sm-auto">
-            <div class="d-flex gap-1 flex-wrap">
-              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourierModal">
-                <i class="ri-user-add-line align-bottom me-1"></i> Add Courier
-              </button>
-              <button type="button" class="btn btn-info">
-                <i class="ri-file-download-line align-bottom me-1"></i> Export
-              </button>
-              <button class="btn btn-soft-danger" id="remove-actions">
-                <i class="ri-delete-bin-2-line"></i>
-              </button>
-            </div>
-          </div>
+    .card-header {
+      padding: 1rem;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .table tbody tr {
+      display: block;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .table tbody td {
+      display: block;
+      text-align: right;
+      padding: 0.5rem;
+      border: none;
+    }
+
+    .table tbody td:before {
+      content: attr(data-label);
+      float: left;
+      font-weight: 600;
+    }
+  }
+
+  /* Animation */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .card {
+    animation: fadeInUp 0.5s ease;
+  }
+
+  /* Photo Upload Status */
+  #photoStatus {
+    font-size: 0.85rem;
+    color: var(--success-color);
+    font-weight: 500;
+    margin-top: 0.5rem;
+  }
+
+  /* Input Group Add-ons */
+  .input-group-text {
+    border-radius: 10px;
+    background-color: var(--primary-light);
+    border: 1px solid var(--border-color);
+    color: var(--text-medium);
+  }
+
+  .password-addon {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .password-addon:hover {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  /* Status Badges with Gradients */
+  .badge {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-success {
+    background: linear-gradient(135deg, #0ab39c 0%, #08a085 100%);
+    color: white;
+  }
+
+  .badge-warning {
+    background: linear-gradient(135deg, #f1b44c 0%, #f0a534 100%);
+    color: #000;
+  }
+
+  .badge-danger {
+    background: linear-gradient(135deg, #f06548 0%, #e84a29 100%);
+    color: white;
+  }
+
+  .badge-info {
+    background: linear-gradient(135deg, #299cdb 0%, #1a8cc9 100%);
+    color: white;
+  }
+
+  .badge-secondary {
+    background: linear-gradient(135deg, #74788d 0%, #5e6278 100%);
+    color: white;
+  }
+
+  /* Assign Zones Modal Styling */
+  .assign-zones-modal .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .assign-zones-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px 12px 0 0;
+    border: none;
+  }
+
+  .assign-zones-header .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .assign-zones-header .modal-title i {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+  }
+
+  .assign-zones-header .modal-subtitle {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin-top: 0.25rem;
+    font-weight: 400;
+  }
+
+  .assign-zones-body {
+    padding: 1.5rem;
+    background-color: white;
+  }
+
+  /* Courier Info Card */
+  .courier-info-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.25rem;
+  }
+
+  .courier-info-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .courier-info-header i {
+    font-size: 1rem;
+  }
+
+  .courier-info-content {
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+  }
+
+  .courier-avatar-section {
+    position: relative;
+  }
+
+  .courier-avatar-section img {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+  }
+
+  .status-indicator {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 14px;
+    height: 14px;
+    background: #0ab39c;
+    border: 2px solid white;
+    border-radius: 50%;
+  }
+
+  .courier-details h6 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .courier-contact {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--text-light);
+    font-size: 0.85rem;
+  }
+
+  .contact-item i {
+    color: var(--primary-color);
+    font-size: 0.9rem;
+  }
+
+  /* Zone Section Label */
+  .zone-section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .zone-section-label i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+  }
+
+  .zone-count {
+    margin-left: auto;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* Zones Display */
+  .current-zones-display,
+  .new-zones-display {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    min-height: 70px;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+
+  .zones-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .no-zones-message {
+    color: #adb5bd;
+    font-style: italic;
+    font-size: 0.85rem;
+  }
+
+  .zone-tag {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .zone-tag:hover {
+    background: var(--danger-color);
+  }
+
+  .zone-tag i {
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .zone-tag i:hover {
+    transform: scale(1.2);
+  }
+
+  /* Zone Selection Trigger Button */
+  .zone-selection-trigger {
+    width: 100%;
+    background: white;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .zone-selection-trigger:hover {
+    border-color: var(--primary-color);
+    background: #f8f9fa;
+  }
+
+  .trigger-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .trigger-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+  }
+
+  .trigger-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .trigger-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+  }
+
+  .trigger-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-light);
+  }
+
+  .trigger-arrow {
+    font-size: 1.5rem;
+    color: var(--text-light);
+  }
+
+  /* Zone Notes Input */
+  .zone-notes-input {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    resize: vertical;
+  }
+
+  .zone-notes-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(253, 182, 20, 0.1);
+    outline: none;
+  }
+
+  /* Modal Footer */
+  .assign-zones-footer {
+    padding: 1rem 1.5rem;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  .btn-cancel {
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+  }
+
+  .btn-cancel:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+  }
+
+  .btn-save {
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    background: var(--primary-color);
+    border: none;
+    color: white;
+    transition: all 0.2s ease;
+  }
+
+  .btn-save:hover {
+    background: var(--primary-hover);
+  }
+
+  /* Couriers Management Card Styling */
+  .couriers-management-card {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .couriers-header {
+    background: white;
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .couriers-header .header-content .card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .couriers-header .header-content .card-title i {
+    display: none;
+  }
+
+  .couriers-header .header-content .card-subtitle {
+    display: none;
+  }
+
+  .btn-add-courier {
+    background: var(--primary-color);
+    color: white;
+    border: 1px solid var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    box-shadow: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-add-courier:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: white;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-add-courier i {
+    font-size: 1rem;
+  }
+</style>
+
+<div class="container-fluid">
+  <div class="card couriers-management-card" id="courierList">
+    <div class="card-header couriers-header border-0">
+      <div class="row align-items-center gy-3">
+        <div class="col-sm">
+          <h5 class="card-title mb-0">Couriers</h5>
         </div>
-      </div>
-
-      <div class="card-body border border-dashed border-end-0 border-start-0">
-        <form>
-          <div class="row g-3">
-            <div class="col-xxl-5 col-sm-6">
-              <div class="search-box">
-                <input type="text" class="form-control search" placeholder="Search for courier ID, name, phone or zones...">
-                <i class="ri-search-line search-icon"></i>
-              </div>
-            </div>
-            <div class="col-xxl-2 col-sm-6">
-              <div>
-                <input type="text" class="form-control" data-provider="flatpickr" data-date-format="d M, Y" data-range-date="true" id="date-range" placeholder="Select date range">
-              </div>
-            </div>
-            <div class="col-xxl-2 col-sm-4">
-              <div>
-                <select class="form-control" id="statusFilter">
-                  <option value="">Status</option>
-                  <option value="all" selected>All</option>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="On Leave">On Leave</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-xxl-2 col-sm-4">
-              <div>
-                <select class="form-control" id="zoneFilter">
-                  <option value="">Select Zone</option>
-                  <option value="all" selected>All Zones</option>
-                  <option value="Cairo">Cairo</option>
-                  <option value="Giza">Giza</option>
-                  <option value="Alexandria">Alexandria</option>
-                  <option value="Sharm El Sheikh">Sharm El Sheikh</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-xxl-1 col-sm-4">
-              <div>
-                <button type="button" class="btn btn-primary w-100">
-                  <i class="ri-equalizer-fill me-1 align-bottom"></i> Filters
-                </button>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      <div class="card-body pt-0">
-        <div>
-          <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
-            <li class="nav-item">
-              <button class="btn btn-link nav-link active All py-3" data-bs-toggle="tab" id="All" role="tab" aria-selected="true">
-                <i class="ri-team-line me-1 align-bottom"></i> All Couriers
-              </button>
-            </li>
-            <li class="nav-item">
-              <button class="btn btn-link nav-link py-3 Active" data-bs-toggle="tab" id="Active" role="tab" aria-selected="false">
-                <i class="ri-user-follow-line me-1 align-bottom"></i> Active
-              </button>
-            </li>
-            <li class="nav-item">
-              <button class="btn btn-link nav-link py-3 Inactive" data-bs-toggle="tab" id="Inactive" role="tab" aria-selected="false">
-                <i class="ri-user-unfollow-line me-1 align-bottom"></i> Inactive
-              </button>
-            </li>
-            <li class="nav-item">
-              <button class="btn btn-link nav-link py-3 OnLeave" data-bs-toggle="tab" id="OnLeave" role="tab" aria-selected="false">
-                <i class="ri-calendar-event-line me-1 align-bottom"></i> On Leave
-              </button>
-            </li>
-          </ul>
-
-          <div class="table-responsive table-card mb-1">
-            <table class="table table-nowrap align-middle" id="courierTable">
-              <thead class="text-muted table-light">
-                <tr class="text-uppercase">
-                  <th scope="col" style="width: 25px;">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="checkAll" value="option">
-                    </div>
-                  </th>
-                  <th>Courier ID</th>
-                  <th>Courier</th>
-                  <th>Contact</th>
-                  <th>Assigned Zones</th>
-                  <th>Active Tasks</th>  
-                  <th>Total Assigned Orders</th>
-                  <th>Total Assigned Pickups</th>
-                  <!-- <th>Success Rate</th> -->
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody class="list form-check-all" id="couriersTable">
-                <!-- Sample courier data -->
-
-              </tbody>
-            </table>
-
-            <div class="noresult" style="display: none">
-              <div class="text-center">
-                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                <h5 class="mt-2">Sorry! No Result Found</h5>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="d-flex justify-content-end">
-          <div class="pagination-wrap hstack gap-2">
-            <a class="page-item pagination-prev disabled" href="javascript:void(0);">
-              Previous
-            </a>
-            <ul class="pagination listjs-pagination mb-0">
-              <li class="active"><a class="page" href="#" data-i="1">1</a></li>
-              <li><a class="page" href="#" data-i="2">2</a></li>
-              <li><a class="page" href="#" data-i="3">3</a></li>
-            </ul>
-            <a class="page-item pagination-next" href="javascript:void(0);">
-              Next
-            </a>
+        <div class="col-sm-auto">
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-primary btn-add-courier" data-bs-toggle="modal" data-bs-target="#addCourierModal">
+              <i class="ri-user-add-line align-bottom me-1"></i> Add Courier
+            </button>
+            <button type="button" class="btn btn-info">
+              <i class="ri-file-download-line align-bottom me-1"></i> Export
+            </button>
+            <button class="btn btn-soft-danger" id="remove-actions">
+              <i class="ri-delete-bin-2-line"></i>
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Add Courier Modal -->
-  <div class="modal fade" id="addCourierModal" tabindex="-1" aria-labelledby="addCourierModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-     <form action="" id="addCourierForm" >
+    <div class="card-body border border-dashed border-end-0 border-start-0">
+      <form>
+        <div class="row g-3">
+          <div class="col-xxl-5 col-sm-6">
+            <div class="search-box">
+              <input type="text" class="form-control search" placeholder="Search for courier ID, name, phone or zones...">
+              <i class="ri-search-line search-icon"></i>
+            </div>
+          </div>
+          <div class="col-xxl-2 col-sm-6">
+            <div>
+              <input type="text" class="form-control" data-provider="flatpickr" data-date-format="d M, Y" data-range-date="true" id="date-range" placeholder="Select date range">
+            </div>
+          </div>
+          <div class="col-xxl-2 col-sm-4">
+            <div>
+              <select class="form-control" id="statusFilter">
+                <option value="">Status</option>
+                <option value="all" selected>All</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="On Leave">On Leave</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-xxl-2 col-sm-4">
+            <div>
+              <select class="form-control" id="zoneFilter">
+                <option value="">Select Zone</option>
+                <option value="all" selected>All Zones</option>
+                <option value="Cairo">Cairo</option>
+                <option value="Giza">Giza</option>
+                <option value="Alexandria">Alexandria</option>
+                <option value="Sharm El Sheikh">Sharm El Sheikh</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-xxl-1 col-sm-4">
+            <div>
+              <button type="button" class="btn btn-primary w-100">
+                <i class="ri-equalizer-fill me-1 align-bottom"></i> Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="card-body pt-0">
+      <div>
+        <div class="table-responsive table-card mb-1">
+          <table class="table table-nowrap align-middle" id="courierTable">
+            <thead class="text-muted table-light">
+              <tr class="text-uppercase">
+                <th scope="col" style="width: 25px;">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="checkAll" value="option">
+                  </div>
+                </th>
+                <th class="sort" data-sort="id">Courier ID</th>
+                <th class="sort" data-sort="courier_name">Courier</th>
+                <th class="sort" data-sort="contact">Contact</th>
+                <th class="sort" data-sort="zones">Assigned Zones</th>
+                <th class="sort" data-sort="active_tasks">Active Tasks</th>
+                <th class="sort" data-sort="completed">Total Assigned Orders</th>
+                <th class="sort" data-sort="completed">Total Assigned Pickups</th>
+                <th class="sort" data-sort="status">Status</th>
+                <th class="sort" data-sort="date">Date</th>
+                <th class="sort" data-sort="action">Action</th>
+              </tr>
+            </thead>
+            <tbody class="list form-check-all" id="couriersTable">
+              <!-- Courier data will be populated here -->
+
+            </tbody>
+          </table>
+
+          <div class="noresult" style="display: none">
+            <div class="text-center">
+              <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+              <h5 class="mt-2">Sorry! No Result Found</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end">
+        <div class="pagination-wrap hstack gap-2">
+          <a class="page-item pagination-prev disabled" href="javascript:void(0);">
+            Previous
+          </a>
+          <ul class="pagination listjs-pagination mb-0">
+            <li class="active"><a class="page" href="#" data-i="1">1</a></li>
+            <li><a class="page" href="#" data-i="2">2</a></li>
+            <li><a class="page" href="#" data-i="3">3</a></li>
+          </ul>
+          <a class="page-item pagination-next" href="javascript:void(0);">
+            Next
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Courier Modal -->
+<div class="modal fade" id="addCourierModal" tabindex="-1" aria-labelledby="addCourierModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <form action="" id="addCourierForm">
       <div class="modal-content">
         <div class="modal-header text-white">
           <h5 class="modal-title" id="addCourierModalLabel">Add New Courier</h5>
@@ -277,14 +1063,14 @@
                   <div class="invalid-feedback">Please enter full name</div>
                 </div>
               </div>
-            
+
             </div>
 
             <div class="row g-3">
               <div class="col-md-6">
                 <div class="mb-3">
                   <label for="email" class="form-label">Personal Email(Optional)</label>
-                  <input type="email" class="form-control" name="personalEmail" id="email" placeholder="Enter email address" >
+                  <input type="email" class="form-control" name="personalEmail" id="email" placeholder="Enter email address">
                 </div>
               </div>
               <div class="col-md-6">
@@ -308,7 +1094,7 @@
                 <div class="mb-3">
                   <label for="dateOfBirth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
                   <input type="date" class="form-control" name="dateOfBirth" id="dateOfBirth" required>
-                    <div class="invalid-feedback">Please enter date of birth</div>
+                  <div class="invalid-feedback">Please enter date of birth</div>
                 </div>
               </div>
             </div>
@@ -324,14 +1110,14 @@
                     <option value="Van">Van</option>
                     <option value="Bicycle">Bicycle</option>
                   </select>
-                    <div class="invalid-feedback">Please select vehicle type</div>
+                  <div class="invalid-feedback">Please select vehicle type</div>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="mb-3">
                   <label for="vehiclePlate" class="form-label">Vehicle Plate Number <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" name="vehiclePlateNumber" id="vehiclePlate" placeholder="Enter vehicle plate number" required>
-                    <div class="invalid-feedback">Please enter vehicle plate number</div>
+                  <div class="invalid-feedback">Please enter vehicle plate number</div>
                 </div>
               </div>
             </div>
@@ -339,60 +1125,27 @@
             <div class="mb-3">
               <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
               <textarea class="form-control" id="address" name="address" rows="2" placeholder="Enter full address" required></textarea>
-                <div class="invalid-feedback">Please enter address</div>
+              <div class="invalid-feedback">Please enter address</div>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label">Initial Zone Assignment <span class="text-danger">*</span></label>
-            <div class="zone-select-container">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                            <i class="ri-checkbox-blank-circle-line me-1"></i> Cairo Downtown
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                            <i class="ri-checkbox-blank-circle-line me-1"></i> Zamalek
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                            <i class="ri-checkbox-blank-circle-line me-1"></i> Maadi
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                            <i class="ri-checkbox-blank-circle-line me-1"></i> Heliopolis
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                            <i class="ri-checkbox-blank-circle-line me-1"></i> Nasr City
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                            <i class="ri-checkbox-blank-circle-line me-1"></i> New Cairo
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                            <i class="ri-checkbox-blank-circle-line me-1"></i> Giza
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                            <i class="ri-checkbox-blank-circle-line me-1"></i> 6th October
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                            <i class="ri-checkbox-blank-circle-line me-1"></i> Alexandria
-                        </div>
-                    </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold mb-3">Initial Zone Assignment <span class="text-danger">*</span></label>
+
+              <!-- Selected Zones Display for Add Courier -->
+              <div class="selected-zones-container mb-3" id="addCourierSelectedZonesDisplay">
+                <div id="addCourierSelectedZonesTags" class="d-flex flex-wrap gap-2">
+                  <span class="text-muted" id="addCourierNoZonesText">Click below to select zones from governorates</span>
                 </div>
-            </div>
+              </div>
+
+              <!-- Zone Selection Trigger for Add Courier -->
+              <button type="button" class="zone-trigger-btn" id="openAddCourierZoneSelectionBtn">
+                <div>
+                  <i class="ri-map-pin-add-line me-2"></i>
+                  <span>Select Zones from Governorates</span>
+                </div>
+                <i class="ri-arrow-right-s-line"></i>
+              </button>
             </div>
 
             <div class="row g-3">
@@ -418,14 +1171,14 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Upload Photo</label>
-                <input type="file" class="form-control filepond-input" id="courierPhoto" accept="image/*">
-                <div class="mt-2" id="photoStatus">No photo uploaded</div>
+              <label class="form-label">Upload Photo</label>
+              <input type="file" class="form-control filepond-input" id="courierPhoto" accept="image/*">
+              <div class="mt-2" id="photoStatus">No photo uploaded</div>
             </div>
 
-        
 
-            
+
+
 
           </form>
         </div>
@@ -435,519 +1188,577 @@
         </div>
       </div>
     </form>
-    </div>
   </div>
+</div>
 
-  <!-- Assign Zones Modal -->
-  <div class="modal fade" id="assignZonesModal" tabindex="-1" aria-labelledby="assignZonesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title" id="assignZonesModalLabel">Assign Zones to Courier</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Assign Zones Modal -->
+<div class="modal fade" id="assignZonesModal" tabindex="-1" aria-labelledby="assignZonesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content assign-zones-modal">
+      <div class="modal-header assign-zones-header">
+        <div>
+          <h5 class="modal-title" id="assignZonesModalLabel">
+            <i class="ri-map-pin-line me-2"></i>Assign Delivery Zones
+          </h5>
+          <p class="modal-subtitle mb-0">Configure courier's delivery coverage areas</p>
         </div>
-        <div class="modal-body">
-          <form id="assignZonesForm">
-            <input type="hidden" id="courierIdForZones" name="courierId" value="">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body assign-zones-body">
+        <form id="assignZonesForm">
+          <input type="hidden" id="courierIdForZones" name="courierId" value="">
 
-            <div class="mb-3">
-              <label class="form-label fw-medium">Courier Name</label>
-              <div class="d-flex align-items-center">
-                <img src="/placeholder.svg?height=40&width=40" class="courier-avatar me-2" alt="Courier">
-                <h5 class="fs-6 mb-0" id="courierNameForZones">Ahmed Mohamed</h5>
-              </div>
+          <!-- Courier Info Card -->
+          <div class="courier-info-card mb-4">
+            <div class="courier-info-header">
+              <i class="ri-user-star-line"></i>
+              <span>Courier Information</span>
             </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-medium">Currently Assigned Zones</label>
-              <div id="currentZones" class="mb-2">
-                <span class="zone-badge">Cairo Downtown</span>
-                <span class="zone-badge">Zamalek</span>
-                <span class="zone-badge">Maadi</span>
+            <div class="courier-info-content">
+              <div class="courier-avatar-section">
+                <img src="/placeholder.svg?height=70&width=70" id="courierAvatarForZones" alt="Courier">
+                <div class="status-indicator"></div>
               </div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label fw-medium">Select Zones to Assign</label>
-              <div class="zone-select-container">
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> Cairo Downtown
-                    </div>
+              <div class="courier-details">
+                <h6 id="courierNameForZones">Ahmed Mohamed</h6>
+                <div class="courier-contact">
+                  <div class="contact-item">
+                    <i class="ri-phone-line"></i>
+                    <span id="courierPhoneForZones">+20 123 456 7890</span>
                   </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> Zamalek
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item selected" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-circle-fill me-1"></i> Maadi
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> Heliopolis
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> Nasr City
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> New Cairo
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> Giza
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> 6th October
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> Alexandria
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> Montazah
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> Sharm El Sheikh
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="zone-select-item" onclick="toggleZoneSelection(this)">
-                      <i class="ri-checkbox-blank-circle-line me-1"></i> Hurghada
-                    </div>
+                  <div class="contact-item">
+                    <i class="ri-map-pin-2-line"></i>
+                    <span id="courierCurrentZones">3 Zones</span>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div class="mb-3">
-              <label class="form-label fw-medium">Zone Assignment Notes</label>
-              <textarea class="form-control" id="zoneNotes" rows="2" placeholder="Add notes about zone assignment"></textarea>
+          <!-- Currently Assigned Zones -->
+          <div class="mb-4">
+            <label class="zone-section-label">
+              <i class="ri-map-2-line"></i>
+              <span>Currently Assigned Zones</span>
+              <span class="zone-count" id="currentZoneCount">0</span>
+            </label>
+            <div class="current-zones-display" id="currentZonesContainer">
+              <div id="currentZones" class="zones-grid">
+                <span class="no-zones-message">No zones currently assigned</span>
+              </div>
             </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-success" id="saveZonesBtn">Save Zone Assignments</button>
-        </div>
+          </div>
+
+          <!-- Select New Zones -->
+          <div class="mb-4">
+            <label class="zone-section-label">
+              <i class="ri-add-circle-line"></i>
+              <span>Select New Zones to Assign</span>
+              <span class="zone-count" id="selectedZoneCount">0</span>
+            </label>
+
+            <!-- Selected Zones Display -->
+            <div class="new-zones-display mb-3" id="selectedZonesDisplay">
+              <div id="selectedZonesTags" class="zones-grid">
+                <span class="no-zones-message" id="noZonesText">Click below to select zones from governorates</span>
+              </div>
+            </div>
+
+            <!-- Zone Selection Trigger -->
+            <button type="button" class="zone-selection-trigger" id="openZoneSelectionBtn">
+              <div class="trigger-content">
+                <div class="trigger-icon">
+                  <i class="ri-map-pin-add-line"></i>
+                </div>
+                <div class="trigger-text">
+                  <span class="trigger-title">Browse & Select Zones</span>
+                  <span class="trigger-subtitle">Choose from all available governorates and areas</span>
+                </div>
+              </div>
+              <i class="ri-arrow-right-s-line trigger-arrow"></i>
+            </button>
+          </div>
+
+          <!-- Zone Assignment Notes -->
+          <div class="mb-3">
+            <label class="zone-section-label">
+              <i class="ri-file-text-line"></i>
+              <span>Assignment Notes (Optional)</span>
+            </label>
+            <textarea class="form-control zone-notes-input" id="zoneNotes" rows="3" placeholder="Add any notes about this zone assignment, such as preferred times, special requirements, etc..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer assign-zones-footer">
+        <button type="button" class="btn btn-light btn-cancel" data-bs-dismiss="modal">
+          <i class="ri-close-line me-1"></i>Cancel
+        </button>
+        <button type="button" class="btn btn-primary btn-save" id="saveZonesBtn">
+          <i class="ri-save-line me-1"></i>Save Zone Assignments
+        </button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Edit Courier Modal -->
-  <div class="modal fade" id="editCourierModal" tabindex="-1" aria-labelledby="editCourierModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-header bg-warning text-white">
-          <h5 class="modal-title" id="editCourierModalLabel">Edit Courier Details</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Zone Selection Modal (Similar to Area Selection) -->
+<div class="modal fade" id="zoneSelectionModal" tabindex="-1" aria-labelledby="zoneSelectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius: 16px;">
+      <div class="modal-header" style="border-bottom: 1px solid #e0e0e0;">
+        <h5 class="modal-title" id="zoneSelectionModalLabel" style="font-weight: 600;">
+          <i class="ri-map-pin-line me-2"></i>Select Delivery Zones
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="padding: 1.5rem;">
+        <!-- Search Bar -->
+        <div class="mb-4">
+          <div class="input-group" style="border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+            <span class="input-group-text" style="background-color: white; border-right: none !important;">
+              <i class="ri-search-line text-primary"></i>
+            </span>
+            <input type="text" class="form-control border-0" id="zoneSearchInput" placeholder="Search by governorate or zone name..." style="background-color: white; font-size: 1rem;" autocomplete="off">
+            <span class="input-group-text" style="background-color: white; border-left: none !important;">
+              <i class="ri-map-pin-line text-muted"></i>
+            </span>
+          </div>
         </div>
-        <div class="modal-body">
-          <form id="editCourierForm" class="needs-validation" novalidate>
-            <input type="hidden" id="editCourierId" name="courierId" value="">
 
-            <div class="row g-3">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="editFirstName" class="form-label">First Name <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="editFirstName" placeholder="Enter first name" required value="Ahmed">
-                  <div class="invalid-feedback">Please enter first name</div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="editLastName" class="form-label">Last Name <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="editLastName" placeholder="Enter last name" required value="Mohamed">
-                  <div class="invalid-feedback">Please enter last name</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row g-3">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="editEmail" class="form-label">Email <span class="text-danger">*</span></label>
-                  <input type="email" class="form-control" id="editEmail" placeholder="Enter email address" required value="ahmed.m@example.com">
-                  <div class="invalid-feedback">Please enter a valid email</div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="editPhone" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                  <input type="tel" class="form-control" id="editPhone" placeholder="Enter phone number" required value="+20 123 456 7890">
-                  <div class="invalid-feedback">Please enter phone number</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row g-3">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="editVehicleType" class="form-label">Vehicle Type</label>
-                  <select class="form-select" id="editVehicleType">
-                    <option value="">Select Vehicle Type</option>
-                    <option value="Motorcycle" selected>Motorcycle</option>
-                    <option value="Car">Car</option>
-                    <option value="Van">Van</option>
-                    <option value="Bicycle">Bicycle</option>
-                  </select>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="editStatus" class="form-label">Status</label>
-                  <select class="form-select" id="editStatus">
-                    <option value="Active" selected>Active</option>
-                    <option value="Inactive">Inactive</option>
-                    <option value="On Leave">On Leave</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label for="editAddress" class="form-label">Address</label>
-              <textarea class="form-control" id="editAddress" rows="2" placeholder="Enter full address">123 Main St, Cairo, Egypt</textarea>
-            </div>
-          </form>
+        <!-- Instructional Text -->
+        <div class="alert alert-info d-flex align-items-center mb-3" style="background-color: #e7f3ff; border-color: #b3d9ff; color: #0066cc; padding: 0.75rem 1rem; border-radius: 8px;">
+          <i class="ri-information-line me-2 fs-5"></i>
+          <span style="font-size: 0.9rem; font-weight: 500;">Click on governorates to view zones. Select multiple zones from different governorates.</span>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-warning" id="updateCourierBtn">Update Courier</button>
+
+        <!-- Governorate and Zone Selection -->
+        <div style="max-height: 450px; overflow-y: auto;">
+          <div id="governorateZoneList">
+            <!-- Will be populated dynamically -->
+          </div>
         </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid #e0e0e0;">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmZoneSelection">
+          <i class="ri-check-line me-1"></i>Confirm Selection (<span id="selectedZoneCount">0</span>)
+        </button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- JavaScript -->
-  
+<!-- Edit Courier Modal -->
+<div class="modal fade" id="editCourierModal" tabindex="-1" aria-labelledby="editCourierModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title" id="editCourierModalLabel">Edit Courier Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editCourierForm" class="needs-validation" novalidate>
+          <input type="hidden" id="editCourierId" name="courierId" value="">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editFirstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="editFirstName" placeholder="Enter first name" required value="Ahmed">
+                <div class="invalid-feedback">Please enter first name</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editLastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="editLastName" placeholder="Enter last name" required value="Mohamed">
+                <div class="invalid-feedback">Please enter last name</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="editEmail" placeholder="Enter email address" required value="ahmed.m@example.com">
+                <div class="invalid-feedback">Please enter a valid email</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editPhone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" id="editPhone" placeholder="Enter phone number" required value="+20 123 456 7890">
+                <div class="invalid-feedback">Please enter phone number</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editVehicleType" class="form-label">Vehicle Type</label>
+                <select class="form-select" id="editVehicleType">
+                  <option value="">Select Vehicle Type</option>
+                  <option value="Motorcycle" selected>Motorcycle</option>
+                  <option value="Car">Car</option>
+                  <option value="Van">Van</option>
+                  <option value="Bicycle">Bicycle</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editStatus" class="form-label">Status</label>
+                <select class="form-select" id="editStatus">
+                  <option value="Active" selected>Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="On Leave">On Leave</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="editAddress" class="form-label">Address</label>
+            <textarea class="form-control" id="editAddress" rows="2" placeholder="Enter full address">123 Main St, Cairo, Egypt</textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="updateCourierBtn">Update Courier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript -->
+
 
 <%- contentFor('FooterJs') %>
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script>
-    // Toggle zone selection
-    function toggleZoneSelection(element) {
-      if (element.classList.contains('selected')) {
-        element.classList.remove('selected');
-        element.querySelector('i').classList.remove('ri-checkbox-circle-fill');
-        element.querySelector('i').classList.add('ri-checkbox-blank-circle-line');
-      } else {
-        element.classList.add('selected');
-        element.querySelector('i').classList.remove('ri-checkbox-blank-circle-line');
-        element.querySelector('i').classList.add('ri-checkbox-circle-fill');
-      }
+<script>
+  // Toggle zone selection
+  function toggleZoneSelection(element) {
+    if (element.classList.contains('selected')) {
+      element.classList.remove('selected');
+      element.querySelector('i').classList.remove('ri-checkbox-circle-fill');
+      element.querySelector('i').classList.add('ri-checkbox-blank-circle-line');
+    } else {
+      element.classList.add('selected');
+      element.querySelector('i').classList.remove('ri-checkbox-blank-circle-line');
+      element.querySelector('i').classList.add('ri-checkbox-circle-fill');
     }
+  }
 
-    // Toggle password visibility
-    function togglePassword() {
-      const passwordInput = document.getElementById('password');
-      const passwordAddon = document.querySelector('.password-addon i');
+  // Toggle password visibility
+  function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const passwordAddon = document.querySelector('.password-addon i');
 
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        passwordAddon.classList.remove('ri-eye-fill');
-        passwordAddon.classList.add('ri-eye-off-fill');
-      } else {
-        passwordInput.type = 'password';
-        passwordAddon.classList.remove('ri-eye-off-fill');
-        passwordAddon.classList.add('ri-eye-fill');
-      }
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      passwordAddon.classList.remove('ri-eye-fill');
+      passwordAddon.classList.add('ri-eye-off-fill');
+    } else {
+      passwordInput.type = 'password';
+      passwordAddon.classList.remove('ri-eye-off-fill');
+      passwordAddon.classList.add('ri-eye-fill');
     }
+  }
 
-    // Handle assign zones modal
-    document.addEventListener('DOMContentLoaded', function() {
-      const assignZonesModal = document.getElementById('assignZonesModal');
-      if (assignZonesModal) {
-        assignZonesModal.addEventListener('show.bs.modal', function(event) {
-          const button = event.relatedTarget;
-          const courierId = button.getAttribute('data-courier-id');
-          document.getElementById('courierIdForZones').value = courierId;
+  // Handle assign zones modal
+  document.addEventListener('DOMContentLoaded', function() {
+    const assignZonesModal = document.getElementById('assignZonesModal');
+    if (assignZonesModal) {
+      assignZonesModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const courierId = button.getAttribute('data-courier-id');
+        document.getElementById('courierIdForZones').value = courierId;
 
-          // In a real application, you would fetch the courier's data and current zones
-          // For demo purposes, we're just setting static data
-          if (courierId === 'CR001') {
-            document.getElementById('courierNameForZones').textContent = 'Ahmed Mohamed';
-            document.getElementById('currentZones').innerHTML = `
+        // In a real application, you would fetch the courier's data and current zones
+        // For demo purposes, we're just setting static data
+        if (courierId === 'CR001') {
+          document.getElementById('courierNameForZones').textContent = 'Ahmed Mohamed';
+          document.getElementById('currentZones').innerHTML = `
             <span class="zone-badge">Cairo Downtown</span>
             <span class="zone-badge">Zamalek</span>
             <span class="zone-badge">Maadi</span>
           `;
-          } else if (courierId === 'CR002') {
-            document.getElementById('courierNameForZones').textContent = 'Sara Ahmed';
-            document.getElementById('currentZones').innerHTML = `
+        } else if (courierId === 'CR002') {
+          document.getElementById('courierNameForZones').textContent = 'Sara Ahmed';
+          document.getElementById('currentZones').innerHTML = `
             <span class="zone-badge">Giza</span>
             <span class="zone-badge">6th October</span>
           `;
-          } else if (courierId === 'CR003') {
-            document.getElementById('courierNameForZones').textContent = 'Mohamed Ali';
-            document.getElementById('currentZones').innerHTML = `
+        } else if (courierId === 'CR003') {
+          document.getElementById('courierNameForZones').textContent = 'Mohamed Ali';
+          document.getElementById('currentZones').innerHTML = `
             <span class="zone-badge">Alexandria</span>
             <span class="zone-badge">Montazah</span>
           `;
-          }
-        });
-      }
-
-      // Form validation
-      const forms = document.querySelectorAll('.needs-validation');
-      Array.from(forms).forEach(form => {
-        form.addEventListener('submit', event => {
-          if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-          }
-          form.classList.add('was-validated');
-        }, false);
+        }
       });
+    }
 
-      // Save zones button click handler
-      const saveZonesBtn = document.getElementById('saveZonesBtn');
-      if (saveZonesBtn) {
-        saveZonesBtn.addEventListener('click', function() {
-          // Get selected zones
-          const selectedZones = document.querySelectorAll('#assignZonesModal .zone-select-item.selected');
-          const zones = Array.from(selectedZones).map(zone => zone.textContent.trim());
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
 
-          // In a real application, you would save these zones to the server
-          console.log('Saving zones for courier:', document.getElementById('courierIdForZones').value);
-          console.log('Selected zones:', zones);
+    // Save zones button click handler
+    const saveZonesBtn = document.getElementById('saveZonesBtn');
+    if (saveZonesBtn) {
+      saveZonesBtn.addEventListener('click', function() {
+        // Get selected zones
+        const selectedZones = document.querySelectorAll('#assignZonesModal .zone-select-item.selected');
+        const zones = Array.from(selectedZones).map(zone => zone.textContent.trim());
+
+        // In a real application, you would save these zones to the server
+        console.log('Saving zones for courier:', document.getElementById('courierIdForZones').value);
+        console.log('Selected zones:', zones);
+
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('assignZonesModal'));
+        modal.hide();
+
+        // Show success message
+        alert('Zones assigned successfully!');
+      });
+    }
+
+
+    // Update courier button click handler
+    const updateCourierBtn = document.getElementById('updateCourierBtn');
+    if (updateCourierBtn) {
+      updateCourierBtn.addEventListener('click', function() {
+        const form = document.getElementById('editCourierForm');
+        if (form.checkValidity()) {
+          // In a real application, you would update the courier data on the server
+          console.log('Updating courier:', document.getElementById('editCourierId').value);
 
           // Close the modal
-          const modal = bootstrap.Modal.getInstance(document.getElementById('assignZonesModal'));
+          const modal = bootstrap.Modal.getInstance(document.getElementById('editCourierModal'));
           modal.hide();
 
           // Show success message
-          alert('Zones assigned successfully!');
-        });
-      }
-
-
-      // Update courier button click handler
-      const updateCourierBtn = document.getElementById('updateCourierBtn');
-      if (updateCourierBtn) {
-        updateCourierBtn.addEventListener('click', function() {
-          const form = document.getElementById('editCourierForm');
-          if (form.checkValidity()) {
-            // In a real application, you would update the courier data on the server
-            console.log('Updating courier:', document.getElementById('editCourierId').value);
-
-            // Close the modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editCourierModal'));
-            modal.hide();
-
-            // Show success message
-            alert('Courier details updated successfully!');
-          } else {
-            form.classList.add('was-validated');
-          }
-        });
-      }
-
-      // Edit courier modal
-      const editCourierModal = document.getElementById('editCourierModal');
-      if (editCourierModal) {
-        editCourierModal.addEventListener('show.bs.modal', function(event) {
-          const button = event.relatedTarget;
-          const courierId = button.getAttribute('data-courier-id');
-          document.getElementById('editCourierId').value = courierId;
-
-          // In a real application, you would fetch the courier's data
-          // For demo purposes, we're just setting static data based on courier ID
-          if (courierId === 'CR001') {
-            document.getElementById('editFirstName').value = 'Ahmed';
-            document.getElementById('editLastName').value = 'Mohamed';
-            document.getElementById('editEmail').value = 'ahmed.m@example.com';
-            document.getElementById('editPhone').value = '+20 123 456 7890';
-          } else if (courierId === 'CR002') {
-            document.getElementById('editFirstName').value = 'Sara';
-            document.getElementById('editLastName').value = 'Ahmed';
-            document.getElementById('editEmail').value = 'sara.a@example.com';
-            document.getElementById('editPhone').value = '+20 123 456 7891';
-          } else if (courierId === 'CR003') {
-            document.getElementById('editFirstName').value = 'Mohamed';
-            document.getElementById('editLastName').value = 'Ali';
-            document.getElementById('editEmail').value = 'mohamed.a@example.com';
-            document.getElementById('editPhone').value = '+20 123 456 7892';
-            document.getElementById('editStatus').value = 'On Leave';
-          }
-        });
-      }
-    });
- 
- //Handel submmition of Add curior 
-
-// const addCourierForm = document.getElementById('addCourierForm');
-// //    const modal = bootstrap.Modal.getInstance(document.getElementById('addCourierModal'));
-// //    modal.hide();
-// addCourierForm.addEventListener('submit', async (e) => {
-//   e.preventDefault();
-//   try{
-//   const formData = new FormData(addCourierForm);
-//   const data = Object.fromEntries(formData.entries());
-//     const selectedZones = document.querySelectorAll('#addCourierModal .zone-select-item.selected');
-//     const zones = Array.from(selectedZones).map(zone => zone.textContent.trim());
-//     data.zones = zones;
-
-//     const response = await fetch('/admin/couriers/create-courier', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//       body: JSON.stringify(data),
-//     });
-    
-//     const responseData = await response.json();
-//     if (response.ok) {
-//       swal('Success', 'Courier added successfully!', 'success').then(() => {
-//         location.reload();
-//       });
-//     } else {
-//       swal('Error', `${responseData.error}`, 'error');
-//     }
-
-//     }catch(err){
-//         console.log(err);
-//         swal('Error', 'An error occurred. Please try again.', 'error');
-//     }
-
-
-
-// });
- 
- </script>
-
-    <script>
-      const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
-      const CLOUDINARY_UPLOAD_PRESET = 'order_project';
-      let uploadedPhoto = '';
-
-    document.getElementById('courierPhoto').addEventListener('change', async function(event) {
-        const file = event.target.files[0];
-        uploadedPhoto = '';
-
-        if (file) {
-            const submitButton = document.getElementById('addCourierBtn');
-            submitButton.disabled = true;
-            submitButton.innerText = 'Uploading Photo...';
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-            try {
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', CLOUDINARY_URL, true);
-
-                xhr.upload.onprogress = function(event) {
-                    if (event.lengthComputable) {
-                        const percentCompleted = Math.round((event.loaded * 100) / event.total);
-                        document.getElementById('photoStatus').innerText = `Uploading: ${percentCompleted}%`;
-                    }
-                };
-
-                xhr.onload = function() {
-                    if (xhr.status === 200) {
-                        const data = JSON.parse(xhr.responseText);
-                        if (data.secure_url) {
-                            uploadedPhoto = data.secure_url;
-                            document.getElementById('photoStatus').innerText = 'Photo uploaded successfully';
-                        }
-                    } else {
-                        document.getElementById('photoStatus').innerText = 'Error uploading photo';
-                    }
-                    submitButton.disabled = false;
-                    submitButton.innerText = 'Create Courier Account';
-                };
-
-                xhr.onerror = function() {
-                    document.getElementById('photoStatus').innerText = 'Error uploading photo';
-                    submitButton.disabled = false;
-                    submitButton.innerText = 'Create Courier Account';
-                };
-
-                xhr.send(formData);
-            } catch (error) {
-                console.error('Error uploading image:', error);
-                document.getElementById('photoStatus').innerText = 'Error uploading photo';
-                submitButton.disabled = false;
-                submitButton.innerText = 'Create Courier Account';
-            }
-        }
-    });
-
-      addCourierForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-          const formData = new FormData(addCourierForm);
-          const data = Object.fromEntries(formData.entries());
-          const selectedZones = document.querySelectorAll('#addCourierModal .zone-select-item.selected');
-          const zones = Array.from(selectedZones).map(zone => zone.textContent.trim());
-          data.zones = zones;
-          data.photo = uploadedPhoto;
-
-          const response = await fetch('/admin/couriers/create-courier', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-          });
-
-          const responseData = await response.json();
-          if (response.ok) {
-            Swal.fire({
-            title: 'Success',
-            text: 'Account Created Successfully',
-            icon: 'success',
-            confirmButtonText: 'OK',
-            }).then(() => {
-            window.location.reload();
-            });
-          } else {
-            Swal.fire({
-            title: 'Error',
-            text: `${responseData.error}`,
-            icon: 'error',
-            confirmButtonText: 'OK',
-            });
-          }
-        } catch (err) {
-          console.log(err);
-            Swal.fire({
-                title: 'Error',
-                text: 'An error occurred. Please try again.',
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
+          alert('Courier details updated successfully!');
+        } else {
+          form.classList.add('was-validated');
         }
       });
-   
+    }
+
+    // Edit courier modal
+    const editCourierModal = document.getElementById('editCourierModal');
+    if (editCourierModal) {
+      editCourierModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const courierId = button.getAttribute('data-courier-id');
+        document.getElementById('editCourierId').value = courierId;
+
+        // In a real application, you would fetch the courier's data
+        // For demo purposes, we're just setting static data based on courier ID
+        if (courierId === 'CR001') {
+          document.getElementById('editFirstName').value = 'Ahmed';
+          document.getElementById('editLastName').value = 'Mohamed';
+          document.getElementById('editEmail').value = 'ahmed.m@example.com';
+          document.getElementById('editPhone').value = '+20 123 456 7890';
+        } else if (courierId === 'CR002') {
+          document.getElementById('editFirstName').value = 'Sara';
+          document.getElementById('editLastName').value = 'Ahmed';
+          document.getElementById('editEmail').value = 'sara.a@example.com';
+          document.getElementById('editPhone').value = '+20 123 456 7891';
+        } else if (courierId === 'CR003') {
+          document.getElementById('editFirstName').value = 'Mohamed';
+          document.getElementById('editLastName').value = 'Ali';
+          document.getElementById('editEmail').value = 'mohamed.a@example.com';
+          document.getElementById('editPhone').value = '+20 123 456 7892';
+          document.getElementById('editStatus').value = 'On Leave';
+        }
+      });
+    }
+  });
+
+  //Handel submmition of Add curior 
+
+  // const addCourierForm = document.getElementById('addCourierForm');
+  // //    const modal = bootstrap.Modal.getInstance(document.getElementById('addCourierModal'));
+  // //    modal.hide();
+  // addCourierForm.addEventListener('submit', async (e) => {
+  //   e.preventDefault();
+  //   try{
+  //   const formData = new FormData(addCourierForm);
+  //   const data = Object.fromEntries(formData.entries());
+  //     const selectedZones = document.querySelectorAll('#addCourierModal .zone-select-item.selected');
+  //     const zones = Array.from(selectedZones).map(zone => zone.textContent.trim());
+  //     data.zones = zones;
+
+  //     const response = await fetch('/admin/couriers/create-courier', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(data),
+  //     });
+
+  //     const responseData = await response.json();
+  //     if (response.ok) {
+  //       swal('Success', 'Courier added successfully!', 'success').then(() => {
+  //         location.reload();
+  //       });
+  //     } else {
+  //       swal('Error', `${responseData.error}`, 'error');
+  //     }
+
+  //     }catch(err){
+  //         console.log(err);
+  //         swal('Error', 'An error occurred. Please try again.', 'error');
+  //     }
 
 
-async function fetchCouriers(status = "All") {
+
+  // });
+</script>
+
+<script>
+  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
+  const CLOUDINARY_UPLOAD_PRESET = 'order_project';
+  let uploadedPhoto = '';
+
+  document.getElementById('courierPhoto').addEventListener('change', async function(event) {
+    const file = event.target.files[0];
+    uploadedPhoto = '';
+
+    if (file) {
+      const submitButton = document.getElementById('addCourierBtn');
+      submitButton.disabled = true;
+      submitButton.innerText = 'Uploading Photo...';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', CLOUDINARY_URL, true);
+
+        xhr.upload.onprogress = function(event) {
+          if (event.lengthComputable) {
+            const percentCompleted = Math.round((event.loaded * 100) / event.total);
+            document.getElementById('photoStatus').innerText = `Uploading: ${percentCompleted}%`;
+          }
+        };
+
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            if (data.secure_url) {
+              uploadedPhoto = data.secure_url;
+              document.getElementById('photoStatus').innerText = 'Photo uploaded successfully';
+            }
+          } else {
+            document.getElementById('photoStatus').innerText = 'Error uploading photo';
+          }
+          submitButton.disabled = false;
+          submitButton.innerText = 'Create Courier Account';
+        };
+
+        xhr.onerror = function() {
+          document.getElementById('photoStatus').innerText = 'Error uploading photo';
+          submitButton.disabled = false;
+          submitButton.innerText = 'Create Courier Account';
+        };
+
+        xhr.send(formData);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        document.getElementById('photoStatus').innerText = 'Error uploading photo';
+        submitButton.disabled = false;
+        submitButton.innerText = 'Create Courier Account';
+      }
+    }
+  });
+
+  addCourierForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Validate zone selection
+    if (selectedZonesForAddCourier.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Zones Selected',
+        text: 'Please select at least one delivery zone for the courier.',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
     try {
-        const tableBody = document.getElementById("couriersTable");
-        const NoResult = document.querySelector(".noresult");
+      const formData = new FormData(addCourierForm);
+      const data = Object.fromEntries(formData.entries());
 
-        // Show loading spinner
-        tableBody.innerHTML = `
+      // Use the selected zones from our zone selection system
+      const zones = selectedZonesForAddCourier.map(z => z.value);
+      data.zones = zones;
+      data.photo = uploadedPhoto;
+
+      const response = await fetch('/admin/couriers/create-courier', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json();
+      if (response.ok) {
+        Swal.fire({
+          title: 'Success',
+          text: 'Account Created Successfully',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        }).then(() => {
+          window.location.reload();
+        });
+      } else {
+        Swal.fire({
+          title: 'Error',
+          text: `${responseData.error}`,
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      Swal.fire({
+        title: 'Error',
+        text: 'An error occurred. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      });
+    }
+  });
+
+
+
+  async function fetchCouriers(status = "All") {
+    try {
+      const tableBody = document.getElementById("couriersTable");
+      const NoResult = document.querySelector(".noresult");
+
+      // Show loading spinner
+      tableBody.innerHTML = `
             <tr>
                 <td colspan="10" class="text-center">
                     <div class="spinner-border text-primary" role="status">
@@ -957,119 +1768,776 @@ async function fetchCouriers(status = "All") {
             </tr>
         `;
 
-        const response = await fetch(`/admin/get-couriers?status=${status}`);
-        const couriers = await response.json();
-        if (response.ok) {
-            tableBody.innerHTML = ""; // Clear existing rows
-            NoResult.style.display = "none";
-            if (couriers.length === 0) {
-                NoResult.style.display = "block";
-                return;
-            }
-            populateCouriersTable(couriers);
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: `Error fetching couriers: ${couriers.message || 'Unknown error'}`,
-            });
+      const response = await fetch(`/admin/get-couriers?status=${status}`);
+      const couriers = await response.json();
+      if (response.ok) {
+        tableBody.innerHTML = ""; // Clear existing rows
+        NoResult.style.display = "none";
+        if (couriers.length === 0) {
+          NoResult.style.display = "block";
+          return;
         }
+        populateCouriersTable(couriers);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: `Error fetching couriers: ${couriers.message || 'Unknown error'}`,
+        });
+      }
     } catch (error) {
-        console.error("Error fetching couriers:", error);
+      console.error("Error fetching couriers:", error);
     }
-}
+  }
 
-function populateCouriersTable(couriers) {
+  function populateCouriersTable(couriers) {
     const tableBody = document.getElementById("couriersTable");
     tableBody.innerHTML = ""; // Clear existing rows
-    couriers.forEach(courier => {
-        const row = document.createElement("tr");
 
-        row.innerHTML = `
+    couriers.forEach(courier => {
+      const row = document.createElement("tr");
+
+      // Get zone labels
+      const zoneLabels = getZoneLabels(courier.assignedZones || []);
+
+      row.innerHTML = `
             <th scope="row">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="checkAll[]" value="${courier.courierID}">
                 </div>
             </th>
-            <td class="id"><a href="" class="fw-medium fs-15 link-primary">${courier.courierID}</a></td>
+            <td class="id"><a href="/admin/courier-details/${courier.courierID}" class="fw-medium link-primary">#${courier.courierID}</a></td>
             <td class="courier_name">
                 <div class="d-flex align-items-center">
-                    <img src="${courier.personalPhoto || '/placeholder.svg?height=40&width=40'}" class="courier-avatar me-2" alt="${courier.name}">
+                    <img src="${courier.personalPhoto || '/placeholder.svg?height=40&width=40'}" class="courier-avatar me-2" alt="${courier.name || 'Courier'}">
                     <div>
-                        <h5 class="fs-6 mb-1">${courier.name.split(' ').slice(0, 2).join(' ')}</h5>
-                        <p class="text-muted mb-0">ID: #${courier.courierID}</p>
+                        <h5 class="fs-14 mb-0">${courier.name || 'Unknown'}</h5>
+                        <p class="text-muted mb-0 fs-12">ID: #${courier.courierID}</p>
                     </div>
                 </div>
             </td>
-            <td class="contact fs-13 fw-medium">
-                <div>${courier.phoneNumber}</div>
+            <td class="contact">
+                <div>${courier.phoneNumber || 'N/A'}</div>
             </td>
             <td class="zones">
                 <div class="zone-badge-container">
-                    ${courier.assignedZones.map(zone => `<span class="zone-badge">${zone}</span>`).join('')}
+                    ${zoneLabels.length > 0 ? zoneLabels.map(zone => `<span class="zone-badge">${zone}</span>`).join('') : '<span class="text-muted fs-12">No zones</span>'}
                 </div>
             </td>
             <td class="active_tasks">
                 <div class="d-flex flex-column gap-1">
-                    <div class="badge bg-info-subtle text-info">
+                    <small class="text-info">
                         <i class="ri-truck-line me-1"></i>
-                        ${courier.activeOrders} Orders
-                    </div>
-                    <div class="badge bg-warning-subtle text-warning">
+                        ${courier.activeOrders || 0} Orders
+                    </small>
+                    <small class="text-warning">
                         <i class="ri-takeaway-line me-1"></i>
-                        ${courier.activePickups} Pickups
-                    </div>
+                        ${courier.activePickups || 0} Pickups
+                    </small>
                 </div>
             </td>
             <td class="completed">
-                <div class="d-flex flex-column gap-1">
-                    <div class="badge bg-success-subtle text-success">
-                        <i class="ri-check-line me-1"></i>
-                        ${courier.totalAssignedOrders} Total Orders
-                    </div>
-                    <div class="badge bg-primary-subtle text-primary">
-                        <i class="ri-percent-line me-1"></i>
-                        ${courier.successPercentage}% Success Rate
-                    </div>
+                <div class="text-center">
+                    <div class="fs-14 fw-semibold">${courier.totalAssignedOrders || 0}</div>
+                    <small class="text-muted">${courier.successPercentage || 0}% Success</small>
                 </div>
             </td>
             <td class="completed">
-                <div class="d-flex flex-column gap-1">
-                    <div class="badge bg-success-subtle text-success">
-                        <i class="ri-check-line me-1"></i>
-                        ${courier.totalAssignedPickups} Total Pickups
-                    </div>
+                <div class="text-center">
+                    <div class="fs-14 fw-semibold">${courier.totalAssignedPickups || 0}</div>
                 </div>
             </td>
-
             <td class="status">
                 <span class="badge ${courier.isAvailable ? 'badge-courier-active' : 'badge-courier-inactive'} text-uppercase">${courier.isAvailable ? 'Active' : 'Inactive'}</span>
             </td>
-            <td class="date">${new Date(courier.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
+            <td class="date">${new Date(courier.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
             <td>
                 <div class="dropdown dropdown-fix">
                     <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="ri-more-fill align-middle"></i>
                     </button>
-                    <ul class="dropdown-menu">
-                        <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#assignZonesModal" data-courier-id="${courier.courierID}"><i class="ri-map-pin-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Zones</span></button></li>
-                        <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editCourierModal" data-courier-id="${courier.courierID}"><i class="ri-edit-2-fill align-bottom me-2 text-warning"></i> <span class="fs-6">Edit Courier</span></button></li>
-                        <li><button class="dropdown-item"><i class="ri-delete-bin-6-fill align-bottom me-2 text-danger"></i> <span class="fs-6">Delete Courier</span></button></li>
-                        <li><button class="dropdown-item"><i class="ri-truck-line align-bottom me-2 text-info"></i> <span class="fs-6">View Deliveries</span></button></li>
-                        <li><button class="dropdown-item"><i class="ri-file-chart-line align-bottom me-2 text-primary"></i> <span class="fs-6">Performance Report</span></button></li>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/admin/courier-details/${courier.courierID}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View Details</a></li>
+                        <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#assignZonesModal" data-courier-id="${courier.courierID}"><i class="ri-map-pin-line align-bottom me-2 text-muted"></i> Assign Zones</button></li>
+                        <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editCourierModal" data-courier-id="${courier.courierID}"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</button></li>
+                        <li class="dropdown-divider"></li>
+                        <li><button class="dropdown-item text-danger"><i class="ri-delete-bin-fill align-bottom me-2"></i> Delete</button></li>
                     </ul>
                 </div>
             </td>
         `;
 
-        tableBody.appendChild(row);
+      tableBody.appendChild(row);
     });
-}
+  }
 
-// Fetch couriers on page load
-document.addEventListener("DOMContentLoaded", () => fetchCouriers());
+  // Helper function to get readable zone labels
+  function getZoneLabels(zoneValues) {
+    if (!zoneValues || zoneValues.length === 0) return [];
 
-    
+    const currentLang = getCurrentLanguage();
+    const labels = [];
 
+    zoneValues.forEach(zoneValue => {
+      // If bosta regions data is loaded, try to find the label
+      if (Object.keys(bostaRegionsData).length > 0) {
+        for (const govValue in bostaRegionsData) {
+          const gov = bostaRegionsData[govValue];
+          const area = gov.areas.find(a => a.value === zoneValue);
+          if (area) {
+            labels.push(area.label[currentLang] || area.label.en);
+            return;
+          }
+        }
+      }
+
+      // If not found in Bosta data or data not loaded, use the raw value
+      labels.push(zoneValue);
+    });
+
+    return labels;
+  }
+
+  // Fetch couriers on page load
+  document.addEventListener("DOMContentLoaded", () => fetchCouriers());
+
+  // Function to remove a zone from currently assigned zones
+  async function removeCurrentZone(zoneValue, courierId) {
+    try {
+      // Show confirmation dialog
+      const result = await Swal.fire({
+        title: 'Remove Zone?',
+        text: 'Are you sure you want to remove this zone from the courier?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f06548',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, remove it',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (!result.isConfirmed) {
+        return;
+      }
+
+      // Show loading
+      Swal.fire({
+        title: 'Removing zone...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Fetch current courier data
+      const response = await fetch(`/admin/get-couriers`);
+      const couriers = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch courier data');
+      }
+
+      const courier = couriers.find(c => c.courierID === courierId);
+      if (!courier) {
+        throw new Error('Courier not found');
+      }
+
+      // Remove the zone from the array
+      const updatedZones = courier.assignedZones.filter(z => z !== zoneValue);
+
+      // Update on server
+      const updateResponse = await fetch('/admin/couriers/update-zones', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courierId: courierId,
+          zones: updatedZones,
+          notes: `Zone removed: ${zoneValue}`
+        }),
+      });
+
+      const updateResult = await updateResponse.json();
+
+      if (!updateResponse.ok) {
+        throw new Error(updateResult.message || 'Failed to update zones');
+      }
+
+      // Success - update the display
+      const currentZonesContainer = document.getElementById('currentZones');
+      const currentZoneCountElement = document.getElementById('currentZoneCount');
+
+      if (updatedZones.length > 0) {
+        const zoneLabels = getZoneLabels(updatedZones);
+        currentZonesContainer.innerHTML = updatedZones.map((zoneVal, index) => {
+          const label = zoneLabels[index] || zoneVal;
+          return `<span class="zone-tag" data-zone-value="${zoneVal}">
+                    ${label}
+                    <i class="ri-close-line" onclick="removeCurrentZone('${zoneVal}', '${courierId}')"></i>
+                </span>`;
+        }).join('');
+      } else {
+        currentZonesContainer.innerHTML = '<span class="no-zones-message">No zones currently assigned</span>';
+      }
+
+      // Update count
+      if (currentZoneCountElement) {
+        currentZoneCountElement.textContent = updatedZones.length;
+      }
+
+      // Show success message
+      Swal.fire({
+        icon: 'success',
+        title: 'Zone Removed',
+        text: 'The zone has been successfully removed from the courier.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+      // Refresh the courier table
+      fetchCouriers();
+
+    } catch (error) {
+      console.error('Error removing zone:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to remove zone. Please try again.',
+      });
+    }
+  }
+
+  // ==================== Zone Selection Functionality ====================
+  let bostaRegionsData = {};
+  let selectedZonesForCourier = [];
+  let selectedZonesForAddCourier = [];
+  let currentZoneContext = 'assign'; // 'assign' or 'add'
+
+  // Load Bosta regions data
+  async function loadBostaRegions() {
+    try {
+      const response = await fetch('/assets/js/bosta-regions-data-processed.json');
+      bostaRegionsData = await response.json();
+      renderGovernorateZones();
+    } catch (error) {
+      console.error('Error loading regions data:', error);
+    }
+  }
+
+  // Get current language
+  function getCurrentLanguage() {
+    const htmlLang = document.documentElement.lang;
+    if (htmlLang && htmlLang !== 'en') return htmlLang;
+
+    const cookies = document.cookie.split(';');
+    const langCookie = cookies.find(cookie => cookie.trim().startsWith('language='));
+    if (langCookie) {
+      const lang = langCookie.split('=')[1].trim();
+      if (lang && lang !== 'en') return lang;
+    }
+
+    const storedLang = localStorage.getItem('language');
+    if (storedLang && storedLang !== 'en') return storedLang;
+
+    return 'en';
+  }
+
+  // Get current selected zones based on context
+  function getCurrentSelectedZones() {
+    return currentZoneContext === 'add' ? selectedZonesForAddCourier : selectedZonesForCourier;
+  }
+
+  // Set current selected zones based on context
+  function setCurrentSelectedZones(zones) {
+    if (currentZoneContext === 'add') {
+      selectedZonesForAddCourier = zones;
+    } else {
+      selectedZonesForCourier = zones;
+    }
+  }
+
+  // Render governorates and zones
+  function renderGovernorateZones() {
+    const governorateZoneList = document.getElementById('governorateZoneList');
+    if (!governorateZoneList) return;
+
+    governorateZoneList.innerHTML = '';
+
+    const sortedGovernorates = Object.keys(bostaRegionsData).sort((a, b) => {
+      return bostaRegionsData[a].label.en.localeCompare(bostaRegionsData[b].label.en);
+    });
+
+    const currentZones = getCurrentSelectedZones();
+
+    sortedGovernorates.forEach(govValue => {
+      const gov = bostaRegionsData[govValue];
+      const governorateItem = document.createElement('div');
+      governorateItem.className = 'governorate-item';
+      governorateItem.dataset.governorate = govValue;
+
+      const currentLang = getCurrentLanguage();
+      const govLabel = gov.label[currentLang] || gov.label.en;
+      const areaCount = gov.areas.length;
+
+      governorateItem.innerHTML = `
+            <div class="governorate-header">
+                <div style="display: flex; align-items: center;">
+                    <span>${govLabel}</span>
+                    <span class="area-count-badge">${areaCount}</span>
+                </div>
+                <i class="ri-arrow-down-s-line governorate-arrow"></i>
+            </div>
+            <div class="area-list">
+                ${renderZoneItems(gov.areas, currentZones)}
+            </div>
+        `;
+
+      // Add click handler for the entire governorate card
+      governorateItem.addEventListener('click', function(e) {
+        if (e.target.closest('.area-item')) return;
+
+        const isActive = governorateItem.classList.contains('active');
+        document.querySelectorAll('.governorate-item').forEach(item => {
+          item.classList.remove('active');
+        });
+
+        if (!isActive) {
+          governorateItem.classList.add('active');
+          setTimeout(() => {
+            governorateItem.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }, 150);
+        }
+      });
+
+      governorateZoneList.appendChild(governorateItem);
+    });
+
+    // Add click handlers for zone items
+    setupZoneClickHandlers();
+  }
+
+  // Render zone items
+  function renderZoneItems(areas, selectedZones) {
+    return areas.map((area, index) => {
+      const currentLang = getCurrentLanguage();
+      const areaLabel = area.label[currentLang] || area.label.en;
+      const isSelected = selectedZones.some(z => z.value === area.value);
+
+      return `
+            <div class="area-item ${isSelected ? 'selected' : ''}" data-area-value="${area.value}" data-area-index="${index}">
+                <div class="area-item-text">
+                    <span>${areaLabel}</span>
+                    <i class="ri-check-line" style="display: ${isSelected ? 'block' : 'none'};"></i>
+                </div>
+            </div>
+        `;
+    }).join('');
+  }
+
+  // Setup zone click handlers
+  function setupZoneClickHandlers() {
+    document.querySelectorAll('#governorateZoneList .area-item').forEach(areaItem => {
+      areaItem.addEventListener('click', function(e) {
+        e.stopPropagation();
+
+        const areaValue = this.dataset.areaValue;
+        const govItem = this.closest('.governorate-item');
+        const govValue = govItem.dataset.governorate;
+        const gov = bostaRegionsData[govValue];
+        const area = gov.areas.find(a => a.value === areaValue);
+
+        const currentLang = getCurrentLanguage();
+        const areaLabel = area.label[currentLang] || area.label.en;
+        const govLabel = gov.label[currentLang] || gov.label.en;
+
+        // Get current zones
+        let zones = getCurrentSelectedZones();
+
+        // Toggle selection
+        const existingIndex = zones.findIndex(z => z.value === areaValue);
+
+        if (existingIndex >= 0) {
+          // Deselect
+          zones.splice(existingIndex, 1);
+          this.classList.remove('selected');
+          const checkIcon = this.querySelector('i');
+          if (checkIcon) checkIcon.style.display = 'none';
+        } else {
+          // Select
+          zones.push({
+            value: areaValue,
+            label: areaLabel,
+            governorate: govLabel
+          });
+          this.classList.add('selected');
+          const checkIcon = this.querySelector('i');
+          if (checkIcon) checkIcon.style.display = 'block';
+        }
+
+        // Update zones based on context
+        setCurrentSelectedZones(zones);
+        updateSelectedZoneCount();
+      });
+    });
+  }
+
+  // Update selected zone count
+  function updateSelectedZoneCount() {
+    const zones = getCurrentSelectedZones();
+    const count = zones.length;
+
+    // Update all elements with selectedZoneCount (there are multiple in different modals)
+    document.querySelectorAll('[id="selectedZoneCount"]').forEach(element => {
+      element.textContent = count;
+    });
+  }
+
+  // Update selected zones display
+  function updateSelectedZonesDisplay(context = 'assign') {
+    let selectedZonesTags, noZonesText, countElement;
+    const zones = context === 'add' ? selectedZonesForAddCourier : selectedZonesForCourier;
+
+    if (context === 'add') {
+      selectedZonesTags = document.getElementById('addCourierSelectedZonesTags');
+      noZonesText = document.getElementById('addCourierNoZonesText');
+    } else {
+      selectedZonesTags = document.getElementById('selectedZonesTags');
+      noZonesText = document.getElementById('noZonesText');
+      countElement = document.getElementById('selectedZoneCount');
+    }
+
+    if (!selectedZonesTags) return;
+
+    // Update counter
+    if (countElement) {
+      countElement.textContent = zones.length;
+    }
+
+    if (zones.length === 0) {
+      if (noZonesText) noZonesText.style.display = 'inline';
+      selectedZonesTags.querySelectorAll('.selected-zone-tag, .zone-tag').forEach(tag => tag.remove());
+    } else {
+      if (noZonesText) noZonesText.style.display = 'none';
+
+      selectedZonesTags.innerHTML = '';
+      zones.forEach((zone, index) => {
+        const tag = document.createElement('span');
+        tag.className = 'zone-tag';
+        tag.innerHTML = `
+                ${zone.label}
+                <i class="ri-close-line" data-index="${index}"></i>
+            `;
+
+        // Remove zone on click
+        tag.querySelector('i').addEventListener('click', function(e) {
+          e.stopPropagation();
+          const idx = parseInt(this.dataset.index);
+
+          if (context === 'add') {
+            selectedZonesForAddCourier.splice(idx, 1);
+          } else {
+            selectedZonesForCourier.splice(idx, 1);
+          }
+
+          updateSelectedZonesDisplay(context);
+          renderGovernorateZones(); // Re-render to update checkmarks
+        });
+
+        selectedZonesTags.appendChild(tag);
+      });
+    }
+  }
+
+  // Search functionality for zones
+  document.getElementById('zoneSearchInput')?.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase().trim();
+
+    if (!searchTerm) {
+      document.querySelectorAll('.governorate-item').forEach(item => {
+        item.style.display = 'block';
+        item.classList.remove('active');
+      });
+      document.querySelectorAll('.area-item').forEach(item => {
+        item.style.display = 'block';
+      });
+      return;
+    }
+
+    document.querySelectorAll('.governorate-item').forEach(item => {
+      item.style.display = 'none';
+      item.classList.remove('active');
+    });
+
+    Object.keys(bostaRegionsData).forEach(govValue => {
+      const gov = bostaRegionsData[govValue];
+      const govMatches = gov.label.en.toLowerCase().includes(searchTerm) ||
+        gov.label.ar.includes(searchTerm);
+
+      const matchingAreas = gov.areas.filter(area =>
+        area.label.en.toLowerCase().includes(searchTerm) ||
+        area.value.toLowerCase().includes(searchTerm) ||
+        area.label.ar.includes(searchTerm)
+      );
+
+      if (govMatches || matchingAreas.length > 0) {
+        const governorateItem = document.querySelector(`[data-governorate="${govValue}"]`);
+        if (governorateItem) {
+          governorateItem.style.display = 'block';
+          if (matchingAreas.length > 0) {
+            governorateItem.classList.add('active');
+          }
+
+          governorateItem.querySelectorAll('.area-item').forEach(item => {
+            const areaValue = item.dataset.areaValue;
+            const isMatch = matchingAreas.some(area => area.value === areaValue);
+            item.style.display = isMatch || govMatches ? 'block' : 'none';
+          });
+        }
+      }
+    });
+  });
+
+  // Open zone selection modal for assign zones
+  document.getElementById('openZoneSelectionBtn')?.addEventListener('click', function() {
+    currentZoneContext = 'assign';
+    const zoneSelectionModal = new bootstrap.Modal(document.getElementById('zoneSelectionModal'));
+    zoneSelectionModal.show();
+
+    // Update counter immediately
+    updateSelectedZoneCount();
+
+    // Load regions if not loaded
+    if (Object.keys(bostaRegionsData).length === 0) {
+      loadBostaRegions();
+    } else {
+      renderGovernorateZones();
+    }
+  });
+
+  // Open zone selection modal for add courier
+  document.getElementById('openAddCourierZoneSelectionBtn')?.addEventListener('click', function() {
+    currentZoneContext = 'add';
+    const zoneSelectionModal = new bootstrap.Modal(document.getElementById('zoneSelectionModal'));
+    zoneSelectionModal.show();
+
+    // Update counter immediately
+    updateSelectedZoneCount();
+
+    // Load regions if not loaded
+    if (Object.keys(bostaRegionsData).length === 0) {
+      loadBostaRegions();
+    } else {
+      renderGovernorateZones();
+    }
+  });
+
+  // Confirm zone selection
+  document.getElementById('confirmZoneSelection')?.addEventListener('click', function() {
+    updateSelectedZonesDisplay(currentZoneContext);
+
+    const zoneSelectionModal = bootstrap.Modal.getInstance(document.getElementById('zoneSelectionModal'));
+    if (zoneSelectionModal) {
+      zoneSelectionModal.hide();
+    }
+  });
+
+  // Save zones button
+  document.getElementById('saveZonesBtn')?.addEventListener('click', async function() {
+    const courierId = document.getElementById('courierIdForZones').value;
+    const notes = document.getElementById('zoneNotes').value;
+
+    if (!courierId) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Courier ID not found. Please close and reopen the modal.',
+      });
+      return;
+    }
+
+    if (selectedZonesForCourier.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Zones Selected',
+        text: 'Please select at least one zone to assign to the courier.',
+      });
+      return;
+    }
+
+    // Show loading state
+    const saveBtn = document.getElementById('saveZonesBtn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="ri-loader-4-line ri-spin me-1"></i>Saving...';
+
+    try {
+      const zoneValues = selectedZonesForCourier.map(z => z.value);
+
+      // Make API call to save the zones
+      const response = await fetch('/admin/couriers/update-zones', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courierId: courierId,
+          zones: zoneValues,
+          notes: notes
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.status === 'success') {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: `Successfully assigned ${selectedZonesForCourier.length} zone(s) to ${data.data.name}.`,
+          confirmButtonText: 'OK'
+        }).then(() => {
+          const assignZonesModal = bootstrap.Modal.getInstance(document.getElementById('assignZonesModal'));
+          if (assignZonesModal) {
+            assignZonesModal.hide();
+          }
+
+          // Reset selections
+          selectedZonesForCourier = [];
+          updateSelectedZonesDisplay('assign');
+
+          // Reload courier list
+          fetchCouriers();
+        });
+      } else {
+        throw new Error(data.error || 'Failed to update zones');
+      }
+    } catch (error) {
+      console.error('Error saving zones:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Failed to save zone assignments. Please try again.',
+      });
+    } finally {
+      // Restore button state
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalText;
+    }
+  });
+
+  // Initialize zone selection when assign zones modal opens
+  document.getElementById('assignZonesModal')?.addEventListener('show.bs.modal', async function(event) {
+    // Get the button that triggered the modal
+    const button = event.relatedTarget;
+    const courierId = button?.getAttribute('data-courier-id');
+
+    // Reset notes
+    document.getElementById('zoneNotes').value = '';
+
+    if (courierId) {
+      document.getElementById('courierIdForZones').value = courierId;
+
+      // Fetch courier details
+      try {
+        const response = await fetch(`/admin/get-couriers`);
+        const couriers = await response.json();
+
+        if (response.ok && Array.isArray(couriers)) {
+          const courier = couriers.find(c => c.courierID === courierId);
+
+          if (courier) {
+            // Update courier info
+            document.getElementById('courierNameForZones').textContent = courier.name || 'Unknown';
+            document.getElementById('courierPhoneForZones').textContent = courier.phoneNumber || 'N/A';
+
+            // Update avatar
+            const avatar = document.getElementById('courierAvatarForZones');
+            if (avatar && courier.personalPhoto) {
+              avatar.src = courier.personalPhoto;
+            }
+
+            // Initialize selectedZonesForCourier with existing zones (so new selections are added to them)
+            selectedZonesForCourier = [];
+            if (courier.assignedZones && courier.assignedZones.length > 0) {
+              const currentLang = getCurrentLanguage();
+              // Convert existing zones to the format we need
+              courier.assignedZones.forEach(zoneValue => {
+                // Try to find the zone in bosta data to get proper label
+                let zoneLabel = zoneValue;
+                let govLabel = '';
+
+                if (Object.keys(bostaRegionsData).length > 0) {
+                  for (const govValue in bostaRegionsData) {
+                    const gov = bostaRegionsData[govValue];
+                    const area = gov.areas.find(a => a.value === zoneValue);
+                    if (area) {
+                      zoneLabel = area.label[currentLang] || area.label.en;
+                      govLabel = gov.label[currentLang] || gov.label.en;
+                      break;
+                    }
+                  }
+                }
+
+                selectedZonesForCourier.push({
+                  value: zoneValue,
+                  label: zoneLabel,
+                  governorate: govLabel
+                });
+              });
+            }
+
+            // Update the "Select New Zones" display with existing zones
+            updateSelectedZonesDisplay('assign');
+
+            // Display currently assigned zones with proper labels and delete buttons
+            const currentZonesContainer = document.getElementById('currentZones');
+            const currentZoneCountElement = document.getElementById('currentZoneCount');
+
+            if (currentZonesContainer && courier.assignedZones && courier.assignedZones.length > 0) {
+              const zoneLabels = getZoneLabels(courier.assignedZones);
+              currentZonesContainer.innerHTML = courier.assignedZones.map((zoneValue, index) => {
+                const label = zoneLabels[index] || zoneValue;
+                return `<span class="zone-tag" data-zone-value="${zoneValue}">
+                                ${label}
+                                <i class="ri-close-line" onclick="removeCurrentZone('${zoneValue}', '${courierId}')"></i>
+                            </span>`;
+              }).join('');
+
+              // Update count
+              if (currentZoneCountElement) {
+                currentZoneCountElement.textContent = courier.assignedZones.length;
+              }
+            } else if (currentZonesContainer) {
+              currentZonesContainer.innerHTML = '<span class="no-zones-message">No zones currently assigned</span>';
+              if (currentZoneCountElement) {
+                currentZoneCountElement.textContent = '0';
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching courier details:', error);
+      }
+    }
+
+    // Load regions if needed
+    if (Object.keys(bostaRegionsData).length === 0) {
+      loadBostaRegions();
+    }
+  });
+
+  // Initialize zone selection when add courier modal opens
+  document.getElementById('addCourierModal')?.addEventListener('show.bs.modal', function(event) {
+    // Reset selections
+    selectedZonesForAddCourier = [];
+    updateSelectedZonesDisplay('add');
+
+    // Load regions if needed
+    if (Object.keys(bostaRegionsData).length === 0) {
+      loadBostaRegions();
+    }
+  });
 </script>
-

@@ -85,63 +85,6 @@ setupNumberValidation('shipping-count');
 setupNumberValidation('exchange-current-count');
 setupNumberValidation('exchange-new-count');
 
-// Filter zones based on selected government
-function filterZonesByGovernment(governmentSelect, zoneSelect) {
-    // Get the selected government
-    const selectedGovernment = governmentSelect.value;
-    
-    // Clear the zone select dropdown first
-    zoneSelect.innerHTML = '<option value="">Select Area</option>';
-    
-    // If no government is selected, just leave the empty dropdown
-    if (!selectedGovernment) {
-        // If Choices is attached, sync it
-        if (zoneSelect && zoneSelect.choices) {
-            zoneSelect.choices.clearChoices();
-            zoneSelect.choices.setChoices([{ value: '', label: 'Select Area', selected: true }], 'value', 'label', true);
-        }
-        return;
-    }
-    
-    // Get all optgroups from the dropdown
-    const sourceElement = document.createElement('select');
-    sourceElement.style.display = 'none';
-    sourceElement.innerHTML = document.getElementById('zone-options-template').innerHTML;
-    document.body.appendChild(sourceElement);
-    
-    // Add only relevant optgroups and options based on selected government
-    if (selectedGovernment === 'Cairo') {
-        // Add only Cairo zones
-        sourceElement.querySelectorAll('optgroup[label^="Cairo"]').forEach(optgroup => {
-            zoneSelect.appendChild(optgroup.cloneNode(true));
-        });
-    } else if (selectedGovernment === 'Giza') {
-        // Add only Giza zones
-        sourceElement.querySelectorAll('optgroup[label^="Giza"]').forEach(optgroup => {
-            zoneSelect.appendChild(optgroup.cloneNode(true));
-        });
-    } else if (selectedGovernment === 'Alexandria') {
-        // Add only Alexandria zones
-        sourceElement.querySelectorAll('optgroup[label^="Alexandria"]').forEach(optgroup => {
-            zoneSelect.appendChild(optgroup.cloneNode(true));
-        });
-    }
-    
-    // Clean up the temporary element
-    document.body.removeChild(sourceElement);
-
-    // If Choices.js is enhancing the zone select, update its choices
-    if (zoneSelect && zoneSelect.choices) {
-        // Build a flat choices list from the resulting options
-        const flatOptions = Array.from(zoneSelect.querySelectorAll('option'))
-            .filter(opt => opt.value !== '')
-            .map(opt => ({ value: opt.value, label: opt.textContent }));
-        // Reset and set new choices
-        zoneSelect.choices.clearChoices();
-        zoneSelect.choices.setChoices([{ value: '', label: 'Select Area', selected: true }].concat(flatOptions), 'value', 'label', true);
-    }
-}
-
 // Handle form submission
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('createOrderForm');
@@ -154,36 +97,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const feeDisplay = document.getElementById('totalFee');
     const feeDisplayContainer = document.getElementById('feeDisplayContainer');
     
-    // Setup government and zone filtering
-    const governmentSelect = form.querySelector('select[name="government"]');
-    const zoneSelect = form.querySelector('select[name="zone"]');
+    // Setup government and zone (now using hidden inputs from modal)
+    const governmentInput = form.querySelector('input[name="government"]');
+    const zoneInput = form.querySelector('input[name="zone"]');
     
-    if (governmentSelect && zoneSelect) {
-        // Initialize Choices if available and not already initialized
-        if (window.Choices) {
-            if (!governmentSelect.choices) {
-                try { governmentSelect.choices = new Choices(governmentSelect, { searchEnabled: true, shouldSort: false }); } catch (e) { /* noop */ }
-            }
-            if (!zoneSelect.choices) {
-                try { zoneSelect.choices = new Choices(zoneSelect, { searchEnabled: true, shouldSort: false }); } catch (e) { /* noop */ }
-            }
-        }
-        // Initialize filtering on page load - only when government is already selected
-        if (governmentSelect.value) {
-            filterZonesByGovernment(governmentSelect, zoneSelect);
-        }
-        
-        // Add change event listener to government dropdown
-        governmentSelect.addEventListener('change', function() {
-            filterZonesByGovernment(governmentSelect, zoneSelect);
-            updateFees(); // Recalculate fees when government changes
-        });
-    }
+    // Note: The old select-based logic is replaced by modal-based selection
+    // If you need to add listeners for when values change from the modal, they're already in the main script
 
-    // Function to update fees by calling server API
-    async function updateFees() {
+    // Function to update fees by calling server API (made global for modal access)
+    window.updateFees = async function updateFees() {
         try {
-            const selectedGovernment = form.querySelector('select[name="government"]').value;
+            const selectedGovernment = form.querySelector('input[name="government"]').value;
             if (!selectedGovernment) {
                 feeDisplay.textContent = '0';
                 return;
@@ -234,9 +158,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Add event listeners for zone, government, order type, and express shipping changes
-    form.querySelector('select[name="zone"]').addEventListener('change', updateFees);
-    form.querySelector('select[name="government"]').addEventListener('change', updateFees);
+    // Add event listeners for order type and express shipping changes
+    // Note: Government and zone are now handled by the modal in the main script
     
     orderTypeRadios.forEach(radio => {
         radio.addEventListener('change', function() {
@@ -276,8 +199,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const fullName = form.querySelector('input[name="fullName"]');
         const phoneNumber = form.querySelector('input[name="phoneNumber"]');
         const address = form.querySelector('textarea[name="address"]');
-        const government = form.querySelector('select[name="government"]');
-        const zone = form.querySelector('select[name="zone"]');
+        const government = form.querySelector('input[name="government"]');
+        const zone = form.querySelector('input[name="zone"]');
 
         if (!fullName.value.trim() || !phoneNumber.value.trim() || !address.value.trim() || !government.value || !zone.value) {
             Swal.fire({

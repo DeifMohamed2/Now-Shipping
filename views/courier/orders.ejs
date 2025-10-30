@@ -276,7 +276,14 @@
       showLoadingSpinner();
       currentFilter = status;
 
-      const response = await fetch(`/courier/get-orders?orderType=${status}`);
+      const response = await fetch(`/courier/get-orders?orderType=${status}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
       const orders = await response.json();
 
       if (response.ok) {
@@ -741,8 +748,10 @@
       const response = await fetch('/courier/update-order-status', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
           orderId,
           status,

@@ -2,6 +2,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
 
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 <%- contentFor('body') %>
 <style>
   /* Fix for dropdown menus in tables */
@@ -23,6 +24,7 @@
   .table-responsive{
     overflow: scroll !important;
   }
+  .table-responsive.table-card{ max-height:70vh; overflow-y:auto; min-height:300px; }
 </style>
 <div class="row">
   <div class="col-lg-12">
@@ -294,7 +296,6 @@
 <!--end row-->
 
 <%- contentFor('FooterJs') %>
-
 <script>
   async function assignDeliveryMan(orderId, zone) {
     console.log(zone, orderId);
@@ -392,42 +393,81 @@
     });
   }
 
-  async function fetchOrders(orderType = "All",status='') {
-    try {
+  const ORDERS_PER_PAGE_ADMIN = 30;
+  let currentPageAdmin = 1;
+  let paginationAdmin = { currentPage:1, totalPages:1, totalCount:0 };
 
-      // Show loading spinner
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="9" class="text-center">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-          </td>
-        </tr>
-      `;
-
-
-      const response = await fetch(`/admin/get-orders?orderType=${orderType}&status=${status}`);
-      const orders = await response.json();
-      if (response.ok) {
-        tableBody.innerHTML = ""; // Clear existing rows
-        NoResult.style.display = "none";
-        if (orders.length === 0) {
-          NoResult.style.display = "block";
-          return;
-        }
-        populateOrdersTable(orders);
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: `Error fetching orders: ${orders.message || 'Unknown error'}`,
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
+  function getAdminFilters(){
+    const search = document.querySelector('.search')?.value?.trim() || '';
+    const status = document.getElementById('orderStatus')?.value || 'all';
+    const payment = document.getElementById('idPayment')?.value || 'all';
+    const dateInput = document.getElementById('demo-datepicker');
+    let dateFrom = '', dateTo = '';
+    if (dateInput && dateInput.value) {
+      if (dateInput.value.includes('to')) {
+        const [from, to] = dateInput.value.split('to').map(s => s.trim());
+        dateFrom = from; dateTo = to;
+      } else { dateFrom = dateInput.value.trim(); dateTo = dateInput.value.trim(); }
     }
+    return { search, status, paymentType: payment, dateFrom, dateTo };
   }
+
+  async function fetchOrders(orderType = "All", status='all', page=1) {
+    try {
+      tableBody.innerHTML = `
+        <tr><td colspan="11" class="text-center">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+        </td></tr>`;
+      const filters = getAdminFilters();
+      const params = new URLSearchParams();
+      params.append('limit', ORDERS_PER_PAGE_ADMIN);
+      params.append('page', page);
+      if (orderType && orderType !== 'All') params.append('orderType', orderType);
+      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+      if (filters.paymentType && filters.paymentType !== 'all') params.append('paymentType', filters.paymentType);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters.dateTo) params.append('dateTo', filters.dateTo);
+
+      const response = await fetch(`/admin/get-orders?${params.toString()}`);
+      const data = await response.json();
+      if (response.ok && data.orders) {
+        paginationAdmin = data.pagination;
+        tableBody.innerHTML = "";
+        NoResult.style.display = data.orders.length === 0 ? "block" : "none";
+        if (data.orders.length) populateOrdersTable(data.orders);
+        updateAdminPagination();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Oops...', text: `Error fetching orders: ${data.message || 'Unknown error'}` });
+      }
+    } catch (error) { console.error("Error fetching orders:", error); }
+  }
+
+  function updateAdminPagination(){
+    const prev = document.querySelector('.pagination-prev');
+    const next = document.querySelector('.pagination-next');
+    const ul = document.querySelector('.listjs-pagination');
+    if (!ul) return; ul.innerHTML = '';
+    const { currentPage, totalPages } = paginationAdmin;
+    if (totalPages > 1 || totalPages === 0) {
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, currentPage + 2);
+      if (currentPage <= 3) endPage = Math.min(totalPages, 5);
+      if (currentPage + 2 > totalPages) startPage = Math.max(1, totalPages - 4);
+      for (let p = startPage; p <= endPage; p++) {
+        const li = document.createElement('li');
+        li.className = `page-item${p === currentPage ? ' active' : ''}`;
+        const a = document.createElement('a'); a.className = 'page-link'; a.textContent = p; a.href = 'javascript:void(0);'; a.onclick = () => gotoAdminPage(p);
+        li.appendChild(a); ul.appendChild(li);
+      }
+    }
+    if (prev) { prev.classList.toggle('disabled', currentPage === 1); prev.onclick = () => gotoAdminPage(currentPage - 1); }
+    if (next) { next.classList.toggle('disabled', currentPage === totalPages); next.onclick = () => gotoAdminPage(currentPage + 1); }
+  }
+
+  function gotoAdminPage(p){ if (p < 1 || p > paginationAdmin.totalPages) return; currentPageAdmin = p; fetchOrders(document.querySelector('.orderType.active')?.id || 'All', document.getElementById('orderStatus')?.value || 'all', currentPageAdmin); }
+
+  function SearchData() { currentPageAdmin = 1; fetchOrders(document.querySelector('.orderType.active')?.id || 'All', document.getElementById('orderStatus')?.value || 'all', 1); }
 
   function populateOrdersTable(orders) {
     tableBody.innerHTML = ""; // Clear existing rows
@@ -514,13 +554,6 @@
   document.addEventListener("DOMContentLoaded", () => fetchOrders());
 
 
-  function SearchData() {
-    const search = document.querySelector('.search').value;
-    const status = document.getElementById('orderStatus').value;
-    const payment = document.getElementById('idPayment').value;
-    const activeOrderType = document.querySelector('.orderType.active').id;
-    fetchOrders(activeOrderType, status);
-  }
   function getStatusDetails(status) {
     let badgeClass = '';
     let statusText = '';
@@ -745,6 +778,32 @@
 <!-- <script src="/assets/js/pages/ecommerce-order.init.js"></script> -->
 
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
-
+<script src="/assets/libs/flatpickr/flatpickr.min.js"></script>
+<script>
+  (function initDatePicker(){
+    function init() {
+      var el = document.getElementById('demo-datepicker');
+      if (!el) return;
+      try {
+        flatpickr(el, {
+          mode: 'range',
+          dateFormat: 'd M, Y',
+          allowInput: true
+        });
+        el.addEventListener('focus', function(){ if (el._flatpickr) { el._flatpickr.open(); } });
+      } catch (e) {
+        console.error('Flatpickr init error:', e);
+      }
+    }
+    if (typeof window.flatpickr === 'undefined') {
+      var s = document.createElement('script');
+      s.src = '/assets/libs/flatpickr/flatpickr.min.js';
+      s.onload = init;
+      document.head.appendChild(s);
+    } else {
+      init();
+    }
+  })();
+</script>
 
 <!-- <script src="/assets/rJS/business/orders.js"></script> -->

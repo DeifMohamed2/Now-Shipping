@@ -644,38 +644,89 @@ const get_ordersPage = async (req, res) => {
 };
 
 const get_orders = async (req, res) => {
-  const { orderType, statusCategory } = req.query;
   try {
-    let query = { business: req.userData._id };
-    
+    const {
+      page = 1,
+      limit = 50,
+      orderType,
+      status,
+      statusCategory,
+      paymentType, // amountType (e.g. COD, CD, CC, NA)
+      dateFrom,
+      dateTo,
+      search
+    } = req.query;
+
+    // Build query
+    const query = { business: req.userData._id };
+
     // Filter by order type if provided
-    if (orderType && statusHelper.ORDER_TYPES[orderType]) {
+    if (orderType && orderType !== 'all') {
       query['orderShipping.orderType'] = orderType;
     }
-    
+
+    // Filter by status if provided
+    if (status && status !== 'all') {
+      query.orderStatus = status;
+    }
+
     // Filter by status category if provided
-    if (statusCategory && statusHelper.STATUS_CATEGORIES[statusCategory]) {
+    if (statusCategory && statusCategory !== 'all') {
       query.statusCategory = statusCategory;
     }
     
-    // Get orders with filters
-    const orders = await Order.find(query).sort({ orderDate: -1, createdAt: -1 });
-    
-    // Enhance orders with status information
+    // Filter by payment/amount type
+    if (paymentType && paymentType !== 'all') {
+      query['orderShipping.amountType'] = paymentType;
+    }
+
+    // Date range filter
+    if (dateFrom || dateTo) {
+      query.orderDate = {};
+      if (dateFrom) query.orderDate.$gte = new Date(dateFrom);
+      if (dateTo) query.orderDate.$lte = new Date(dateTo);
+    }
+
+    // Text search across key fields
+    if (search && search.trim() !== '') {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { orderNumber: searchRegex },
+        { 'orderCustomer.fullName': searchRegex },
+        { 'orderCustomer.phoneNumber': searchRegex },
+        { 'orderShipping.productDescription': searchRegex }
+      ];
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const orders = await Order.find(query)
+      .sort({ orderDate: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    const totalCount = await Order.countDocuments(query);
+
+    // Enhance orders with status info
     const enhancedOrders = orders.map(order => {
       const orderObj = order.toObject();
       orderObj.statusLabel = statusHelper.getOrderStatusLabel(order.orderStatus);
       orderObj.statusDescription = statusHelper.getOrderStatusDescription(order.orderStatus);
       orderObj.categoryClass = statusHelper.getCategoryClass(order.statusCategory);
       orderObj.categoryColor = statusHelper.getCategoryColor(order.statusCategory);
-      
-      // Add fast shipping indicator
       orderObj.isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
-      
       return orderObj;
     });
-    
-    res.status(200).json(enhancedOrders || []);
+
+    res.status(200).json({
+      orders: enhancedOrders || [],
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalCount,
+        hasNext: skip + orders.length < totalCount,
+        hasPrev: parseInt(page) > 1
+      }
+    });
   } catch (error) {
     console.error('Error in orders:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -2155,27 +2206,62 @@ const get_pickupPage = (req, res) => {
 
 const get_pickups = async (req, res) => {
   try {
-    const { pickupType, statusCategory } = req.query;
-    let query = { business: req.userData._id };
-    
-    // Handle legacy pickupType parameter for backward compatibility
+    const {
+      page = 1,
+      limit = 30,
+      status, // picikupStatus or statusCategory mapping
+      statusCategory,
+      dateFrom,
+      dateTo,
+      search,
+      pickupType // Upcoming / Completed
+    } = req.query;
+
+    const query = { business: req.userData._id };
+
+    // Legacy pickupType handling to keep original UX
     if (pickupType === 'Upcoming') {
       query.statusCategory = { $in: [statusHelper.STATUS_CATEGORIES.NEW, statusHelper.STATUS_CATEGORIES.PROCESSING] };
     } else if (pickupType === 'Completed') {
       query.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
     }
-    
-    // Override with direct status category if provided
+
+    // Map status filters
+    if (status && status !== 'all') {
+      query.picikupStatus = status;
+    }
+
     if (statusCategory && statusHelper.STATUS_CATEGORIES[statusCategory]) {
       query.statusCategory = statusCategory;
     }
-    
-    // Get pickups with filters
+
+    // Date range filter (pickupDate)
+    if (dateFrom || dateTo) {
+      query.pickupDate = {};
+      if (dateFrom) query.pickupDate.$gte = new Date(dateFrom);
+      if (dateTo) query.pickupDate.$lte = new Date(dateTo);
+    }
+
+    // Text search
+    if (search && search.trim() !== '') {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { pickupNumber: searchRegex },
+        { phoneNumber: searchRegex }
+      ];
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
     const pickups = await Pickup.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ pickupDate: -1, createdAt: -1 })
       .populate('business')
-      .populate('assignedDriver');
-    
+      .populate('assignedDriver')
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const totalCount = await Pickup.countDocuments(query);
+
     // Enhance pickups with status information
     const enhancedPickups = pickups.map(pickup => {
       const pickupObj = pickup.toObject();
@@ -2185,8 +2271,17 @@ const get_pickups = async (req, res) => {
       pickupObj.categoryColor = statusHelper.getCategoryColor(pickup.statusCategory);
       return pickupObj;
     });
-    
-    res.status(200).json(enhancedPickups || []);
+
+    res.status(200).json({
+      pickups: enhancedPickups || [],
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        totalCount,
+        hasNext: skip + pickups.length < totalCount,
+        hasPrev: parseInt(page) > 1
+      }
+    });
   } catch (error) {
     console.error('Error in pickups:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });

@@ -50,6 +50,8 @@ router.get('/get-couriers', adminController.get_couriers);
 
 router.post('/couriers/create-courier', adminController.createCourier);
 
+router.put('/couriers/update-zones', adminController.updateCourierZones);
+
 // couriers-follow-up
 
 router.get('/couriers-follow-up', adminController.get_couriersFollowUp);
@@ -220,7 +222,10 @@ router.get(
 );
 
 // FCM Token Management routes
-router.post('/notifications/cleanup-tokens', notificationController.cleanupInvalidTokens);
+router.post(
+  '/notifications/cleanup-tokens',
+  notificationController.cleanupInvalidTokens
+);
 router.post('/notifications/test-token', notificationController.testUserToken);
 
 // Financial Processing Management routes
@@ -279,9 +284,18 @@ router.delete('/api/shop/products/:id', adminController.deleteProduct);
 
 router.get('/api/shop/orders', adminController.getShopOrders);
 router.get('/api/shop/orders/:id', adminController.getShopOrder);
-router.put('/api/shop/orders/:id/status', adminController.updateShopOrderStatus);
-router.put('/api/shop/orders/:id/assign-courier', adminController.assignCourierToShopOrder);
-router.post('/api/shop/orders/assign-multiple-couriers', adminController.assignMultipleCouriersToShopOrders);
+router.put(
+  '/api/shop/orders/:id/status',
+  adminController.updateShopOrderStatus
+);
+router.put(
+  '/api/shop/orders/:id/assign-courier',
+  adminController.assignCourierToShopOrder
+);
+router.post(
+  '/api/shop/orders/assign-multiple-couriers',
+  adminController.assignMultipleCouriersToShopOrders
+);
 router.get('/api/shop/couriers-by-zone', adminController.get_deliveryMenByZone);
 router.get('/api/couriers', adminController.get_couriers);
 router.get('/api/admin/couriers', adminController.getAllCouriers);

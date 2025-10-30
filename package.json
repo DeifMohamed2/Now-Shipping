@@ -49,8 +49,10 @@
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^39.0.2",
+    "@google-cloud/translate": "^9.2.1",
     "@simonwep/pickr": "^1.9.0",
     "@tarekraafat/autocomplete.js": "^10.2.7",
+    "@vitalets/google-translate-api": "^9.2.1",
     "aos": "^2.3.4",
     "apexcharts": "^4.5.0",
     "axios": "^1.12.2",
