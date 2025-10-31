@@ -632,22 +632,22 @@ const get_orders = async (req, res) => {
     const query = { business: req.userData._id };
 
     // Filter by order type if provided
-    if (orderType && orderType !== 'all') {
+    if (orderType && orderType !== 'All') {
       query['orderShipping.orderType'] = orderType;
     }
 
     // Filter by status if provided
-    if (status && status !== 'all') {
+    if (status && status !== 'All') {
       query.orderStatus = status;
     }
 
     // Filter by status category if provided
-    if (statusCategory && statusCategory !== 'all') {
+    if (statusCategory && statusCategory !== 'All') {
       query.statusCategory = statusCategory;
     }
     
     // Filter by payment/amount type
-    if (paymentType && paymentType !== 'all') {
+    if (paymentType && paymentType !== 'All') {
       query['orderShipping.amountType'] = paymentType;
     }
 
