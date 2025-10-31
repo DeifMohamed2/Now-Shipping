@@ -44,6 +44,31 @@ async function authenticateUser(req, res, next) {
       return res.status(401).redirect('/login');
     }
 
+    // If the business account is not completed, restrict access to everything except dashboard pages
+    const normalizedRole = (user && user.role ? String(user.role).toLowerCase() : '');
+    const isCompleted = Boolean(user && user.isCompleted);
+    if (normalizedRole === 'business' && !isCompleted) {
+      const allowedWhenIncomplete = new Set(['/dashboard', '/completionConfirm', '/request-verification']);
+
+      if (!allowedWhenIncomplete.has(req.path)) {
+        // Expose flag to templates if needed
+        res.locals.accountIncomplete = true;
+
+        // For API/JSON requests, respond with 403; otherwise, redirect to dashboard
+        if (
+          req.path.startsWith('/api/') ||
+          req.headers['content-type'] === 'application/json' ||
+          req.xhr ||
+          (req.headers['accept'] && req.headers['accept'].includes('application/json'))
+        ) {
+          return res
+            .status(403)
+            .json({ error: 'Account not completed. Access restricted to dashboard.' });
+        }
+        return res.redirect('/business/dashboard');
+      }
+    }
+
     next(); // Move to the next middleware
   } catch (error) {
     console.error('Authentication error:', error);

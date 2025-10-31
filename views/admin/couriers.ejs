@@ -558,8 +558,8 @@
   }
 
   .assign-zones-header {
-    background: white;
-    color: var(--text-dark);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: #fff;
     padding: 1.25rem 1.5rem;
     border-radius: 8px 8px 0 0;
     border-bottom: 1px solid var(--border-color);
@@ -577,7 +577,7 @@
   .assign-zones-header .modal-title i {
     font-size: 1.25rem;
     margin-right: 0.5rem;
-    color: var(--text-medium);
+    color: #fff;
   }
 
   .assign-zones-header .modal-subtitle {
@@ -588,7 +588,7 @@
   }
 
   .assign-zones-header .btn-close {
-    color: var(--text-dark);
+    filter: invert(1);
   }
 
   .assign-zones-body {
@@ -710,7 +710,7 @@
     background: #f8f9fa;
     border-radius: 6px;
     padding: 0.875rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--primary-light);
     min-height: 60px;
     max-height: 140px;
     overflow-y: auto;
@@ -745,8 +745,51 @@
 
   .zone-tag:hover {
     background: #f8f9fa;
-    border-color: var(--danger-color);
-    color: var(--danger-color);
+    border-color: var(--primary-color);
+    color: var(--primary-hover);
+  }
+
+  /* Light coloring for governorates and areas */
+  .governorate-item {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    background: #fff;
+  }
+  .governorate-item .governorate-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #fafafa;
+  }
+  .governorate-item.active .governorate-header {
+    background: rgba(253, 182, 20, 0.12);
+  }
+  .area-list {
+    padding: 0.5rem 0.75rem 0.75rem;
+  }
+  #governorateZoneList .area-item {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin: 0.35rem 0.25rem;
+    background: #fff;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  #governorateZoneList .area-item .area-item-text i {
+    color: var(--primary-color);
+  }
+  #governorateZoneList .area-item:hover {
+    background: #fdf8e6;
+    border-color: var(--primary-light);
+  }
+  #governorateZoneList .area-item.selected {
+    background: rgba(253, 182, 20, 0.15);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(253, 182, 20, 0.12) inset;
   }
 
   .zone-tag i {

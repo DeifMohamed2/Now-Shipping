@@ -461,6 +461,14 @@ const orderSchema = new mongoose.Schema(
         required: false
       }
     },
+
+    // Delivery OTP for customer verification (24h validity)
+    deliveryOtp: {
+      otpHash: { type: String, required: false, default: null },
+      expiresAt: { type: Date, required: false, default: null },
+      verifiedAt: { type: Date, required: false, default: null },
+      attempts: { type: Number, required: true, default: 0 }
+    },
   },
   {
     timestamps: true,

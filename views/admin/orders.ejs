@@ -806,4 +806,14 @@
   })();
 </script>
 
+<script>
+  // Ensure backdrop is cleaned when any modal is closed
+  document.addEventListener('hidden.bs.modal', function () {
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(function(b){ b.remove(); });
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('padding-right');
+  });
+</script>
+
 <!-- <script src="/assets/rJS/business/orders.js"></script> -->
