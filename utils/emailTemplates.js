@@ -144,8 +144,6 @@ const getEmailBaseTemplate = (title, content, buttonText = null, buttonLink = nu
         
         .cta-button:hover {
             background: linear-gradient(135deg, #f39720 0%, #e8850e 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(253, 182, 20, 0.4);
         }
         
         .order-details {
@@ -228,16 +226,7 @@ const getEmailBaseTemplate = (title, content, buttonText = null, buttonLink = nu
             font-size: 14px;
         }
         
-        .unsubscribe {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-top: 20px;
-        }
         
-        .unsubscribe a {
-            color: #fdb614;
-            text-decoration: none;
-        }
         
         /* Responsive design */
         @media only screen and (max-width: 600px) {
@@ -298,14 +287,34 @@ const getEmailBaseTemplate = (title, content, buttonText = null, buttonLink = nu
                 <a href="#">Twitter</a> | 
                 <a href="#">LinkedIn</a>
             </div>
-            <div class="unsubscribe">
-                <a href="#">Unsubscribe</a> | 
-                <a href="#">Update Preferences</a>
-            </div>
         </div>
     </div>
 </body>
 </html>`;
+};
+
+/**
+ * Email Verification Template
+ */
+const getEmailVerificationTemplate = (userName, verificationLink) => {
+  const content = `
+    <h2>🔐 Verify Your Email Address</h2>
+    <p>Hi ${userName || 'there'},</p>
+    <p>Thanks for creating an account with Now Shipping. Please confirm that <strong>this is your email address</strong> to finish setting up your account.</p>
+    <div class="highlight-box">
+      <p><strong>Why verification?</strong> It keeps your account secure and enables important notifications about your orders, payouts, and account activity.</p>
+    </div>
+    <p>If the button below does not work, copy and paste this link into your browser:</p>
+    <p style="word-break: break-all; color: #2b71b9;">${verificationLink}</p>
+  `;
+
+  return getEmailBaseTemplate(
+    'Verify your email address',
+    content,
+    'Verify Email',
+    verificationLink,
+    'If you did not request this, you can safely ignore this email.'
+  );
 };
 
 /**
@@ -632,6 +641,7 @@ const getWelcomeTemplate = (businessData) => {
 
 module.exports = {
   getEmailBaseTemplate,
+  getEmailVerificationTemplate,
   getOrderDeliveryTemplate,
   getDailyCashCycleTemplate,
   getMoneyReleaseTemplate,

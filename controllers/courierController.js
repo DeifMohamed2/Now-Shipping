@@ -2122,7 +2122,10 @@ const getCourierShopOrderDetailsPage = async (req, res) => {
 // Get courier shop orders
 const getCourierShopOrders = async (req, res) => {
   try {
-    const courierId = req.courierData._id;
+    const courierId = (req.courierData && req.courierData._id) || req.courierId || req.userId;
+    if (!courierId) {
+      return res.status(401).json({ error: 'Unauthorized: courier ID missing' });
+    }
     const { status } = req.query;
 
     const query = { courier: courierId };
@@ -2147,7 +2150,14 @@ const getCourierShopOrders = async (req, res) => {
 const getCourierShopOrderDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    const courierId = req.courierData._id;
+    const courierId = (req.courierData && req.courierData._id) || req.courierId || req.userId;
+    if (!courierId) {
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(401).json({ error: 'Unauthorized: courier ID missing' });
+      }
+      req.flash('error', 'Unauthorized');
+      return res.redirect('/courier/shop-orders');
+    }
 
     const order = await ShopOrder.findOne({ _id: id, courier: courierId })
       .populate('business', 'brandInfo phone email')
@@ -2189,7 +2199,14 @@ const updateCourierShopOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, location, notes } = req.body;
-    const courierId = req.courierData._id;
+    const courierId = (req.courierData && req.courierData._id) || req.courierId || req.userId;
+    if (!courierId) {
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(401).json({ error: 'Unauthorized: courier ID missing' });
+      }
+      req.flash('error', 'Unauthorized');
+      return res.redirect('/courier/shop-orders');
+    }
 
     const order = await ShopOrder.findOne({ _id: id, courier: courierId });
 
@@ -2251,7 +2268,7 @@ const updateCourierShopOrderStatus = async (req, res) => {
         order.orderNumber,
         status,
         {
-          courierName: req.courierData.name,
+          courierName: req.courierData ? req.courierData.name : 'Courier',
           previousStatus: previousStatus,
           updatedAt: new Date(),
           notes: notes || '',

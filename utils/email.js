@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const emailTemplates = require('./emailTemplates');
+const { getEmailConfig } = require('./emailConfig');
 
 
 class EmailService {
@@ -12,24 +13,18 @@ class EmailService {
    * Initialize email transporter with professional settings
    */
   initializeTransporter() {
+    const cfg = getEmailConfig();
     this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
-      auth: {
-        user: process.env.EMAIL_USERNAME,
-        pass: process.env.EMAIL_PASSWORD
-      },
-      // Anti-spam settings
-      tls: {
-        rejectUnauthorized: false
-      },
-      // Professional headers
+      host: cfg.host,
+      port: cfg.port,
+      secure: cfg.secure,
+      auth: cfg.auth,
+      tls: { rejectUnauthorized: false },
       headers: {
         'X-Mailer': 'Order Company Platform',
         'X-Priority': '3',
-        'X-MSMail-Priority': 'Normal'
-      }
+        'X-MSMail-Priority': 'Normal',
+      },
     });
 
     // Verify transporter configuration
@@ -53,10 +48,11 @@ class EmailService {
    */
   async sendEmail(options) {
     try {
+      const cfg = getEmailConfig();
       const mailOptions = {
         from: {
           name: 'Now Shipping',
-          address: process.env.EMAIL_FROM
+          address: cfg.from,
         },
         to: options.email,
         subject: options.subject,
@@ -145,6 +141,19 @@ class EmailService {
       email: businessData.email,
       subject: '🎉 Welcome to Order Company!',
       html: html
+    });
+  }
+
+  /**
+   * Send email verification
+   */
+  async sendVerificationEmail(user, token, baseUrl = process.env.BUSINESS_BASE_URL || process.env.APP_BASE_URL || 'http://localhost:6098') {
+    const verificationLink = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${token}`;
+    const html = emailTemplates.getEmailVerificationTemplate(user?.name, verificationLink);
+    return await this.sendEmail({
+      email: user.email,
+      subject: 'Verify your email address',
+      html,
     });
   }
 

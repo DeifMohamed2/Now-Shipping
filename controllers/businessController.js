@@ -15,15 +15,7 @@ const { emailService } = require('../utils/email');
 require('../models/courier');
 require('../models/shopProduct');
 require('../models/shopOrder');
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: Number(process.env.SMTP_PORT || 465),
-  secure: (process.env.SMTP_SECURE || 'true') === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+// Transporter is centralized in utils/email via emailService
 
 //================================================ Dashboard  ================================================= //
 // Simple in-memory cache for dashboard data
@@ -577,53 +569,12 @@ const completionConfirm = async (req, res) => {
 };
 
 
-function sendVerificationEmail(user, token) {
-  console.log('Sending verification email to:', user.email);
-
-  const verificationLink = `http://localhost:6098/verify-email?token=${token}`;
-
-  const mailOptions = {
-    from: '"NowShipping" <no-reply@nowshipping.com>', // Use a real domain if possible
-    to: user.email,
-    subject: 'Verify your NowShipping email address',
-    text: `
-Hello ${user.name},
-
-Thank you for registering with NowShipping!
-
-Please verify your email by clicking the link below:
-
-${verificationLink}
-
-If you didn't create this account, you can safely ignore this email.
-
-Regards,  
-The NowShipping Team
-    `,
-    html: `
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
-  <h2 style="color: #333;">Welcome to NowShipping, ${user.name}!</h2>
-  <p style="font-size: 16px; color: #555;">
-    Thanks for signing up. To get started, please verify your email address by clicking the button below:
-  </p>
-  <div style="text-align: center; margin: 30px 0;">
-    <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-size: 16px;">Verify Email</a>
-  </div>
-  <p style="font-size: 14px; color: #888;">If the button above doesn't work, copy and paste this link into your browser:</p>
-  <p style="font-size: 14px; color: #888;">${verificationLink}</p>
-  <hr style="margin: 20px 0;">
-  <p style="font-size: 12px; color: #999;">If you didn't create an account, you can ignore this email.</p>
-</div>
-    `,
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('Email send failed:', error);
-    } else {
-      console.log('Verification email sent:', info.response || info);
-    }
-  });
+async function sendVerificationEmail(user, token) {
+  try {
+    await emailService.sendVerificationEmail(user, token);
+  } catch (e) {
+    console.error('Email send failed:', e);
+  }
 }
 
 //

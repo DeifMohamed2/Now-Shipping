@@ -7,16 +7,10 @@ const crypto = require('crypto');
 const OtpVerification = require('../models/OtpVerification');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const sms = require('../utils/sms');
+const { emailService } = require('../utils/email');
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,   
-    auth: {
-        user: 'deifm81@gmail.com',
-        pass: 'wqxm esqo vfvh bsjl'
-    }
-});
+// Transporter moved to centralized emailService
 
 
 
@@ -79,32 +73,12 @@ const privacyPolicyPage = (req, res) => {
 
 //================================================= Authentication =========================================================
 
-function sendVerificationEmail(user, token) {
-    console.log(user.email);
-  const mailOptions = {
-    to: user.email,
-    subject: 'Email Verification',
-    html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-            <h2 style="text-align: center; color: #333;">Email Verification</h2>
-            <p style="font-size: 16px; color: #555;">Hello ${user.name},</p>
-            <p style="font-size: 16px; color: #555;">Thank you for registering. Please click the button below to verify your email address:</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <a href="http://localhost:6098/verify-email?token=${token}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">Verify Email</a>
-            </div>
-            <p style="font-size: 16px; color: #555;">If you did not create an account, no further action is required.</p>
-            <p style="font-size: 16px; color: #555;">Regards,<br>Your Company</p>
-            </div>
-        `,
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-    }
-  });
+async function sendVerificationEmail(user, token) {
+  try {
+    await emailService.sendVerificationEmail(user, token);
+  } catch (e) {
+    console.log('Verification email send failed:', e.message);
+  }
 }
 
 const verifyEmailBytoken = async (req, res) => {
@@ -272,34 +246,11 @@ const sendOTP = async (req, res) => {
   const smsMessage = `Your NowShipping verification code is: ${otp}`;
 
   try {
-    // const response = await axios.post(
-    //   'https://bulk.whysms.com/api/v3/sms/send',
-    //   {
-    //     recipient: internationalNumber,
-    //     sender_id: 'WhySMS Test', 
-    //     type: 'plain',
-    //     message: smsMessage,
-    //   },
-    //   {
-    //     headers: {
-    //       Authorization:
-    //         'Bearer 555|eouTObaho6DFjDs5S9mLojMI4lNi7VDmqMLMRcrKe5373dd8',
-    //       'Content-Type': 'application/json',
-    //       Accept: 'application/json',
-    //     },
-    //   }
-    // );
-
-    // const data = response.data;
-
-    // if (data.status !== 'success') {
-    //   console.error('WhySMS API error:', data);
-    //   return res.status(500).json({ message: 'Failed to send OTP via SMS' });
-    // }
+    await sms.sendSms({ recipient: internationalNumber, message: smsMessage });
 
     return res.status(200).json({ message: `OTP sent successfully: ${otp}` });
   } catch (err) {
-    console.error('SMS error:', err.response?.data || err.message);
+    console.error('SMS error:', err.details || err.message);
     return res.status(500).json({ message: 'SMS service error' });
   }
 };
