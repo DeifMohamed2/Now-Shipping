@@ -12,9 +12,24 @@
   <div class="dropdown sidebar-user m-2 rounded shadow-sm">
     <button type="button" class="btn w-100 d-flex justify-content-between align-items-center" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       <span class="d-flex align-items-center gap-2">
-        <img class="rounded-circle header-profile-user" src="assets/images/users/avatar-1.jpg" alt="Header Avatar">
+        <% 
+          // Get courier data
+          let courierName = '';
+          let courierPhoto = '/assets/images/users/avatar-1.jpg';
+          
+          if (typeof courierData !== 'undefined' && courierData) {
+            courierName = courierData.name || 'Courier';
+            courierPhoto = courierData.profileImage || '/assets/images/users/avatar-1.jpg';
+          } else if (typeof courier !== 'undefined' && courier) {
+            courierName = courier.name || 'Courier';
+            courierPhoto = courier.profileImage || '/assets/images/users/avatar-1.jpg';
+          } else {
+            courierName = 'Courier';
+          }
+        %>
+        <img class="rounded-circle header-profile-user" src="<%= courierPhoto %>" alt="<%= courierName %>" onerror="this.src='/assets/images/users/avatar-1.jpg'" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #F39720;">
         <span class="text-start">
-          <span class="d-block fw-semibold sidebar-user-name-text" style="color: #212529; font-size: 14px;">Anna Adame</span>
+          <span class="d-block fw-semibold sidebar-user-name-text" style="color: #212529; font-size: 14px;"><%= courierName %></span>
           <span class="d-block fs-12 sidebar-user-name-sub-text" style="color: #6c757d;"><i class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span class="align-middle">Online</span>
           </span>
         </span>
@@ -23,22 +38,18 @@
     <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg py-2">
       <!-- item-->
       <div class="dropdown-header px-3 py-2">
-        <span style="color: #212529; font-weight: 600;">Welcome Anna!</span>
+        <span style="color: #212529; font-weight: 600;">Welcome <%= courierName %>!</span>
       </div>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="pages-profile">
-        <i class="mdi mdi-account-circle fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Profile</span>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="/courier/dashboard">
+        <i class="mdi mdi-view-dashboard fs-16 align-middle me-2" style="color: #F39720;"></i>
+        <span class="align-middle" style="color: #212529;">Dashboard</span>
       </a>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="apps-chat">
-        <i class="mdi mdi-message-text-outline fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Messages</span>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="/courier/orders">
+        <i class="mdi mdi-package-variant fs-16 align-middle me-2" style="color: #F39720;"></i>
+        <span class="align-middle" style="color: #212529;">My Orders</span>
       </a>
       <div class="dropdown-divider my-2"></div>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="pages-profile-settings">
-        <i class="mdi mdi-cog-outline fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Settings</span>
-      </a>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="auth-logout-basic">
+      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="/logout">
         <i class="mdi mdi-logout fs-16 align-middle me-2" style="color: #F39720;"></i>
         <span class="align-middle" style="color: #212529;">Logout</span>
       </a>

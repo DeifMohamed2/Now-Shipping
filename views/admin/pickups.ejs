@@ -590,6 +590,78 @@
     return { badgeClass, statusText };
   }
 
+  // Render grouped pickups (returned by /admin/get-pickups) into the admin table
+  if (typeof populatePickupsTable !== 'function') {
+    function populatePickupsTable(groupedPickups) {
+      try {
+        tableBody.innerHTML = "";
+        const groups = Array.isArray(groupedPickups) ? groupedPickups : [];
+        groups.forEach((group) => {
+          const city = group?._id || 'Unknown City';
+          const cityHeaderRow = document.createElement('tr');
+          cityHeaderRow.innerHTML = `<td colspan="10" class="bg-light fw-semibold text-uppercase">${city}</td>`;
+          tableBody.appendChild(cityHeaderRow);
+
+          (group.pickups || []).forEach((pickup) => {
+            const row = document.createElement('tr');
+
+            if (pickup.picikupStatus === 'new') {
+              row.classList.add('table-warning');
+            } else if (pickup.picikupStatus === 'rejected' || pickup.picikupStatus === 'returned') {
+              row.classList.add('table-danger');
+            }
+
+            const details = getPickupStatusDetails(pickup.picikupStatus);
+            const businessName = pickup.business?.brandInfo?.brandName || pickup.business?.name || '';
+            const businessCity = pickup.business?.pickUpAdress?.city || city || '';
+            const businessAddress = pickup.business?.pickUpAdress?.adressDetails || '';
+            const driverName = pickup.assignedDriver?.name ? pickup.assignedDriver.name.split(' ').slice(0,2).join(' ') : 'Not Assigned';
+
+            row.innerHTML = `
+              <th scope="row">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="checkAll[]" value="${pickup.pickupNumber}">
+                </div>
+              </th>
+              <td class="id"><a href="/admin/pickup-details/${pickup.pickupNumber}" class="fw-medium link-primary">${pickup.pickupNumber}</a></td>
+              <td class="business">${businessName}</td>
+              <td class="pickup_address">
+                ${businessAddress}<br>
+                <span class="text-muted">${businessCity}</span>
+              </td>
+              <td class="contact_info">${pickup.phoneNumber || ''}</td>
+              <td class="pickup_date">
+                ${pickup.pickupDate ? new Date(pickup.pickupDate).toLocaleDateString('en-US', { weekday: 'long' }) : ''}<br>
+                ${pickup.pickupDate ? new Date(pickup.pickupDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+              </td>
+              <td class="number_of_items text-center">${pickup.numberOfOrders || 0}</td>
+              <td class="status"><span class="badge text-uppercase fs-6 ${details.badgeClass}">${details.statusText}</span></td>
+              <td class="delivery_man">${driverName}</td>
+              <td>
+                <div class="dropdown dropdown-fix">
+                  <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ri-more-fill align-middle"></i>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="/admin/pickup-details/${pickup.pickupNumber}"><i class="ri-eye-fill align-bottom me-2 text-primary"></i> <span class="fs-6">View Details</span></a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="assignDeliveryMan('${pickup._id}', '${businessCity.replace(/'/g, "\\'")}')"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span></a></li>
+                  </ul>
+                </div>
+              </td>
+            `;
+
+            tableBody.appendChild(row);
+          });
+        });
+
+        // Handle empty state
+        NoResult.style.display = groups.length ? 'none' : 'block';
+      } catch (e) {
+        console.error('Error rendering pickups table:', e);
+      }
+    }
+  }
+
 </script>
 
 

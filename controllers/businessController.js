@@ -343,7 +343,25 @@ const getDashboardData = async (req, res) => {
         }
       ];
 
-      const [stats] = await Order.aggregate(statsPipeline);
+      const [stats, revenueByMonth, ordersByMonth] = await Promise.all([
+        Order.aggregate(statsPipeline),
+        // Revenue by month for this business (completed & returnCompleted)
+        Order.aggregate([
+          { $match: { business: businessId, orderStatus: { $in: ['completed', 'returnCompleted'] } } },
+          { $project: { m: { $month: { $ifNull: ['$completedDate', '$updatedAt'] } }, y: { $year: { $ifNull: ['$completedDate', '$updatedAt'] } }, amount: { $ifNull: ['$feeBreakdown.total', '$orderFees'] } } },
+          { $group: { _id: { y: '$y', m: '$m' }, revenue: { $sum: '$amount' }, orders: { $sum: 1 } } },
+          { $sort: { '_id.y': -1, '_id.m': -1 } },
+          { $limit: 9 }
+        ]),
+        // Orders by month (all statuses)
+        Order.aggregate([
+          { $match: { business: businessId } },
+          { $project: { m: { $month: '$orderDate' }, y: { $year: '$orderDate' } } },
+          { $group: { _id: { y: '$y', m: '$m' }, count: { $sum: 1 } } },
+          { $sort: { '_id.y': -1, '_id.m': -1 } },
+          { $limit: 9 }
+        ]),
+      ]).then(results => [results[0][0], results[1], results[2]]);
       const result = stats || {};
 
       // Calculate rates
@@ -378,6 +396,8 @@ const getDashboardData = async (req, res) => {
           expectedCash: result.expectedCash || 0,
           collectedCash: result.collectedCash || 0,
           collectionRate,
+          revenueByMonth: revenueByMonth || [],
+          ordersByMonth: ordersByMonth || [],
         },
       };
     }

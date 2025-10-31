@@ -30,6 +30,162 @@ const getDashboardPage = (req, res) => {
   });
 };
 
+// Admin Dashboard Data (aggregated)
+const getAdminDashboardData = async (req, res) => {
+  try {
+    // Basic order status buckets used across the app
+    const statusQuery = (status) => ({ orderStatus: status });
+
+    const [
+      totalOrders,
+      completedCount,
+      headingToCustomerCount,
+      newOrdersCount,
+      headingToYouCount,
+      awaitingActionCount,
+      recentOrders,
+      recentPickups,
+      activeCouriers,
+      onlineCouriers,
+      ordersByStatus,
+      ordersByCategory,
+      ordersByGovernment,
+      revenueByMonth,
+      amountTypeBreakdown,
+      expressBreakdown,
+      courierAssignments30d,
+      returnRateMonthly,
+      ordersByMonth,
+    ] = await Promise.all([
+      Order.countDocuments({}),
+      Order.countDocuments(statusQuery('completed')),
+      Order.countDocuments(statusQuery('headingToCustomer')),
+      Order.countDocuments(statusQuery('new')),
+      Order.countDocuments(statusQuery('headingToYou')),
+      Order.countDocuments({ orderStatus: { $in: ['waiting', 'awaitingAction', 'retryScheduled'] } }),
+      Order.find({}, 'orderNumber orderStatus orderBusiness businessId createdAt')
+        .sort({ createdAt: -1 })
+        .limit(7)
+        .lean(),
+      Pickup.find({}, 'pickupNumber pickupDate numberOfOrders picikupStatus createdAt')
+        .sort({ createdAt: -1 })
+        .limit(7)
+        .lean(),
+      Courier.countDocuments({ isActive: true }),
+      Courier.countDocuments({ isOnline: true }).catch(() => 0),
+      // Orders by status
+      Order.aggregate([
+        { $group: { _id: '$orderStatus', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      // Orders by high-level category
+      Order.aggregate([
+        { $group: { _id: '$statusCategory', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      // Top governments
+      Order.aggregate([
+        { $group: { _id: '$orderCustomer.government', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 8 }
+      ]),
+      // Revenue by month (last 9 months) based on completed/returnCompleted
+      Order.aggregate([
+        { $match: { orderStatus: { $in: ['completed', 'returnCompleted'] } } },
+        { $project: { m: { $month: { $ifNull: ['$completedDate', '$updatedAt'] } }, y: { $year: { $ifNull: ['$completedDate', '$updatedAt'] } }, amount: { $ifNull: ['$feeBreakdown.total', '$orderFees'] } } },
+        { $group: { _id: { y: '$y', m: '$m' }, revenue: { $sum: '$amount' }, orders: { $sum: 1 } } },
+        { $sort: { '_id.y': -1, '_id.m': -1 } },
+        { $limit: 9 }
+      ]),
+      // Amount type breakdown (COD/CD/CC/NA)
+      Order.aggregate([
+        { $group: { _id: '$orderShipping.amountType', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      // Express vs Standard
+      Order.aggregate([
+        { $group: { _id: { $ifNull: ['$orderShipping.isExpressShipping', false] }, count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      // Courier assignment load last 30 days
+      Order.aggregate([
+        { $match: { createdAt: { $gte: new Date(Date.now() - 30*24*60*60*1000) }, deliveryMan: { $ne: null } } },
+        { $group: { _id: '$deliveryMan', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+      ]),
+      // Return rates by month (last 9 months)
+      Order.aggregate([
+        { $match: { orderStatus: { $in: ['returned', 'returnCompleted', 'deliveryFailed'] } } },
+        { $project: { m: { $month: { $ifNull: ['$updatedAt', '$orderDate'] } }, y: { $year: { $ifNull: ['$updatedAt', '$orderDate'] } } } },
+        { $group: { _id: { y: '$y', m: '$m' }, count: { $sum: 1 } } },
+        { $sort: { '_id.y': -1, '_id.m': -1 } },
+        { $limit: 9 }
+      ]),
+      // Orders by month (fallback for chart when no revenue months)
+      Order.aggregate([
+        { $project: { m: { $month: '$orderDate' }, y: { $year: '$orderDate' } } },
+        { $group: { _id: { y: '$y', m: '$m' }, count: { $sum: 1 } } },
+        { $sort: { '_id.y': -1, '_id.m': -1 } },
+        { $limit: 9 }
+      ]),
+    ]);
+
+    const completionRate = totalOrders > 0 ? Math.round((completedCount / totalOrders) * 100) : 0;
+
+    const dashboardData = {
+      orderStats: {
+        totalOrders,
+        completedCount,
+        completionRate,
+        headingToCustomerCount,
+        newOrdersCount,
+        headingToYouCount,
+        awaitingActionCount,
+      },
+      recentData: {
+        recentOrders,
+        recentPickups,
+      },
+      financialStats: {
+        totalRevenue: Array.isArray(revenueByMonth) ? revenueByMonth.reduce((s,r)=>s+(r.revenue||0),0) : 0,
+        revenueByMonth,
+        ordersByMonth,
+      },
+      courierStats: {
+        active: activeCouriers || 0,
+        online: onlineCouriers || 0,
+        assignments30d: courierAssignments30d,
+      },
+      slaStats: {
+        avgDeliveryDays: 0,
+      },
+      issueStats: {
+        open: 0,
+        cancellationsToday: 0,
+      },
+      returnStats: {
+        inProcess: 0,
+        completed: 0,
+        failedDeliveries: 0,
+        monthly: returnRateMonthly,
+      },
+      breakdowns: {
+        byStatus: ordersByStatus,
+        byCategory: ordersByCategory,
+        byGovernment: ordersByGovernment,
+        amountType: amountTypeBreakdown,
+        express: expressBreakdown,
+      }
+    };
+
+    res.status(200).json({ status: 'success', dashboardData });
+  } catch (error) {
+    console.error('Error loading admin dashboard data:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to load dashboard data' });
+  }
+};
+
 // ======================================== Orders Page ======================================== //
 
 const get_ordersPage = (req, res) => {
@@ -1264,11 +1420,9 @@ const assignCourierToStock = async (req, res) => {
           order.orderStatus === 'headingToCustomer' ||
           order.orderStatus === 'headingToYou'
         ) {
-          return res
-            .status(400)
-            .json({
-              error: `Order ${order.orderNumber} Can\'t be assigned to courier because it is on the way to customer`,
-            });
+          return res.status(400).json({
+            error: `Order ${order.orderNumber} Can\'t be assigned to courier because it is on the way to customer`,
+          });
         }
       }
     }
@@ -1638,11 +1792,9 @@ const add_return_to_stock = async (req, res) => {
       order.orderStages.returnAtWarehouse.notes =
         'Return order details updated by admin';
     } else {
-      return res
-        .status(400)
-        .json({
-          error: `Order status '${order.orderStatus}' cannot be changed to return stock. Allowed statuses: completed, returnInitiated, waitingAction, returnToWarehouse, rejected`,
-        });
+      return res.status(400).json({
+        error: `Order status '${order.orderStatus}' cannot be changed to return stock. Allowed statuses: completed, returnInitiated, waitingAction, returnToWarehouse, rejected`,
+      });
     }
 
     await order.save();
@@ -1696,11 +1848,9 @@ const assignCourierToReturn = async (req, res) => {
         order.orderStatus === 'headingToCustomer' ||
         order.orderStatus === 'headingToYou'
       ) {
-        return res
-          .status(400)
-          .json({
-            error: `Order ${order.orderNumber} is already assigned to a courier`,
-          });
+        return res.status(400).json({
+          error: `Order ${order.orderNumber} is already assigned to a courier`,
+        });
       }
 
       // Check if this is a Return order type
@@ -1795,11 +1945,9 @@ const convertFailedDeliveryToReturn = async (req, res) => {
       deliverOrder.orderStatus !== 'canceled' &&
       deliverOrder.orderShipping.orderType !== 'Deliver'
     ) {
-      return res
-        .status(400)
-        .json({
-          error: 'Order is not eligible for automatic return conversion',
-        });
+      return res.status(400).json({
+        error: 'Order is not eligible for automatic return conversion',
+      });
     }
 
     // Create a new Return order (R2) automatically
@@ -2176,11 +2324,9 @@ const assignCourierToReturnToBusiness = async (req, res) => {
         order.orderStatus !== 'returnAtWarehouse' &&
         order.orderStatus !== 'inReturnStock'
       ) {
-        return res
-          .status(400)
-          .json({
-            error: `Order ${order.orderNumber} is not at warehouse or in return stock`,
-          });
+        return res.status(400).json({
+          error: `Order ${order.orderNumber} is not at warehouse or in return stock`,
+        });
       }
 
       order.deliveryMan = courierId;
@@ -2225,11 +2371,9 @@ const assignCourierToReturnToBusiness = async (req, res) => {
       // Don't fail the assignment if notification fails
     }
 
-    res
-      .status(200)
-      .json({
-        message: 'Courier assigned to deliver returns to business successfully',
-      });
+    res.status(200).json({
+      message: 'Courier assigned to deliver returns to business successfully',
+    });
   } catch (error) {
     console.error('Error in assignCourierToReturnToBusiness:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -2535,6 +2679,267 @@ const get_businessesPage = (req, res) => {
     page_title: 'Businesses',
     folder: 'Pages',
   });
+};
+
+const get_businesses = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 12,
+      search,
+      status,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      dateFrom,
+      dateTo,
+    } = req.query;
+
+    const query = { role: 'business', isCompleted: true };
+
+    // Search functionality
+    if (search && search.trim() !== '') {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex },
+        { 'brandInfo.brandName': searchRegex },
+        { 'brandInfo.industry': searchRegex },
+      ];
+    }
+
+    // Filter by verification status
+    if (status === 'verified') {
+      query.isVerified = true;
+    } else if (status === 'unverified') {
+      query.isVerified = false;
+    }
+
+    // Date range filter
+    if (dateFrom || dateTo) {
+      query.createdAt = {};
+      if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) query.createdAt.$lte = new Date(dateTo);
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    const businesses = await User.find(query)
+      .select(
+        '-password -verificationToken -verificationTokenExpires -verificationOTP -verificationOTPExpires'
+      )
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Get statistics for each business
+    const businessesWithStats = await Promise.all(
+      businesses.map(async (business) => {
+        const [
+          totalOrders,
+          completedOrders,
+          totalPickups,
+          totalShopOrders,
+          totalTransactions,
+        ] = await Promise.all([
+          Order.countDocuments({ business: business._id }),
+          Order.countDocuments({
+            business: business._id,
+            statusCategory: 'SUCCESSFUL',
+          }),
+          Pickup.countDocuments({ business: business._id }),
+          ShopOrder.countDocuments({ business: business._id }),
+          Transaction.countDocuments({ business: business._id }),
+        ]);
+
+        const successRate =
+          totalOrders > 0
+            ? ((completedOrders / totalOrders) * 100).toFixed(1)
+            : 0;
+
+        return {
+          ...business,
+          stats: {
+            totalOrders,
+            completedOrders,
+            totalPickups,
+            totalShopOrders,
+            totalTransactions,
+            successRate,
+          },
+        };
+      })
+    );
+
+    const totalCount = await User.countDocuments(query);
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+    res.status(200).json({
+      businesses: businessesWithStats,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalCount,
+        limit: parseInt(limit),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching businesses:', error);
+    res.status(500).json({ error: 'Failed to fetch businesses' });
+  }
+};
+
+const get_businessDetailsPage = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+
+    const business = await User.findById(businessId)
+      .select(
+        '-password -verificationToken -verificationTokenExpires -verificationOTP -verificationOTPExpires'
+      )
+      .lean();
+
+    if (!business || business.role !== 'business') {
+      return res.status(404).render('auth/auth-404', {
+        title: '404',
+        page_title: 'Business Not Found',
+        folder: 'Pages',
+      });
+    }
+
+    res.render('admin/business-details', {
+      title: business.brandInfo?.brandName || business.name,
+      page_title: 'Business Details',
+      folder: 'Pages',
+      businessId: business._id.toString(),
+    });
+  } catch (error) {
+    console.error('Error loading business details page:', error);
+    res.status(500).send('Internal server error');
+  }
+};
+
+const get_businessDetails = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+
+    const business = await User.findById(businessId)
+      .select(
+        '-password -verificationToken -verificationTokenExpires -verificationOTP -verificationOTPExpires'
+      )
+      .lean();
+
+    if (!business || business.role !== 'business') {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    // Get comprehensive statistics
+    const [orders, pickups, shopOrders, transactions, releases] =
+      await Promise.all([
+        Order.find({ business: business._id })
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .populate('deliveryMan', 'courierName phoneNumber')
+          .lean(),
+        Pickup.find({ business: business._id })
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .populate('assignedDriver', 'courierName phoneNumber')
+          .lean(),
+        ShopOrder.find({ business: business._id })
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .populate('courier', 'courierName phoneNumber')
+          .lean(),
+        Transaction.find({ business: business._id })
+          .sort({ createdAt: -1 })
+          .limit(20)
+          .lean(),
+        Release.find({ business: business._id }).sort({ createdAt: -1 }).lean(),
+      ]);
+
+    // Calculate statistics
+    const stats = {
+      orders: {
+        total: await Order.countDocuments({ business: business._id }),
+        successful: await Order.countDocuments({
+          business: business._id,
+          statusCategory: 'SUCCESSFUL',
+        }),
+        processing: await Order.countDocuments({
+          business: business._id,
+          statusCategory: 'PROCESSING',
+        }),
+        unsuccessful: await Order.countDocuments({
+          business: business._id,
+          statusCategory: 'UNSUCCESSFUL',
+        }),
+        new: await Order.countDocuments({
+          business: business._id,
+          statusCategory: 'NEW',
+        }),
+      },
+      pickups: {
+        total: await Pickup.countDocuments({ business: business._id }),
+        completed: await Pickup.countDocuments({
+          business: business._id,
+          picikupStatus: 'completed',
+        }),
+        pending: await Pickup.countDocuments({
+          business: business._id,
+          picikupStatus: { $in: ['new', 'pendingPickup', 'driverAssigned'] },
+        }),
+      },
+      shopOrders: {
+        total: await ShopOrder.countDocuments({ business: business._id }),
+        delivered: await ShopOrder.countDocuments({
+          business: business._id,
+          status: 'delivered',
+        }),
+        pending: await ShopOrder.countDocuments({
+          business: business._id,
+          status: { $in: ['pending', 'confirmed', 'assigned'] },
+        }),
+      },
+      financial: {
+        currentBalance: business.balance || 0,
+        totalTransactions: transactions.length,
+        totalReleases: releases.length,
+        pendingReleases: releases.filter((r) => r.releaseStatus === 'pending')
+          .length,
+      },
+    };
+
+    // Calculate revenue breakdown
+    const revenueBreakdown = transactions.reduce(
+      (acc, trans) => {
+        if (trans.transactionAmount > 0) {
+          acc.income += trans.transactionAmount;
+        } else {
+          acc.expenses += Math.abs(trans.transactionAmount);
+        }
+        return acc;
+      },
+      { income: 0, expenses: 0 }
+    );
+
+    res.status(200).json({
+      business,
+      stats,
+      revenueBreakdown,
+      recentOrders: orders,
+      recentPickups: pickups,
+      recentShopOrders: shopOrders,
+      recentTransactions: transactions,
+      releases,
+    });
+  } catch (error) {
+    console.error('Error fetching business details:', error);
+    res.status(500).json({ error: 'Failed to fetch business details' });
+  }
 };
 
 // ======================================== Logout ======================================== //
@@ -4099,6 +4504,7 @@ const getAllCouriers = async (req, res) => {
 
 module.exports = {
   getDashboardPage,
+  getAdminDashboardData,
   get_deliveryMenByZone,
 
   // Orders
@@ -4151,7 +4557,11 @@ module.exports = {
   rescheduleRelease,
   releaseFunds,
 
+  // Businesses
   get_businessesPage,
+  get_businesses,
+  get_businessDetailsPage,
+  get_businessDetails,
 
   // Tickets
   get_ticketsPage,

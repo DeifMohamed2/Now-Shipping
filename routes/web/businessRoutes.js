@@ -27,6 +27,11 @@ async function authenticateUser(req, res, next) {
     req.userId = decode.userId;
     const user = await User.findOne({ _id: decode.userId });
     req.userData = user; // Attach user data to request object
+
+    // Make userData available to all views
+    res.locals.userData = user;
+    res.locals.user = user;
+
     if (!user) {
       res.clearCookie('token');
       // For API requests, return JSON error instead of redirect
@@ -210,13 +215,19 @@ router.get(
 // Shop routes
 router.get('/shop', businessController.getBusinessShopPage);
 router.get('/shop/orders', businessController.getBusinessShopOrdersPage);
-router.get('/shop/orders/:id', businessController.getBusinessShopOrderDetailsPage);
+router.get(
+  '/shop/orders/:id',
+  businessController.getBusinessShopOrderDetailsPage
+);
 
 // Shop API routes
 router.get('/api/shop/products', businessController.getAvailableProducts);
 router.post('/api/shop/orders', businessController.createShopOrder);
 router.get('/api/shop/orders', businessController.getBusinessShopOrders);
-router.get('/api/shop/orders/:id', businessController.getBusinessShopOrderDetails);
+router.get(
+  '/api/shop/orders/:id',
+  businessController.getBusinessShopOrderDetails
+);
 router.put('/api/shop/orders/:id/cancel', businessController.cancelShopOrder);
 
 // tickets

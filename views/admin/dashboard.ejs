@@ -1,883 +1,422 @@
 <%- contentFor('HeaderCss') %>
-<!-- jsvectormap css -->
-<link href="/assets/libs/jsvectormap/jsvectormap.min.css" rel="stylesheet" type="text/css" />
-
-<!--Swiper slider css-->
-<link href="/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/assets/rCSS/business.css">
+<style>
+  .dashboard-card{border-radius:1rem;box-shadow:0 4px 20px rgba(0,0,0,0.05);transition:all .3s ease;overflow:hidden}
+  .dashboard-card:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.1)}
+  .order-status{display:inline-block;padding:.25rem .75rem;border-radius:2rem;font-size:.75rem;font-weight:600}
+  .order-status.delivered{background:rgba(10,179,156,.1);color:#0ab39c}
+  .order-status.pending{background:rgba(243,151,32,.1);color:#F39720}
+  .order-status.processing{background:rgba(64,81,137,.1);color:#405189}
+  .order-status.cancelled{background:rgba(220,53,69,.1);color:#dc3545}
+  .text-primary-custom{color:#F39720!important}
+  .bg-neutral-light{background:#f8f9fa!important}
+  .btn-primary-custom{background:#F39720;border-color:#F39720;color:#fff}
+  .btn-primary-custom:hover{background:#E58809;border-color:#E58809}
+  .small-muted{font-size:.875rem;color:#6c757d}
+</style>
 <%- contentFor('body') %>
 
 <div class="row">
   <div class="col">
     <div class="h-100">
-      <div class="row mb-3 pb-1">
+      <div class="row mb-3">
         <div class="col-12">
           <div class="d-flex align-items-lg-center flex-lg-row flex-column">
             <div class="flex-grow-1">
-              <h4 class="fs-16 mb-1">Good Morning, Anna!</h4>
-              <p class="text-muted mb-0">Here's what's happening with your store today.</p>
+              <% 
+                const hour = new Date().getHours();
+                let greeting = 'Good Evening';
+                if (hour < 12) greeting = 'Good Morning';
+                else if (hour < 18) greeting = 'Good Afternoon';
+              %>
+              <h4 class="fs-16 mb-1 fw-semibold"><%= greeting %>, Admin! 👋</h4>
+              <p class="text-muted mb-0">Platform-wide analytics and live operations at a glance.</p>
             </div>
             <div class="mt-3 mt-lg-0">
-              <form action="javascript:void(0);">
-                <div class="row g-3 mb-0 align-items-center">
-                  <div class="col-sm-auto">
-                    <div class="input-group">
-                      <input type="text" class="form-control border-0 minimal-border dash-filter-picker shadow" data-provider="flatpickr" data-range-date="true" data-date-format="d M, Y" data-deafult-date="01 Jan 2022 to 31 Jan 2022">
-                      <div class="input-group-text bg-primary border-primary text-white">
-                        <i class="ri-calendar-2-line"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <!--end col-->
-                  <div class="col-auto">
-                    <button type="button" class="btn btn-soft-success material-shadow-none"><i class="ri-add-circle-line align-middle me-1"></i> Add Product</button>
-                  </div>
-                  <!--end col-->
-                  <div class="col-auto">
-                    <button type="button" class="btn btn-soft-info btn-icon waves-effect material-shadow-none waves-light layout-rightside-btn"><i class="ri-pulse-line"></i></button>
-                  </div>
-                  <!--end col-->
-                </div>
-                <!--end row-->
-              </form>
+              <a href="/admin/orders" class="btn btn-primary-custom">
+                <i class="ri-file-list-3-line align-middle me-1"></i> Go to Orders
+              </a>
             </div>
-          </div><!-- end card header -->
+          </div>
         </div>
-        <!--end col-->
       </div>
-      <!--end row-->
 
-      <div class="row">
-        <div class="col-xl-3 col-md-6">
-          <!-- card -->
-          <div class="card card-animate">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="flex-grow-1 overflow-hidden">
-                  <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> Total Earnings</p>
-                </div>
-                <div class="flex-shrink-0">
-                  <h5 class="text-success fs-14 mb-0">
-                    <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +16.24 %
-                  </h5>
-                </div>
-              </div>
-              <div class="d-flex align-items-end justify-content-between mt-4">
-                <div>
-                  <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span class="counter-value" data-target="559.25">0</span>k </h4>
-                  <a href="" class="text-decoration-underline">View net earnings</a>
-                </div>
-                <div class="avatar-sm flex-shrink-0">
-                  <span class="avatar-title bg-success-subtle rounded fs-3">
-                    <i class="bx bx-dollar-circle text-success"></i>
-                  </span>
-                </div>
-              </div>
-            </div><!-- end card body -->
-          </div><!-- end card -->
-        </div><!-- end col -->
+      <!-- Top Analytics: Status, Category, Geography, Payments, Shipping, Couriers, Returns -->
+      
 
-        <div class="col-xl-3 col-md-6">
-          <!-- card -->
-          <div class="card card-animate">
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card dashboard-card">
+            <div class="card-header d-flex align-items-center">
+              <h4 class="card-title mb-0">Today's Overview</h4>
+              <div class="ms-auto"><span class="text-muted small" id="adminLastUpdated">Loading...</span></div>
+            </div>
             <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="flex-grow-1 overflow-hidden">
-                  <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Orders</p>
-                </div>
-                <div class="flex-shrink-0">
-                  <h5 class="text-danger fs-14 mb-0">
-                    <i class="ri-arrow-right-down-line fs-13 align-middle"></i> -3.57 %
-                  </h5>
+              <div class="row g-3" id="adminDashboardStats">
+                <div class="col-12 text-center py-4">
+                  <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                  <p class="mt-2 text-muted">Loading dashboard data...</p>
                 </div>
               </div>
-              <div class="d-flex align-items-end justify-content-between mt-4">
-                <div>
-                  <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="36894">0</span></h4>
-                  <a href="" class="text-decoration-underline">View all orders</a>
-                </div>
-                <div class="avatar-sm flex-shrink-0">
-                  <span class="avatar-title bg-info-subtle rounded fs-3">
-                    <i class="bx bx-shopping-bag text-info"></i>
-                  </span>
-                </div>
-              </div>
-            </div><!-- end card body -->
-          </div><!-- end card -->
-        </div><!-- end col -->
-
-        <div class="col-xl-3 col-md-6">
-          <!-- card -->
-          <div class="card card-animate">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="flex-grow-1 overflow-hidden">
-                  <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Customers</p>
-                </div>
-                <div class="flex-shrink-0">
-                  <h5 class="text-success fs-14 mb-0">
-                    <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +29.08 %
-                  </h5>
-                </div>
-              </div>
-              <div class="d-flex align-items-end justify-content-between mt-4">
-                <div>
-                  <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="183.35">0</span>M </h4>
-                  <a href="" class="text-decoration-underline">See details</a>
-                </div>
-                <div class="avatar-sm flex-shrink-0">
-                  <span class="avatar-title bg-warning-subtle rounded fs-3">
-                    <i class="bx bx-user-circle text-warning"></i>
-                  </span>
-                </div>
-              </div>
-            </div><!-- end card body -->
-          </div><!-- end card -->
-        </div><!-- end col -->
-
-        <div class="col-xl-3 col-md-6">
-          <!-- card -->
-          <div class="card card-animate">
-            <div class="card-body">
-              <div class="d-flex align-items-center">
-                <div class="flex-grow-1 overflow-hidden">
-                  <p class="text-uppercase fw-medium text-muted text-truncate mb-0"> My Balance</p>
-                </div>
-                <div class="flex-shrink-0">
-                  <h5 class="text-muted fs-14 mb-0">
-                    +0.00 %
-                  </h5>
-                </div>
-              </div>
-              <div class="d-flex align-items-end justify-content-between mt-4">
-                <div>
-                  <h4 class="fs-22 fw-semibold ff-secondary mb-4">$<span class="counter-value" data-target="165.89">0</span>k </h4>
-                  <a href="" class="text-decoration-underline">Withdraw money</a>
-                </div>
-                <div class="avatar-sm flex-shrink-0">
-                  <span class="avatar-title bg-primary-subtle rounded fs-3">
-                    <i class="bx bx-wallet text-primary"></i>
-                  </span>
-                </div>
-              </div>
-            </div><!-- end card body -->
-          </div><!-- end card -->
-        </div><!-- end col -->
-      </div> <!-- end row-->
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="row">
         <div class="col-xl-8">
-          <div class="card">
-            <div class="card-header border-0 align-items-center d-flex">
-              <h4 class="card-title mb-0 flex-grow-1">Revenue</h4>
-              <div>
-                <button type="button" class="btn btn-soft-secondary material-shadow-none btn-sm">
-                  ALL
-                </button>
-                <button type="button" class="btn btn-soft-secondary material-shadow-none btn-sm">
-                  1M
-                </button>
-                <button type="button" class="btn btn-soft-secondary material-shadow-none btn-sm">
-                  6M
-                </button>
-                <button type="button" class="btn btn-soft-primary material-shadow-none btn-sm">
-                  1Y
-                </button>
-              </div>
-            </div><!-- end card header -->
-
-            <div class="card-header p-0 border-0 bg-light-subtle">
-              <div class="row g-0 text-center">
-                <div class="col-6 col-sm-3">
-                  <div class="p-3 border border-dashed border-start-0">
-                    <h5 class="mb-1"><span class="counter-value" data-target="7585">0</span></h5>
-                    <p class="text-muted mb-0">Orders</p>
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-6 col-sm-3">
-                  <div class="p-3 border border-dashed border-start-0">
-                    <h5 class="mb-1">$<span class="counter-value" data-target="22.89">0</span>k</h5>
-                    <p class="text-muted mb-0">Earnings</p>
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-6 col-sm-3">
-                  <div class="p-3 border border-dashed border-start-0">
-                    <h5 class="mb-1"><span class="counter-value" data-target="367">0</span></h5>
-                    <p class="text-muted mb-0">Refunds</p>
-                  </div>
-                </div>
-                <!--end col-->
-                <div class="col-6 col-sm-3">
-                  <div class="p-3 border border-dashed border-start-0 border-end-0">
-                    <h5 class="mb-1 text-success"><span class="counter-value" data-target="18.92">0</span>%</h5>
-                    <p class="text-muted mb-0">Conversation Ratio</p>
-                  </div>
-                </div>
-                <!--end col-->
-              </div>
-            </div><!-- end card header -->
-
-            <div class="card-body p-0 pb-2">
-              <div class="w-100">
-                <div id="customer_impression_charts" data-colors='["--vz-primary", "--vz-success", "--vz-danger"]' data-colors-minimal='["--vz-light", "--vz-primary", "--vz-info"]' data-colors-saas='["--vz-success", "--vz-info", "--vz-danger"]' data-colors-modern='["--vz-warning", "--vz-primary", "--vz-success"]' data-colors-interactive='["--vz-info", "--vz-primary", "--vz-danger"]' data-colors-creative='["--vz-warning", "--vz-primary", "--vz-danger"]' data-colors-corporate='["--vz-light", "--vz-primary", "--vz-secondary"]' data-colors-galaxy='["--vz-secondary", "--vz-primary", "--vz-primary-rgb, 0.50"]' data-colors-classic='["--vz-light", "--vz-primary", "--vz-secondary"]' data-colors-vintage='["--vz-success", "--vz-primary", "--vz-secondary"]' class="apex-charts" dir="ltr"></div>
-              </div>
-            </div><!-- end card body -->
-          </div><!-- end card -->
-        </div><!-- end col -->
-
-        <div class="col-xl-4">
-          <!-- card -->
-          <div class="card card-height-100">
-            <div class="card-header align-items-center d-flex">
-              <h4 class="card-title mb-0 flex-grow-1">Sales by Locations</h4>
-              <div class="flex-shrink-0">
-                <button type="button" class="btn btn-soft-primary material-shadow-none btn-sm">
-                  Export Report
-                </button>
-              </div>
-            </div><!-- end card header -->
-
-            <!-- card body -->
-            <div class="card-body">
-
-              <div id="sales-by-locations" data-colors='["--vz-light", "--vz-success", "--vz-primary"]' data-colors-interactive='["--vz-light", "--vz-info", "--vz-primary"]' style="height: 269px" dir="ltr">
-              </div>
-
-              <div class="px-2 py-2 mt-1">
-                <p class="mb-1">Canada <span class="float-end">75%</span></p>
-                <div class="progress mt-2" style="height: 6px;">
-                  <div class="progress-bar progress-bar-striped bg-primary" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="75"></div>
-                </div>
-
-                <p class="mt-3 mb-1">Greenland <span class="float-end">47%</span>
-                </p>
-                <div class="progress mt-2" style="height: 6px;">
-                  <div class="progress-bar progress-bar-striped bg-primary" role="progressbar" style="width: 47%" aria-valuenow="47" aria-valuemin="0" aria-valuemax="47"></div>
-                </div>
-
-                <p class="mt-3 mb-1">Russia <span class="float-end">82%</span></p>
-                <div class="progress mt-2" style="height: 6px;">
-                  <div class="progress-bar progress-bar-striped bg-primary" role="progressbar" style="width: 82%" aria-valuenow="82" aria-valuemin="0" aria-valuemax="82"></div>
-                </div>
-              </div>
-            </div>
-            <!-- end card body -->
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Revenue & Orders Analytics</h4></div>
+            <div class="card-body"><div id="admin-revenue-chart" style="height: 350px;"></div></div>
           </div>
-          <!-- end card -->
         </div>
-        <!-- end col -->
-      </div>
-
-      <div class="row">
-        <div class="col-xl-6">
-          <div class="card">
-            <div class="card-header align-items-center d-flex">
-              <h4 class="card-title mb-0 flex-grow-1">Recent PickUps</h4>
-              <div class="flex-shrink-0">
-                <div class="dropdown card-header-dropdown">
-                  <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="fw-semibold text-uppercase fs-12">Sort by:
-                    </span><span class="text-muted">Today<i class="mdi mdi-chevron-down ms-1"></i></span>
-                  </a>
-                  <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item" href="#">Today</a>
-                    <a class="dropdown-item" href="#">Yesterday</a>
-                    <a class="dropdown-item" href="#">Last 7 Days</a>
-                    <a class="dropdown-item" href="#">Last 30 Days</a>
-                    <a class="dropdown-item" href="#">This Month</a>
-                    <a class="dropdown-item" href="#">Last Month</a>
-                  </div>
-                </div>
-              </div>
-            </div><!-- end card header -->
-
-            <div class="card-body">
-              <div class="table-responsive table-card">
-                <table class="table table-hover table-centered align-middle table-nowrap mb-0">
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="avatar-sm bg-light rounded p-1 me-2">
-                            <img src="assets/images/products/img-1.png" alt="" class="img-fluid d-block" />
-                          </div>
-                          <div>
-                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details" class="text-reset">Branded
-                                T-Shirts</a></h5>
-                            <span class="text-muted">24 Apr 2021</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$29.00</h5>
-                        <span class="text-muted">Price</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">62</h5>
-                        <span class="text-muted">Orders</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">510</h5>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$1,798</h5>
-                        <span class="text-muted">Amount</span>
-                      </td>
-                        <td>
-                        <button type="button" class="btn btn-primary">View</button>
-                        </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="avatar-sm bg-light rounded p-1 me-2">
-                            <img src="assets/images/products/img-2.png" alt="" class="img-fluid d-block" />
-                          </div>
-                          <div>
-                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details" class="text-reset">Bentwood
-                                Chair</a></h5>
-                            <span class="text-muted">19 Mar 2021</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$85.20</h5>
-                        <span class="text-muted">Price</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">35</h5>
-                        <span class="text-muted">Orders</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal"><span class="badge bg-danger-subtle text-danger">Out of
-                            stock</span> </h5>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$2982</h5>
-                        <span class="text-muted">Amount</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="avatar-sm bg-light rounded p-1 me-2">
-                            <img src="assets/images/products/img-3.png" alt="" class="img-fluid d-block" />
-                          </div>
-                          <div>
-                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details" class="text-reset">Borosil
-                                Paper Cup</a></h5>
-                            <span class="text-muted">01 Mar 2021</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$14.00</h5>
-                        <span class="text-muted">Price</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">80</h5>
-                        <span class="text-muted">Orders</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">749</h5>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$1120</h5>
-                        <span class="text-muted">Amount</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="avatar-sm bg-light rounded p-1 me-2">
-                            <img src="assets/images/products/img-4.png" alt="" class="img-fluid d-block" />
-                          </div>
-                          <div>
-                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details" class="text-reset">One
-                                Seater Sofa</a></h5>
-                            <span class="text-muted">11 Feb 2021</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$127.50</h5>
-                        <span class="text-muted">Price</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">56</h5>
-                        <span class="text-muted">Orders</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal"><span class="badge bg-danger-subtle text-danger">Out of
-                            stock</span></h5>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$7140</h5>
-                        <span class="text-muted">Amount</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="avatar-sm bg-light rounded p-1 me-2">
-                            <img src="assets/images/products/img-5.png" alt="" class="img-fluid d-block" />
-                          </div>
-                          <div>
-                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details" class="text-reset">Stillbird
-                                Helmet</a></h5>
-                            <span class="text-muted">17 Jan 2021</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$54</h5>
-                        <span class="text-muted">Price</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">74</h5>
-                        <span class="text-muted">Orders</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">805</h5>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 my-1 fw-normal">$3996</h5>
-                        <span class="text-muted">Amount</span>
-                      </td>
-                    </tr>
+        <div class="col-xl-4">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Operational Snapshot</h4></div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-borderless mb-0">
+                  <thead class="table-light"><tr><th>Metric</th><th class="text-end">Value</th></tr></thead>
+                  <tbody id="adminOperationalSnapshot">
+                    <tr><td class="small-muted">Loading...</td><td class="text-end">—</td></tr>
                   </tbody>
                 </table>
               </div>
-
-              <div class="align-items-center mt-4 pt-2 justify-content-between row text-center text-sm-start">
-                <div class="col-sm">
-                  <div class="text-muted">
-                    Showing <span class="fw-semibold">5</span> of <span class="fw-semibold">25</span> Results
-                  </div>
-                </div>
-                <div class="col-sm-auto  mt-3 mt-sm-0">
-                  <ul class="pagination pagination-separated pagination-sm mb-0 justify-content-center">
-                    <li class="page-item disabled">
-                      <a href="#" class="page-link">←</a>
-                    </li>
-                    <li class="page-item">
-                      <a href="#" class="page-link">1</a>
-                    </li>
-                    <li class="page-item active">
-                      <a href="#" class="page-link">2</a>
-                    </li>
-                    <li class="page-item">
-                      <a href="#" class="page-link">3</a>
-                    </li>
-                    <li class="page-item">
-                      <a href="#" class="page-link">→</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
             </div>
           </div>
         </div>
+      </div>
 
+      <div class="row mt-3">
         <div class="col-xl-6">
-          <div class="card card-height-100">
-            <div class="card-header align-items-center d-flex">
-              <h4 class="card-title mb-0 flex-grow-1">Top Business</h4>
-              <div class="flex-shrink-0">
-                <div class="dropdown card-header-dropdown">
-                  <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="text-muted">Report<i class="mdi mdi-chevron-down ms-1"></i></span>
-                  </a>
-                  <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item" href="#">Download Report</a>
-                    <a class="dropdown-item" href="#">Export</a>
-                    <a class="dropdown-item" href="#">Import</a>
-                  </div>
-                </div>
-              </div>
-            </div><!-- end card header -->
-
-            <div class="card-body">
-              <div class="table-responsive table-card">
-                <table class="table table-centered table-hover align-middle table-nowrap mb-0">
-                  <tbody>
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/companies/img-1.png" alt="" class="avatar-sm p-2" />
-                          </div>
-                          <div>
-                            <h5 class="fs-14 my-1 fw-medium">
-                              <a href="apps-ecommerce-seller-details" class="text-reset">iTest Factory</a>
-                            </h5>
-                            <span class="text-muted">Oliver Tyler</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-muted">Bags and Wallets</span>
-                      </td>
-                      <td>
-                        <p class="mb-0">8547</p>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <span class="text-muted">$541200</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 mb-0">32%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                        </h5>
-                      </td>
-                    </tr><!-- end -->
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/companies/img-2.png" alt="" class="avatar-sm p-2" />
-                          </div>
-                          <div class="flex-grow-1">
-                            <h5 class="fs-14 my-1 fw-medium"><a href="apps-ecommerce-seller-details" class="text-reset">Digitech Galaxy</a></h5>
-                            <span class="text-muted">John Roberts</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-muted">Watches</span>
-                      </td>
-                      <td>
-                        <p class="mb-0">895</p>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <span class="text-muted">$75030</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 mb-0">79%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                        </h5>
-                      </td>
-                    </tr><!-- end -->
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/companies/img-3.png" alt="" class="avatar-sm p-2" />
-                          </div>
-                          <div class="flex-gow-1">
-                            <h5 class="fs-14 my-1 fw-medium"><a href="apps-ecommerce-seller-details" class="text-reset">Nesta Technologies</a></h5>
-                            <span class="text-muted">Harley Fuller</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-muted">Bike Accessories</span>
-                      </td>
-                      <td>
-                        <p class="mb-0">3470</p>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <span class="text-muted">$45600</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 mb-0">90%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                        </h5>
-                      </td>
-                    </tr><!-- end -->
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/companies/img-8.png" alt="" class="avatar-sm p-2" />
-                          </div>
-                          <div class="flex-grow-1">
-                            <h5 class="fs-14 my-1 fw-medium"><a href="apps-ecommerce-seller-details" class="text-reset">Zoetic Fashion</a></h5>
-                            <span class="text-muted">James Bowen</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-muted">Clothes</span>
-                      </td>
-                      <td>
-                        <p class="mb-0">5488</p>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <span class="text-muted">$29456</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 mb-0">40%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                        </h5>
-                      </td>
-                    </tr><!-- end -->
-                    <tr>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/companies/img-5.png" alt="" class="avatar-sm p-2" />
-                          </div>
-                          <div class="flex-grow-1">
-                            <h5 class="fs-14 my-1 fw-medium">
-                              <a href="apps-ecommerce-seller-details" class="text-reset">Meta4Systems</a>
-                            </h5>
-                            <span class="text-muted">Zoe Dennis</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span class="text-muted">Furniture</span>
-                      </td>
-                      <td>
-                        <p class="mb-0">4100</p>
-                        <span class="text-muted">Stock</span>
-                      </td>
-                      <td>
-                        <span class="text-muted">$11260</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 mb-0">57%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                        </h5>
-                      </td>
-                    </tr><!-- end -->
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Recent Orders</h4></div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-borderless mb-0">
+                  <thead class="table-light"><tr><th>Order</th><th>Business</th><th>Status</th></tr></thead>
+                  <tbody id="adminRecentOrders">
+                    <tr><td colspan="3" class="text-center py-3">Loading...</td></tr>
                   </tbody>
-                </table><!-- end table -->
+                </table>
               </div>
-
-              <div class="align-items-center mt-4 pt-2 justify-content-between row text-center text-sm-start">
-                <div class="col-sm">
-                  <div class="text-muted">
-                    Showing <span class="fw-semibold">5</span> of <span class="fw-semibold">25</span> Results
-                  </div>
-                </div>
-                <div class="col-sm-auto  mt-3 mt-sm-0">
-                  <ul class="pagination pagination-separated pagination-sm mb-0 justify-content-center">
-                    <li class="page-item disabled">
-                      <a href="#" class="page-link">←</a>
-                    </li>
-                    <li class="page-item">
-                      <a href="#" class="page-link">1</a>
-                    </li>
-                    <li class="page-item active">
-                      <a href="#" class="page-link">2</a>
-                    </li>
-                    <li class="page-item">
-                      <a href="#" class="page-link">3</a>
-                    </li>
-                    <li class="page-item">
-                      <a href="#" class="page-link">→</a>
-                    </li>
-                  </ul>
-                </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Recent Pickups</h4></div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-borderless mb-0">
+                  <thead class="table-light"><tr><th>Pickup</th><th>Date</th><th>Status</th></tr></thead>
+                  <tbody id="adminRecentPickups">
+                    <tr><td colspan="3" class="text-center py-3">Loading...</td></tr>
+                  </tbody>
+                </table>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            </div> <!-- .card-body-->
-          </div> <!-- .card-->
-        </div> <!-- .col-->
-      </div> <!-- end row-->
+      <div class="row mt-3">
+        <div class="col-xl-6">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Performance Metrics</h4></div>
+            <div class="card-body"><div id="admin-performance-chart" style="height: 200px;"></div></div>
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Returns & Exceptions</h4></div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-borderless mb-0">
+                  <thead class="table-light"><tr><th>Type</th><th>Count</th><th class="text-end">Trend</th></tr></thead>
+                  <tbody id="adminReturnsExceptions">
+                    <tr><td class="small-muted">Loading...</td><td>—</td><td class="text-end">—</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <div class="row">
+      <div class="row mt-3">
         <div class="col-xl-4">
-          <div class="card card-height-100">
-            <div class="card-header align-items-center d-flex">
-              <h4 class="card-title mb-0 flex-grow-1">Store Visits by Source</h4>
-              <div class="flex-shrink-0">
-                <div class="dropdown card-header-dropdown">
-                  <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="text-muted">Report<i class="mdi mdi-chevron-down ms-1"></i></span>
-                  </a>
-                  <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item" href="#">Download Report</a>
-                    <a class="dropdown-item" href="#">Export</a>
-                    <a class="dropdown-item" href="#">Import</a>
-                  </div>
-                </div>
-              </div>
-            </div><!-- end card header -->
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Orders by Status</h4></div>
+            <div class="card-body"><div id="admin-orders-by-status" style="height: 280px;"></div></div>
+          </div>
+        </div>
+        <div class="col-xl-4">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Orders by Category</h4></div>
+            <div class="card-body"><div id="admin-orders-by-category" style="height: 280px;"></div></div>
+          </div>
+        </div>
+        <div class="col-xl-4">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Top Governorates</h4></div>
+            <div class="card-body"><div id="admin-orders-by-government" style="height: 280px;"></div></div>
+          </div>
+        </div>
+      </div>
 
-            <div class="card-body">
-              <div id="store-visits-source" data-colors='["--vz-primary", "--vz-success", "--vz-warning", "--vz-danger", "--vz-info"]' data-colors-minimal='["--vz-primary", "--vz-primary-rgb, 0.85", "--vz-primary-rgb, 0.70", "--vz-primary-rgb, 0.60", "--vz-primary-rgb, 0.45"]' data-colors-interactive='["--vz-primary", "--vz-primary-rgb, 0.85", "--vz-primary-rgb, 0.70", "--vz-primary-rgb, 0.60", "--vz-primary-rgb, 0.45"]' data-colors-galaxy='["--vz-primary", "--vz-primary-rgb, 0.85", "--vz-primary-rgb, 0.70", "--vz-primary-rgb, 0.60", "--vz-primary-rgb, 0.45"]' class="apex-charts" dir="ltr"></div>
-            </div>
-          </div> <!-- .card-->
-        </div> <!-- .col-->
+      <div class="row mt-3">
+        <div class="col-xl-6">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Payment Breakdown</h4></div>
+            <div class="card-body"><div id="admin-amount-type" style="height: 260px;"></div></div>
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Express vs Standard</h4></div>
+            <div class="card-body"><div id="admin-express-breakdown" style="height: 260px;"></div></div>
+          </div>
+        </div>
+      </div>
 
-        <div class="col-xl-8">
-          <div class="card">
-            <div class="card-header align-items-center d-flex">
-              <h4 class="card-title mb-0 flex-grow-1">Recent Orders</h4>
-              <div class="flex-shrink-0">
-                <button type="button" class="btn btn-soft-info btn-sm material-shadow-none">
-                  <i class="ri-file-list-3-line align-middle"></i> Generate Report
-                </button>
-              </div>
-            </div><!-- end card header -->
+      <div class="row mt-3">
+        <div class="col-xl-6">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Courier Assignments (30d)</h4></div>
+            <div class="card-body"><div id="admin-courier-assignments" style="height: 300px;"></div></div>
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <div class="card dashboard-card">
+            <div class="card-header"><h4 class="card-title mb-0">Return Rate by Month</h4></div>
+            <div class="card-body"><div id="admin-returns-monthly" style="height: 300px;"></div></div>
+          </div>
+        </div>
+      </div>
 
-            <div class="card-body">
-              <div class="table-responsive table-card">
-                <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
-                  <thead class="text-muted table-light">
-                    <tr>
-                      <th scope="col">Order ID</th>
-                      <th scope="col">Customer</th>
-                      <th scope="col">Product</th>
-                      <th scope="col">Amount</th>
-                      <th scope="col">Vendor</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Rating</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <a href="apps-ecommerce-order-details" class="fw-medium link-primary">#VZ2112</a>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/users/avatar-1.jpg" alt="" class="avatar-xs rounded-circle material-shadow" />
-                          </div>
-                          <div class="flex-grow-1">Alex Smith</div>
-                        </div>
-                      </td>
-                      <td>Clothes</td>
-                      <td>
-                        <span class="text-success">$109.00</span>
-                      </td>
-                      <td>Zoetic Fashion</td>
-                      <td>
-                        <span class="badge bg-success-subtle text-success">Paid</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 fw-medium mb-0">5.0<span class="text-muted fs-11 ms-1">(61 votes)</span></h5>
-                      </td>
-                    </tr><!-- end tr -->
-                    <tr>
-                      <td>
-                        <a href="apps-ecommerce-order-details" class="fw-medium link-primary">#VZ2111</a>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/users/avatar-2.jpg" alt="" class="avatar-xs rounded-circle material-shadow" />
-                          </div>
-                          <div class="flex-grow-1">Jansh Brown</div>
-                        </div>
-                      </td>
-                      <td>Kitchen Storage</td>
-                      <td>
-                        <span class="text-success">$149.00</span>
-                      </td>
-                      <td>Micro Design</td>
-                      <td>
-                        <span class="badge bg-warning-subtle text-warning">Pending</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 fw-medium mb-0">4.5<span class="text-muted fs-11 ms-1">(61 votes)</span></h5>
-                      </td>
-                    </tr><!-- end tr -->
-                    <tr>
-                      <td>
-                        <a href="apps-ecommerce-order-details" class="fw-medium link-primary">#VZ2109</a>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/users/avatar-3.jpg" alt="" class="avatar-xs rounded-circle material-shadow" />
-                          </div>
-                          <div class="flex-grow-1">Ayaan Bowen</div>
-                        </div>
-                      </td>
-                      <td>Bike Accessories</td>
-                      <td>
-                        <span class="text-success">$215.00</span>
-                      </td>
-                      <td>Nesta Technologies</td>
-                      <td>
-                        <span class="badge bg-success-subtle text-success">Paid</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 fw-medium mb-0">4.9<span class="text-muted fs-11 ms-1">(89 votes)</span></h5>
-                      </td>
-                    </tr><!-- end tr -->
-                    <tr>
-                      <td>
-                        <a href="apps-ecommerce-order-details" class="fw-medium link-primary">#VZ2108</a>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/users/avatar-4.jpg" alt="" class="avatar-xs rounded-circle material-shadow" />
-                          </div>
-                          <div class="flex-grow-1">Prezy Mark</div>
-                        </div>
-                      </td>
-                      <td>Furniture</td>
-                      <td>
-                        <span class="text-success">$199.00</span>
-                      </td>
-                      <td>Syntyce Solutions</td>
-                      <td>
-                        <span class="badge bg-danger-subtle text-danger">Unpaid</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 fw-medium mb-0">4.3<span class="text-muted fs-11 ms-1">(47 votes)</span></h5>
-                      </td>
-                    </tr><!-- end tr -->
-                    <tr>
-                      <td>
-                        <a href="apps-ecommerce-order-details" class="fw-medium link-primary">#VZ2107</a>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <img src="assets/images/users/avatar-6.jpg" alt="" class="avatar-xs rounded-circle material-shadow" />
-                          </div>
-                          <div class="flex-grow-1">Vihan Hudda</div>
-                        </div>
-                      </td>
-                      <td>Bags and Wallets</td>
-                      <td>
-                        <span class="text-success">$330.00</span>
-                      </td>
-                      <td>iTest Factory</td>
-                      <td>
-                        <span class="badge bg-success-subtle text-success">Paid</span>
-                      </td>
-                      <td>
-                        <h5 class="fs-14 fw-medium mb-0">4.7<span class="text-muted fs-11 ms-1">(161 votes)</span></h5>
-                      </td>
-                    </tr><!-- end tr -->
-                  </tbody><!-- end tbody -->
-                </table><!-- end table -->
-              </div>
-            </div>
-          </div> <!-- .card-->
-        </div> <!-- .col-->
-      </div> <!-- end row-->
-
-    </div> <!-- end .h-100-->
-
-  </div> <!-- end col -->
-
-
+    </div>
+  </div>
 </div>
 <%- contentFor('FooterJs') %>
-<!-- apexcharts -->
 <script src="/assets/libs/apexcharts/apexcharts.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    loadAdminDashboardData();
+    initAdminCharts();
+  });
 
-<!-- Vector map-->
-<script src="/assets/libs/jsvectormap/jsvectormap.min.js"></script>
-<script src="/assets/libs/jsvectormap/maps/world-merc.js"></script>
+  async function loadAdminDashboardData(){
+    try{
+      const res = await fetch('/admin/dashboard-data');
+      const json = await res.json();
+      if(json.status === 'success'){
+        renderAdminStats(json.dashboardData);
+        renderAdminTables(json.dashboardData);
+        renderAdminOperationalSnapshot(json.dashboardData);
+        renderAdminReturns(json.dashboardData);
+        renderAdminBreakdowns(json.dashboardData);
+        renderAdminAuxCharts(json.dashboardData);
+        renderAdminRevenueOrders(json.dashboardData);
+        updateAdminLastUpdated();
+      }
+    }catch(e){
+      const stats = document.getElementById('adminDashboardStats');
+      if(stats){
+        stats.innerHTML = '<div class="col-12 text-center py-4"><i class="ri-error-warning-line text-danger fs-1"></i><p class="mt-2 text-muted">Failed to load dashboard data</p></div>';
+      }
+    }
+  }
 
-<!--Swiper slider js-->
-<script src="/assets/libs/swiper/swiper-bundle.min.js"></script>
+  function renderAdminStats(data){
+    const stats = data.orderStats || {};
+    const financial = data.financialStats || {};
+    const couriers = data.courierStats || {};
+    const returns = data.returnStats || {};
+    const container = document.getElementById('adminDashboardStats');
+    if(!container) return;
+    container.innerHTML = `
+      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Total Orders</h6></div><h2 class="mb-0">${stats.totalOrders || 0}</h2></div></div></div>
+      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Completed</h6></div><div class="d-flex align-items-baseline"><h2 class="mb-0 text-success">${stats.completedCount || 0}</h2><span class="text-muted ms-2">/ ${stats.totalOrders || 0}</span><span class="badge bg-success ms-auto">${stats.completionRate || 0}%</span></div></div></div></div>
+      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Heading to Customer</h6></div><h2 class="mb-0 text-primary-custom">${stats.headingToCustomerCount || 0}</h2></div></div></div>
+      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Awaiting Action</h6></div><h2 class="mb-0 text-warning">${stats.awaitingActionCount || 0}</h2></div></div></div>
+      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Heading to You</h6></div><h2 class="mb-0">${stats.headingToYouCount || 0}</h2></div></div></div>
+      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">New Orders</h6></div><h2 class="mb-0 text-primary-custom">${stats.newOrdersCount || 0}</h2></div></div></div>
+      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Active Couriers</h6></div><h2 class="mb-0">${couriers.active || 0}</h2></div></div></div>
+      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Revenue (EGP)</h6></div><h2 class="mb-0">${financial.totalRevenue || 0}</h2></div></div></div>
+    `;
+  }
 
-<!-- Dashboard init -->
-<script src="/assets/js/pages/dashboard-ecommerce.init.js"></script>
+  function renderAdminTables(data){
+    const ordersTbody = document.getElementById('adminRecentOrders');
+    const pickupsTbody = document.getElementById('adminRecentPickups');
+    const recentOrders = data.recentData?.recentOrders || [];
+    const recentPickups = data.recentData?.recentPickups || [];
+
+    if(ordersTbody){
+      if(recentOrders.length === 0){
+        ordersTbody.innerHTML = '<tr><td colspan="3" class="text-center py-3">No recent orders</td></tr>';
+      }else{
+        ordersTbody.innerHTML = recentOrders.map(o=>{
+          let statusClass = 'pending';
+          switch(o.orderStatus){
+            case 'completed': statusClass='delivered'; break;
+            case 'processing':
+            case 'headingToCustomer': statusClass='processing'; break;
+            case 'cancelled': statusClass='cancelled'; break;
+          }
+          return `<tr>
+            <td>#${o.orderNumber}</td>
+            <td>${o.businessName || o.orderBusiness?.name || 'N/A'}</td>
+            <td><span class="order-status ${statusClass}">${o.orderStatus}</span></td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
+    if(pickupsTbody){
+      if(recentPickups.length === 0){
+        pickupsTbody.innerHTML = '<tr><td colspan="3" class="text-center py-3">No recent pickups</td></tr>';
+      }else{
+        pickupsTbody.innerHTML = recentPickups.map(p=>{
+          let statusClass = 'pending';
+          switch(p.picikupStatus){
+            case 'Completed': statusClass='delivered'; break;
+            case 'In Progress': statusClass='processing'; break;
+          }
+          return `<tr>
+            <td>#${p.pickupNumber}</td>
+            <td>${new Date(p.pickupDate).toLocaleDateString()}</td>
+            <td><span class="order-status ${statusClass}">${p.picikupStatus}</span></td>
+          </tr>`;
+        }).join('');
+      }
+    }
+  }
+
+  function renderAdminOperationalSnapshot(data){
+    const el = document.getElementById('adminOperationalSnapshot');
+    if(!el) return;
+    const couriers = data.courierStats || {};
+    const sla = data.slaStats || {};
+    const issues = data.issueStats || {};
+    el.innerHTML = `
+      <tr><td>Couriers Online</td><td class="text-end">${couriers.online || 0}</td></tr>
+      <tr><td>Avg. Delivery Time</td><td class="text-end">${sla.avgDeliveryDays || '-'} days</td></tr>
+      <tr><td>Open Issues</td><td class="text-end">${issues.open || 0}</td></tr>
+      <tr><td>Today Cancellations</td><td class="text-end">${issues.cancellationsToday || 0}</td></tr>
+    `;
+  }
+
+  function renderAdminReturns(data){
+    const el = document.getElementById('adminReturnsExceptions');
+    if(!el) return;
+    const r = data.returnStats || {};
+    el.innerHTML = `
+      <tr><td>Returns In-Process</td><td>${r.inProcess || 0}</td><td class="text-end">${r.inProcessTrend || '—'}</td></tr>
+      <tr><td>Returns Completed</td><td>${r.completed || 0}</td><td class="text-end">${r.completedTrend || '—'}</td></tr>
+      <tr><td>Failed Deliveries</td><td>${r.failedDeliveries || 0}</td><td class="text-end">${r.failedTrend || '—'}</td></tr>
+    `;
+  }
+
+  function updateAdminLastUpdated(){
+    const el = document.getElementById('adminLastUpdated');
+    if(el){ el.textContent = `Last updated at ${new Date().toLocaleTimeString()}`; }
+  }
+
+  function initAdminCharts(){
+    setTimeout(()=>{
+      // revenue chart is rendered once data loads via renderAdminRevenueOrders
+      if(document.getElementById('admin-performance-chart')){
+        const popts = { series:[{name:'Performance',data:[75,85,65,90,82,78]}], chart:{type:'radar',height:200,toolbar:{show:false}}, colors:['#F39720'], xaxis:{categories:['Delivery','Quality','Service','Value','Satisfaction','Retention']}, yaxis:{show:false}, markers:{size:4,colors:['#333333'],strokeColors:'#fff',strokeWidth:2}, tooltip:{y:{formatter:val=>val+'%'}} };
+        new ApexCharts(document.getElementById('admin-performance-chart'), popts).render();
+      }
+    }, 500);
+  }
+
+  function renderAdminRevenueOrders(d){
+    const el = document.getElementById('admin-revenue-chart');
+    if(!el) return;
+    const rev = d.financialStats?.revenueByMonth || [];
+    const ord = d.financialStats?.ordersByMonth || [];
+    const revMap = new Map(rev.map(r => [r._id.y + '-' + String(r._id.m).padStart(2,'0'), r.revenue]));
+    const ordMap = new Map(
+      (rev.map(r => [r._id.y + '-' + String(r._id.m).padStart(2,'0'), r.orders]))
+      .concat(ord.map(o => [o._id.y + '-' + String(o._id.m).padStart(2,'0'), o.count]))
+    );
+    const keys = Array.from(new Set([...revMap.keys(), ...ordMap.keys()])).sort().slice(-9);
+    const revSeries = keys.map(k => revMap.get(k) || 0);
+    const ordSeries = keys.map(k => ordMap.get(k) || 0);
+    const opts = { series:[{name:'Revenue',type:'column',data:revSeries},{name:'Orders',type:'line',data:ordSeries}], chart:{height:350,type:'line',toolbar:{show:false}}, stroke:{width:[0,4],curve:'smooth'}, colors:['#F39720','#333333'], dataLabels:{enabled:true,enabledOnSeries:[1]}, labels:keys, xaxis:{type:'category'}, yaxis:[{title:{text:'Revenue (EGP)'}},{opposite:true,title:{text:'Orders'}}] };
+    new ApexCharts(el, opts).render();
+  }
+
+  function renderAdminBreakdowns(data){
+    const b = data.breakdowns || {};
+    // Orders by Status (donut)
+    if(document.getElementById('admin-orders-by-status')){
+      const labels = (b.byStatus||[]).map(x=>x._id||'Unknown');
+      const series = (b.byStatus||[]).map(x=>x.count||0);
+      new ApexCharts(document.getElementById('admin-orders-by-status'), {
+        chart:{type:'donut',height:280}, labels, series, colors:['#405189','#0ab39c','#f7b84b','#f06548','#299cdb','#F39720','#6c757d']
+      }).render();
+    }
+    // Orders by Category (pie)
+    if(document.getElementById('admin-orders-by-category')){
+      const labels = (b.byCategory||[]).map(x=>x._id||'Unknown');
+      const series = (b.byCategory||[]).map(x=>x.count||0);
+      new ApexCharts(document.getElementById('admin-orders-by-category'), {
+        chart:{type:'pie',height:280}, labels, series, colors:['#0ab39c','#405189','#f7b84b','#198754','#f06548']
+      }).render();
+    }
+    // Top Governorates (bar)
+    if(document.getElementById('admin-orders-by-government')){
+      const cats = (b.byGovernment||[]).map(x=>x._id||'N/A');
+      const vals = (b.byGovernment||[]).map(x=>x.count||0);
+      new ApexCharts(document.getElementById('admin-orders-by-government'), {
+        chart:{type:'bar',height:280,toolbar:{show:false}},
+        series:[{name:'Orders',data:vals}], xaxis:{categories:cats}, colors:['#F39720']
+      }).render();
+    }
+    // Amount Types (bar)
+    if(document.getElementById('admin-amount-type')){
+      const cats = (b.amountType||[]).map(x=>x._id||'N/A');
+      const vals = (b.amountType||[]).map(x=>x.count||0);
+      new ApexCharts(document.getElementById('admin-amount-type'), {
+        chart:{type:'bar',height:260,toolbar:{show:false}}, series:[{name:'Count',data:vals}], xaxis:{categories:cats}, colors:['#405189']
+      }).render();
+    }
+    // Express breakdown (donut)
+    if(document.getElementById('admin-express-breakdown')){
+      const labels = (b.express||[]).map(x=> (x._id ? 'Express':'Standard'));
+      const series = (b.express||[]).map(x=>x.count||0);
+      new ApexCharts(document.getElementById('admin-express-breakdown'), {
+        chart:{type:'donut',height:260}, labels, series, colors:['#F39720','#6c757d']
+      }).render();
+    }
+  }
+
+  function renderAdminAuxCharts(data){
+    // Courier Assignments (horizontal bar)
+    if(document.getElementById('admin-courier-assignments')){
+      const items = data.courierStats?.assignments30d || [];
+      const cats = items.map(i=>String(i._id).slice(-6));
+      const vals = items.map(i=>i.count||0);
+      new ApexCharts(document.getElementById('admin-courier-assignments'), {
+        chart:{type:'bar',height:300,toolbar:{show:false}},
+        plotOptions:{bar:{horizontal:true}},
+        series:[{name:'Assignments',data:vals}], xaxis:{categories:cats}, colors:['#299cdb']
+      }).render();
+    }
+    // Returns monthly (line)
+    if(document.getElementById('admin-returns-monthly')){
+      const items = data.returnStats?.monthly || [];
+      const cats = items.map(i=> `${i._id.y}-${String(i._id.m).padStart(2,'0')}` ).reverse();
+      const vals = items.map(i=> i.count||0).reverse();
+      new ApexCharts(document.getElementById('admin-returns-monthly'), {
+        chart:{type:'line',height:300,toolbar:{show:false}},
+        stroke:{curve:'smooth',width:3}, series:[{name:'Returns',data:vals}], xaxis:{categories:cats}, colors:['#f06548']
+      }).render();
+    }
+  }
+</script>

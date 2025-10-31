@@ -25,6 +25,10 @@ async function authenticateAdmin(req, res, next) {
       return res.status(401).redirect('/admin-login');
     }
     req.adminData = admin; // Attach admin data to request object
+
+    // Make adminData available to all views
+    res.locals.adminData = admin;
+
     next(); // Move to the next middleware
   } catch (error) {
     res.clearCookie('token');
@@ -35,6 +39,7 @@ async function authenticateAdmin(req, res, next) {
 router.use(authenticateAdmin);
 
 router.get('/dashboard', adminController.getDashboardPage);
+router.get('/dashboard-data', adminController.getAdminDashboardData);
 router.get('/get-delivery-men', adminController.get_deliveryMenByZone);
 router.post('/assign-delivery-man', adminController.assignCourierToStock);
 
@@ -174,6 +179,15 @@ router.get(
 // businesses
 
 router.get('/businesses', adminController.get_businessesPage);
+router.get('/get-businesses', adminController.get_businesses);
+router.get(
+  '/business-details/:businessId',
+  adminController.get_businessDetailsPage
+);
+router.get(
+  '/get-business-details/:businessId',
+  adminController.get_businessDetails
+);
 
 // tickets
 router.get('/tickets', adminController.get_ticketsPage);

@@ -110,6 +110,32 @@
     font-size: 0.75rem;
   }
 
+  .zones-container {
+    max-height: 80px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px;
+  }
+
+  /* Custom scrollbar for zones container */
+  .zones-container::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .zones-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .zones-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+
+  .zones-container::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+  }
+
   .filter-card {
     border-radius: 10px;
     margin-bottom: 20px;
@@ -233,90 +259,89 @@
   <!-- Courier Cards -->
   <div class="row">
     <% if (couriers && couriers.length > 0) { %>
-      <% couriers.forEach(courier => { %>
-        <!-- Courier Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card courier-card">
-            <div class="card-header card-header-light">
-              <div class="d-flex align-items-center">
-                <img src="<%= courier.photo %>" class="courier-avatar me-3" alt="Courier">
-                <div>
-                  <h5 class="mb-1 courier-name"><%= courier.name %></h5>
-                  <p class="mb-0 courier-id">ID: <%= courier.courierId %></p>
-                  <span class="badge <%= courier.statusBadge || 'bg-secondary' %>"><%= courier.status %></span>
-                </div>
-              </div>
+    <% couriers.forEach(courier => { %>
+    <!-- Courier Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card courier-card">
+        <div class="card-header card-header-light">
+          <div class="d-flex align-items-center">
+            <img src="<%= courier.photo %>" class="courier-avatar me-3" alt="Courier">
+            <div>
+              <h5 class="mb-1 courier-name"><%= courier.name %></h5>
+              <p class="mb-0 courier-id">ID: <%= courier.courierId %></p>
+              <span class="badge <%= courier.statusBadge || 'bg-secondary' %>"><%= courier.status %></span>
             </div>
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="mb-0 text-muted">Money with Courier:</h6>
-                <span class="money-badge"><%= courier.moneyWithCourier.toLocaleString() %> EGP</span>
-              </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 text-muted">Money with Courier:</h6>
+            <span class="money-badge"><%= courier.moneyWithCourier.toLocaleString() %> EGP</span>
+          </div>
 
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="mb-0 text-muted">Orders to Return:</h6>
-                <span class="return-badge"><%= courier.ordersToReturn %></span>
-              </div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 text-muted">Orders to Return:</h6>
+            <span class="return-badge"><%= courier.ordersToReturn %></span>
+          </div>
 
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="mb-0 text-muted">Active Orders:</h6>
-                <span class="orders-badge"><%= courier.activeOrders %></span>
-              </div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 text-muted">Active Orders:</h6>
+            <span class="orders-badge"><%= courier.activeOrders %></span>
+          </div>
 
-              <div class="mb-3">
-                <h6 class="mb-2 text-muted">Zones:</h6>
-                <div>
-                  <% if (courier.zones && courier.zones.length > 0) { %>
-                    <% courier.zones.forEach(zone => { %>
-                      <span class="zone-badge"><%= zone %></span>
-                    <% }); %>
-                  <% } else { %>
-                    <span class="text-muted">No zones assigned</span>
-                  <% } %>
-                </div>
-              </div>
+          <div class="mb-3">
+            <h6 class="mb-2 text-muted">Zones:</h6>
+            <div class="zones-container">
+              <% if (courier.zones && courier.zones.length > 0) { %>
+              <% courier.zones.forEach(zone => { %>
+              <span class="zone-badge"><%= zone %></span>
+              <% }); %>
+              <% } else { %>
+              <span class="text-muted">No zones assigned</span>
+              <% } %>
+            </div>
+          </div>
 
-              <div class="mb-3">
-                <h6 class="mb-2 text-muted">Today's Performance:</h6>
-                <div class="progress mb-2">
-                  <% 
+          <div class="mb-3">
+            <h6 class="mb-2 text-muted">Today's Performance:</h6>
+            <div class="progress mb-2">
+              <% 
                     let progressClass = 'bg-success';
                     if (courier.performance < 50) progressClass = 'bg-danger';
                     else if (courier.performance < 75) progressClass = 'bg-warning';
                   %>
-                  <div class="progress-bar <%= progressClass %>" role="progressbar" style="width: <%= courier.performance || 0 %>%" aria-valuenow="<%= courier.performance || 0 %>" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-                <small class="text-muted"><%= courier.performance %>% of daily target completed</small>
-              </div>
-
-              <div class="d-flex gap-2">
-                <a href="/admin/courier-details/<%= courier.courierId %>" class="btn btn-sm btn-brand flex-grow-1">
-                  <i class="ri-eye-line me-1"></i> View Details
-                </a>
-                <button class="btn btn-sm btn-light">
-                  <i class="ri-phone-line"></i>
-                </button>
-              </div>
+              <div class="progress-bar <%= progressClass %>" role="progressbar" style="width: <%= courier.performance || 0 %>%" aria-valuenow="<%= courier.performance || 0 %>" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
+            <small class="text-muted"><%= courier.performance %>% of daily target completed</small>
           </div>
-        </div>
-      <% }); %>
-    <% } else { %>
-      <div class="col-12">
-        <div class="card">
-          <div class="card-body text-center py-5">
-            <h5 class="mb-3">No couriers found</h5>
-            <p class="text-muted">There are no couriers to display at the moment.</p>
+
+          <div class="d-flex gap-2">
+            <a href="/admin/courier-details/<%= courier.courierId %>" class="btn btn-sm btn-brand flex-grow-1">
+              <i class="ri-eye-line me-1"></i> View Details
+            </a>
+            <button class="btn btn-sm btn-light">
+              <i class="ri-phone-line"></i>
+            </button>
           </div>
         </div>
       </div>
+    </div>
+    <% }); %>
+    <% } else { %>
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <h5 class="mb-3">No couriers found</h5>
+          <p class="text-muted">There are no couriers to display at the moment.</p>
+        </div>
+      </div>
+    </div>
     <% } %>
   </div>
 </div>
 
 <%- contentFor('FooterJs') %>
 <script>
-  
   document.addEventListener('DOMContentLoaded', function() {
 
     // Call courier functionality
@@ -332,12 +357,12 @@
     async function fetchCouriers() {
       try {
         const response = await fetch('/admin/get-couriers-follow-up');
-        
+
         // Check if the response is ok before parsing JSON
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        
+
         // Check content type to ensure it's JSON
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
@@ -359,6 +384,4 @@
 
 
   });
-
-  
 </script>

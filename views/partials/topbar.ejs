@@ -31,7 +31,7 @@
           </span>
         </button>
 
-   
+
       </div>
 
       <div class="d-flex align-items-center">
@@ -54,13 +54,13 @@
 
         <div class="dropdown ms-1 topbar-head-dropdown header-item">
           <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary material-shadow-none rounded-circle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <% if(lang=="en" ) { %>
+            <% if(lang=="en" ) { %>
             <img src="/assets/images/flags/us.svg" alt="Header Language" id="header-lang-img" class="rounded" height="20">
-          <% } else if(lang=="ar" ) { %>
+            <% } else if(lang=="ar" ) { %>
             <img src="/assets/images/flags/ae.svg" alt="Header Language" id="header-lang-img" class="rounded" height="20">
-          <% } else { %>
+            <% } else { %>
             <img src="/assets/images/flags/us.svg" alt="Header Language" id="header-lang-img" class="rounded" height="20">
-          <% } %>
+            <% } %>
           </button>
           <div class="dropdown-menu dropdown-menu-end">
 
@@ -344,17 +344,56 @@
         </div> -->
 
         <div class="dropdown ms-sm-3 header-item topbar-user">
+          <button type="button" class="btn material-shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="d-flex align-items-center">
-              <img class="rounded-circle header-profile-user" src="/assets/images/users/avatar-1.jpg" alt="Header Avatar">
+              <% 
+                // Determine user info based on context (admin or business)
+                let userName = '';
+                let userRole = '';
+                let userPhoto = '/assets/images/users/avatar-1.jpg';
+                
+                if (typeof adminData !== 'undefined' && adminData) {
+                  // Admin context
+                  userName = adminData.name || 'Admin';
+                  userRole = 'Administrator';
+                  userPhoto = adminData.profileImage || '/assets/images/users/avatar-1.jpg';
+                } else if (typeof userData !== 'undefined' && userData) {
+                  // Business user context
+                  userName = userData.brandInfo?.brandName || userData.name || 'User';
+                  userRole = userData.role === 'business' ? 'Business Account' : userData.role || 'User';
+                  userPhoto = userData.profileImage || '/assets/images/users/avatar-1.jpg';
+                } else if (typeof user !== 'undefined' && user) {
+                  // Alternative user object
+                  userName = user.brandInfo?.brandName || user.name || 'User';
+                  userRole = user.role === 'business' ? 'Business Account' : user.role || 'User';
+                  userPhoto = user.profileImage || '/assets/images/users/avatar-1.jpg';
+                } else {
+                  userName = 'Guest';
+                  userRole = 'Guest User';
+                }
+              %>
+              <img class="rounded-circle header-profile-user" src="<%= userPhoto %>" alt="<%= userName %>" onerror="this.src='/assets/images/users/avatar-1.jpg'">
               <span class="text-start ms-xl-2">
-                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Anna Adame</span>
-                <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">Founder</span>
+                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text"><%= userName %></span>
+                <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text text-capitalize"><%= userRole %></span>
               </span>
             </span>
-        
+          </button>
+          <div class="dropdown-menu dropdown-menu-end">
+            <!-- item-->
+            <h6 class="dropdown-header">Welcome <%= userName %>!</h6>
+            <% if (typeof userData !== 'undefined' && userData && userData.role === 'business') { %>
+            <a class="dropdown-item" href="/manage/dashboard"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Profile</span></a>
+            <a class="dropdown-item" href="/manage/orders"><i class="mdi mdi-package-variant text-muted fs-16 align-middle me-1"></i> <span class="align-middle">My Orders</span></a>
+            <div class="dropdown-divider"></div>
+            <% } else if (typeof adminData !== 'undefined' && adminData) { %>
+            <a class="dropdown-item" href="/admin/dashboard"><i class="mdi mdi-view-dashboard text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Dashboard</span></a>
+            <div class="dropdown-divider"></div>
+            <% } %>
+            <a class="dropdown-item" href="/logout"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle" data-key="t-logout">Logout</span></a>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </header>
-

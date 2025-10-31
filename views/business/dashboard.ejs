@@ -8,32 +8,39 @@
   #previewMap {
     border-radius: 0 0.75rem 0.75rem 0;
   }
+
   #map {
     transition: all 0.3s ease-in-out;
   }
+
   .pac-container {
-    z-index: 1060 !important; /* Higher than modal z-index */
+    z-index: 1060 !important;
+    /* Higher than modal z-index */
   }
+
   .location-pin {
     color: var(--primary-color);
     font-size: 1.5rem;
     animation: pulse 1.5s infinite;
   }
+
   @keyframes pulse {
     0% {
       transform: scale(1);
       opacity: 1;
     }
+
     50% {
       transform: scale(1.2);
       opacity: 0.7;
     }
+
     100% {
       transform: scale(1);
       opacity: 1;
     }
   }
-  
+
   :root {
     --primary-color: #F39720;
     --secondary-color: #FDB614;
@@ -148,7 +155,8 @@
   }
 
   .btn-primary-custom:hover {
-    background-color: #ef9517 !important; /* Slightly darker shade for hover */
+    background-color: #ef9517 !important;
+    /* Slightly darker shade for hover */
     border-color: #E58809 !important;
     transform: translateY(-3px) !important;
     box-shadow: 0 8px 15px rgba(243, 151, 32, 0.35) !important;
@@ -189,7 +197,7 @@
   }
 
   /* Primary button when active or focused */
-  .btn-primary-custom:active, 
+  .btn-primary-custom:active,
   .btn-primary-custom:focus {
     background-color: #E58809 !important;
     border-color: #E58809 !important;
@@ -376,64 +384,65 @@
   .social-link-input.active {
     display: block;
   }
-    /* Badge styles */
-    .badge {
+
+  /* Badge styles */
+  .badge {
     font-weight: 500;
     padding: 0.35em 0.65em;
     border-radius: 0.25rem;
-    }
+  }
 
-    .bg-warning-light {
+  .bg-warning-light {
     background-color: rgba(255, 193, 7, 0.1);
-    }
+  }
 
-    .text-warning {
+  .text-warning {
     color: #ffc107 !important;
-    }
+  }
 
-    /* Card border styles */
-    .card.border-start {
+  /* Card border styles */
+  .card.border-start {
     overflow: hidden;
-    }
+  }
 
-    /* Progress bar */
-    .progress {
+  /* Progress bar */
+  .progress {
     background-color: var(--neutral-medium);
     border-radius: 0.5rem;
     overflow: hidden;
-    }
+  }
 
-    /* Avatar styles */
-    .avatar-sm {
+  /* Avatar styles */
+  .avatar-sm {
     height: 2.5rem;
     width: 2.5rem;
-    }
+  }
 
-    .avatar-title {
+  .avatar-title {
     align-items: center;
     display: flex;
     font-weight: 500;
     height: 100%;
     justify-content: center;
     width: 100%;
-    }
+  }
 
-    .rounded-circle {
+  .rounded-circle {
     border-radius: 50% !important;
-    }
+  }
 
-    /* Card hover effect */
-    .card.border:hover {
+  /* Card hover effect */
+  .card.border:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
-    }
+  }
 
   /* Enhanced Zone Selection Styling */
   .zone-select-wrapper {
     position: relative;
   }
-  
+
   .custom-zone-select {
     appearance: none;
     -webkit-appearance: none;
@@ -443,12 +452,12 @@
     transition: all 0.3s ease;
     border-color: #e6e6e6;
   }
-  
+
   .custom-zone-select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.25rem rgba(243, 151, 32, 0.25);
   }
-  
+
   .zone-select-arrow {
     position: absolute;
     right: 15px;
@@ -458,36 +467,36 @@
     font-size: 1.5rem;
     pointer-events: none;
   }
-  
+
   .custom-zone-select option {
     padding: 10px;
   }
-  
+
   .custom-zone-select optgroup {
     font-weight: 600;
     color: var(--dark-color);
     background-color: #f8f9fa;
   }
-  
+
   /* Custom scrollbar for select dropdown */
   select::-webkit-scrollbar {
     width: 8px;
   }
-  
+
   select::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
   }
-  
+
   select::-webkit-scrollbar-thumb {
     background: var(--primary-color);
     border-radius: 4px;
   }
-  
+
   select::-webkit-scrollbar-thumb:hover {
     background: var(--secondary-color);
   }
-  
+
   @media (max-width: 768px) {
     .custom-zone-select {
       font-size: 0.875rem;
@@ -498,21 +507,21 @@
   select::-webkit-scrollbar {
     width: 8px;
   }
-  
+
   select::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
   }
-  
+
   select::-webkit-scrollbar-thumb {
     background: var(--primary-color);
     border-radius: 4px;
   }
-  
+
   select::-webkit-scrollbar-thumb:hover {
     background: var(--secondary-color);
   }
-  
+
   /* Animation and interactive styles */
   .custom-zone-select {
     appearance: none;
@@ -524,7 +533,7 @@
     border-color: #e6e6e6;
     max-height: 300px;
   }
-  
+
   /* Loading animation */
   .loading-zones {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='38' height='38' viewBox='0 0 38 38' stroke='%23F39720'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg transform='translate(1 1)' stroke-width='2'%3E%3Ccircle stroke-opacity='.5' cx='18' cy='18' r='18'/%3E%3Cpath d='M36 18c0-9.94-8.06-18-18-18'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 18 18' to='360 18 18' dur='1s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
@@ -532,30 +541,38 @@
     background-repeat: no-repeat;
     background-size: 20px 20px;
   }
-  
+
   /* Highlight effect on update */
   .zones-updated {
     animation: highlightZone 1s ease;
   }
-  
+
   @keyframes highlightZone {
-    0% { box-shadow: 0 0 0 0 rgba(243, 151, 32, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(243, 151, 32, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(243, 151, 32, 0); }
+    0% {
+      box-shadow: 0 0 0 0 rgba(243, 151, 32, 0.4);
+    }
+
+    70% {
+      box-shadow: 0 0 0 10px rgba(243, 151, 32, 0);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(243, 151, 32, 0);
+    }
   }
-  
+
   /* Focus state styling */
   .zone-select-wrapper.focused {
     border-radius: 0.5rem;
     box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.25);
   }
-  
+
   /* Selected state styling */
   .zone-select-wrapper.has-value .zone-select-arrow {
     color: var(--primary-color);
     transform: translateY(-50%) rotate(180deg);
   }
-  
+
   /* Style for optgroups */
   .custom-zone-select optgroup {
     font-weight: 600;
@@ -565,25 +582,25 @@
     border-top: 1px solid #ddd;
     border-bottom: 1px solid #ddd;
   }
-  
+
   /* Style for options */
   .custom-zone-select option {
     padding: 10px 15px;
     border-bottom: 1px dotted #f0f0f0;
     transition: background-color 0.2s;
   }
-  
+
   .custom-zone-select option:hover,
   .custom-zone-select option:focus {
     background-color: rgba(243, 151, 32, 0.1) !important;
   }
-  
+
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .custom-zone-select {
       font-size: 0.875rem;
     }
-    
+
     .zone-select-wrapper .zone-select-arrow {
       right: 10px;
       font-size: 1.25rem;
@@ -809,7 +826,7 @@
                       <h4 class="fw-bold">Pickup Address</h4>
                       <p class="text-muted">Where should we pick up your packages from?</p>
                     </div>
-                    
+
                     <!-- Map selection card -->
                     <div class="card shadow-sm border mb-4">
                       <div class="card-body p-0">
@@ -824,7 +841,7 @@
                               <i class="ri-map-pin-2-line me-2"></i> Choose on Map
                             </button>
                             <div id="selectedLocation" class="alert alert-light mt-3 text-center" style="display: none;">
-                              <i class="ri-map-pin-fill text-primary-custom me-1"></i> 
+                              <i class="ri-map-pin-fill text-primary-custom me-1"></i>
                               <span class="fw-medium"></span>
                             </div>
                           </div>
@@ -834,7 +851,7 @@
                         </div>
                       </div>
                     </div>
-                    
+
                     <div class="row g-3">
                       <div class="col-md-6">
                         <label for="country" class="form-label">Country</label>
@@ -843,19 +860,19 @@
                           <option value="egypt">Egypt</option>
                         </select>
                       </div>
-                      
+
                       <div class="col-12">
                         <div class="card border-0 shadow-sm">
                           <div class="card-body">
                             <h5 class="fw-semibold mb-3">Location Details</h5>
-                            
+
                             <!-- Location Details Section -->
                             <div class="row">
                               <div class="col-md-12">
                                 <label for="pickup-area" class="form-label text-muted small fw-medium">Governorate and Area</label>
                                 <button type="button" class="btn btn-outline-secondary w-100 text-start" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
                                   <span id="selectedAreaDisplay">Select Area</span>
-                                    <i class="ri-arrow-down-s-line"></i>
+                                  <i class="ri-arrow-down-s-line"></i>
                                 </button>
                                 <input type="hidden" name="city" id="government-value">
                                 <input type="hidden" name="zone" id="zone-value">
@@ -864,7 +881,7 @@
                           </div>
                         </div>
                       </div>
-                      
+
                       <div class="col-md-12">
                         <label for="address-details" class="form-label">Address Details</label>
                         <input type="text" class="form-control" name="adressDetails" id="address-details" placeholder="Street, Building, Floor, Apartment" required>
@@ -880,7 +897,7 @@
                       <!-- Hidden input for storing coordinates -->
                       <input type="hidden" id="locationCoordinates" name="coordinates">
                     </div>
-                    
+
                     <!-- Map Modal with enhanced design -->
                     <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
                       <div class="modal-dialog modal-lg">
@@ -916,7 +933,7 @@
                         </div>
                       </div>
                     </div>
-                    
+
                     <div class="d-flex align-items-start gap-3 mt-4">
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-brand-info-tab">
                         <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Brand Info
@@ -1109,69 +1126,93 @@
   </div>
   <% } else { %>
   <div class="col-xl-12">
-<!-- Dashboard Overview Cards - Optimized -->
-<div class="row mb-4">
-  <div class="col-12">
-    <div class="card dashboard-card">
-      <div class="card-header d-flex align-items-center">
-        <h4 class="card-title mb-0">Today's Overview</h4>
-        <div class="ms-auto">
-          <span class="text-muted small" id="lastUpdated">Loading...</span>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="row g-3" id="dashboardStats">
-          <!-- Stats will be loaded via JavaScript for better performance -->
-          <div class="col-12 text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2 text-muted">Loading dashboard data...</p>
+    <!-- Welcome Section -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="d-flex align-items-lg-center flex-lg-row flex-column">
+          <div class="flex-grow-1">
+            <% 
+              const hour = new Date().getHours();
+              let greeting = 'Good Evening';
+              if (hour < 12) greeting = 'Good Morning';
+              else if (hour < 18) greeting = 'Good Afternoon';
+              
+              const businessName = user.brandInfo?.brandName || user.name || 'there';
+            %>
+            <h4 class="fs-16 mb-1 fw-semibold"><%= greeting %>, <%= businessName %>! 👋</h4>
+            <p class="text-muted mb-0">Here's your business overview for today.</p>
+          </div>
+          <div class="mt-3 mt-lg-0">
+            <a href="/manage/create-order" class="btn btn-primary-custom">
+              <i class="ri-add-circle-line align-middle me-1"></i> Create New Order
+            </a>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Chart and Recent Orders Row -->
-<div class="row">
-  <!-- Chart -->
-  <div class="col-xl-8">
-    <div class="card dashboard-card">
-      <div class="card-header">
-        <h4 class="card-title mb-0">Revenue & Orders Analytics</h4>
-      </div>
-      <div class="card-body">
-        <div id="revenue-chart" style="height: 350px;"></div>
+    <!-- Dashboard Overview Cards - Optimized -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card dashboard-card">
+          <div class="card-header d-flex align-items-center">
+            <h4 class="card-title mb-0">Today's Overview</h4>
+            <div class="ms-auto">
+              <span class="text-muted small" id="lastUpdated">Loading...</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-3" id="dashboardStats">
+              <!-- Stats will be loaded via JavaScript for better performance -->
+              <div class="col-12 text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading dashboard data...</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Recent Orders -->
-  <div class="col-xl-4">
-    <div class="card dashboard-card">
-      <div class="card-header">
-        <h4 class="card-title mb-0">Recent Orders</h4>
+    <!-- Chart and Recent Orders Row -->
+    <div class="row">
+      <!-- Chart -->
+      <div class="col-xl-8">
+        <div class="card dashboard-card">
+          <div class="card-header">
+            <h4 class="card-title mb-0">Revenue & Orders Analytics</h4>
+          </div>
+          <div class="card-body">
+            <div id="revenue-chart" style="height: 350px;"></div>
+          </div>
+        </div>
       </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-borderless mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% if (dashboardData?.recentData?.recentOrders?.length > 0) { %>
-              <% dashboardData.recentData.recentOrders.forEach(order => { %>
-              <tr>
-                <td>#<%= order.orderNumber %></td>
-                <td><%= order.orderCustomer?.fullName || 'N/A' %></td>
-                <td>
-                  <% let statusClass = ''; 
+
+      <!-- Recent Orders -->
+      <div class="col-xl-4">
+        <div class="card dashboard-card">
+          <div class="card-header">
+            <h4 class="card-title mb-0">Recent Orders</h4>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-borderless mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (dashboardData?.recentData?.recentOrders?.length > 0) { %>
+                  <% dashboardData.recentData.recentOrders.forEach(order => { %>
+                  <tr>
+                    <td>#<%= order.orderNumber %></td>
+                    <td><%= order.orderCustomer?.fullName || 'N/A' %></td>
+                    <td>
+                      <% let statusClass = ''; 
                          switch(order.orderStatus) {
                            case 'completed': statusClass = 'delivered'; break;
                            case 'new': statusClass = 'pending'; break;
@@ -1180,55 +1221,55 @@
                            default: statusClass = 'pending';
                          } 
                       %>
-                  <span class="order-status <%= statusClass %>"><%= order.orderStatus %></span>
-                </td>
-              </tr>
-              <% }) %>
-              <% } else { %>
-              <tr>
-                <td colspan="3" class="text-center py-3">No recent orders</td>
-              </tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card-footer bg-transparent border-top-0">
-        <div class="text-center">
-          <a href="/business/orders" class="text-dark-custom">View All Orders <i class="ri-arrow-right-line align-middle"></i></a>
+                      <span class="order-status <%= statusClass %>"><%= order.orderStatus %></span>
+                    </td>
+                  </tr>
+                  <% }) %>
+                  <% } else { %>
+                  <tr>
+                    <td colspan="3" class="text-center py-3">No recent orders</td>
+                  </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-top-0">
+            <div class="text-center">
+              <a href="/business/orders" class="text-dark-custom">View All Orders <i class="ri-arrow-right-line align-middle"></i></a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<div class="row">
-  <!-- Recent Pickups -->
-  <div class="col-xl-6">
-    <div class="card dashboard-card">
-      <div class="card-header">
-        <h4 class="card-title mb-0">Recent Pickups</h4>
-      </div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-borderless mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Pickup ID</th>
-                <th>Date</th>
-                <th>Items</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% if (dashboardData?.recentData?.recentPickups?.length > 0) { %>
-              <% dashboardData.recentData.recentPickups.forEach(pickup => { %>
-              <tr>
-                <td>#<%= pickup.pickupNumber %></td>
-                <td><%= new Date(pickup.pickupDate).toLocaleDateString() %></td>
-                <td><%= pickup.numberOfOrders %></td>
-                <td>
-                  <% let statusClass = ''; 
+    <div class="row">
+      <!-- Recent Pickups -->
+      <div class="col-xl-6">
+        <div class="card dashboard-card">
+          <div class="card-header">
+            <h4 class="card-title mb-0">Recent Pickups</h4>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-borderless mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Pickup ID</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (dashboardData?.recentData?.recentPickups?.length > 0) { %>
+                  <% dashboardData.recentData.recentPickups.forEach(pickup => { %>
+                  <tr>
+                    <td>#<%= pickup.pickupNumber %></td>
+                    <td><%= new Date(pickup.pickupDate).toLocaleDateString() %></td>
+                    <td><%= pickup.numberOfOrders %></td>
+                    <td>
+                      <% let statusClass = ''; 
                          switch(pickup.picikupStatus) {
                            case 'Completed': statusClass = 'delivered'; break;
                            case 'new': statusClass = 'pending'; break;
@@ -1236,158 +1277,159 @@
                            default: statusClass = 'pending';
                          }
                       %>
-                  <span class="order-status <%= statusClass %>"><%= pickup.picikupStatus %></span>
-                </td>
-              </tr>
-              <% }) %>
-              <% } else { %>
-              <tr>
-                <td colspan="4" class="text-center py-3">No recent pickups</td>
-              </tr>
-              <% } %>
-            </tbody>
-          </table>
+                      <span class="order-status <%= statusClass %>"><%= pickup.picikupStatus %></span>
+                    </td>
+                  </tr>
+                  <% }) %>
+                  <% } else { %>
+                  <tr>
+                    <td colspan="4" class="text-center py-3">No recent pickups</td>
+                  </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-top-0">
+            <div class="text-center">
+              <a href="/business/pickup" class="text-dark-custom">View All Pickups <i class="ri-arrow-right-line align-middle"></i></a>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="card-footer bg-transparent border-top-0">
-        <div class="text-center">
-          <a href="/business/pickup" class="text-dark-custom">View All Pickups <i class="ri-arrow-right-line align-middle"></i></a>
+
+      <!-- Performance Card -->
+      <div class="col-xl-6">
+        <div class="card dashboard-card">
+          <div class="card-header">
+            <h4 class="card-title mb-0">Performance Metrics</h4>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-4">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="avatar-sm">
+                      <span class="avatar-title bg-neutral-light rounded">
+                        <i class="ri-time-line text-primary-custom fs-4"></i>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h5 class="fs-15 mb-1">Average Delivery Time</h5>
+                    <p class="text-muted mb-0">2.3 days</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-4">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="avatar-sm">
+                      <span class="avatar-title bg-neutral-light rounded">
+                        <i class="ri-star-line text-dark-custom fs-4"></i>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h5 class="fs-15 mb-1">Customer Satisfaction</h5>
+                    <p class="text-muted mb-0">4.8/5</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-4">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="avatar-sm">
+                      <span class="avatar-title bg-neutral-light rounded">
+                        <i class="ri-repeat-line text-primary-custom fs-4"></i>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h5 class="fs-15 mb-1">Return Rate</h5>
+                    <p class="text-muted mb-0">2.1%</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-4">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="avatar-sm">
+                      <span class="avatar-title bg-neutral-light rounded">
+                        <i class="ri-user-heart-line text-dark-custom fs-4"></i>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h5 class="fs-15 mb-1">Repeat Customers</h5>
+                    <p class="text-muted mb-0">68%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3">
+              <div id="performance-chart" style="height: 200px;"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
   </div>
+  <% } %>
 
-  <!-- Performance Card -->
-  <div class="col-xl-6">
-    <div class="card dashboard-card">
-      <div class="card-header">
-        <h4 class="card-title mb-0">Performance Metrics</h4>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="d-flex align-items-center mb-4">
-              <div class="flex-shrink-0 me-3">
-                <div class="avatar-sm">
-                  <span class="avatar-title bg-neutral-light rounded">
-                    <i class="ri-time-line text-primary-custom fs-4"></i>
-                  </span>
-                </div>
-              </div>
-              <div class="flex-grow-1">
-                <h5 class="fs-15 mb-1">Average Delivery Time</h5>
-                <p class="text-muted mb-0">2.3 days</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="d-flex align-items-center mb-4">
-              <div class="flex-shrink-0 me-3">
-                <div class="avatar-sm">
-                  <span class="avatar-title bg-neutral-light rounded">
-                    <i class="ri-star-line text-dark-custom fs-4"></i>
-                  </span>
-                </div>
-              </div>
-              <div class="flex-grow-1">
-                <h5 class="fs-15 mb-1">Customer Satisfaction</h5>
-                <p class="text-muted mb-0">4.8/5</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="d-flex align-items-center mb-4">
-              <div class="flex-shrink-0 me-3">
-                <div class="avatar-sm">
-                  <span class="avatar-title bg-neutral-light rounded">
-                    <i class="ri-repeat-line text-primary-custom fs-4"></i>
-                  </span>
-                </div>
-              </div>
-              <div class="flex-grow-1">
-                <h5 class="fs-15 mb-1">Return Rate</h5>
-                <p class="text-muted mb-0">2.1%</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="d-flex align-items-center mb-4">
-              <div class="flex-shrink-0 me-3">
-                <div class="avatar-sm">
-                  <span class="avatar-title bg-neutral-light rounded">
-                    <i class="ri-user-heart-line text-dark-custom fs-4"></i>
-                  </span>
-                </div>
-              </div>
-              <div class="flex-grow-1">
-                <h5 class="fs-15 mb-1">Repeat Customers</h5>
-                <p class="text-muted mb-0">68%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="mt-3">
-          <div id="performance-chart" style="height: 200px;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+  <%- contentFor('FooterJs') %>
+  <!-- Include Area Selection Modal -->
+  <%- include('../partials/area-selection-modal') %>
+  <script src="/assets/libs/filepond/filepond.min.js"></script>
+  <script src="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js"></script>
+  <script src="/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js"></script>
+  <script src="/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js"></script>
+  <script src="/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js"></script>
+  <script src="/assets/libs/apexcharts/apexcharts.min.js"></script>
 
-</div>
-<% } %>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<%- contentFor('FooterJs') %>
-<!-- Include Area Selection Modal -->
-<%- include('../partials/area-selection-modal') %>
-<script src="/assets/libs/filepond/filepond.min.js"></script>
-<script src="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js"></script>
-<script src="/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js"></script>
-<script src="/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js"></script>
-<script src="/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js"></script>
-<script src="/assets/libs/apexcharts/apexcharts.min.js"></script>
+  <script src="/assets/js/pages/form-file-upload.init.js"></script>
+  <script src="/assets/rJS/business/main.js"></script>
+  <script src="/assets/js/area-selection-modal.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    // Optimized Dashboard Loading
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load dashboard data asynchronously
+      loadDashboardData();
 
-<script src="/assets/js/pages/form-file-upload.init.js"></script>
-<script src="/assets/rJS/business/main.js"></script>
-<script src="/assets/js/area-selection-modal.js"></script>
+      // Charts render after data loads
+    });
 
-<script>
-// Optimized Dashboard Loading
-document.addEventListener('DOMContentLoaded', function() {
-  // Load dashboard data asynchronously
-  loadDashboardData();
-  
-  // Initialize charts after data loads
-  initializeCharts();
-});
+    // Async dashboard data loading
+    async function loadDashboardData() {
+      try {
+        const response = await fetch('/business/dashboard-data');
+        const data = await response.json();
 
-// Async dashboard data loading
-async function loadDashboardData() {
-  try {
-    const response = await fetch('/business/dashboard-data');
-    const data = await response.json();
-    
-    if (data.status === 'success') {
-      renderDashboardStats(data.dashboardData);
-      updateLastUpdatedTime();
+        if (data.status === 'success') {
+          renderDashboardStats(data.dashboardData);
+          renderRevenueChart(data.dashboardData);
+          renderPerformanceChart();
+          updateLastUpdatedTime();
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        showDashboardError();
+      }
     }
-  } catch (error) {
-    console.error('Error loading dashboard data:', error);
-    showDashboardError();
-  }
-}
 
-// Render dashboard statistics
-function renderDashboardStats(data) {
-  const statsContainer = document.getElementById('dashboardStats');
-  if (!statsContainer) return;
-  
-  const orderStats = data.orderStats || {};
-  const financialStats = data.financialStats || {};
-  
-  statsContainer.innerHTML = `
+    // Render dashboard statistics
+    function renderDashboardStats(data) {
+      const statsContainer = document.getElementById('dashboardStats');
+      if (!statsContainer) return;
+
+      const orderStats = data.orderStats || {};
+      const financialStats = data.financialStats || {};
+
+      statsContainer.innerHTML = `
     <!-- In Progress Orders -->
     <div class="col-md-3">
       <div class="card border shadow-sm h-100">
@@ -1470,684 +1512,54 @@ function renderDashboardStats(data) {
       </div>
     </div>
   `;
-  
-  // Initialize tooltips
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function(tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
-}
 
-// Update last updated time
-function updateLastUpdatedTime() {
-  const lastUpdated = document.getElementById('lastUpdated');
-  if (lastUpdated) {
-    lastUpdated.textContent = `Last updated at ${new Date().toLocaleTimeString()}`;
-  }
-}
+      // Initialize tooltips
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    }
 
-// Show error state
-function showDashboardError() {
-  const statsContainer = document.getElementById('dashboardStats');
-  if (statsContainer) {
-    statsContainer.innerHTML = `
+    // Update last updated time
+    function updateLastUpdatedTime() {
+      const lastUpdated = document.getElementById('lastUpdated');
+      if (lastUpdated) {
+        lastUpdated.textContent = `Last updated at ${new Date().toLocaleTimeString()}`;
+      }
+    }
+
+    // Show error state
+    function showDashboardError() {
+      const statsContainer = document.getElementById('dashboardStats');
+      if (statsContainer) {
+        statsContainer.innerHTML = `
       <div class="col-12 text-center py-4">
         <i class="ri-error-warning-line text-danger fs-1"></i>
         <p class="mt-2 text-muted">Failed to load dashboard data</p>
         <button class="btn btn-outline-primary btn-sm" onclick="loadDashboardData()">Retry</button>
       </div>
     `;
-  }
-}
-
-// Initialize charts
-function initializeCharts() {
-  // Chart will be initialized after data loads
-  setTimeout(() => {
-    if (document.getElementById('revenue-chart')) {
-      initializeRevenueChart();
-    }
-    if (document.getElementById('performance-chart')) {
-      initializePerformanceChart();
-    }
-  }, 1000);
-}
-
-// Initialize revenue chart
-function initializeRevenueChart() {
-  const revenueChartOptions = {
-    series: [{
-      name: 'Revenue',
-      type: 'column',
-      data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
-    }, {
-      name: 'Orders',
-      type: 'line',
-      data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
-    }],
-    chart: {
-      height: 350,
-      type: 'line',
-      toolbar: { show: false }
-    },
-    stroke: { width: [0, 4], curve: 'smooth' },
-    colors: ['#F39720', '#333333'],
-    dataLabels: { enabled: true, enabledOnSeries: [1] },
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-    xaxis: { type: 'category' },
-    yaxis: [{
-      title: { text: 'Revenue (EGP)' }
-    }, {
-      opposite: true,
-      title: { text: 'Orders' }
-    }]
-  };
-
-  const revenueChart = new ApexCharts(document.getElementById('revenue-chart'), revenueChartOptions);
-  revenueChart.render();
-}
-
-// Initialize performance chart
-function initializePerformanceChart() {
-  const performanceChartOptions = {
-    series: [{ name: 'Performance', data: [75, 85, 65, 90, 82, 78] }],
-    chart: { type: 'radar', height: 200, toolbar: { show: false } },
-    colors: ['#F39720'],
-    xaxis: { categories: ['Delivery', 'Quality', 'Service', 'Value', 'Satisfaction', 'Retention'] },
-    yaxis: { show: false },
-    markers: { size: 4, colors: ['#333333'], strokeColors: '#fff', strokeWidth: 2 },
-    tooltip: { y: { formatter: function(val) { return val + '%'; } } }
-  };
-
-  const performanceChart = new ApexCharts(document.getElementById('performance-chart'), performanceChartOptions);
-  performanceChart.render();
-}
-
-  document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap components
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function(tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Helper function to check if an element is visible
-    function isVisible(el) {
-      return el && el.offsetParent !== null;
-    }
-
-    // Helper function to clear all input values inside a container
-    function clearFormInputs(container) {
-      if (!container) return;
-      const inputs = container.querySelectorAll('input, select, textarea');
-      inputs.forEach((input) => {
-        if (input.type === 'checkbox' || input.type === 'radio') {
-          input.checked = false;
-        } else {
-          input.value = '';
-        }
-        input.classList.remove('is-invalid');
-      });
-    }
-
-    // Validate only the visible required fields in the current tab
-    function validateCurrentStep(currentTabPane) {
-      let isValid = true;
-      const requiredElements = currentTabPane.querySelectorAll(
-        'input[required], select[required], textarea[required]'
-      );
-
-      requiredElements.forEach((el) => {
-        if (!isVisible(el)) {
-          return;
-        }
-
-        if (el.type === 'radio') {
-          const groupName = el.name;
-          const radioGroup = currentTabPane.querySelectorAll(
-            `input[name="${groupName}"]`
-          );
-          const groupChecked = Array.from(radioGroup).some(
-            (radio) => radio.checked
-          );
-
-          if (!groupChecked) {
-            isValid = false;
-            const parentContainer = el.closest('.row');
-            if (parentContainer) {
-              parentContainer.querySelectorAll('.card').forEach(card => {
-                card.classList.add('border-danger');
-              });
-            }
-          } else {
-            const parentContainer = el.closest('.row');
-            if (parentContainer) {
-              parentContainer.querySelectorAll('.card').forEach(card => {
-                card.classList.remove('border-danger');
-              });
-            }
-          }
-        } else {
-          if (!el.value.trim()) {
-            isValid = false;
-            el.classList.add('is-invalid');
-          } else {
-            el.classList.remove('is-invalid');
-          }
-        }
-      });
-
-      return isValid;
-    }
-
-    // Mark step as completed
-    function markStepAsDone(tabId) {
-      const tabLink = document.querySelector(`button[data-bs-target="#${tabId}"]`);
-      if (tabLink) {
-        const icon = tabLink.querySelector('.step-icon');
-        if (icon) {
-          icon.classList.remove('ri-close-circle-fill');
-          icon.classList.add('ri-check-circle-fill', 'text-primary-custom');
-        }
       }
     }
 
-    // Initialize form steps
-    document.querySelectorAll('.form-steps').forEach((formSteps) => {
-      // Handle next tab navigation
-      formSteps.querySelectorAll('.nexttab').forEach((nextBtn) => {
-        nextBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-
-          const currentTabPane = formSteps.querySelector('.tab-pane.show.active');
-          if (!currentTabPane) return;
-
-          const currentTabId = currentTabPane.getAttribute('id');
-
-          // Skip validation for already verified steps
-          if (currentTabId !== 'v-pills-bill-info' || !document.querySelector('.fw-bold')?.textContent?.includes('Email Verified')) {
-            // Validate current step
-            if (!validateCurrentStep(currentTabPane)) {
-              Swal.fire({
-                title: 'Validation Error',
-                text: 'Please complete all required fields before continuing.',
-                icon: 'error',
-                confirmButtonText: 'OK'
-              });
-              return;
-            }
-          }
-
-          // Mark current step as done
-          markStepAsDone(currentTabId);
-
-          // Get next tab ID
-          const nextTabId = this.getAttribute('data-nexttab');
-          if (!nextTabId) return;
-
-          // Get the actual tab element and trigger click
-          const nextTabButton = document.getElementById(nextTabId);
-          if (nextTabButton) {
-            // Enable the next tab if it was disabled
-            nextTabButton.classList.remove('disabled');
-            nextTabButton.removeAttribute('disabled');
-            
-            // Use native click method to activate the tab
-            nextTabButton.click();
-          }
-        });
-      });
-
-      // Handle previous tab navigation
-      formSteps.querySelectorAll('.previestab').forEach((prevBtn) => {
-        prevBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          const prevTabId = this.getAttribute('data-previous');
-          if (!prevTabId) return;
-          
-          // Get the actual tab element and trigger click
-          const prevTabButton = document.getElementById(prevTabId);
-          if (prevTabButton) {
-            prevTabButton.click();
-          }
-        });
-      });
-
-      // Payment Method Selection
-      formSteps.querySelectorAll('.payment-option').forEach((paymentOption) => {
-        paymentOption.addEventListener('click', function() {
-          // Remove active class from all payment options
-          formSteps.querySelectorAll('.payment-option').forEach((option) => {
-            option.classList.remove('active');
-          });
-
-          // Add active class to the clicked option
-          this.classList.add('active');
-
-          // Hide all payment details
-          document.querySelectorAll('.payment-detail').forEach((detail) => {
-            detail.style.display = 'none';
-            clearFormInputs(detail);
-          });
-
-          // Show the relevant payment details
-          const method = this.getAttribute('data-value');
-          if (method) {
-            const detailDiv = document.getElementById(method + 'Details');
-            if (detailDiv) {
-              detailDiv.style.display = 'block';
-              document.getElementById('paymentDetails').style.display = 'block';
-            }
-          }
-
-          // Check the radio input
-          const radioInput = this.querySelector('.payment-radio');
-          if (radioInput) {
-            radioInput.checked = true;
-          }
-        });
-      });
-
-      // Brand Type Selection
-      formSteps.querySelectorAll('.brand-option').forEach((brandOption) => {
-        brandOption.addEventListener('click', function() {
-          // Remove active class from all brand options
-          formSteps.querySelectorAll('.brand-option').forEach((option) => {
-            option.classList.remove('active');
-          });
-
-          // Add active class to the clicked option
-          this.classList.add('active');
-
-          // Get the brand type
-          const brandType = this.getAttribute('data-value');
-          const personalFields = document.getElementById('personalFields');
-          const companyFields = document.getElementById('companyFields');
-
-          // Show/hide fields based on selection
-          if (brandType === 'personal') {
-            if (companyFields) {
-              clearFormInputs(companyFields);
-              companyFields.style.display = 'none';
-            }
-            if (personalFields) {
-              personalFields.style.display = 'block';
-            }
-          } else if (brandType === 'company') {
-            if (personalFields) {
-              clearFormInputs(personalFields);
-              personalFields.style.display = 'none';
-            }
-            if (companyFields) {
-              companyFields.style.display = 'block';
-            }
-          }
-
-          // Check the radio input
-          const radioInput = this.querySelector('.brand-radio');
-          if (radioInput) {
-            radioInput.checked = true;
-          }
-        });
-      });
-
-      // Social Media Channel Selection
-      formSteps.querySelectorAll('.channel-checkbox').forEach((checkbox) => {
-        checkbox.addEventListener('change', function() {
-          const channelName = this.getAttribute('data-channel');
-          const linkInput = document.getElementById(`${channelName}-link-input`);
-
-          if (linkInput) {
-            if (this.checked) {
-              linkInput.classList.add('active');
-            } else {
-              linkInput.classList.remove('active');
-              // Clear the input when unchecked
-              const input = linkInput.querySelector('input');
-              if (input) input.value = '';
-            }
-          }
-        });
-      });
-    });
-
-    // File Upload Handling
-    const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
-    const CLOUDINARY_UPLOAD_PRESET = 'order_project';
-
-    let uploadedPhotos = [];
-    const photoCountDisplay = document.getElementById('photoCount');
-    const submitButton = document.getElementById('submitButton');
-
-    // Initialize FilePond
-    FilePond.registerPlugin(
-      FilePondPluginImagePreview,
-      FilePondPluginFileValidateSize,
-      FilePondPluginImageExifOrientation,
-      FilePondPluginFileEncode
-    );
-
-    // Create FilePond instances
-    document.querySelectorAll('.filepond-input-multiple').forEach((input) => {
-      // Create a progress container for this input if it doesn't exist
-      let progressContainer = document.createElement('div');
-      progressContainer.className = 'upload-progress mt-2';
-      progressContainer.style.display = 'none';
-
-      let progressBar = document.createElement('div');
-      progressBar.className = 'upload-progress-bar';
-      progressBar.style.width = '0%';
-
-      progressContainer.appendChild(progressBar);
-
-      // Add the progress container after the input
-      input.parentNode.appendChild(progressContainer);
-
-      const pond = FilePond.create(input, {
-        allowMultiple: true,
-        maxFiles: input.getAttribute('data-max-files') || 5,
-        maxFileSize: input.getAttribute('data-max-file-size') || '3MB',
-        server: {
-          process: (fieldName, file, metadata, load, error, progress, abort) => {
-            // Show progress indicator
-            progressContainer.style.display = 'block';
-
-            // Create form data
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-            // Create and send XHR request
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', CLOUDINARY_URL, true);
-
-            // Update progress
-            xhr.upload.onprogress = (e) => {
-              if (e.lengthComputable) {
-                const percentComplete = (e.loaded / e.total) * 100;
-                progress(percentComplete, {
-                  type: 'upload',
-                  value: percentComplete
-                });
-
-                progressBar.style.width = percentComplete + '%';
-              }
-            };
-
-            // Handle response
-            xhr.onload = function() {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                const response = JSON.parse(xhr.responseText);
-                uploadedPhotos.push(response.secure_url);
-
-                // Update photo count display
-                if (photoCountDisplay) {
-                  photoCountDisplay.style.display = 'inline-flex';
-                  photoCountDisplay.querySelector('span').textContent = uploadedPhotos.length;
-                }
-
-                load(response.secure_url);
-              } else {
-                error('Upload failed');
-              }
-            };
-
-            // Handle error
-            xhr.onerror = function() {
-              error('Upload failed');
-            };
-
-            // Send the form data
-            xhr.send(formData);
-
-            // Return abort function
-            return {
-              abort: () => {
-                xhr.abort();
-                abort();
-              }
-            };
-          }
-        },
-        labelIdle: 'Drag & Drop your files or <span class="filepond--label-action">Browse</span>',
-        labelFileProcessing: 'Uploading',
-        labelFileProcessingComplete: 'Upload Complete',
-        labelTapToCancel: 'tap to cancel',
-        labelTapToRetry: 'tap to retry',
-        labelTapToUndo: 'tap to undo',
-        onaddfile: (error, file) => {
-          if (error) {
-            console.error('Error adding file:', error);
-            return;
-          }
-        },
-        onremovefile: (error, file) => {
-          if (error) {
-            console.error('Error removing file:', error);
-            return;
-          }
-        }
-      });
-    });
-
-    // Form Submission
-    const verificationForm = document.getElementById('verificationForm');
-    if (verificationForm) {
-      verificationForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const lastStep = document.querySelector('.tab-pane.show.active');
-        if (!validateCurrentStep(lastStep)) {
-          Swal.fire({
-            title: 'Validation Error',
-            text: 'Please complete all required fields before submitting.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
-          return;
-        }
-
-        // Show loading state
-        Swal.fire({
-          title: 'Processing',
-          text: 'Submitting your information...',
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-
-        try {
-          const formData = new FormData(verificationForm);
-          const formObject = Object.fromEntries(formData.entries());
-
-          // Add selling points
-          const sellingPoints = [];
-          const socialLinks = {};
-
-          document.querySelectorAll('input[name="sellingPoints[]"]:checked').forEach((checkbox) => {
-            const channel = checkbox.value;
-            sellingPoints.push(channel);
-
-            // Get the associated link if available
-            const linkInput = document.getElementById(`${channel}-link`);
-            if (linkInput && linkInput.value) {
-              socialLinks[channel] = linkInput.value;
-            }
-          });
-
-          formObject.sellingPoints = sellingPoints;
-          formObject.socialLinks = socialLinks;
-
-          // Add uploaded photos
-          formObject.photosOfBrandType = uploadedPhotos;
-          
-          // Add map location data
-          const locationCoordinates = document.getElementById('locationCoordinates');
-          if (locationCoordinates && locationCoordinates.value) {
-            try {
-              formObject.pickUpPointCoordinates = JSON.parse(locationCoordinates.value);
-              formObject.pickUpPointInMaps = locationCoordinates.getAttribute('data-location-text') || '';
-            } catch (e) {
-              console.error('Error parsing location coordinates:', e);
-            }
-          }
-
-          // Send data to server
-          const response = await fetch('/business/completionConfirm', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formObject)
-          });
-
-          const data = await response.json();
-
-          if (response.ok) {
-            // Show success message
-            Swal.fire({
-              icon: 'success',
-              title: 'Success!',
-              text: data.message || 'Account Successfully Completed',
-              confirmButtonText: 'OK'
-            }).then((result) => {
-              if (result.isConfirmed) {
-                // Enable and activate the finish tab
-                const finishTab = document.getElementById('v-pills-finish-tab');
-                if (finishTab) {
-                  finishTab.classList.remove('disabled');
-                  finishTab.removeAttribute('disabled');
-                  finishTab.click();
-                }
-                markStepAsDone('v-brand-type');
-              }
-            });
-          } else {
-            // Show error message
-            Swal.fire({
-              icon: 'error',
-              title: 'Submission Failed',
-              text: data.error || 'An error occurred. Please try again.',
-              confirmButtonText: 'OK'
-            });
-          }
-        } catch (err) {
-          console.error('An error occurred:', err);
-          Swal.fire({
-            icon: 'error',
-            title: 'Submission Failed',
-            text: 'An error occurred. Please try again.',
-            confirmButtonText: 'OK'
-          });
-        }
-      });
-    }
-
-    // Submit button should trigger form submission
-    if (submitButton) {
-      submitButton.addEventListener('click', function(e) {
-        e.preventDefault();
-
-        // Trigger form submission
-        const form = document.getElementById('verificationForm');
-        if (form) {
-          form.dispatchEvent(new Event('submit'));
-        }
-      });
-    }
-
-    // Email Verification
-    const sendVerificationEmailBtn = document.getElementById('sendVerificationEmail');
-    if (sendVerificationEmailBtn) {
-      sendVerificationEmailBtn.addEventListener('click', async function() {
-        try {
-          // Show loading state
-          sendVerificationEmailBtn.disabled = true;
-          sendVerificationEmailBtn.innerHTML = '<i class="ri-loader-4-line animate-spin me-2"></i> Sending...';
-
-          const response = await fetch('/business/request-verification');
-          const data = await response.json();
-
-          if (data.status === 'success') {
-            Swal.fire({
-              icon: 'success',
-              title: 'Email Sent',
-              text: 'Verification email sent successfully! Please check your inbox.',
-              confirmButtonText: 'OK'
-            });
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: data.message || 'Failed to send verification email.',
-              confirmButtonText: 'Try Again'
-            });
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while sending the email.',
-            confirmButtonText: 'Try Again'
-          });
-        } finally {
-          // Reset button state
-          sendVerificationEmailBtn.disabled = false;
-          sendVerificationEmailBtn.innerHTML = '<i class="ri-mail-fill fs-5 me-2"></i> Send Verification Email';
-        }
-      });
-    }
-
-    // Initialize Dashboard Charts if user is completed
-    if (document.getElementById('revenue-chart')) {
-      const revenueChartOptions = {
-        series: [{
-          name: 'Revenue',
-          type: 'column',
-          data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
-        }, {
-          name: 'Orders',
-          type: 'line',
-          data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
-        }],
-        chart: {
-          height: 350,
-          type: 'line',
-          toolbar: {
-            show: false
-          }
-        },
-        stroke: {
-          width: [0, 4],
-          curve: 'smooth'
-        },
-        colors: ['#F39720', '#333333'],
-        dataLabels: {
-          enabled: true,
-          enabledOnSeries: [1]
-        },
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-        xaxis: {
-          type: 'category'
-        },
-        yaxis: [{
-          title: {
-            text: 'Revenue ($)',
-          },
-        }, {
-          opposite: true,
-          title: {
-            text: 'Orders'
-          }
-        }]
+    function renderRevenueChart(d) {
+      const el = document.getElementById('revenue-chart');
+      if(!el) return;
+      const rev = d.financialStats?.revenueByMonth || [];
+      const ord = d.financialStats?.ordersByMonth || [];
+      const revMap = new Map(rev.map(r => [r._id.y + '-' + String(r._id.m).padStart(2,'0'), r.revenue]));
+      const ordMap = new Map(ord.map(o => [o._id.y + '-' + String(o._id.m).padStart(2,'0'), o.count]));
+      const keys = Array.from(new Set([...revMap.keys(), ...ordMap.keys()])).sort().slice(-9);
+      const revSeries = keys.map(k => revMap.get(k) || 0);
+      const ordSeries = keys.map(k => ordMap.get(k) || 0);
+      const opts = {
+        series:[{name:'Revenue', type:'column', data:revSeries},{name:'Orders', type:'line', data:ordSeries}],
+        chart:{height:350,type:'line',toolbar:{show:false}}, stroke:{width:[0,4],curve:'smooth'}, colors:['#F39720','#333333'], dataLabels:{enabled:true,enabledOnSeries:[1]}, labels:keys, xaxis:{type:'category'}, yaxis:[{title:{text:'Revenue (EGP)'}},{opposite:true,title:{text:'Orders'}}]
       };
-
-      const revenueChart = new ApexCharts(document.getElementById('revenue-chart'), revenueChartOptions);
-      revenueChart.render();
+      new ApexCharts(el, opts).render();
     }
 
-    if (document.getElementById('performance-chart')) {
+    function renderPerformanceChart() {
       const performanceChartOptions = {
         series: [{
           name: 'Performance',
@@ -2171,7 +1583,7 @@ function initializePerformanceChart() {
           size: 4,
           colors: ['#333333'],
           strokeColors: '#fff',
-          strokeWidth: 2,
+          strokeWidth: 2
         },
         tooltip: {
           y: {
@@ -2186,13 +1598,637 @@ function initializePerformanceChart() {
       performanceChart.render();
     }
 
-    // Ensure first tab is active on page load
-    document.getElementById('v-pills-bill-info-tab').click();
-  });
-</script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize Bootstrap components
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
 
-<!-- Google Maps API for location selection -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBg4oV-yrhIkatEh2fVvzOXmFaDmJ-h7Aw&libraries=places&callback=initMap" async defer></script>
-<script src="/assets/js/map-location.js"></script>
+      // Helper function to check if an element is visible
+      function isVisible(el) {
+        return el && el.offsetParent !== null;
+      }
+
+      // Helper function to clear all input values inside a container
+      function clearFormInputs(container) {
+        if (!container) return;
+        const inputs = container.querySelectorAll('input, select, textarea');
+        inputs.forEach((input) => {
+          if (input.type === 'checkbox' || input.type === 'radio') {
+            input.checked = false;
+          } else {
+            input.value = '';
+          }
+          input.classList.remove('is-invalid');
+        });
+      }
+
+      // Validate only the visible required fields in the current tab
+      function validateCurrentStep(currentTabPane) {
+        let isValid = true;
+        const requiredElements = currentTabPane.querySelectorAll(
+          'input[required], select[required], textarea[required]'
+        );
+
+        requiredElements.forEach((el) => {
+          if (!isVisible(el)) {
+            return;
+          }
+
+          if (el.type === 'radio') {
+            const groupName = el.name;
+            const radioGroup = currentTabPane.querySelectorAll(
+              `input[name="${groupName}"]`
+            );
+            const groupChecked = Array.from(radioGroup).some(
+              (radio) => radio.checked
+            );
+
+            if (!groupChecked) {
+              isValid = false;
+              const parentContainer = el.closest('.row');
+              if (parentContainer) {
+                parentContainer.querySelectorAll('.card').forEach(card => {
+                  card.classList.add('border-danger');
+                });
+              }
+            } else {
+              const parentContainer = el.closest('.row');
+              if (parentContainer) {
+                parentContainer.querySelectorAll('.card').forEach(card => {
+                  card.classList.remove('border-danger');
+                });
+              }
+            }
+          } else {
+            if (!el.value.trim()) {
+              isValid = false;
+              el.classList.add('is-invalid');
+            } else {
+              el.classList.remove('is-invalid');
+            }
+          }
+        });
+
+        return isValid;
+      }
+
+      // Mark step as completed
+      function markStepAsDone(tabId) {
+        const tabLink = document.querySelector(`button[data-bs-target="#${tabId}"]`);
+        if (tabLink) {
+          const icon = tabLink.querySelector('.step-icon');
+          if (icon) {
+            icon.classList.remove('ri-close-circle-fill');
+            icon.classList.add('ri-check-circle-fill', 'text-primary-custom');
+          }
+        }
+      }
+
+      // Initialize form steps
+      document.querySelectorAll('.form-steps').forEach((formSteps) => {
+        // Handle next tab navigation
+        formSteps.querySelectorAll('.nexttab').forEach((nextBtn) => {
+          nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const currentTabPane = formSteps.querySelector('.tab-pane.show.active');
+            if (!currentTabPane) return;
+
+            const currentTabId = currentTabPane.getAttribute('id');
+
+            // Skip validation for already verified steps
+            if (currentTabId !== 'v-pills-bill-info' || !document.querySelector('.fw-bold')?.textContent?.includes('Email Verified')) {
+              // Validate current step
+              if (!validateCurrentStep(currentTabPane)) {
+                Swal.fire({
+                  title: 'Validation Error',
+                  text: 'Please complete all required fields before continuing.',
+                  icon: 'error',
+                  confirmButtonText: 'OK'
+                });
+                return;
+              }
+            }
+
+            // Mark current step as done
+            markStepAsDone(currentTabId);
+
+            // Get next tab ID
+            const nextTabId = this.getAttribute('data-nexttab');
+            if (!nextTabId) return;
+
+            // Get the actual tab element and trigger click
+            const nextTabButton = document.getElementById(nextTabId);
+            if (nextTabButton) {
+              // Enable the next tab if it was disabled
+              nextTabButton.classList.remove('disabled');
+              nextTabButton.removeAttribute('disabled');
+
+              // Use native click method to activate the tab
+              nextTabButton.click();
+            }
+          });
+        });
+
+        // Handle previous tab navigation
+        formSteps.querySelectorAll('.previestab').forEach((prevBtn) => {
+          prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const prevTabId = this.getAttribute('data-previous');
+            if (!prevTabId) return;
+
+            // Get the actual tab element and trigger click
+            const prevTabButton = document.getElementById(prevTabId);
+            if (prevTabButton) {
+              prevTabButton.click();
+            }
+          });
+        });
+
+        // Payment Method Selection
+        formSteps.querySelectorAll('.payment-option').forEach((paymentOption) => {
+          paymentOption.addEventListener('click', function() {
+            // Remove active class from all payment options
+            formSteps.querySelectorAll('.payment-option').forEach((option) => {
+              option.classList.remove('active');
+            });
+
+            // Add active class to the clicked option
+            this.classList.add('active');
+
+            // Hide all payment details
+            document.querySelectorAll('.payment-detail').forEach((detail) => {
+              detail.style.display = 'none';
+              clearFormInputs(detail);
+            });
+
+            // Show the relevant payment details
+            const method = this.getAttribute('data-value');
+            if (method) {
+              const detailDiv = document.getElementById(method + 'Details');
+              if (detailDiv) {
+                detailDiv.style.display = 'block';
+                document.getElementById('paymentDetails').style.display = 'block';
+              }
+            }
+
+            // Check the radio input
+            const radioInput = this.querySelector('.payment-radio');
+            if (radioInput) {
+              radioInput.checked = true;
+            }
+          });
+        });
+
+        // Brand Type Selection
+        formSteps.querySelectorAll('.brand-option').forEach((brandOption) => {
+          brandOption.addEventListener('click', function() {
+            // Remove active class from all brand options
+            formSteps.querySelectorAll('.brand-option').forEach((option) => {
+              option.classList.remove('active');
+            });
+
+            // Add active class to the clicked option
+            this.classList.add('active');
+
+            // Get the brand type
+            const brandType = this.getAttribute('data-value');
+            const personalFields = document.getElementById('personalFields');
+            const companyFields = document.getElementById('companyFields');
+
+            // Show/hide fields based on selection
+            if (brandType === 'personal') {
+              if (companyFields) {
+                clearFormInputs(companyFields);
+                companyFields.style.display = 'none';
+              }
+              if (personalFields) {
+                personalFields.style.display = 'block';
+              }
+            } else if (brandType === 'company') {
+              if (personalFields) {
+                clearFormInputs(personalFields);
+                personalFields.style.display = 'none';
+              }
+              if (companyFields) {
+                companyFields.style.display = 'block';
+              }
+            }
+
+            // Check the radio input
+            const radioInput = this.querySelector('.brand-radio');
+            if (radioInput) {
+              radioInput.checked = true;
+            }
+          });
+        });
+
+        // Social Media Channel Selection
+        formSteps.querySelectorAll('.channel-checkbox').forEach((checkbox) => {
+          checkbox.addEventListener('change', function() {
+            const channelName = this.getAttribute('data-channel');
+            const linkInput = document.getElementById(`${channelName}-link-input`);
+
+            if (linkInput) {
+              if (this.checked) {
+                linkInput.classList.add('active');
+              } else {
+                linkInput.classList.remove('active');
+                // Clear the input when unchecked
+                const input = linkInput.querySelector('input');
+                if (input) input.value = '';
+              }
+            }
+          });
+        });
+      });
+
+      // File Upload Handling
+      const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
+      const CLOUDINARY_UPLOAD_PRESET = 'order_project';
+
+      let uploadedPhotos = [];
+      const photoCountDisplay = document.getElementById('photoCount');
+      const submitButton = document.getElementById('submitButton');
+
+      // Initialize FilePond
+      FilePond.registerPlugin(
+        FilePondPluginImagePreview,
+        FilePondPluginFileValidateSize,
+        FilePondPluginImageExifOrientation,
+        FilePondPluginFileEncode
+      );
+
+      // Create FilePond instances
+      document.querySelectorAll('.filepond-input-multiple').forEach((input) => {
+        // Create a progress container for this input if it doesn't exist
+        let progressContainer = document.createElement('div');
+        progressContainer.className = 'upload-progress mt-2';
+        progressContainer.style.display = 'none';
+
+        let progressBar = document.createElement('div');
+        progressBar.className = 'upload-progress-bar';
+        progressBar.style.width = '0%';
+
+        progressContainer.appendChild(progressBar);
+
+        // Add the progress container after the input
+        input.parentNode.appendChild(progressContainer);
+
+        const pond = FilePond.create(input, {
+          allowMultiple: true,
+          maxFiles: input.getAttribute('data-max-files') || 5,
+          maxFileSize: input.getAttribute('data-max-file-size') || '3MB',
+          server: {
+            process: (fieldName, file, metadata, load, error, progress, abort) => {
+              // Show progress indicator
+              progressContainer.style.display = 'block';
+
+              // Create form data
+              const formData = new FormData();
+              formData.append('file', file);
+              formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+              // Create and send XHR request
+              const xhr = new XMLHttpRequest();
+              xhr.open('POST', CLOUDINARY_URL, true);
+
+              // Update progress
+              xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                  const percentComplete = (e.loaded / e.total) * 100;
+                  progress(percentComplete, {
+                    type: 'upload',
+                    value: percentComplete
+                  });
+
+                  progressBar.style.width = percentComplete + '%';
+                }
+              };
+
+              // Handle response
+              xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  const response = JSON.parse(xhr.responseText);
+                  uploadedPhotos.push(response.secure_url);
+
+                  // Update photo count display
+                  if (photoCountDisplay) {
+                    photoCountDisplay.style.display = 'inline-flex';
+                    photoCountDisplay.querySelector('span').textContent = uploadedPhotos.length;
+                  }
+
+                  load(response.secure_url);
+                } else {
+                  error('Upload failed');
+                }
+              };
+
+              // Handle error
+              xhr.onerror = function() {
+                error('Upload failed');
+              };
+
+              // Send the form data
+              xhr.send(formData);
+
+              // Return abort function
+              return {
+                abort: () => {
+                  xhr.abort();
+                  abort();
+                }
+              };
+            }
+          },
+          labelIdle: 'Drag & Drop your files or <span class="filepond--label-action">Browse</span>',
+          labelFileProcessing: 'Uploading',
+          labelFileProcessingComplete: 'Upload Complete',
+          labelTapToCancel: 'tap to cancel',
+          labelTapToRetry: 'tap to retry',
+          labelTapToUndo: 'tap to undo',
+          onaddfile: (error, file) => {
+            if (error) {
+              console.error('Error adding file:', error);
+              return;
+            }
+          },
+          onremovefile: (error, file) => {
+            if (error) {
+              console.error('Error removing file:', error);
+              return;
+            }
+          }
+        });
+      });
+
+      // Form Submission
+      const verificationForm = document.getElementById('verificationForm');
+      if (verificationForm) {
+        verificationForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          const lastStep = document.querySelector('.tab-pane.show.active');
+          if (!validateCurrentStep(lastStep)) {
+            Swal.fire({
+              title: 'Validation Error',
+              text: 'Please complete all required fields before submitting.',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+            return;
+          }
+
+          // Show loading state
+          Swal.fire({
+            title: 'Processing',
+            text: 'Submitting your information...',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
+          try {
+            const formData = new FormData(verificationForm);
+            const formObject = Object.fromEntries(formData.entries());
+
+            // Add selling points
+            const sellingPoints = [];
+            const socialLinks = {};
+
+            document.querySelectorAll('input[name="sellingPoints[]"]:checked').forEach((checkbox) => {
+              const channel = checkbox.value;
+              sellingPoints.push(channel);
+
+              // Get the associated link if available
+              const linkInput = document.getElementById(`${channel}-link`);
+              if (linkInput && linkInput.value) {
+                socialLinks[channel] = linkInput.value;
+              }
+            });
+
+            formObject.sellingPoints = sellingPoints;
+            formObject.socialLinks = socialLinks;
+
+            // Add uploaded photos
+            formObject.photosOfBrandType = uploadedPhotos;
+
+            // Add map location data
+            const locationCoordinates = document.getElementById('locationCoordinates');
+            if (locationCoordinates && locationCoordinates.value) {
+              try {
+                formObject.pickUpPointCoordinates = JSON.parse(locationCoordinates.value);
+                formObject.pickUpPointInMaps = locationCoordinates.getAttribute('data-location-text') || '';
+              } catch (e) {
+                console.error('Error parsing location coordinates:', e);
+              }
+            }
+
+            // Send data to server
+            const response = await fetch('/business/completionConfirm', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(formObject)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              // Show success message
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: data.message || 'Account Successfully Completed',
+                confirmButtonText: 'OK'
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  // Enable and activate the finish tab
+                  const finishTab = document.getElementById('v-pills-finish-tab');
+                  if (finishTab) {
+                    finishTab.classList.remove('disabled');
+                    finishTab.removeAttribute('disabled');
+                    finishTab.click();
+                  }
+                  markStepAsDone('v-brand-type');
+                }
+              });
+            } else {
+              // Show error message
+              Swal.fire({
+                icon: 'error',
+                title: 'Submission Failed',
+                text: data.error || 'An error occurred. Please try again.',
+                confirmButtonText: 'OK'
+              });
+            }
+          } catch (err) {
+            console.error('An error occurred:', err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Submission Failed',
+              text: 'An error occurred. Please try again.',
+              confirmButtonText: 'OK'
+            });
+          }
+        });
+      }
+
+      // Submit button should trigger form submission
+      if (submitButton) {
+        submitButton.addEventListener('click', function(e) {
+          e.preventDefault();
+
+          // Trigger form submission
+          const form = document.getElementById('verificationForm');
+          if (form) {
+            form.dispatchEvent(new Event('submit'));
+          }
+        });
+      }
+
+      // Email Verification
+      const sendVerificationEmailBtn = document.getElementById('sendVerificationEmail');
+      if (sendVerificationEmailBtn) {
+        sendVerificationEmailBtn.addEventListener('click', async function() {
+          try {
+            // Show loading state
+            sendVerificationEmailBtn.disabled = true;
+            sendVerificationEmailBtn.innerHTML = '<i class="ri-loader-4-line animate-spin me-2"></i> Sending...';
+
+            const response = await fetch('/business/request-verification');
+            const data = await response.json();
+
+            if (data.status === 'success') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Email Sent',
+                text: 'Verification email sent successfully! Please check your inbox.',
+                confirmButtonText: 'OK'
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Failed to send verification email.',
+                confirmButtonText: 'Try Again'
+              });
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred while sending the email.',
+              confirmButtonText: 'Try Again'
+            });
+          } finally {
+            // Reset button state
+            sendVerificationEmailBtn.disabled = false;
+            sendVerificationEmailBtn.innerHTML = '<i class="ri-mail-fill fs-5 me-2"></i> Send Verification Email';
+          }
+        });
+      }
+
+      // Initialize Dashboard Charts if user is completed
+      if (document.getElementById('revenue-chart')) {
+        const revenueChartOptions = {
+          series: [{
+            name: 'Revenue',
+            type: 'column',
+            data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
+          }, {
+            name: 'Orders',
+            type: 'line',
+            data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
+          }],
+          chart: {
+            height: 350,
+            type: 'line',
+            toolbar: {
+              show: false
+            }
+          },
+          stroke: {
+            width: [0, 4],
+            curve: 'smooth'
+          },
+          colors: ['#F39720', '#333333'],
+          dataLabels: {
+            enabled: true,
+            enabledOnSeries: [1]
+          },
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+          xaxis: {
+            type: 'category'
+          },
+          yaxis: [{
+            title: {
+              text: 'Revenue ($)',
+            },
+          }, {
+            opposite: true,
+            title: {
+              text: 'Orders'
+            }
+          }]
+        };
+
+        const revenueChart = new ApexCharts(document.getElementById('revenue-chart'), revenueChartOptions);
+        revenueChart.render();
+      }
+
+      if (document.getElementById('performance-chart')) {
+        const performanceChartOptions = {
+          series: [{
+            name: 'Performance',
+            data: [75, 85, 65, 90, 82, 78]
+          }],
+          chart: {
+            type: 'radar',
+            height: 200,
+            toolbar: {
+              show: false
+            }
+          },
+          colors: ['#F39720'],
+          xaxis: {
+            categories: ['Delivery', 'Quality', 'Service', 'Value', 'Satisfaction', 'Retention']
+          },
+          yaxis: {
+            show: false
+          },
+          markers: {
+            size: 4,
+            colors: ['#333333'],
+            strokeColors: '#fff',
+            strokeWidth: 2,
+          },
+          tooltip: {
+            y: {
+              formatter: function(val) {
+                return val + '%';
+              }
+            }
+          }
+        };
+
+        const performanceChart = new ApexCharts(document.getElementById('performance-chart'), performanceChartOptions);
+        performanceChart.render();
+      }
+
+      // Ensure first tab is active on page load
+      document.getElementById('v-pills-bill-info-tab').click();
+    });
+  </script>
+
+  <!-- Google Maps API for location selection -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBg4oV-yrhIkatEh2fVvzOXmFaDmJ-h7Aw&libraries=places&callback=initMap" async defer></script>
+  <script src="/assets/js/map-location.js"></script>
   </body>
-</html>
+
+  </html>

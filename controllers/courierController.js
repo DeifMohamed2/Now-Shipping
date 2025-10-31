@@ -1857,6 +1857,9 @@ const completePickup = async (req, res) => {
     pickup.picikupStatus = 'pickedUp';
     pickup.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
 
+    // Determine courier name safely for API requests where req.courierData might be undefined
+    const courierName = (req.courierData && req.courierData.name) || (pickup.assignedDriver && pickup.assignedDriver.name) || 'Courier';
+
     const lastPickupStage = pickup.pickupStages[pickup.pickupStages.length - 1];
     if (!lastPickupStage || lastPickupStage.stageName !== 'pickedUp') {
       pickup.pickupStages.push({
@@ -1864,7 +1867,7 @@ const completePickup = async (req, res) => {
         stageDate: new Date(),
         stageNotes: [
           {
-            text: `Order picked up by courier ${req.courierData.name}`,
+            text: `Order picked up by courier ${courierName}`,
             date: new Date(),
           },
         ],
@@ -1878,7 +1881,7 @@ const completePickup = async (req, res) => {
       if (!order.orderStages.packed.isCompleted) {
         order.orderStages.packed.isCompleted = true;
         order.orderStages.packed.completedAt = new Date();
-        order.orderStages.packed.notes = `Order picked up by courier ${req.courierData.name}`;
+        order.orderStages.packed.notes = `Order picked up by courier ${courierName}`;
       }
       await order.save();
     }
@@ -1892,7 +1895,7 @@ const completePickup = async (req, res) => {
         pickup.pickupNumber,
         'pickedUp',
         {
-          courierName: req.courierData.name,
+          courierName: courierName,
           pickedUpAt: new Date(),
           ordersCount: pickup.ordersPickedUp.length,
           pickupFees: pickup.pickupFees

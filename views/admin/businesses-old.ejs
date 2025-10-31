@@ -1,0 +1,1463 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="/assets/rCSS/admin.css">
+<style>
+  /* Core Styles */
+  .business-card {
+    cursor: pointer;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+  }
+
+  .business-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  }
+
+  .business-card .card-body {
+    padding: 1.25rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .business-card .card-footer {
+    background-color: transparent;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.75rem 1.25rem;
+  }
+
+  .business-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .business-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Horizontal Card Layout */
+  .horizontal-card .card-body {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .horizontal-card .business-info {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .horizontal-card .business-metrics {
+    flex: 2;
+    min-width: 250px;
+  }
+
+  /* Business Logo */
+  .business-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+  }
+
+  .horizontal-card .business-logo {
+    margin-right: 1rem;
+    margin-bottom: 0;
+    float: left;
+  }
+
+  .business-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .business-card:hover .business-logo img {
+    transform: scale(1.1);
+  }
+
+  /* Business Info */
+  .business-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #212529;
+    /* display: -webkit-box; */
+    /* -webkit-line-clamp: 1; */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .horizontal-card .business-name {
+    margin-top: 0.25rem;
+  }
+
+  .business-owner {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .owner-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 0.75rem;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+  }
+
+  .owner-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .owner-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6c757d;
+  }
+
+  /* Stats */
+  .business-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .horizontal-card .business-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-item {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+  }
+
+  .business-card:hover .stat-item {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #405189;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .stat-value i {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+
+  /* Progress */
+  .progress-wrapper {
+    margin-bottom: 1rem;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .progress-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #495057;
+  }
+
+  .progress-percentage {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #405189;
+  }
+
+  .progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #e9ecef;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    border-radius: 3px;
+    transition: width 1.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+  }
+
+  /* Badges */
+  .business-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .business-badge i {
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+  }
+
+  .badge-premium {
+    background-color: #fff8e6;
+    color: #f7b84b;
+  }
+
+  .badge-new {
+    background-color: #e6f7f5;
+    color: #0ab39c;
+  }
+
+  .badge-top {
+    background-color: #e6f3ff;
+    color: #405189;
+  }
+
+  /* Actions */
+  .business-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .btn-action {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn-view {
+    background-color: #e6f3ff;
+    color: #405189;
+    border: none;
+  }
+
+  .btn-view:hover {
+    background-color: #405189;
+    color: #fff;
+  }
+
+  /* Filters */
+  .filter-section {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .filter-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #212529;
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .filter-chip:hover,
+  .filter-chip.active {
+    background-color: #405189;
+    color: #fff;
+    border-color: #405189;
+  }
+
+  .filter-chip i {
+    margin-right: 0.5rem;
+  }
+
+  /* Animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease forwards;
+  }
+
+  .delay-1 {
+    animation-delay: 0.1s;
+  }
+
+  .delay-2 {
+    animation-delay: 0.2s;
+  }
+
+  .delay-3 {
+    animation-delay: 0.3s;
+  }
+
+  .delay-4 {
+    animation-delay: 0.4s;
+  }
+
+  .delay-5 {
+    animation-delay: 0.5s;
+  }
+
+  .delay-6 {
+    animation-delay: 0.6s;
+  }
+
+  /* Responsive */
+  @media (max-width: 767.98px) {
+    .business-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .horizontal-card .card-body {
+      flex-direction: column;
+    }
+
+    .horizontal-card .business-logo {
+      float: none;
+      margin-right: 0;
+      margin-bottom: 1rem;
+    }
+  }
+
+  /* Swiper */
+  .featured-businesses {
+    margin-bottom: 2rem;
+  }
+
+  .featured-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #212529;
+    display: flex;
+    align-items: center;
+  }
+
+  .featured-title i {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+    color: #f7b84b;
+  }
+
+  .swiper {
+    padding: 1rem 0.5rem;
+    margin: -1rem -0.5rem;
+  }
+
+  .swiper-slide {
+    height: auto;
+  }
+
+  .swiper-pagination {
+    bottom: -5px !important;
+  }
+
+  .swiper-button-next,
+  .swiper-button-prev {
+    color: #405189;
+    background-color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .swiper-button-next:after,
+  .swiper-button-prev:after {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+
+  /* Search */
+  .search-box {
+    position: relative;
+  }
+
+  .search-box .form-control {
+    padding-left: 3rem;
+    height: 48px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    color: #adb5bd;
+  }
+
+  /* Status Indicator */
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+  }
+
+  .status-active {
+    background-color: #0ab39c;
+    box-shadow: 0 0 0 3px rgba(10, 179, 156, 0.2);
+  }
+
+  .status-inactive {
+    background-color: #f06548;
+    box-shadow: 0 0 0 3px rgba(240, 101, 72, 0.2);
+  }
+
+  /* Featured Card Styles */
+  .featured-card {
+    height: 100%;
+  }
+
+  .featured-card .card-body {
+    padding: 1.25rem;
+  }
+
+  .featured-card .business-stats {
+    margin-top: 1rem;
+  }
+
+  /* Clearfix for logo float */
+  .clearfix::after {
+    content: "";
+    clear: both;
+    display: table;
+  }
+</style>
+<%- contentFor('body') %>
+<!-- Page Title -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <h4 class="fw-bold mb-0">Business Directory</h4>
+        <p class="text-muted mb-0">Manage and monitor all your business partners</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-soft-primary d-flex align-items-center">
+          <i class="ri-filter-3-line me-1"></i> Filters
+        </button>
+        <button type="button" class="btn btn-primary d-flex align-items-center">
+          <i class="ri-add-line me-1"></i> Add Business
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="row mb-4">
+  <div class="col-lg-12">
+    <div class="filter-section">
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <div class="search-box">
+            <i class="ri-search-line"></i>
+            <input type="text" class="form-control" placeholder="Search businesses...">
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="filter-chips">
+            <div class="filter-chip active">
+              <i class="ri-apps-line"></i> All
+            </div>
+            <div class="filter-chip">
+              <i class="ri-star-line"></i> Premium
+            </div>
+            <div class="filter-chip">
+              <i class="ri-time-line"></i> New
+            </div>
+            <div class="filter-chip">
+              <i class="ri-arrow-up-line"></i> Top Performers
+            </div>
+            <div class="filter-chip">
+              <i class="ri-user-follow-line"></i> Active
+            </div>
+            <div class="filter-chip">
+              <i class="ri-user-unfollow-line"></i> Inactive
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Featured Businesses Carousel -->
+<div class="row">
+  <div class="col-12">
+    <div class="featured-businesses">
+      <h5 class="featured-title">
+        <i class="ri-award-fill"></i> Featured Businesses
+      </h5>
+
+      <div class="swiper featured-swiper">
+        <div class="swiper-wrapper">
+          <!-- Featured Business 1 -->
+          <div class="swiper-slide">
+            <div class="card business-card featured-card animate-fade-in delay-1">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div class="business-logo">
+                    <img src="/assets/images/companies/img-1.png" alt="Acme Corporation">
+                  </div>
+                  <div class="d-flex">
+                    <span class="badge rounded-pill bg-soft-success text-success">
+                      <i class="ri-arrow-up-line me-1"></i> 24%
+                    </span>
+                  </div>
+                </div>
+
+                <h5 class="business-name">Acme Corporation</h5>
+
+                <div class="business-owner">
+                  <div class="owner-avatar">
+                    <img src="/assets/images/users/avatar-1.jpg" alt="John Doe">
+                  </div>
+                  <div class="owner-name">John Doe, CEO</div>
+                </div>
+
+                <div class="business-stats">
+                  <div class="stat-item">
+                    <div class="stat-value">
+                      <i class="ri-shopping-cart-2-line"></i> 4000
+                    </div>
+                    <div class="stat-label">Orders This Month</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">
+                      <i class="ri-money-dollar-circle-line"></i> $24.5k
+                    </div>
+                    <div class="stat-label">Total Revenue</div>
+                  </div>
+                </div>
+
+                <div class="progress-wrapper">
+                  <div class="progress-label">
+                    <span class="progress-title">Monthly Target</span>
+                    <span class="progress-percentage">78%</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 78%" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <span class="business-badge badge-premium">
+                    <i class="ri-vip-crown-line"></i> Premium
+                  </span>
+                  <span class="business-badge badge-top">
+                    <i class="ri-award-line"></i> Top Performer
+                  </span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="business-actions">
+                  <div class="d-flex align-items-center">
+                    <span class="status-indicator status-active"></span>
+                    <span class="small text-muted">Active</span>
+                  </div>
+                  <button type="button" class="btn btn-action btn-view">View Details</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Featured Business 2 -->
+          <div class="swiper-slide">
+            <div class="card business-card featured-card animate-fade-in delay-2">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div class="business-logo">
+                    <img src="/assets/images/companies/img-2.png" alt="Global Traders">
+                  </div>
+                  <div class="d-flex">
+                    <span class="badge rounded-pill bg-soft-success text-success">
+                      <i class="ri-arrow-up-line me-1"></i> 18%
+                    </span>
+                  </div>
+                </div>
+
+                <h5 class="business-name">Global Traders</h5>
+
+                <div class="business-owner">
+                  <div class="owner-avatar">
+                    <img src="/assets/images/users/avatar-2.jpg" alt="Sarah Johnson">
+                  </div>
+                  <div class="owner-name">Sarah Johnson, Director</div>
+                </div>
+
+                <div class="business-stats">
+                  <div class="stat-item">
+                    <div class="stat-value">
+                      <i class="ri-shopping-cart-2-line"></i> 96
+                    </div>
+                    <div class="stat-label">Orders This Month</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">
+                      <i class="ri-money-dollar-circle-line"></i> $18.7k
+                    </div>
+                    <div class="stat-label">Total Revenue</div>
+                  </div>
+                </div>
+
+                <div class="progress-wrapper">
+                  <div class="progress-label">
+                    <span class="progress-title">Monthly Target</span>
+                    <span class="progress-percentage">65%</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <span class="business-badge badge-premium">
+                    <i class="ri-vip-crown-line"></i> Premium
+                  </span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="business-actions">
+                  <div class="d-flex align-items-center">
+                    <span class="status-indicator status-active"></span>
+                    <span class="small text-muted">Active</span>
+                  </div>
+                  <button type="button" class="btn btn-action btn-view">View Details</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Featured Business 3 -->
+          <div class="swiper-slide">
+            <div class="card business-card featured-card animate-fade-in delay-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div class="business-logo">
+                    <img src="/assets/images/companies/img-3.png" alt="Tech Solutions Inc.">
+                  </div>
+                  <div class="d-flex">
+                    <span class="badge rounded-pill bg-soft-success text-success">
+                      <i class="ri-arrow-up-line me-1"></i> 32%
+                    </span>
+                  </div>
+                </div>
+
+                <h5 class="business-name">Tech Solutions Inc.</h5>
+
+                <div class="business-owner">
+                  <div class="owner-avatar">
+                    <img src="/assets/images/users/avatar-3.jpg" alt="Michael Chen">
+                  </div>
+                  <div class="owner-name">Michael Chen, CTO</div>
+                </div>
+
+                <div class="business-stats">
+                  <div class="stat-item">
+                    <div class="stat-value">
+                      <i class="ri-shopping-cart-2-line"></i> 142
+                    </div>
+                    <div class="stat-label">Orders This Month</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">
+                      <i class="ri-money-dollar-circle-line"></i> $32.8k
+                    </div>
+                    <div class="stat-label">Total Revenue</div>
+                  </div>
+                </div>
+
+                <div class="progress-wrapper">
+                  <div class="progress-label">
+                    <span class="progress-title">Monthly Target</span>
+                    <span class="progress-percentage">92%</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 92%" aria-valuenow="92" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <span class="business-badge badge-top">
+                    <i class="ri-award-line"></i> Top Performer
+                  </span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="business-actions">
+                  <div class="d-flex align-items-center">
+                    <span class="status-indicator status-active"></span>
+                    <span class="small text-muted">Active</span>
+                  </div>
+                  <button type="button" class="btn btn-action btn-view">View Details</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Featured Business 4 -->
+          <div class="swiper-slide">
+            <div class="card business-card featured-card animate-fade-in delay-4">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div class="business-logo">
+                    <img src="/assets/images/companies/img-4.png" alt="Quantum Enterprises">
+                  </div>
+                  <div class="d-flex">
+                    <span class="badge rounded-pill bg-soft-warning text-warning">
+                      <i class="ri-arrow-down-line me-1"></i> 5%
+                    </span>
+                  </div>
+                </div>
+
+                <h5 class="business-name">Quantum Enterprises</h5>
+
+                <div class="business-owner">
+                  <div class="owner-avatar">
+                    <img src="/assets/images/users/avatar-4.jpg" alt="Emily Rodriguez">
+                  </div>
+                  <div class="owner-name">Emily Rodriguez, President</div>
+                </div>
+
+                <div class="business-stats">
+                  <div class="stat-item">
+                    <div class="stat-value">
+                      <i class="ri-shopping-cart-2-line"></i> 78
+                    </div>
+                    <div class="stat-label">Orders This Month</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">
+                      <i class="ri-money-dollar-circle-line"></i> $15.2k
+                    </div>
+                    <div class="stat-label">Total Revenue</div>
+                  </div>
+                </div>
+
+                <div class="progress-wrapper">
+                  <div class="progress-label">
+                    <span class="progress-title">Monthly Target</span>
+                    <span class="progress-percentage">45%</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <span class="business-badge badge-premium">
+                    <i class="ri-vip-crown-line"></i> Premium
+                  </span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="business-actions">
+                  <div class="d-flex align-items-center">
+                    <span class="status-indicator status-active"></span>
+                    <span class="small text-muted">Active</span>
+                  </div>
+                  <button type="button" class="btn btn-action btn-view">View Details</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- All Businesses Grid -->
+<div class="row">
+  <div class="col-12 mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+      <h5 class="mb-0 fw-semibold">All Businesses</h5>
+      <div class="d-flex align-items-center">
+        <span class="text-muted me-2">Sort by:</span>
+        <select class="form-select form-select-sm" style="width: 150px;">
+          <option value="name">Name</option>
+          <option value="revenue" selected>Revenue (High to Low)</option>
+          <option value="orders">Orders (High to Low)</option>
+          <option value="date">Date Added</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Business Card 1 - Horizontal Layout -->
+  <div class="col-lg-6 mb-4 animate-fade-in delay-1">
+    <div class="card business-card horizontal-card">
+      <div class="card-body">
+        <div class="business-info">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="business-logo">
+              <img src="/assets/images/companies/img-5.png" alt="Stellar Innovations">
+            </div>
+            <div class="d-flex">
+              <span class="badge rounded-pill bg-soft-success text-success">
+                <i class="ri-arrow-up-line me-1"></i> 15%
+              </span>
+            </div>
+          </div>
+
+          <div class="clearfix">
+            <h5 class="business-name">Stellar Innovations</h5>
+
+            <div class="business-owner">
+              <div class="owner-avatar">
+                <img src="/assets/images/users/avatar-5.jpg" alt="David Wilson">
+              </div>
+              <div class="owner-name">David Wilson, Founder</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="business-metrics">
+          <div class="business-stats">
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-shopping-cart-2-line"></i> 92
+              </div>
+              <div class="stat-label">Orders This Month</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-money-dollar-circle-line"></i> $19.4k
+              </div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+          </div>
+
+          <div class="progress-wrapper">
+            <div class="progress-label">
+              <span class="progress-title">Monthly Target</span>
+              <span class="progress-percentage">68%</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-info" role="progressbar" style="width: 68%" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <span class="business-badge badge-new">
+              <i class="ri-flashlight-line"></i> New
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="business-actions">
+          <div class="d-flex align-items-center">
+            <span class="status-indicator status-active"></span>
+            <span class="small text-muted">Active</span>
+          </div>
+          <button type="button" class="btn btn-action btn-view">View Details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Business Card 2 - Horizontal Layout -->
+  <div class="col-lg-6 mb-4 animate-fade-in delay-2">
+    <div class="card business-card horizontal-card">
+      <div class="card-body">
+        <div class="business-info">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="business-logo">
+              <img src="/assets/images/companies/img-6.png" alt="Horizon Partners">
+            </div>
+            <div class="d-flex">
+              <span class="badge rounded-pill bg-soft-success text-success">
+                <i class="ri-arrow-up-line me-1"></i> 22%
+              </span>
+            </div>
+          </div>
+
+          <div class="clearfix">
+            <h5 class="business-name">Horizon Partners</h5>
+
+            <div class="business-owner">
+              <div class="owner-avatar">
+                <img src="/assets/images/users/avatar-6.jpg" alt="Jessica Lee">
+              </div>
+              <div class="owner-name">Jessica Lee, Managing Partner</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="business-metrics">
+          <div class="business-stats">
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-shopping-cart-2-line"></i> 118
+              </div>
+              <div class="stat-label">Orders This Month</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-money-dollar-circle-line"></i> $22.8k
+              </div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+          </div>
+
+          <div class="progress-wrapper">
+            <div class="progress-label">
+              <span class="progress-title">Monthly Target</span>
+              <span class="progress-percentage">82%</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-success" role="progressbar" style="width: 82%" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <span class="business-badge badge-top">
+              <i class="ri-award-line"></i> Top Performer
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="business-actions">
+          <div class="d-flex align-items-center">
+            <span class="status-indicator status-active"></span>
+            <span class="small text-muted">Active</span>
+          </div>
+          <button type="button" class="btn btn-action btn-view">View Details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Business Card 3 - Horizontal Layout -->
+  <div class="col-lg-6 mb-4 animate-fade-in delay-3">
+    <div class="card business-card horizontal-card">
+      <div class="card-body">
+        <div class="business-info">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="business-logo">
+              <img src="/assets/images/companies/img-7.png" alt="Apex Industries">
+            </div>
+            <div class="d-flex">
+              <span class="badge rounded-pill bg-soft-danger text-danger">
+                <i class="ri-arrow-down-line me-1"></i> 8%
+              </span>
+            </div>
+          </div>
+
+          <div class="clearfix">
+            <h5 class="business-name">Apex Industries</h5>
+
+            <div class="business-owner">
+              <div class="owner-avatar">
+                <img src="/assets/images/users/avatar-7.jpg" alt="Robert Brown">
+              </div>
+              <div class="owner-name">Robert Brown, CEO</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="business-metrics">
+          <div class="business-stats">
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-shopping-cart-2-line"></i> 64
+              </div>
+              <div class="stat-label">Orders This Month</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-money-dollar-circle-line"></i> $12.6k
+              </div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+          </div>
+
+          <div class="progress-wrapper">
+            <div class="progress-label">
+              <span class="progress-title">Monthly Target</span>
+              <span class="progress-percentage">38%</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-danger" role="progressbar" style="width: 38%" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <span class="business-badge badge-premium">
+              <i class="ri-vip-crown-line"></i> Premium
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="business-actions">
+          <div class="d-flex align-items-center">
+            <span class="status-indicator status-inactive"></span>
+            <span class="small text-muted">Inactive</span>
+          </div>
+          <button type="button" class="btn btn-action btn-view">View Details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Business Card 4 - Horizontal Layout -->
+  <div class="col-lg-6 mb-4 animate-fade-in delay-4">
+    <div class="card business-card horizontal-card">
+      <div class="card-body">
+        <div class="business-info">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="business-logo">
+              <img src="/assets/images/companies/img-8.png" alt="Nexus Group">
+            </div>
+            <div class="d-flex">
+              <span class="badge rounded-pill bg-soft-success text-success">
+                <i class="ri-arrow-up-line me-1"></i> 12%
+              </span>
+            </div>
+          </div>
+
+          <div class="clearfix">
+            <h5 class="business-name">Nexus Group</h5>
+
+            <div class="business-owner">
+              <div class="owner-avatar">
+                <img src="/assets/images/users/avatar-8.jpg" alt="Amanda Martinez">
+              </div>
+              <div class="owner-name">Amanda Martinez, COO</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="business-metrics">
+          <div class="business-stats">
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-shopping-cart-2-line"></i> 86
+              </div>
+              <div class="stat-label">Orders This Month</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-money-dollar-circle-line"></i> $17.3k
+              </div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+          </div>
+
+          <div class="progress-wrapper">
+            <div class="progress-label">
+              <span class="progress-title">Monthly Target</span>
+              <span class="progress-percentage">72%</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-info" role="progressbar" style="width: 72%" aria-valuenow="72" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <span class="business-badge badge-new">
+              <i class="ri-flashlight-line"></i> New
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="business-actions">
+          <div class="d-flex align-items-center">
+            <span class="status-indicator status-active"></span>
+            <span class="small text-muted">Active</span>
+          </div>
+          <button type="button" class="btn btn-action btn-view">View Details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Business Card 5 - Horizontal Layout -->
+  <div class="col-lg-6 mb-4 animate-fade-in delay-5">
+    <div class="card business-card horizontal-card">
+      <div class="card-body">
+        <div class="business-info">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="business-logo">
+              <img src="/assets/images/companies/img-9.png" alt="Pinnacle Systems">
+            </div>
+            <div class="d-flex">
+              <span class="badge rounded-pill bg-soft-success text-success">
+                <i class="ri-arrow-up-line me-1"></i> 28%
+              </span>
+            </div>
+          </div>
+
+          <div class="clearfix">
+            <h5 class="business-name">Pinnacle Systems</h5>
+
+            <div class="business-owner">
+              <div class="owner-avatar">
+                <img src="/assets/images/users/avatar-9.jpg" alt="Thomas Clark">
+              </div>
+              <div class="owner-name">Thomas Clark, Director</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="business-metrics">
+          <div class="business-stats">
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-shopping-cart-2-line"></i> 4000
+              </div>
+              <div class="stat-label">Orders This Month</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-money-dollar-circle-line"></i> $28.9k
+              </div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+          </div>
+
+          <div class="progress-wrapper">
+            <div class="progress-label">
+              <span class="progress-title">Monthly Target</span>
+              <span class="progress-percentage">88%</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-success" role="progressbar" style="width: 88%" aria-valuenow="88" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <span class="business-badge badge-top">
+              <i class="ri-award-line"></i> Top Performer
+            </span>
+            <span class="business-badge badge-premium">
+              <i class="ri-vip-crown-line"></i> Premium
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="business-actions">
+          <div class="d-flex align-items-center">
+            <span class="status-indicator status-active"></span>
+            <span class="small text-muted">Active</span>
+          </div>
+          <button type="button" class="btn btn-action btn-view">View Details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Business Card 6 - Horizontal Layout -->
+  <div class="col-lg-6 mb-4 animate-fade-in delay-6">
+    <div class="card business-card horizontal-card">
+      <div class="card-body">
+        <div class="business-info">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="business-logo">
+              <img src="/assets/images/companies/img-10.png" alt="Fusion Dynamics">
+            </div>
+            <div class="d-flex">
+              <span class="badge rounded-pill bg-soft-warning text-warning">
+                <i class="ri-arrow-down-line me-1"></i> 3%
+              </span>
+            </div>
+          </div>
+
+          <div class="clearfix">
+            <h5 class="business-name">Fusion Dynamics</h5>
+
+            <div class="business-owner">
+              <div class="owner-avatar">
+                <img src="/assets/images/users/avatar-10.jpg" alt="Lisa Wong">
+              </div>
+              <div class="owner-name">Lisa Wong, President</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="business-metrics">
+          <div class="business-stats">
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-shopping-cart-2-line"></i> 74
+              </div>
+              <div class="stat-label">Orders This Month</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">
+                <i class="ri-money-dollar-circle-line"></i> $14.8k
+              </div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+          </div>
+
+          <div class="progress-wrapper">
+            <div class="progress-label">
+              <span class="progress-title">Monthly Target</span>
+              <span class="progress-percentage">52%</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar bg-warning" role="progressbar" style="width: 52%" aria-valuenow="52" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <span class="business-badge badge-premium">
+              <i class="ri-vip-crown-line"></i> Premium
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="business-actions">
+          <div class="d-flex align-items-center">
+            <span class="status-indicator status-active"></span>
+            <span class="small text-muted">Active</span>
+          </div>
+          <button type="button" class="btn btn-action btn-view">View Details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pagination -->
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="text-muted">
+        Showing <span class="fw-semibold">1</span> to <span class="fw-semibold">6</span> of <span class="fw-semibold">24</span> businesses
+      </div>
+      <nav aria-label="Page navigation">
+        <ul class="pagination pagination-rounded mb-0">
+          <li class="page-item disabled">
+            <a class="page-link" href="#" aria-label="Previous">
+              <i class="ri-arrow-left-s-line"></i>
+            </a>
+          </li>
+          <li class="page-item active"><a class="page-link" href="#">1</a></li>
+          <li class="page-item"><a class="page-link" href="#">2</a></li>
+          <li class="page-item"><a class="page-link" href="#">3</a></li>
+          <li class="page-item"><a class="page-link" href="#">4</a></li>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Next">
+              <i class="ri-arrow-right-s-line"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<!-- Required libs -->
+<script src="/assets/libs/swiper/swiper-bundle.min.js"></script>
+<script src="/assets/libs/flatpickr/flatpickr.min.js"></script>
+<script src="/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+
+<!-- Custom scripts -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Initialize Swiper
+    const swiper = new Swiper('.featured-swiper', {
+      slidesPerView: 1,
+      spaceBetween: 24,
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      breakpoints: {
+        640: {
+          slidesPerView: 1,
+        },
+        768: {
+          slidesPerView: 2,
+        },
+        1024: {
+          slidesPerView: 3,
+        },
+        1200: {
+          slidesPerView: 4,
+        },
+      },
+    });
+
+    // Initialize feather icons
+    feather.replace();
+
+    // Filter chips
+    const filterChips = document.querySelectorAll('.filter-chip');
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', function() {
+        // If already active and it's not the "All" chip, toggle it off
+        if (this.classList.contains('active') && this.textContent.trim() !== 'All') {
+          this.classList.remove('active');
+          document.querySelector('.filter-chip:first-child').classList.add('active');
+        } else {
+          // If clicking on "All", deactivate all other chips
+          if (this.textContent.trim() === 'All') {
+            filterChips.forEach(c => c.classList.remove('active'));
+          } else {
+            // If clicking on any other chip, deactivate "All"
+            document.querySelector('.filter-chip:first-child').classList.remove('active');
+          }
+          this.classList.add('active');
+        }
+
+        // Here you would typically filter the businesses based on the selected chips
+        const activeFilters = Array.from(document.querySelectorAll('.filter-chip.active'))
+          .map(chip => chip.textContent.trim());
+
+        console.log('Active filters:', activeFilters);
+
+        // For demo purposes, show a toast notification
+        Swal.fire({
+          title: 'Filters Applied',
+          text: `Filtering businesses by: ${activeFilters.join(', ')}`,
+          icon: 'success',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+      });
+    });
+
+    // View Details buttons
+    const viewButtons = document.querySelectorAll('.btn-view');
+    viewButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const businessName = this.closest('.business-card').querySelector('.business-name').textContent;
+
+        // For demo purposes, show a modal
+        Swal.fire({
+          title: 'Business Details',
+          text: `You are viewing details for ${businessName}`,
+          icon: 'info',
+          confirmButtonText: 'View Dashboard'
+        });
+      });
+    });
+
+    // Animate progress bars on scroll
+    const progressBars = document.querySelectorAll('.progress-bar');
+    const animateProgressBars = () => {
+      progressBars.forEach(bar => {
+        const rect = bar.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight && rect.bottom >= 0;
+
+        if (isVisible) {
+          const width = bar.getAttribute('aria-valuenow') + '%';
+          bar.style.width = width;
+        }
+      });
+    };
+
+    // Initial check
+    animateProgressBars();
+
+    // Check on scroll
+    window.addEventListener('scroll', animateProgressBars);
+  });
+</script>

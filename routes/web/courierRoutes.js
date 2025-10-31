@@ -24,12 +24,22 @@ async function authenticateCourier(req, res, next) {
     if (!courier) {
       res.clearCookie('token');
       // Check if this is an API request (fetch request from JavaScript)
-      if (req.headers.accept && req.headers.accept.includes('application/json')) {
-        return res.status(401).json({ message: 'Invalid authentication token' });
+      if (
+        req.headers.accept &&
+        req.headers.accept.includes('application/json')
+      ) {
+        return res
+          .status(401)
+          .json({ message: 'Invalid authentication token' });
       }
       return res.status(401).redirect('/courier-login');
     }
     req.courierData = courier; // Attach courier data to request object
+
+    // Make courierData available to all views
+    res.locals.courierData = courier;
+    res.locals.courier = courier;
+
     next(); // Move to the next middleware
   } catch (error) {
     res.clearCookie('token');
@@ -59,10 +69,7 @@ router.get('/get-orders', courierController.get_orders);
 router.get('/returns', courierController.get_returnsPage);
 router.get('/get-returns', courierController.get_returns);
 
-router.get(
-  '/order-details/:orderNumber',
-  courierController.get_orderDetails
-);
+router.get('/order-details/:orderNumber', courierController.get_orderDetails);
 
 router.put(
   '/update-order-status/:orderNumber',
@@ -128,12 +135,21 @@ router.put('/complete-pickup/:pickupNumber', courierController.completePickup);
 
 // Shop deliveries routes
 router.get('/shop-orders', courierController.getCourierShopOrdersPage);
-router.get('/shop-orders/:id', courierController.getCourierShopOrderDetailsPage);
+router.get(
+  '/shop-orders/:id',
+  courierController.getCourierShopOrderDetailsPage
+);
 
 // Shop API routes
 router.get('/api/shop/orders', courierController.getCourierShopOrders);
-router.get('/api/shop/orders/:id', courierController.getCourierShopOrderDetails);
-router.put('/api/shop/orders/:id/status', courierController.updateCourierShopOrderStatus);
+router.get(
+  '/api/shop/orders/:id',
+  courierController.getCourierShopOrderDetails
+);
+router.put(
+  '/api/shop/orders/:id/status',
+  courierController.updateCourierShopOrderStatus
+);
 
 //logout
 
