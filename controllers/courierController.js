@@ -513,7 +513,7 @@ const fullInitiationReturn = async (order, status) => {
 
 const updateOrderStatus = async (req, res) => {
   const { orderNumber } = req.params;
-  const { status, reason } = req.body;
+  const { status, reason } = req.body || {};
   // Handle both API (JWT) and web (session) authentication
   const courierId = req.courierId || req.userId;
   
@@ -660,7 +660,7 @@ const completeOrder = async (req, res) => {
     return res.redirect('/courier/orders');
   }
   
-  const { collectionReceipt, exchangePhotos, otp } = req.body; // Added parameters for Exchange and Cash Collection + OTP
+  const { collectionReceipt, exchangePhotos } = req.body || {}; // Parameters for Exchange and Cash Collection
   
   try {
     const order = await Order.findOne({
@@ -727,40 +727,6 @@ const completeOrder = async (req, res) => {
       return res.redirect(`/courier/order-details/${orderNumber}`);
     }
 
-    // OTP requirement: All non-return completion flows require valid OTP
-    const isReturnFlow = order.orderShipping?.orderType === 'Return' ||
-                         order.orderStatus === 'returnInProgress' ||
-                         order.orderStatus === 'headingToYou';
-
-    async function requireValidOtpOrFail() {
-      // TEMP testing override: accept OTP 12345 always
-      if (String(otp) === '12345') {
-        order.deliveryOtp = order.deliveryOtp || {};
-        order.deliveryOtp.verifiedAt = new Date();
-        await order.save();
-        return; // treat as valid
-      }
-      if (isReturnFlow) return; // Skip OTP for return flows
-      if (!order.deliveryOtp || !order.deliveryOtp.otpHash || !order.deliveryOtp.expiresAt) {
-        return res.status(400).json({ message: 'Delivery OTP not generated. Please contact support.' });
-      }
-      if (new Date(order.deliveryOtp.expiresAt).getTime() < Date.now()) {
-        return res.status(400).json({ message: 'OTP expired. Ask admin to resend.' });
-      }
-      if (!otp) {
-        return res.status(400).json({ message: 'OTP is required to complete this order' });
-      }
-      const bcrypt = require('bcrypt');
-      const ok = await bcrypt.compare(String(otp), order.deliveryOtp.otpHash);
-      if (!ok) {
-        order.deliveryOtp.attempts = (order.deliveryOtp.attempts || 0) + 1;
-        await order.save();
-        return res.status(400).json({ message: 'Invalid OTP' });
-      }
-      order.deliveryOtp.verifiedAt = new Date();
-      await order.save();
-    }
-
     // Handle different completion types based on order type and status
     const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
 
@@ -799,8 +765,6 @@ const completeOrder = async (req, res) => {
         notes: `Courier ${courierName} delivered return to business`,
       });
     } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'headingToCustomer') {
-      const otpCheck = await requireValidOtpOrFail();
-      if (otpCheck) return; // if response already sent
       // For Exchange orders, first we mark the exchange pickup stage
       order.orderStatus = 'exchangePickup';
       
@@ -832,8 +796,6 @@ const completeOrder = async (req, res) => {
       });
       
     } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'exchangePickup') {
-      const otpCheck = await requireValidOtpOrFail();
-      if (otpCheck) return;
       // For Exchange orders, next we mark the exchange delivery stage
       order.orderStatus = 'exchangeDelivery';
       
@@ -863,8 +825,6 @@ const completeOrder = async (req, res) => {
       order.completedDate = new Date();
       
     } else if (order.orderShipping.orderType === 'Cash Collection' && order.orderStatus === 'headingToCustomer') {
-      const otpCheck = await requireValidOtpOrFail();
-      if (otpCheck) return;
       // For Cash Collection orders, mark the collection complete stage
       order.orderStatus = 'collectionComplete';
       
@@ -892,8 +852,6 @@ const completeOrder = async (req, res) => {
       order.completedDate = new Date();
       
     } else {
-      const otpCheck = await requireValidOtpOrFail();
-      if (otpCheck) return;
       // Regular delivery completion
       order.orderStatus = 'completed';
       order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
@@ -1399,7 +1357,7 @@ const pickupReturn = async (req, res) => {
     customerSignature,
     returnCondition,
     returnValue,
-  } = req.body;
+  } = req.body || {};
 
   try {
     // Find the order by orderNumber or smartFlyerBarcode
@@ -1421,7 +1379,7 @@ const pickupReturn = async (req, res) => {
     if (order.orderStatus !== 'returnAssigned') {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({
-          message: `Order status ${order.orderStatus} is not valid for return pickup`,
+          message: `Order status ${order.orderStatus} is not valid for return pickup Must be returnAssigned`,
         });
       }
       req.flash('error', `Order status ${order.orderStatus} is not valid for return pickup`);
@@ -1430,8 +1388,11 @@ const pickupReturn = async (req, res) => {
 
     order.orderStatus = 'returnPickedUp';
 
+    // Determine courier name safely for API requests where req.courierData might be undefined
+    const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
+
     // Update returnPickedUp stage with comprehensive details
-    let pickupNotes = `Return picked up from customer by courier ${req.courierData.name}`;
+    let pickupNotes = `Return picked up from customer by courier ${courierName}`;
     
     // Add partial return information if applicable
     if (order.orderShipping.isPartialReturn) {
@@ -1464,7 +1425,7 @@ const pickupReturn = async (req, res) => {
       courier: courierId,
       assignedAt: new Date(),
       action: 'pickup_from_customer',
-      notes: `Courier ${req.courierData.name} picked up return from customer${
+      notes: `Courier ${courierName} picked up return from customer${
         notes ? ': ' + notes : ''
       }`,
     });
@@ -1519,7 +1480,7 @@ const pickupReturn = async (req, res) => {
         order.orderNumber,
         'returnPickedUp',
         {
-          courierName: req.courierData.name,
+          courierName: courierName,
           pickedUpAt: new Date(),
           returnReason: order.orderShipping?.returnReason || 'Customer return'
         }
@@ -1566,7 +1527,7 @@ const deliverReturnToWarehouse = async (req, res) => {
     return res.redirect('/courier/returns');
   }
   
-  const { notes, warehouseLocation, conditionNotes, deliveryPhotos } = req.body;
+  const { notes, warehouseLocation, conditionNotes, deliveryPhotos } = req.body || {};
 
   try {
     const order = await Order.findOne({
@@ -1596,11 +1557,14 @@ const deliverReturnToWarehouse = async (req, res) => {
 
     order.orderStatus = 'returnAtWarehouse';
 
+    // Determine courier name safely for API requests where req.courierData might be undefined
+    const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
+
     // Update returnAtWarehouse stage with comprehensive details
     order.orderStages.returnAtWarehouse = {
       isCompleted: true,
       completedAt: new Date(),
-      notes: `Return delivered to warehouse by courier ${req.courierData.name}${
+      notes: `Return delivered to warehouse by courier ${courierName}${
         notes ? ': ' + notes : ''
       }`,
       receivedBy: null, // Will be updated by admin
@@ -1618,7 +1582,7 @@ const deliverReturnToWarehouse = async (req, res) => {
       courier: courierId,
       assignedAt: new Date(),
       action: 'delivered_to_warehouse',
-      notes: `Courier ${req.courierData.name} delivered return to warehouse${
+      notes: `Courier ${courierName} delivered return to warehouse${
         notes ? ': ' + notes : ''
       }`,
     });
@@ -1662,7 +1626,7 @@ const completeReturnToBusiness = async (req, res) => {
   }
   
   const { notes, deliveryLocation, businessSignature, deliveryPhotos } =
-    req.body;
+    req.body || {};
 
   try {
     const order = await Order.findOne({
@@ -1692,12 +1656,15 @@ const completeReturnToBusiness = async (req, res) => {
 
     order.orderStatus = 'returnCompleted';
 
+    // Determine courier name safely for API requests where req.courierData might be undefined
+    const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
+
     // Update returnCompleted stage with comprehensive details
     order.orderStages.returnCompleted = {
       isCompleted: true,
       completedAt: new Date(),
       notes: `Return completed and delivered to business by courier ${
-        req.courierData.name
+        courierName
       }${notes ? ': ' + notes : ''}`,
       completedBy: courierId,
       deliveryLocation: deliveryLocation || order.business.address,
@@ -1713,7 +1680,7 @@ const completeReturnToBusiness = async (req, res) => {
       assignedAt: new Date(),
       action: 'delivered_to_business',
       notes: `Courier ${
-        req.courierData.name
+        courierName
       } completed return delivery to business${notes ? ': ' + notes : ''}`,
     });
 
@@ -1726,7 +1693,7 @@ const completeReturnToBusiness = async (req, res) => {
         order.orderNumber,
         'returnCompleted',
         {
-          courierName: req.courierData.name,
+          courierName: courierName,
           completedAt: order.completedDate,
           returnReason: order.orderShipping?.returnReason || 'Customer return'
         }
@@ -2511,7 +2478,7 @@ const getCourierShopOrdersPage = (req, res) => {
 const getCourierShopOrderDetailsPage = async (req, res) => {
   try {
     const { id } = req.params;
-    const courierId = req.courierData._id;
+    const courierId = (req.courierData && req.courierData._id) || req.courierId || req.userId;
     
     if (!courierId) {
       req.flash('error', 'Unauthorized');
@@ -2639,7 +2606,7 @@ const getCourierShopOrderDetails = async (req, res) => {
 const updateCourierShopOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, location, notes } = req.body;
+    const { status, location, notes } = req.body || {};
     const courierId = (req.courierData && req.courierData._id) || req.courierId || req.userId;
     if (!courierId) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
