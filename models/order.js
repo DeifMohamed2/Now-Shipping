@@ -250,6 +250,10 @@ const orderSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
+      otherPhoneNumber: {
+        type: String,
+        required: false,
+      },
       address: {
         type: String,
         required: true,
@@ -261,6 +265,11 @@ const orderSchema = new mongoose.Schema(
       zone: {
         type: String,
         required: true,
+      },
+      deliverToWorkAddress: {
+        type: Boolean,
+        required: false,
+        default: false,
       },
     },
     

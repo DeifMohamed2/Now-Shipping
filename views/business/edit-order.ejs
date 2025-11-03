@@ -196,8 +196,20 @@
                         <input type="number" class="form-control" name="phoneNumber" id="phoneNumber" placeholder="Enter Phone Number" value="<%= order.orderCustomer.phoneNumber %>">
                       </div>
                       <div class="mb-3">
+                        <label for="otherPhoneNumber" class="form-label">Other Phone Number (Optional)</label>
+                        <input type="number" class="form-control" name="otherPhoneNumber" id="otherPhoneNumber" placeholder="Enter alternative phone number" value="<%= order.orderCustomer.otherPhoneNumber || '' %>">
+                      </div>
+                      <div class="mb-3">
                         <label for="address" class="form-label">Address</label>
                         <textarea class="form-control" name="address" id="address" placeholder="Enter address" rows="2"><%= order.orderCustomer.address %></textarea>
+                      </div>
+                      <div class="mb-3">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="deliverToWorkAddress" id="deliverToWorkAddress-checkbox" <%= order.orderCustomer.deliverToWorkAddress ? 'checked' : '' %>>
+                          <label class="form-check-label" for="deliverToWorkAddress-checkbox">
+                            Deliver to work address
+                          </label>
+                        </div>
                       </div>
                       <div class="row">
                         <div class="mb-3 col-md-12">

@@ -584,6 +584,36 @@
                   <p class="text-muted mb-0">Contact Number</p>
                 </div>
               </li>
+              <% if (order.orderCustomer.otherPhoneNumber) { %>
+              <li class="d-flex align-items-center mt-2">
+                <div class="flex-shrink-0">
+                  <div class="avatar-xs">
+                    <div class="avatar-title bg-soft-info text-white rounded-circle">
+                      <i class="ri-phone-line"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h6 class="fs-14 mb-0"><%= order.orderCustomer.otherPhoneNumber %></h6>
+                  <p class="text-muted mb-0">Alternative Contact Number</p>
+                </div>
+              </li>
+              <% } %>
+              <% if (order.orderCustomer.deliverToWorkAddress) { %>
+              <li class="d-flex align-items-center mt-2">
+                <div class="flex-shrink-0">
+                  <div class="avatar-xs">
+                    <div class="avatar-title bg-soft-warning text-white rounded-circle">
+                      <i class="ri-building-line"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <span class="badge bg-warning text-dark">Work Address</span>
+                  <p class="text-muted mb-0">Delivery Destination</p>
+                </div>
+              </li>
+              <% } %>
             </div>
           </div>
           <div class="row">

@@ -1360,19 +1360,49 @@ const pickupReturn = async (req, res) => {
   } = req.body || {};
 
   try {
-    // Find the order by orderNumber or smartFlyerBarcode
-    const order = await Order.findOne({
-      $or: [
-        { orderNumber: orderNumber },
-        { smartFlyerBarcode: orderNumber }
-      ],
+    // Find the return order by scanning the ORIGINAL order number (not the return order number)
+    // The scanned orderNumber should match the originalOrderNumber field in the return order
+    let order = await Order.findOne({
+      'orderShipping.originalOrderNumber': orderNumber,
+      'orderShipping.orderType': 'Return',
+      orderStatus: 'returnAssigned',
       deliveryMan: courierId,
     });
+    
+    // If not found by originalOrderNumber, also try finding via smartFlyerBarcode of the original order
+    if (!order) {
+      // First, try to find the original deliver order by smartFlyerBarcode
+      const originalOrder = await Order.findOne({
+        $or: [
+          { orderNumber: orderNumber },
+          { smartFlyerBarcode: orderNumber }
+        ],
+        'orderShipping.orderType': 'Deliver',
+      });
+      
+      if (originalOrder) {
+        // Then find the return order that references this original order
+        const returnOrder = await Order.findOne({
+          'orderShipping.originalOrderNumber': originalOrder.orderNumber,
+          'orderShipping.orderType': 'Return',
+          orderStatus: 'returnAssigned',
+          deliveryMan: courierId,
+        });
+        
+        if (returnOrder) {
+          // Use the return order found via original order lookup
+          order = returnOrder;
+        }
+      }
+    }
+    
     if (!order) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
-        return res.status(404).json({ message: 'Order not found' });
+        return res.status(404).json({ 
+          message: 'Return order not found. Please scan the ORIGINAL order number, not the return order number.' 
+        });
       }
-      req.flash('error', 'Order not found');
+      req.flash('error', 'Return order not found. Please scan the ORIGINAL order number.');
       return res.redirect('/courier/returns');
     }
 
@@ -1383,7 +1413,7 @@ const pickupReturn = async (req, res) => {
         });
       }
       req.flash('error', `Order status ${order.orderStatus} is not valid for return pickup`);
-      return res.redirect(`/courier/return-orders/${orderNumber}`);
+      return res.redirect(`/courier/return-orders/${order.orderNumber}`);
     }
 
     order.orderStatus = 'returnPickedUp';
@@ -1392,7 +1422,8 @@ const pickupReturn = async (req, res) => {
     const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
 
     // Update returnPickedUp stage with comprehensive details
-    let pickupNotes = `Return picked up from customer by courier ${courierName}`;
+    // Note: Original order number ${orderNumber} was scanned to identify this return order
+    let pickupNotes = `Return picked up from customer by courier ${courierName} (Scanned original order: ${orderNumber}, Return order: ${order.orderNumber})`;
     
     // Add partial return information if applicable
     if (order.orderShipping.isPartialReturn) {
@@ -1400,7 +1431,7 @@ const pickupReturn = async (req, res) => {
     }
     
     if (notes) {
-      pickupNotes += `: ${notes}`;
+      pickupNotes += `. Notes: ${notes}`;
     }
 
     order.orderStages.returnPickedUp = {
@@ -1500,9 +1531,9 @@ const pickupReturn = async (req, res) => {
       });
     }
     
-    // For web requests, redirect back to return details
+    // For web requests, redirect back to return details (use return order number, not original)
     req.flash('success', 'Return picked up successfully');
-    res.redirect(`/courier/return-orders/${orderNumber}`);
+    res.redirect(`/courier/return-orders/${order.orderNumber}`);
   } catch (error) {
     console.log(error.message);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {

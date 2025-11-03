@@ -320,6 +320,129 @@
   }
 
   /* Additional styles specific to create-order page if needed */
+  
+  /* Enhanced Express Shipping and Payment Options */
+  .enhanced-option-card {
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background-color: #ffffff;
+  }
+  
+  .enhanced-option-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(243, 151, 32, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  .enhanced-option-card.active {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.1);
+  }
+  
+  .enhanced-option-card input[type="checkbox"] {
+    display: none;
+  }
+  
+  .enhanced-option-card .option-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+  }
+  
+  .enhanced-option-card .option-title {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+  }
+  
+  .enhanced-option-card .option-description {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 0;
+  }
+  
+  .amount-input-section {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-left: 3px solid var(--primary-color);
+  }
+  
+  .amount-input-section .info-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .info-badge.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+  
+  .info-badge i {
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+  }
+  
+  /* Fee Breakdown Styles */
+  .fee-breakdown {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+  }
+  
+  .fee-breakdown-header {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  .fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .fee-row:last-child {
+    border-bottom: none;
+  }
+  
+  .fee-row-label {
+    color: var(--text-medium);
+    font-size: 0.9rem;
+  }
+  
+  .fee-row-amount {
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+  }
+  
+  .fee-row-total {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 2px solid var(--primary-color);
+  }
+  
+  .fee-breakdown-hidden {
+    display: none;
+  }
 </style>
 
 <%- contentFor('body') %>
@@ -379,6 +502,14 @@
                     </div>
                   </div>
                 </div>
+                <div class="row g-4">
+                  <div class="col-sm-6">
+                    <div class="mb-3">
+                      <label for="billinginfo-otherPhoneNumber" class="form-label">Other Phone Number (Optional)</label>
+                      <input type="tel" class="form-control" name="otherPhoneNumber" id="billinginfo-otherPhoneNumber" placeholder="Enter alternative phone number">
+                    </div>
+                  </div>
+                </div>
                 <div class="row g-3">
                   <div class="col-md-12">
                     <h5 class="section-title mb-3">Location Details</h5>
@@ -399,6 +530,21 @@
                   <div class="col-md-12">
                     <label for="address" class="form-label">Address</label>
                     <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter full address"></textarea>
+                  </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                  <div class="col-md-12">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="deliverToWorkAddress" id="deliverToWorkAddress-checkbox">
+                      <label class="form-check-label" for="deliverToWorkAddress-checkbox">
+                        <i class="ri-building-line me-2"></i>Deliver to work address
+                      </label>
+                    </div>
+                    <div class="alert alert-info mt-2" style="display: none;" id="work-address-alert">
+                      <i class="ri-time-line me-2"></i>
+                      <strong>Note:</strong> Work address deliveries will be scheduled during business working hours (8:00 AM - 3:00 PM)
+                    </div>
                   </div>
                 </div>
 
@@ -482,25 +628,44 @@
                       <button type="button" class="btn" id="increment-shipping">+</button>
                     </div>
                   </div>
-                  <div class="form-check mb-3">
-                    <input class="form-check-input" name="isExpressShipping" type="checkbox" id="express-shipping-checkbox">
-                    <label class="form-check-label" for="express-shipping-checkbox">
-                      Express Shipping <i class="ri-information-line text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Same day delivery service. Doubles the shipping fee but ensures faster delivery."></i>
-                    </label>
-                  </div>
-                  <div id="cash-on-delivery-section" style="display: none;">
-                    <div class="form-check mb-3">
-                      <input class="form-check-input" name="COD" type="checkbox" id="cash-on-delivery-checkbox">
-                      <label class="form-check-label" for="cash-on-delivery-checkbox">
-                        Cash on Delivery
-                      </label>
-                    </div>
-                    <div class="mb-3" id="cash-on-delivery-amount" style="display: none;">
-                      <label for="cash-on-delivery-input" class="form-label">Amount to Collect</label>
-                      <div class="input-group">
-                        <span class="input-group-text">EGP</span>
-                        <input type="number" name="amountCOD" class="form-control" id="cash-on-delivery-input" placeholder="Enter amount">
+                  
+                  <!-- Enhanced Options Section - Side by Side -->
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label mb-2">Shipping Speed</label>
+                      <div class="enhanced-option-card" id="express-card">
+                        <input type="checkbox" name="isExpressShipping" id="express-shipping-checkbox">
+                        <div class="text-center">
+                          <div class="option-icon"><i class="ri-flashlight-line"></i></div>
+                          <div class="option-title">Express Shipping</div>
+                          <div class="option-description">Same day delivery service</div>
+                        </div>
                       </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3" id="cash-on-delivery-section" style="display: none;">
+                      <label class="form-label mb-2">Payment Collection</label>
+                      <div class="enhanced-option-card" id="cod-card">
+                        <input type="checkbox" name="COD" id="cash-on-delivery-checkbox">
+                        <div class="text-center">
+                          <div class="option-icon"><i class="ri-money-dollar-circle-line"></i></div>
+                          <div class="option-title">Cash on Delivery (COD)</div>
+                          <div class="option-description">Collect payment upon delivery</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Amount Input Section (Full Width Below) -->
+                  <div class="amount-input-section" id="cash-on-delivery-amount" style="display: none;">
+                    <div class="info-badge info">
+                      <i class="ri-information-line"></i>
+                      This is the actual full amount that will be collected from the customer
+                    </div>
+                    <label for="cash-on-delivery-input" class="form-label">Amount to Collect</label>
+                    <div class="input-group">
+                      <span class="input-group-text">EGP</span>
+                      <input type="number" name="amountCOD" class="form-control" id="cash-on-delivery-input" placeholder="Enter amount">
                     </div>
                   </div>
                 </div>
@@ -536,25 +701,43 @@
                       <button type="button" class="btn" id="increment-new">+</button>
                     </div>
                   </div>
-                  <div class="form-check mb-3">
-                    <input class="form-check-input" name="isExpressShipping" type="checkbox" id="express-shipping-exchange-checkbox">
-                    <label class="form-check-label" for="express-shipping-exchange-checkbox">
-                      Express Shipping <i class="ri-information-line text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Same day delivery service. Doubles the shipping fee but ensures faster delivery."></i>
-                    </label>
-                  </div>
-                  <div id="cash-difference-section" style="display: none;">
-                    <div class="form-check mb-3">
-                      <input class="form-check-input" name="CashDifference" type="checkbox" id="cash-difference-checkbox">
-                      <label class="form-check-label" for="cash-difference-checkbox">
-                        Cash Difference
-                      </label>
-                    </div>
-                    <div class="mb-3" id="cash-difference-amount" style="display: none;">
-                      <label for="cash-difference-input" class="form-label">Difference Amount</label>
-                      <div class="input-group">
-                        <span class="input-group-text">EGP</span>
-                        <input type="number" name="amountCashDifference" class="form-control" id="cash-difference-input" placeholder="Enter difference amount">
+                  <!-- Enhanced Options Section - Side by Side -->
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label mb-2">Shipping Speed</label>
+                      <div class="enhanced-option-card" id="express-card-exchange">
+                        <input type="checkbox" name="isExpressShipping" id="express-shipping-exchange-checkbox">
+                        <div class="text-center">
+                          <div class="option-icon"><i class="ri-flashlight-line"></i></div>
+                          <div class="option-title">Express Shipping</div>
+                          <div class="option-description">Same day exchange service</div>
+                        </div>
                       </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3" id="cash-difference-section" style="display: none;">
+                      <label class="form-label mb-2">Payment Collection</label>
+                      <div class="enhanced-option-card" id="cd-card">
+                        <input type="checkbox" name="CashDifference" id="cash-difference-checkbox">
+                        <div class="text-center">
+                          <div class="option-icon"><i class="ri-money-dollar-circle-line"></i></div>
+                          <div class="option-title">Cash Difference (CD)</div>
+                          <div class="option-description">Collect additional payment</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Amount Input Section (Full Width Below) -->
+                  <div class="amount-input-section" id="cash-difference-amount" style="display: none;">
+                    <div class="info-badge info">
+                      <i class="ri-information-line"></i>
+                      This is the actual full amount that will be collected from the customer
+                    </div>
+                    <label for="cash-difference-input" class="form-label">Difference Amount</label>
+                    <div class="input-group">
+                      <span class="input-group-text">EGP</span>
+                      <input type="number" name="amountCashDifference" class="form-control" id="cash-difference-input" placeholder="Enter difference amount">
                     </div>
                   </div>
                 </div>
@@ -661,11 +844,18 @@
                       <textarea class="form-control" name="returnNotes" id="return-notes" placeholder="Provide any additional details about the return..." rows="3"></textarea>
                     </div>
                   </div>
-                  <div class="form-check mb-3">
-                    <input class="form-check-input" name="isExpressShipping" type="checkbox" id="express-shipping-return-checkbox">
-                    <label class="form-check-label" for="express-shipping-return-checkbox">
-                      Express Return <i class="ri-information-line text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Same day return service. Doubles the shipping fee but ensures faster pickup."></i>
-                    </label>
+                  
+                  <!-- Enhanced Express Shipping Option -->
+                  <div class="mb-3">
+                    <label class="form-label mb-2">Shipping Speed</label>
+                    <div class="enhanced-option-card" id="express-card-return">
+                      <input type="checkbox" name="isExpressShipping" id="express-shipping-return-checkbox">
+                      <div class="text-center">
+                        <div class="option-icon"><i class="ri-flashlight-line"></i></div>
+                        <div class="option-title">Express Return</div>
+                        <div class="option-description">Same day return pickup service</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -676,18 +866,29 @@
                   <h6 class="mb-0">Cash Collection Details</h6>
                 </div>
                 <div class="card-body">
-                  <div class="mb-3">
+                  <div class="amount-input-section mb-3">
+                    <div class="info-badge info">
+                      <i class="ri-information-line"></i>
+                      This is the actual full amount that will be collected from the customer
+                    </div>
                     <label for="cash-collection-input" class="form-label">Amount to Collect</label>
                     <div class="input-group">
                       <span class="input-group-text">EGP</span>
                       <input type="number" name="amountCashCollection" class="form-control" id="cash-collection-input" placeholder="Enter amount to collect">
                     </div>
                   </div>
-                  <div class="form-check mb-3">
-                    <input class="form-check-input" name="isExpressShipping" type="checkbox" id="express-shipping-collection-checkbox">
-                    <label class="form-check-label" for="express-shipping-collection-checkbox">
-                      Express Collection <i class="ri-information-line text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Same day collection service. Doubles the shipping fee but ensures faster collection."></i>
-                    </label>
+                  
+                  <!-- Enhanced Express Shipping Option -->
+                  <div class="mb-3">
+                    <label class="form-label mb-2">Shipping Speed</label>
+                    <div class="enhanced-option-card" id="express-card-collection">
+                      <input type="checkbox" name="isExpressShipping" id="express-shipping-collection-checkbox">
+                      <div class="text-center">
+                        <div class="option-icon"><i class="ri-flashlight-line"></i></div>
+                        <div class="option-title">Express Collection</div>
+                        <div class="option-description">Same day collection service</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -752,6 +953,33 @@
                         <span class="visually-hidden">Loading...</span>
                       </div>
                     </div>
+                  </div>
+                  
+                  <!-- Fee Breakdown -->
+                  <div class="fee-breakdown fee-breakdown-hidden" id="feeBreakdown">
+                    <div class="fee-breakdown-header">Fee Breakdown:</div>
+                    <div class="fee-row">
+                      <span class="fee-row-label">Base Delivery Fee</span>
+                      <span class="fee-row-amount" id="baseFee">0 EGP</span>
+                    </div>
+                    <div class="fee-row" id="expressRow" style="display: none;">
+                      <span class="fee-row-label">
+                        <i class="ri-flashlight-line text-primary me-1"></i>
+                        Express Shipping (×2)
+                      </span>
+                      <span class="fee-row-amount text-primary" id="expressFee">+0 EGP</span>
+                    </div>
+                    <div class="fee-row fee-row-total">
+                      <span>Total Fee</span>
+                      <span id="breakdownTotal">0 EGP</span>
+                    </div>
+                  </div>
+                  
+                  <div class="text-center mt-3">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="toggleBreakdown">
+                      <i class="ri-list-check me-1"></i>
+                      <span id="breakdownToggleText">Show Breakdown</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1187,6 +1415,128 @@ document.addEventListener('DOMContentLoaded', function() {
       updateRemainingCount();
     });
   }
+
+  // Fee Breakdown Toggle and Update Functionality
+  function setupFeeBreakdown() {
+    const toggleBtn = document.getElementById('toggleBreakdown');
+    const breakdown = document.getElementById('feeBreakdown');
+    const toggleText = document.getElementById('breakdownToggleText');
+    
+    if (toggleBtn && breakdown) {
+      toggleBtn.addEventListener('click', function() {
+        if (breakdown.classList.contains('fee-breakdown-hidden')) {
+          breakdown.classList.remove('fee-breakdown-hidden');
+          toggleText.textContent = 'Hide Breakdown';
+        } else {
+          breakdown.classList.add('fee-breakdown-hidden');
+          toggleText.textContent = 'Show Breakdown';
+        }
+      });
+    }
+  }
+  
+  // Function to update fee breakdown display
+  function updateFeeBreakdown(totalFee, isExpress = false) {
+    const baseFeeEl = document.getElementById('baseFee');
+    const expressFeeEl = document.getElementById('expressFee');
+    const expressRowEl = document.getElementById('expressRow');
+    const breakdownTotalEl = document.getElementById('breakdownTotal');
+    
+    if (!baseFeeEl || !expressFeeEl || !expressRowEl || !breakdownTotalEl) return;
+    
+    const total = parseFloat(totalFee) || 0;
+    let baseFee = total;
+    
+    if (isExpress && total > 0) {
+      baseFee = total / 2;
+      const expressFee = baseFee;
+      
+      baseFeeEl.textContent = baseFee.toFixed(0) + ' EGP';
+      expressFeeEl.textContent = '+' + expressFee.toFixed(0) + ' EGP';
+      expressRowEl.style.display = 'flex';
+    } else {
+      baseFeeEl.textContent = total.toFixed(0) + ' EGP';
+      expressRowEl.style.display = 'none';
+    }
+    
+    breakdownTotalEl.textContent = total.toFixed(0) + ' EGP';
+  }
+
+  // Enhanced card interaction for new professional boxes
+  function setupEnhancedCards() {
+    // Express Shipping cards
+    const expressCards = ['express-card', 'express-card-exchange', 'express-card-return', 'express-card-collection'];
+    expressCards.forEach(cardId => {
+      const card = document.getElementById(cardId);
+      if (card) {
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        card.addEventListener('click', function(e) {
+          // Only toggle if clicking on the card itself, not on nested elements
+          if (e.target === card || !e.target.closest('input, select, textarea, button')) {
+            checkbox.checked = !checkbox.checked;
+            updateCardActiveState(card, checkbox.checked);
+            // Trigger change event for other listeners
+            checkbox.dispatchEvent(new Event('change'));
+          }
+        });
+        // Initialize active state
+        updateCardActiveState(card, checkbox.checked);
+      }
+    });
+
+    // Payment option cards
+    const codCard = document.getElementById('cod-card');
+    if (codCard) {
+      const checkbox = codCard.querySelector('input[type="checkbox"]');
+      codCard.addEventListener('click', function(e) {
+        if (e.target === codCard || !e.target.closest('input, select, textarea, button')) {
+          checkbox.checked = !checkbox.checked;
+          updateCardActiveState(codCard, checkbox.checked);
+          checkbox.dispatchEvent(new Event('change'));
+        }
+      });
+      updateCardActiveState(codCard, checkbox.checked);
+    }
+
+    const cdCard = document.getElementById('cd-card');
+    if (cdCard) {
+      const checkbox = cdCard.querySelector('input[type="checkbox"]');
+      cdCard.addEventListener('click', function(e) {
+        if (e.target === cdCard || !e.target.closest('input, select, textarea, button')) {
+          checkbox.checked = !checkbox.checked;
+          updateCardActiveState(cdCard, checkbox.checked);
+          checkbox.dispatchEvent(new Event('change'));
+        }
+      });
+      updateCardActiveState(cdCard, checkbox.checked);
+    }
+
+    // Work address alert toggle
+    const workAddressCheckbox = document.getElementById('deliverToWorkAddress-checkbox');
+    const workAddressAlert = document.getElementById('work-address-alert');
+    if (workAddressCheckbox && workAddressAlert) {
+      workAddressCheckbox.addEventListener('change', function() {
+        workAddressAlert.style.display = this.checked ? 'block' : 'none';
+      });
+    }
+  }
+
+  function updateCardActiveState(card, isActive) {
+    if (isActive) {
+      card.classList.add('active');
+    } else {
+      card.classList.remove('active');
+    }
+  }
+
+  // Initialize enhanced cards
+  setupEnhancedCards();
+  
+  // Initialize fee breakdown
+  setupFeeBreakdown();
+  
+  // Make updateFeeBreakdown available globally for create-order.js
+  window.updateFeeBreakdown = updateFeeBreakdown;
 });
 </script>
 

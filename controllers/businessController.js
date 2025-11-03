@@ -722,9 +722,11 @@ const submitOrder = async (req, res) => {
   const {
     fullName,
     phoneNumber,
+    otherPhoneNumber,
     address,
     government,
     zone,
+    deliverToWorkAddress,
     orderType,
     productDescription,
     numberOfItems,
@@ -907,9 +909,11 @@ const submitOrder = async (req, res) => {
     orderCustomer: {
       fullName,
       phoneNumber,
+      otherPhoneNumber: otherPhoneNumber || null,
       address,
       government,
       zone,
+      deliverToWorkAddress: deliverToWorkAddress === 'on' || deliverToWorkAddress === true,
     },
     orderShipping: {
       productDescription: productDescription || currentPD || '',
@@ -1117,9 +1121,11 @@ const editOrder = async (req, res) => {
   const {
     fullName,
     phoneNumber,
+    otherPhoneNumber,
     address,
     government,
     zone,
+    deliverToWorkAddress,
     orderType,
     productDescription,
     numberOfItems,
@@ -1205,9 +1211,11 @@ const editOrder = async (req, res) => {
       orderCustomer: {
         fullName,
         phoneNumber,
+        otherPhoneNumber: otherPhoneNumber || null,
         address,
         government,
         zone,
+        deliverToWorkAddress: deliverToWorkAddress === 'on' || deliverToWorkAddress === true,
       },
       orderFees: calculatedOrderFees,
       orderShipping: {

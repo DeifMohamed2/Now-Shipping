@@ -137,9 +137,17 @@ document.addEventListener('DOMContentLoaded', function () {
             
             if (response.ok) {
                 feeDisplay.textContent = data.fee;
+                // Update fee breakdown if function exists
+                if (window.updateFeeBreakdown) {
+                    window.updateFeeBreakdown(data.fee, isExpressShipping);
+                }
             } else {
                 console.error('Error calculating fees:', data.error);
                 feeDisplay.textContent = '0';
+                // Reset breakdown on error
+                if (window.updateFeeBreakdown) {
+                    window.updateFeeBreakdown(0, false);
+                }
                 
                 // Handle authentication errors for fee calculation
                 if (response.status === 401) {
@@ -150,6 +158,10 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error('Error calculating fees:', error);
             feeDisplay.textContent = '0';
+            // Reset breakdown on error
+            if (window.updateFeeBreakdown) {
+                window.updateFeeBreakdown(0, false);
+            }
         } finally {
             // Hide loading indicator
             if (feeDisplayContainer) {
