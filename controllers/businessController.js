@@ -10,6 +10,7 @@ const nodemailer = require('nodemailer');
 const statusHelper = require('../utils/statusHelper');
 const ExcelJS = require('exceljs');
 const { emailService } = require('../utils/email');
+const cloudinary = require('../utils/cloudinary');
 
 // Ensure all models are properly registered with Mongoose
 require('../models/courier');
@@ -335,7 +336,7 @@ const getDashboardData = async (req, res) => {
         }
       ];
 
-      const [stats, revenueByMonth, ordersByMonth] = await Promise.all([
+      const [stats, revenueByMonth, ordersByMonth, performanceStats] = await Promise.all([
         Order.aggregate(statsPipeline),
         // Revenue by month for this business (completed & returnCompleted)
         Order.aggregate([
@@ -353,8 +354,75 @@ const getDashboardData = async (req, res) => {
           { $sort: { '_id.y': -1, '_id.m': -1 } },
           { $limit: 9 }
         ]),
-      ]).then(results => [results[0][0], results[1], results[2]]);
+        // Performance metrics aggregation
+        Order.aggregate([
+          { $match: { business: businessId } },
+          {
+            $project: {
+              orderDate: 1,
+              completedDate: 1,
+              orderStatus: 1,
+              deliveryDays: {
+                $cond: {
+                  if: {
+                    $and: [
+                      { $ne: ['$orderDate', null] },
+                      { $ne: ['$completedDate', null] },
+                      { $eq: ['$orderStatus', 'completed'] }
+                    ]
+                  },
+                  then: {
+                    $divide: [
+                      { $subtract: ['$completedDate', '$orderDate'] },
+                      1000 * 60 * 60 * 24 // Convert milliseconds to days
+                    ]
+                  },
+                  else: null
+                }
+              }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalOrders: { $sum: 1 },
+              completedOrders: {
+                $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, 1, 0] }
+              },
+              returnOrders: {
+                $sum: {
+                  $cond: [
+                    { $in: ['$orderStatus', ['returned', 'returnCompleted', 'returnToBusiness']] },
+                    1,
+                    0
+                  ]
+                }
+              },
+              cancelledOrders: {
+                $sum: {
+                  $cond: [
+                    { $in: ['$orderStatus', ['cancelled', 'rejected', 'terminated', 'failed']] },
+                    1,
+                    0
+                  ]
+                }
+              },
+              avgDeliveryDays: { $avg: '$deliveryDays' },
+              successfulOrders: {
+                $sum: {
+                  $cond: [
+                    { $eq: ['$orderStatus', 'completed'] },
+                    1,
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        ])
+      ]).then(results => [results[0][0], results[1], results[2], results[3][0] || {}]);
       const result = stats || {};
+      const performance = performanceStats || {};
 
       // Calculate rates
       const completionRate = result.totalOrders > 0 
@@ -367,6 +435,15 @@ const getDashboardData = async (req, res) => {
 
       const collectionRate = result.expectedCash > 0 
         ? Math.round((result.collectedCash / result.expectedCash) * 100) 
+        : 0;
+
+      // Calculate performance metrics
+      const avgDeliveryDays = performance.avgDeliveryDays ? parseFloat(performance.avgDeliveryDays.toFixed(1)) : 0;
+      const returnRate = performance.totalOrders > 0
+        ? parseFloat(((performance.returnOrders / performance.totalOrders) * 100).toFixed(1))
+        : 0;
+      const successRate = performance.totalOrders > 0
+        ? Math.round(((performance.successfulOrders / performance.totalOrders) * 100))
         : 0;
 
       // Compile all dashboard data
@@ -390,6 +467,12 @@ const getDashboardData = async (req, res) => {
           collectionRate,
           revenueByMonth: revenueByMonth || [],
           ordersByMonth: ordersByMonth || [],
+        },
+        performanceStats: {
+          avgDeliveryDays,
+          completionRate,
+          returnRate,
+          successRate,
         },
       };
     }
@@ -516,6 +599,49 @@ const completionConfirm = async (req, res) => {
       }
     }
 
+    // Process multiple pickup addresses if provided
+    let pickUpAddressesArray = [];
+    if (req.body.pickupAddresses && Array.isArray(req.body.pickupAddresses)) {
+      pickUpAddressesArray = req.body.pickupAddresses.map((addr, index) => {
+        let addrCoords = null;
+        if (addr.coordinates) {
+          addrCoords = typeof addr.coordinates === 'string' 
+            ? JSON.parse(addr.coordinates) 
+            : addr.coordinates;
+        }
+        return {
+          addressId: addr.addressId || `addr_${Date.now()}_${index}`,
+          addressName: addr.addressName || (index === 0 ? 'Main Address' : `Address ${index + 1}`),
+          isDefault: addr.isDefault || index === 0,
+          country: addr.country || country,
+          city: addr.city || city,
+          zone: addr.zone || zone,
+          adressDetails: addr.adressDetails || addr.adressDetails,
+          nearbyLandmark: addr.nearbyLandmark || '',
+          pickupPhone: addr.pickupPhone || pickupPhone,
+          otherPickupPhone: addr.otherPickupPhone || req.body.otherPickupPhone || '',
+          pickUpPointInMaps: addr.pickUpPointInMaps || '',
+          coordinates: addrCoords || locationCoords
+        };
+      });
+    } else {
+      // If no multiple addresses provided, create one from single address (backward compatibility)
+      pickUpAddressesArray = [{
+        addressId: `addr_${Date.now()}`,
+        addressName: 'Main Address',
+        isDefault: true,
+        country,
+        city,
+        zone,
+        adressDetails,
+        nearbyLandmark: nearbyLandmark || '',
+        pickupPhone,
+        otherPickupPhone: req.body.otherPickupPhone || '',
+        pickUpPointInMaps: pickUpPointInMaps || '',
+        coordinates: locationCoords
+      }];
+    }
+
     // ✅ 4. Update Existing User
     const updatedUser = await User.findByIdAndUpdate(
       req.userData._id,
@@ -533,10 +659,12 @@ const completionConfirm = async (req, res) => {
           adressDetails,
           nearbyLandmark: nearbyLandmark || '',
           pickupPhone,
+          otherPickupPhone: req.body.otherPickupPhone || '',
           pickUpPointInMaps: pickUpPointInMaps || '',
           coordinates: locationCoords,
           zone  
         },
+        pickUpAddresses: pickUpAddressesArray,
         paymentMethod: {
           paymentChoice: paymentMethod,
           details: paymentDetails,
@@ -704,14 +832,150 @@ const get_orders = async (req, res) => {
   }
 };
 
+// Professional Excel Export for Orders
+const exportOrdersToExcel = async (req, res) => {
+  try {
+    // Get ALL orders for the business (no filters)
+    const orders = await Order.find({ business: req.userData._id })
+      .populate('deliveryMan', 'name phone')
+      .sort({ orderDate: -1 });
+    
+    // Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Orders Report');
+    
+    // Define columns
+    worksheet.columns = [
+      { header: 'Order ID', key: 'orderNumber', width: 15 },
+      { header: 'Order Date', key: 'orderDate', width: 15 },
+      { header: 'Order Type', key: 'orderType', width: 15 },
+      { header: 'Status', key: 'status', width: 18 },
+      { header: 'Customer Name', key: 'customerName', width: 25 },
+      { header: 'Phone Number', key: 'phoneNumber', width: 15 },
+      { header: 'Address', key: 'address', width: 30 },
+      { header: 'Government', key: 'government', width: 15 },
+      { header: 'Zone', key: 'zone', width: 15 },
+      { header: 'Product Description', key: 'productDescription', width: 30 },
+      { header: 'Number of Items', key: 'numberOfItems', width: 15 },
+      { header: 'Amount Type', key: 'amountType', width: 15 },
+      { header: 'Amount (EGP)', key: 'amount', width: 15 },
+      { header: 'Order Fees (EGP)', key: 'orderFees', width: 18 },
+      { header: 'Express Shipping', key: 'expressShipping', width: 18 },
+      { header: 'Delivery Man', key: 'deliveryMan', width: 20 },
+      { header: 'Completed Date', key: 'completedDate', width: 18 },
+      { header: 'Notes', key: 'notes', width: 30 }
+    ];
+    
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '2A3950' }
+    };
+    worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // Add data rows
+    orders.forEach(order => {
+      const statusLabel = statusHelper.getOrderStatusLabel(order.orderStatus);
+      const expressShipping = order.orderShipping?.isExpressShipping ? 'Yes' : 'No';
+      const deliveryManName = order.deliveryMan ? order.deliveryMan.name : 'N/A';
+      
+      worksheet.addRow({
+        orderNumber: order.orderNumber,
+        orderDate: order.orderDate ? new Date(order.orderDate).toLocaleDateString() : 'N/A',
+        orderType: order.orderShipping?.orderType || 'N/A',
+        status: statusLabel,
+        customerName: order.orderCustomer?.fullName || 'N/A',
+        phoneNumber: order.orderCustomer?.phoneNumber || 'N/A',
+        address: order.orderCustomer?.address || 'N/A',
+        government: order.orderCustomer?.government || 'N/A',
+        zone: order.orderCustomer?.zone || 'N/A',
+        productDescription: order.orderShipping?.productDescription || 'N/A',
+        numberOfItems: order.orderShipping?.numberOfItems || 0,
+        amountType: order.orderShipping?.amountType || 'N/A',
+        amount: order.orderShipping?.amount || 0,
+        orderFees: order.orderFees || 0,
+        expressShipping: expressShipping,
+        deliveryMan: deliveryManName,
+        completedDate: order.completedDate ? new Date(order.completedDate).toLocaleDateString() : 'N/A',
+        notes: order.orderNotes || ''
+      });
+    });
+    
+    // Style data rows
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber > 1) {
+        row.alignment = { vertical: 'middle' };
+        
+        // Color code amounts
+        const amountCell = row.getCell('amount');
+        if (amountCell.value > 0) {
+          amountCell.font = { color: { argb: '10B981' } };
+        }
+        
+        // Color code fees
+        const feesCell = row.getCell('orderFees');
+        if (feesCell.value > 0) {
+          feesCell.font = { color: { argb: 'EF4444' } };
+        }
+        
+        // Color code express shipping
+        const expressCell = row.getCell('expressShipping');
+        if (expressCell.value === 'Yes') {
+          expressCell.font = { color: { argb: 'F59E0B' }, bold: true };
+        }
+      }
+    });
+    
+    // Add borders
+    worksheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+    
+    // Set response headers
+    const filename = `orders_${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
+    
+  } catch (error) {
+    console.error('Error exporting orders to Excel:', error);
+    res.status(500).json({ error: 'Failed to export orders' });
+  }
+};
 
-const get_createOrderPage = (req, res) => {
-  res.render('business/create-order' , {
-    title: "Create Order",
-    page_title: 'Create Order',
-    folder: 'Pages'
-   
-  });
+
+const get_createOrderPage = async (req, res) => {
+  try {
+    const user = await User.findById(req.userData._id).lean();
+    res.render('business/create-order', {
+      title: "Create Order",
+      page_title: 'Create Order',
+      folder: 'Pages',
+      user: user,
+      userData: user
+    });
+  } catch (error) {
+    console.error('Error in get_createOrderPage:', error);
+    res.render('business/create-order', {
+      title: "Create Order",
+      page_title: 'Create Order',
+      folder: 'Pages',
+      user: req.userData,
+      userData: req.userData
+    });
+  }
 }
 
 
@@ -743,6 +1007,7 @@ const submitOrder = async (req, res) => {
     referralNumber,
     Notes,
     isExpressShipping,
+    selectedPickupAddressId,
     // Return order specific fields
     originalOrderNumber,
     returnReason,
@@ -805,8 +1070,10 @@ const submitOrder = async (req, res) => {
     }
     
     // Validate that the original order exists and is eligible for return
+    // Trim the original order number before searching
+    const trimmedOriginalOrderNumber = originalOrderNumber ? originalOrderNumber.trim() : null;
     const originalOrder = await Order.findOne({ 
-      orderNumber: originalOrderNumber,
+      orderNumber: trimmedOriginalOrderNumber,
       business: req.userData._id,
       orderStatus: 'completed',
       'orderShipping.orderType': 'Deliver'
@@ -817,7 +1084,7 @@ const submitOrder = async (req, res) => {
     if (!originalOrder) {
       console.log('Order not found in submitOrder, searching without restrictions...');
       const debugOrder = await Order.findOne({ 
-        orderNumber: originalOrderNumber,
+        orderNumber: trimmedOriginalOrderNumber,
         business: req.userData._id
       }).select('orderNumber orderCustomer orderShipping orderStatus business');
       
@@ -925,7 +1192,7 @@ const submitOrder = async (req, res) => {
       amount: amountCOD || amountCashDifference || amountCashCollection,
       isExpressShipping: isExpressShipping === 'on' || isExpressShipping === true,
       // Return order specific fields
-      originalOrderNumber: originalOrderNumber || null,
+      originalOrderNumber: originalOrderNumber ? originalOrderNumber.trim() : null,
       returnReason: returnReason || null,
       returnNotes: returnNotes || null,
       // Partial return fields
@@ -1062,6 +1329,7 @@ const submitOrder = async (req, res) => {
       })
     },
     business: req.userData._id,
+    selectedPickupAddressId: selectedPickupAddressId || null,
   });
 
 
@@ -1260,6 +1528,7 @@ const get_orderDetailsPage = async (req, res) => {
     }
     const order = await Order.findOne({ orderNumber: orderNumber, business: userData._id })
       .populate('deliveryMan')
+      .populate('business')
       .populate({
         path: 'courierHistory.courier',
         model: 'courier',
@@ -1271,11 +1540,20 @@ const get_orderDetailsPage = async (req, res) => {
       return res.redirect('/business/orders');
     }
 
+    // Get selected pickup address if order has selectedPickupAddressId
+    let selectedPickupAddress = null;
+    if (order.selectedPickupAddressId && order.business && order.business.pickUpAddresses) {
+      selectedPickupAddress = order.business.pickUpAddresses.find(
+        addr => addr.addressId === order.selectedPickupAddressId
+      );
+    }
+
     res.render('business/order-details', {
       title: 'Order Details',
       page_title: 'Order Details',
       folder: 'Orders',
-      order: order
+      order: order,
+      selectedPickupAddress: selectedPickupAddress
     });
   } catch (error) {
     console.log(error);
@@ -2267,6 +2545,150 @@ const get_pickups = async (req, res) => {
   }
 };
 
+// Professional Excel Export for Pickups
+const exportPickupsToExcel = async (req, res) => {
+  try {
+    // Get ALL pickups for the business (no filters)
+    const pickups = await Pickup.find({ business: req.userData._id })
+      .populate('assignedDriver', 'name phone')
+      .populate('business', 'name brandInfo')
+      .sort({ pickupDate: -1 });
+    
+    // Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Pickups Report');
+    
+    // Define columns
+    worksheet.columns = [
+      { header: 'Pickup Number', key: 'pickupNumber', width: 18 },
+      { header: 'Pickup Date', key: 'pickupDate', width: 18 },
+      { header: 'Status', key: 'status', width: 18 },
+      { header: 'Number of Orders', key: 'numberOfOrders', width: 18 },
+      { header: 'Pickup Fee (EGP)', key: 'pickupFees', width: 18 },
+      { header: 'Phone Number', key: 'phoneNumber', width: 18 },
+      { header: 'Pickup Location', key: 'pickupLocation', width: 30 },
+      { header: 'Address Details', key: 'addressDetails', width: 30 },
+      { header: 'City', key: 'city', width: 15 },
+      { header: 'Zone', key: 'zone', width: 15 },
+      { header: 'Fragile Items', key: 'fragileItems', width: 15 },
+      { header: 'Large Items', key: 'largeItems', width: 15 },
+      { header: 'Driver', key: 'driver', width: 20 },
+      { header: 'Pickup Notes', key: 'pickupNotes', width: 30 },
+      { header: 'Created At', key: 'createdAt', width: 18 }
+    ];
+    
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '2A3950' }
+    };
+    worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+    
+    // Add data rows
+    pickups.forEach(pickup => {
+      const statusLabel = statusHelper.getPickupStatusLabel(pickup.picikupStatus);
+      const driverName = pickup.assignedDriver ? pickup.assignedDriver.name : 'Not Assigned';
+      
+      // Get pickup address information
+      let addressDetails = 'N/A';
+      let city = 'N/A';
+      let zone = 'N/A';
+      
+      if (pickup.pickupAddressId && pickup.business?.pickUpAddresses) {
+        const address = pickup.business.pickUpAddresses.find(a => a.addressId === pickup.pickupAddressId);
+        if (address) {
+          addressDetails = address.adressDetails || 'N/A';
+          city = address.city || 'N/A';
+          zone = address.zone || 'N/A';
+        }
+      } else if (pickup.business?.pickUpAddresses?.length > 0) {
+        const defaultAddress = pickup.business.pickUpAddresses.find(a => a.isDefault) || pickup.business.pickUpAddresses[0];
+        if (defaultAddress) {
+          addressDetails = defaultAddress.adressDetails || 'N/A';
+          city = defaultAddress.city || 'N/A';
+          zone = defaultAddress.zone || 'N/A';
+        }
+      } else if (pickup.business?.pickUpAdress) {
+        addressDetails = pickup.business.pickUpAdress.adressDetails || 'N/A';
+        city = pickup.business.pickUpAdress.city || 'N/A';
+        zone = pickup.business.pickUpAdress.zone || 'N/A';
+      }
+      
+      const pickupLocation = pickup.pickupLocation || `${addressDetails}, ${zone}, ${city}`;
+      
+      worksheet.addRow({
+        pickupNumber: pickup.pickupNumber,
+        pickupDate: pickup.pickupDate ? new Date(pickup.pickupDate).toLocaleDateString() : 'N/A',
+        status: statusLabel,
+        numberOfOrders: pickup.numberOfOrders || 0,
+        pickupFees: pickup.pickupFees || 0,
+        phoneNumber: pickup.phoneNumber || 'N/A',
+        pickupLocation: pickupLocation,
+        addressDetails: addressDetails,
+        city: city,
+        zone: zone,
+        fragileItems: pickup.isFragileItems ? 'Yes' : 'No',
+        largeItems: pickup.isLargeItems ? 'Yes' : 'No',
+        driver: driverName,
+        pickupNotes: pickup.pickupNotes || '',
+        createdAt: pickup.createdAt ? new Date(pickup.createdAt).toLocaleDateString() : 'N/A'
+      });
+    });
+    
+    // Style data rows
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber > 1) {
+        row.alignment = { vertical: 'middle' };
+        
+        // Color code fees
+        const feesCell = row.getCell('pickupFees');
+        if (feesCell.value > 0) {
+          feesCell.font = { color: { argb: 'EF4444' } };
+        }
+        
+        // Color code fragile items
+        const fragileCell = row.getCell('fragileItems');
+        if (fragileCell.value === 'Yes') {
+          fragileCell.font = { color: { argb: 'F59E0B' }, bold: true };
+        }
+        
+        // Color code large items
+        const largeCell = row.getCell('largeItems');
+        if (largeCell.value === 'Yes') {
+          largeCell.font = { color: { argb: '3B82F6' }, bold: true };
+        }
+      }
+    });
+    
+    // Add borders
+    worksheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+    
+    // Set response headers
+    const filename = `pickups_${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
+    
+  } catch (error) {
+    console.error('Error exporting pickups to Excel:', error);
+    res.status(500).json({ error: 'Failed to export pickups' });
+  }
+};
+
 const createPickup = async (req, res) => {
   const {
     numberOfOrders,
@@ -2275,7 +2697,8 @@ const createPickup = async (req, res) => {
     isFragileItems,
     isLargeItems,
     pickupNotes,
-    pickupLocation
+    pickupLocation,
+    pickupAddressId
   } = req.body;
 
   try {
@@ -2288,7 +2711,17 @@ const createPickup = async (req, res) => {
     console.log(req.body);
     // ✅ 2. Compute pickup fee based on business zone/city and number of picked orders rule
     const business = await User.findById(req.userData._id);
-    const businessCity = business?.pickUpAdress?.city || '';
+    
+    // Get pickup address - use selected address or default
+    let selectedAddress = null;
+    if (pickupAddressId && business.pickUpAddresses && business.pickUpAddresses.length > 0) {
+      selectedAddress = business.pickUpAddresses.find(addr => addr.addressId === pickupAddressId);
+    }
+    if (!selectedAddress && business.pickUpAddresses && business.pickUpAddresses.length > 0) {
+      selectedAddress = business.pickUpAddresses.find(addr => addr.isDefault) || business.pickUpAddresses[0];
+    }
+    
+    const businessCity = selectedAddress?.city || business?.pickUpAdress?.city || '';
 
     const governmentCategories = {
       'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
@@ -2325,6 +2758,9 @@ const createPickup = async (req, res) => {
     const computedPickupFee = initialPickedCount < 3 ? Math.round(basePickupFee * 1.3) : basePickupFee;
 
     // ✅ 3. Create Pickup
+    // Use selected address phone if available, otherwise use provided phoneNumber
+    const pickupPhoneNumber = phoneNumber || selectedAddress?.pickupPhone || business.phoneNumber || '';
+    
     const newPickup = new Pickup({
       business: req.userData._id,
       pickupNumber: `${
@@ -2332,12 +2768,14 @@ const createPickup = async (req, res) => {
       }`,
       numberOfOrders,
       pickupDate,
-      phoneNumber,
+      phoneNumber: pickupPhoneNumber,
       isFragileItems: isFragileItems === 'true',
       isLargeItems: isLargeItems === 'true',
       picikupStatus: 'new',
       pickupNotes,
       pickupFees: computedPickupFee,
+      pickupAddressId: pickupAddressId || (selectedAddress?.addressId || null),
+      pickupLocation: pickupLocation || (selectedAddress ? `${selectedAddress.adressDetails}, ${selectedAddress.city}, ${selectedAddress.country}` : '')
     });
     newPickup.pickupStages.push({
       stageName: 'Pickup Created',
@@ -2359,9 +2797,18 @@ const createPickup = async (req, res) => {
 const get_pickupDetailsPage = async(req, res) => {
   const { pickupNumber } = req.params;  
 
-  const pickup = await Pickup.findOne({ pickupNumber }).populate('business').populate('assignedDriver');
-  console.log(pickup);  
-  if (!pickup) {
+    const pickup = await Pickup.findOne({ pickupNumber }).populate('business').populate('assignedDriver');
+    
+    // Get selected pickup address if pickup has pickupAddressId
+    let selectedPickupAddress = null;
+    if (pickup && pickup.pickupAddressId && pickup.business && pickup.business.pickUpAddresses) {
+      selectedPickupAddress = pickup.business.pickUpAddresses.find(
+        addr => addr.addressId === pickup.pickupAddressId
+      );
+    }
+    
+    console.log(pickup);  
+    if (!pickup) {
     // Check if the request is from API or web
     if (req.originalUrl.includes('/api/')) {
       // API request - return JSON response
@@ -2387,6 +2834,7 @@ const get_pickupDetailsPage = async(req, res) => {
       page_title: 'Pickup Details',
       folder: 'Pages',
       pickup,
+      selectedPickupAddress: selectedPickupAddress
     });
   }
 };
@@ -3525,9 +3973,12 @@ const validateOriginalOrder = async (req, res) => {
       return res.status(400).json({ error: 'Order number is required' });
     }
 
+    // Trim the order number
+    const trimmedOrderNumber = orderNumber.trim();
+
     // Find the original order
     const originalOrder = await Order.findOne({ 
-      orderNumber: orderNumber,
+      orderNumber: trimmedOrderNumber,
       business: req.userData._id,
       orderStatus: 'completed',
       'orderShipping.orderType': 'Deliver'
@@ -3537,7 +3988,7 @@ const validateOriginalOrder = async (req, res) => {
     if (!originalOrder) {
       console.log('Order not found with Deliver type, searching without type restriction...');
       const debugOrder = await Order.findOne({ 
-        orderNumber: orderNumber,
+        orderNumber: trimmedOrderNumber,
         business: req.userData._id
       }).select('orderNumber orderCustomer orderShipping orderStatus business');
       
@@ -3572,7 +4023,7 @@ const validateOriginalOrder = async (req, res) => {
 
     // Check if this order is already linked to a return
     const existingReturn = await Order.findOne({
-      'orderShipping.originalOrderNumber': orderNumber,
+      'orderShipping.originalOrderNumber': trimmedOrderNumber,
       business: req.userData._id
     });
 
@@ -3675,6 +4126,513 @@ const editProfile = async (req, res) => {
   }
 }
 
+// ================================================= Settings Page ================================================= //
+
+const getSettingsPage = async (req, res) => {
+  try {
+    const user = await User.findById(req.userData._id).lean();
+    
+    if (!user) {
+      return res.status(404).redirect('/business/dashboard');
+    }
+
+    res.render('business/settings', {
+      title: 'Settings',
+      page_title: 'Settings',
+      folder: 'Settings',
+      user: user,
+      userData: user
+    });
+  } catch (error) {
+    console.error('Error in getSettingsPage:', error);
+    res.status(500).redirect('/business/dashboard');
+  }
+}
+
+// ================================================= OTP Verification for Settings ================================================= //
+
+const sendEmailOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const crypto = require('crypto');
+    const { emailService } = require('../utils/email');
+
+    // Check if user is authenticated
+    if (!req.userData || !req.userData._id) {
+      console.error('sendEmailOtp: Authentication failed - req.userData:', req.userData);
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    // Validate email input
+    if (!email) {
+      return res.status(400).json({ 
+        message: 'Email address is required',
+        code: 'EMAIL_REQUIRED',
+        field: 'email'
+      });
+    }
+
+    const emailTrimmed = email.trim().toLowerCase();
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      return res.status(400).json({ 
+        message: 'Invalid email address format. Please enter a valid email address.',
+        code: 'INVALID_EMAIL_FORMAT',
+        field: 'email'
+      });
+    }
+
+    // Check if user is trying to verify their current email
+    const currentUserEmail = req.userData.email ? req.userData.email.trim().toLowerCase() : null;
+    if (currentUserEmail && emailTrimmed === currentUserEmail) {
+      // User is trying to verify their current email - this is allowed
+      // We'll send OTP anyway to allow re-verification
+    } else {
+      // User is trying to change to a different email - check if it's available
+      const existingUser = await User.findOne({ email: emailTrimmed });
+      if (existingUser) {
+        // Email exists and belongs to another user
+        if (existingUser._id.toString() !== req.userData._id.toString()) {
+          return res.status(400).json({ 
+            message: 'This email is already registered to another account',
+            code: 'EMAIL_ALREADY_EXISTS',
+            field: 'email'
+          });
+        }
+      }
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+
+    // Store OTP in OtpVerification model using email as identifier
+    const OtpVerification = require('../models/OtpVerification');
+    
+    // Clear old OTPs for this email (using email as phoneNumber field for compatibility)
+    await OtpVerification.deleteMany({ phoneNumber: emailTrimmed });
+
+    // Save hashed OTP
+    await OtpVerification.create({ phoneNumber: emailTrimmed, otpHash });
+
+    // Send OTP via email
+    try {
+      const emailContent = `
+        <h2>🔐 Email Verification Code</h2>
+        <p>Your verification code to change your email address is:</p>
+        <div style="font-size: 32px; font-weight: bold; color: #F39720; text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px; margin: 20px 0;">
+          ${otp}
+        </div>
+        <p>This code will expire in 6 minutes.</p>
+        <p>If you did not request this code, please ignore this email.</p>
+      `;
+      
+      await emailService.sendCustomEmail(
+        emailTrimmed,
+        'Email Verification Code - Now Shipping',
+        emailContent
+      );
+
+      return res.status(200).json({ message: 'OTP sent successfully to ' + emailTrimmed });
+    } catch (err) {
+      console.error('Email send error:', err);
+      console.error('Email send error details:', {
+        message: err.message,
+        stack: err.stack,
+        email: emailTrimmed
+      });
+      return res.status(500).json({ 
+        message: 'Failed to send OTP email. Please try again later.',
+        code: 'EMAIL_SEND_FAILED',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
+    }
+  } catch (error) {
+    console.error('Error in sendEmailOtp:', error);
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+const verifyEmailOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const crypto = require('crypto');
+    const OtpVerification = require('../models/OtpVerification');
+
+    // Check if user is authenticated
+    if (!req.userData || !req.userData._id) {
+      console.error('verifyEmailOtp: Authentication failed - req.userData:', req.userData);
+      return res.status(401).json({ 
+        message: 'Authentication required',
+        code: 'AUTHENTICATION_REQUIRED'
+      });
+    }
+
+    if (!email || !otp) {
+      const missingFields = [];
+      if (!email) missingFields.push('email');
+      if (!otp) missingFields.push('otp');
+      
+      return res.status(400).json({ 
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        code: 'MISSING_REQUIRED_FIELDS',
+        fields: missingFields
+      });
+    }
+
+    if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ 
+        message: 'OTP must be a 6-digit number',
+        code: 'INVALID_OTP_FORMAT',
+        field: 'otp'
+      });
+    }
+
+    const emailTrimmed = email.trim().toLowerCase();
+    const record = await OtpVerification.findOne({ phoneNumber: emailTrimmed });
+    if (!record) {
+      return res.status(400).json({ 
+        message: 'OTP not found or expired. Please request a new OTP.',
+        code: 'OTP_NOT_FOUND_OR_EXPIRED',
+        field: 'otp'
+      });
+    }
+
+    const hash = crypto.createHash('sha256').update(otp).digest('hex');
+    if (hash !== record.otpHash) {
+      return res.status(400).json({ 
+        message: 'Invalid OTP. Please check the code and try again.',
+        code: 'INVALID_OTP',
+        field: 'otp'
+      });
+    }
+
+    // Delete OTP after successful verification
+    await OtpVerification.deleteOne({ _id: record._id });
+
+    return res.status(200).json({ 
+      message: 'Email OTP verified successfully',
+      email: emailTrimmed
+    });
+  } catch (error) {
+    console.error('Error in verifyEmailOtp:', error);
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({ 
+      message: 'Internal server error. Please try again later.',
+      code: 'INTERNAL_SERVER_ERROR',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+const sendPhoneOtp = async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    const crypto = require('crypto');
+    const sms = require('../utils/sms');
+    const OtpVerification = require('../models/OtpVerification');
+
+    // Check if user is authenticated
+    if (!req.userData || !req.userData._id) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    if (!phoneNumber) {
+      return res.status(400).json({ 
+        message: 'Phone number is required',
+        code: 'PHONE_REQUIRED',
+        field: 'phoneNumber'
+      });
+    }
+
+    if (!/^\d{11}$/.test(phoneNumber)) {
+      return res.status(400).json({ 
+        message: 'Invalid phone number format. Please enter an 11-digit phone number.',
+        code: 'INVALID_PHONE_FORMAT',
+        field: 'phoneNumber'
+      });
+    }
+
+    // Check if user is trying to verify their current phone
+    const currentUserPhone = req.userData.phoneNumber ? req.userData.phoneNumber.trim() : null;
+    if (currentUserPhone && phoneNumber === currentUserPhone) {
+      // User is trying to verify their current phone - this is allowed
+      // We'll send OTP anyway to allow re-verification
+    } else {
+      // User is trying to change to a different phone - check if it's available
+      const existingUser = await User.findOne({ phoneNumber });
+      if (existingUser) {
+        // Phone exists and belongs to another user
+        if (existingUser._id.toString() !== req.userData._id.toString()) {
+          return res.status(400).json({ 
+            message: 'This phone number is already registered to another account',
+            code: 'PHONE_ALREADY_EXISTS',
+            field: 'phoneNumber'
+          });
+        }
+      }
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+
+    // Clear old OTPs
+    await OtpVerification.deleteMany({ phoneNumber });
+
+    // Save hashed OTP
+    await OtpVerification.create({ phoneNumber, otpHash });
+
+    // Format phone number to international
+    const internationalNumber = `20${phoneNumber.slice(1)}`; // Eg. "01123456789" -> "201123456789"
+
+    const smsMessage = `Your NowShipping verification code is: ${otp}`;
+
+    try {
+      await sms.sendSms({ recipient: internationalNumber, message: smsMessage });
+      return res.status(200).json({ message: 'OTP sent successfully to ' + phoneNumber });
+    } catch (err) {
+      console.error('SMS error:', err.details || err.message);
+      return res.status(500).json({ message: 'Failed to send OTP via SMS' });
+    }
+  } catch (error) {
+    console.error('Error in sendPhoneOtp:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const verifyPhoneOtp = async (req, res) => {
+  try {
+    const { phoneNumber, otp } = req.body;
+    const crypto = require('crypto');
+    const OtpVerification = require('../models/OtpVerification');
+
+    // Check if user is authenticated
+    if (!req.userData || !req.userData._id) {
+      console.error('verifyPhoneOtp: Authentication failed - req.userData:', req.userData);
+      return res.status(401).json({ 
+        message: 'Authentication required',
+        code: 'AUTHENTICATION_REQUIRED'
+      });
+    }
+
+    if (!phoneNumber || !otp) {
+      const missingFields = [];
+      if (!phoneNumber) missingFields.push('phoneNumber');
+      if (!otp) missingFields.push('otp');
+      
+      return res.status(400).json({ 
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        code: 'MISSING_REQUIRED_FIELDS',
+        fields: missingFields
+      });
+    }
+
+    if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ 
+        message: 'OTP must be a 6-digit number',
+        code: 'INVALID_OTP_FORMAT',
+        field: 'otp'
+      });
+    }
+
+    const record = await OtpVerification.findOne({ phoneNumber });
+    if (!record) {
+      return res.status(400).json({ 
+        message: 'OTP not found or expired. Please request a new OTP.',
+        code: 'OTP_NOT_FOUND_OR_EXPIRED',
+        field: 'otp'
+      });
+    }
+
+    const hash = crypto.createHash('sha256').update(otp).digest('hex');
+    if (hash !== record.otpHash) {
+      return res.status(400).json({ 
+        message: 'Invalid OTP. Please check the code and try again.',
+        code: 'INVALID_OTP',
+        field: 'otp'
+      });
+    }
+
+    // Delete OTP after successful verification
+    await OtpVerification.deleteOne({ _id: record._id });
+
+          return res.status(200).json({ 
+        message: 'Phone OTP verified successfully',
+        phoneNumber: phoneNumber
+      });
+  } catch (error) {
+    console.error('Error in verifyPhoneOtp:', error);
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({ 
+      message: 'Internal server error. Please try again later.',
+      code: 'INTERNAL_SERVER_ERROR',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+const updateSettings = async (req, res) => {
+  try {
+    const userId = req.userData._id;
+    const updateData = {};
+
+    // Basic Information
+    if (req.body.name !== undefined) updateData.name = req.body.name;
+    
+    // Validate email if it's being updated
+    if (req.body.email !== undefined) {
+      const newEmail = req.body.email.trim();
+      // Check if email is already in use by another user
+      const existingEmailUser = await User.findOne({ email: newEmail });
+      if (existingEmailUser && existingEmailUser._id.toString() !== userId.toString()) {
+        return res.status(400).json({ 
+          error: 'This email is already registered to another account',
+          message: 'This email is already registered to another account'
+        });
+      }
+      updateData.email = newEmail;
+    }
+    
+    // Validate phone number if it's being updated
+    if (req.body.phoneNumber !== undefined) {
+      const newPhoneNumber = req.body.phoneNumber.trim();
+      // Check if phone number is already in use by another user
+      const existingPhoneUser = await User.findOne({ phoneNumber: newPhoneNumber });
+      if (existingPhoneUser && existingPhoneUser._id.toString() !== userId.toString()) {
+        return res.status(400).json({ 
+          error: 'This phone number is already registered to another account',
+          message: 'This phone number is already registered to another account'
+        });
+      }
+      updateData.phoneNumber = newPhoneNumber;
+    }
+    
+    // Handle profile image upload
+    if (req.files && req.files.profileImage) {
+      const result = await cloudinary.uploader.upload(req.files.profileImage.path, {
+        folder: 'profiles',
+        resource_type: 'image'
+      });
+      updateData.profileImage = result.secure_url;
+    } else if (req.body.profileImage !== undefined) {
+      updateData.profileImage = req.body.profileImage;
+    }
+
+    // Brand Information
+    if (req.body.brandName !== undefined) {
+      if (!updateData.brandInfo) updateData.brandInfo = {};
+      updateData.brandInfo.brandName = req.body.brandName;
+    }
+    if (req.body.industry !== undefined) {
+      if (!updateData.brandInfo) updateData.brandInfo = {};
+      updateData.brandInfo.industry = req.body.industry;
+    }
+    if (req.body.monthlyOrders !== undefined) {
+      if (!updateData.brandInfo) updateData.brandInfo = {};
+      updateData.brandInfo.monthlyOrders = req.body.monthlyOrders;
+    }
+    if (req.body.sellingPoints !== undefined) {
+      if (!updateData.brandInfo) updateData.brandInfo = {};
+      updateData.brandInfo.sellingPoints = Array.isArray(req.body.sellingPoints) 
+        ? req.body.sellingPoints 
+        : req.body.sellingPoints.split(',').map(s => s.trim());
+    }
+    if (req.body.socialLinks !== undefined) {
+      if (!updateData.brandInfo) updateData.brandInfo = {};
+      updateData.brandInfo.socialLinks = typeof req.body.socialLinks === 'string' 
+        ? JSON.parse(req.body.socialLinks) 
+        : req.body.socialLinks;
+    }
+
+    // Pickup Address
+    if (req.body.pickupCountry !== undefined || req.body.pickupCity !== undefined || 
+        req.body.pickupZone !== undefined || req.body.pickupAddressDetails !== undefined ||
+        req.body.pickupNearbyLandmark !== undefined || req.body.pickupPhone !== undefined ||
+        req.body.otherPickupPhone !== undefined || req.body.pickupCoordinates !== undefined || 
+        req.body.pickupPointInMaps !== undefined) {
+      if (!updateData.pickUpAdress) updateData.pickUpAdress = {};
+      if (req.body.pickupCountry !== undefined) updateData.pickUpAdress.country = req.body.pickupCountry;
+      if (req.body.pickupCity !== undefined) updateData.pickUpAdress.city = req.body.pickupCity;
+      if (req.body.pickupZone !== undefined) updateData.pickUpAdress.zone = req.body.pickupZone;
+      if (req.body.pickupAddressDetails !== undefined) updateData.pickUpAdress.adressDetails = req.body.pickupAddressDetails;
+      if (req.body.pickupNearbyLandmark !== undefined) updateData.pickUpAdress.nearbyLandmark = req.body.pickupNearbyLandmark;
+      if (req.body.pickupPhone !== undefined) updateData.pickUpAdress.pickupPhone = req.body.pickupPhone;
+      if (req.body.otherPickupPhone !== undefined) updateData.pickUpAdress.otherPickupPhone = req.body.otherPickupPhone;
+      if (req.body.pickupPointInMaps !== undefined) updateData.pickUpAdress.pickUpPointInMaps = req.body.pickupPointInMaps;
+      if (req.body.pickupCoordinates !== undefined) {
+        try {
+          const coords = typeof req.body.pickupCoordinates === 'string' 
+            ? JSON.parse(req.body.pickupCoordinates) 
+            : req.body.pickupCoordinates;
+          updateData.pickUpAdress.coordinates = coords;
+        } catch (e) {
+          console.error('Error parsing coordinates:', e);
+        }
+      }
+    }
+
+    // Payment Method
+    if (req.body.paymentChoice !== undefined) {
+      if (!updateData.paymentMethod) updateData.paymentMethod = {};
+      updateData.paymentMethod.paymentChoice = req.body.paymentChoice;
+      
+      if (req.body.paymentDetails !== undefined) {
+        const paymentDetails = typeof req.body.paymentDetails === 'string' 
+          ? JSON.parse(req.body.paymentDetails) 
+          : req.body.paymentDetails;
+        updateData.paymentMethod.details = paymentDetails;
+      }
+    }
+
+    // Brand Type
+    if (req.body.brandTypeChoice !== undefined) {
+      if (!updateData.brandType) updateData.brandType = {};
+      updateData.brandType.brandChoice = req.body.brandTypeChoice;
+      
+      if (req.body.brandTypeDetails !== undefined) {
+        const brandDetails = typeof req.body.brandTypeDetails === 'string' 
+          ? JSON.parse(req.body.brandTypeDetails) 
+          : req.body.brandTypeDetails;
+        updateData.brandType.brandDetails = brandDetails;
+      }
+    }
+
+    // Storage preference
+    if (req.body.isNeedStorage !== undefined) {
+      updateData.isNeedStorage = req.body.isNeedStorage === 'true' || req.body.isNeedStorage === true;
+    }
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Settings updated successfully',
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Error in updateSettings:', error);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again.',
+      details: error.message 
+    });
+  }
+}
+
 // Recovery function for orders that lost courier assignment
 const recoverOrderCourier = async (req, res) => {
   try {
@@ -3732,6 +4690,223 @@ const recoverOrderCourier = async (req, res) => {
   } catch (error) {
     console.error('Error recovering order courier:', error);
     return res.status(500).json({ error: 'Failed to recover order courier' });
+  }
+};
+
+// ======================================== MULTIPLE PICKUP ADDRESSES ======================================== //
+
+// Add a new pickup address
+const addPickupAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.userData._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const {
+      addressName,
+      country,
+      city,
+      zone,
+      adressDetails,
+      nearbyLandmark,
+      pickupPhone,
+      otherPickupPhone,
+      pickUpPointInMaps,
+      coordinates
+    } = req.body;
+
+    // Validate required fields
+    if (!country || !city || !zone || !adressDetails) {
+      return res.status(400).json({ error: 'Country, city, zone, and address details are required' });
+    }
+
+    // Parse coordinates if string
+    let coords = null;
+    if (coordinates) {
+      try {
+        coords = typeof coordinates === 'string' ? JSON.parse(coordinates) : coordinates;
+      } catch (e) {
+        console.error('Error parsing coordinates:', e);
+      }
+    }
+
+    // Create new address
+    const newAddress = {
+      addressId: `addr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      addressName: addressName || `Address ${(user.pickUpAddresses?.length || 0) + 1}`,
+      isDefault: (user.pickUpAddresses?.length || 0) === 0, // First address is default
+      country,
+      city,
+      zone,
+      adressDetails,
+      nearbyLandmark: nearbyLandmark || '',
+      pickupPhone: pickupPhone || user.phoneNumber,
+      otherPickupPhone: otherPickupPhone || '',
+      pickUpPointInMaps: pickUpPointInMaps || '',
+      coordinates: coords || null
+    };
+
+    // If this is the first address, set as default
+    if (!user.pickUpAddresses || user.pickUpAddresses.length === 0) {
+      newAddress.isDefault = true;
+    }
+
+    // Add to array
+    if (!user.pickUpAddresses) {
+      user.pickUpAddresses = [];
+    }
+    user.pickUpAddresses.push(newAddress);
+
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Pickup address added successfully',
+      address: newAddress
+    });
+  } catch (error) {
+    console.error('Error in addPickupAddress:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
+// Update an existing pickup address
+const updatePickupAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.userData._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { addressId } = req.params;
+    const {
+      addressName,
+      country,
+      city,
+      zone,
+      adressDetails,
+      nearbyLandmark,
+      pickupPhone,
+      otherPickupPhone,
+      pickUpPointInMaps,
+      coordinates
+    } = req.body;
+
+    // Find the address
+    const addressIndex = user.pickUpAddresses?.findIndex(addr => addr.addressId === addressId);
+    if (addressIndex === -1 || addressIndex === undefined) {
+      return res.status(404).json({ error: 'Address not found' });
+    }
+
+    // Update fields
+    if (addressName !== undefined) user.pickUpAddresses[addressIndex].addressName = addressName;
+    if (country !== undefined) user.pickUpAddresses[addressIndex].country = country;
+    if (city !== undefined) user.pickUpAddresses[addressIndex].city = city;
+    if (zone !== undefined) user.pickUpAddresses[addressIndex].zone = zone;
+    if (adressDetails !== undefined) user.pickUpAddresses[addressIndex].adressDetails = adressDetails;
+    if (nearbyLandmark !== undefined) user.pickUpAddresses[addressIndex].nearbyLandmark = nearbyLandmark;
+    if (pickupPhone !== undefined) user.pickUpAddresses[addressIndex].pickupPhone = pickupPhone;
+    if (otherPickupPhone !== undefined) user.pickUpAddresses[addressIndex].otherPickupPhone = otherPickupPhone;
+    if (pickUpPointInMaps !== undefined) user.pickUpAddresses[addressIndex].pickUpPointInMaps = pickUpPointInMaps;
+    if (coordinates !== undefined) {
+      try {
+        const coords = typeof coordinates === 'string' ? JSON.parse(coordinates) : coordinates;
+        user.pickUpAddresses[addressIndex].coordinates = coords;
+      } catch (e) {
+        console.error('Error parsing coordinates:', e);
+      }
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Pickup address updated successfully',
+      address: user.pickUpAddresses[addressIndex]
+    });
+  } catch (error) {
+    console.error('Error in updatePickupAddress:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
+// Delete a pickup address
+const deletePickupAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.userData._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { addressId } = req.params;
+
+    // Find the address
+    const addressIndex = user.pickUpAddresses?.findIndex(addr => addr.addressId === addressId);
+    if (addressIndex === -1 || addressIndex === undefined) {
+      return res.status(404).json({ error: 'Address not found' });
+    }
+
+    // Don't allow deleting if it's the only address
+    if (user.pickUpAddresses.length === 1) {
+      return res.status(400).json({ error: 'Cannot delete the only pickup address' });
+    }
+
+    // Remove the address
+    const deletedAddress = user.pickUpAddresses[addressIndex];
+    user.pickUpAddresses.splice(addressIndex, 1);
+
+    // If deleted address was default, set first address as default
+    if (deletedAddress.isDefault && user.pickUpAddresses.length > 0) {
+      user.pickUpAddresses[0].isDefault = true;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Pickup address deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error in deletePickupAddress:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
+// Set default pickup address
+const setDefaultPickupAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.userData._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { addressId } = req.params;
+
+    // Find the address
+    const addressIndex = user.pickUpAddresses?.findIndex(addr => addr.addressId === addressId);
+    if (addressIndex === -1 || addressIndex === undefined) {
+      return res.status(404).json({ error: 'Address not found' });
+    }
+
+    // Set all addresses to not default
+    user.pickUpAddresses.forEach(addr => {
+      addr.isDefault = false;
+    });
+
+    // Set selected address as default
+    user.pickUpAddresses[addressIndex].isDefault = true;
+
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Default pickup address updated successfully',
+      address: user.pickUpAddresses[addressIndex]
+    });
+  } catch (error) {
+    console.error('Error in setDefaultPickupAddress:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 };
 
@@ -4324,6 +5499,7 @@ module.exports = {
   // Orders
   get_ordersPage,
   get_orders,
+  exportOrdersToExcel,
   get_createOrderPage,
   submitOrder,
   get_editOrderPage,
@@ -4346,6 +5522,7 @@ module.exports = {
   // Pickup
   get_pickupPage,
   get_pickups,
+  exportPickupsToExcel,
   get_pickupDetailsPage,
   get_pickedupOrders,
   ratePickup,
@@ -4397,6 +5574,20 @@ module.exports = {
   // Smart Flyer Barcode functions
   scanSmartFlyerBarcode,
   getOrderBySmartBarcode,
+  
+  // Settings functions
+  getSettingsPage,
+  updateSettings,
+  sendEmailOtp,
+  verifyEmailOtp,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+  
+  // Multiple Pickup Addresses
+  addPickupAddress,
+  updatePickupAddress,
+  deletePickupAddress,
+  setDefaultPickupAddress,
   
 };
 

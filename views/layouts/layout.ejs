@@ -57,15 +57,16 @@
   <%- typeof FooterJs !== 'undefined' ? FooterJs : '' %>
 
   <!-- Add the assistant floating button and container before the closing body tag -->
+  <!-- TODO: AI Assistant - Temporary implementation for now -->
 
   <!-- AI Assistant Floating Button -->
-  <div class="assistant-floating-button" id="assistant-floating-button" style="display: none;">
+  <!-- <div class="assistant-floating-button" id="assistant-floating-button" style="display: none;">
       <button class="btn btn-primary btn-lg rounded-circle">
           <i class="ri-robot-line"></i>
       </button>
-  </div>
+  </div> -->
 
-  <div class="assistant-floating-container" id="assistant-floating-container" style="display: none;">
+  <!-- <div class="assistant-floating-container" id="assistant-floating-container" style="display: none;">
       <div class="assistant-floating-header">
           <h5 class="mb-0">Virtual Assistant</h5>
           <div>
@@ -79,7 +80,6 @@
       </div>
       <div class="assistant-floating-body">
           <div class="assistant-floating-messages" id="assistant-floating-messages">
-              <!-- Messages will be loaded here -->
               <div class="d-flex justify-content-center mt-4 mb-4">
                   <div class="spinner-border text-primary" role="status">
                       <span class="visually-hidden">Loading...</span>
@@ -88,7 +88,6 @@
           </div>
           
           <div class="assistant-floating-suggestions mt-2" id="assistant-floating-suggestions">
-              <!-- Suggestions will be loaded here -->
           </div>
       </div>
       <div class="assistant-floating-footer">
@@ -100,7 +99,7 @@
               </button>
           </div>
       </div>
-  </div>
+  </div> -->
 
   <style>
       /* Floating Assistant Styles */
@@ -261,6 +260,14 @@
               const floatingSend = document.getElementById('assistant-floating-send');
               const floatingMinimize = document.getElementById('assistant-floating-minimize');
               const floatingClose = document.getElementById('assistant-floating-close');
+              
+              // Check if all required elements exist (they might be commented out)
+              if (!floatingButton || !floatingContainer || !floatingMessages || 
+                  !floatingSuggestions || !floatingInput || !floatingSend || 
+                  !floatingMinimize || !floatingClose) {
+                  console.log('Floating assistant elements not found - feature is disabled');
+                  return;
+              }
               
               // State
               let preferences = {
@@ -517,29 +524,39 @@
               }
               
               // Event Listeners
-              floatingButton.addEventListener('click', () => {
-                  floatingContainer.style.display = 'flex';
-                  // Load conversation when opening
-                  loadConversation();
-              });
+              if (floatingButton) {
+                  floatingButton.addEventListener('click', () => {
+                      floatingContainer.style.display = 'flex';
+                      // Load conversation when opening
+                      loadConversation();
+                  });
+              }
               
-              floatingSend.addEventListener('click', () => {
-                  sendMessage(floatingInput.value);
-              });
-              
-              floatingInput.addEventListener('keypress', (e) => {
-                  if (e.key === 'Enter') {
+              if (floatingSend) {
+                  floatingSend.addEventListener('click', () => {
                       sendMessage(floatingInput.value);
-                  }
-              });
+                  });
+              }
               
-              floatingMinimize.addEventListener('click', () => {
-                  floatingContainer.style.display = 'none';
-              });
+              if (floatingInput) {
+                  floatingInput.addEventListener('keypress', (e) => {
+                      if (e.key === 'Enter') {
+                          sendMessage(floatingInput.value);
+                      }
+                  });
+              }
               
-              floatingClose.addEventListener('click', () => {
-                  floatingContainer.style.display = 'none';
-              });
+              if (floatingMinimize) {
+                  floatingMinimize.addEventListener('click', () => {
+                      floatingContainer.style.display = 'none';
+                  });
+              }
+              
+              if (floatingClose) {
+                  floatingClose.addEventListener('click', () => {
+                      floatingContainer.style.display = 'none';
+                  });
+              }
               
               // Listen for dark mode changes
               window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);

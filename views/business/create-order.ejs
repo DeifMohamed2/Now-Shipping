@@ -641,6 +641,31 @@
                           <div class="option-description">Same day delivery service</div>
                         </div>
                       </div>
+                      <!-- Pickup Address Selection for Express Shipping -->
+                      <div id="pickupAddressSelection" class="mt-3" style="display: none;">
+                        <label class="form-label mb-2">Select Pickup Address <span class="text-danger">*</span></label>
+                        <select class="form-select" id="selectedPickupAddressId" name="selectedPickupAddressId">
+                          <option value="">Select pickup address...</option>
+                          <% if (userData && userData.pickUpAddresses && userData.pickUpAddresses.length > 0) { %>
+                            <% userData.pickUpAddresses.forEach(address => { %>
+                              <option value="<%= address.addressId %>" <%= address.isDefault ? 'selected' : '' %>>
+                                <%= address.addressName || 'Address' %> 
+                                <% if (address.isDefault) { %> (Default) <% } %>
+                                - <%= address.zone %>, <%= address.city %>
+                              </option>
+                            <% }); %>
+                          <% } else if (userData && userData.pickUpAdress) { %>
+                            <option value="default" selected>
+                              Main Address - <%= userData.pickUpAdress.zone || '' %>, <%= userData.pickUpAdress.city || '' %>
+                            </option>
+                          <% } %>
+                        </select>
+                        <div class="mt-2">
+                          <a href="/business/settings#address" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="ri-add-line me-1"></i> Add New Address
+                          </a>
+                        </div>
+                      </div>
                     </div>
                     
                     <div class="col-md-6 mb-3" id="cash-on-delivery-section" style="display: none;">
@@ -919,7 +944,7 @@
                         <input class="form-check-input" name="previewPermission" type="checkbox" id="order-preview-checkbox">
                         <label class="form-check-label" for="order-preview-checkbox">
                           <span class="fs-16 me-2"><i class="ri-eye-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap">Allow package inspection before delivery</span>
+                          <span class="fs-14 text-wrap">Customer can open package </span>
                         </label>
                       </div>
                     </div>
@@ -1268,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', function() {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ orderNumber })
+          body: JSON.stringify({ orderNumber: orderNumber.trim() })
         });
 
         const data = await response.json();
@@ -1481,6 +1506,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         // Initialize active state
         updateCardActiveState(card, checkbox.checked);
+        
+        // Show/hide pickup address selection for express shipping
+        checkbox.addEventListener('change', function() {
+          const pickupAddressSelection = document.getElementById('pickupAddressSelection');
+          if (pickupAddressSelection) {
+            pickupAddressSelection.style.display = this.checked ? 'block' : 'none';
+            if (this.checked && pickupAddressSelection.querySelector('select').value === '') {
+              // Select default address if available
+              const defaultOption = pickupAddressSelection.querySelector('select option[selected]');
+              if (defaultOption) {
+                pickupAddressSelection.querySelector('select').value = defaultOption.value;
+              }
+            }
+          }
+        });
       }
     });
 

@@ -1533,8 +1533,16 @@
         details.push(`Type: ${business.brandType.brandChoice}`);
       }
       
-      if (business.pickUpAdress?.city) {
-        details.push(`City: ${business.pickUpAdress.city}`);
+      // Get default pickup address
+      let pickupAddress = null;
+      if (business.pickUpAddresses && business.pickUpAddresses.length > 0) {
+        pickupAddress = business.pickUpAddresses.find(addr => addr.isDefault) || business.pickUpAddresses[0];
+      }
+      if (!pickupAddress && business.pickUpAdress) {
+        pickupAddress = business.pickUpAdress;
+      }
+      if (pickupAddress?.city) {
+        details.push(`City: ${pickupAddress.city}`);
       }
       
       return details.join(' • ') || 'No additional details';
@@ -1864,7 +1872,16 @@
                 <strong>Business Type:</strong> ${business?.brandType?.brandChoice || 'N/A'}
               </div>
               <div class="mb-2">
-                <strong>City:</strong> ${business?.pickUpAdress?.city || 'N/A'}
+                <strong>City:</strong> ${(() => {
+                  let addr = null;
+                  if (business?.pickUpAddresses && business.pickUpAddresses.length > 0) {
+                    addr = business.pickUpAddresses.find(a => a.isDefault) || business.pickUpAddresses[0];
+                  }
+                  if (!addr && business?.pickUpAdress) {
+                    addr = business.pickUpAdress;
+                  }
+                  return addr?.city || 'N/A';
+                })()}
               </div>
             </div>
           </div>
@@ -2359,7 +2376,16 @@
                 <div class="card-body">
                   <div class="mb-2"><strong>Industry:</strong> ${business.brandInfo?.industry || 'N/A'}</div>
                   <div class="mb-2"><strong>Type:</strong> ${business.brandType?.brandChoice || 'N/A'}</div>
-                  <div class="mb-2"><strong>City:</strong> ${business.pickUpAdress?.city || 'N/A'}</div>
+                  <div class="mb-2"><strong>City:</strong> ${(() => {
+                    let addr = null;
+                    if (business.pickUpAddresses && business.pickUpAddresses.length > 0) {
+                      addr = business.pickUpAddresses.find(a => a.isDefault) || business.pickUpAddresses[0];
+                    }
+                    if (!addr && business.pickUpAdress) {
+                      addr = business.pickUpAdress;
+                    }
+                    return addr?.city || 'N/A';
+                  })()}</div>
                   <div class="mb-2"><strong>Balance:</strong> ${business.balance || 0} EGP</div>
                 </div>
               </div>

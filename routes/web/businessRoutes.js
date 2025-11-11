@@ -100,6 +100,8 @@ router.get('/orders', businessController.get_ordersPage);
 
 router.get('/get-orders', businessController.get_orders);
 
+router.get('/export-orders', businessController.exportOrdersToExcel);
+
 router.get('/create-order', businessController.get_createOrderPage);
 
 router.post('/submit-order', businessController.submitOrder);
@@ -134,6 +136,8 @@ router.delete('/orders/delete-order/:orderId', businessController.deleteOrder);
 router.get('/pickups', businessController.get_pickupPage);
 
 router.get('/get-pickups', businessController.get_pickups);
+
+router.get('/export-pickups', businessController.exportPickupsToExcel);
 
 router.get(
   '/pickup-details/:pickupNumber',
@@ -257,6 +261,21 @@ router.put('/api/shop/orders/:id/cancel', businessController.cancelShopOrder);
 
 // tickets
 router.get('/tickets', businessController.get_ticketsPage);
+
+// Settings routes
+router.get('/settings', businessController.getSettingsPage);
+router.put('/settings/update', businessController.updateSettings);
+router.post('/settings/update', businessController.updateSettings);
+router.post('/settings/send-email-otp', businessController.sendEmailOtp);
+router.post('/settings/verify-email-otp', businessController.verifyEmailOtp);
+router.post('/settings/send-phone-otp', businessController.sendPhoneOtp);
+router.post('/settings/verify-phone-otp', businessController.verifyPhoneOtp);
+
+// Multiple Pickup Addresses routes
+router.post('/pickup-addresses/add', businessController.addPickupAddress);
+router.put('/pickup-addresses/:addressId', businessController.updatePickupAddress);
+router.delete('/pickup-addresses/:addressId', businessController.deletePickupAddress);
+router.post('/pickup-addresses/:addressId/set-default', businessController.setDefaultPickupAddress);
 
 // AI Assistant routes
 router.get('/assistant', assistantController.getAssistantPage);

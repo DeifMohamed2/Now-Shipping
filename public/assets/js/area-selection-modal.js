@@ -55,13 +55,16 @@
     
     governorateList.innerHTML = '';
     
+    // Filter to only show Cairo
+    const cairoData = data['Cairo'] ? { 'Cairo': data['Cairo'] } : {};
+    
     // Sort governorates alphabetically by English name
-    const sortedGovernorates = Object.keys(data).sort((a, b) => {
-      return data[a].label.en.localeCompare(data[b].label.en);
+    const sortedGovernorates = Object.keys(cairoData).sort((a, b) => {
+      return cairoData[a].label.en.localeCompare(cairoData[b].label.en);
     });
     
     sortedGovernorates.forEach(govValue => {
-      const gov = data[govValue];
+      const gov = cairoData[govValue];
       const governorateItem = document.createElement('div');
       governorateItem.className = 'governorate-item';
       governorateItem.dataset.governorate = govValue;
@@ -170,9 +173,10 @@
         item.classList.remove('active');
       });
       
-      // Search through governorates and areas
-      Object.keys(bostaRegionsData).forEach(govValue => {
-        const gov = bostaRegionsData[govValue];
+      // Search through governorates and areas (only Cairo)
+      const cairoData = bostaRegionsData['Cairo'];
+      if (cairoData) {
+        const gov = cairoData;
         const govMatches = gov.label.en.toLowerCase().includes(searchTerm) || 
                            gov.label.ar.includes(searchTerm);
         
@@ -184,7 +188,7 @@
         );
         
         if (govMatches || matchingAreas.length > 0) {
-          const governorateItem = document.querySelector(`[data-governorate="${govValue}"]`);
+          const governorateItem = document.querySelector(`[data-governorate="Cairo"]`);
           if (governorateItem) {
             governorateItem.style.display = 'block';
             if (matchingAreas.length > 0) {
@@ -199,7 +203,7 @@
             });
           }
         }
-      });
+      }
     });
   }
 
@@ -245,13 +249,7 @@
               zoneInput.value = selectedArea;
             }
             
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('areaSelectionModal'));
-            if (modal) {
-              modal.hide();
-            }
-            
-            // Call callback if provided
+            // Call callback if provided first
             if (callbacks.onSelect) {
               callbacks.onSelect({
                 governorate: selectedGovernorate,
@@ -259,6 +257,45 @@
                 displayText: displayText,
                 data: { governorate: gov, area: area }
               });
+            }
+            
+            // Close modal properly
+            const modalElement = document.getElementById('areaSelectionModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+              // Add event listener to clean up after modal is fully hidden
+              modalElement.addEventListener('hidden.bs.modal', function cleanupModal() {
+                // Remove any lingering backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                  backdrop.remove();
+                });
+                
+                // Remove modal-open class from body
+                document.body.classList.remove('modal-open');
+                
+                // Reset body styles
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                
+                // Remove this event listener after it runs once
+                modalElement.removeEventListener('hidden.bs.modal', cleanupModal);
+              }, { once: true });
+              
+              modal.hide();
+            } else {
+              // Fallback if modal instance not found
+              const bsModal = new bootstrap.Modal(modalElement);
+              bsModal.hide();
+              
+              // Cleanup after animation
+              setTimeout(() => {
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                  backdrop.remove();
+                });
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+              }, 300);
             }
             
             // Trigger fees update if function exists

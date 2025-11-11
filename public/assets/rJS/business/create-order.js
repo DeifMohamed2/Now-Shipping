@@ -333,6 +333,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const formObject = Object.fromEntries(formData.entries());
             console.log('Form data being submitted:', formObject);
             
+            // Trim originalOrderNumber if it exists
+            if (formObject.originalOrderNumber) {
+              formObject.originalOrderNumber = formObject.originalOrderNumber.trim();
+            }
+            
             // Handle partial return: automatically set numberOfItems from partialReturnItemCount
             if (formObject.orderType === 'Return' && formObject.returnType === 'partial') {
               formObject.numberOfItems = formObject.partialReturnItemCount;

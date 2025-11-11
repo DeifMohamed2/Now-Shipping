@@ -288,7 +288,18 @@
                       </tr>
                       <tr>
                         <th scope="row">Contact Phone:</th>
-                        <td><%= pickup.business.phoneNumber %></td>
+                        <td>
+                          <% 
+                            let pickupPhoneDisplay = pickup.business.phoneNumber;
+                            if (selectedPickupAddress && selectedPickupAddress.pickupPhone) {
+                              pickupPhoneDisplay = selectedPickupAddress.pickupPhone;
+                            }
+                          %>
+                          <%= pickupPhoneDisplay %>
+                          <% if (selectedPickupAddress && selectedPickupAddress.otherPickupPhone) { %>
+                            <br><small class="text-muted">Alternative: <%= selectedPickupAddress.otherPickupPhone %></small>
+                          <% } %>
+                        </td>
                       </tr>
                       <tr>
                         <th scope="row">Pickup Date:</th>
@@ -301,9 +312,21 @@
               <div class="col-md-6">
                 <div class="address-box mb-3">
                   <h6 class="mb-2">Pickup Address:</h6>
-                  <p id="pickupAddressDisplay" class="mb-2"><%= pickup.business.pickUpAdress.adressDetails %>, <%= pickup.business.pickUpAdress.city %></p>
-                  <p id="pickupNearbyLocationDisplay" class="text-muted mb-2">Nearby Location: <%= pickup.business.pickUpAdress.nearbyLandmark %></p>
-                  <a href="#" class="btn btn-sm btn-primary">
+                  <% 
+                    let pickupAddressDetails = pickup.business.pickUpAdress; // Fallback to old structure
+                    if (selectedPickupAddress) {
+                      pickupAddressDetails = selectedPickupAddress;
+                    } else if (pickup.pickupAddressId && pickup.business.pickUpAddresses && pickup.business.pickUpAddresses.length > 0) {
+                      const selectedAddr = pickup.business.pickUpAddresses.find(addr => addr.addressId === pickup.pickupAddressId);
+                      if (selectedAddr) {
+                        pickupAddressDetails = selectedAddr;
+                      }
+                    }
+                  %>
+                  <p id="pickupAddressDisplay" class="mb-2"><%= pickupAddressDetails?.adressDetails || 'N/A' %></p>
+                  <p class="text-muted mb-2"><%= pickupAddressDetails?.zone ? pickupAddressDetails.zone + ', ' : '' %><%= pickupAddressDetails?.city || 'N/A' %></p>
+                  <p id="pickupNearbyLocationDisplay" class="text-muted mb-2">Nearby Location: <%= pickupAddressDetails?.nearbyLandmark || 'N/A' %></p>
+                  <a href="https://maps.google.com/?q=<%= encodeURIComponent((pickupAddressDetails?.adressDetails || '') + ', ' + (pickupAddressDetails?.city || '') + ', ' + (pickupAddressDetails?.country || '')) %>" target="_blank" class="btn btn-sm btn-primary">
                   <i class="ri-map-pin-line me-1"></i> Navigate to Address
                   </a>
                 </div>

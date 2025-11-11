@@ -5,10 +5,32 @@
 <link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 <%- contentFor('body') %>
 <style>
-  /* Fix for dropdown menus in tables */
+  /* Ensure nav-tabs don't create stacking context issues */
+  .nav-tabs {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .nav-tabs-custom {
+    z-index: 1;
+  }
+  
+  /* Ensure dropdown button and menu are in proper stacking context */
+  .dropdown-fix {
+    position: relative;
+    z-index: 10000;
+  }
+
+  /* Fix for dropdown menus in tables - ensure they appear above tabs */
   .dropdown-fix .dropdown-menu {
-    position: fixed !important;
-    z-index: 1050 !important;
+    position: absolute !important;
+    z-index: 10050 !important;
+  }
+  
+  /* When Bootstrap shows the dropdown, ensure it's above everything */
+  .dropdown-fix.show .dropdown-menu,
+  .dropdown-fix[data-bs-popper] .dropdown-menu {
+    z-index: 10050 !important;
   }
 
   /* Ensure the table doesn't constrain the dropdown */
@@ -25,6 +47,29 @@
     overflow: scroll !important;
   }
   .table-responsive.table-card{ max-height:70vh; overflow-y:auto; min-height:300px; }
+  
+  /* Override any Bootstrap dropdown z-index that might be interfering */
+  #orderTable .dropdown-menu,
+  #orderTable .dropdown-menu.show,
+  .card-body .dropdown-menu,
+  .card-body .dropdown-menu.show {
+    z-index: 10050 !important;
+  }
+  
+  /* Ensure table rows with dropdowns are in proper stacking context */
+  #orderTable tbody tr {
+    position: relative;
+  }
+  
+  /* Make sure the table container itself doesn't create issues */
+  .table-responsive.table-card {
+    position: relative;
+  }
+  
+  /* Handle dropdowns that Bootstrap/Popper might move to body */
+  body > .dropdown-menu[data-bs-popper] {
+    z-index: 10050 !important;
+  }
 </style>
 <div class="row">
   <div class="col-lg-12">
@@ -813,6 +858,30 @@
     backdrops.forEach(function(b){ b.remove(); });
     document.body.classList.remove('modal-open');
     document.body.style.removeProperty('padding-right');
+  });
+  
+  // Ensure dropdowns always appear above tabs
+  document.addEventListener('shown.bs.dropdown', function (e) {
+    const dropdownMenu = e.target.querySelector('.dropdown-menu');
+    if (dropdownMenu) {
+      dropdownMenu.style.zIndex = '10050';
+    }
+  });
+  
+  // Also handle dropdowns that might be moved to body by Popper
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      mutation.addedNodes.forEach(function(node) {
+        if (node.nodeType === 1 && node.classList && node.classList.contains('dropdown-menu')) {
+          node.style.zIndex = '10050';
+        }
+      });
+    });
+  });
+  
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
   });
 </script>
 

@@ -97,7 +97,76 @@ const UserSchema = new mongoose.Schema(
         type: String,
         required: false,
       },
+      otherPickupPhone: {
+        type: String,
+        required: false,
+      },
     },
+    // Multiple pickup addresses support
+    pickUpAddresses: [{
+      addressId: {
+        type: String,
+        required: true,
+        default: function() {
+          return `addr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+      },
+      addressName: {
+        type: String,
+        required: false,
+        default: 'Main Address'
+      },
+      isDefault: {
+        type: Boolean,
+        default: false
+      },
+      pickUpPointInMaps: {
+        type: String,
+        required: false,
+      },
+      coordinates: {
+        lat: {
+          type: Number,
+          required: false,
+        },
+        lng: {
+          type: Number,
+          required: false,
+        }
+      },
+      country: {
+        type: String,
+        required: false,
+      },
+      city: {
+        type: String,
+        required: false,
+      },
+      zone: {
+        type: String,
+        required: false,
+      },
+      adressDetails: {
+        type: String,
+        required: false,
+      },
+      nearbyLandmark: {
+        type: String,
+        required: false,
+      },
+      pickupPhone: {
+        type: String,
+        required: false,
+      },
+      otherPickupPhone: {
+        type: String,
+        required: false,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
     paymentMethod: {
       paymentChoice: {
         type: String,

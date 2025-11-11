@@ -347,6 +347,15 @@ const get_orderDetails= async (req, res) => {
       req.flash('error', 'Order not found');
       return res.redirect('/courier/orders');
     }
+    
+    // Get selected pickup address if order has selectedPickupAddressId
+    let selectedPickupAddress = null;
+    if (order.selectedPickupAddressId && order.business && order.business.pickUpAddresses) {
+      selectedPickupAddress = order.business.pickUpAddresses.find(
+        addr => addr.addressId === order.selectedPickupAddressId
+      );
+    }
+    
     // Enhance order with partial return information
     const enhancedOrder = {
       ...order.toObject(),
@@ -361,7 +370,7 @@ const get_orderDetails= async (req, res) => {
 
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(200).json({ order: enhancedOrder });
+      return res.status(200).json({ order: enhancedOrder, selectedPickupAddress: selectedPickupAddress });
     }
     
     // Render page for web requests
@@ -370,6 +379,7 @@ const get_orderDetails= async (req, res) => {
       page_title: 'Order Details',
       folder: 'Pages',
       order: enhancedOrder,
+      selectedPickupAddress: selectedPickupAddress,
       courierData: req.courierData
     });
   } catch (error) {
@@ -750,6 +760,14 @@ const completeOrder = async (req, res) => {
     } else if (order.orderStatus === 'headingToYou') {
       // This is returning an order to the business
       order.orderStatus = 'returnCompleted';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+      order.completedDate = new Date();
+      
+      // Increment attempts but ensure it doesn't exceed 2
+      if (order.Attemps < 2) {
+        order.Attemps += 1;
+      }
+      
       // Update delivered stage for return completion
       if (!order.orderStages.delivered.isCompleted) {
         order.orderStages.delivered.isCompleted = true;
@@ -819,6 +837,11 @@ const completeOrder = async (req, res) => {
         notes: `Courier ${courierName} delivered replacement item`
       });
       
+      // Increment attempts but ensure it doesn't exceed 2
+      if (order.Attemps < 2) {
+        order.Attemps += 1;
+      }
+      
       // Now mark the order as completed
       order.orderStatus = 'completed';
       order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
@@ -845,6 +868,11 @@ const completeOrder = async (req, res) => {
         action: 'cash_collected',
         notes: `Courier ${courierName} collected cash amount ${order.orderShipping.amount}`
       });
+      
+      // Increment attempts but ensure it doesn't exceed 2
+      if (order.Attemps < 2) {
+        order.Attemps += 1;
+      }
       
       // Now mark the order as completed
       order.orderStatus = 'completed';
@@ -1337,6 +1365,7 @@ const completeOrder = async (req, res) => {
 // };
 
 // Enhanced pick up return from customer with comprehensive tracking
+
 const pickupReturn = async (req, res) => {
   const { orderNumber } = req.params;
   // Handle both API (JWT) and web (session) authentication
@@ -1686,6 +1715,13 @@ const completeReturnToBusiness = async (req, res) => {
     }
 
     order.orderStatus = 'returnCompleted';
+    order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+    order.completedDate = new Date();
+    
+    // Increment attempts but ensure it doesn't exceed 2
+    if (order.Attemps < 2) {
+      order.Attemps += 1;
+    }
 
     // Determine courier name safely for API requests where req.courierData might be undefined
     const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
@@ -1701,9 +1737,6 @@ const completeReturnToBusiness = async (req, res) => {
       deliveryLocation: deliveryLocation || order.business.address,
       businessSignature: businessSignature || null,
     };
-
-    // Set completion date
-    order.completedDate = new Date();
 
     // Add to courier history
     order.courierHistory.push({
@@ -1846,9 +1879,17 @@ const get_pickupDetails = async (req, res) => {
       return res.redirect('/courier/pickups');
     }
     
+    // Get selected pickup address if pickup has pickupAddressId
+    let selectedPickupAddress = null;
+    if (pickup.pickupAddressId && pickup.business && pickup.business.pickUpAddresses) {
+      selectedPickupAddress = pickup.business.pickUpAddresses.find(
+        addr => addr.addressId === pickup.pickupAddressId
+      );
+    }
+    
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(200).json({ pickup: pickup });
+      return res.status(200).json({ pickup: pickup, selectedPickupAddress: selectedPickupAddress });
     }
     
     // Render page for web requests
@@ -1857,6 +1898,7 @@ const get_pickupDetails = async (req, res) => {
       page_title: 'Pickup Details',
       folder: 'Pages',
       pickup: pickup,
+      selectedPickupAddress: selectedPickupAddress,
       courierData: req.courierData
     });
   } catch (error) {
@@ -1901,9 +1943,17 @@ const get_picked_up_orders = async (req, res) => {
       return res.redirect('/courier/pickups');
     }
     
+    // Get selected pickup address if pickup has pickupAddressId
+    let selectedPickupAddress = null;
+    if (pickup.pickupAddressId && pickup.business && pickup.business.pickUpAddresses) {
+      selectedPickupAddress = pickup.business.pickUpAddresses.find(
+        addr => addr.addressId === pickup.pickupAddressId
+      );
+    }
+    
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(200).json({ orders: pickup.ordersPickedUp });
+      return res.status(200).json({ orders: pickup.ordersPickedUp, selectedPickupAddress: selectedPickupAddress });
     }
     
     // For web requests, render the pickup details page with orders
@@ -1913,6 +1963,7 @@ const get_picked_up_orders = async (req, res) => {
       folder: 'Pages',
       pickup: pickup,
       orders: pickup.ordersPickedUp,
+      selectedPickupAddress: selectedPickupAddress,
       courierData: req.courierData
     });
   } catch (error) {

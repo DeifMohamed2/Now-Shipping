@@ -334,18 +334,40 @@
                     </div>
                     <div class="info-item">
                       <div class="info-label">Contact Phone:</div>
-                      <div class="info-value"><%= order.business?.phoneNumber || 'N/A' %></div>
+                      <div class="info-value">
+                        <% 
+                          let businessPhoneDisplay = order.business?.phoneNumber || 'N/A';
+                          if (selectedPickupAddress && selectedPickupAddress.pickupPhone) {
+                            businessPhoneDisplay = selectedPickupAddress.pickupPhone;
+                          }
+                        %>
+                        <%= businessPhoneDisplay %>
+                        <% if (selectedPickupAddress && selectedPickupAddress.otherPickupPhone) { %>
+                          <br><small class="text-muted">Alternative: <%= selectedPickupAddress.otherPickupPhone %></small>
+                        <% } %>
+                      </div>
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="address-box">
                       <h6 class="mb-2"><i class="ri-map-pin-line me-2 text-primary"></i>Business Address</h6>
-                      <p class="mb-2"><%= order.business?.pickUpAdress?.adressDetails || 'N/A' %></p>
-                      <p class="mb-2"><%= order.business?.pickUpAdress?.city || 'N/A' %>, <%= order.business?.pickUpAdress?.country || 'N/A' %></p>
-                      <% if (order.business?.pickUpAdress?.nearbyLandmark) { %>
-                      <p class="text-muted small mb-2">Nearby: <%= order.business.pickUpAdress.nearbyLandmark %></p>
+                      <% 
+                        let businessPickupAddress = order.business?.pickUpAdress;
+                        if (selectedPickupAddress) {
+                          businessPickupAddress = selectedPickupAddress;
+                        } else if (order.selectedPickupAddressId && order.business?.pickUpAddresses) {
+                          const selectedAddr = order.business.pickUpAddresses.find(addr => addr.addressId === order.selectedPickupAddressId);
+                          if (selectedAddr) {
+                            businessPickupAddress = selectedAddr;
+                          }
+                        }
+                      %>
+                      <p class="mb-2"><%= businessPickupAddress?.adressDetails || 'N/A' %></p>
+                      <p class="mb-2"><%= businessPickupAddress?.city || 'N/A' %>, <%= businessPickupAddress?.country || 'N/A' %></p>
+                      <% if (businessPickupAddress?.nearbyLandmark) { %>
+                      <p class="text-muted small mb-2">Nearby: <%= businessPickupAddress.nearbyLandmark %></p>
                       <% } %>
-                      <a href="https://maps.google.com/?q=<%= encodeURIComponent((order.business?.pickUpAdress?.adressDetails || '') + ', ' + (order.business?.pickUpAdress?.city || '') + ', ' + (order.business?.pickUpAdress?.country || '')) %>" target="_blank" class="btn btn-sm btn-primary">
+                      <a href="https://maps.google.com/?q=<%= encodeURIComponent((businessPickupAddress?.adressDetails || '') + ', ' + (businessPickupAddress?.city || '') + ', ' + (businessPickupAddress?.country || '')) %>" target="_blank" class="btn btn-sm btn-primary">
                         <i class="ri-navigation-line me-1"></i> Navigate to Business
                       </a>
                     </div>
@@ -812,22 +834,44 @@
                 </div>
                 <div class="info-item">
                   <div class="info-label">Phone Number:</div>
-                  <div class="info-value"><%= order.business?.phoneNumber %></div>
+                  <div class="info-value">
+                    <% 
+                      let businessPhoneDisplay2 = order.business?.phoneNumber || 'N/A';
+                      if (selectedPickupAddress && selectedPickupAddress.pickupPhone) {
+                        businessPhoneDisplay2 = selectedPickupAddress.pickupPhone;
+                      }
+                    %>
+                    <%= businessPhoneDisplay2 %>
+                    <% if (selectedPickupAddress && selectedPickupAddress.otherPickupPhone) { %>
+                      <br><small class="text-muted">Alternative: <%= selectedPickupAddress.otherPickupPhone %></small>
+                    <% } %>
+                  </div>
                 </div>
                 </div>
                 <div class="col-md-6">
                 <div class="address-box">
                   <h6 class="mb-2"><i class="ri-map-pin-line me-2 text-primary"></i>Pickup Address</h6>
-                  <p class="mb-2"><%= order.business?.pickUpAdress?.adressDetails %></p>
-                  <p class="mb-2"><%= order.business?.pickUpAdress?.city %>, <%= order.business?.pickUpAdress?.country %></p>
-                  <a href="https://maps.google.com/?q=<%= encodeURIComponent(order.business?.pickUpAdress?.adressDetails + ', ' + order.business?.pickUpAdress?.city + ', ' + order.business?.pickUpAdress?.country) %>" target="_blank" class="btn btn-sm btn-primary">
+                  <% 
+                    let businessPickupAddress2 = order.business?.pickUpAdress;
+                    if (selectedPickupAddress) {
+                      businessPickupAddress2 = selectedPickupAddress;
+                    } else if (order.selectedPickupAddressId && order.business?.pickUpAddresses) {
+                      const selectedAddr = order.business.pickUpAddresses.find(addr => addr.addressId === order.selectedPickupAddressId);
+                      if (selectedAddr) {
+                        businessPickupAddress2 = selectedAddr;
+                      }
+                    }
+                  %>
+                  <p class="mb-2"><%= businessPickupAddress2?.adressDetails || 'N/A' %></p>
+                  <p class="mb-2"><%= businessPickupAddress2?.zone ? businessPickupAddress2.zone + ', ' : '' %><%= businessPickupAddress2?.city || 'N/A' %>, <%= businessPickupAddress2?.country || 'N/A' %></p>
+                  <a href="https://maps.google.com/?q=<%= encodeURIComponent((businessPickupAddress2?.adressDetails || '') + ', ' + (businessPickupAddress2?.city || '') + ', ' + (businessPickupAddress2?.country || '')) %>" target="_blank" class="btn btn-sm btn-primary">
                   <i class="ri-map-pin-line me-1"></i> Navigate to Address
                   </a>
                 </div>
-                <% if (order.business?.pickUpAdress?.nearbyLandmark) { %>
+                <% if (businessPickupAddress2?.nearbyLandmark) { %>
                 <div class="info-item">
                   <div class="info-label">Nearby Landmark:</div>
-                  <div class="info-value"><%= order.business?.pickUpAdress?.nearbyLandmark %></div>
+                  <div class="info-value"><%= businessPickupAddress2.nearbyLandmark %></div>
                 </div>
                 <% } %>
                 </div>

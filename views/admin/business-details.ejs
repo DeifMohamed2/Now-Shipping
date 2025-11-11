@@ -513,6 +513,10 @@
             <span class="info-label">Pickup Phone</span>
             <span class="info-value" id="pickupPhone">-</span>
           </div>
+          <div class="info-row">
+            <span class="info-label">Other Pickup Phone</span>
+            <span class="info-value" id="otherPickupPhone">-</span>
+          </div>
         </div>
       </div>
 
@@ -828,14 +832,26 @@
       document.getElementById('socialLinks').textContent = '-';
     }
 
-    // Pickup Address
-    const address = business.pickUpAdress || {};
+    // Pickup Address - use default from pickUpAddresses if available, otherwise fallback to old structure
+    let address = null;
+    if (business.pickUpAddresses && business.pickUpAddresses.length > 0) {
+      address = business.pickUpAddresses.find(addr => addr.isDefault) || business.pickUpAddresses[0];
+    }
+    if (!address && business.pickUpAdress) {
+      address = business.pickUpAdress;
+    }
+    address = address || {};
     document.getElementById('addressCountry').textContent = address.country || '-';
     document.getElementById('addressCity').textContent = address.city || '-';
     document.getElementById('addressZone').textContent = address.zone || '-';
     document.getElementById('addressDetails').textContent = address.adressDetails || '-';
     document.getElementById('addressLandmark').textContent = address.nearbyLandmark || '-';
     document.getElementById('pickupPhone').textContent = address.pickupPhone || '-';
+    // Display other pickup phone if exists (add to DOM if needed)
+    const otherPhoneElement = document.getElementById('otherPickupPhone');
+    if (otherPhoneElement) {
+      otherPhoneElement.textContent = address.otherPickupPhone || '-';
+    }
 
     // Payment Method
     const paymentContainer = document.getElementById('paymentMethodContent');

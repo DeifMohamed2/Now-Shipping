@@ -24,6 +24,28 @@
     animation: pulse 1.5s infinite;
   }
 
+  /* Get Current Location Button Styles */
+  .get-current-location-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .get-current-location-btn {
+      font-size: 0.875rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .d-flex.gap-2.mb-2 {
+      flex-wrap: wrap;
+    }
+
+    .d-flex.gap-2.mb-2 .address-map-point {
+      flex: 1;
+      min-width: 200px;
+    }
+  }
+
   @keyframes pulse {
     0% {
       transform: scale(1);
@@ -706,13 +728,17 @@
                         <label for="industry" class="form-label fw-semibold">Industry</label>
                         <select class="form-select" id="industry" name="industry" required>
                           <option value="">Select an industry...</option>
-                          <option>Books, Arts & Media</option>
-                          <option>Fashion & Clothing</option>
-                          <option>Electronics</option>
-                          <option>Health & Beauty</option>
-                          <option>Home & Furniture</option>
-                          <option>Other</option>
+                          <option value="Books, Arts & Media">Books, Arts & Media</option>
+                          <option value="Fashion & Clothing">Fashion & Clothing</option>
+                          <option value="Electronics">Electronics</option>
+                          <option value="Health & Beauty">Health & Beauty</option>
+                          <option value="Home & Furniture">Home & Furniture</option>
+                          <option value="Other">Other</option>
                         </select>
+                        <div id="otherIndustryContainer" class="mt-3" style="display: none;">
+                          <label for="otherIndustry" class="form-label fw-semibold">Specify Industry <span class="text-danger">*</span></label>
+                          <input type="text" class="form-control" id="otherIndustry" name="otherIndustry" placeholder="Enter your industry">
+                        </div>
                       </div>
                       <div class="col-md-6">
                         <label for="orderSize" class="form-label fw-semibold">Monthly Order Volume</label>
@@ -822,117 +848,97 @@
 
                   <!-- Step 3: PickUp Address -->
                   <div class="tab-pane fade" id="v-pills-location" role="tabpanel" aria-labelledby="v-pills-pickUp-tab">
-                    <div class="mb-4">
-                      <h4 class="fw-bold">Pickup Address</h4>
-                      <p class="text-muted">Where should we pick up your packages from?</p>
+                    <div class="mb-4 d-flex justify-content-between align-items-center">
+                      <div>
+                        <h4 class="fw-bold">Pickup Addresses</h4>
+                        <p class="text-muted">Add one or more pickup locations for your packages</p>
+                      </div>
+                      <button type="button" class="btn btn-primary-custom" id="addPickupAddressBtn">
+                        <i class="ri-add-line me-1"></i> Add Address
+                      </button>
                     </div>
 
-                    <!-- Map selection card -->
-                    <div class="card shadow-sm border mb-4">
-                      <div class="card-body p-0">
-                        <div class="row g-0">
-                          <div class="col-md-4 bg-light p-4 d-flex flex-column justify-content-center">
-                            <div class="text-center mb-3">
-                              <i class="ri-map-pin-line fs-2 text-primary-custom"></i>
-                            </div>
-                            <h5 class="fw-semibold text-center mb-3">Locate Your Business</h5>
-                            <p class="text-muted mb-4 text-center">Select your exact location on the map for accurate pickups</p>
-                            <button type="button" class="btn btn-primary-custom w-100 d-flex align-items-center justify-content-center" id="openMapBtn" data-bs-toggle="modal" data-bs-target="#locationModal">
-                              <i class="ri-map-pin-2-line me-2"></i> Choose on Map
-                            </button>
-                            <div id="selectedLocation" class="alert alert-light mt-3 text-center" style="display: none;">
-                              <i class="ri-map-pin-fill text-primary-custom me-1"></i>
-                              <span class="fw-medium"></span>
-                            </div>
-                          </div>
-                          <div class="col-md-8">
-                            <div id="previewMap" style="height: 250px; width: 100%;"></div>
-                          </div>
+                    <!-- Multiple Addresses Container -->
+                    <div id="pickupAddressesContainer">
+                      <!-- Addresses will be dynamically added here -->
+                    </div>
+
+                    <!-- Hidden template for address form -->
+                    <template id="pickupAddressTemplate">
+                      <div class="card mb-4 pickup-address-card" data-address-index="">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                          <h5 class="mb-0">
+                            <i class="ri-map-pin-line me-2 text-primary-custom"></i>
+                            <span class="address-name-display">Main Address</span>
+                            <span class="badge bg-primary ms-2 default-badge" style="display: none;">Default</span>
+                          </h5>
+                          <button type="button" class="btn btn-sm btn-outline-danger remove-address-btn" style="display: none;">
+                            <i class="ri-delete-bin-line"></i> Remove
+                          </button>
                         </div>
-                      </div>
-                    </div>
-
-                    <div class="row g-3">
-                      <div class="col-md-6">
-                        <label for="country" class="form-label">Country</label>
-                        <select class="form-select" id="country" name="country" required>
-                          <option value="" selected disabled>Select Country</option>
-                          <option value="egypt">Egypt</option>
-                        </select>
-                      </div>
-
-                      <div class="col-12">
-                        <div class="card border-0 shadow-sm">
-                          <div class="card-body">
-                            <h5 class="fw-semibold mb-3">Location Details</h5>
-
-                            <!-- Location Details Section -->
-                            <div class="row">
-                              <div class="col-md-12">
-                                <label for="pickup-area" class="form-label text-muted small fw-medium">Governorate and Area</label>
-                                <button type="button" class="btn btn-outline-secondary w-100 text-start" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
-                                  <span id="selectedAreaDisplay">Select Area</span>
-                                  <i class="ri-arrow-down-s-line"></i>
-                                </button>
-                                <input type="hidden" name="city" id="government-value">
-                                <input type="hidden" name="zone" id="zone-value">
-                              </div>
+                        <div class="card-body">
+                          <div class="row g-3">
+                            <div class="col-md-12">
+                              <label class="form-label">Address Name</label>
+                              <input type="text" class="form-control address-name-input" placeholder="e.g. Main Warehouse, Branch Office" value="Main Address">
                             </div>
-                          </div>
-                        </div>
-                      </div>
+                            
+                            <div class="col-md-6">
+                              <label class="form-label">Country <span class="text-danger">*</span></label>
+                              <select class="form-select address-country" required>
+                                <option value="" disabled>Select Country</option>
+                                <option value="egypt" selected>Egypt</option>
+                              </select>
+                            </div>
 
-                      <div class="col-md-12">
-                        <label for="address-details" class="form-label">Address Details</label>
-                        <input type="text" class="form-control" name="adressDetails" id="address-details" placeholder="Street, Building, Floor, Apartment" required>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="landmark" class="form-label">Nearby Landmark (Optional)</label>
-                        <input type="text" class="form-control" name="nearbyLandmark" id="landmark" placeholder="e.g. Near the school">
-                      </div>
-                      <div class="col-md-6">
-                        <label for="pickup-phone" class="form-label">Pickup Phone Number</label>
-                        <input type="tel" class="form-control" name="pickupPhone" id="pickup-phone" placeholder="e.g. +20 123 456 7890" required>
-                      </div>
-                      <!-- Hidden input for storing coordinates -->
-                      <input type="hidden" id="locationCoordinates" name="coordinates">
-                    </div>
+                            <div class="col-md-12">
+                              <label class="form-label">Governorate and Area <span class="text-danger">*</span></label>
+                              <button type="button" class="btn btn-outline-secondary w-100 text-start select-area-btn" style="height: 45px; display: flex; align-items: center; justify-content: space-between; border: 2px solid #e0e0e0;">
+                                <span class="selected-area-display">Select Area</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                              </button>
+                              <input type="hidden" class="address-city">
+                              <input type="hidden" class="address-zone">
+                              <small class="text-muted">Click to select governorate and area</small>
+                            </div>
 
-                    <!-- Map Modal with enhanced design -->
-                    <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
-                      <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                          <div class="modal-header bg-light">
-                            <h5 class="modal-title" id="locationModalLabel">
-                              <i class="ri-map-pin-line me-2 text-primary-custom"></i>
-                              Select Your Location
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                          </div>
-                          <div class="modal-body p-0">
-                            <div class="p-3 border-bottom">
-                              <div class="input-group">
-                                <input type="text" id="mapSearch" class="form-control" placeholder="Search for a location">
-                                <button type="button" id="searchMapBtn" class="btn btn-primary">
-                                  <i class="ri-search-line"></i>
+                            <div class="col-md-12">
+                              <label class="form-label">Address Details <span class="text-danger">*</span></label>
+                              <input type="text" class="form-control address-details" placeholder="Street, Building, Floor, Apartment" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                              <label class="form-label">Nearby Landmark (Optional)</label>
+                              <input type="text" class="form-control address-landmark" placeholder="e.g. Near the school">
+                            </div>
+                            
+                            <div class="col-md-6">
+                              <label class="form-label">Pickup Phone Number <span class="text-danger">*</span></label>
+                              <input type="tel" class="form-control address-phone" placeholder="e.g. 0 123 456 7890" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                              <label class="form-label">Other Pickup Phone <span class="text-danger">*</span></label>
+                              <input type="tel" class="form-control address-other-phone" placeholder="e.g. 0 123 456 7890" required>
+                            </div>
+
+                            <div class="col-md-12">
+                              <label class="form-label">Location on Map (Optional)</label>
+                              <div class="d-flex gap-2 mb-2">
+                                <input type="text" class="form-control address-map-point" placeholder="Search for location or click on map below">
+                                <button type="button" class="btn btn-primary get-current-location-btn" title="Get Current Location">
+                                  <i class="ri-map-pin-2-line me-1"></i> Get Location
                                 </button>
                               </div>
+                              <div class="address-preview-map" style="height: 250px; width: 100%; border-radius: 0.5rem; border: 2px solid #e0e0e6; margin-bottom: 0.5rem;"></div>
+                              <small class="text-muted">Click on the map or search above to set your location</small>
+                              <input type="hidden" class="address-coordinates">
                             </div>
-                            <div id="map" style="width: 100%; height: 400px;"></div>
-                            <div class="p-3 bg-light">
-                              <p class="mb-1 fw-medium">Selected Location:</p>
-                              <p id="selectedLocationText" class="mb-0 text-muted">No location selected</p>
-                            </div>
-                          </div>
-                          <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="confirmLocation" disabled>
-                              <i class="ri-check-line me-1"></i> Confirm Location
-                            </button>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </template>
+
 
                     <div class="d-flex align-items-start gap-3 mt-4">
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-brand-info-tab">
@@ -953,9 +959,9 @@
                     </div>
                     <div class="row g-3">
                       <!-- InstaPay -->
-                      <div class="col-md-4">
+                      <div class="col-md-4" style="display: none;">
                         <div class="card p-3 text-center payment-option" data-value="instapay">
-                          <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="instapay" value="instaPay" required>
+                          <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="instapay" value="instaPay" required disabled>
                           <label class="form-check-label" for="instapay">
                             <i class="ri-smartphone-line fs-2 mb-2 text-primary-custom"></i>
                             <h5>InstaPay</h5>
@@ -963,9 +969,9 @@
                         </div>
                       </div>
                       <!-- Mobile Wallet -->
-                      <div class="col-md-4">
+                      <div class="col-md-4" style="display: none;">
                         <div class="card p-3 text-center payment-option" data-value="mobileWallet">
-                          <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="mobileWallet" value="mobileWallet" required>
+                          <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="mobileWallet" value="mobileWallet" required disabled>
                           <label class="form-check-label" for="mobileWallet">
                             <i class="ri-wallet-line fs-2 mb-2 text-dark-custom"></i>
                             <h5>Mobile Wallet</h5>
@@ -974,8 +980,8 @@
                       </div>
                       <!-- Bank Transfer -->
                       <div class="col-md-4">
-                        <div class="card p-3 text-center payment-option" data-value="bankTransfer">
-                          <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="bankTransfer" value="bankTransfer" required>
+                        <div class="card p-3 text-center payment-option active" data-value="bankTransfer">
+                          <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="bankTransfer" value="bankTransfer" required checked>
                           <label class="form-check-label" for="bankTransfer">
                             <i class="ri-bank-line fs-2 mb-2 text-dark-secondary"></i>
                             <h5>Bank Transfer</h5>
@@ -984,32 +990,58 @@
                       </div>
                     </div>
                     <!-- Payment Details Section -->
-                    <div id="paymentDetails" class="mt-4" style="display: none;">
+                    <div id="paymentDetails" class="mt-4" style="display: block;">
                       <!-- InstaPay Input -->
                       <div id="instapayDetails" class="payment-detail" style="display: none;">
                         <label for="ipaAddress" class="form-label">Enter your IPA Address:</label>
-                        <input type="text" id="ipaAddress" name="IPAorPhoneNumber" class="form-control" placeholder="Example: ABCD1234">
+                        <input type="text" id="ipaAddress" name="IPAorPhoneNumber" class="form-control" placeholder="Example: ABCD1234" disabled>
                       </div>
                       <!-- Mobile Wallet Input -->
                       <div id="mobileWalletDetails" class="payment-detail" style="display: none;">
                         <label for="mobileNumber" class="form-label">Enter your Mobile Number:</label>
-                        <input type="text" id="mobileNumber" name="mobileWalletNumber" class="form-control" placeholder="Example: +201234567890">
+                        <input type="text" id="mobileNumber" name="mobileWalletNumber" class="form-control" placeholder="Example: 01234567890" disabled>
                       </div>
                       <!-- Bank Transfer Inputs -->
-                      <div id="bankTransferDetails" class="payment-detail" style="display: none;">
+                      <div id="bankTransferDetails" class="payment-detail" style="display: block;">
                         <label for="bankSelect" class="form-label">Select Your Bank:</label>
-                        <select id="bankSelect" class="form-select" name="bankName">
-                          <option value="">Choose your bank</option>
-                          <option value="nbe">National Bank of Egypt</option>
-                          <option value="cib">CIB (Commercial International Bank)</option>
-                          <option value="qnb">QNB Alahli</option>
-                          <option value="hsbc">HSBC</option>
-                          <option value="saib">SAIB Bank</option>
+                        <select id="bankSelect" class="form-select" name="bankName" required>
+                          <option value="">Choose your bank / اختر البنك</option>
+                          <option value="nbe">National Bank of Egypt / البنك الأهلي المصري</option>
+                          <option value="banque-misr">Banque Misr / بنك مصر</option>
+                          <option value="cib">CIB (Commercial International Bank) / البنك التجاري الدولي</option>
+                          <option value="qnb">QNB Alahli / QNB الأهلي</option>
+                          <option value="aaib">Arab African International Bank (AAIB) / البنك العربي الأفريقي الدولي</option>
+                          <option value="adib">Abu Dhabi Islamic Bank - Egypt (ADIB) / بنك أبوظبي الإسلامي - مصر</option>
+                          <option value="abk">Al Ahli Bank of Kuwait - Egypt (ABK) / بنك الأهلي الكويتي - مصر</option>
+                          <option value="aib">Arab Investment Bank (AIB) / البنك العربي للاستثمار</option>
+                          <option value="attijariwafa">Attijariwafa Bank Egypt / بنك التجاري وفا مصر</option>
+                          <option value="bank-of-alexandria">Bank of Alexandria / بنك الإسكندرية</option>
+                          <option value="bank-audi">Bank Audi - Egypt / بنك عوده - مصر</option>
+                          <option value="banque-du-caire">Banque du Caire / بنك القاهرة</option>
+                          <option value="blom">BLOM Bank Egypt / بنك بلوم مصر</option>
+                          <option value="credit-agricole">Crédit Agricole Egypt / كريديت أجريكول مصر</option>
+                          <option value="egb">Egyptian Gulf Bank (EGB) / البنك المصري الخليجي</option>
+                          <option value="emirates-nbd">Emirates NBD Egypt / بنك الإمارات دبي الوطني مصر</option>
+                          <option value="ebbe">Export Development Bank of Egypt (EBBE) / بنك تنمية الصادرات</option>
+                          <option value="fab">First Abu Dhabi Bank Egypt (FAB) / بنك أبوظبي الأول مصر</option>
+                          <option value="faisal-islamic">Faisal Islamic Bank of Egypt / بنك فيصل الإسلامي المصري</option>
+                          <option value="hdb">Housing and Development Bank (HDB) / بنك الإسكان والتنمية</option>
+                          <option value="hsbc">HSBC Bank Egypt / بنك HSBC مصر</option>
+                          <option value="idb">Industrial Development Bank (IDB) / بنك التنمية الصناعية</option>
+                          <option value="nbk">National Bank of Kuwait - Egypt (NBK) / البنك الوطني الكويتي - مصر</option>
+                          <option value="saib">SAIB Bank / بنك SAIB</option>
+                          <option value="united-bank">United Bank of Egypt / البنك المتحد</option>
+                          <option value="alexbank">Bank of Alexandria (AlexBank) / بنك الإسكندرية (أليكس بنك)</option>
+                          <option value="al-baraka">Al Baraka Bank Egypt / بنك البركة مصر</option>
+                          <option value="adcb">Abu Dhabi Commercial Bank Egypt (ADCB) / بنك أبوظبي التجاري مصر</option>
+                          <option value="suez-canal-bank">Suez Canal Bank / بنك قناة السويس</option>
+                          <option value="mashreq">Mashreq Bank Egypt / بنك المشرق مصر</option>
+                          <option value="bank-ei">Bank of Egypt International (BEI) / بنك مصر الدولي</option>
                         </select>
                         <label for="ibanNumber" class="form-label mt-3">Enter your IBAN:</label>
-                        <input type="text" id="ibanNumber" class="form-control" name="IBAN" placeholder="Example: EG12 3456 7890 1234 5678 90">
+                        <input type="text" id="ibanNumber" class="form-control" name="IBAN" placeholder="Example: EG12 3456 7890 1234 5678 90" required>
                         <label for="accountName" class="form-label mt-3">Enter your Account Name:</label>
-                        <input type="text" id="accountName" class="form-control" name="accountName" placeholder="Example: John Doe">
+                        <input type="text" id="accountName" class="form-control" name="accountName" placeholder="Example: John Doe" required>
                       </div>
                     </div>
                     <div class="d-flex align-items-start gap-3 mt-4">
@@ -1143,7 +1175,7 @@
             <p class="text-muted mb-0">Here's your business overview for today.</p>
           </div>
           <div class="mt-3 mt-lg-0">
-            <a href="/manage/create-order" class="btn btn-primary-custom">
+            <a href="/business/create-order" class="btn btn-primary-custom">
               <i class="ri-add-circle-line align-middle me-1"></i> Create New Order
             </a>
           </div>
@@ -1175,22 +1207,10 @@
       </div>
     </div>
 
-    <!-- Chart and Recent Orders Row -->
+    <!-- Recent Orders and Recent Pickups Row -->
     <div class="row">
-      <!-- Chart -->
-      <div class="col-xl-8">
-        <div class="card dashboard-card">
-          <div class="card-header">
-            <h4 class="card-title mb-0">Revenue & Orders Analytics</h4>
-          </div>
-          <div class="card-body">
-            <div id="revenue-chart" style="height: 350px;"></div>
-          </div>
-        </div>
-      </div>
-
       <!-- Recent Orders -->
-      <div class="col-xl-4">
+      <div class="col-xl-6">
         <div class="card dashboard-card">
           <div class="card-header">
             <h4 class="card-title mb-0">Recent Orders</h4>
@@ -1241,9 +1261,7 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="row">
       <!-- Recent Pickups -->
       <div class="col-xl-6">
         <div class="card dashboard-card">
@@ -1297,17 +1315,32 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Performance Card -->
-      <div class="col-xl-6">
+    <!-- Chart and Performance Metrics Row -->
+    <div class="row">
+      <!-- Revenue & Orders Analytics -->
+      <div class="col-xl-8">
+        <div class="card dashboard-card">
+          <div class="card-header">
+            <h4 class="card-title mb-0">Revenue & Orders Analytics</h4>
+          </div>
+          <div class="card-body">
+            <div id="revenue-chart" style="height: 350px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Metrics -->
+      <div class="col-xl-4">
         <div class="card dashboard-card">
           <div class="card-header">
             <h4 class="card-title mb-0">Performance Metrics</h4>
           </div>
           <div class="card-body">
             <div class="row">
-              <div class="col-md-6">
-                <div class="d-flex align-items-center mb-4">
+              <div class="col-12">
+                <div class="d-flex align-items-center mb-3">
                   <div class="flex-shrink-0 me-3">
                     <div class="avatar-sm">
                       <span class="avatar-title bg-neutral-light rounded">
@@ -1316,28 +1349,28 @@
                     </div>
                   </div>
                   <div class="flex-grow-1">
-                    <h5 class="fs-15 mb-1">Average Delivery Time</h5>
-                    <p class="text-muted mb-0">2.3 days</p>
+                    <h5 class="fs-15 mb-1">Avg Delivery Time</h5>
+                    <p class="text-muted mb-0" id="avgDeliveryTime">Loading...</p>
                   </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="d-flex align-items-center mb-4">
+              <div class="col-12">
+                <div class="d-flex align-items-center mb-3">
                   <div class="flex-shrink-0 me-3">
                     <div class="avatar-sm">
                       <span class="avatar-title bg-neutral-light rounded">
-                        <i class="ri-star-line text-dark-custom fs-4"></i>
+                        <i class="ri-checkbox-circle-line text-success fs-4"></i>
                       </span>
                     </div>
                   </div>
                   <div class="flex-grow-1">
-                    <h5 class="fs-15 mb-1">Customer Satisfaction</h5>
-                    <p class="text-muted mb-0">4.8/5</p>
+                    <h5 class="fs-15 mb-1">Completion Rate</h5>
+                    <p class="text-muted mb-0" id="completionRate">Loading...</p>
                   </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="d-flex align-items-center mb-4">
+              <div class="col-12">
+                <div class="d-flex align-items-center mb-3">
                   <div class="flex-shrink-0 me-3">
                     <div class="avatar-sm">
                       <span class="avatar-title bg-neutral-light rounded">
@@ -1347,22 +1380,22 @@
                   </div>
                   <div class="flex-grow-1">
                     <h5 class="fs-15 mb-1">Return Rate</h5>
-                    <p class="text-muted mb-0">2.1%</p>
+                    <p class="text-muted mb-0" id="returnRate">Loading...</p>
                   </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="d-flex align-items-center mb-4">
+              <div class="col-12">
+                <div class="d-flex align-items-center mb-3">
                   <div class="flex-shrink-0 me-3">
                     <div class="avatar-sm">
                       <span class="avatar-title bg-neutral-light rounded">
-                        <i class="ri-user-heart-line text-dark-custom fs-4"></i>
+                        <i class="ri-user-star-line text-warning fs-4"></i>
                       </span>
                     </div>
                   </div>
                   <div class="flex-grow-1">
-                    <h5 class="fs-15 mb-1">Repeat Customers</h5>
-                    <p class="text-muted mb-0">68%</p>
+                    <h5 class="fs-15 mb-1">Success Rate</h5>
+                    <p class="text-muted mb-0" id="successRate">Loading...</p>
                   </div>
                 </div>
               </div>
@@ -1412,7 +1445,8 @@
         if (data.status === 'success') {
           renderDashboardStats(data.dashboardData);
           renderRevenueChart(data.dashboardData);
-          renderPerformanceChart();
+          renderPerformanceChart(data.dashboardData.performanceStats);
+          updatePerformanceMetrics(data.dashboardData.performanceStats);
           updateLastUpdatedTime();
         }
       } catch (error) {
@@ -1552,18 +1586,50 @@
       const keys = Array.from(new Set([...revMap.keys(), ...ordMap.keys()])).sort().slice(-9);
       const revSeries = keys.map(k => revMap.get(k) || 0);
       const ordSeries = keys.map(k => ordMap.get(k) || 0);
+      
+      // Format labels for better display
+      const monthLabels = keys.map(k => {
+        const [y, m] = k.split('-');
+        const date = new Date(parseInt(y), parseInt(m) - 1);
+        return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      });
+      
       const opts = {
         series:[{name:'Revenue', type:'column', data:revSeries},{name:'Orders', type:'line', data:ordSeries}],
-        chart:{height:350,type:'line',toolbar:{show:false}}, stroke:{width:[0,4],curve:'smooth'}, colors:['#F39720','#333333'], dataLabels:{enabled:true,enabledOnSeries:[1]}, labels:keys, xaxis:{type:'category'}, yaxis:[{title:{text:'Revenue (EGP)'}},{opposite:true,title:{text:'Orders'}}]
+        chart:{height:350,type:'line',toolbar:{show:false}}, 
+        stroke:{width:[0,4],curve:'smooth'}, 
+        colors:['#F39720','#333333'], 
+        dataLabels:{enabled:true,enabledOnSeries:[1]}, 
+        labels:monthLabels, 
+        xaxis:{type:'category'}, 
+        yaxis:[{title:{text:'Revenue (EGP)'}},{opposite:true,title:{text:'Orders'}}]
       };
       new ApexCharts(el, opts).render();
     }
 
-    function renderPerformanceChart() {
+    function renderPerformanceChart(performanceData) {
+      const el = document.getElementById('performance-chart');
+      if(!el) return;
+      
+      const data = performanceData || {
+        deliveryTime: 50,
+        completionRate: 75,
+        successRate: 80,
+        returnRate: 70
+      };
+      
+      // Normalize values to 0-100 scale for radar chart
+      // Invert delivery time (lower is better, so higher score = lower time)
+      // Invert return rate (lower is better)
+      const deliveryScore = Math.max(0, Math.min(100, 100 - (data.avgDeliveryDays || 0) * 10));
+      const completionScore = data.completionRate || 0;
+      const successScore = data.successRate || 0;
+      const returnScore = Math.max(0, Math.min(100, 100 - (data.returnRate || 0)));
+      
       const performanceChartOptions = {
         series: [{
           name: 'Performance',
-          data: [75, 85, 65, 90, 82, 78]
+          data: [deliveryScore, completionScore, successScore, returnScore]
         }],
         chart: {
           type: 'radar',
@@ -1574,10 +1640,11 @@
         },
         colors: ['#F39720'],
         xaxis: {
-          categories: ['Delivery', 'Quality', 'Service', 'Value', 'Satisfaction', 'Retention']
+          categories: ['Delivery Speed', 'Completion', 'Success Rate', 'Return Handling']
         },
         yaxis: {
-          show: false
+          show: false,
+          max: 100
         },
         markers: {
           size: 4,
@@ -1594,8 +1661,40 @@
         }
       };
 
-      const performanceChart = new ApexCharts(document.getElementById('performance-chart'), performanceChartOptions);
+      const performanceChart = new ApexCharts(el, performanceChartOptions);
       performanceChart.render();
+    }
+    
+    function updatePerformanceMetrics(performanceData) {
+      const data = performanceData || {};
+      
+      // Update average delivery time
+      const avgDeliveryEl = document.getElementById('avgDeliveryTime');
+      if (avgDeliveryEl) {
+        const days = data.avgDeliveryDays || 0;
+        avgDeliveryEl.textContent = days > 0 ? `${days.toFixed(1)} days` : 'N/A';
+      }
+      
+      // Update completion rate
+      const completionRateEl = document.getElementById('completionRate');
+      if (completionRateEl) {
+        const rate = data.completionRate || 0;
+        completionRateEl.textContent = `${rate}%`;
+      }
+      
+      // Update return rate
+      const returnRateEl = document.getElementById('returnRate');
+      if (returnRateEl) {
+        const rate = data.returnRate || 0;
+        returnRateEl.textContent = `${rate.toFixed(1)}%`;
+      }
+      
+      // Update success rate
+      const successRateEl = document.getElementById('successRate');
+      if (successRateEl) {
+        const rate = data.successRate || 0;
+        successRateEl.textContent = `${rate}%`;
+      }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1750,6 +1849,11 @@
         // Payment Method Selection
         formSteps.querySelectorAll('.payment-option').forEach((paymentOption) => {
           paymentOption.addEventListener('click', function() {
+            // Skip disabled options
+            if (this.style.display === 'none' || this.querySelector('.payment-radio')?.disabled) {
+              return;
+            }
+
             // Remove active class from all payment options
             formSteps.querySelectorAll('.payment-option').forEach((option) => {
               option.classList.remove('active');
@@ -1781,6 +1885,21 @@
             }
           });
         });
+
+        // Auto-select bank transfer on page load
+        const bankTransferOption = formSteps.querySelector('[data-value="bankTransfer"]');
+        if (bankTransferOption) {
+          const bankTransferRadio = bankTransferOption.querySelector('.payment-radio');
+          if (bankTransferRadio && !bankTransferRadio.checked) {
+            bankTransferRadio.checked = true;
+            bankTransferOption.classList.add('active');
+            const bankTransferDetails = document.getElementById('bankTransferDetails');
+            if (bankTransferDetails) {
+              bankTransferDetails.style.display = 'block';
+              document.getElementById('paymentDetails').style.display = 'block';
+            }
+          }
+        }
 
         // Brand Type Selection
         formSteps.querySelectorAll('.brand-option').forEach((brandOption) => {
@@ -1843,6 +1962,31 @@
             }
           });
         });
+
+        // Industry Selection - Show/Hide Other Industry Input
+        const industrySelect = document.getElementById('industry');
+        const otherIndustryContainer = document.getElementById('otherIndustryContainer');
+        const otherIndustryInput = document.getElementById('otherIndustry');
+
+        if (industrySelect && otherIndustryContainer && otherIndustryInput) {
+          industrySelect.addEventListener('change', function() {
+            if (this.value === 'Other') {
+              otherIndustryContainer.style.display = 'block';
+              otherIndustryInput.setAttribute('required', 'required');
+            } else {
+              otherIndustryContainer.style.display = 'none';
+              otherIndustryInput.removeAttribute('required');
+              otherIndustryInput.value = '';
+              otherIndustryInput.classList.remove('is-invalid');
+            }
+          });
+
+          // Check on page load if "Other" is already selected
+          if (industrySelect.value === 'Other') {
+            otherIndustryContainer.style.display = 'block';
+            otherIndustryInput.setAttribute('required', 'required');
+          }
+        }
       });
 
       // File Upload Handling
@@ -1995,6 +2139,11 @@
             const formData = new FormData(verificationForm);
             const formObject = Object.fromEntries(formData.entries());
 
+            // Handle industry field - if "Other" is selected, use the otherIndustry value
+            if (formObject.industry === 'Other' && formObject.otherIndustry) {
+              formObject.industry = formObject.otherIndustry;
+            }
+
             // Add selling points
             const sellingPoints = [];
             const socialLinks = {};
@@ -2016,16 +2165,52 @@
             // Add uploaded photos
             formObject.photosOfBrandType = uploadedPhotos;
 
-            // Add map location data
-            const locationCoordinates = document.getElementById('locationCoordinates');
-            if (locationCoordinates && locationCoordinates.value) {
-              try {
-                formObject.pickUpPointCoordinates = JSON.parse(locationCoordinates.value);
-                formObject.pickUpPointInMaps = locationCoordinates.getAttribute('data-location-text') || '';
-              } catch (e) {
-                console.error('Error parsing location coordinates:', e);
+            // Collect all pickup addresses
+            const addresses = [];
+            document.querySelectorAll('.pickup-address-card').forEach((card, index) => {
+              const coordsValue = card.querySelector('.address-coordinates')?.value;
+              let coordinates = null;
+              if (coordsValue) {
+                try {
+                  coordinates = typeof coordsValue === 'string' ? JSON.parse(coordsValue) : coordsValue;
+                } catch (e) {
+                  console.error('Error parsing coordinates:', e);
+                }
               }
-            }
+
+              const address = {
+                addressName: card.querySelector('.address-name-input')?.value || `Address ${index + 1}`,
+                isDefault: index === 0,
+                country: card.querySelector('.address-country')?.value || 'egypt',
+                city: card.querySelector('.address-city')?.value || '',
+                zone: card.querySelector('.address-zone')?.value || '',
+                adressDetails: card.querySelector('.address-details')?.value || '',
+                nearbyLandmark: card.querySelector('.address-landmark')?.value || '',
+                pickupPhone: card.querySelector('.address-phone')?.value || '',
+                otherPickupPhone: card.querySelector('.address-other-phone')?.value || '',
+                pickUpPointInMaps: card.querySelector('.address-map-point')?.value || '',
+                coordinates: coordinates
+              };
+              
+              // For backward compatibility, use first address as main
+              if (index === 0) {
+                formObject.country = address.country;
+                formObject.city = address.city;
+                formObject.zone = address.zone;
+                formObject.adressDetails = address.adressDetails;
+                formObject.nearbyLandmark = address.nearbyLandmark;
+                formObject.pickupPhone = address.pickupPhone;
+                formObject.otherPickupPhone = address.otherPickupPhone;
+                formObject.pickUpPointInMaps = address.pickUpPointInMaps;
+                if (coordinates) {
+                  formObject.pickUpPointCoordinates = coordinates;
+                }
+              }
+              
+              addresses.push(address);
+            });
+
+            formObject.pickupAddresses = addresses;
 
             // Send data to server
             const response = await fetch('/business/completionConfirm', {
@@ -2134,101 +2319,400 @@
         });
       }
 
-      // Initialize Dashboard Charts if user is completed
-      if (document.getElementById('revenue-chart')) {
-        const revenueChartOptions = {
-          series: [{
-            name: 'Revenue',
-            type: 'column',
-            data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
-          }, {
-            name: 'Orders',
-            type: 'line',
-            data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
-          }],
-          chart: {
-            height: 350,
-            type: 'line',
-            toolbar: {
-              show: false
-            }
-          },
-          stroke: {
-            width: [0, 4],
-            curve: 'smooth'
-          },
-          colors: ['#F39720', '#333333'],
-          dataLabels: {
-            enabled: true,
-            enabledOnSeries: [1]
-          },
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-          xaxis: {
-            type: 'category'
-          },
-          yaxis: [{
-            title: {
-              text: 'Revenue ($)',
-            },
-          }, {
-            opposite: true,
-            title: {
-              text: 'Orders'
-            }
-          }]
-        };
-
-        const revenueChart = new ApexCharts(document.getElementById('revenue-chart'), revenueChartOptions);
-        revenueChart.render();
-      }
-
-      if (document.getElementById('performance-chart')) {
-        const performanceChartOptions = {
-          series: [{
-            name: 'Performance',
-            data: [75, 85, 65, 90, 82, 78]
-          }],
-          chart: {
-            type: 'radar',
-            height: 200,
-            toolbar: {
-              show: false
-            }
-          },
-          colors: ['#F39720'],
-          xaxis: {
-            categories: ['Delivery', 'Quality', 'Service', 'Value', 'Satisfaction', 'Retention']
-          },
-          yaxis: {
-            show: false
-          },
-          markers: {
-            size: 4,
-            colors: ['#333333'],
-            strokeColors: '#fff',
-            strokeWidth: 2,
-          },
-          tooltip: {
-            y: {
-              formatter: function(val) {
-                return val + '%';
-              }
-            }
-          }
-        };
-
-        const performanceChart = new ApexCharts(document.getElementById('performance-chart'), performanceChartOptions);
-        performanceChart.render();
-      }
 
       // Ensure first tab is active on page load
       document.getElementById('v-pills-bill-info-tab').click();
+
+      // ==================== MULTIPLE PICKUP ADDRESSES HANDLING ====================
+      let pickupAddressCounter = 0;
+      let currentMapAddressIndex = null;
+      let dashboardMaps = {}; // Store map instances for each address
+
+      // Helper function to open area selection modal (matches settings.ejs)
+      function openAreaSelectionModal(callback) {
+        if (typeof window.AreaSelectionModal !== 'undefined') {
+          // Set up callback for when area is selected
+          window.AreaSelectionModal.onSelect(function(selectedData) {
+            if (selectedData && callback) {
+              const gov = selectedData.data.governorate;
+              const area = selectedData.data.area;
+              const currentLang = document.documentElement.lang || 'en';
+              const govLabel = gov.label[currentLang] || gov.label.en;
+              const areaLabel = area.label[currentLang] || area.label.en;
+              
+              callback({
+                governorate: govLabel,
+                zone: areaLabel,
+                governorateValue: selectedData.governorate,
+                zoneValue: selectedData.zone
+              });
+            }
+          });
+          
+          // Open the modal
+          window.AreaSelectionModal.open();
+        } else {
+          // Retry if not loaded yet
+          setTimeout(() => openAreaSelectionModal(callback), 100);
+        }
+      }
+
+      // Helper function to setup marker with drag listener
+      function setupAddressMarker(map, marker, coordinatesInput, mapPointInput, geocoder, position) {
+        if (marker) {
+          marker.setPosition(position);
+        } else {
+          marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            draggable: true
+          });
+        }
+
+        // Setup drag listener (remove old ones first to avoid duplicates)
+        google.maps.event.clearListeners(marker, 'dragend');
+        marker.addListener('dragend', function() {
+          const pos = marker.getPosition();
+          const coords = {
+            lat: pos.lat(),
+            lng: pos.lng()
+          };
+          coordinatesInput.value = JSON.stringify(coords);
+
+          // Reverse geocode
+          geocoder.geocode({ location: coords }, function(results, status) {
+            if (status === 'OK' && mapPointInput) {
+              mapPointInput.value = 'https://www.google.com/maps?q=' + coords.lat + ',' + coords.lng;
+            }
+          });
+        });
+
+        return marker;
+      }
+
+      // Helper function to update coordinates and reverse geocode
+      function updateAddressLocation(coords, coordinatesInput, mapPointInput, geocoder, updateInput = true) {
+        coordinatesInput.value = JSON.stringify(coords);
+        
+        if (updateInput && geocoder && mapPointInput) {
+          geocoder.geocode({ location: coords }, function(results, status) {
+            if (status === 'OK') {
+              mapPointInput.value = 'https://www.google.com/maps?q=' + coords.lat + ',' + coords.lng;
+            }
+          });
+        }
+      }
+
+      // Initialize map for a specific address card
+      function initAddressMap(addressIndex, coordinates) {
+        const addressCard = document.querySelector(`[data-address-index="${addressIndex}"]`);
+        if (!addressCard) return;
+
+        const mapContainer = addressCard.querySelector('.address-preview-map');
+        const mapPointInput = addressCard.querySelector('.address-map-point');
+        const coordinatesInput = addressCard.querySelector('.address-coordinates');
+        const getCurrentLocationBtn = addressCard.querySelector('.get-current-location-btn');
+        const openMapBtn = addressCard.querySelector('.open-map-btn');
+
+        if (!mapContainer || !google || !google.maps) return;
+
+        const defaultCoords = coordinates || { lat: 30.0444, lng: 31.2357 }; // Cairo default
+
+        // Initialize map
+        const map = new google.maps.Map(mapContainer, {
+          center: defaultCoords,
+          zoom: coordinates ? 15 : 10,
+          mapTypeId: 'roadmap'
+        });
+
+        // Initialize geocoder
+        const geocoder = new google.maps.Geocoder();
+
+        let marker = null;
+        if (coordinates && coordinates.lat && coordinates.lng) {
+          marker = setupAddressMarker(map, marker, coordinatesInput, mapPointInput, geocoder, defaultCoords);
+        }
+
+        // Setup autocomplete for search
+        if (mapPointInput) {
+          const autocomplete = new google.maps.places.Autocomplete(mapPointInput);
+          autocomplete.bindTo('bounds', map);
+
+          autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) return;
+
+            if (place.geometry.viewport) {
+              map.fitBounds(place.geometry.viewport);
+            } else {
+              map.setCenter(place.geometry.location);
+              map.setZoom(15);
+            }
+
+            const locationCoords = {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng()
+            };
+            
+            marker = setupAddressMarker(map, marker, coordinatesInput, mapPointInput, geocoder, place.geometry.location);
+            updateAddressLocation(locationCoords, coordinatesInput, mapPointInput, geocoder, false); // Don't update input, place already has address
+            
+            // Update stored map instance
+            if (dashboardMaps[addressIndex]) {
+              dashboardMaps[addressIndex].marker = marker;
+            }
+            
+            // Save as Google Maps link
+            mapPointInput.value = 'https://www.google.com/maps?q=' + locationCoords.lat + ',' + locationCoords.lng;
+          });
+        }
+
+        // Add click listener to map
+        map.addListener('click', function(event) {
+          const coords = {
+            lat: event.latLng.lat(),
+            lng: event.latLng.lng()
+          };
+
+          marker = setupAddressMarker(map, marker, coordinatesInput, mapPointInput, geocoder, event.latLng);
+          updateAddressLocation(coords, coordinatesInput, mapPointInput, geocoder);
+          
+          // Update stored map instance
+          if (dashboardMaps[addressIndex]) {
+            dashboardMaps[addressIndex].marker = marker;
+          }
+        });
+
+        // Get Current Location Button Handler
+        if (getCurrentLocationBtn) {
+          // Remove existing listeners by cloning the button
+          const newBtn = getCurrentLocationBtn.cloneNode(true);
+          getCurrentLocationBtn.parentNode.replaceChild(newBtn, getCurrentLocationBtn);
+          
+          newBtn.addEventListener('click', function() {
+            if (!navigator.geolocation) {
+              alert('Geolocation is not supported by your browser');
+              return;
+            }
+
+            // Show loading state
+            const originalHTML = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = '<i class="ri-loader-2-line ri-spin me-1"></i> Getting...';
+
+            navigator.geolocation.getCurrentPosition(
+              function(position) {
+                const coords = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude
+                };
+
+                // Center map on current location
+                map.setCenter(coords);
+                map.setZoom(15);
+
+                // Update marker
+                marker = setupAddressMarker(map, marker, coordinatesInput, mapPointInput, geocoder, coords);
+                updateAddressLocation(coords, coordinatesInput, mapPointInput, geocoder);
+
+                // Update stored map instance
+                if (dashboardMaps[addressIndex]) {
+                  dashboardMaps[addressIndex].marker = marker;
+                }
+
+                // Reset button
+                newBtn.disabled = false;
+                newBtn.innerHTML = originalHTML;
+              },
+              function(error) {
+                console.error('Error getting location:', error);
+                let errorMessage = 'Unable to retrieve your location';
+                switch(error.code) {
+                  case error.PERMISSION_DENIED:
+                    errorMessage = 'Location access denied by user';
+                    break;
+                  case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'Location information unavailable';
+                    break;
+                  case error.TIMEOUT:
+                    errorMessage = 'Location request timed out';
+                    break;
+                }
+                alert(errorMessage);
+                // Reset button
+                newBtn.disabled = false;
+                newBtn.innerHTML = originalHTML;
+              },
+              {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+              }
+            );
+          });
+        }
+
+        // Store map instance
+        dashboardMaps[addressIndex] = { map, marker, geocoder };
+      }
+
+      // Initialize with one address
+      function initializePickupAddresses() {
+        const container = document.getElementById('pickupAddressesContainer');
+        if (container && container.children.length === 0) {
+          addPickupAddress();
+        }
+      }
+
+      // Add new pickup address
+      function addPickupAddress() {
+        const container = document.getElementById('pickupAddressesContainer');
+        const template = document.getElementById('pickupAddressTemplate');
+        if (!container || !template) return;
+
+        const addressIndex = pickupAddressCounter++;
+        const clone = template.content.cloneNode(true);
+        const addressCard = clone.querySelector('.pickup-address-card');
+        addressCard.setAttribute('data-address-index', addressIndex);
+
+        // Show remove button if more than one address
+        if (pickupAddressCounter > 1) {
+          addressCard.querySelector('.remove-address-btn').style.display = 'block';
+        }
+
+        // Update address name display on input
+        const nameInput = addressCard.querySelector('.address-name-input');
+        const nameDisplay = addressCard.querySelector('.address-name-display');
+        nameInput.addEventListener('input', function() {
+          nameDisplay.textContent = this.value || 'Main Address';
+        });
+
+        // Handle area selection - Fixed to work like settings.ejs
+        const selectAreaBtn = addressCard.querySelector('.select-area-btn');
+        const areaDisplay = addressCard.querySelector('.selected-area-display');
+        const cityInput = addressCard.querySelector('.address-city');
+        const zoneInput = addressCard.querySelector('.address-zone');
+
+        if (selectAreaBtn) {
+          selectAreaBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentMapAddressIndex = addressIndex;
+            
+            // Use the helper function to open modal
+            openAreaSelectionModal(function(selectedArea) {
+              if (selectedArea) {
+                areaDisplay.textContent = `${selectedArea.governorate} - ${selectedArea.zone}`;
+                cityInput.value = selectedArea.governorateValue || selectedArea.governorate;
+                zoneInput.value = selectedArea.zoneValue || selectedArea.zone;
+              }
+            });
+          });
+        }
+
+        // Map will be initialized automatically when Google Maps loads
+        // No need for a button click - map is always visible
+
+        // Handle remove button
+        const removeBtn = addressCard.querySelector('.remove-address-btn');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', function() {
+            if (pickupAddressCounter > 1) {
+              addressCard.remove();
+              pickupAddressCounter--;
+              delete dashboardMaps[addressIndex];
+              updateRemoveButtonsVisibility();
+            }
+          });
+        }
+
+        container.appendChild(clone);
+
+        // Update remove buttons visibility
+        updateRemoveButtonsVisibility();
+
+        // Initialize map if Google Maps is already loaded
+        if (typeof google !== 'undefined' && google.maps) {
+          setTimeout(() => {
+            initAddressMap(addressIndex, null);
+          }, 500);
+        }
+      }
+
+      function updateRemoveButtonsVisibility() {
+        const addresses = document.querySelectorAll('.pickup-address-card');
+        addresses.forEach((card, index) => {
+          const removeBtn = card.querySelector('.remove-address-btn');
+          if (addresses.length > 1) {
+            removeBtn.style.display = 'block';
+          } else {
+            removeBtn.style.display = 'none';
+          }
+        });
+      }
+
+      // Add address button click handler
+      const addAddressBtn = document.getElementById('addPickupAddressBtn');
+      if (addAddressBtn) {
+        addAddressBtn.addEventListener('click', addPickupAddress);
+      }
+
+      // Initialize on page load if location tab is visible
+      if (document.getElementById('v-pills-location')) {
+        initializePickupAddresses();
+      }
+
+      // Initialize maps when Google Maps API loads
+      if (typeof google !== 'undefined' && google.maps) {
+        // Maps already loaded, initialize existing addresses
+        setTimeout(() => {
+          document.querySelectorAll('.pickup-address-card').forEach((card, index) => {
+            const addressIndex = card.getAttribute('data-address-index');
+            if (addressIndex !== null) {
+              const coordsInput = card.querySelector('.address-coordinates');
+              let coordinates = null;
+              if (coordsInput && coordsInput.value) {
+                try {
+                  coordinates = JSON.parse(coordsInput.value);
+                } catch (e) {
+                  console.error('Error parsing coordinates:', e);
+                }
+              }
+              initAddressMap(parseInt(addressIndex), coordinates);
+            }
+          });
+        }, 500);
+      } else {
+        // Wait for Google Maps to load
+        window.addEventListener('load', function() {
+          if (typeof google !== 'undefined' && google.maps) {
+            setTimeout(() => {
+              document.querySelectorAll('.pickup-address-card').forEach((card) => {
+                const addressIndex = card.getAttribute('data-address-index');
+                if (addressIndex !== null) {
+                  const coordsInput = card.querySelector('.address-coordinates');
+                  let coordinates = null;
+                  if (coordsInput && coordsInput.value) {
+                    try {
+                      coordinates = JSON.parse(coordsInput.value);
+                    } catch (e) {
+                      console.error('Error parsing coordinates:', e);
+                    }
+                  }
+                  initAddressMap(parseInt(addressIndex), coordinates);
+                }
+              });
+            }, 500);
+          }
+        });
+      }
+
+      // Remove old map modal confirmation handler - now using inline maps
+      // The old locationModal is no longer needed for multiple addresses
     });
   </script>
 
   <!-- Google Maps API for location selection -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBg4oV-yrhIkatEh2fVvzOXmFaDmJ-h7Aw&libraries=places&callback=initMap" async defer></script>
-  <script src="/assets/js/map-location.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBg4oV-yrhIkatEh2fVvzOXmFaDmJ-h7Aw&libraries=places&loading=async" async defer></script>
   </body>
 
   </html>

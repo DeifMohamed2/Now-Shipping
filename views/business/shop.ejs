@@ -1343,7 +1343,15 @@
     try {
       <% if (typeof userData !== 'undefined' && userData) { %>
       const userData = <%- JSON.stringify(userData) %>;
-      const pickupAddress = userData.pickUpAdress || {};
+      // Get default pickup address from pickUpAddresses if available, otherwise fallback to old structure
+      let pickupAddress = null;
+      if (userData.pickUpAddresses && userData.pickUpAddresses.length > 0) {
+        pickupAddress = userData.pickUpAddresses.find(addr => addr.isDefault) || userData.pickUpAddresses[0];
+      }
+      if (!pickupAddress && userData.pickUpAdress) {
+        pickupAddress = userData.pickUpAdress;
+      }
+      pickupAddress = pickupAddress || {};
       
       if (pickupAddress.city) {
         const governmentSelect = document.getElementById('government');

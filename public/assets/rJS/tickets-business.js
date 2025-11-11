@@ -132,6 +132,12 @@
   function renderTickets(ticketsToRender) {
     const ticketList = document.getElementById('ticketList');
 
+    // Update ticket count
+    const countEl = document.getElementById('ticketCount');
+    if (countEl) {
+      countEl.textContent = ticketsToRender.length;
+    }
+
     if (ticketsToRender.length === 0) {
       ticketList.innerHTML = `
         <div class="text-center p-4">
@@ -781,10 +787,112 @@
     });
   }
 
+  // Rate ticket functionality
+  let currentRating = 0;
+
+  function initRatingStars() {
+    const stars = document.querySelectorAll('#ratingStars .star');
+    stars.forEach((star, index) => {
+      star.addEventListener('click', function() {
+        currentRating = parseInt(this.dataset.rating);
+        updateRatingDisplay(currentRating);
+      });
+      star.addEventListener('mouseenter', function() {
+        const rating = parseInt(this.dataset.rating);
+        highlightStars(rating);
+      });
+    });
+
+    document.getElementById('ratingStars')?.addEventListener('mouseleave', function() {
+      highlightStars(currentRating);
+    });
+  }
+
+  function highlightStars(rating) {
+    const stars = document.querySelectorAll('#ratingStars .star');
+    const texts = {
+      1: 'Poor',
+      2: 'Fair',
+      3: 'Good',
+      4: 'Very Good',
+      5: 'Excellent'
+    };
+
+    stars.forEach((star, index) => {
+      if (index < rating) {
+        star.classList.add('filled', 'active');
+        star.classList.remove('ri-star-line');
+        star.classList.add('ri-star-fill');
+      } else {
+        star.classList.remove('filled', 'active');
+        star.classList.remove('ri-star-fill');
+        star.classList.add('ri-star-line');
+      }
+    });
+
+    const ratingText = document.getElementById('ratingText');
+    if (ratingText) {
+      ratingText.textContent = rating > 0 ? texts[rating] : 'Click to rate';
+    }
+  }
+
+  function updateRatingDisplay(rating) {
+    highlightStars(rating);
+  }
+
+  async function submitRating() {
+    if (!currentTicketId || !currentRating) {
+      showToast('Please select a rating', 'error');
+      return;
+    }
+
+    const comment = document.getElementById('ratingComment')?.value || '';
+
+    try {
+      const response = await fetch(`/api/v1/tickets/${currentTicketId}/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          rating: currentRating,
+          comment: comment
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast('Thank you for your feedback!', 'success');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('rateTicketModal'));
+        modal.hide();
+        currentRating = 0;
+        document.getElementById('ratingComment').value = '';
+        highlightStars(0);
+      } else {
+        showToast(data.message || 'Failed to submit rating', 'error');
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      showToast('Failed to submit rating', 'error');
+    }
+  }
+
   // Initialize on DOM ready
   document.addEventListener('DOMContentLoaded', function () {
     initSocket();
     initEventListeners();
+    initRatingStars();
     loadTickets();
+
+    // Rate ticket button
+    document.getElementById('rateTicketBtn')?.addEventListener('click', function() {
+      if (currentTicketId) {
+        const modal = new bootstrap.Modal(document.getElementById('rateTicketModal'));
+        modal.show();
+      }
+    });
+
+    // Submit rating
+    document.getElementById('submitRatingBtn')?.addEventListener('click', submitRating);
   });
 })();

@@ -157,7 +157,11 @@ const pickupSchema = new Schema(
     },
     pickupLocation: {
       type:String
-
+    },
+    // Selected pickup address ID
+    pickupAddressId: {
+      type: String,
+      required: false,
     }
 
     

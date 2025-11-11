@@ -1,0 +1,2537 @@
+<%- contentFor('HeaderCss') %>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/rCSS/business.css">
+<link rel="stylesheet" href="/assets/rCSS/style.css">
+<link rel="stylesheet" href="/assets/libs/filepond/filepond.min.css" type="text/css" />
+<link rel="stylesheet" href="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/css/area-selection-modal.css">
+
+<style>
+  :root {
+    --primary-color: #F39720;
+    --primary-hover: #e08a18;
+    --primary-light: #fef4e8;
+    --secondary-color: #FDB614;
+    --text-dark: #333333;
+    --text-medium: #555555;
+    --text-light: #777777;
+    --border-color: #e0e0e0;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-dark);
+    background-color: #f8f9fa;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Global touch support for all interactive elements */
+  button, .btn, .nav-tab, .payment-option, .brand-option, .profile-image-overlay {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .settings-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .settings-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: var(--card-shadow);
+  }
+
+  .settings-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .settings-header p {
+    opacity: 0.9;
+    margin: 0;
+  }
+
+  .settings-nav {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--card-shadow);
+  }
+
+  .settings-nav-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1rem;
+    margin-bottom: 0;
+  }
+
+  .nav-tab {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: var(--text-medium);
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-tab:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+  }
+
+  .nav-tab.active {
+    color: var(--primary-color);
+    background: var(--primary-light);
+  }
+
+  .nav-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1rem;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 3px 3px 0 0;
+  }
+
+  .settings-content {
+    display: none;
+  }
+
+  .settings-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .settings-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+  }
+
+  .settings-card:hover {
+    box-shadow: var(--card-shadow-hover);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .card-header i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+  }
+
+  .card-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .form-label .required {
+    color: var(--danger-color);
+  }
+
+  .form-control,
+  .form-select {
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(243, 151, 32, 0.25);
+    outline: none;
+  }
+
+  .form-control:disabled {
+    background-color: #f8f9fa;
+    opacity: 0.7;
+  }
+
+  .btn-save {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border: none;
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(243, 151, 32, 0.3);
+  }
+
+  .btn-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary-custom {
+    background: white;
+    border: 2px solid var(--border-color);
+    color: var(--text-medium);
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-secondary-custom:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .profile-image-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+
+  .profile-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary-color);
+    box-shadow: var(--card-shadow);
+  }
+
+  .profile-image-overlay {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: var(--primary-color);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+  }
+
+  .profile-image-overlay:hover {
+    background: var(--primary-hover);
+    transform: scale(1.1);
+  }
+
+  .badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .badge-verified {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+  }
+
+  .badge-unverified {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+  }
+
+  .badge-completed {
+    background: rgba(243, 151, 32, 0.1);
+    color: var(--primary-color);
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--primary-light);
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .info-row label {
+    font-weight: 500;
+    color: var(--text-medium);
+    margin: 0;
+  }
+
+  .info-row span {
+    color: var(--text-dark);
+    font-weight: 600;
+  }
+
+  .tags-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    min-height: 50px;
+  }
+
+  .tag {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .tag-remove {
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .tag-input {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 100px;
+    padding: 0.25rem;
+  }
+
+  .map-container {
+    height: 300px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-top: 1rem;
+    border: 2px solid var(--border-color);
+  }
+
+  .payment-option,
+  .brand-option {
+    cursor: pointer;
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: white;
+  }
+
+  .payment-option:hover,
+  .brand-option:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+  }
+
+  .payment-option.selected,
+  .brand-option.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    box-shadow: 0 0 0 0.2rem rgba(243, 151, 32, 0.25);
+  }
+
+  .payment-option i,
+  .brand-option i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .alert {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .alert.show {
+    display: block;
+    animation: slideDown 0.3s ease;
+  }
+
+  .alert-success {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+  }
+
+  .alert-error {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 26px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: var(--primary-color);
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+
+  @media (max-width: 768px) {
+    .settings-container {
+      padding: 1rem;
+    }
+
+    .settings-nav-tabs {
+      flex-direction: column;
+    }
+
+    .nav-tab {
+      width: 100%;
+    }
+
+    .settings-card {
+      padding: 1.5rem;
+    }
+
+    /* Get Current Location Button - Mobile */
+    #getCurrentLocationBtn {
+      white-space: nowrap;
+      font-size: 0.875rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .d-flex.gap-2.mb-2 {
+      flex-wrap: wrap;
+    }
+
+    .d-flex.gap-2.mb-2 input {
+      flex: 1;
+      min-width: 200px;
+    }
+  }
+</style>
+
+<%- contentFor('body') %>
+<div class="settings-container">
+  <!-- Header -->
+  <div class="settings-header">
+    <h1><i class="ri-settings-3-line me-2"></i>Settings</h1>
+    <p>Manage your account preferences and information</p>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="settings-nav">
+    <div class="settings-nav-tabs">
+      <button class="nav-tab active" data-tab="profile">
+        <i class="ri-user-line"></i>
+        <span>Profile</span>
+      </button>
+      <button class="nav-tab" data-tab="brand">
+        <i class="ri-store-line"></i>
+        <span>Brand Info</span>
+      </button>
+      <button class="nav-tab" data-tab="address">
+        <i class="ri-map-pin-line"></i>
+        <span>Pickup Address</span>
+      </button>
+      <button class="nav-tab" data-tab="payment">
+        <i class="ri-bank-card-line"></i>
+        <span>Payment Method</span>
+      </button>
+      <button class="nav-tab" data-tab="brand-type">
+        <i class="ri-file-text-line"></i>
+        <span>Brand Type</span>
+      </button>
+      <button class="nav-tab" data-tab="preferences">
+        <i class="ri-settings-line"></i>
+        <span>Preferences</span>
+      </button>
+      <button class="nav-tab" data-tab="security">
+        <i class="ri-shield-check-line"></i>
+        <span>Security</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Alert Messages -->
+  <div id="alertContainer"></div>
+
+  <!-- Profile Tab -->
+  <div id="profile" class="settings-content active">
+    <form id="profileForm" class="settings-card">
+      <div class="card-header">
+        <i class="ri-user-line"></i>
+        <h3>Profile Information</h3>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4 text-center">
+          <div class="profile-image-container">
+            <img id="profileImagePreview" src="<%= typeof user.profileImage === 'string' && user.profileImage ? user.profileImage.replace(/&/g, '&amp;') : '/assets/images/default-avatar.png' %>" alt="Profile" class="profile-image" onerror="this.onerror=null; this.src='/assets/images/default-avatar.png';">
+            <div class="profile-image-overlay" id="profileImageOverlay">
+              <i class="ri-camera-line"></i>
+            </div>
+            <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
+          </div>
+          <p class="text-muted mt-2">Click to change profile picture</p>
+        </div>
+        <div class="col-md-8">
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="required">*</span></label>
+            <input type="text" class="form-control" id="name" name="name" value="<%= user.name || '' %>" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address <span class="required">*</span></label>
+            <div class="input-group">
+              <input type="email" class="form-control" id="email" name="email" value="<%= user.email || '' %>" required readonly>
+              <button type="button" class="btn btn-outline-secondary" id="editEmailBtn">
+                <i class="ri-edit-line"></i> Edit
+              </button>
+            </div>
+            <!-- OTP Verification for Email -->
+            <div id="emailOtpContainer" style="display: none;" class="mt-3">
+              <div class="alert alert-info">
+                <i class="ri-information-line me-2"></i>
+                OTP verification required to change email address
+              </div>
+              <div class="input-group mb-2">
+                <input type="email" class="form-control" id="newEmail" name="newEmail" placeholder="Enter new email address">
+                <button type="button" class="btn btn-primary" id="sendEmailOtpBtn">
+                  <i class="ri-mail-send-line me-1"></i> Send OTP
+                </button>
+              </div>
+              <div id="emailOtpInputContainer" style="display: none;">
+                <div class="input-group mb-2">
+                  <input type="text" class="form-control" id="emailOtp" name="emailOtp" placeholder="Enter 6-digit OTP" maxlength="6">
+                  <button type="button" class="btn btn-success" id="verifyEmailOtpBtn">
+                    <i class="ri-check-line me-1"></i> Verify
+                  </button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted" id="emailOtpTimer"></small>
+                  <button type="button" class="btn btn-link btn-sm p-0" id="resendEmailOtpBtn" disabled>Resend OTP</button>
+                </div>
+              </div>
+              <div id="emailOtpStatus" class="mt-2"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone Number <span class="required">*</span></label>
+            <div class="input-group">
+              <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" value="<%= user.phoneNumber || '' %>" required readonly>
+              <button type="button" class="btn btn-outline-secondary" id="editPhoneBtn">
+                <i class="ri-edit-line"></i> Edit
+              </button>
+            </div>
+            <!-- OTP Verification for Phone -->
+            <div id="phoneOtpContainer" style="display: none;" class="mt-3">
+              <div class="alert alert-info">
+                <i class="ri-information-line me-2"></i>
+                OTP verification required to change phone number
+              </div>
+              <div class="input-group mb-2">
+                <input type="tel" class="form-control" id="newPhoneNumber" name="newPhoneNumber" placeholder="Enter new phone number (11 digits)">
+                <button type="button" class="btn btn-primary" id="sendPhoneOtpBtn">
+                  <i class="ri-phone-send-line me-1"></i> Send OTP
+                </button>
+              </div>
+              <div id="phoneOtpInputContainer" style="display: none;">
+                <div class="input-group mb-2">
+                  <input type="text" class="form-control" id="phoneOtp" name="phoneOtp" placeholder="Enter 6-digit OTP" maxlength="6">
+                  <button type="button" class="btn btn-success" id="verifyPhoneOtpBtn">
+                    <i class="ri-check-line me-1"></i> Verify
+                  </button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted" id="phoneOtpTimer"></small>
+                  <button type="button" class="btn btn-link btn-sm p-0" id="resendPhoneOtpBtn" disabled>Resend OTP</button>
+                </div>
+              </div>
+              <div id="phoneOtpStatus" class="mt-2"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Account Status</label>
+            <div class="d-flex gap-2 flex-wrap">
+              <% if (user.isVerified) { %>
+                <span class="badge-status badge-verified">
+                  <i class="ri-checkbox-circle-line"></i>
+                  Email Verified
+                </span>
+              <% } else { %>
+                <span class="badge-status badge-unverified">
+                  <i class="ri-close-circle-line"></i>
+                  Email Not Verified
+                </span>
+              <% } %>
+              <% if (user.isCompleted) { %>
+                <span class="badge-status badge-completed">
+                  <i class="ri-check-double-line"></i>
+                  Account Completed
+                </span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-end mt-4">
+        <button type="submit" class="btn-save">
+          <i class="ri-save-line"></i>
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Brand Info Tab -->
+  <div id="brand" class="settings-content">
+    <form id="brandForm" class="settings-card">
+      <div class="card-header">
+        <i class="ri-store-line"></i>
+        <h3>Brand Information</h3>
+      </div>
+
+      <div class="mb-4">
+        <h4 class="fw-bold">Brand Profile</h4>
+        <p class="text-muted">Add your business details</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label fw-semibold">Brand Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="brandName" name="brandName" value="<%= user.brandInfo?.brandName || '' %>" placeholder="Enter your brand name" required>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label fw-semibold">Industry <span class="required">*</span></label>
+            <select class="form-select" id="industry" name="industry" required>
+              <option value="">Select an industry...</option>
+              <option value="Books, Arts & Media" <%= user.brandInfo?.industry === 'Books, Arts & Media' ? 'selected' : '' %>>Books, Arts & Media</option>
+              <option value="Fashion & Clothing" <%= user.brandInfo?.industry === 'Fashion & Clothing' ? 'selected' : '' %>>Fashion & Clothing</option>
+              <option value="Electronics" <%= user.brandInfo?.industry === 'Electronics' ? 'selected' : '' %>>Electronics</option>
+              <option value="Health & Beauty" <%= user.brandInfo?.industry === 'Health & Beauty' ? 'selected' : '' %>>Health & Beauty</option>
+              <option value="Home & Furniture" <%= user.brandInfo?.industry === 'Home & Furniture' ? 'selected' : '' %>>Home & Furniture</option>
+              <option value="Other" <%= user.brandInfo?.industry === 'Other' ? 'selected' : '' %>>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label fw-semibold">Monthly Order Volume <span class="required">*</span></label>
+            <select class="form-select" id="monthlyOrders" name="monthlyOrders" required>
+              <option value="">Select...</option>
+              <option value="1 - 10" <%= user.brandInfo?.monthlyOrders === '1 - 10' ? 'selected' : '' %>>1 - 10</option>
+              <option value="11 - 50" <%= user.brandInfo?.monthlyOrders === '11 - 50' ? 'selected' : '' %>>11 - 50</option>
+              <option value="51 - 200" <%= user.brandInfo?.monthlyOrders === '51 - 200' ? 'selected' : '' %>>51 - 200</option>
+              <option value="201 - 1000" <%= user.brandInfo?.monthlyOrders === '201 - 1000' ? 'selected' : '' %>>201 - 1000</option>
+              <option value="1000+" <%= user.brandInfo?.monthlyOrders === '1000+' ? 'selected' : '' %>>1000+</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <h5 class="fw-bold">Where do you sell your products?</h5>
+        <p class="text-muted">Select all the sales channels you use.</p>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card p-3">
+            <div class="form-check">
+              <input class="form-check-input channel-checkbox" type="checkbox" id="instagram" name="sellingPoints[]" value="instagram" data-channel="instagram" <%= user.brandInfo?.sellingPoints?.includes('instagram') ? 'checked' : '' %>>
+              <label class="form-check-label d-flex align-items-center" for="instagram">
+                <i class="ri-instagram-line me-2 fs-5 text-danger"></i> Instagram
+              </label>
+              <div class="social-link-input <%= user.brandInfo?.socialLinks?.instagram ? 'active' : '' %>" id="instagram-link-input">
+                <label for="instagram-link" class="form-label">Instagram Profile URL</label>
+                <input type="url" class="form-control" id="instagram-link" name="instagramLink" value="<%= user.brandInfo?.socialLinks?.instagram || '' %>" placeholder="https://instagram.com/yourbrand">
+              </div>
+            </div>
+            <div class="form-check mt-2">
+              <input class="form-check-input channel-checkbox" type="checkbox" id="tiktok" name="sellingPoints[]" value="tiktok" data-channel="tiktok" <%= user.brandInfo?.sellingPoints?.includes('tiktok') ? 'checked' : '' %>>
+              <label class="form-check-label d-flex align-items-center" for="tiktok">
+                <i class="ri-tiktok-line me-2 fs-5 text-dark"></i> TikTok
+              </label>
+              <div class="social-link-input <%= user.brandInfo?.socialLinks?.tiktok ? 'active' : '' %>" id="tiktok-link-input">
+                <label for="tiktok-link" class="form-label">TikTok Profile URL</label>
+                <input type="url" class="form-control" id="tiktok-link" name="tiktokLink" value="<%= user.brandInfo?.socialLinks?.tiktok || '' %>" placeholder="https://tiktok.com/@yourbrand">
+              </div>
+            </div>
+            <div class="form-check mt-2">
+              <input class="form-check-input channel-checkbox" type="checkbox" id="woocommerce" name="sellingPoints[]" value="woocommerce" data-channel="woocommerce" <%= user.brandInfo?.sellingPoints?.includes('woocommerce') ? 'checked' : '' %>>
+              <label class="form-check-label d-flex align-items-center" for="woocommerce">
+                <i class="ri-store-2-line me-2 fs-5 text-primary"></i> WooCommerce
+              </label>
+              <div class="social-link-input <%= user.brandInfo?.socialLinks?.woocommerce ? 'active' : '' %>" id="woocommerce-link-input">
+                <label for="woocommerce-link" class="form-label">WooCommerce Store URL</label>
+                <input type="url" class="form-control" id="woocommerce-link" name="woocommerceLink" value="<%= user.brandInfo?.socialLinks?.woocommerce || '' %>" placeholder="https://yourstore.com">
+              </div>
+            </div>
+            <div class="form-check mt-2">
+              <input class="form-check-input channel-checkbox" type="checkbox" id="customWebsite" name="sellingPoints[]" value="customWebsite" data-channel="customWebsite" <%= user.brandInfo?.sellingPoints?.includes('customWebsite') ? 'checked' : '' %>>
+              <label class="form-check-label d-flex align-items-center" for="customWebsite">
+                <i class="ri-global-line me-2 fs-5 text-secondary"></i> Custom Website
+              </label>
+              <div class="social-link-input <%= user.brandInfo?.socialLinks?.customWebsite ? 'active' : '' %>" id="customWebsite-link-input">
+                <label for="website-link" class="form-label">Website URL</label>
+                <input type="url" class="form-control" id="website-link" name="websiteLink" value="<%= user.brandInfo?.socialLinks?.customWebsite || '' %>" placeholder="https://yourwebsite.com">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card p-3">
+            <div class="form-check">
+              <input class="form-check-input channel-checkbox" type="checkbox" id="facebookShop" name="sellingPoints[]" value="facebookShop" data-channel="facebookShop" <%= user.brandInfo?.sellingPoints?.includes('facebookShop') ? 'checked' : '' %>>
+              <label class="form-check-label d-flex align-items-center" for="facebookShop">
+                <i class="ri-facebook-circle-line me-2 fs-5 text-primary"></i> Facebook Shop
+              </label>
+              <div class="social-link-input <%= user.brandInfo?.socialLinks?.facebookShop ? 'active' : '' %>" id="facebookShop-link-input">
+                <label for="facebook-shop-link" class="form-label">Facebook Shop URL</label>
+                <input type="url" class="form-control" id="facebook-shop-link" name="facebookShopLink" value="<%= user.brandInfo?.socialLinks?.facebookShop || '' %>" placeholder="https://facebook.com/yourbrand/shop">
+              </div>
+            </div>
+            <div class="form-check mt-2">
+              <input class="form-check-input channel-checkbox" type="checkbox" id="facebookMessenger" name="sellingPoints[]" value="facebookMessenger" data-channel="facebookMessenger" <%= user.brandInfo?.sellingPoints?.includes('facebookMessenger') ? 'checked' : '' %>>
+              <label class="form-check-label d-flex align-items-center" for="facebookMessenger">
+                <i class="ri-messenger-line me-2 fs-5 text-info"></i> Facebook Messenger
+              </label>
+              <div class="social-link-input <%= user.brandInfo?.socialLinks?.facebookMessenger ? 'active' : '' %>" id="facebookMessenger-link-input">
+                <label for="messenger-link" class="form-label">Facebook Page URL</label>
+                <input type="url" class="form-control" id="messenger-link" name="messengerLink" value="<%= user.brandInfo?.socialLinks?.facebookMessenger || '' %>" placeholder="https://facebook.com/yourbrand">
+              </div>
+            </div>
+            <div class="form-check mt-2">
+              <input class="form-check-input channel-checkbox" type="checkbox" id="shopify" name="sellingPoints[]" value="shopify" data-channel="shopify" <%= user.brandInfo?.sellingPoints?.includes('shopify') ? 'checked' : '' %>>
+              <label class="form-check-label d-flex align-items-center" for="shopify">
+                <i class="ri-shopping-cart-line me-2 fs-5 text-success"></i> Shopify
+              </label>
+              <div class="social-link-input <%= user.brandInfo?.socialLinks?.shopify ? 'active' : '' %>" id="shopify-link-input">
+                <label for="shopify-link" class="form-label">Shopify Store URL</label>
+                <input type="url" class="form-control" id="shopify-link" name="shopifyLink" value="<%= user.brandInfo?.socialLinks?.shopify || '' %>" placeholder="https://yourstore.myshopify.com">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-end mt-4">
+        <button type="submit" class="btn-save">
+          <i class="ri-save-line"></i>
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Pickup Address Tab -->
+  <div id="address" class="settings-content">
+    <div class="settings-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <i class="ri-map-pin-line"></i>
+          <h3>Pickup Addresses</h3>
+        </div>
+        <button type="button" class="btn-save" id="addNewAddressBtn">
+          <i class="ri-add-line"></i> Add New Address
+        </button>
+      </div>
+
+      <!-- Existing Addresses List -->
+      <div id="addressesList" class="mb-4">
+        <% if (user.pickUpAddresses && user.pickUpAddresses.length > 0) { %>
+          <% user.pickUpAddresses.forEach((address, index) => { %>
+            <div class="card mb-3 address-card" data-address-id="<%= address.addressId %>">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h5 class="mb-1">
+                      <%= address.addressName || 'Address ' + (index + 1) %>
+                      <% if (address.isDefault) { %>
+                        <span class="badge-status badge-verified ms-2">Default</span>
+                      <% } %>
+                    </h5>
+                    <p class="text-muted mb-0">
+                      <%= address.adressDetails %><br>
+                      <%= address.zone %>, <%= address.city %>, <%= address.country %>
+                    </p>
+                    <% if (address.pickupPhone) { %>
+                      <p class="text-muted mb-0 mt-1">
+                        <i class="ri-phone-line"></i> <%= address.pickupPhone %>
+                      </p>
+                    <% } %>
+                    <% if (address.otherPickupPhone) { %>
+                      <p class="text-muted mb-0 mt-1">
+                        <i class="ri-phone-line"></i> <%= address.otherPickupPhone %> <span class="badge bg-secondary badge-sm ms-1">Alternative</span>
+                      </p>
+                    <% } %>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <% if (!address.isDefault) { %>
+                      <button type="button" class="btn btn-sm btn-outline-primary set-default-btn" data-address-id="<%= address.addressId %>">
+                        <i class="ri-star-line"></i> Set Default
+                      </button>
+                    <% } %>
+                    <button type="button" class="btn btn-sm btn-outline-secondary edit-address-btn" data-address-id="<%= address.addressId %>">
+                      <i class="ri-edit-line"></i> Edit
+                    </button>
+                    <% if (user.pickUpAddresses.length > 1) { %>
+                      <button type="button" class="btn btn-sm btn-outline-danger delete-address-btn" data-address-id="<%= address.addressId %>">
+                        <i class="ri-delete-bin-line"></i> Delete
+                      </button>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="alert alert-info">
+            <i class="ri-information-line me-2"></i>
+            No pickup addresses added yet. Click "Add New Address" to get started.
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Add/Edit Address Form (Hidden by default) -->
+    <form id="addressForm" class="settings-card" style="display: none;">
+      <div class="card-header">
+        <i class="ri-map-pin-line"></i>
+        <h3 id="addressFormTitle">Add Pickup Address</h3>
+      </div>
+      <input type="hidden" id="editAddressId">
+
+      <div class="form-group">
+        <label class="form-label">Address Name</label>
+        <input type="text" class="form-control" id="addressName" name="addressName" placeholder="e.g. Main Warehouse, Branch Office">
+        <small class="text-muted">Give this address a name to easily identify it</small>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="form-label">Country <span class="required">*</span></label>
+            <select class="form-control" id="pickupCountry" name="pickupCountry" required>
+              <option value="egypt" selected>Egypt</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="form-group">
+            <label class="form-label">Governorate and Area <span class="required">*</span></label>
+            <button type="button" class="btn btn-outline-secondary w-100 text-start select-area-btn" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
+              <span id="selectedAreaDisplay">Select Area</span>
+              <i class="ri-arrow-down-s-line"></i>
+            </button>
+            <input type="hidden" id="pickupCity" name="pickupCity">
+            <input type="hidden" id="pickupZone" name="pickupZone">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Address Details <span class="required">*</span></label>
+        <textarea class="form-control" id="pickupAddressDetails" name="pickupAddressDetails" rows="3" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nearby Landmark</label>
+        <input type="text" class="form-control" id="pickupNearbyLandmark" name="pickupNearbyLandmark">
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label">Pickup Phone <span class="required">*</span></label>
+            <input type="tel" class="form-control" id="pickupPhone" name="pickupPhone" required>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label">Other Pickup Phone (Optional)</label>
+            <input type="tel" class="form-control" id="otherPickupPhone" name="otherPickupPhone" placeholder="Alternative phone number">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Location on Map</label>
+        <div class="d-flex gap-2 mb-2">
+          <input type="text" class="form-control" id="pickupPointInMaps" name="pickupPointInMaps" placeholder="Search for location...">
+          <button type="button" class="btn btn-primary" id="getCurrentLocationBtn" title="Get Current Location">
+            <i class="ri-map-pin-2-line me-1"></i> Get Current Location
+          </button>
+        </div>
+        <div class="map-container" id="pickupMap"></div>
+        <input type="hidden" id="pickupCoordinates" name="pickupCoordinates">
+      </div>
+
+      <div class="text-end mt-4">
+        <button type="submit" class="btn-save">
+          <i class="ri-save-line"></i>
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Payment Method Tab -->
+  <div id="payment" class="settings-content">
+    <form id="paymentForm" class="settings-card">
+      <div class="card-header">
+        <i class="ri-bank-card-line"></i>
+        <h3>Payment Method</h3>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Select Payment Method <span class="required">*</span></label>
+        <div class="row g-3">
+          <div class="col-md-4" style="display: none;">
+            <div class="payment-option <%= user.paymentMethod?.paymentChoice === 'instaPay' ? 'selected' : '' %>" data-value="instaPay">
+              <i class="ri-bank-line"></i>
+              <h5>InstaPay</h5>
+            </div>
+          </div>
+          <div class="col-md-4" style="display: none;">
+            <div class="payment-option <%= user.paymentMethod?.paymentChoice === 'mobileWallet' ? 'selected' : '' %>" data-value="mobileWallet">
+              <i class="ri-wallet-line"></i>
+              <h5>Mobile Wallet</h5>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="payment-option <%= user.paymentMethod?.paymentChoice === 'bankTransfer' ? 'selected' : '' %>" data-value="bankTransfer">
+              <i class="ri-exchange-line"></i>
+              <h5>Bank Transfer</h5>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="paymentChoice" name="paymentChoice" value="<%= user.paymentMethod?.paymentChoice || 'bankTransfer' %>">
+      </div>
+
+      <!-- InstaPay Details -->
+      <div id="instaPayDetails" class="payment-details" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">IPA or Phone Number <span class="required">*</span></label>
+          <input type="text" class="form-control" id="IPAorPhoneNumber" name="IPAorPhoneNumber" value="<%= user.paymentMethod?.details?.IPAorPhoneNumber || '' %>" disabled>
+        </div>
+      </div>
+
+      <!-- Mobile Wallet Details -->
+      <div id="mobileWalletDetails" class="payment-details" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Mobile Wallet Number <span class="required">*</span></label>
+          <input type="text" class="form-control" id="mobileWalletNumber" name="mobileWalletNumber" value="<%= user.paymentMethod?.details?.mobileWalletNumber || '' %>" disabled>
+        </div>
+      </div>
+
+      <!-- Bank Transfer Details -->
+      <div id="bankTransferDetails" class="payment-details" style="display: block;">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Bank Name <span class="required">*</span></label>
+              <select class="form-select" id="bankName" name="bankName" required>
+                <option value="">Choose your bank / اختر البنك</option>
+                <option value="nbe" <%= user.paymentMethod?.details?.bankName === 'nbe' ? 'selected' : '' %>>National Bank of Egypt / البنك الأهلي المصري</option>
+                <option value="banque-misr" <%= user.paymentMethod?.details?.bankName === 'banque-misr' ? 'selected' : '' %>>Banque Misr / بنك مصر</option>
+                <option value="cib" <%= user.paymentMethod?.details?.bankName === 'cib' ? 'selected' : '' %>>CIB (Commercial International Bank) / البنك التجاري الدولي</option>
+                <option value="qnb" <%= user.paymentMethod?.details?.bankName === 'qnb' ? 'selected' : '' %>>QNB Alahli / QNB الأهلي</option>
+                <option value="aaib" <%= user.paymentMethod?.details?.bankName === 'aaib' ? 'selected' : '' %>>Arab African International Bank (AAIB) / البنك العربي الأفريقي الدولي</option>
+                <option value="adib" <%= user.paymentMethod?.details?.bankName === 'adib' ? 'selected' : '' %>>Abu Dhabi Islamic Bank - Egypt (ADIB) / بنك أبوظبي الإسلامي - مصر</option>
+                <option value="abk" <%= user.paymentMethod?.details?.bankName === 'abk' ? 'selected' : '' %>>Al Ahli Bank of Kuwait - Egypt (ABK) / بنك الأهلي الكويتي - مصر</option>
+                <option value="aib" <%= user.paymentMethod?.details?.bankName === 'aib' ? 'selected' : '' %>>Arab Investment Bank (AIB) / البنك العربي للاستثمار</option>
+                <option value="attijariwafa" <%= user.paymentMethod?.details?.bankName === 'attijariwafa' ? 'selected' : '' %>>Attijariwafa Bank Egypt / بنك التجاري وفا مصر</option>
+                <option value="bank-of-alexandria" <%= user.paymentMethod?.details?.bankName === 'bank-of-alexandria' ? 'selected' : '' %>>Bank of Alexandria / بنك الإسكندرية</option>
+                <option value="bank-audi" <%= user.paymentMethod?.details?.bankName === 'bank-audi' ? 'selected' : '' %>>Bank Audi - Egypt / بنك عوده - مصر</option>
+                <option value="banque-du-caire" <%= user.paymentMethod?.details?.bankName === 'banque-du-caire' ? 'selected' : '' %>>Banque du Caire / بنك القاهرة</option>
+                <option value="blom" <%= user.paymentMethod?.details?.bankName === 'blom' ? 'selected' : '' %>>BLOM Bank Egypt / بنك بلوم مصر</option>
+                <option value="credit-agricole" <%= user.paymentMethod?.details?.bankName === 'credit-agricole' ? 'selected' : '' %>>Crédit Agricole Egypt / كريديت أجريكول مصر</option>
+                <option value="egb" <%= user.paymentMethod?.details?.bankName === 'egb' ? 'selected' : '' %>>Egyptian Gulf Bank (EGB) / البنك المصري الخليجي</option>
+                <option value="emirates-nbd" <%= user.paymentMethod?.details?.bankName === 'emirates-nbd' ? 'selected' : '' %>>Emirates NBD Egypt / بنك الإمارات دبي الوطني مصر</option>
+                <option value="ebbe" <%= user.paymentMethod?.details?.bankName === 'ebbe' ? 'selected' : '' %>>Export Development Bank of Egypt (EBBE) / بنك تنمية الصادرات</option>
+                <option value="fab" <%= user.paymentMethod?.details?.bankName === 'fab' ? 'selected' : '' %>>First Abu Dhabi Bank Egypt (FAB) / بنك أبوظبي الأول مصر</option>
+                <option value="faisal-islamic" <%= user.paymentMethod?.details?.bankName === 'faisal-islamic' ? 'selected' : '' %>>Faisal Islamic Bank of Egypt / بنك فيصل الإسلامي المصري</option>
+                <option value="hdb" <%= user.paymentMethod?.details?.bankName === 'hdb' ? 'selected' : '' %>>Housing and Development Bank (HDB) / بنك الإسكان والتنمية</option>
+                <option value="hsbc" <%= user.paymentMethod?.details?.bankName === 'hsbc' ? 'selected' : '' %>>HSBC Bank Egypt / بنك HSBC مصر</option>
+                <option value="idb" <%= user.paymentMethod?.details?.bankName === 'idb' ? 'selected' : '' %>>Industrial Development Bank (IDB) / بنك التنمية الصناعية</option>
+                <option value="nbk" <%= user.paymentMethod?.details?.bankName === 'nbk' ? 'selected' : '' %>>National Bank of Kuwait - Egypt (NBK) / البنك الوطني الكويتي - مصر</option>
+                <option value="saib" <%= user.paymentMethod?.details?.bankName === 'saib' ? 'selected' : '' %>>SAIB Bank / بنك SAIB</option>
+                <option value="united-bank" <%= user.paymentMethod?.details?.bankName === 'united-bank' ? 'selected' : '' %>>United Bank of Egypt / البنك المتحد</option>
+                <option value="alexbank" <%= user.paymentMethod?.details?.bankName === 'alexbank' ? 'selected' : '' %>>Bank of Alexandria (AlexBank) / بنك الإسكندرية (أليكس بنك)</option>
+                <option value="al-baraka" <%= user.paymentMethod?.details?.bankName === 'al-baraka' ? 'selected' : '' %>>Al Baraka Bank Egypt / بنك البركة مصر</option>
+                <option value="adcb" <%= user.paymentMethod?.details?.bankName === 'adcb' ? 'selected' : '' %>>Abu Dhabi Commercial Bank Egypt (ADCB) / بنك أبوظبي التجاري مصر</option>
+                <option value="suez-canal-bank" <%= user.paymentMethod?.details?.bankName === 'suez-canal-bank' ? 'selected' : '' %>>Suez Canal Bank / بنك قناة السويس</option>
+                <option value="mashreq" <%= user.paymentMethod?.details?.bankName === 'mashreq' ? 'selected' : '' %>>Mashreq Bank Egypt / بنك المشرق مصر</option>
+                <option value="bank-ei" <%= user.paymentMethod?.details?.bankName === 'bank-ei' ? 'selected' : '' %>>Bank of Egypt International (BEI) / بنك مصر الدولي</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Account Name <span class="required">*</span></label>
+              <input type="text" class="form-control" id="accountName" name="accountName" value="<%= user.paymentMethod?.details?.accountName || '' %>" required>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="form-group">
+              <label class="form-label">IBAN <span class="required">*</span></label>
+              <input type="text" class="form-control" id="IBAN" name="IBAN" value="<%= user.paymentMethod?.details?.IBAN || '' %>" required placeholder="Example: EG12 3456 7890 1234 5678 90">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-end mt-4">
+        <button type="submit" class="btn-save">
+          <i class="ri-save-line"></i>
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Brand Type Tab -->
+  <div id="brand-type" class="settings-content">
+    <form id="brandTypeForm" class="settings-card">
+      <div class="card-header">
+        <i class="ri-file-text-line"></i>
+        <h3>Brand Type</h3>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Brand Type <span class="required">*</span></label>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="brand-option <%= user.brandType?.brandChoice === 'personal' ? 'selected' : '' %>" data-value="personal">
+              <i class="ri-user-line"></i>
+              <h5>Personal</h5>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="brand-option <%= user.brandType?.brandChoice === 'company' ? 'selected' : '' %>" data-value="company">
+              <i class="ri-building-line"></i>
+              <h5>Company</h5>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="brandTypeChoice" name="brandTypeChoice" value="<%= user.brandType?.brandChoice || '' %>">
+      </div>
+
+      <!-- Personal Details -->
+      <div id="personalDetails" class="brand-details" style="display: <%= user.brandType?.brandChoice === 'personal' ? 'block' : 'none' %>;">
+        <div class="form-group">
+          <label class="form-label">National ID <span class="required">*</span></label>
+          <input type="text" class="form-control" id="nationalId" name="nationalId" value="<%= user.brandType?.brandDetails?.nationalId || '' %>">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ID Photos</label>
+          <input type="file" class="form-control" id="personalPhotos" name="personalPhotos" multiple accept="image/*">
+          <small class="text-muted">Upload photos of your national ID</small>
+        </div>
+      </div>
+
+      <!-- Company Details -->
+      <div id="companyDetails" class="brand-details" style="display: <%= user.brandType?.brandChoice === 'company' ? 'block' : 'none' %>;">
+        <div class="form-group">
+          <label class="form-label">Tax Number <span class="required">*</span></label>
+          <input type="text" class="form-control" id="taxNumber" name="taxNumber" value="<%= user.brandType?.brandDetails?.taxNumber || '' %>">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tax Certificate Photos</label>
+          <input type="file" class="form-control" id="companyPhotos" name="companyPhotos" multiple accept="image/*">
+          <small class="text-muted">Upload photos of your tax certificate</small>
+        </div>
+      </div>
+
+      <div class="text-end mt-4">
+        <button type="submit" class="btn-save">
+          <i class="ri-save-line"></i>
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Preferences Tab -->
+  <div id="preferences" class="settings-content">
+    <form id="preferencesForm" class="settings-card">
+      <div class="card-header">
+        <i class="ri-settings-line"></i>
+        <h3>Preferences</h3>
+      </div>
+
+      <div class="info-row">
+        <label>Storage Service</label>
+        <label class="switch">
+          <input type="checkbox" id="isNeedStorage" name="isNeedStorage" <%= user.isNeedStorage ? 'checked' : '' %>>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <p class="text-muted">Enable storage service for your orders</p>
+
+      <div class="text-end mt-4">
+        <button type="submit" class="btn-save">
+          <i class="ri-save-line"></i>
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Security Tab -->
+  <div id="security" class="settings-content">
+    <div class="settings-card">
+      <div class="card-header">
+        <i class="ri-shield-check-line"></i>
+        <h3>Security & Account</h3>
+      </div>
+
+      <div class="info-row">
+        <div>
+          <label>Email Verification</label>
+          <p class="text-muted mb-0">Status: <%= user.isVerified ? 'Verified' : 'Not Verified' %></p>
+        </div>
+        <% if (!user.isVerified) { %>
+          <button class="btn btn-primary" onclick="requestVerification()">
+            <i class="ri-mail-send-line me-1"></i>
+            Request Verification
+          </button>
+        <% } else { %>
+          <span class="badge-status badge-verified">
+            <i class="ri-checkbox-circle-line"></i>
+            Verified
+          </span>
+        <% } %>
+      </div>
+
+      <div class="info-row">
+        <div>
+          <label>Account Completion</label>
+          <p class="text-muted mb-0">Status: <%= user.isCompleted ? 'Completed' : 'Incomplete' %></p>
+        </div>
+        <% if (!user.isCompleted) { %>
+          <a href="/business/dashboard" class="btn btn-primary">
+            <i class="ri-arrow-right-line me-1"></i>
+            Complete Account
+          </a>
+        <% } else { %>
+          <span class="badge-status badge-completed">
+            <i class="ri-check-double-line"></i>
+            Completed
+          </span>
+        <% } %>
+      </div>
+
+      <div class="info-row">
+        <div>
+          <label>Account Balance</label>
+          <p class="text-muted mb-0">EGP <%= (user.balance || 0).toFixed(2) %></p>
+        </div>
+        <a href="/business/wallet/total-balance" class="btn btn-secondary-custom">
+          <i class="ri-wallet-line me-1"></i>
+          View Wallet
+        </a>
+      </div>
+
+      <div class="info-row">
+        <div>
+          <label>Member Since</label>
+          <p class="text-muted mb-0"><%= new Date(user.createdAt).toLocaleDateString() %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<!-- Include Area Selection Modal -->
+<%- include('../partials/area-selection-modal') %>
+<script src="/assets/libs/filepond/filepond.min.js"></script>
+<script src="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js"></script>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script src="/assets/js/area-selection-modal.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBg4oV-yrhIkatEh2fVvzOXmFaDmJ-h7Aw&libraries=places&loading=async" async defer></script>
+
+<script>
+  // Wait for DOM to be fully loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Global cleanup function to ensure page is never locked
+    function ensurePageUnlocked() {
+      // Remove any lingering modal backdrops
+      document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.remove();
+      });
+      
+      // Remove modal-open class from body
+      document.body.classList.remove('modal-open');
+      
+      // Reset body styles
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    
+    // Run cleanup when any modal is hidden
+    document.addEventListener('hidden.bs.modal', ensurePageUnlocked);
+    
+    // Also run cleanup on page interactions as a safety net
+    let cleanupTimeout;
+    document.addEventListener('click', function() {
+      clearTimeout(cleanupTimeout);
+      cleanupTimeout = setTimeout(ensurePageUnlocked, 500);
+    }, { passive: true });
+    
+    // Navigation Tabs with Touch Support
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      function handleTabSwitch(e) {
+        if (e) e.preventDefault();
+        const tabName = tab.getAttribute('data-tab');
+        
+        // Update active tab
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Show active content
+        document.querySelectorAll('.settings-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        const targetContent = document.getElementById(tabName);
+        if (targetContent) {
+          targetContent.classList.add('active');
+        }
+      }
+      tab.addEventListener('click', handleTabSwitch);
+      tab.addEventListener('touchend', handleTabSwitch);
+    });
+
+  // Profile Image Upload with Touch Support
+  const profileImageInput = document.getElementById('profileImageInput');
+  const profileImagePreview = document.getElementById('profileImagePreview');
+  const profileImageOverlay = document.getElementById('profileImageOverlay');
+  
+  if (profileImageOverlay) {
+    function triggerImageInput(e) {
+      if (e) e.preventDefault();
+      profileImageInput.click();
+    }
+    profileImageOverlay.addEventListener('click', triggerImageInput);
+    profileImageOverlay.addEventListener('touchend', triggerImageInput);
+  }
+  
+  profileImageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        profileImagePreview.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Social Media Channel Selection (matching dashboard.ejs)
+  document.querySelectorAll('.channel-checkbox').forEach((checkbox) => {
+    // Initialize: show input if checkbox is already checked
+    const channelName = checkbox.getAttribute('data-channel');
+    const linkInput = document.getElementById(`${channelName}-link-input`);
+    if (checkbox.checked && linkInput) {
+      linkInput.classList.add('active');
+    }
+
+    // Handle checkbox change
+    checkbox.addEventListener('change', function() {
+      const channelName = this.getAttribute('data-channel');
+      const linkInput = document.getElementById(`${channelName}-link-input`);
+
+      if (linkInput) {
+        if (this.checked) {
+          linkInput.classList.add('active');
+        } else {
+          linkInput.classList.remove('active');
+          // Clear the input when unchecked
+          const input = linkInput.querySelector('input');
+          if (input) input.value = '';
+        }
+      }
+    });
+  });
+
+  // Payment Method Selection with Touch Support
+  document.querySelectorAll('.payment-option').forEach(option => {
+    function handleSelection(e) {
+      if (e) e.preventDefault();
+      
+      // Skip hidden/disabled options
+      if (option.closest('.col-md-4')?.style.display === 'none') {
+        return;
+      }
+      
+      document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+      option.classList.add('selected');
+      document.getElementById('paymentChoice').value = option.getAttribute('data-value');
+      
+      // Show/hide payment details
+      document.querySelectorAll('.payment-details').forEach(d => d.style.display = 'none');
+      const detailsId = option.getAttribute('data-value') + 'Details';
+      const detailsElement = document.getElementById(detailsId);
+      if (detailsElement) detailsElement.style.display = 'block';
+    }
+    option.addEventListener('click', handleSelection);
+    option.addEventListener('touchend', handleSelection);
+  });
+
+  // Auto-select bank transfer on page load if no selection
+  const paymentChoice = document.getElementById('paymentChoice');
+  if (!paymentChoice.value || paymentChoice.value === '') {
+    paymentChoice.value = 'bankTransfer';
+    const bankTransferOption = document.querySelector('[data-value="bankTransfer"]');
+    if (bankTransferOption) {
+      bankTransferOption.classList.add('selected');
+      document.getElementById('bankTransferDetails').style.display = 'block';
+    }
+  }
+
+  // Brand Type Selection with Touch Support
+  document.querySelectorAll('.brand-option').forEach(option => {
+    function handleSelection(e) {
+      if (e) e.preventDefault();
+      document.querySelectorAll('.brand-option').forEach(o => o.classList.remove('selected'));
+      option.classList.add('selected');
+      document.getElementById('brandTypeChoice').value = option.getAttribute('data-value');
+      
+      // Show/hide brand details
+      document.querySelectorAll('.brand-details').forEach(d => d.style.display = 'none');
+      const detailsId = option.getAttribute('data-value') === 'personal' ? 'personalDetails' : 'companyDetails';
+      document.getElementById(detailsId).style.display = 'block';
+    }
+    option.addEventListener('click', handleSelection);
+    option.addEventListener('touchend', handleSelection);
+  });
+
+  // Show Alert
+  function showAlert(message, type = 'success') {
+    const alertContainer = document.getElementById('alertContainer');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} show`;
+    alert.innerHTML = `<i class="ri-${type === 'success' ? 'check' : 'error-warning'}-line me-2"></i>${message}`;
+    alertContainer.appendChild(alert);
+    
+    setTimeout(() => {
+      alert.classList.remove('show');
+      setTimeout(() => alert.remove(), 300);
+    }, 3000);
+  }
+
+  // OTP Verification State
+  let emailOtpVerified = false;
+  let phoneOtpVerified = false;
+  let emailOtpTimer = null;
+  let phoneOtpTimer = null;
+  let emailOtpCountdown = 0;
+  let phoneOtpCountdown = 0;
+
+  // Edit Email Button Handler
+  document.getElementById('editEmailBtn').addEventListener('click', function() {
+    document.getElementById('emailOtpContainer').style.display = 'block';
+    this.style.display = 'none';
+    emailOtpVerified = false;
+    // Reset email OTP status
+    document.getElementById('emailOtpStatus').innerHTML = '';
+    document.getElementById('emailOtpInputContainer').style.display = 'none';
+  });
+
+  // Edit Phone Button Handler
+  document.getElementById('editPhoneBtn').addEventListener('click', function() {
+    document.getElementById('phoneOtpContainer').style.display = 'block';
+    this.style.display = 'none';
+    phoneOtpVerified = false;
+    // Reset phone OTP status
+    document.getElementById('phoneOtpStatus').innerHTML = '';
+    document.getElementById('phoneOtpInputContainer').style.display = 'none';
+  });
+
+  // Start countdown timer
+  function startCountdown(timerElementId, resendBtnId, duration = 40) {
+    let timeLeft = duration;
+    const timerElement = document.getElementById(timerElementId);
+    const resendBtn = document.getElementById(resendBtnId);
+    
+    if (timerElementId === 'emailOtpTimer') {
+      clearInterval(emailOtpTimer);
+    } else {
+      clearInterval(phoneOtpTimer);
+    }
+
+    const timer = setInterval(() => {
+      timeLeft--;
+      timerElement.textContent = `${timeLeft}s`;
+      
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        timerElement.textContent = '';
+        resendBtn.disabled = false;
+        if (timerElementId === 'emailOtpTimer') {
+          emailOtpTimer = null;
+        } else {
+          phoneOtpTimer = null;
+        }
+      }
+    }, 1000);
+
+    if (timerElementId === 'emailOtpTimer') {
+      emailOtpTimer = timer;
+    } else {
+      phoneOtpTimer = timer;
+    }
+  }
+
+  // Send Email OTP
+  document.getElementById('sendEmailOtpBtn').addEventListener('click', async function() {
+    const newEmail = document.getElementById('newEmail').value.trim();
+    if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      document.getElementById('emailOtpStatus').innerHTML = '<div class="alert alert-danger">Please enter a valid email address</div>';
+      return;
+    }
+
+    try {
+      this.disabled = true;
+      this.innerHTML = '<i class="ri-loader-2-line ri-spin me-1"></i> Sending...';
+
+      const response = await fetch('/business/settings/send-email-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: newEmail })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        document.getElementById('emailOtpInputContainer').style.display = 'block';
+        const statusElement = document.getElementById('emailOtpStatus');
+        if (statusElement) {
+          statusElement.innerHTML = '<div class="alert alert-success" style="display: block !important;">OTP sent successfully to ' + newEmail + '</div>';
+          statusElement.style.display = 'block';
+        }
+        startCountdown('emailOtpTimer', 'resendEmailOtpBtn');
+        this.disabled = false;
+        this.innerHTML = '<i class="ri-mail-send-line me-1"></i> Send OTP';
+      } else {
+        const errorMessage = data.message || data.error || 'Failed to send OTP';
+        const errorCode = data.code || 'UNKNOWN_ERROR';
+        const errorField = data.field || 'email';
+        console.error('Error sending email OTP:', {
+          message: errorMessage,
+          code: errorCode,
+          field: errorField,
+          fullResponse: data
+        });
+        
+        let errorHtml = '<div class="alert alert-danger" style="display: block !important;">';
+        errorHtml += '<strong>Error:</strong> ' + errorMessage + '<br>';
+        if (data.code) {
+          errorHtml += '<small>Error Code: ' + data.code + '</small>';
+        }
+        if (data.error) {
+          errorHtml += '<br><small>Details: ' + data.error + '</small>';
+        }
+        errorHtml += '</div>';
+        
+        const statusElement = document.getElementById('emailOtpStatus');
+        if (statusElement) {
+          statusElement.innerHTML = errorHtml;
+          statusElement.style.display = 'block';
+        } else {
+          console.error('emailOtpStatus element not found!');
+        }
+        this.disabled = false;
+        this.innerHTML = '<i class="ri-mail-send-line me-1"></i> Send OTP';
+      }
+    } catch (error) {
+      console.error('Exception sending email OTP:', error);
+      document.getElementById('emailOtpStatus').innerHTML = '<div class="alert alert-danger">Error sending OTP: ' + error.message + '</div>';
+      this.disabled = false;
+      this.innerHTML = '<i class="ri-mail-send-line me-1"></i> Send OTP';
+    }
+  });
+
+  // Verify Email OTP
+  document.getElementById('verifyEmailOtpBtn').addEventListener('click', async function() {
+    const otp = document.getElementById('emailOtp').value.trim();
+    const newEmail = document.getElementById('newEmail').value.trim();
+    
+    if (!otp || otp.length !== 6) {
+      document.getElementById('emailOtpStatus').innerHTML = '<div class="alert alert-danger">Please enter a valid 6-digit OTP</div>';
+      return;
+    }
+
+    try {
+      this.disabled = true;
+      this.innerHTML = '<i class="ri-loader-2-line ri-spin me-1"></i> Verifying...';
+
+      const response = await fetch('/business/settings/verify-email-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: newEmail, otp: otp })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        emailOtpVerified = true;
+        const statusElement = document.getElementById('emailOtpStatus');
+        if (statusElement) {
+          statusElement.innerHTML = '<div class="alert alert-success" style="display: block !important;"><i class="ri-checkbox-circle-line me-2"></i>Email verified successfully!</div>';
+          statusElement.style.display = 'block';
+        }
+        document.getElementById('email').value = newEmail;
+        document.getElementById('email').readOnly = false;
+        this.disabled = true;
+        this.innerHTML = '<i class="ri-check-line me-1"></i> Verified';
+      } else {
+        const errorMessage = data.message || data.error || 'Invalid OTP';
+        const errorCode = data.code || 'UNKNOWN_ERROR';
+        console.error('Error verifying email OTP:', {
+          message: errorMessage,
+          code: errorCode,
+          field: data.field,
+          fullResponse: data
+        });
+        
+        let errorHtml = '<div class="alert alert-danger" style="display: block !important;">';
+        errorHtml += '<strong>Error:</strong> ' + errorMessage + '<br>';
+        if (data.code) {
+          errorHtml += '<small>Error Code: ' + data.code + '</small>';
+        }
+        if (data.error) {
+          errorHtml += '<br><small>Details: ' + data.error + '</small>';
+        }
+        errorHtml += '</div>';
+        
+        const statusElement = document.getElementById('emailOtpStatus');
+        if (statusElement) {
+          statusElement.innerHTML = errorHtml;
+          statusElement.style.display = 'block';
+        } else {
+          console.error('emailOtpStatus element not found!');
+        }
+        this.disabled = false;
+        this.innerHTML = '<i class="ri-check-line me-1"></i> Verify';
+      }
+    } catch (error) {
+      console.error('Exception verifying email OTP:', error);
+      const statusElement = document.getElementById('emailOtpStatus');
+      if (statusElement) {
+        statusElement.innerHTML = '<div class="alert alert-danger" style="display: block !important;"><strong>Error:</strong> Error verifying OTP. ' + error.message + '</div>';
+        statusElement.style.display = 'block';
+      }
+      this.disabled = false;
+      this.innerHTML = '<i class="ri-check-line me-1"></i> Verify';
+    }
+  });
+
+  // Resend Email OTP
+  document.getElementById('resendEmailOtpBtn').addEventListener('click', function() {
+    document.getElementById('sendEmailOtpBtn').click();
+  });
+
+  // Send Phone OTP
+  document.getElementById('sendPhoneOtpBtn').addEventListener('click', async function() {
+    const newPhone = document.getElementById('newPhoneNumber').value.trim();
+    if (!newPhone || !/^\d{11}$/.test(newPhone)) {
+      document.getElementById('phoneOtpStatus').innerHTML = '<div class="alert alert-danger">Please enter a valid 11-digit phone number</div>';
+      return;
+    }
+
+    try {
+      this.disabled = true;
+      this.innerHTML = '<i class="ri-loader-2-line ri-spin me-1"></i> Sending...';
+
+      const response = await fetch('/business/settings/send-phone-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ phoneNumber: newPhone })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        document.getElementById('phoneOtpInputContainer').style.display = 'block';
+        const statusElement = document.getElementById('phoneOtpStatus');
+        if (statusElement) {
+          statusElement.innerHTML = '<div class="alert alert-success" style="display: block !important;">OTP sent successfully to ' + newPhone + '</div>';
+          statusElement.style.display = 'block';
+        }
+        startCountdown('phoneOtpTimer', 'resendPhoneOtpBtn');
+        this.disabled = false;
+        this.innerHTML = '<i class="ri-phone-send-line me-1"></i> Send OTP';
+      } else {
+        const errorMessage = data.message || data.error || 'Failed to send OTP';
+        const errorCode = data.code || 'UNKNOWN_ERROR';
+        const errorField = data.field || 'phoneNumber';
+        console.error('Error sending phone OTP:', {
+          message: errorMessage,
+          code: errorCode,
+          field: errorField,
+          fullResponse: data
+        });
+        
+        let errorHtml = '<div class="alert alert-danger" style="display: block !important;">';
+        errorHtml += '<strong>Error:</strong> ' + errorMessage + '<br>';
+        if (data.code) {
+          errorHtml += '<small>Error Code: ' + data.code + '</small>';
+        }
+        if (data.error) {
+          errorHtml += '<br><small>Details: ' + data.error + '</small>';
+        }
+        errorHtml += '</div>';
+        
+        const statusElement = document.getElementById('phoneOtpStatus');
+        if (statusElement) {
+          statusElement.innerHTML = errorHtml;
+          statusElement.style.display = 'block';
+        } else {
+          console.error('phoneOtpStatus element not found!');
+        }
+        this.disabled = false;
+        this.innerHTML = '<i class="ri-phone-send-line me-1"></i> Send OTP';
+      }
+    } catch (error) {
+      console.error('Exception sending phone OTP:', error);
+      const statusElement = document.getElementById('phoneOtpStatus');
+      if (statusElement) {
+        statusElement.innerHTML = '<div class="alert alert-danger" style="display: block !important;"><strong>Error:</strong> Error sending OTP. ' + error.message + '</div>';
+        statusElement.style.display = 'block';
+      }
+      this.disabled = false;
+      this.innerHTML = '<i class="ri-phone-send-line me-1"></i> Send OTP';
+    }
+  });
+
+  // Verify Phone OTP
+  document.getElementById('verifyPhoneOtpBtn').addEventListener('click', async function() {
+    const otp = document.getElementById('phoneOtp').value.trim();
+    const newPhone = document.getElementById('newPhoneNumber').value.trim();
+    
+    if (!otp || otp.length !== 6) {
+      document.getElementById('phoneOtpStatus').innerHTML = '<div class="alert alert-danger">Please enter a valid 6-digit OTP</div>';
+      return;
+    }
+
+    try {
+      this.disabled = true;
+      this.innerHTML = '<i class="ri-loader-2-line ri-spin me-1"></i> Verifying...';
+
+      const response = await fetch('/business/settings/verify-phone-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ phoneNumber: newPhone, otp: otp })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        phoneOtpVerified = true;
+        const statusElement = document.getElementById('phoneOtpStatus');
+        if (statusElement) {
+          statusElement.innerHTML = '<div class="alert alert-success" style="display: block !important;"><i class="ri-checkbox-circle-line me-2"></i>Phone verified successfully!</div>';
+          statusElement.style.display = 'block';
+        }
+        document.getElementById('phoneNumber').value = newPhone;
+        document.getElementById('phoneNumber').readOnly = false;
+        this.disabled = true;
+        this.innerHTML = '<i class="ri-check-line me-1"></i> Verified';
+      } else {
+        const errorMessage = data.message || data.error || 'Invalid OTP';
+        const errorCode = data.code || 'UNKNOWN_ERROR';
+        console.error('Error verifying phone OTP:', {
+          message: errorMessage,
+          code: errorCode,
+          field: data.field,
+          fullResponse: data
+        });
+        
+        let errorHtml = '<div class="alert alert-danger" style="display: block !important;">';
+        errorHtml += '<strong>Error:</strong> ' + errorMessage + '<br>';
+        if (data.code) {
+          errorHtml += '<small>Error Code: ' + data.code + '</small>';
+        }
+        if (data.error) {
+          errorHtml += '<br><small>Details: ' + data.error + '</small>';
+        }
+        errorHtml += '</div>';
+        
+        const statusElement = document.getElementById('phoneOtpStatus');
+        if (statusElement) {
+          statusElement.innerHTML = errorHtml;
+          statusElement.style.display = 'block';
+        } else {
+          console.error('phoneOtpStatus element not found!');
+        }
+        this.disabled = false;
+        this.innerHTML = '<i class="ri-check-line me-1"></i> Verify';
+      }
+    } catch (error) {
+      console.error('Exception verifying phone OTP:', error);
+      const statusElement = document.getElementById('phoneOtpStatus');
+      if (statusElement) {
+        statusElement.innerHTML = '<div class="alert alert-danger" style="display: block !important;"><strong>Error:</strong> Error verifying OTP. ' + error.message + '</div>';
+        statusElement.style.display = 'block';
+      }
+      this.disabled = false;
+      this.innerHTML = '<i class="ri-check-line me-1"></i> Verify';
+    }
+  });
+
+  // Resend Phone OTP
+  document.getElementById('resendPhoneOtpBtn').addEventListener('click', function() {
+    document.getElementById('sendPhoneOtpBtn').click();
+  });
+
+  // Form Submissions
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Check if email or phone was changed and verify OTP was completed
+    const currentEmail = '<%= user.email || "" %>';
+    const currentPhone = '<%= user.phoneNumber || "" %>';
+    const newEmailValue = document.getElementById('email').value;
+    const newPhoneValue = document.getElementById('phoneNumber').value;
+    
+    const emailChanged = newEmailValue !== currentEmail;
+    const phoneChanged = newPhoneValue !== currentPhone;
+    
+    if (emailChanged && !emailOtpVerified) {
+      showAlert('Please verify your new email address with OTP before saving', 'error');
+      return;
+    }
+    
+    if (phoneChanged && !phoneOtpVerified) {
+      showAlert('Please verify your new phone number with OTP before saving', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', document.getElementById('name').value);
+    formData.append('email', newEmailValue);
+    formData.append('phoneNumber', newPhoneValue);
+    
+    const profileImage = document.getElementById('profileImageInput').files[0];
+    if (profileImage) {
+      formData.append('profileImage', profileImage);
+    }
+
+    try {
+      const response = await fetch('/business/settings/update', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showAlert('Profile updated successfully!', 'success');
+        if (data.user && data.user.profileImage) {
+          const imageUrl = data.user.profileImage.replace(/&/g, '&amp;');
+          document.getElementById('profileImagePreview').src = imageUrl;
+        }
+        // Reset OTP containers and states
+        if (emailChanged) {
+          emailOtpVerified = false;
+          document.getElementById('emailOtpContainer').style.display = 'none';
+          document.getElementById('editEmailBtn').style.display = 'block';
+        }
+        if (phoneChanged) {
+          phoneOtpVerified = false;
+          document.getElementById('phoneOtpContainer').style.display = 'none';
+          document.getElementById('editPhoneBtn').style.display = 'block';
+        }
+      } else {
+        showAlert(data.error || 'Failed to update profile', 'error');
+      }
+    } catch (error) {
+      showAlert('Error updating profile', 'error');
+    }
+  });
+
+  document.getElementById('brandForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Collect selling points and social links (matching dashboard.ejs logic)
+    const sellingPoints = [];
+    const socialLinks = {};
+
+    document.querySelectorAll('input[name="sellingPoints[]"]:checked').forEach((checkbox) => {
+      const channel = checkbox.value;
+      sellingPoints.push(channel);
+
+      // Get the associated link if available
+      const linkInput = document.getElementById(`${channel}-link`);
+      if (linkInput && linkInput.value) {
+        socialLinks[channel] = linkInput.value;
+      }
+    });
+
+    const formData = {
+      brandName: document.getElementById('brandName').value,
+      industry: document.getElementById('industry').value,
+      monthlyOrders: document.getElementById('monthlyOrders').value,
+      sellingPoints: sellingPoints,
+      socialLinks: socialLinks
+    };
+
+    try {
+      const response = await fetch('/business/settings/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showAlert('Brand information updated successfully!', 'success');
+      } else {
+        showAlert(data.error || 'Failed to update brand information', 'error');
+      }
+    } catch (error) {
+      showAlert('Error updating brand information', 'error');
+    }
+  });
+
+  // ==================== MULTIPLE PICKUP ADDRESSES MANAGEMENT ====================
+  
+  // Show add address form with Touch Support
+  const addNewAddressBtn = document.getElementById('addNewAddressBtn');
+  if (addNewAddressBtn) {
+    function handleAddAddress(e) {
+      if (e) e.preventDefault();
+      document.getElementById('addressForm').style.display = 'block';
+      document.getElementById('addressFormTitle').textContent = 'Add Pickup Address';
+      document.getElementById('editAddressId').value = '';
+      document.getElementById('addressForm').scrollIntoView({ behavior: 'smooth' });
+      // Reset form
+      document.getElementById('addressForm').reset();
+      document.getElementById('selectedAreaDisplay').textContent = 'Select Area';
+      document.getElementById('pickupCity').value = '';
+      document.getElementById('pickupZone').value = '';
+      document.getElementById('pickupCoordinates').value = '';
+      
+      // Wait for map container to be visible, then initialize map
+      setTimeout(() => {
+        if (typeof google !== 'undefined' && google.maps) {
+          initPickupMap();
+        } else {
+          // Wait for Google Maps to load
+          const checkGoogleMaps = setInterval(() => {
+            if (typeof google !== 'undefined' && google.maps) {
+              clearInterval(checkGoogleMaps);
+              initPickupMap();
+            }
+          }, 100);
+        }
+      }, 300);
+    }
+    addNewAddressBtn.addEventListener('click', handleAddAddress);
+    addNewAddressBtn.addEventListener('touchend', handleAddAddress);
+  }
+
+  // Cancel address form
+  document.getElementById('cancelAddressForm')?.addEventListener('click', () => {
+    document.getElementById('addressForm').style.display = 'none';
+    document.getElementById('addressForm').reset();
+  });
+
+  // Edit address with Touch Support
+  document.querySelectorAll('.edit-address-btn').forEach(btn => {
+    const addressId = btn.getAttribute('data-address-id');
+    async function handleEdit(e) {
+      if (e) e.preventDefault();
+      try {
+        // Get address from list
+        const addressCard = document.querySelector(`[data-address-id="${addressId}"]`);
+        const addresses = window.userPickupAddresses || [];
+        const address = addresses.find(a => a.addressId === addressId);
+        
+        if (address) {
+          document.getElementById('editAddressId').value = addressId;
+          document.getElementById('addressName').value = address.addressName || '';
+          document.getElementById('pickupCountry').value = address.country || 'egypt';
+          document.getElementById('pickupCity').value = address.city || '';
+          document.getElementById('pickupZone').value = address.zone || '';
+          // Update area display
+          if (address.city && address.zone) {
+            document.getElementById('selectedAreaDisplay').textContent = `${address.city} - ${address.zone}`;
+          } else {
+            document.getElementById('selectedAreaDisplay').textContent = 'Select Area';
+          }
+          document.getElementById('pickupAddressDetails').value = address.adressDetails || '';
+          document.getElementById('pickupNearbyLandmark').value = address.nearbyLandmark || '';
+          document.getElementById('pickupPhone').value = address.pickupPhone || '';
+          document.getElementById('otherPickupPhone').value = address.otherPickupPhone || '';
+          document.getElementById('pickupPointInMaps').value = address.pickUpPointInMaps || '';
+          document.getElementById('pickupCoordinates').value = JSON.stringify(address.coordinates || {});
+          
+          document.getElementById('addressFormTitle').textContent = 'Edit Pickup Address';
+          document.getElementById('addressForm').style.display = 'block';
+          document.getElementById('addressForm').scrollIntoView({ behavior: 'smooth' });
+          
+          // Wait for map container to be visible, then initialize map
+          setTimeout(() => {
+            if (typeof google !== 'undefined' && google.maps) {
+              initPickupMap(address.coordinates);
+            } else {
+              // Wait for Google Maps to load
+              const checkGoogleMaps = setInterval(() => {
+                if (typeof google !== 'undefined' && google.maps) {
+                  clearInterval(checkGoogleMaps);
+                  initPickupMap(address.coordinates);
+                }
+              }, 100);
+            }
+          }, 300);
+        }
+      } catch (error) {
+        console.error('Error loading address:', error);
+        showAlert('Error loading address details', 'error');
+      }
+    }
+    btn.addEventListener('click', handleEdit);
+    btn.addEventListener('touchend', handleEdit);
+  });
+
+  // Set default address with Touch Support
+  document.querySelectorAll('.set-default-btn').forEach(btn => {
+    const addressId = btn.getAttribute('data-address-id');
+    async function handleSetDefault(e) {
+      if (e) e.preventDefault();
+      try {
+        const response = await fetch(`/business/pickup-addresses/${addressId}/set-default`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showAlert('Default address updated successfully!', 'success');
+          setTimeout(() => window.location.reload(), 1500);
+        } else {
+          showAlert(data.error || 'Failed to set default address', 'error');
+        }
+      } catch (error) {
+        showAlert('Error setting default address', 'error');
+      }
+    }
+    btn.addEventListener('click', handleSetDefault);
+    btn.addEventListener('touchend', handleSetDefault);
+  });
+
+  // Delete address with Touch Support
+  document.querySelectorAll('.delete-address-btn').forEach(btn => {
+    const addressId = btn.getAttribute('data-address-id');
+    async function handleDelete(e) {
+      if (e) e.preventDefault();
+      if (!confirm('Are you sure you want to delete this address?')) return;
+      
+      try {
+        const response = await fetch(`/business/pickup-addresses/${addressId}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showAlert('Address deleted successfully!', 'success');
+          setTimeout(() => window.location.reload(), 1500);
+        } else {
+          showAlert(data.error || 'Failed to delete address', 'error');
+        }
+      } catch (error) {
+        showAlert('Error deleting address', 'error');
+      }
+    }
+    btn.addEventListener('click', handleDelete);
+    btn.addEventListener('touchend', handleDelete);
+  });
+
+  // Add/Edit address form submission
+  document.getElementById('addressForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const editId = document.getElementById('editAddressId').value;
+    const formData = {
+      addressName: document.getElementById('addressName').value,
+      country: document.getElementById('pickupCountry').value,
+      city: document.getElementById('pickupCity').value,
+      zone: document.getElementById('pickupZone').value,
+      adressDetails: document.getElementById('pickupAddressDetails').value,
+      nearbyLandmark: document.getElementById('pickupNearbyLandmark').value,
+      pickupPhone: document.getElementById('pickupPhone').value,
+      otherPickupPhone: document.getElementById('otherPickupPhone').value,
+      pickUpPointInMaps: document.getElementById('pickupPointInMaps').value,
+      coordinates: document.getElementById('pickupCoordinates').value
+    };
+
+    try {
+      let response;
+      if (editId) {
+        // Update existing
+        response = await fetch(`/business/pickup-addresses/${editId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+      } else {
+        // Add new
+        response = await fetch('/business/pickup-addresses/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+      }
+      
+      const data = await response.json();
+      if (response.ok) {
+        showAlert(editId ? 'Address updated successfully!' : 'Address added successfully!', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        showAlert(data.error || 'Failed to save address', 'error');
+      }
+    } catch (error) {
+      showAlert('Error saving address', 'error');
+    }
+  });
+
+  // Store addresses data for JavaScript access
+  window.userPickupAddresses = <%- JSON.stringify(user.pickUpAddresses || []) %>;
+  
+  // Helper function to open area selection modal (matches dashboard.ejs)
+  function openAreaSelectionModal(callback) {
+    if (typeof window.AreaSelectionModal !== 'undefined') {
+      // Set up callback for when area is selected
+      window.AreaSelectionModal.onSelect(function(selectedData) {
+        if (selectedData && callback) {
+          const gov = selectedData.data.governorate;
+          const area = selectedData.data.area;
+          const currentLang = document.documentElement.lang || 'en';
+          const govLabel = gov.label[currentLang] || gov.label.en;
+          const areaLabel = area.label[currentLang] || area.label.en;
+          
+          callback({
+            governorate: govLabel,
+            zone: areaLabel,
+            governorateValue: selectedData.governorate,
+            zoneValue: selectedData.zone
+          });
+        }
+      });
+      
+      // Open the modal
+      window.AreaSelectionModal.open();
+    } else {
+      // Retry if not loaded yet
+      setTimeout(() => openAreaSelectionModal(callback), 100);
+    }
+  }
+
+  // Area Selection Modal Handler - Wait for area-selection-modal.js to load
+  function setupAreaSelection() {
+    const selectAreaBtn = document.getElementById('selectAreaBtn');
+    const selectedAreaDisplay = document.getElementById('selectedAreaDisplay');
+    const pickupCityInput = document.getElementById('pickupCity');
+    const pickupZoneInput = document.getElementById('pickupZone');
+    
+    if (selectAreaBtn) {
+      let touchHandled = false;
+      
+      function handleAreaSelection(e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        
+        // Prevent double-firing from both touch and click
+        if (e.type === 'touchend') {
+          touchHandled = true;
+        } else if (e.type === 'click' && touchHandled) {
+          touchHandled = false;
+          return;
+        }
+        
+        openAreaSelectionModal(function(selectedArea) {
+          if (selectedArea) {
+            selectedAreaDisplay.textContent = `${selectedArea.governorate} - ${selectedArea.zone}`;
+            pickupCityInput.value = selectedArea.governorateValue || selectedArea.governorate;
+            pickupZoneInput.value = selectedArea.zoneValue || selectedArea.zone;
+          }
+        });
+      }
+      selectAreaBtn.addEventListener('click', handleAreaSelection);
+      selectAreaBtn.addEventListener('touchend', handleAreaSelection);
+    } else {
+      // Retry if button not loaded yet
+      setTimeout(setupAreaSelection, 100);
+    }
+  }
+  
+  // Setup area selection when DOM and scripts are ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupAreaSelection);
+  } else {
+    // DOM already loaded, wait a bit for scripts
+    setTimeout(setupAreaSelection, 200);
+  }
+
+  document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const paymentChoice = document.getElementById('paymentChoice').value;
+    let paymentDetails = {};
+
+    if (paymentChoice === 'instaPay') {
+      paymentDetails.IPAorPhoneNumber = document.getElementById('IPAorPhoneNumber').value;
+    } else if (paymentChoice === 'mobileWallet') {
+      paymentDetails.mobileWalletNumber = document.getElementById('mobileWalletNumber').value;
+    } else if (paymentChoice === 'bankTransfer') {
+      paymentDetails.bankName = document.getElementById('bankName').value;
+      paymentDetails.accountName = document.getElementById('accountName').value;
+      paymentDetails.IBAN = document.getElementById('IBAN').value;
+    }
+
+    const formData = {
+      paymentChoice: paymentChoice,
+      paymentDetails: paymentDetails
+    };
+
+    try {
+      const response = await fetch('/business/settings/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showAlert('Payment method updated successfully!', 'success');
+      } else {
+        showAlert(data.error || 'Failed to update payment method', 'error');
+      }
+    } catch (error) {
+      showAlert('Error updating payment method', 'error');
+    }
+  });
+
+  document.getElementById('brandTypeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const brandTypeChoice = document.getElementById('brandTypeChoice').value;
+    let brandDetails = {};
+
+    if (brandTypeChoice === 'personal') {
+      brandDetails.nationalId = document.getElementById('nationalId').value;
+    } else if (brandTypeChoice === 'company') {
+      brandDetails.taxNumber = document.getElementById('taxNumber').value;
+    }
+
+    const formData = {
+      brandTypeChoice: brandTypeChoice,
+      brandTypeDetails: brandDetails
+    };
+
+    try {
+      const response = await fetch('/business/settings/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showAlert('Brand type updated successfully!', 'success');
+      } else {
+        showAlert(data.error || 'Failed to update brand type', 'error');
+      }
+    } catch (error) {
+      showAlert('Error updating brand type', 'error');
+    }
+  });
+
+  document.getElementById('preferencesForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = {
+      isNeedStorage: document.getElementById('isNeedStorage').checked
+    };
+
+    try {
+      const response = await fetch('/business/settings/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showAlert('Preferences updated successfully!', 'success');
+      } else {
+        showAlert(data.error || 'Failed to update preferences', 'error');
+      }
+    } catch (error) {
+      showAlert('Error updating preferences', 'error');
+    }
+  });
+
+  // Google Maps for Pickup Address
+  let pickupMap, pickupMarker, pickupAutocomplete, pickupGeocoder;
+
+  // Helper function to setup marker with drag listener
+  function setupPickupMarker(position) {
+    const mapPointInput = document.getElementById('pickupPointInMaps');
+    
+    if (pickupMarker) {
+      pickupMarker.setPosition(position);
+    } else {
+      pickupMarker = new google.maps.Marker({
+        position: position,
+        map: pickupMap,
+        draggable: true
+      });
+    }
+
+    // Setup drag listener (remove old ones first to avoid duplicates)
+    google.maps.event.clearListeners(pickupMarker, 'dragend');
+    pickupMarker.addListener('dragend', function() {
+      const pos = pickupMarker.getPosition();
+      const coords = {
+        lat: pos.lat(),
+        lng: pos.lng()
+      };
+      document.getElementById('pickupCoordinates').value = JSON.stringify(coords);
+
+      // Reverse geocode
+      if (pickupGeocoder && mapPointInput) {
+        pickupGeocoder.geocode({ location: coords }, function(results, status) {
+          if (status === 'OK') {
+            mapPointInput.value = 'https://www.google.com/maps?q=' + coords.lat + ',' + coords.lng;
+          }
+        });
+      }
+    });
+  }
+
+  // Helper function to update coordinates and reverse geocode
+  function updatePickupLocation(coords, updateInput = true) {
+    document.getElementById('pickupCoordinates').value = JSON.stringify(coords);
+    const mapPointInput = document.getElementById('pickupPointInMaps');
+    
+    if (updateInput && pickupGeocoder && mapPointInput) {
+      pickupGeocoder.geocode({ location: coords }, function(results, status) {
+        if (status === 'OK') {
+          mapPointInput.value = 'https://www.google.com/maps?q=' + coords.lat + ',' + coords.lng;
+        }
+      });
+    }
+  }
+
+  function initPickupMap(coordinates) {
+    const mapContainer = document.getElementById('pickupMap');
+    if (!mapContainer) return;
+
+    const coords = coordinates || JSON.parse(document.getElementById('pickupCoordinates').value || '{}');
+    const defaultCoords = { lat: coords.lat || 30.0444, lng: coords.lng || 31.2357 }; // Cairo default
+
+    // Destroy existing map if it exists
+    if (pickupMap) {
+      pickupMarker = null;
+      pickupAutocomplete = null;
+    }
+
+    pickupMap = new google.maps.Map(mapContainer, {
+      center: defaultCoords,
+      zoom: coords.lat ? 15 : 10,
+      mapTypeId: 'roadmap'
+    });
+
+    // Initialize geocoder
+    pickupGeocoder = new google.maps.Geocoder();
+
+    // Create marker if coordinates exist
+    if (coords.lat && coords.lng) {
+      setupPickupMarker(defaultCoords);
+    }
+
+    // Setup autocomplete for search
+    const mapPointInput = document.getElementById('pickupPointInMaps');
+    if (mapPointInput) {
+      pickupAutocomplete = new google.maps.places.Autocomplete(mapPointInput);
+      pickupAutocomplete.bindTo('bounds', pickupMap);
+
+      pickupAutocomplete.addListener('place_changed', () => {
+        const place = pickupAutocomplete.getPlace();
+        if (!place.geometry) return;
+
+        if (place.geometry.viewport) {
+          pickupMap.fitBounds(place.geometry.viewport);
+        } else {
+          pickupMap.setCenter(place.geometry.location);
+          pickupMap.setZoom(15);
+        }
+
+        const locationCoords = {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng()
+        };
+        
+        setupPickupMarker(place.geometry.location);
+        updatePickupLocation(locationCoords, false); // Don't update input, place already has address
+        
+        // Save as Google Maps link
+        mapPointInput.value = 'https://www.google.com/maps?q=' + locationCoords.lat + ',' + locationCoords.lng;
+      });
+    }
+
+    // Add click listener to map
+    pickupMap.addListener('click', function(event) {
+      const coords = {
+        lat: event.latLng.lat(),
+        lng: event.latLng.lng()
+      };
+
+      setupPickupMarker(event.latLng);
+      updatePickupLocation(coords);
+    });
+
+    // Setup Get Current Location Button
+    setupGetCurrentLocationButton();
+  }
+
+  // Get Current Location Button Handler
+  function setupGetCurrentLocationButton() {
+    const getCurrentLocationBtn = document.getElementById('getCurrentLocationBtn');
+    if (!getCurrentLocationBtn) return;
+    
+    // Remove the data attribute to allow re-setting up the listener if needed
+    delete getCurrentLocationBtn.dataset.listenerAdded;
+    
+    // Remove any existing click listeners by cloning the button
+    const newBtn = getCurrentLocationBtn.cloneNode(true);
+    getCurrentLocationBtn.parentNode.replaceChild(newBtn, getCurrentLocationBtn);
+    
+    newBtn.addEventListener('click', function() {
+      if (!pickupMap) {
+        showAlert('Please wait for the map to load', 'error');
+        return;
+      }
+      
+      if (!navigator.geolocation) {
+        showAlert('Geolocation is not supported by your browser', 'error');
+        return;
+      }
+
+      // Show loading state
+      const originalHTML = this.innerHTML;
+      this.disabled = true;
+      this.innerHTML = '<i class="ri-loader-2-line ri-spin me-1"></i> Getting location...';
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const coords = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+
+          // Center map on current location
+          pickupMap.setCenter(coords);
+          pickupMap.setZoom(15);
+
+          // Update marker
+          setupPickupMarker(coords);
+          updatePickupLocation(coords);
+
+          // Reset button
+          newBtn.disabled = false;
+          newBtn.innerHTML = originalHTML;
+          showAlert('Current location retrieved successfully!', 'success');
+        },
+        function(error) {
+          console.error('Error getting location:', error);
+          let errorMessage = 'Unable to retrieve your location';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location access denied by user';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information unavailable';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out';
+              break;
+          }
+          showAlert(errorMessage, 'error');
+          // Reset button
+          newBtn.disabled = false;
+          newBtn.innerHTML = originalHTML;
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    });
+  }
+
+  // Initialize map when address tab is opened with Touch Support
+  const addressTab = document.querySelector('[data-tab="address"]');
+  if (addressTab) {
+    function handleAddressTabOpen(e) {
+      if (e) e.preventDefault();
+      // Only initialize map if address form is visible and map hasn't been initialized
+      const addressForm = document.getElementById('addressForm');
+      if (addressForm && addressForm.style.display !== 'none') {
+        setTimeout(() => {
+          const mapContainer = document.getElementById('pickupMap');
+          if (mapContainer && typeof google !== 'undefined' && google.maps && !pickupMap) {
+            initPickupMap();
+          }
+        }, 300);
+      }
+    }
+    addressTab.addEventListener('click', handleAddressTabOpen);
+    addressTab.addEventListener('touchend', handleAddressTabOpen);
+  }
+
+  // Request Verification
+  function requestVerification() {
+    Swal.fire({
+      title: 'Request Email Verification',
+      text: 'An verification email will be sent to your email address.',
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonColor: '#F39720',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Send Email'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch('/business/request-verification', {
+          method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('Success!', 'Verification email sent!', 'success');
+          } else {
+            Swal.fire('Error', data.error || 'Failed to send verification email', 'error');
+          }
+        })
+        .catch(error => {
+          Swal.fire('Error', 'Failed to send verification email', 'error');
+        });
+      }
+    });
+  }
+  }); // End of DOMContentLoaded
+</script>
+

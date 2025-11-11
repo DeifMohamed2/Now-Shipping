@@ -20,7 +20,7 @@ const NoResult = document.getElementById('NoResult');
 let currentOrderType = 'all';
 let currentStatusCategory = 'all';
 
-const ORDERS_PER_PAGE = 30;
+const ORDERS_PER_PAGE = 20;
 let currentPage = 1;
 let lastPaginationData = { currentPage: 1, totalPages: 1, totalCount: 0 };
 
@@ -103,6 +103,54 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Initialize professional dropdown system
   initializeDropdownSystem();
+  
+  // Add search input event listener for real-time search with debounce
+  const searchInput = document.querySelector('.search-box .search');
+  if (searchInput) {
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentPage = 1; // Reset to first page on search
+        SearchData();
+      }, 500); // 500ms debounce
+    });
+    
+    // Allow Enter key to trigger immediate search
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        clearTimeout(searchTimeout);
+        currentPage = 1;
+        SearchData();
+      }
+    });
+  }
+  
+  // Add filter change listeners to reset pagination
+  const statusSelect = document.getElementById('idStatus');
+  const paymentSelect = document.getElementById('idPayment');
+  const dateInput = document.getElementById('demo-datepicker');
+  
+  if (statusSelect) {
+    statusSelect.addEventListener('change', function() {
+      currentPage = 1;
+      SearchData();
+    });
+  }
+  
+  if (paymentSelect) {
+    paymentSelect.addEventListener('change', function() {
+      currentPage = 1;
+      SearchData();
+    });
+  }
+  
+  if (dateInput) {
+    dateInput.addEventListener('change', function() {
+      currentPage = 1;
+      SearchData();
+    });
+  }
 });
 
 // Add status category filter dropdown
@@ -153,25 +201,29 @@ if (checkAll) {
 // Filter by status category
 function filterByStatusCategory(category) {
   currentStatusCategory = category;
+  currentPage = 1; // Reset to first page when filtering
   document.getElementById('statusCategoryDropdown').innerHTML = 
     `<i class="ri-filter-2-line me-1"></i> ${category === 'all' ? 'All' : category}`;
-  fetchOrders(currentOrderType, category);
+  fetchOrders(currentOrderType, category, 1);
 }
 
 // Filter by order type
 function filterOrders(orderType) {
   currentOrderType = orderType;
-  fetchOrders(orderType, currentStatusCategory);
+  currentPage = 1; // Reset to first page when filtering
+  fetchOrders(orderType, currentStatusCategory, 1);
 }
 
 // Filter returned orders
 function filterReturnedOrders() {
-  fetchOrders('Return', currentStatusCategory);
+  currentPage = 1; // Reset to first page when filtering
+  fetchOrders('Return', currentStatusCategory, 1);
 }
 
 // Replace fetchOrders to always fetch from server with pagination/filters
 async function fetchOrders(orderType = "all", statusCategory = "all", page = 1) {
   try {
+    currentPage = page; // Update global currentPage
     showLoadingSpinner();
     const filters = getFiltersFromUI();
     const params = new URLSearchParams();
@@ -203,6 +255,7 @@ async function fetchOrders(orderType = "all", statusCategory = "all", page = 1) 
     const data = await response.json();
     if (response.ok && data.orders) {
       lastPaginationData = data.pagination;
+      currentPage = data.pagination.currentPage || page; // Sync with server response
       handleOrdersResponse(data.orders);
       updatePaginationBar();
     } else {
@@ -743,20 +796,43 @@ function updatePaginationBar() {
   const ul = document.querySelector('.listjs-pagination');
   if (!ul) return;
   ul.innerHTML = '';
-  const { currentPage, totalPages } = lastPaginationData;
+  const { currentPage: serverPage, totalPages } = lastPaginationData;
+  const activePage = currentPage || serverPage;
+  
   // Only render pagination buttons if more than 1 page
-  if (totalPages > 1 || totalPages === 0) {
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, currentPage + 2);
-    if (currentPage <= 3) {
+  if (totalPages > 1) {
+    let startPage = Math.max(1, activePage - 2);
+    let endPage = Math.min(totalPages, activePage + 2);
+    if (activePage <= 3) {
       endPage = Math.min(totalPages, 5);
     }
-    if (currentPage + 2 > totalPages) {
+    if (activePage + 2 > totalPages) {
       startPage = Math.max(1, totalPages - 4);
     }
+    
+    // Add first page if not in range
+    if (startPage > 1) {
+      const li = document.createElement('li');
+      li.className = 'page-item';
+      const a = document.createElement('a');
+      a.className = 'page-link';
+      a.textContent = '1';
+      a.href = 'javascript:void(0);';
+      a.onclick = () => gotoPage(1);
+      li.appendChild(a);
+      ul.appendChild(li);
+      
+      if (startPage > 2) {
+        const ellipsis = document.createElement('li');
+        ellipsis.className = 'page-item disabled';
+        ellipsis.innerHTML = '<span class="page-link">...</span>';
+        ul.appendChild(ellipsis);
+      }
+    }
+    
     for (let p = startPage; p <= endPage; p++) {
       const li = document.createElement('li');
-      li.className = `page-item${p === currentPage ? ' active' : ''}`;
+      li.className = `page-item${p === activePage ? ' active' : ''}`;
       const a = document.createElement('a');
       a.className = 'page-link';
       a.textContent = p;
@@ -765,9 +841,73 @@ function updatePaginationBar() {
       li.appendChild(a);
       ul.appendChild(li);
     }
+    
+    // Add last page if not in range
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        const ellipsis = document.createElement('li');
+        ellipsis.className = 'page-item disabled';
+        ellipsis.innerHTML = '<span class="page-link">...</span>';
+        ul.appendChild(ellipsis);
+      }
+      
+      const li = document.createElement('li');
+      li.className = `page-item${totalPages === activePage ? ' active' : ''}`;
+      const a = document.createElement('a');
+      a.className = 'page-link';
+      a.textContent = totalPages;
+      a.href = 'javascript:void(0);';
+      a.onclick = () => gotoPage(totalPages);
+      li.appendChild(a);
+      ul.appendChild(li);
+    }
   }
-  if (prev) prev.classList.toggle('disabled', currentPage === 1);
-  if (prev) prev.onclick = () => gotoPage(currentPage - 1);
-  if (next) next.classList.toggle('disabled', currentPage === totalPages);
-  if (next) next.onclick = () => gotoPage(currentPage + 1);
+  
+  // Update prev/next buttons
+  if (prev) {
+    prev.classList.toggle('disabled', activePage === 1);
+    prev.onclick = () => {
+      if (activePage > 1) gotoPage(activePage - 1);
+    };
+  }
+  if (next) {
+    next.classList.toggle('disabled', activePage === totalPages || totalPages === 0);
+    next.onclick = () => {
+      if (activePage < totalPages) gotoPage(activePage + 1);
+    };
+  }
+}
+
+// Export orders to Excel
+function exportOrdersToExcel() {
+  // Show loading indicator
+  Swal.fire({
+    title: 'Preparing export...',
+    html: 'Please wait while we prepare your orders export.',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  // Export ALL orders (no filters)
+  const exportUrl = `/business/export-orders`;
+  const link = document.createElement('a');
+  link.href = exportUrl;
+  link.download = `orders_${new Date().toISOString().split('T')[0]}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Close loading indicator after a short delay
+  setTimeout(() => {
+    Swal.close();
+    Swal.fire({
+      icon: 'success',
+      title: 'Export Started!',
+      text: 'Your orders export has been downloaded.',
+      confirmButtonColor: '#0d6efd',
+      timer: 2000
+    });
+  }, 500);
 }

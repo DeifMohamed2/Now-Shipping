@@ -371,7 +371,18 @@
     const pickupsByZone = {};
 
     pickups.forEach(pickup => {
-      const zone = pickup.business?.pickUpAdress?.city || 'Unknown Zone';
+      // Get pickup address - use selected address if available, otherwise fallback to default or old structure
+      let pickupAddress = null;
+      if (pickup.pickupAddressId && pickup.business?.pickUpAddresses) {
+        pickupAddress = pickup.business.pickUpAddresses.find(addr => addr.addressId === pickup.pickupAddressId);
+      }
+      if (!pickupAddress && pickup.business?.pickUpAddresses?.length > 0) {
+        pickupAddress = pickup.business.pickUpAddresses.find(addr => addr.isDefault) || pickup.business.pickUpAddresses[0];
+      }
+      if (!pickupAddress && pickup.business?.pickUpAdress) {
+        pickupAddress = pickup.business.pickUpAdress;
+      }
+      const zone = pickupAddress?.city || pickup.business?.pickUpAdress?.city || 'Unknown Zone';
       const businessName = pickup.business?.brandInfo?.brandName || 'Unknown Business';
 
       if (!pickupsByZone[zone]) {
@@ -460,7 +471,22 @@
           </div>
           <div class="col-md-3 col-xs-6">
             <div>
-            <div class="fw-medium">${pickup.business?.pickUpAdress?.adressDetails || 'No address'}</div>
+            ${(() => {
+              let addr = null;
+              if (pickup.pickupAddressId && pickup.business?.pickUpAddresses) {
+                addr = pickup.business.pickUpAddresses.find(a => a.addressId === pickup.pickupAddressId);
+              }
+              if (!addr && pickup.business?.pickUpAddresses?.length > 0) {
+                addr = pickup.business.pickUpAddresses.find(a => a.isDefault) || pickup.business.pickUpAddresses[0];
+              }
+              if (!addr && pickup.business?.pickUpAdress) {
+                addr = pickup.business.pickUpAdress;
+              }
+              const zone = addr?.zone || '';
+              const city = addr?.city || '';
+              const location = zone ? zone : city;
+              return addr ? `<div class="fw-medium">${addr.adressDetails || 'No address'}</div><div class="text-muted small">${location}</div>` : '<div class="fw-medium">No address</div>';
+            })()}
             <div class="text-muted small">${pickup.phoneNumber || 'No phone'}</div>
             </div>
           </div>
@@ -499,7 +525,19 @@
                 </a>
               </li>
               <li>
-                <a class="dropdown-item" href="https://maps.google.com/?q=${encodeURIComponent(pickup.business?.pickUpAdress?.adressDetails || '')}" target="_blank">
+                <a class="dropdown-item" href="https://maps.google.com/?q=${encodeURIComponent((() => {
+                  let addr = null;
+                  if (pickup.pickupAddressId && pickup.business?.pickUpAddresses) {
+                    addr = pickup.business.pickUpAddresses.find(a => a.addressId === pickup.pickupAddressId);
+                  }
+                  if (!addr && pickup.business?.pickUpAddresses?.length > 0) {
+                    addr = pickup.business.pickUpAddresses.find(a => a.isDefault) || pickup.business.pickUpAddresses[0];
+                  }
+                  if (!addr && pickup.business?.pickUpAdress) {
+                    addr = pickup.business.pickUpAdress;
+                  }
+                  return addr ? (addr.adressDetails || '') : '';
+                })())}" target="_blank">
                 <i class="ri-map-pin-line me-2 text-success"></i> Navigate
                 </a>
               </li>
@@ -626,8 +664,20 @@
       filteredPickups = filteredPickups.filter(pickup =>
         (pickup.pickupNumber && pickup.pickupNumber.toLowerCase().includes(searchTerm)) ||
         (pickup.business?.brandInfo?.brandName && pickup.business.brandInfo.brandName.toLowerCase().includes(searchTerm)) ||
-        (pickup.business?.pickUpAdress?.city && pickup.business.pickUpAdress.city.toLowerCase().includes(searchTerm)) ||
-        (pickup.business?.pickUpAdress?.adressDetails && pickup.business.pickUpAdress.adressDetails.toLowerCase().includes(searchTerm)) ||
+        (() => {
+          let addr = null;
+          if (pickup.pickupAddressId && pickup.business?.pickUpAddresses) {
+            addr = pickup.business.pickUpAddresses.find(a => a.addressId === pickup.pickupAddressId);
+          }
+          if (!addr && pickup.business?.pickUpAddresses?.length > 0) {
+            addr = pickup.business.pickUpAddresses.find(a => a.isDefault) || pickup.business.pickUpAddresses[0];
+          }
+          if (!addr && pickup.business?.pickUpAdress) {
+            addr = pickup.business.pickUpAdress;
+          }
+          return (addr?.city && addr.city.toLowerCase().includes(searchTerm)) ||
+                 (addr?.adressDetails && addr.adressDetails.toLowerCase().includes(searchTerm));
+        })() ||
         (pickup.phoneNumber && pickup.phoneNumber.toLowerCase().includes(searchTerm))
       );
     }

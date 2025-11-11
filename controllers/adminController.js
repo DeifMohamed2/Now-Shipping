@@ -326,11 +326,20 @@ const get_orderDetailsPage = async (req, res) => {
       return res.redirect('/admin/orders');
     }
 
+    // Get selected pickup address if order has selectedPickupAddressId
+    let selectedPickupAddress = null;
+    if (order.selectedPickupAddressId && order.business && order.business.pickUpAddresses) {
+      selectedPickupAddress = order.business.pickUpAddresses.find(
+        addr => addr.addressId === order.selectedPickupAddressId
+      );
+    }
+
     res.render('admin/order-details', {
       title: 'Order Details',
       page_title: 'Order Details',
       folder: 'Orders',
       order: order,
+      selectedPickupAddress: selectedPickupAddress
     });
   } catch (error) {
     console.log(error);
@@ -929,9 +938,80 @@ const get_pickups = async (req, res) => {
     }
 
     pipeline.push({ $sort: { pickupTime: -1, pickupDate: -1, createdAt: -1 } });
+    
+    // Add a field to determine the correct city from the selected pickup address
+    pipeline.push({
+      $addFields: {
+        pickupCity: {
+          $let: {
+            vars: {
+              selectedAddress: {
+                $cond: {
+                  if: { $and: [
+                    { $ne: ['$pickupAddressId', null] },
+                    { $isArray: '$business.pickUpAddresses' }
+                  ]},
+                  then: {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: '$business.pickUpAddresses',
+                          as: 'addr',
+                          cond: { $eq: ['$$addr.addressId', '$pickupAddressId'] }
+                        }
+                      },
+                      0
+                    ]
+                  },
+                  else: null
+                }
+              }
+            },
+            in: {
+              $cond: {
+                if: { $ne: ['$$selectedAddress', null] },
+                then: '$$selectedAddress.city',
+                else: {
+                  $cond: {
+                    if: { $gt: [{ $size: { $ifNull: ['$business.pickUpAddresses', []] } }, 0] },
+                    then: {
+                      $let: {
+                        vars: {
+                          defaultAddr: {
+                            $arrayElemAt: [
+                              {
+                                $filter: {
+                                  input: '$business.pickUpAddresses',
+                                  as: 'addr',
+                                  cond: { $eq: ['$$addr.isDefault', true] }
+                                }
+                              },
+                              0
+                            ]
+                          }
+                        },
+                        in: {
+                          $cond: {
+                            if: { $ne: ['$$defaultAddr', null] },
+                            then: '$$defaultAddr.city',
+                            else: { $arrayElemAt: ['$business.pickUpAddresses.city', 0] }
+                          }
+                        }
+                      }
+                    },
+                    else: '$business.pickUpAdress.city'
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    
     pipeline.push({
       $group: {
-        _id: '$business.pickUpAdress.city',
+        _id: '$pickupCity',
         pickups: { $push: '$$ROOT' },
       },
     });
@@ -963,15 +1043,23 @@ const get_pickups = async (req, res) => {
 };
 
 const get_pickupMenByZone = async (req, res) => {
-  const { city } = req.query;
+  const { city, zone } = req.query;
   try {
+    // Prefer zone over city for more accurate courier matching
+    const searchZone = zone || city;
+    
+    console.log('Looking for couriers in zone/city:', searchZone);
+    
     const deliveryMen = await Courier.find({
-      assignedZones: city,
+      assignedZones: searchZone,
       isAvailable: true,
     });
+    
+    console.log(`Found ${deliveryMen.length} couriers for zone: ${searchZone}`);
+    
     res.status(200).json(deliveryMen);
   } catch (error) {
-    console.error('Error fetching delivery ', error);
+    console.error('Error fetching delivery men:', error);
 
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
@@ -1123,11 +1211,20 @@ const get_pickupDetailsPage = async (req, res) => {
     return;
   }
 
+  // Get selected pickup address if pickup has pickupAddressId
+  let selectedPickupAddress = null;
+  if (pickup.pickupAddressId && pickup.business && pickup.business.pickUpAddresses) {
+    selectedPickupAddress = pickup.business.pickUpAddresses.find(
+      addr => addr.addressId === pickup.pickupAddressId
+    );
+  }
+
   res.render('admin/pickup-details', {
     title: 'Pickup Details',
     page_title: 'Pickup Details',
     folder: 'Pages',
     pickup,
+    selectedPickupAddress: selectedPickupAddress
   });
 };
 
@@ -1798,7 +1895,11 @@ const add_return_to_stock = async (req, res) => {
     }
     // Case 4: Order is already at warehouse but needs to be processed as return
     else if (order.orderStatus === 'returnAtWarehouse') {
-      // Order is already at warehouse, just update the return details
+      // Change status to inReturnStock since order is at warehouse
+      order.orderStatus = 'inReturnStock';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
+
+      // Update return details
       if (returnReason) {
         order.orderShipping.returnReason = returnReason;
       }
@@ -1807,14 +1908,45 @@ const add_return_to_stock = async (req, res) => {
         order.orderShipping.returnNotes = returnNotes;
       }
 
-      // Update returnAtWarehouse stage
-      order.orderStages.returnAtWarehouse.isCompleted = true;
-      order.orderStages.returnAtWarehouse.completedAt = new Date();
+      // Update returnAtWarehouse stage - mark as completed if not already
+      if (!order.orderStages.returnAtWarehouse.isCompleted) {
+        order.orderStages.returnAtWarehouse.isCompleted = true;
+        order.orderStages.returnAtWarehouse.completedAt = new Date();
+      }
       order.orderStages.returnAtWarehouse.notes =
-        'Return order details updated by admin';
+        'Return order received at warehouse and added to return stock by admin';
+    }
+    // Case 5: Handle returnPickedUp status (courier picked up but hasn't delivered to warehouse yet)
+    // This shouldn't normally happen, but we can handle it by transitioning through returnAtWarehouse
+    else if (order.orderStatus === 'returnPickedUp') {
+      // First transition to returnAtWarehouse, then to inReturnStock
+      order.orderStatus = 'inReturnStock';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
+
+      // Update return details
+      if (returnReason) {
+        order.orderShipping.returnReason = returnReason;
+      }
+
+      if (returnNotes) {
+        order.orderShipping.returnNotes = returnNotes;
+      }
+
+      // Mark returnAtWarehouse as completed (assuming it arrived at warehouse)
+      // Get admin ID from either req.adminData or req.userData (for API compatibility)
+      const adminId = (req.adminData && req.adminData._id) || (req.userData && req.userData._id) || null;
+      
+      order.orderStages.returnAtWarehouse = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: 'Return received at warehouse and added to return stock by admin (transitioned from returnPickedUp)',
+        receivedBy: adminId,
+        warehouseLocation: 'Main Warehouse',
+        conditionNotes: returnNotes || ''
+      };
     } else {
       return res.status(400).json({
-        error: `Order status '${order.orderStatus}' cannot be changed to return stock. Allowed statuses: completed, returnInitiated, waitingAction, returnToWarehouse, rejected`,
+        error: `Order status '${order.orderStatus}' cannot be changed to return stock. Allowed statuses: completed, returnInitiated, waitingAction, returnToWarehouse, rejected, returnAtWarehouse, returnPickedUp`,
       });
     }
 

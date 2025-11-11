@@ -143,6 +143,9 @@
   function renderTickets(ticketsToRender) {
     const ticketList = document.getElementById('ticketList');
 
+    // Update ticket count
+    updateTicketCount(ticketsToRender.length);
+
     if (ticketsToRender.length === 0) {
       ticketList.innerHTML =
         '<div class="text-center p-4"><i class="ri-inbox-line display-4 text-muted"></i><p class="text-muted mt-2">No tickets found</p></div>';
@@ -273,8 +276,9 @@
           }
         `;
 
-        // Set status select
+        // Set status and priority selects
         document.getElementById('statusSelect').value = ticket.status;
+        document.getElementById('prioritySelect').value = ticket.priority || 'medium';
       }
     } catch (error) {
       console.error('Error loading ticket details:', error);
@@ -713,11 +717,309 @@
     });
   }
 
+  // Update priority
+  async function updatePriority(newPriority) {
+    if (!currentTicketId) return;
+
+    try {
+      const response = await fetch(`/api/v1/tickets/${currentTicketId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ priority: newPriority }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast('Priority updated successfully', 'success');
+        loadTickets();
+        loadTicketDetails(currentTicketId);
+      } else {
+        showToast(data.message || 'Failed to update priority', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating priority:', error);
+      showToast('Failed to update priority', 'error');
+    }
+  }
+
+  // Load admins for assignment
+  async function loadAdmins() {
+    try {
+      // Try to fetch admins from API, fallback to empty array if endpoint doesn't exist
+      const response = await fetch('/api/v1/admin/list', {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.admins || [];
+      }
+      // If endpoint doesn't exist, return empty array (assignment will still work via API)
+      return [];
+    } catch (error) {
+      console.error('Error loading admins:', error);
+      // Return empty array - assignment can still work without the list
+      return [];
+    }
+  }
+
+  // Assign ticket
+  async function assignTicket(adminId) {
+    if (!currentTicketId) return;
+
+    try {
+      const response = await fetch(`/api/v1/tickets/${currentTicketId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ assignedTo: adminId || null }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast(adminId ? 'Ticket assigned successfully' : 'Ticket unassigned', 'success');
+        loadTickets();
+        loadTicketDetails(currentTicketId);
+      } else {
+        showToast(data.message || 'Failed to assign ticket', 'error');
+      }
+    } catch (error) {
+      console.error('Error assigning ticket:', error);
+      showToast('Failed to assign ticket', 'error');
+    }
+  }
+
+  // Load ticket timeline
+  async function loadTimeline(ticketId) {
+    try {
+      const response = await fetch(`/api/v1/tickets/${ticketId}`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        const ticket = data.ticket;
+        const timelineContent = document.getElementById('timelineContent');
+        
+        let timelineHTML = '<div class="timeline">';
+        
+        // Add creation
+        timelineHTML += `
+          <div class="timeline-item">
+            <div class="timeline-item-header">
+              <div class="timeline-item-title">Ticket Created</div>
+              <div class="timeline-item-time">${formatDate(ticket.createdAt)}</div>
+            </div>
+            <div class="timeline-item-content">Ticket ${ticket.ticketNumber} was created</div>
+          </div>
+        `;
+
+        // Add status history
+        if (ticket.statusHistory && ticket.statusHistory.length > 0) {
+          ticket.statusHistory.forEach(history => {
+            timelineHTML += `
+              <div class="timeline-item">
+                <div class="timeline-item-header">
+                  <div class="timeline-item-title">Status Changed to ${history.status}</div>
+                  <div class="timeline-item-time">${formatDate(history.changedAt)}</div>
+                </div>
+                <div class="timeline-item-content">Changed by ${history.changedBy.userType}</div>
+              </div>
+            `;
+          });
+        }
+
+        // Add assignment
+        if (ticket.assignedAt) {
+          timelineHTML += `
+            <div class="timeline-item">
+              <div class="timeline-item-header">
+                <div class="timeline-item-title">Ticket Assigned</div>
+                <div class="timeline-item-time">${formatDate(ticket.assignedAt)}</div>
+              </div>
+              <div class="timeline-item-content">Assigned to ${ticket.assignedTo?.name || 'Admin'}</div>
+            </div>
+          `;
+        }
+
+        // Add resolution
+        if (ticket.resolvedAt) {
+          timelineHTML += `
+            <div class="timeline-item">
+              <div class="timeline-item-header">
+                <div class="timeline-item-title">Ticket Resolved</div>
+                <div class="timeline-item-time">${formatDate(ticket.resolvedAt)}</div>
+              </div>
+              <div class="timeline-item-content">Resolved by ${ticket.resolvedBy || 'Admin'}</div>
+            </div>
+          `;
+        }
+
+        timelineHTML += '</div>';
+        timelineContent.innerHTML = timelineHTML;
+      }
+    } catch (error) {
+      console.error('Error loading timeline:', error);
+    }
+  }
+
+  // Delete ticket
+  async function deleteTicket() {
+    if (!currentTicketId) return;
+
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'This action cannot be undone!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it!',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/api/v1/tickets/${currentTicketId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('Ticket deleted successfully', 'success');
+          currentTicketId = null;
+          document.getElementById('emptyState').classList.remove('hidden');
+          document.getElementById('chatContainer').classList.add('hidden');
+          loadTickets();
+          loadStatistics();
+        } else {
+          showToast(data.message || 'Failed to delete ticket', 'error');
+        }
+      } catch (error) {
+        console.error('Error deleting ticket:', error);
+        showToast('Failed to delete ticket', 'error');
+      }
+    }
+  }
+
+  // Refresh tickets
+  function refreshTickets() {
+    const refreshBtn = document.getElementById('refreshBtn');
+    refreshBtn.classList.add('rotating');
+    loadTickets();
+    loadStatistics();
+    setTimeout(() => {
+      refreshBtn.classList.remove('rotating');
+    }, 1000);
+  }
+
+  // Export tickets
+  async function exportTickets() {
+    try {
+      const params = new URLSearchParams();
+      if (currentFilter !== 'all') params.append('status', currentFilter);
+      if (currentPriorityFilter !== 'all') params.append('priority', currentPriorityFilter);
+      if (currentTypeFilter !== 'all') params.append('ticketType', currentTypeFilter);
+
+      const response = await fetch(`/api/v1/tickets?${params}&limit=1000`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // Convert to CSV
+        const tickets = data.tickets;
+        let csv = 'Ticket Number,Subject,Type,Priority,Status,Business,Created At,Last Message\n';
+        
+        tickets.forEach(ticket => {
+          const businessName = ticket.business?.businessInfo?.brandName || ticket.business?.name || 'Unknown';
+          csv += `"${ticket.ticketNumber}","${ticket.subject}","${ticket.ticketType}","${ticket.priority}","${ticket.status}","${businessName}","${new Date(ticket.createdAt).toLocaleString()}","${new Date(ticket.lastMessageAt || ticket.createdAt).toLocaleString()}"\n`;
+        });
+
+        // Download
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tickets_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        showToast('Tickets exported successfully', 'success');
+      }
+    } catch (error) {
+      console.error('Error exporting tickets:', error);
+      showToast('Failed to export tickets', 'error');
+    }
+  }
+
+  // Update ticket count
+  function updateTicketCount(count) {
+    const countEl = document.getElementById('ticketCount');
+    if (countEl) {
+      countEl.textContent = count;
+    }
+  }
+
   // Initialize
   document.addEventListener('DOMContentLoaded', function () {
     initSocket();
     initEventListeners();
     loadStatistics();
     loadTickets();
+
+    // Priority select handler
+    document.getElementById('prioritySelect')?.addEventListener('change', function() {
+      updatePriority(this.value);
+    });
+
+    // Assign ticket button
+    document.getElementById('assignTicketBtn')?.addEventListener('click', async function(e) {
+      e.preventDefault();
+      const admins = await loadAdmins();
+      const select = document.getElementById('assignToSelect');
+      select.innerHTML = '<option value="">Unassign</option>';
+      admins.forEach(admin => {
+        const option = document.createElement('option');
+        option.value = admin._id;
+        option.textContent = admin.name;
+        select.appendChild(option);
+      });
+      const modal = new bootstrap.Modal(document.getElementById('assignTicketModal'));
+      modal.show();
+    });
+
+    // Confirm assign
+    document.getElementById('confirmAssignBtn')?.addEventListener('click', function() {
+      const adminId = document.getElementById('assignToSelect').value;
+      assignTicket(adminId);
+      const modal = bootstrap.Modal.getInstance(document.getElementById('assignTicketModal'));
+      modal.hide();
+    });
+
+    // View timeline
+    document.getElementById('viewTimelineBtn')?.addEventListener('click', async function(e) {
+      e.preventDefault();
+      if (currentTicketId) {
+        await loadTimeline(currentTicketId);
+        const modal = new bootstrap.Modal(document.getElementById('timelineModal'));
+        modal.show();
+      }
+    });
+
+    // Delete ticket
+    document.getElementById('deleteTicketBtn')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      deleteTicket();
+    });
+
+    // Refresh button
+    document.getElementById('refreshBtn')?.addEventListener('click', refreshTickets);
+
+    // Export button
+    document.getElementById('exportBtn')?.addEventListener('click', exportTickets);
   });
 })();

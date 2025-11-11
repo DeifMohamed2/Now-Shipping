@@ -470,24 +470,33 @@
 
 
 <script>
-  async function assignDeliveryMan(pickupId, city) {
-    console.log(city, pickupId);
+  async function assignDeliveryMan(pickupId, zoneOrCity) {
+    console.log('Fetching couriers for zone/city:', zoneOrCity, 'Pickup ID:', pickupId);
     document.getElementById('pickupId').value = pickupId;
     const deliveryManSelect = document.getElementById('deliveryMan');
     deliveryManSelect.innerHTML = '<option value="">Select a delivery man</option>';
     document.getElementById('loader').style.display = 'block';
 
     try {
-      const response = await fetch(`/admin/get-pickup-men?pickupNumber=${pickupId}&city=${city}`);
+      const response = await fetch(`/admin/get-pickup-men?pickupNumber=${pickupId}&city=${encodeURIComponent(zoneOrCity)}`);
       const deliveryMen = await response.json();
 
       if (response.ok) {
-        deliveryMen.forEach(man => {
-          const option = document.createElement('option');
-          option.value = man._id;
-          option.textContent = man.name;
-          deliveryManSelect.appendChild(option);
-        });
+        if (deliveryMen.length === 0) {
+          deliveryManSelect.innerHTML = '<option value="">No couriers available for this zone</option>';
+          Swal.fire({
+            icon: 'warning',
+            title: 'No Couriers Found',
+            text: `No available couriers found for zone: ${zoneOrCity}. Please assign couriers to this zone first.`,
+          });
+        } else {
+          deliveryMen.forEach(man => {
+            const option = document.createElement('option');
+            option.value = man._id;
+            option.textContent = man.name;
+            deliveryManSelect.appendChild(option);
+          });
+        }
       } else {
         Swal.fire({
           icon: 'error',
@@ -497,6 +506,11 @@
       }
     } catch (error) {
       console.error('Error fetching Pickup men:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to fetch couriers. Please try again.',
+      });
     } finally {
       document.getElementById('loader').style.display = 'none';
     }
@@ -613,8 +627,20 @@
 
             const details = getPickupStatusDetails(pickup.picikupStatus);
             const businessName = pickup.business?.brandInfo?.brandName || pickup.business?.name || '';
-            const businessCity = pickup.business?.pickUpAdress?.city || city || '';
-            const businessAddress = pickup.business?.pickUpAdress?.adressDetails || '';
+            // Get pickup address - use selected address if available, otherwise fallback to default or old structure
+            let pickupAddress = null;
+            if (pickup.pickupAddressId && pickup.business?.pickUpAddresses) {
+              pickupAddress = pickup.business.pickUpAddresses.find(addr => addr.addressId === pickup.pickupAddressId);
+            }
+            if (!pickupAddress && pickup.business?.pickUpAddresses?.length > 0) {
+              pickupAddress = pickup.business.pickUpAddresses.find(addr => addr.isDefault) || pickup.business.pickUpAddresses[0];
+            }
+            if (!pickupAddress && pickup.business?.pickUpAdress) {
+              pickupAddress = pickup.business.pickUpAdress;
+            }
+            const businessCity = pickupAddress?.city || pickup.business?.pickUpAdress?.city || city || '';
+            const businessZone = pickupAddress?.zone || pickup.business?.pickUpAdress?.zone || '';
+            const businessAddress = pickupAddress?.adressDetails || pickup.business?.pickUpAdress?.adressDetails || '';
             const driverName = pickup.assignedDriver?.name ? pickup.assignedDriver.name.split(' ').slice(0,2).join(' ') : 'Not Assigned';
 
             row.innerHTML = `
@@ -627,7 +653,7 @@
               <td class="business">${businessName}</td>
               <td class="pickup_address">
                 ${businessAddress}<br>
-                <span class="text-muted">${businessCity}</span>
+                <span class="text-muted">${businessZone ? businessZone : businessCity}</span>
               </td>
               <td class="contact_info">${pickup.phoneNumber || ''}</td>
               <td class="pickup_date">
@@ -644,7 +670,7 @@
                   </button>
                   <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="/admin/pickup-details/${pickup.pickupNumber}"><i class="ri-eye-fill align-bottom me-2 text-primary"></i> <span class="fs-6">View Details</span></a></li>
-                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="assignDeliveryMan('${pickup._id}', '${businessCity.replace(/'/g, "\\'")}')"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span></a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="assignDeliveryMan('${pickup._id}', '${(businessZone || businessCity).replace(/'/g, "\\'")}')"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span></a></li>
                   </ul>
                 </div>
               </td>

@@ -423,6 +423,11 @@ const orderSchema = new mongoose.Schema(
       ref: 'users',
       required: true,
     },
+    // Selected pickup address for express shipping orders
+    selectedPickupAddressId: {
+      type: String,
+      required: false,
+    },
     isMoneyRecivedFromCourier: { // this is the status of the money that is recived from the courier
       type: Boolean,
       required: true,

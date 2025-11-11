@@ -3117,7 +3117,8 @@ input:hover,select:hover{
   color: var(--vz-vertical-menu-item-active-color);
 }
 .navbar-menu .navbar-nav .nav-link:hover {
-  color: var(--vz-vertical-menu-item-hover-color);
+  color: white ;
+  background-color: var(--vz-primary);
 }
 .navbar-menu .navbar-nav .nav-link i {
   display: inline-block;

@@ -12,7 +12,7 @@
   <div class="dropdown sidebar-user m-2 rounded shadow-sm">
     <button type="button" class="btn w-100 d-flex justify-content-between align-items-center" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       <span class="d-flex align-items-center gap-2">
-        <img class="rounded-circle header-profile-user" src="assets/images/users/avatar-1.jpg" alt="Header Avatar">
+        <img class="rounded-circle header-profile-user" src="/assets/images/users/avatar-1.jpg" alt="Header Avatar">
         <span class="text-start">
           <span class="d-block fw-semibold sidebar-user-name-text" style="color: #212529; font-size: 14px;">Anna Adame</span>
           <span class="d-block fs-12 sidebar-user-name-sub-text" style="color: #6c757d;"><i class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span class="align-middle">Online</span></span>
@@ -20,44 +20,32 @@
       </span>
       <i class="ri-chevron-down-line fs-16" style="color: #6c757d;"></i>
     </button>
-    <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg py-2">
+    <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg py-2 sidebar-dropdown-menu">
       <!-- item-->
-      <div class="dropdown-header px-3 py-2">
-        <span style="color: #212529; font-weight: 600;">Welcome Anna!</span>
+      <div class="dropdown-header px-3 py-2 sidebar-dropdown-header">
+        <span style="color: #212529; font-weight: 600;">Welcome!</span>
       </div>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="pages-profile">
-        <i class="mdi mdi-account-circle fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Profile</span>
+      <div class="dropdown-divider my-1"></div>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item" href="/business/settings">
+        <i class="ri-user-line fs-16 align-middle me-2" style="color: #F39720;"></i>
+        <span class="align-middle" style="color: #212529;">Profile Settings</span>
       </a>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="apps-chat">
-        <i class="mdi mdi-message-text-outline fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Messages</span>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item" href="/business/dashboard">
+        <i class="ri-dashboard-line fs-16 align-middle me-2" style="color: #F39720;"></i>
+        <span class="align-middle" style="color: #212529;">Dashboard</span>
       </a>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="apps-tasks-kanban">
-        <i class="mdi mdi-calendar-check-outline fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Taskboard</span>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item" href="/business/orders">
+        <i class="ri-shopping-cart-line fs-16 align-middle me-2" style="color: #F39720;"></i>
+        <span class="align-middle" style="color: #212529;">My Orders</span>
       </a>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="pages-faqs">
-        <i class="mdi mdi-lifebuoy fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Help</span>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item" href="/business/wallet/total-balance">
+        <i class="ri-wallet-line fs-16 align-middle me-2" style="color: #F39720;"></i>
+        <span class="align-middle" style="color: #212529;">My Wallet</span>
       </a>
       <div class="dropdown-divider my-2"></div>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="pages-profile">
-        <i class="mdi mdi-wallet fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Balance : <b>$5971.67</b></span>
-      </a>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="pages-profile-settings">
-        <i class="mdi mdi-cog-outline fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Settings</span>
-        <span class="badge bg-success-subtle text-success mt-1 float-end">New</span>
-      </a>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="auth-lockscreen-basic">
-        <i class="mdi mdi-lock fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Lock screen</span>
-      </a>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2" href="auth-logout-basic">
-        <i class="mdi mdi-logout fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Logout</span>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item text-danger" href="/business/logout">
+        <i class="ri-logout-box-r-line fs-16 align-middle me-2"></i>
+        <span class="align-middle fw-semibold" style="color: #dc3545;">Logout</span>
       </a>
     </div>
   </div>
@@ -86,11 +74,11 @@
           </a>
         </li>
 
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link menu-link" href="/business/assistant">
             <i class="ri-robot-line"></i> <span data-key="t-assistant">AI Assistant</span>
           </a>
-        </li>
+        </li> -->
 
         <li class="nav-item">
           <a class="nav-link menu-link" href="#sidebarWallet" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarWallet">
@@ -147,6 +135,14 @@
           </a>
         </li>
 
+        <li class="menu-title"><span style="color: #212529; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">Account</span></li>
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="/business/settings" role="button">
+            <i class="ri-settings-3-line" style="color: #F39720;"></i>
+            <span data-key="t-settings" style="color: #212529; font-size: 15px;">Settings</span>
+          </a>
+        </li>
+
         <li class="nav-item">
           <a class="nav-link menu-link" href="/business/logout" role="button">
             <i class="ri-logout-box-line" style="color: #F39720;"></i>
@@ -165,18 +161,74 @@
 <style>
   /* Main sidebar styling */
   .app-menu {
-    background-color: #ffffff;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
-    border-right: 1px solid #f0f0f0;
-    border: 1px solid #f0f0f0;
+    background-color: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    border-right: 1px solid #e9ecef;
+  }
+
+  /* Override CSS variable backgrounds - remove var(--vz-vertical-menu-bg) */
+  .app-menu {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+  }
+
+  /* Override for collapsed sidebar state */
+  [data-sidebar-size="sm"] .app-menu {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+  }
+
+  /* Specific override for the CSS rule mentioned by user */
+  :is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .navbar-brand-box {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+
+  /* Override hover states - remove var(--vz-vertical-menu-bg) */
+  .nav-link:hover,
+  .nav-link.active,
+  [data-sidebar-size="sm"] .nav-link:hover,
+  [aria-expanded="true"].menu-link,
+  .collapse.show .nav-link:hover {
+    background-color: #f8f9fa !important;
+    background: #f8f9fa !important;
+    color: #212529 !important;
+  }
+
+  /* Ensure icons are visible on hover */
+  .nav-link:hover i,
+  .nav-link.active i,
+  [data-sidebar-size="sm"] .nav-link:hover i,
+  [data-sidebar-size="sm"] .nav-link.active i,
+  [aria-expanded="true"].menu-link i,
+  .collapse.show .nav-link:hover i {
+    color: #F39720 !important;
+  }
+
+  /* Ensure text is visible in collapsed state - override white colors */
+  [data-sidebar-size="sm"] .nav-link {
+    color: #212529 !important;
+  }
+
+  [data-sidebar-size="sm"] .nav-link:hover {
+    color: #212529 !important;
+  }
+
+  [data-sidebar-size="sm"] .nav-link:hover span {
+    color: #212529 !important;
+  }
+
+  /* Icons should be orange on hover in collapsed state */
+  [data-sidebar-size="sm"] .nav-link:hover i {
+    color: #F39720 !important;
   }
 
 
 
   /* Brand box styling */
   .navbar-brand-box {
-    background-color: #ffffff;
-    border-bottom: 1px solid #f0f0f0;
+    background-color: transparent !important;
+    border-bottom: 1px solid #e9ecef;
     padding: 20px 0;
     display: flex;
     align-items: center;
@@ -243,22 +295,22 @@
   }
 
   .nav-link:hover {
-    background-color: rgba(243, 151, 32, 0.08);
-    color: #212529;
+    background-color: #f8f9fa;
+    color: #212529 !important;
   }
 
   .nav-link:hover i {
-    color: #F39720;
+    color: #F39720 !important;
   }
 
   .nav-link.active {
-    background-color: rgba(243, 151, 32, 0.1);
-    color: #212529;
+    background-color: #f8f9fa;
+    color: #212529 !important;
     font-weight: 600;
   }
 
   .nav-link.active i {
-    color: #F39720;
+    color: #F39720 !important;
   }
 
   /* Menu arrow */
@@ -323,6 +375,43 @@
 
   .dropdown-item:hover i {
     color: #F39720;
+  }
+
+  /* Enhanced sidebar dropdown */
+  .sidebar-dropdown-menu {
+    border-radius: 10px;
+    min-width: 220px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(243, 151, 32, 0.1);
+  }
+
+  .sidebar-dropdown-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 0;
+  }
+
+  .sidebar-dropdown-item {
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .sidebar-dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+  }
+
+  .sidebar-dropdown-item:hover i {
+    color: #F39720;
+  }
+
+  .sidebar-dropdown-item.text-danger:hover {
+    background-color: #f8f9fa;
+    color: #dc3545;
+  }
+
+  .sidebar-dropdown-item i {
+    transition: color 0.2s ease;
   }
 
   .dropdown-divider {
@@ -422,5 +511,162 @@
 
   .app-menu.sidebar-collapsed .logo-img {
     height: 40px;
+  }
+
+  /* Enhanced collapsed/toggled sidebar states */
+  [data-sidebar-size="sm"] .app-menu,
+  body:not(.vertical-sidebar-enable) [data-sidebar-size="sm"] .app-menu {
+    background-color: #ffffff;
+    border-right: 1px solid #e9ecef;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  }
+
+  [data-sidebar-size="sm"] .nav-link span:not(.menu-arrow),
+  [data-sidebar-size="sm"] .menu-title,
+  [data-sidebar-size="sm"] .sidebar-user-name-text,
+  [data-sidebar-size="sm"] .sidebar-user-name-sub-text {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  [data-sidebar-size="sm"] .nav-link {
+    justify-content: center;
+    padding: 12px 8px;
+    color: #212529 !important;
+  }
+
+  [data-sidebar-size="sm"] .nav-link i {
+    margin-right: 0;
+    font-size: 20px;
+    color: #6c757d !important;
+  }
+
+  [data-sidebar-size="sm"] .nav-link:hover {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+  }
+
+  [data-sidebar-size="sm"] .nav-link:hover i {
+    color: #F39720 !important;
+  }
+
+  [data-sidebar-size="sm"] .nav-link:hover span {
+    color: #212529 !important;
+  }
+
+  [data-sidebar-size="sm"] .nav-link.active {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+  }
+
+  [data-sidebar-size="sm"] .nav-link.active i {
+    color: #F39720 !important;
+  }
+
+  [data-sidebar-size="sm"] .sidebar-user {
+    padding: 10px 5px;
+    justify-content: center;
+  }
+
+  [data-sidebar-size="sm"] .header-profile-user {
+    margin: 0 auto;
+    border: 2px solid #e9ecef;
+  }
+
+  /* Hamburger icon animation */
+  .hamburger-icon.open span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+    background-color: #F39720;
+  }
+
+  .hamburger-icon.open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-icon.open span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+    background-color: #F39720;
+  }
+
+  /* Enhanced transitions */
+  .app-menu {
+    transition: all 0.2s ease;
+  }
+
+  .nav-link,
+  .nav-link i {
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-user {
+    transition: all 0.2s ease;
+  }
+
+  /* Collapse menu enhanced styling */
+  [aria-expanded="true"].menu-link {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    font-weight: 600;
+  }
+
+  [aria-expanded="true"].menu-link i {
+    color: #F39720 !important;
+  }
+
+  [aria-expanded="true"].menu-link span {
+    color: #212529 !important;
+  }
+
+  .collapse.show .nav-link {
+    border-left: 1px solid #e9ecef;
+    padding-left: 20px;
+    color: #212529 !important;
+  }
+
+  .collapse.show .nav-link:hover {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+  }
+
+  .collapse.show .nav-link:hover i,
+  .collapse.show .nav-link:hover span {
+    color: #212529 !important;
+  }
+
+  .collapse.show .nav-link i {
+    color: #6c757d;
+  }
+
+  .collapse.show .nav-link:hover i {
+    color: #F39720 !important;
+  }
+
+  /* Force override ALL CSS variable-based colors - Maximum specificity */
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .nav-link,
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .menu-link,
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .nav-link span,
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .menu-link span {
+    color: #212529 !important;
+  }
+
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .nav-link:hover,
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .menu-link:hover,
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .nav-link:hover span,
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .menu-link:hover span {
+    background-color: #f8f9fa !important;
+    background: #f8f9fa !important;
+    color: #212529 !important;
+  }
+
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .nav-link:hover i,
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .menu-link:hover i {
+    color: #F39720 !important;
+  }
+
+  /* Override CSS variables at root level for collapsed sidebar */
+  html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] {
+    --vz-vertical-menu-item-hover-color: #212529 !important;
+    --vz-vertical-menu-item-active-color: #212529 !important;
+    --vz-vertical-menu-item-color: #212529 !important;
   }
 </style>

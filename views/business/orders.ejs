@@ -10,6 +10,7 @@
   .orders-table-dropdown {
     position: relative;
     display: inline-block;
+    z-index: 10000;
   }
 
   .orders-table-dropdown .dropdown-menu {
@@ -17,7 +18,7 @@
     top: 100%;
     right: 0;
     left: auto;
-    z-index: 9999;
+    z-index: 10050 !important;
     min-width: 200px;
     padding: 0.5rem 0;
     margin: 0;
@@ -36,7 +37,7 @@
   }
 
   .orders-table-dropdown.show .dropdown-menu {
-    display: block;
+    display: block !important;
   }
 
   .orders-table-dropdown .dropdown-item {
@@ -108,8 +109,28 @@
   /* Ensure dropdown appears above table and other elements */
   .orders-table-dropdown.show .dropdown-menu {
     display: block !important;
-    z-index: 9999 !important;
+    z-index: 10050 !important;
     position: absolute !important;
+  }
+  
+  /* Ensure nav-tabs don't create stacking context issues */
+  .nav-tabs {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .nav-tabs-custom {
+    z-index: 1;
+  }
+  
+  /* Ensure table rows with dropdowns are in proper stacking context */
+  #orderTable tbody tr {
+    position: relative;
+  }
+  
+  /* Make sure the table container itself doesn't create issues */
+  .table-responsive.table-card {
+    position: relative;
   }
 
   /* Special positioning for last row dropdowns */
@@ -117,6 +138,7 @@
     top: auto !important;
     bottom: 100% !important;
     margin-bottom: 5px;
+    z-index: 10050 !important;
   }
 
   /* Mobile responsive adjustments */
@@ -607,7 +629,7 @@
           <div class="col-sm-auto">
             <div class="d-flex gap-1 flex-wrap">
               <button type="button" class="btn btn-success add-btn" onClick='window.location.href="/business/create-order"'><i class="ri-add-line align-bottom me-1"></i> Create Order</button>
-              <button type="button" class="btn btn-info"><i class="ri-file-download-line align-bottom me-1"></i> Import</button>
+              <button type="button" class="btn btn-info" onclick="exportOrdersToExcel()"><i class="ri-file-download-line align-bottom me-1"></i> Export</button>
               <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>
             </div>
           </div>

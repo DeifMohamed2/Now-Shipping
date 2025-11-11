@@ -100,6 +100,8 @@
     "particles.js": "^2.0.0",
     "pdfkit": "^0.16.0",
     "prismjs": "^1.29.0",
+    "puppeteer": "^24.28.0",
+    "qrcode": "^1.5.4",
     "quill": "^2.0.3",
     "rater-js": "^1.0.1",
     "shepherd.js": "^14.5.0",

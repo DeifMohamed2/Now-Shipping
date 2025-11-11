@@ -427,6 +427,27 @@
                     <p class="mb-0"><%= pickup.pickupNotes %></p>
                   </td>
                 </tr>
+                <% if (selectedPickupAddress) { %>
+                <tr>
+                  <td colspan="2">
+                    <h6 class="fs-14 mb-1 text-muted">Pickup Address</h6>
+                    <div class="p-2 bg-light rounded">
+                      <h6 class="mb-1 fw-semibold"><%= selectedPickupAddress.addressName || 'Pickup Address' %></h6>
+                      <p class="mb-1 text-muted small"><%= selectedPickupAddress.adressDetails || '' %></p>
+                      <p class="mb-0 text-muted small"><%= selectedPickupAddress.zone || '' %>, <%= selectedPickupAddress.city || '' %>, <%= selectedPickupAddress.country || '' %></p>
+                      <% if (selectedPickupAddress.nearbyLandmark) { %>
+                      <p class="mb-0 text-muted small mt-1"><i class="ri-map-pin-line me-1"></i>Nearby: <%= selectedPickupAddress.nearbyLandmark %></p>
+                      <% } %>
+                      <% if (selectedPickupAddress.pickupPhone) { %>
+                      <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line me-1"></i>Contact: <%= selectedPickupAddress.pickupPhone %></p>
+                      <% } %>
+                      <% if (selectedPickupAddress.otherPickupPhone) { %>
+                      <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line me-1"></i>Alternative: <%= selectedPickupAddress.otherPickupPhone %></p>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+                <% } %>
               </tbody>
             </table>
           </div>

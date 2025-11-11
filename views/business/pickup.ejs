@@ -149,6 +149,7 @@
           <div class="col-sm-auto">
             <div class="d-flex gap-1 flex-wrap">
               <button type="button" class="btn btn-success add-btn" data-bs-toggle="modal" id="create-btn" data-bs-target="#showModal"><i class="ri-add-line align-bottom me-1"></i> Create PickUp</button>
+              <button type="button" class="btn btn-info" onclick="exportPickupsToExcel()"><i class="ri-file-download-line align-bottom me-1"></i> Export</button>
             </div>
           </div>
         </div>
@@ -294,11 +295,30 @@
                 </div>
 
                 <div class="mb-4">
-                  <label for="pickup-location" class="form-label">Place of Pickup <span class="required-asterisk">*</span></label>
-                  <input type="text" id="pickup-location" name="pickupLocation" value="<%= userData.pickUpAdress.adressDetails %>, <%= userData.pickUpAdress.city %>, <%= userData.pickUpAdress.country %>" class="form-control readonly-field" placeholder="Enter place of pickup" readonly required />
-                  <div class="contact-info-note">
-                    <i class="ri-map-pin-line me-1"></i> Your saved pickup address will be used for this order.
+                  <label for="pickup-address-select" class="form-label">Select Pickup Address <span class="required-asterisk">*</span></label>
+                  <select class="form-control" id="pickup-address-select" name="pickupAddressId" required>
+                    <option value="">Select pickup address...</option>
+                    <% if (userData && userData.pickUpAddresses && userData.pickUpAddresses.length > 0) { %>
+                      <% userData.pickUpAddresses.forEach(address => { %>
+                        <option value="<%= address.addressId %>" <%= address.isDefault ? 'selected' : '' %>>
+                          <%= address.addressName || 'Address' %> 
+                          <% if (address.isDefault) { %> (Default) <% } %>
+                          - <%= address.adressDetails %>, <%= address.zone %>, <%= address.city %>
+                        </option>
+                      <% }); %>
+                    <% } else if (userData && userData.pickUpAdress) { %>
+                      <option value="default" selected>
+                        Main Address - <%= userData.pickUpAdress.adressDetails || '' %>, <%= userData.pickUpAdress.zone || '' %>, <%= userData.pickUpAdress.city || '' %>
+                      </option>
+                    <% } %>
+                  </select>
+                  <div class="contact-info-note mt-2">
+                    <i class="ri-map-pin-line me-1"></i> 
+                    <a href="/business/settings#address" class="text-primary" target="_blank">
+                      <i class="ri-add-line me-1"></i> Add New Address
+                    </a>
                   </div>
+                  <input type="hidden" id="pickup-location" name="pickupLocation">
                 </div>
 
                 <div class="mb-4">
@@ -416,7 +436,7 @@
   const estimatedPickupFeeEl = document.getElementById('estimatedPickupFee');
 
   // Replace client-side listing with server-side pagination version
-  const PICKUPS_PER_PAGE = 30;
+  const PICKUPS_PER_PAGE = 20;
   let currentPage = 1;
   let lastPaginationData = { currentPage: 1, totalPages: 1, totalCount: 0 };
 
@@ -445,6 +465,7 @@
 
   async function fetchPickups(tabType = 'Upcoming', page = 1) {
     try {
+      currentPage = page; // Update global currentPage
       tableBody.innerHTML = `
         <tr>
           <td colspan="10" class="text-center">
@@ -469,6 +490,7 @@
       const data = await response.json();
       if (response.ok && data.pickups) {
         lastPaginationData = data.pagination;
+        currentPage = data.pagination.currentPage || page; // Sync with server response
         populatePickupsTable(data.pickups);
         updatePaginationBar();
       } else {
@@ -479,15 +501,19 @@
     }
   }
 
+  // Store current tab type globally
+  let currentTabType = 'Upcoming';
+
   function filterPickups(tabType) {
+    currentTabType = tabType;
     currentPage = 1;
-    fetchPickups(tabType, currentPage);
+    fetchPickups(tabType, 1);
   }
 
   function gotoPage(page) {
     if (page < 1 || page > lastPaginationData.totalPages) return;
     currentPage = page;
-    fetchPickups('Upcoming', currentPage);
+    fetchPickups(currentTabType, currentPage);
   }
 
   function updatePaginationBar() {
@@ -496,15 +522,38 @@
     const ul = document.querySelector('.listjs-pagination');
     if (!ul) return;
     ul.innerHTML = '';
-    const { currentPage, totalPages } = lastPaginationData;
-    if (totalPages > 1 || totalPages === 0) {
-      let startPage = Math.max(1, currentPage - 2);
-      let endPage = Math.min(totalPages, currentPage + 2);
-      if (currentPage <= 3) endPage = Math.min(totalPages, 5);
-      if (currentPage + 2 > totalPages) startPage = Math.max(1, totalPages - 4);
+    const { currentPage: serverPage, totalPages } = lastPaginationData;
+    const activePage = currentPage || serverPage;
+    
+    if (totalPages > 1) {
+      let startPage = Math.max(1, activePage - 2);
+      let endPage = Math.min(totalPages, activePage + 2);
+      if (activePage <= 3) endPage = Math.min(totalPages, 5);
+      if (activePage + 2 > totalPages) startPage = Math.max(1, totalPages - 4);
+      
+      // Add first page if not in range
+      if (startPage > 1) {
+        const li = document.createElement('li');
+        li.className = 'page-item';
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.textContent = '1';
+        a.href = 'javascript:void(0);';
+        a.onclick = () => gotoPage(1);
+        li.appendChild(a);
+        ul.appendChild(li);
+        
+        if (startPage > 2) {
+          const ellipsis = document.createElement('li');
+          ellipsis.className = 'page-item disabled';
+          ellipsis.innerHTML = '<span class="page-link">...</span>';
+          ul.appendChild(ellipsis);
+        }
+      }
+      
       for (let p = startPage; p <= endPage; p++) {
         const li = document.createElement('li');
-        li.className = `page-item${p === currentPage ? ' active' : ''}`;
+        li.className = `page-item${p === activePage ? ' active' : ''}`;
         const a = document.createElement('a');
         a.className = 'page-link';
         a.textContent = p;
@@ -513,21 +562,90 @@
         li.appendChild(a);
         ul.appendChild(li);
       }
+      
+      // Add last page if not in range
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const ellipsis = document.createElement('li');
+          ellipsis.className = 'page-item disabled';
+          ellipsis.innerHTML = '<span class="page-link">...</span>';
+          ul.appendChild(ellipsis);
+        }
+        
+        const li = document.createElement('li');
+        li.className = `page-item${totalPages === activePage ? ' active' : ''}`;
+        const a = document.createElement('a');
+        a.className = 'page-link';
+        a.textContent = totalPages;
+        a.href = 'javascript:void(0);';
+        a.onclick = () => gotoPage(totalPages);
+        li.appendChild(a);
+        ul.appendChild(li);
+      }
     }
-    if (prev) { prev.classList.toggle('disabled', currentPage === 1); prev.onclick = () => gotoPage(currentPage - 1); }
-    if (next) { next.classList.toggle('disabled', currentPage === totalPages); next.onclick = () => gotoPage(currentPage + 1); }
+    
+    if (prev) {
+      prev.classList.toggle('disabled', activePage === 1);
+      prev.onclick = () => {
+        if (activePage > 1) gotoPage(activePage - 1);
+      };
+    }
+    if (next) {
+      next.classList.toggle('disabled', activePage === totalPages || totalPages === 0);
+      next.onclick = () => {
+        if (activePage < totalPages) gotoPage(activePage + 1);
+      };
+    }
   }
 
   function SearchData() {
     currentPage = 1;
-    fetchPickups('Upcoming', currentPage);
+    fetchPickups(currentTabType, 1);
   }
 
   // On load
-  document.addEventListener('DOMContentLoaded', () => fetchPickups('Upcoming', 1));
-
-
   document.addEventListener('DOMContentLoaded', function() {
+    fetchPickups('Upcoming', 1);
+    
+    // Add search input event listener for real-time search with debounce
+    const searchInput = document.querySelector('.search-box .search');
+    if (searchInput) {
+      let searchTimeout;
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          currentPage = 1; // Reset to first page on search
+          SearchData();
+        }, 500); // 500ms debounce
+      });
+      
+      // Allow Enter key to trigger immediate search
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          clearTimeout(searchTimeout);
+          currentPage = 1;
+          SearchData();
+        }
+      });
+    }
+    
+    // Add filter change listeners to reset pagination
+    const statusSelect = document.getElementById('idStatus');
+    const dateInput = document.getElementById('demo-datepicker');
+    
+    if (statusSelect) {
+      statusSelect.addEventListener('change', function() {
+        currentPage = 1;
+        SearchData();
+      });
+    }
+    
+    if (dateInput) {
+      dateInput.addEventListener('change', function() {
+        currentPage = 1;
+        SearchData();
+      });
+    }
 
 
     // Initialize flatpickr with custom formatting
@@ -567,6 +685,43 @@
 
     // Initialize estimated fee on open
     updateEstimatedPickupFee(parseInt(numberOfOrdersInput.value || '0'));
+
+    // Update pickup location and phone based on selected address
+    const pickupAddressSelect = document.getElementById('pickup-address-select');
+    const pickupLocationInput = document.getElementById('pickup-location');
+    const contactInfoInput = document.getElementById('contact-info');
+    
+    // Store addresses data for JavaScript access
+    const userPickupAddresses = <%- JSON.stringify(userData.pickUpAddresses || []) %>;
+    
+    function updatePickupLocation() {
+      const selectedOption = pickupAddressSelect.options[pickupAddressSelect.selectedIndex];
+      if (selectedOption && selectedOption.textContent) {
+        pickupLocationInput.value = selectedOption.textContent.replace(' (Default)', '').trim();
+      }
+      
+      // Update phone number based on selected address
+      if (selectedOption && selectedOption.value && selectedOption.value !== '') {
+        const addressId = selectedOption.value === 'default' ? null : selectedOption.value;
+        if (addressId && userPickupAddresses && userPickupAddresses.length > 0) {
+          const selectedAddress = userPickupAddresses.find(addr => addr.addressId === addressId);
+          if (selectedAddress && selectedAddress.pickupPhone && contactInfoInput) {
+            contactInfoInput.value = selectedAddress.pickupPhone;
+          }
+        } else if (selectedOption.value === 'default' && userPickupAddresses && userPickupAddresses.length > 0) {
+          // Use default address phone
+          const defaultAddress = userPickupAddresses.find(addr => addr.isDefault) || userPickupAddresses[0];
+          if (defaultAddress && defaultAddress.pickupPhone && contactInfoInput) {
+            contactInfoInput.value = defaultAddress.pickupPhone;
+          }
+        }
+      }
+    }
+    
+    if (pickupAddressSelect) {
+      pickupAddressSelect.addEventListener('change', updatePickupLocation);
+      updatePickupLocation(); // Initialize on load
+    }
 
     // Form submission
     const createPickupForm = document.querySelector('.tablelist-form');
@@ -695,8 +850,22 @@
           </th>
           <td class="id"><a href="/business/pickup-details/${pickup.pickupNumber}" class="fw-medium link-primary">${pickup.pickupNumber}</a></td>
           <td class="pickup_address">
-            ${pickup.business?.pickUpAdress?.adressDetails || ''}<br>
-            <span class="text-muted">${pickup.business?.pickUpAdress?.city || ''}</span>
+            ${(() => {
+              let addr = null;
+              if (pickup.pickupAddressId && pickup.business?.pickUpAddresses) {
+                addr = pickup.business.pickUpAddresses.find(a => a.addressId === pickup.pickupAddressId);
+              }
+              if (!addr && pickup.business?.pickUpAddresses?.length > 0) {
+                addr = pickup.business.pickUpAddresses.find(a => a.isDefault) || pickup.business.pickUpAddresses[0];
+              }
+              if (!addr && pickup.business?.pickUpAdress) {
+                addr = pickup.business.pickUpAdress;
+              }
+              const zone = addr?.zone || '';
+              const city = addr?.city || '';
+              const location = zone ? zone : city;
+              return addr ? `${addr.adressDetails || ''}<br><span class="text-muted">${location}</span>` : 'N/A';
+            })()}
           </td>
           <td class="contact_info">${pickup.phoneNumber || ''}</td>
           <td class="pickup_date">
@@ -722,6 +891,40 @@
     }
   }
 
+
+// Export pickups to Excel
+function exportPickupsToExcel() {
+  // Show loading indicator
+  Swal.fire({
+    title: 'Preparing export...',
+    html: 'Please wait while we prepare your pickups export.',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  // Export ALL pickups (no filters)
+  const exportUrl = `/business/export-pickups`;
+  const link = document.createElement('a');
+  link.href = exportUrl;
+  link.download = `pickups_${new Date().toISOString().split('T')[0]}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Close loading indicator after a short delay
+  setTimeout(() => {
+    Swal.close();
+    Swal.fire({
+      icon: 'success',
+      title: 'Export Started!',
+      text: 'Your pickups export has been downloaded.',
+      confirmButtonColor: '#0d6efd',
+      timer: 2000
+    });
+  }, 500);
+}
 
 </script>
 
