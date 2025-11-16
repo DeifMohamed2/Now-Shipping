@@ -580,6 +580,16 @@ const completionConfirm = async (req, res) => {
       return res.status(400).json({ error: "Invalid brand type." });
     }
 
+    // Helper function to generate random 13-character alphanumeric ID
+    const generateRandomId = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < 13; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    };
+
     // Process coordinates - they could be coming from different properties
     let locationCoords = null;
     if (pickUpPointCoordinates) {
@@ -610,7 +620,7 @@ const completionConfirm = async (req, res) => {
             : addr.coordinates;
         }
         return {
-          addressId: addr.addressId || `addr_${Date.now()}_${index}`,
+          addressId: addr.addressId || generateRandomId(),
           addressName: addr.addressName || (index === 0 ? 'Main Address' : `Address ${index + 1}`),
           isDefault: addr.isDefault || index === 0,
           country: addr.country || country,
@@ -627,7 +637,7 @@ const completionConfirm = async (req, res) => {
     } else {
       // If no multiple addresses provided, create one from single address (backward compatibility)
       pickUpAddressesArray = [{
-        addressId: `addr_${Date.now()}`,
+        addressId: generateRandomId(),
         addressName: 'Main Address',
         isDefault: true,
         country,

@@ -220,7 +220,7 @@ router.get('/courier-tracking', adminController.courierTracking);
 router.get('/courier-locations', adminController.getCourierLocations);
 router.get('/courier-location/:id', adminController.getCourierLocation);
 
-// Notification routes
+// Notification routes - Couriers
 router.get('/notifications', notificationController.getNotificationsPage);
 router.post(
   '/notifications/courier',
@@ -230,6 +230,19 @@ router.post(
   '/notifications/broadcast',
   notificationController.sendNotificationToAllCouriers
 );
+
+// Notification routes - Businesses
+router.get('/notifications/businesses', notificationController.getBusinessNotificationsPage);
+router.post(
+  '/notifications/business',
+  notificationController.sendNotificationToBusiness
+);
+router.post(
+  '/notifications/businesses/broadcast',
+  notificationController.sendNotificationToAllBusinesses
+);
+
+// Shared notification routes
 router.get(
   '/notifications/recent',
   notificationController.getRecentNotifications

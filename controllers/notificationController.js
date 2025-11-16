@@ -162,7 +162,8 @@ const sendNotificationToAllCouriers = async (req, res) => {
       response = await firebase.sendMulticastNotification(
         tokens,
         { title, body },
-        { ...data, notificationId: notification._id.toString() }
+        { ...data, notificationId: notification._id.toString() },
+        'courier'
       );
       
       successCount = response.successCount;
@@ -213,7 +214,8 @@ const sendNotificationToAllCouriers = async (req, res) => {
           const individualResponse = await firebase.sendNotification(
             token,
             { title, body },
-            { ...data, notificationId: notification._id.toString() }
+            { ...data, notificationId: notification._id.toString() },
+            'courier'
           );
           
           individualResponses.push({ success: true, response: individualResponse });
@@ -378,6 +380,29 @@ const getNotificationsPage = async (req, res) => {
 };
 
 /**
+ * Get page for sending notifications to businesses (admin)
+ */
+const getBusinessNotificationsPage = async (req, res) => {
+  try {
+    // Get all businesses for the dropdown
+    const businesses = await User.find({ role: 'business' }).select('name email');
+    
+    res.render('admin/send-notifications-business', {
+      title: 'Send Business Notifications',
+      page_title: 'Send Business Notifications',
+      folder: 'Pages',
+      businesses
+    });
+  } catch (error) {
+    console.error('Error loading business notifications page:', error);
+    res.status(500).render('error', {
+      message: 'Failed to load business notifications page',
+      error
+    });
+  }
+};
+
+/**
  * Get all notifications for a courier (mobile API)
  */
 const getCourierNotifications = async (req, res) => {
@@ -504,6 +529,7 @@ const getRecentNotifications = async (req, res) => {
     // Get filter parameters
     const type = req.query.type;
     const courierId = req.query.courierId;
+    const businessId = req.query.businessId;
     const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
     const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
     
@@ -518,6 +544,10 @@ const getRecentNotifications = async (req, res) => {
       query.recipient = courierId;
     }
     
+    if (businessId) {
+      query.recipient = businessId;
+    }
+    
     if (startDate && endDate) {
       query.createdAt = {
         $gte: startDate,
@@ -529,17 +559,23 @@ const getRecentNotifications = async (req, res) => {
     const totalCount = await Notification.countDocuments(query);
     
     // Get notifications with pagination and filters
+    // Populate recipient - could be courier or business
     const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('recipient', 'name courierID');
+      .populate('recipient', 'name courierID email');
     
     // Format notifications for the table
     const formattedNotifications = notifications.map(notification => {
       const formatted = notification.toObject();
       if (notification.recipient) {
-        formatted.recipientName = `${notification.recipient.name} (${notification.recipient.courierID})`;
+        // Check if it's a courier (has courierID) or business (has email)
+        if (notification.recipient.courierID) {
+          formatted.recipientName = `${notification.recipient.name} (${notification.recipient.courierID})`;
+        } else {
+          formatted.recipientName = `${notification.recipient.name} (${notification.recipient.email})`;
+        }
       }
       return formatted;
     });
@@ -743,7 +779,8 @@ const sendNotificationToAllBusinesses = async (req, res) => {
       response = await firebase.sendMulticastNotification(
         tokens,
         { title, body },
-        { ...data, notificationId: notification._id.toString() }
+        { ...data, notificationId: notification._id.toString() },
+        'business'
       );
       
       successCount = response.successCount;
@@ -786,7 +823,8 @@ const sendNotificationToAllBusinesses = async (req, res) => {
           const individualResponse = await firebase.sendNotification(
             token,
             { title, body },
-            { ...data, notificationId: notification._id.toString() }
+            { ...data, notificationId: notification._id.toString() },
+            'business'
           );
           
           individualResponses.push({ success: true, response: individualResponse });
@@ -1181,6 +1219,7 @@ module.exports = {
   sendNotificationToBusiness,
   sendNotificationToAllBusinesses,
   getNotificationsPage,
+  getBusinessNotificationsPage,
   getCourierNotifications,
   getBusinessNotifications,
   markNotificationAsRead,

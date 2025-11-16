@@ -147,7 +147,7 @@ class EmailService {
   /**
    * Send email verification
    */
-  async sendVerificationEmail(user, token, baseUrl = process.env.BUSINESS_BASE_URL || process.env.APP_BASE_URL || 'http://localhost:6098') {
+  async sendVerificationEmail(user, token, baseUrl = process.env.APP_BASE_URL || 'http://localhost:6098') {
     const verificationLink = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${token}`;
     const html = emailTemplates.getEmailVerificationTemplate(user?.name, verificationLink);
     return await this.sendEmail({

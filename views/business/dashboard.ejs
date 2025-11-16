@@ -628,6 +628,55 @@
       font-size: 1.25rem;
     }
   }
+
+  /* Collapsible Address Card Styles */
+  .pickup-address-card {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+    margin-bottom: 1rem;
+  }
+
+  .pickup-address-card .card-header {
+    user-select: none;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .pickup-address-card .card-header:hover {
+    background-color: #e9ecef;
+  }
+
+  .pickup-address-card .collapse-icon {
+    transition: transform 0.3s ease;
+    display: inline-block;
+    color: var(--primary-color);
+  }
+
+  /* Icon points down when expanded (default) */
+  .pickup-address-card .card-header[aria-expanded="true"] .collapse-icon {
+    transform: rotate(0deg);
+  }
+
+  /* Icon points right when collapsed */
+  .pickup-address-card .card-header[aria-expanded="false"] .collapse-icon,
+  .pickup-address-card .card-header.collapsed .collapse-icon {
+    transform: rotate(-90deg);
+  }
+
+  .pickup-address-card .card-body-collapse {
+    transition: height 0.35s ease;
+  }
+
+  .pickup-address-card .card-body {
+    padding: 1.5rem;
+  }
+
+  /* Ensure smooth collapse animation */
+  .pickup-address-card .collapse:not(.show) {
+    display: none;
+  }
 </style>
 
 
@@ -866,17 +915,21 @@
                     <!-- Hidden template for address form -->
                     <template id="pickupAddressTemplate">
                       <div class="card mb-4 pickup-address-card" data-address-index="">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                          <h5 class="mb-0">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="cursor: pointer;">
+                          <h5 class="mb-0 d-flex align-items-center">
+                            <i class="ri-arrow-down-s-line collapse-icon me-2" style="transition: transform 0.3s ease; font-size: 1.2rem;"></i>
                             <i class="ri-map-pin-line me-2 text-primary-custom"></i>
                             <span class="address-name-display">Main Address</span>
                             <span class="badge bg-primary ms-2 default-badge" style="display: none;">Default</span>
                           </h5>
-                          <button type="button" class="btn btn-sm btn-outline-danger remove-address-btn" style="display: none;">
-                            <i class="ri-delete-bin-line"></i> Remove
-                          </button>
+                          <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-address-btn" style="display: none;" onclick="event.stopPropagation();">
+                              <i class="ri-delete-bin-line"></i> Remove
+                            </button>
+                          </div>
                         </div>
-                        <div class="card-body">
+                        <div class="collapse show card-body-collapse">
+                          <div class="card-body">
                           <div class="row g-3">
                             <div class="col-md-12">
                               <label class="form-label">Address Name</label>
@@ -926,7 +979,7 @@
                               <label class="form-label">Location on Map (Optional)</label>
                               <div class="d-flex gap-2 mb-2">
                                 <input type="text" class="form-control address-map-point" placeholder="Search for location or click on map below">
-                                <button type="button" class="btn btn-primary get-current-location-btn" title="Get Current Location">
+                                <button type="button" class="btn btn-primary get-current-location-btn" title="Get Current Location" onclick="event.stopPropagation();">
                                   <i class="ri-map-pin-2-line me-1"></i> Get Location
                                 </button>
                               </div>
@@ -934,6 +987,7 @@
                               <small class="text-muted">Click on the map or search above to set your location</small>
                               <input type="hidden" class="address-coordinates">
                             </div>
+                          </div>
                           </div>
                         </div>
                       </div>
@@ -2575,32 +2629,57 @@
         const addressCard = clone.querySelector('.pickup-address-card');
         addressCard.setAttribute('data-address-index', addressIndex);
 
+        // Set up collapse functionality
+        const collapseId = `collapseAddress${addressIndex}`;
+        const cardHeader = addressCard.querySelector('.card-header');
+        const collapseDiv = addressCard.querySelector('.card-body-collapse');
+        
+        // Set unique IDs and attributes for collapse
+        collapseDiv.id = collapseId;
+        collapseDiv.className = 'collapse show card-body-collapse';
+        cardHeader.setAttribute('aria-expanded', 'true');
+        cardHeader.setAttribute('aria-controls', collapseId);
+
         // Show remove button if more than one address
         if (pickupAddressCounter > 1) {
           addressCard.querySelector('.remove-address-btn').style.display = 'block';
         }
 
+        container.appendChild(clone);
+
+        // Get the actual card from DOM after appending
+        const actualCard = container.querySelector(`[data-address-index="${addressIndex}"]`);
+        if (!actualCard) return;
+
+        // Get actual elements from the DOM
+        const actualCardHeader = actualCard.querySelector('.card-header');
+        const actualCollapseDiv = actualCard.querySelector(`#${collapseId}`);
+        const actualCardBody = actualCard.querySelector('.card-body');
+        const selectAreaBtn = actualCard.querySelector('.select-area-btn');
+        const areaDisplay = actualCard.querySelector('.selected-area-display');
+        const cityInput = actualCard.querySelector('.address-city');
+        const zoneInput = actualCard.querySelector('.address-zone');
+        const removeBtn = actualCard.querySelector('.remove-address-btn');
+        const nameInput = actualCard.querySelector('.address-name-input');
+        const nameDisplay = actualCard.querySelector('.address-name-display');
+
         // Update address name display on input
-        const nameInput = addressCard.querySelector('.address-name-input');
-        const nameDisplay = addressCard.querySelector('.address-name-display');
-        nameInput.addEventListener('input', function() {
-          nameDisplay.textContent = this.value || 'Main Address';
-        });
+        if (nameInput && nameDisplay) {
+          nameInput.addEventListener('input', function() {
+            nameDisplay.textContent = this.value || 'Main Address';
+          });
+        }
 
         // Handle area selection - Fixed to work like settings.ejs
-        const selectAreaBtn = addressCard.querySelector('.select-area-btn');
-        const areaDisplay = addressCard.querySelector('.selected-area-display');
-        const cityInput = addressCard.querySelector('.address-city');
-        const zoneInput = addressCard.querySelector('.address-zone');
-
         if (selectAreaBtn) {
           selectAreaBtn.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation(); // Prevent collapse when clicking area selection
             currentMapAddressIndex = addressIndex;
             
             // Use the helper function to open modal
             openAreaSelectionModal(function(selectedArea) {
-              if (selectedArea) {
+              if (selectedArea && areaDisplay && cityInput && zoneInput) {
                 areaDisplay.textContent = `${selectedArea.governorate} - ${selectedArea.zone}`;
                 cityInput.value = selectedArea.governorateValue || selectedArea.governorate;
                 zoneInput.value = selectedArea.zoneValue || selectedArea.zone;
@@ -2609,15 +2688,12 @@
           });
         }
 
-        // Map will be initialized automatically when Google Maps loads
-        // No need for a button click - map is always visible
-
         // Handle remove button
-        const removeBtn = addressCard.querySelector('.remove-address-btn');
         if (removeBtn) {
-          removeBtn.addEventListener('click', function() {
+          removeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
             if (pickupAddressCounter > 1) {
-              addressCard.remove();
+              actualCard.remove();
               pickupAddressCounter--;
               delete dashboardMaps[addressIndex];
               updateRemoveButtonsVisibility();
@@ -2625,7 +2701,57 @@
           });
         }
 
-        container.appendChild(clone);
+        // Prevent collapse when clicking on form inputs, buttons, and selects
+        if (actualCardBody) {
+          const interactiveElements = actualCardBody.querySelectorAll('input, select, textarea, button, .select-area-btn');
+          interactiveElements.forEach(element => {
+            element.addEventListener('click', function(e) {
+              e.stopPropagation();
+            });
+            element.addEventListener('mousedown', function(e) {
+              e.stopPropagation();
+            });
+          });
+
+          // Prevent collapse on map container but allow map interactions
+          const mapContainer = actualCardBody.querySelector('.address-preview-map');
+          if (mapContainer) {
+            mapContainer.addEventListener('click', function(e) {
+              e.stopPropagation();
+            });
+            mapContainer.addEventListener('mousedown', function(e) {
+              e.stopPropagation();
+            });
+          }
+        }
+
+        // Initialize Bootstrap collapse after appending to DOM
+        if (actualCard && typeof bootstrap !== 'undefined' && actualCollapseDiv && actualCardHeader) {
+          // Initialize Bootstrap collapse
+          const collapseInstance = new bootstrap.Collapse(actualCollapseDiv, {
+            toggle: false
+          });
+
+          // Update icon rotation on collapse events
+          actualCollapseDiv.addEventListener('show.bs.collapse', function() {
+            actualCardHeader.setAttribute('aria-expanded', 'true');
+            actualCardHeader.classList.remove('collapsed');
+          });
+
+          actualCollapseDiv.addEventListener('hide.bs.collapse', function() {
+            actualCardHeader.setAttribute('aria-expanded', 'false');
+            actualCardHeader.classList.add('collapsed');
+          });
+
+          // Handle header click to toggle collapse
+          actualCardHeader.addEventListener('click', function(e) {
+            // Don't toggle if clicking on remove button or its children
+            if (e.target.closest('.remove-address-btn')) {
+              return;
+            }
+            collapseInstance.toggle();
+          });
+        }
 
         // Update remove buttons visibility
         updateRemoveButtonsVisibility();

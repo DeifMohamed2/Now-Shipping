@@ -42,19 +42,7 @@ router.use(authenticateUser); // First authenticate the user to set req.userId
 // get user data
 router.get('/user-data', async (req, res) => {
     try {
-        const user = await User.findById(req.userId, {
-            role: 1,
-            name: 1,
-            email: 1,
-            phoneNumber: 1,
-            isNeedStorage: 1,
-            isCompleted: 1,
-            isVerified: 1,
-            brandInfo: 1,
-            pickUpAdress: 1,
-            profileImage: 1,
-            createdAt:1,
-        });
+        const user = await User.findById(req.userId);
         res.json(user);
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });

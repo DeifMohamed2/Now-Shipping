@@ -1,20 +1,53 @@
 const admin = require('firebase-admin');
 const path = require('path');
 
-// Initialize Firebase Admin SDK
-// You will need to download the service account key from the Firebase console
-// and place it in the config directory
+// Initialize Firebase Admin SDK for Business (default app)
+let businessApp;
 try {
-  const serviceAccount = require('../serviceAccountKey.json');
+  const serviceAccountBusiness = require('../serviceAccountKey.json');
   
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: serviceAccount.project_id
-  });
+  businessApp = admin.initializeApp({
+    credential: admin.credential.cert(serviceAccountBusiness),
+    projectId: serviceAccountBusiness.project_id
+  }, 'business');
   
-  console.log('Firebase Admin SDK initialized successfully for project:', serviceAccount.project_id);
+  console.log('✅ Firebase Admin SDK initialized successfully for Business project:', serviceAccountBusiness.project_id);
 } catch (error) {
-  console.error('Error initializing Firebase Admin SDK:', error);
+  console.error('❌ Error initializing Firebase Admin SDK for Business:', error);
+}
+
+// Initialize Firebase Admin SDK for Courier (separate app)
+let courierApp;
+try {
+  const serviceAccountCourier = require('../serviceAccountKey-Courier.json');
+  
+  courierApp = admin.initializeApp({
+    credential: admin.credential.cert(serviceAccountCourier),
+    projectId: serviceAccountCourier.project_id
+  }, 'courier');
+  
+  console.log('✅ Firebase Admin SDK initialized successfully for Courier project:', serviceAccountCourier.project_id);
+} catch (error) {
+  console.error('❌ Error initializing Firebase Admin SDK for Courier:', error);
+}
+
+/**
+ * Get the appropriate Firebase messaging instance based on user type
+ * @param {string} userType - 'business' or 'courier'
+ * @returns {object} - Firebase messaging instance
+ */
+function getMessagingInstance(userType = 'business') {
+  if (userType === 'courier') {
+    if (!courierApp) {
+      throw new Error('Courier Firebase app is not initialized');
+    }
+    return courierApp.messaging();
+  } else {
+    if (!businessApp) {
+      throw new Error('Business Firebase app is not initialized');
+    }
+    return businessApp.messaging();
+  }
 }
 
 /**
@@ -40,9 +73,10 @@ function sanitizeFCMData(data) {
  * @param {string} token - The FCM token of the device
  * @param {object} notification - The notification object { title, body }
  * @param {object} data - Additional data to send with the notification
+ * @param {string} userType - 'business' or 'courier' (default: 'business')
  * @returns {Promise} - FCM response
  */
-async function sendNotification(token, notification, data = {}) {
+async function sendNotification(token, notification, data = {}, userType = 'business') {
   try {
     if (!token) {
       throw new Error('FCM token is required');
@@ -67,8 +101,9 @@ async function sendNotification(token, notification, data = {}) {
       }
     };
     
-    const response = await admin.messaging().send(message);
-    console.log('Notification sent successfully:', response);
+    const messaging = getMessagingInstance(userType);
+    const response = await messaging.send(message);
+    console.log(`Notification sent successfully to ${userType}:`, response);
     return response;
   } catch (error) {
     console.error('❌ Error sending notification:', error.message);
@@ -119,9 +154,10 @@ async function sendNotification(token, notification, data = {}) {
  * @param {array} tokens - Array of FCM tokens
  * @param {object} notification - The notification object { title, body }
  * @param {object} data - Additional data to send with the notification
+ * @param {string} userType - 'business' or 'courier' (default: 'business')
  * @returns {Promise} - FCM response
  */
-async function sendMulticastNotification(tokens, notification, data = {}) {
+async function sendMulticastNotification(tokens, notification, data = {}, userType = 'business') {
   try {
     if (!tokens || !tokens.length) {
       throw new Error('FCM tokens are required');
@@ -137,7 +173,7 @@ async function sendMulticastNotification(tokens, notification, data = {}) {
     // Create a multicast message
     const multicastMessage = {
       notification: notification,
-      data: data,
+      data: sanitizeFCMData(data),
       tokens: validTokens,
       android: {
         priority: 'high',
@@ -154,11 +190,12 @@ async function sendMulticastNotification(tokens, notification, data = {}) {
       }
     };
 
-    console.log(`Sending multicast notification to ${validTokens.length} devices`);
+    console.log(`Sending multicast notification to ${validTokens.length} ${userType} devices`);
     
     // Send the multicast message using the updated method
-    const response = await admin.messaging().sendEachForMulticast(multicastMessage);
-    console.log('Multicast notification sent successfully:', response);
+    const messaging = getMessagingInstance(userType);
+    const response = await messaging.sendEachForMulticast(multicastMessage);
+    console.log(`Multicast notification sent successfully to ${userType}:`, response);
 
     // It's good practice to check the response for failures in a batch send
     if (response.failureCount > 0) {
@@ -227,7 +264,7 @@ async function sendNotificationToUser(userId, userType, notification, data = {})
     console.log(`🔑 FCM Token: ${user.fcmToken.substring(0, 20)}...`);
     console.log(`📋 Notification: ${notification.title} - ${notification.body}`);
     
-    return await sendNotification(user.fcmToken, notification, data);
+    return await sendNotification(user.fcmToken, notification, data, userType);
   } catch (error) {
     console.error(`❌ Error sending notification to ${userType} (ID: ${userId}):`, error.message);
     console.error(`📊 Error context:`, {
@@ -277,7 +314,7 @@ async function sendNotificationToUsersByType(userType, notification, data = {}, 
     }
     
     const tokens = users.map(user => user.fcmToken);
-    return await sendMulticastNotification(tokens, notification, data);
+    return await sendMulticastNotification(tokens, notification, data, userType);
   } catch (error) {
     console.error(`Error sending notification to ${userType}s:`, error);
     throw error;
@@ -930,7 +967,7 @@ async function sendShopOrderAssignmentNotification(courierId, orderNumber, addit
  * @param {string} userType - 'business' or 'courier' (optional, for cleanup)
  * @returns {Promise<boolean>} - True if token is valid, false if invalid
  */
-async function validateAndCleanupToken(token, userId = null, userType = null) {
+async function validateAndCleanupToken(token, userId = null, userType = 'business') {
   try {
     if (!token) {
       return false;
@@ -955,8 +992,9 @@ async function validateAndCleanupToken(token, userId = null, userType = null) {
       }
     };
 
-    await admin.messaging().send(testMessage);
-    console.log('Token validation successful');
+    const messaging = getMessagingInstance(userType);
+    await messaging.send(testMessage);
+    console.log(`Token validation successful for ${userType}`);
     return true;
   } catch (error) {
     console.error('Token validation failed:', error.message);
@@ -1046,10 +1084,10 @@ async function cleanupInvalidTokens() {
  * @param {object} notification - Notification object
  * @param {object} data - Additional data
  * @param {string} userId - User ID for cleanup
- * @param {string} userType - User type for cleanup
+ * @param {string} userType - User type ('business' or 'courier')
  * @returns {Promise} - FCM response
  */
-async function sendNotificationWithValidation(token, notification, data = {}, userId = null, userType = null) {
+async function sendNotificationWithValidation(token, notification, data = {}, userId = null, userType = 'business') {
   try {
     // First validate the token
     const isValid = await validateAndCleanupToken(token, userId, userType);
@@ -1059,7 +1097,7 @@ async function sendNotificationWithValidation(token, notification, data = {}, us
     }
     
     // Send the notification
-    return await sendNotification(token, notification, data);
+    return await sendNotification(token, notification, data, userType);
   } catch (error) {
     console.error('Error in sendNotificationWithValidation:', error);
     throw error;
@@ -1068,6 +1106,9 @@ async function sendNotificationWithValidation(token, notification, data = {}, us
 
 module.exports = {
   admin,
+  businessApp,
+  courierApp,
+  getMessagingInstance,
   sendNotification,
   sendMulticastNotification,
   sendNotificationToUser,
