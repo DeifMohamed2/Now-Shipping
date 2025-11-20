@@ -117,6 +117,11 @@ router.post(
 );
 
 router.get(
+  '/print-policy/:orderNumber',
+  businessController.printPolicy
+);
+
+router.get(
   '/order-details/:orderNumber',
   businessController.get_orderDetailsPage
 );

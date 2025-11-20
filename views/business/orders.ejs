@@ -5,11 +5,16 @@
 <link href="/assets/css/status-styles.css" rel="stylesheet" type="text/css" />
 <link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 <%- contentFor('body') %>
+
 <style>
   /* Professional Dropdown Styles */
   .orders-table-dropdown {
     position: relative;
     display: inline-block;
+    z-index: 1;
+  }
+
+  .orders-table-dropdown.show {
     z-index: 10000;
   }
 
@@ -19,21 +24,19 @@
     right: 0;
     left: auto;
     z-index: 10050 !important;
-    min-width: 200px;
+    min-width: 220px;
     padding: 0.5rem 0;
-    margin: 0;
+    margin: 0.25rem 0 0 0;
     font-size: 0.875rem;
     color: #212529;
     text-align: left;
     list-style: none;
     background-color: #fff;
     background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 0.375rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
     display: none;
-    transform: translateY(0);
-    transition: none;
   }
 
   .orders-table-dropdown.show .dropdown-menu {
@@ -41,40 +44,47 @@
   }
 
   .orders-table-dropdown .dropdown-item {
-    display: block;
+    display: flex;
+    align-items: center;
     width: 100%;
-    padding: 0.5rem 1rem;
+    padding: 0.65rem 1.25rem;
     clear: both;
     font-weight: 400;
-    color: #212529;
+    font-size: 0.875rem;
+    color: #495057;
     text-align: inherit;
     text-decoration: none;
     white-space: nowrap;
     background-color: transparent;
     border: 0;
-    transition: background-color 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
     cursor: pointer;
   }
 
   .orders-table-dropdown .dropdown-item:hover,
   .orders-table-dropdown .dropdown-item:focus {
-    color: #1e2125;
-    background-color: #e9ecef;
+    color: #212529;
+    background-color: #f8f9fa;
   }
 
   .orders-table-dropdown .dropdown-item i {
     width: 20px;
-    margin-right: 0.5rem;
+    margin-right: 0.75rem;
     text-align: center;
+    font-size: 0.95rem;
   }
 
   .orders-table-dropdown .dropdown-toggle {
-    background: none;
+    background: transparent;
     border: none;
     padding: 0.375rem 0.75rem;
     border-radius: 0.375rem;
     transition: background-color 0.15s ease-in-out;
     cursor: pointer;
+    color: #6c757d;
+    font-size: 1.2rem;
+    position: relative;
+    z-index: 1;
   }
 
   .orders-table-dropdown .dropdown-toggle:hover {
@@ -501,56 +511,6 @@
     transform: scale(1);
   }
 
-  .preview-container {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1.5rem;
-    border: 1px solid #e9ecef;
-  }
-
-  .preview-document {
-    background: white;
-    border-radius: 6px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    max-width: 300px;
-    margin: 0 auto;
-  }
-
-  .preview-header {
-    border-bottom: 2px solid #fdb614;
-    padding-bottom: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .preview-title {
-    color: #495057;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-  }
-
-  .preview-subtitle {
-    color: #6c757d;
-  }
-
-  .preview-line {
-    height: 8px;
-    background: #e9ecef;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-  }
-
-  .preview-line.short {
-    width: 60%;
-  }
-
-  .preview-line.medium {
-    width: 80%;
-  }
-
-  .preview-line:last-child {
-    margin-bottom: 0;
-  }
 
   #printBtn:disabled {
     opacity: 0.6;
@@ -631,6 +591,27 @@
               <button type="button" class="btn btn-success add-btn" onClick='window.location.href="/business/create-order"'><i class="ri-add-line align-bottom me-1"></i> Create Order</button>
               <button type="button" class="btn btn-info" onclick="exportOrdersToExcel()"><i class="ri-file-download-line align-bottom me-1"></i> Export</button>
               <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Bulk Actions Toolbar -->
+      <div class="card-header border-0 bg-light" id="bulkActionsToolbar" style="display: none;">
+        <div class="row align-items-center">
+          <div class="col-sm">
+            <h6 class="mb-0">
+              <i class="ri-checkbox-multiple-line me-1"></i>
+              <span id="selectedCount">0</span> order(s) selected
+            </h6>
+          </div>
+          <div class="col-sm-auto">
+            <div class="d-flex gap-2 flex-wrap">
+              <button type="button" class="btn btn-primary btn-sm" onclick="bulkPrintPolicy()">
+                <i class="ri-printer-fill me-1"></i> Print Policies
+              </button>
+              <button type="button" class="btn btn-light btn-sm" onclick="clearSelection()">
+                <i class="ri-close-line me-1"></i> Clear Selection
+              </button>
             </div>
           </div>
         </div>
@@ -752,7 +733,6 @@
                   <th  data-sort="order-Location">Order Location</th>
                   <th  data-sort="amount">Amount</th>
                   <th  data-sort="status">Delivery Status</th>
-                  <th  data-sort="category">Category</th>
                   <th  data-sort="status">Delivery Tries</th>
                   <th  data-sort="date">Order Date</th>
                   <th data-sort="city">Action</th>
@@ -824,8 +804,8 @@
                   <i class="ri-file-copy-line text-primary me-2"></i>Select Paper Size
                 </h6>
                 
-                <div class="row g-3">
-                  <div class="col-md-4">
+                <div class="row g-3 justify-content-center">
+                  <div class="col-md-5 col-lg-4">
                     <div class="paper-size-card" onclick="selectPaperSize('A4')">
                       <div class="paper-icon-container">
                         <i class="ri-file-text-line paper-icon"></i>
@@ -841,7 +821,7 @@
                     </div>
                   </div>
                   
-                  <div class="col-md-4">
+                  <div class="col-md-5 col-lg-4">
                     <div class="paper-size-card" onclick="selectPaperSize('A5')">
                       <div class="paper-icon-container">
                         <i class="ri-file-reduce-line paper-icon"></i>
@@ -856,46 +836,10 @@
                       </div>
                     </div>
                   </div>
-                  
-                  <div class="col-md-4">
-                    <div class="paper-size-card" onclick="selectPaperSize('A6')">
-                      <div class="paper-icon-container">
-                        <i class="ri-file-paper-2-line paper-icon"></i>
-                      </div>
-                      <div class="paper-info">
-                        <h6 class="paper-label">A6</h6>
-                        <p class="paper-dimensions">105 × 148 mm</p>
-                        <small class="paper-description">Small format</small>
-                      </div>
-                      <div class="selection-indicator">
-                        <i class="ri-check-line"></i>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
               
               <input type="hidden" id="paperSize" name="paperSize" value="">
-              
-              <div class="print-preview-section mt-4">
-                <h6 class="fw-semibold text-dark mb-3">
-                  <i class="ri-eye-line text-primary me-2"></i>Print Preview
-                </h6>
-                <div class="preview-container">
-                  <div class="preview-document">
-                    <div class="preview-header">
-                      <h6 class="preview-title">Delivery Policy</h6>
-                      <small class="preview-subtitle">Order #<span id="previewOrderId">---</span></small>
-                    </div>
-                    <div class="preview-content">
-                      <div class="preview-line"></div>
-                      <div class="preview-line short"></div>
-                      <div class="preview-line"></div>
-                      <div class="preview-line medium"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </form>
           </div>
           <div class="modal-footer bg-light border-0 p-4">
@@ -1130,11 +1074,6 @@
   // Function to set order ID
   function setOrderId(id) {
     document.getElementById('orderId').value = id;
-    // Update preview with order ID
-    const previewOrderId = document.getElementById('previewOrderId');
-    if (previewOrderId) {
-      previewOrderId.textContent = id;
-    }
   }
 
   // Function to print policy
@@ -1166,11 +1105,17 @@
     fetch(`/business/print-policy/${orderId}?paperSize=${paperSize}`, {
         method: 'GET',
       })
-      .then(response => {
-        if (response.ok) {
-          return response.blob();
+      .then(async response => {
+        if (!response.ok) {
+          // Try to parse error message from JSON response
+          try {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to generate document');
+          } catch (e) {
+            throw new Error('Failed to generate document');
+          }
         }
-        throw new Error('Network response was not ok.');
+        return response.blob();
       })
       .then(blob => {
         // Create URL for the blob
@@ -1187,8 +1132,12 @@
         // Clean up
         window.URL.revokeObjectURL(url);
 
-        // Close modal
-        $('#printPolicyModal').modal('hide');
+        // Close modal using Bootstrap 5 vanilla JS API
+        const modalElement = document.getElementById('printPolicyModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
 
         // Show success message
         Swal.fire({
@@ -1200,10 +1149,18 @@
       })
       .catch(error => {
         console.error('Error:', error);
+        
+        // Close modal on error too
+        const modalElement = document.getElementById('printPolicyModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+        
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
-          text: 'Something went wrong while preparing the document.',
+          text: error.message || 'Something went wrong while preparing the document.',
           confirmButtonColor: '#0d6efd'
         });
       });
@@ -1242,6 +1199,180 @@
       confirmButtonColor: '#0d6efd'
     });
   }
+
+  // ============= BULK ACTIONS FUNCTIONALITY =============
+  
+  let selectedOrders = new Set();
+
+  // Initialize checkbox listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    // Select All checkbox
+    const checkAllBox = document.getElementById('checkAll');
+    if (checkAllBox) {
+      checkAllBox.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('input[name="checkAll[]"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = this.checked;
+          if (this.checked) {
+            selectedOrders.add(checkbox.value);
+          } else {
+            selectedOrders.delete(checkbox.value);
+          }
+        });
+        updateBulkActionsToolbar();
+      });
+    }
+
+    // Delegate event for individual checkboxes (since they're dynamically created)
+    document.getElementById('orderTable')?.addEventListener('change', function(e) {
+      if (e.target.matches('input[name="checkAll[]"]')) {
+        const orderNumber = e.target.value;
+        if (e.target.checked) {
+          selectedOrders.add(orderNumber);
+        } else {
+          selectedOrders.delete(orderNumber);
+          document.getElementById('checkAll').checked = false;
+        }
+        updateBulkActionsToolbar();
+      }
+    });
+  });
+
+  function updateBulkActionsToolbar() {
+    const toolbar = document.getElementById('bulkActionsToolbar');
+    const countSpan = document.getElementById('selectedCount');
+    
+    if (selectedOrders.size > 0) {
+      toolbar.style.display = 'block';
+      countSpan.textContent = selectedOrders.size;
+    } else {
+      toolbar.style.display = 'none';
+    }
+  }
+
+  function clearSelection() {
+    selectedOrders.clear();
+    document.querySelectorAll('input[name="checkAll[]"]').forEach(checkbox => {
+      checkbox.checked = false;
+    });
+    document.getElementById('checkAll').checked = false;
+    updateBulkActionsToolbar();
+  }
+
+  function bulkPrintPolicy() {
+    if (selectedOrders.size === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Orders Selected',
+        text: 'Please select at least one order to print policies.',
+        confirmButtonColor: '#0d6efd'
+      });
+      return;
+    }
+
+    // Show paper size selection modal for bulk print
+    Swal.fire({
+      title: 'Select Paper Size',
+      html: `
+        <div class="text-start">
+          <p class="mb-3">Select paper size for <strong>${selectedOrders.size}</strong> delivery policies:</p>
+          <div class="d-flex gap-3 justify-content-center">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="bulkPaperSize" id="bulkA4" value="A4" checked>
+              <label class="form-check-label" for="bulkA4">
+                <strong>A4</strong><br>
+                <small class="text-muted">210 × 297 mm</small>
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="bulkPaperSize" id="bulkA5" value="A5">
+              <label class="form-check-label" for="bulkA5">
+                <strong>A5</strong><br>
+                <small class="text-muted">148 × 210 mm</small>
+              </label>
+            </div>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Print Policies',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0d6efd',
+      preConfirm: () => {
+        const selectedSize = document.querySelector('input[name="bulkPaperSize"]:checked');
+        return selectedSize ? selectedSize.value : null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        processBulkPrint(Array.from(selectedOrders), result.value);
+      }
+    });
+  }
+
+  async function processBulkPrint(orderNumbers, paperSize) {
+    let successCount = 0;
+    let failCount = 0;
+    const totalOrders = orderNumbers.length;
+
+    Swal.fire({
+      title: 'Processing...',
+      html: `Printing policies: <strong>0</strong> / ${totalOrders}`,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    for (let i = 0; i < orderNumbers.length; i++) {
+      try {
+        const response = await fetch(`/business/print-policy/${orderNumbers[i]}?paperSize=${paperSize}`, {
+          method: 'GET',
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `delivery-policy-${orderNumbers[i]}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          successCount++;
+        } else {
+          failCount++;
+        }
+
+        // Update progress
+        Swal.update({
+          html: `Printing policies: <strong>${i + 1}</strong> / ${totalOrders}`
+        });
+
+        // Small delay between downloads to prevent browser blocking
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error('Error printing policy:', error);
+        failCount++;
+      }
+    }
+
+    // Clear selection after bulk print
+    clearSelection();
+
+    // Show result
+    Swal.fire({
+      icon: successCount > 0 ? 'success' : 'error',
+      title: 'Bulk Print Complete',
+      html: `
+        <p><strong>${successCount}</strong> policies printed successfully</p>
+        ${failCount > 0 ? `<p class="text-danger"><strong>${failCount}</strong> failed</p>` : ''}
+      `,
+      confirmButtonColor: '#0d6efd'
+    });
+  }
+
 </script>
 
 <script>

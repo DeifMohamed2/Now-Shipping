@@ -350,11 +350,6 @@ function populateOrdersTable(orders) {
           ${order.statusLabel || getStatusLabel(order.orderStatus)}
         </span>
       </td>
-      <td class="category">
-        <span class="status-pill ${(order.statusCategory || 'NEW').toLowerCase()}">
-          ${order.statusCategory || 'NEW'}
-        </span>
-      </td>
       <td class="tries">
         <div>${order.Attemps || 0}/2</div>
       </td>

@@ -657,350 +657,6 @@ const updateOrderStatus = async (req, res) => {
 /**
  * Complete an order with proper status transition
  */
-const completeOrder = async (req, res) => {
-  const { orderNumber } = req.params;
-  // Handle both API (JWT) and web (session) authentication
-  const courierId = req.courierId || req.userId;
-  
-  if (!courierId) {
-    if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(401).json({ message: 'Courier ID not found in request' });
-    }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/orders');
-  }
-  
-  const { collectionReceipt, exchangePhotos } = req.body || {}; // Parameters for Exchange and Cash Collection
-  
-  try {
-    const order = await Order.findOne({
-      orderNumber: orderNumber,
-      deliveryMan: courierId,
-    }).populate('deliveryMan');
-    if (!order) {
-      if (req.headers.accept && req.headers.accept.includes('application/json')) {
-        return res.status(404).json({ message: 'Order not found' });
-      }
-      req.flash('error', 'Order not found');
-      return res.redirect('/courier/orders');
-    }
-
-    // Check if order can be completed based on status
-    if (
-      [
-        'completed',
-        'canceled',
-        'rejected',
-        'returned',
-        'terminated',
-        'returnCompleted',
-        'new',
-        'pickedUp',
-        'inStock',
-        'inReturnStock',
-        'returnAssigned',
-        'returnPickedUp',
-        'returnAtWarehouse',
-        'returnToBusiness'
-      ].includes(order.orderStatus)
-    ) {
-      if (req.headers.accept && req.headers.accept.includes('application/json')) {
-        return res.status(400).json({
-          message: `Order status '${order.orderStatus}' does not allow completion`,
-        });
-      }
-      req.flash('error', `Order status '${order.orderStatus}' does not allow completion`);
-      return res.redirect(`/courier/order-details/${orderNumber}`);
-    }
-
-    // For regular deliveries
-    if (
-      ![
-        'inStock',
-        'headingToCustomer',
-        'headingToYou',
-        'inReturnStock',
-        'rescheduled',
-        'waitingAction',
-        'exchangePickup',
-        'exchangeDelivery',
-        'collectionComplete'
-      ].includes(order.orderStatus) &&
-      order.orderStatus !== 'returnInProgress'
-    ) {
-      if (req.headers.accept && req.headers.accept.includes('application/json')) {
-        return res.status(400).json({
-          message: `Order status ${order.orderStatus} is not valid for completion`,
-        });
-      }
-      req.flash('error', `Order status ${order.orderStatus} is not valid for completion`);
-      return res.redirect(`/courier/order-details/${orderNumber}`);
-    }
-
-    // Handle different completion types based on order type and status
-    const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
-
-    if (order.orderStatus === 'returnInProgress') {
-      // This is a return being picked up from customer
-      order.orderStatus = 'inReturnStock';
-      // Update inProgress stage for return completion
-      if (!order.orderStages.inProgress.isCompleted) {
-        order.orderStages.inProgress.isCompleted = true;
-        order.orderStages.inProgress.completedAt = new Date();
-        order.orderStages.inProgress.notes = `Return completed by courier ${courierName} and received in return stock`;
-      }
-
-      // Add to courier history
-      order.courierHistory.push({
-        courier: courierId,
-        assignedAt: new Date(),
-        action: 'delivered_to_warehouse',
-        notes: `Courier ${courierName} delivered return from customer to warehouse`,
-      });
-    } else if (order.orderStatus === 'headingToYou') {
-      // This is returning an order to the business
-      order.orderStatus = 'returnCompleted';
-      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
-      order.completedDate = new Date();
-      
-      // Increment attempts but ensure it doesn't exceed 2
-      if (order.Attemps < 2) {
-        order.Attemps += 1;
-      }
-      
-      // Update delivered stage for return completion
-      if (!order.orderStages.delivered.isCompleted) {
-        order.orderStages.delivered.isCompleted = true;
-        order.orderStages.delivered.completedAt = new Date();
-        order.orderStages.delivered.notes = `Return delivered to business by courier ${courierName}`;
-      }
-
-      // Add to courier history
-      order.courierHistory.push({
-        courier: courierId,
-        assignedAt: new Date(),
-        action: 'delivered_to_business',
-        notes: `Courier ${courierName} delivered return to business`,
-      });
-    } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'headingToCustomer') {
-      // For Exchange orders, first we mark the exchange pickup stage
-      order.orderStatus = 'exchangePickup';
-      
-      // Update exchange pickup stage
-      if (order.orderStages.exchangePickup) {
-        order.orderStages.exchangePickup.isCompleted = true;
-        order.orderStages.exchangePickup.completedAt = new Date();
-        order.orderStages.exchangePickup.notes = `Original item picked up by courier ${courierName}`;
-        order.orderStages.exchangePickup.pickedUpBy = courierId;
-        order.orderStages.exchangePickup.pickupLocation = order.orderCustomer.address;
-        if (exchangePhotos && Array.isArray(exchangePhotos)) {
-          order.orderStages.exchangePickup.originalItemPhotos = exchangePhotos;
-        }
-      }
-      
-      // Update outForDelivery stage to mark that courier has reached customer
-      if (!order.orderStages.outForDelivery.isCompleted) {
-        order.orderStages.outForDelivery.isCompleted = true;
-        order.orderStages.outForDelivery.completedAt = new Date();
-        order.orderStages.outForDelivery.notes = `Courier ${courierName} reached customer for exchange`;
-      }
-      
-      // Add to courier history
-      order.courierHistory.push({
-        courier: courierId,
-        assignedAt: new Date(),
-        action: 'exchange_pickup',
-        notes: `Courier ${courierName} picked up original item for exchange`
-      });
-      
-    } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'exchangePickup') {
-      // For Exchange orders, next we mark the exchange delivery stage
-      order.orderStatus = 'exchangeDelivery';
-      
-      // Update exchange delivery stage
-      if (order.orderStages.exchangeDelivery) {
-        order.orderStages.exchangeDelivery.isCompleted = true;
-        order.orderStages.exchangeDelivery.completedAt = new Date();
-        order.orderStages.exchangeDelivery.notes = `Replacement item delivered by courier ${courierName}`;
-        order.orderStages.exchangeDelivery.deliveredBy = courierId;
-        order.orderStages.exchangeDelivery.deliveryLocation = order.orderCustomer.address;
-        if (exchangePhotos && Array.isArray(exchangePhotos)) {
-          order.orderStages.exchangeDelivery.replacementItemPhotos = exchangePhotos;
-        }
-      }
-      
-      // Add to courier history
-      order.courierHistory.push({
-        courier: courierId,
-        assignedAt: new Date(),
-        action: 'exchange_delivery',
-        notes: `Courier ${courierName} delivered replacement item`
-      });
-      
-      // Increment attempts but ensure it doesn't exceed 2
-      if (order.Attemps < 2) {
-        order.Attemps += 1;
-      }
-      
-      // Now mark the order as completed
-      order.orderStatus = 'completed';
-      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
-      order.completedDate = new Date();
-      
-    } else if (order.orderShipping.orderType === 'Cash Collection' && order.orderStatus === 'headingToCustomer') {
-      // For Cash Collection orders, mark the collection complete stage
-      order.orderStatus = 'collectionComplete';
-      
-      // Update collection complete stage
-      if (order.orderStages.collectionComplete) {
-        order.orderStages.collectionComplete.isCompleted = true;
-        order.orderStages.collectionComplete.completedAt = new Date();
-        order.orderStages.collectionComplete.notes = `Cash collected by courier ${courierName}`;
-        order.orderStages.collectionComplete.collectedBy = courierId;
-        order.orderStages.collectionComplete.collectionAmount = order.orderShipping.amount;
-        order.orderStages.collectionComplete.collectionReceipt = collectionReceipt || null;
-      }
-      
-      // Add to courier history
-      order.courierHistory.push({
-        courier: courierId,
-        assignedAt: new Date(),
-        action: 'cash_collected',
-        notes: `Courier ${courierName} collected cash amount ${order.orderShipping.amount}`
-      });
-      
-      // Increment attempts but ensure it doesn't exceed 2
-      if (order.Attemps < 2) {
-        order.Attemps += 1;
-      }
-      
-      // Now mark the order as completed
-      order.orderStatus = 'completed';
-      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
-      order.completedDate = new Date();
-      
-    } else {
-      // Regular delivery completion
-      order.orderStatus = 'completed';
-      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
-      order.scheduledRetryAt = null;
-      order.completedDate = new Date();
-      
-      // Increment attempts but ensure it doesn't exceed 2
-      if (order.Attemps < 2) {
-        order.Attemps += 1;
-      }
-      // Update delivered stage for completion
-      if (!order.orderStages.delivered.isCompleted) {
-        order.orderStages.delivered.isCompleted = true;
-        order.orderStages.delivered.completedAt = new Date();
-        order.orderStages.delivered.notes = `Order completed by courier ${courierName}`;
-        // Mark all other order stages as completed
-        if (!order.orderStages.orderPlaced.isCompleted) {
-          order.orderStages.orderPlaced.isCompleted = true;
-        }
-
-        if (!order.orderStages.packed.isCompleted) {
-          order.orderStages.packed.isCompleted = true;
-        }
-
-        if (!order.orderStages.shipping.isCompleted) {
-          order.orderStages.shipping.isCompleted = true;
-        }
-
-        if (!order.orderStages.inProgress.isCompleted) {
-          order.orderStages.inProgress.isCompleted = true;
-        }
-        if (!order.orderStages.outForDelivery.isCompleted) {
-          order.orderStages.outForDelivery.isCompleted = true;
-        }
-      }
-
-      // Add to courier history
-      order.courierHistory.push({
-        courier: courierId,
-        assignedAt: new Date(),
-        action: 'completed',
-        notes: `Courier ${courierName} completed delivery to customer`,
-      });
-    }
-
-    await order.save();
-
-    // Send SMS to customer on successful completion
-    if (order.orderStatus === 'completed') {
-      try {
-        const phone = order.orderCustomer?.phoneNumber;
-        const brand = (order.business && order.business.brandInfo && order.business.brandInfo.brandName) || (order.business && order.business.name) || 'NowShipping';
-        if (phone) {
-          await sendSms({
-            recipient: phone,
-            message: `NowShipping - ${brand}: Your order ${order.orderNumber} has been delivered by ${courierName}. Thank you!`
-          });
-        }
-      } catch (e) {
-        console.error('SMS send error (order completed):', e.details || e.message);
-      }
-    }
-    
-    // Send professional order delivery notification to business
-    try {
-      const business = await User.findById(order.business).select('email brandInfo name');
-      if (business && business.email) {
-        const orderData = {
-          orderNumber: order.orderNumber,
-          orderId: order._id,
-          customerName: order.orderCustomer?.fullName || 'N/A',
-          orderType: order.orderShipping?.orderType || 'Standard',
-          amount: order.orderShipping?.amount || 0,
-          deliveryDate: order.completedDate,
-          courierName: courierName,
-          status: order.orderStatus
-        };
-
-        await emailService.sendOrderDeliveryNotification(orderData, business.email);
-        console.log(`📧 Order delivery notification sent to business ${business._id} for order ${order.orderNumber}`);
-      }
-    } catch (emailError) {
-      console.error(`❌ Failed to send order delivery email for order ${order.orderNumber}:`, emailError);
-      // Don't fail the order completion if email fails
-    }
-
-    // Send push notification to business about order completion
-    try {
-      await firebase.sendOrderStatusNotification(
-        order.business,
-        order.orderNumber,
-        'completed',
-        {
-          courierName: courierName,
-          completedAt: order.completedDate,
-          orderType: order.orderShipping?.orderType || 'Standard'
-        }
-      );
-      console.log(`📱 Push notification sent to business ${order.business} about order ${order.orderNumber} completion`);
-    } catch (notificationError) {
-      console.error(`❌ Failed to send push notification for order ${order.orderNumber}:`, notificationError);
-      // Don't fail the order completion if notification fails
-    }
-    
-    // Check if request expects JSON response (API call)
-    if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(200).json({ message: 'Order completed successfully' });
-    }
-    
-    // For web requests, redirect back to order details
-    req.flash('success', 'Order completed successfully');
-    res.redirect(`/courier/order-details/${orderNumber}`);
-  } catch (error) {
-    console.log(error.message);
-    if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(500).json({ message: error.message });
-    }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/orders');
-  }
-};
 // const completeOrder = async (req, res) => {
 //   const { orderNumber } = req.params;
 //   // Handle both API (JWT) and web (session) authentication
@@ -1014,7 +670,7 @@ const completeOrder = async (req, res) => {
 //     return res.redirect('/courier/orders');
 //   }
   
-//   const { collectionReceipt, exchangePhotos, otp } = req.body; // Added parameters for Exchange and Cash Collection + OTP
+//   const { collectionReceipt, exchangePhotos } = req.body || {}; // Parameters for Exchange and Cash Collection
   
 //   try {
 //     const order = await Order.findOne({
@@ -1081,34 +737,6 @@ const completeOrder = async (req, res) => {
 //       return res.redirect(`/courier/order-details/${orderNumber}`);
 //     }
 
-//     // OTP requirement: All non-return completion flows require valid OTP
-//     const isReturnFlow = order.orderShipping?.orderType === 'Return' ||
-//                          order.orderStatus === 'returnInProgress' ||
-//                          order.orderStatus === 'headingToYou';
-
-//     async function requireValidOtpOrFail() {
-
-//       if (isReturnFlow) return; // Skip OTP for return flows
-//       if (!order.deliveryOtp || !order.deliveryOtp.otpHash || !order.deliveryOtp.expiresAt) {
-//         return res.status(400).json({ message: 'Delivery OTP not generated. Please contact support.' });
-//       }
-//       if (new Date(order.deliveryOtp.expiresAt).getTime() < Date.now()) {
-//         return res.status(400).json({ message: 'OTP expired. Ask admin to resend.' });
-//       }
-//       if (!otp) {
-//         return res.status(400).json({ message: 'OTP is required to complete this order' });
-//       }
-//       const bcrypt = require('bcrypt');
-//       const ok = await bcrypt.compare(String(otp), order.deliveryOtp.otpHash);
-//       if (!ok) {
-//         order.deliveryOtp.attempts = (order.deliveryOtp.attempts || 0) + 1;
-//         await order.save();
-//         return res.status(400).json({ message: 'Invalid OTP' });
-//       }
-//       order.deliveryOtp.verifiedAt = new Date();
-//       await order.save();
-//     }
-
 //     // Handle different completion types based on order type and status
 //     const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
 
@@ -1132,6 +760,14 @@ const completeOrder = async (req, res) => {
 //     } else if (order.orderStatus === 'headingToYou') {
 //       // This is returning an order to the business
 //       order.orderStatus = 'returnCompleted';
+//       order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+//       order.completedDate = new Date();
+      
+//       // Increment attempts but ensure it doesn't exceed 2
+//       if (order.Attemps < 2) {
+//         order.Attemps += 1;
+//       }
+      
 //       // Update delivered stage for return completion
 //       if (!order.orderStages.delivered.isCompleted) {
 //         order.orderStages.delivered.isCompleted = true;
@@ -1147,8 +783,6 @@ const completeOrder = async (req, res) => {
 //         notes: `Courier ${courierName} delivered return to business`,
 //       });
 //     } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'headingToCustomer') {
-//       const otpCheck = await requireValidOtpOrFail();
-//       if (otpCheck) return; // if response already sent
 //       // For Exchange orders, first we mark the exchange pickup stage
 //       order.orderStatus = 'exchangePickup';
       
@@ -1180,8 +814,6 @@ const completeOrder = async (req, res) => {
 //       });
       
 //     } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'exchangePickup') {
-//       const otpCheck = await requireValidOtpOrFail();
-//       if (otpCheck) return;
 //       // For Exchange orders, next we mark the exchange delivery stage
 //       order.orderStatus = 'exchangeDelivery';
       
@@ -1205,14 +837,17 @@ const completeOrder = async (req, res) => {
 //         notes: `Courier ${courierName} delivered replacement item`
 //       });
       
+//       // Increment attempts but ensure it doesn't exceed 2
+//       if (order.Attemps < 2) {
+//         order.Attemps += 1;
+//       }
+      
 //       // Now mark the order as completed
 //       order.orderStatus = 'completed';
 //       order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
 //       order.completedDate = new Date();
       
 //     } else if (order.orderShipping.orderType === 'Cash Collection' && order.orderStatus === 'headingToCustomer') {
-//       const otpCheck = await requireValidOtpOrFail();
-//       if (otpCheck) return;
 //       // For Cash Collection orders, mark the collection complete stage
 //       order.orderStatus = 'collectionComplete';
       
@@ -1234,14 +869,17 @@ const completeOrder = async (req, res) => {
 //         notes: `Courier ${courierName} collected cash amount ${order.orderShipping.amount}`
 //       });
       
+//       // Increment attempts but ensure it doesn't exceed 2
+//       if (order.Attemps < 2) {
+//         order.Attemps += 1;
+//       }
+      
 //       // Now mark the order as completed
 //       order.orderStatus = 'completed';
 //       order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
 //       order.completedDate = new Date();
       
 //     } else {
-//       const otpCheck = await requireValidOtpOrFail();
-//       if (otpCheck) return;
 //       // Regular delivery completion
 //       order.orderStatus = 'completed';
 //       order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
@@ -1363,6 +1001,369 @@ const completeOrder = async (req, res) => {
 //     res.redirect('/courier/orders');
 //   }
 // };
+
+const completeOrder = async (req, res) => {
+  const { orderNumber } = req.params;
+  // Handle both API (JWT) and web (session) authentication
+  const courierId = req.courierId || req.userId;
+  
+  if (!courierId) {
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(401).json({ message: 'Courier ID not found in request' });
+    }
+    req.flash('error', 'Unauthorized');
+    return res.redirect('/courier/orders');
+  }
+  
+  const { collectionReceipt, exchangePhotos, otp } = req.body; // Added parameters for Exchange and Cash Collection + OTP
+  
+  try {
+    const order = await Order.findOne({
+      orderNumber: orderNumber,
+      deliveryMan: courierId,
+    }).populate('deliveryMan');
+    if (!order) {
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+      req.flash('error', 'Order not found');
+      return res.redirect('/courier/orders');
+    }
+
+    // Check if order can be completed based on status
+    if (
+      [
+        'completed',
+        'canceled',
+        'rejected',
+        'returned',
+        'terminated',
+        'returnCompleted',
+        'new',
+        'pickedUp',
+        'inStock',
+        'inReturnStock',
+        'returnAssigned',
+        'returnPickedUp',
+        'returnAtWarehouse',
+        'returnToBusiness'
+      ].includes(order.orderStatus)
+    ) {
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
+          message: `Order status '${order.orderStatus}' does not allow completion`,
+        });
+      }
+      req.flash('error', `Order status '${order.orderStatus}' does not allow completion`);
+      return res.redirect(`/courier/order-details/${orderNumber}`);
+    }
+
+    // For regular deliveries
+    if (
+      ![
+        'inStock',
+        'headingToCustomer',
+        'headingToYou',
+        'inReturnStock',
+        'rescheduled',
+        'waitingAction',
+        'exchangePickup',
+        'exchangeDelivery',
+        'collectionComplete'
+      ].includes(order.orderStatus) &&
+      order.orderStatus !== 'returnInProgress'
+    ) {
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
+          message: `Order status ${order.orderStatus} is not valid for completion`,
+        });
+      }
+      req.flash('error', `Order status ${order.orderStatus} is not valid for completion`);
+      return res.redirect(`/courier/order-details/${orderNumber}`);
+    }
+
+    // OTP requirement: All non-return completion flows require valid OTP
+    const isReturnFlow = order.orderShipping?.orderType === 'Return' ||
+                         order.orderStatus === 'returnInProgress' ||
+                         order.orderStatus === 'headingToYou';
+
+    async function requireValidOtpOrFail() {
+
+      if (isReturnFlow) return; // Skip OTP for return flows
+      if (!order.deliveryOtp || !order.deliveryOtp.otpHash || !order.deliveryOtp.expiresAt) {
+        return res.status(400).json({ message: 'Delivery OTP not generated. Please contact support.' });
+      }
+      if (new Date(order.deliveryOtp.expiresAt).getTime() < Date.now()) {
+        return res.status(400).json({ message: 'OTP expired. Ask admin to resend.' });
+      }
+      if (!otp) {
+        return res.status(400).json({ message: 'OTP is required to complete this order' });
+      }
+      const bcrypt = require('bcrypt');
+      const ok = await bcrypt.compare(String(otp), order.deliveryOtp.otpHash);
+      if (!ok) {
+        order.deliveryOtp.attempts = (order.deliveryOtp.attempts || 0) + 1;
+        await order.save();
+        return res.status(400).json({ message: 'Invalid OTP' });
+      }
+      order.deliveryOtp.verifiedAt = new Date();
+      await order.save();
+    }
+
+    // Handle different completion types based on order type and status
+    const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
+
+    if (order.orderStatus === 'returnInProgress') {
+      // This is a return being picked up from customer
+      order.orderStatus = 'inReturnStock';
+      // Update inProgress stage for return completion
+      if (!order.orderStages.inProgress.isCompleted) {
+        order.orderStages.inProgress.isCompleted = true;
+        order.orderStages.inProgress.completedAt = new Date();
+        order.orderStages.inProgress.notes = `Return completed by courier ${courierName} and received in return stock`;
+      }
+
+      // Add to courier history
+      order.courierHistory.push({
+        courier: courierId,
+        assignedAt: new Date(),
+        action: 'delivered_to_warehouse',
+        notes: `Courier ${courierName} delivered return from customer to warehouse`,
+      });
+    } else if (order.orderStatus === 'headingToYou') {
+      // This is returning an order to the business
+      order.orderStatus = 'returnCompleted';
+      // Update delivered stage for return completion
+      if (!order.orderStages.delivered.isCompleted) {
+        order.orderStages.delivered.isCompleted = true;
+        order.orderStages.delivered.completedAt = new Date();
+        order.orderStages.delivered.notes = `Return delivered to business by courier ${courierName}`;
+      }
+
+      // Add to courier history
+      order.courierHistory.push({
+        courier: courierId,
+        assignedAt: new Date(),
+        action: 'delivered_to_business',
+        notes: `Courier ${courierName} delivered return to business`,
+      });
+    } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'headingToCustomer') {
+      const otpCheck = await requireValidOtpOrFail();
+      if (otpCheck) return; // if response already sent
+      // For Exchange orders, first we mark the exchange pickup stage
+      order.orderStatus = 'exchangePickup';
+      
+      // Update exchange pickup stage
+      if (order.orderStages.exchangePickup) {
+        order.orderStages.exchangePickup.isCompleted = true;
+        order.orderStages.exchangePickup.completedAt = new Date();
+        order.orderStages.exchangePickup.notes = `Original item picked up by courier ${courierName}`;
+        order.orderStages.exchangePickup.pickedUpBy = courierId;
+        order.orderStages.exchangePickup.pickupLocation = order.orderCustomer.address;
+        if (exchangePhotos && Array.isArray(exchangePhotos)) {
+          order.orderStages.exchangePickup.originalItemPhotos = exchangePhotos;
+        }
+      }
+      
+      // Update outForDelivery stage to mark that courier has reached customer
+      if (!order.orderStages.outForDelivery.isCompleted) {
+        order.orderStages.outForDelivery.isCompleted = true;
+        order.orderStages.outForDelivery.completedAt = new Date();
+        order.orderStages.outForDelivery.notes = `Courier ${courierName} reached customer for exchange`;
+      }
+      
+      // Add to courier history
+      order.courierHistory.push({
+        courier: courierId,
+        assignedAt: new Date(),
+        action: 'exchange_pickup',
+        notes: `Courier ${courierName} picked up original item for exchange`
+      });
+      
+    } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'exchangePickup') {
+      const otpCheck = await requireValidOtpOrFail();
+      if (otpCheck) return;
+      // For Exchange orders, next we mark the exchange delivery stage
+      order.orderStatus = 'exchangeDelivery';
+      
+      // Update exchange delivery stage
+      if (order.orderStages.exchangeDelivery) {
+        order.orderStages.exchangeDelivery.isCompleted = true;
+        order.orderStages.exchangeDelivery.completedAt = new Date();
+        order.orderStages.exchangeDelivery.notes = `Replacement item delivered by courier ${courierName}`;
+        order.orderStages.exchangeDelivery.deliveredBy = courierId;
+        order.orderStages.exchangeDelivery.deliveryLocation = order.orderCustomer.address;
+        if (exchangePhotos && Array.isArray(exchangePhotos)) {
+          order.orderStages.exchangeDelivery.replacementItemPhotos = exchangePhotos;
+        }
+      }
+      
+      // Add to courier history
+      order.courierHistory.push({
+        courier: courierId,
+        assignedAt: new Date(),
+        action: 'exchange_delivery',
+        notes: `Courier ${courierName} delivered replacement item`
+      });
+      
+      // Now mark the order as completed
+      order.orderStatus = 'completed';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+      order.completedDate = new Date();
+      
+    } else if (order.orderShipping.orderType === 'Cash Collection' && order.orderStatus === 'headingToCustomer') {
+      const otpCheck = await requireValidOtpOrFail();
+      if (otpCheck) return;
+      // For Cash Collection orders, mark the collection complete stage
+      order.orderStatus = 'collectionComplete';
+      
+      // Update collection complete stage
+      if (order.orderStages.collectionComplete) {
+        order.orderStages.collectionComplete.isCompleted = true;
+        order.orderStages.collectionComplete.completedAt = new Date();
+        order.orderStages.collectionComplete.notes = `Cash collected by courier ${courierName}`;
+        order.orderStages.collectionComplete.collectedBy = courierId;
+        order.orderStages.collectionComplete.collectionAmount = order.orderShipping.amount;
+        order.orderStages.collectionComplete.collectionReceipt = collectionReceipt || null;
+      }
+      
+      // Add to courier history
+      order.courierHistory.push({
+        courier: courierId,
+        assignedAt: new Date(),
+        action: 'cash_collected',
+        notes: `Courier ${courierName} collected cash amount ${order.orderShipping.amount}`
+      });
+      
+      // Now mark the order as completed
+      order.orderStatus = 'completed';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+      order.completedDate = new Date();
+      
+    } else {
+      const otpCheck = await requireValidOtpOrFail();
+      if (otpCheck) return;
+      // Regular delivery completion
+      order.orderStatus = 'completed';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+      order.scheduledRetryAt = null;
+      order.completedDate = new Date();
+      
+      // Increment attempts but ensure it doesn't exceed 2
+      if (order.Attemps < 2) {
+        order.Attemps += 1;
+      }
+      // Update delivered stage for completion
+      if (!order.orderStages.delivered.isCompleted) {
+        order.orderStages.delivered.isCompleted = true;
+        order.orderStages.delivered.completedAt = new Date();
+        order.orderStages.delivered.notes = `Order completed by courier ${courierName}`;
+        // Mark all other order stages as completed
+        if (!order.orderStages.orderPlaced.isCompleted) {
+          order.orderStages.orderPlaced.isCompleted = true;
+        }
+
+        if (!order.orderStages.packed.isCompleted) {
+          order.orderStages.packed.isCompleted = true;
+        }
+
+        if (!order.orderStages.shipping.isCompleted) {
+          order.orderStages.shipping.isCompleted = true;
+        }
+
+        if (!order.orderStages.inProgress.isCompleted) {
+          order.orderStages.inProgress.isCompleted = true;
+        }
+        if (!order.orderStages.outForDelivery.isCompleted) {
+          order.orderStages.outForDelivery.isCompleted = true;
+        }
+      }
+
+      // Add to courier history
+      order.courierHistory.push({
+        courier: courierId,
+        assignedAt: new Date(),
+        action: 'completed',
+        notes: `Courier ${courierName} completed delivery to customer`,
+      });
+    }
+
+    await order.save();
+
+    // Send SMS to customer on successful completion
+    if (order.orderStatus === 'completed') {
+      try {
+        const phone = order.orderCustomer?.phoneNumber;
+        const brand = (order.business && order.business.brandInfo && order.business.brandInfo.brandName) || (order.business && order.business.name) || 'NowShipping';
+        if (phone) {
+          await sendSms({
+            recipient: phone,
+            message: `NowShipping - ${brand}: Your order ${order.orderNumber} has been delivered by ${courierName}. Thank you!`
+          });
+        }
+      } catch (e) {
+        console.error('SMS send error (order completed):', e.details || e.message);
+      }
+    }
+    
+    // Send professional order delivery notification to business
+    try {
+      const business = await User.findById(order.business).select('email brandInfo name');
+      if (business && business.email) {
+        const orderData = {
+          orderNumber: order.orderNumber,
+          orderId: order._id,
+          customerName: order.orderCustomer?.fullName || 'N/A',
+          orderType: order.orderShipping?.orderType || 'Standard',
+          amount: order.orderShipping?.amount || 0,
+          deliveryDate: order.completedDate,
+          courierName: courierName,
+          status: order.orderStatus
+        };
+
+        await emailService.sendOrderDeliveryNotification(orderData, business.email);
+        console.log(`📧 Order delivery notification sent to business ${business._id} for order ${order.orderNumber}`);
+      }
+    } catch (emailError) {
+      console.error(`❌ Failed to send order delivery email for order ${order.orderNumber}:`, emailError);
+      // Don't fail the order completion if email fails
+    }
+
+    // Send push notification to business about order completion
+    try {
+      await firebase.sendOrderStatusNotification(
+        order.business,
+        order.orderNumber,
+        'completed',
+        {
+          courierName: courierName,
+          completedAt: order.completedDate,
+          orderType: order.orderShipping?.orderType || 'Standard'
+        }
+      );
+      console.log(`📱 Push notification sent to business ${order.business} about order ${order.orderNumber} completion`);
+    } catch (notificationError) {
+      console.error(`❌ Failed to send push notification for order ${order.orderNumber}:`, notificationError);
+      // Don't fail the order completion if notification fails
+    }
+    
+    // Check if request expects JSON response (API call)
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(200).json({ message: 'Order completed successfully' });
+    }
+    
+    // For web requests, redirect back to order details
+    req.flash('success', 'Order completed successfully');
+    res.redirect(`/courier/order-details/${orderNumber}`);
+  } catch (error) {
+    console.log(error.message);
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      return res.status(500).json({ message: error.message });
+    }
+    req.flash('error', 'Internal Server Error');
+    res.redirect('/courier/orders');
+  }
+};
 
 // Enhanced pick up return from customer with comprehensive tracking
 

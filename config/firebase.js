@@ -82,6 +82,9 @@ async function sendNotification(token, notification, data = {}, userType = 'busi
       throw new Error('FCM token is required');
     }
     
+    // Use different sound for courier notifications
+    const notificationSound = userType === 'courier' ? 'notification' : 'default';
+    
     const message = {
       token,
       notification,
@@ -89,13 +92,13 @@ async function sendNotification(token, notification, data = {}, userType = 'busi
       android: {
         priority: 'high',
         notification: {
-          sound: 'default'
+          sound: notificationSound
         }
       },
       apns: {
         payload: {
           aps: {
-            sound: 'default'
+            sound: notificationSound
           }
         }
       }
@@ -170,6 +173,9 @@ async function sendMulticastNotification(tokens, notification, data = {}, userTy
       throw new Error('No valid FCM tokens provided');
     }
 
+    // Use different sound for courier notifications
+    const notificationSound = userType === 'courier' ? 'notification' : 'default';
+
     // Create a multicast message
     const multicastMessage = {
       notification: notification,
@@ -178,13 +184,13 @@ async function sendMulticastNotification(tokens, notification, data = {}, userTy
       android: {
         priority: 'high',
         notification: {
-          sound: 'default'
+          sound: notificationSound
         }
       },
       apns: {
         payload: {
           aps: {
-            sound: 'default'
+            sound: notificationSound
           }
         }
       }

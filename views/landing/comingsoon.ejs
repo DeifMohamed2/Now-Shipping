@@ -206,6 +206,24 @@
     animation: fadeIn 1s ease-out forwards;
   }
 
+  .coming-soon-text {
+    margin-top: 30px;
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--dark) 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    letter-spacing: 4px;
+    animation: fadeIn 1.5s ease-out forwards, gradientShift 3s ease-in-out infinite;
+    opacity: 0;
+    text-transform: uppercase;
+    filter: drop-shadow(0 2px 8px rgba(143, 121, 92, 0.4));
+    position: relative;
+  }
+
   @keyframes spin {
     from {
       transform: rotate(0deg);
@@ -228,6 +246,15 @@
     }
   }
 
+  @keyframes gradientShift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
   /* Responsive styles */
   @media (max-width: 768px) {
     .logo img {
@@ -238,6 +265,11 @@
     .text-logo img {
       max-width: 190px;
       height: auto;
+    }
+
+    .coming-soon-text {
+      font-size: 1.75rem;
+      margin-top: 20px;
     }
   }
 </style>
@@ -268,6 +300,9 @@
   </div>
   <div class="text-logo">
     <img src="/assets/rImages/bloewLogo.png" alt="Now Shipping Text" height="100">
+  </div>
+  <div class="coming-soon-text">
+    Coming Soon
   </div>
 </div>
 
