@@ -33,7 +33,7 @@ router.get('/aboutus', authController.aboutusPage);
 
 router.get('/faq', authController.faqPage);
 
-router.get('/privacy-policy', authController.privacyPolicyPage);
+router.get('/privacypolicy', authController.privacyPolicyPage);
 
 // Authentication routes
 
