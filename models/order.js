@@ -137,6 +137,8 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: false,
       default: null,
+      sparse: true,
+      unique: true,
     },
     orderDate: {
       type: Date,
@@ -611,6 +613,30 @@ orderSchema.pre('save', function(next) {
   if (this.orderStatus === 'returned' && this.orderShipping.orderType === 'Deliver') {
     if (!this.orderShipping.linkedReturnOrder) {
       console.warn(`Deliver order ${this.orderNumber} marked as returned but has no linked return order`);
+    }
+  }
+  
+  next();
+});
+
+// Pre-save: validate smartFlyerBarcode uniqueness
+orderSchema.pre('save', async function(next) {
+  // Only validate if smartFlyerBarcode is being set or modified
+  if (this.isModified('smartFlyerBarcode') && this.smartFlyerBarcode) {
+    try {
+      // Check if this barcode is already used by another order
+      const existingOrder = await this.constructor.findOne({
+        smartFlyerBarcode: this.smartFlyerBarcode,
+        _id: { $ne: this._id }
+      });
+
+      if (existingOrder) {
+        const error = new Error(`Smart Flyer barcode ${this.smartFlyerBarcode} is already assigned to order ${existingOrder.orderNumber}`);
+        error.code = 'DUPLICATE_BARCODE';
+        return next(error);
+      }
+    } catch (error) {
+      return next(error);
     }
   }
   

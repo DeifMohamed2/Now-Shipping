@@ -231,8 +231,16 @@ const get_orders = async (req, res) => {
 
     if (dateFrom || dateTo) {
       query.orderDate = {};
-      if (dateFrom) query.orderDate.$gte = new Date(dateFrom);
-      if (dateTo) query.orderDate.$lte = new Date(dateTo);
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        query.orderDate.$gte = fromDate;
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        query.orderDate.$lte = toDate;
+      }
     }
 
     if (search && search.trim() !== '') {
@@ -278,7 +286,7 @@ const get_orders = async (req, res) => {
       if (orderObj.isFastShipping) {
         orderObj.readyForCourierAssignment = order.orderStatus === 'new';
       }
-      if (order.orderShipping.orderType === 'Exchange') {
+      if (order.orderShipping && order.orderShipping.orderType === 'Exchange') {
         orderObj.isExchange = true;
         orderObj.exchangeDetails = {
           originalProduct: order.orderShipping.productDescription,
@@ -286,7 +294,7 @@ const get_orders = async (req, res) => {
           replacementProduct: order.orderShipping.productDescriptionReplacement,
           replacementCount: order.orderShipping.numberOfItemsReplacement,
         };
-      } else if (order.orderShipping.orderType === 'Cash Collection') {
+      } else if (order.orderShipping && order.orderShipping.orderType === 'Cash Collection') {
         orderObj.isCashCollection = true;
         orderObj.collectionAmount = order.orderShipping.amount;
       }

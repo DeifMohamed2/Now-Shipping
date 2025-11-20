@@ -529,7 +529,18 @@ async function sendCourierAssignmentNotification(courierId, orderNumber, action,
       errorType: error.constructor.name,
       timestamp: new Date().toISOString()
     });
-    throw error;
+    
+    // Don't throw error for invalid tokens - just log and continue
+    // The notification is already saved to database, so the assignment can proceed
+    if (error.code === 'messaging/invalid-registration-token' || 
+        error.code === 'messaging/registration-token-not-registered') {
+      console.warn('⚠️ Invalid FCM token for courier, notification saved to database but push failed');
+      return null; // Return null instead of throwing
+    }
+    
+    // For other errors, also return null to not break the assignment flow
+    // The notification is already saved to the database
+    return null;
   }
 }
 

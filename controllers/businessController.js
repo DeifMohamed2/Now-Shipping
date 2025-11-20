@@ -6012,6 +6012,15 @@ const scanSmartFlyerBarcode = async (req, res) => {
 
   } catch (error) {
     console.error('Error scanning Smart Flyer barcode:', error);
+    
+    // Handle duplicate barcode error from model validation
+    if (error.code === 'DUPLICATE_BARCODE' || error.code === 11000 || error.message.includes('duplicate key')) {
+      return res.status(400).json({ 
+        error: 'Barcode already assigned to another order',
+        message: error.message || 'This Smart Flyer barcode is already in use by another order'
+      });
+    }
+    
     res.status(500).json({ 
       error: 'Internal server error. Please try again.',
       details: error.message 

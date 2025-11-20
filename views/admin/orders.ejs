@@ -182,7 +182,7 @@
             </li>
 
             <li class="nav-item">
-              <button class="btn orderType btn-link nav-link py-3 CashCollection" data-bs-toggle="tab" id="CashCollection" role="tab" aria-selected="false" onClick="filterOrders('CashCollection')">
+              <button class="btn orderType btn-link nav-link py-3 CashCollection" data-bs-toggle="tab" id="CashCollection" role="tab" aria-selected="false" onClick="filterOrders('Cash Collection')">
                 <i class="ri-money-dollar-circle-line me-1 align-bottom"></i> Cash Collection
               </button>
             </li>
@@ -467,8 +467,14 @@
       const params = new URLSearchParams();
       params.append('limit', ORDERS_PER_PAGE_ADMIN);
       params.append('page', page);
-      if (orderType && orderType !== 'All') params.append('orderType', orderType);
-      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+      // Only add orderType filter if it's not 'All'
+      if (orderType && orderType !== 'All' && orderType !== 'all') {
+        params.append('orderType', orderType);
+      }
+      // Only add status filter if it's not 'all' and not explicitly set to show all
+      if (filters.status && filters.status !== 'all') {
+        params.append('status', filters.status);
+      }
       if (filters.paymentType && filters.paymentType !== 'all') params.append('paymentType', filters.paymentType);
       if (filters.search) params.append('search', filters.search);
       if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
@@ -523,9 +529,12 @@
           row.classList.add('table-warning'); // Yellow highlight for new orders
         } else if (order.orderStatus === 'rejected' || order.orderStatus === 'returned') {
           row.classList.add('table-danger'); // Red highlight for problem orders
-        } else if (order.orderStatus === 'inReturnStock' || order.orderStatus === 'returnInProgress' || order.orderStatus === 'returnCompleted' || order.orderShipping.orderType === 'Return') {
+        } else if (order.orderStatus === 'inReturnStock' || order.orderStatus === 'returnInProgress' || order.orderStatus === 'returnCompleted' || (order.orderShipping && order.orderShipping.orderType === 'Return')) {
           row.classList.add('table-info'); // Blue highlight for return orders
         }
+      const orderType = order.orderShipping ? order.orderShipping.orderType : 'N/A';
+      const orderAmount = order.orderShipping ? (order.orderShipping.amount || 0) : 0;
+      const orderAmountType = order.orderShipping ? order.orderShipping.amountType : 'N/A';
       row.innerHTML = `
         <th scope="row">
           <div class="form-check">
@@ -535,24 +544,24 @@
         <td class="id">
           <a href="/admin/order-details/${order.orderNumber}" class="fw-medium link-primary">
             ${order.orderNumber}
-            ${order.orderShipping.orderType === 'Return' ? '<i class="ri-arrow-go-back-line text-warning ms-1" title="Return Order"></i>' : ''}
+            ${order.orderShipping && order.orderShipping.orderType === 'Return' ? '<i class="ri-arrow-go-back-line text-warning ms-1" title="Return Order"></i>' : ''}
           </a>
         </td>
-        <td class="business_name">${order.business.brandInfo.brandName}</td>
-        <td class="customer_name">${order.orderCustomer.fullName.split(' ').slice(0, 2).join(' ')}</td>
+        <td class="business_name">${order.business && order.business.brandInfo ? order.business.brandInfo.brandName : 'N/A'}</td>
+        <td class="customer_name">${order.orderCustomer && order.orderCustomer.fullName ? order.orderCustomer.fullName.split(' ').slice(0, 2).join(' ') : 'N/A'}</td>
         <td class="product_name">
-          ${order.orderShipping.orderType}
-          ${order.orderShipping.orderType === 'Return' && order.orderShipping.returnReason ? 
+          ${orderType}
+          ${order.orderShipping && order.orderShipping.orderType === 'Return' && order.orderShipping.returnReason ? 
             `<small class="d-block text-muted">Reason: ${order.orderShipping.returnReason.substring(0, 15)}${order.orderShipping.returnReason.length > 15 ? '...' : ''}</small>` : ''}
           ${order.isFastShipping ? '<span class="badge bg-warning text-dark ms-1"><i class="ri-flashlight-line me-1"></i>Fast</span>' : ''}
         </td>
         <td class="location">
-          <div>${order.orderCustomer.government}</div>
-          <div class="text-muted">${order.orderCustomer.zone}</div>
+          <div>${order.orderCustomer ? (order.orderCustomer.government || 'N/A') : 'N/A'}</div>
+          <div class="text-muted">${order.orderCustomer ? (order.orderCustomer.zone || 'N/A') : 'N/A'}</div>
         </td>
         <td class="amount">
-          <div>${order.orderShipping.amount || 0} EGP</div>
-          <div class="text-muted">${order.orderShipping.amountType}</div>
+          <div>${orderAmount} EGP</div>
+          <div class="text-muted">${orderAmountType}</div>
         </td>
         <td class="status">
             <span class="badge text-uppercase fs-6 ${getStatusDetails(order.orderStatus).badgeClass}">${getStatusDetails(order.orderStatus).statusText}</span>
@@ -570,11 +579,11 @@
               <i class="ri-more-fill align-middle"></i>
             </button>
             <ul class="dropdown-menu">
-                ${(order.orderShipping.orderType === 'Exchange' || (order.orderShipping.orderType === 'Deliver' && order.isFastShipping && order.readyForCourierAssignment) || order.orderStatus === 'pickedUp') ? 
-                  `<li><button class="dropdown-item" onclick="assignDeliveryMan('${order.orderNumber}','${order.orderCustomer.zone}')" data-bs-toggle="modal" data-bs-target="#assignDeliveryManModal"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span>${order.isFastShipping ? ' <span class="badge bg-warning text-dark ms-1">Fast</span>' : ''}</button></li>` 
+                ${(order.orderShipping && (order.orderShipping.orderType === 'Exchange' || (order.orderShipping.orderType === 'Deliver' && order.isFastShipping && order.readyForCourierAssignment)) || order.orderStatus === 'pickedUp') ? 
+                  `<li><button class="dropdown-item" onclick="assignDeliveryMan('${order.orderNumber}','${order.orderCustomer ? order.orderCustomer.zone : ''}')" data-bs-toggle="modal" data-bs-target="#assignDeliveryManModal"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span>${order.isFastShipping ? ' <span class="badge bg-warning text-dark ms-1">Fast</span>' : ''}</button></li>` 
                   : ''}
-                ${(order.orderStatus === 'inReturnStock' || order.orderStatus === 'returnInitiated' || (order.orderShipping.orderType === 'Return' && order.orderStatus === 'new')) ? 
-                  `<li><button class="dropdown-item" onclick="assignCourierToReturn('${order.orderNumber}','${order.orderCustomer.zone}')"><i class="ri-user-received-2-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Courier (Return)</span></button></li>` 
+                ${(order.orderStatus === 'inReturnStock' || order.orderStatus === 'returnInitiated' || (order.orderShipping && order.orderShipping.orderType === 'Return' && order.orderStatus === 'new')) ? 
+                  `<li><button class="dropdown-item" onclick="assignCourierToReturn('${order.orderNumber}','${order.orderCustomer ? order.orderCustomer.zone : ''}')"><i class="ri-user-received-2-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Courier (Return)</span></button></li>` 
                   : ''}
                 <li><a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
                 <i class="ri-edit-2-fill align-bottom me-2 text-warning"></i> <span class="fs-6">Edit Order</span>
@@ -590,9 +599,11 @@
     });
   }
 
-  async function filterOrders(status) {
-    console.log("Filtering orders by status:", status);
-    await fetchOrders(status);
+  async function filterOrders(orderType) {
+    console.log("Filtering orders by type:", orderType);
+    // Reset to page 1 when filtering
+    currentPageAdmin = 1;
+    await fetchOrders(orderType, 'all', 1);
   }
 
   // Fetch orders on page load

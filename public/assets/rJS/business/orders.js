@@ -396,6 +396,18 @@ function populateOrdersTable(orders) {
       </td>
     `;
     tableBody.appendChild(row);
+    
+    // Add event listeners to dropdown items to prevent menu from closing immediately
+    const dropdown = row.querySelector('.orders-table-dropdown');
+    if (dropdown) {
+      const menuItems = dropdown.querySelectorAll('.dropdown-item');
+      menuItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+          // Stop propagation to prevent the click-outside handler from closing the menu immediately
+          e.stopPropagation();
+        });
+      });
+    }
   });
 }
 
@@ -605,9 +617,39 @@ function initializeDropdownSystem() {
 
   // Close all dropdowns when clicking outside
   document.addEventListener('click', function(event) {
+    // Check if click is inside any dropdown (toggle button or menu)
+    const clickedDropdown = event.target.closest('.orders-table-dropdown');
+    const clickedToggle = event.target.closest('[data-dropdown-toggle]');
+    const clickedMenuItem = event.target.closest('.dropdown-item');
+    const clickedMenu = event.target.closest('.dropdown-menu');
+    
+    // If clicking on toggle button, let the toggle handler manage it
+    if (clickedToggle) {
+      return;
+    }
+    
+    // If clicking inside dropdown menu (but not necessarily on an item), don't close
+    if (clickedMenu) {
+      // If clicking on a menu item, close after a brief delay to allow onclick to execute
+      if (clickedMenuItem) {
+        const parentDropdown = clickedMenuItem.closest('.orders-table-dropdown');
+        if (parentDropdown) {
+          // Close after a short delay to allow onclick handlers to execute
+          setTimeout(() => {
+            if (parentDropdown.classList.contains('show')) {
+              closeDropdown(parentDropdown);
+            }
+          }, 150);
+        }
+      }
+      // Don't close if just clicking in the menu area (not on an item)
+      return;
+    }
+    
+    // Close all dropdowns that don't contain the clicked element
     const dropdowns = document.querySelectorAll('.orders-table-dropdown');
     dropdowns.forEach(dropdown => {
-      if (!dropdown.contains(event.target)) {
+      if (dropdown !== clickedDropdown && !dropdown.contains(event.target)) {
         closeDropdown(dropdown);
       }
     });
