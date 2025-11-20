@@ -620,6 +620,61 @@ orderSchema.pre('save', function(next) {
 
 
 
+// Helper function to generate unique 14-digit smart flyer barcode
+orderSchema.statics.generateSmartFlyerBarcode = async function() {
+  let barcode;
+  let isUnique = false;
+  let attempts = 0;
+  const maxAttempts = 10;
+
+  while (!isUnique && attempts < maxAttempts) {
+    // Generate 14-digit barcode from timestamp and random number
+    const timestamp = Date.now().toString();
+    const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    barcode = (timestamp + random).slice(-14).padStart(14, '0');
+
+    // Check if barcode already exists
+    const existing = await this.findOne({ smartFlyerBarcode: barcode });
+    if (!existing) {
+      isUnique = true;
+    }
+    attempts++;
+  }
+
+  if (!isUnique) {
+    throw new Error('Failed to generate unique barcode after maximum attempts');
+  }
+
+  return barcode;
+};
+
+// Method to assign smart flyer barcode to an order
+orderSchema.methods.assignSmartFlyerBarcode = async function(barcode) {
+  if (!barcode) {
+    barcode = await this.constructor.generateSmartFlyerBarcode();
+  }
+  
+  // Validate barcode is 14 digits
+  if (!/^\d{14}$/.test(barcode)) {
+    throw new Error('Barcode must be exactly 14 digits');
+  }
+
+  // Check if barcode is already in use
+  const existing = await this.constructor.findOne({ 
+    smartFlyerBarcode: barcode,
+    _id: { $ne: this._id }
+  });
+
+  if (existing) {
+    throw new Error('Barcode already assigned to another order');
+  }
+
+  this.smartFlyerBarcode = barcode;
+  await this.save();
+  
+  return barcode;
+};
+
 const Order = mongoose.model('order', orderSchema);
 
 module.exports = Order;

@@ -4655,6 +4655,175 @@ const getAllCouriers = async (req, res) => {
   }
 };
 
+// Smart Flyer Management
+const getPrintSmartFlyersPage = (req, res) => {
+  res.render('admin/print-smart-flyers', {
+    title: 'Print Smart Flyers',
+    page_title: 'Print Smart Flyers',
+    folder: 'Tools',
+  });
+};
+
+// Generate smart flyer barcodes and create PDF
+const generateSmartFlyers = async (req, res) => {
+  try {
+    const { amount, startingNumber, includeLogo } = req.body;
+    
+    // Validate amount
+    if (!amount || amount < 1 || amount > 1000) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Amount must be between 1 and 1000'
+      });
+    }
+
+    const bwipjs = require('bwip-js');
+    const PDFDocument = require('pdfkit');
+    
+    // Generate random barcodes (not sequential)
+    const barcodes = [];
+    const usedBarcodes = new Set(); // Track used barcodes to ensure uniqueness
+    
+    // Helper function to generate random 14-digit number (never starts with 0)
+    const generateRandomBarcode = () => {
+      let barcode;
+      let attempts = 0;
+      const maxAttempts = 100;
+      
+      do {
+        // Generate first digit (1-9, never 0)
+        const firstDigit = Math.floor(Math.random() * 9) + 1; // Random 1-9
+        // Generate remaining 13 digits
+        const remainingDigits = Math.floor(Math.random() * 10000000000000); // Random 13 digits
+        barcode = firstDigit.toString() + remainingDigits.toString().padStart(13, '0');
+        attempts++;
+        
+        // If we've tried too many times, use timestamp + random to ensure uniqueness
+        if (attempts > maxAttempts) {
+          const firstDigit = Math.floor(Math.random() * 9) + 1; // Random 1-9
+          const timestamp = Date.now().toString().slice(-10); // Last 10 digits of timestamp
+          const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+          barcode = firstDigit + timestamp + random;
+        }
+      } while (usedBarcodes.has(barcode) && attempts < maxAttempts * 2);
+      
+      usedBarcodes.add(barcode);
+      return barcode;
+    };
+    
+    // Generate random barcodes
+    for (let i = 0; i < amount; i++) {
+      const barcode = generateRandomBarcode();
+      barcodes.push(barcode);
+    }
+
+    // Set response headers
+    const filename = `smart-flyers-${Date.now()}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Logo path
+    const logoPath = path.join(__dirname, '../public/logo.png');
+    const hasLogo = fs.existsSync(logoPath);
+
+    // Label dimensions: 100mm x 50mm (converted to points: 1mm = 2.83465 points)
+    const labelWidth = 100 * 2.83465;   // 100mm = 283.465 points
+    const labelHeight = 50 * 2.83465;   // 50mm = 141.7325 points
+
+    // Create PDF with custom page size
+    const doc = new PDFDocument({
+      size: [labelWidth, labelHeight],
+      margins: 0
+    });
+
+    doc.pipe(res);
+
+    for (let i = 0; i < barcodes.length; i++) {
+      const barcode = barcodes[i];
+      
+      // Add new page for each label (except first)
+      if (i > 0) {
+        doc.addPage({
+          size: [labelWidth, labelHeight],
+          margins: 0
+        });
+      }
+
+      // Add padding around entire PDF label
+      const pdfPadding = 5; // Padding from each side of the PDF
+      const contentAreaX = pdfPadding;
+      const contentAreaY = pdfPadding;
+      const contentAreaWidth = labelWidth - (2 * pdfPadding);
+      const contentAreaHeight = labelHeight - (2 * pdfPadding);
+
+      // Draw border around content area (inside padding)
+      doc.rect(contentAreaX, contentAreaY, contentAreaWidth, contentAreaHeight)
+         .stroke();
+
+      // Logo dimensions and position (centered at top, with padding from border) - Bigger logo
+      const logoPadding = 2; // 2 points padding from border
+      const logoSize = 42; // Bigger logo size (increased from 35)
+      const logoY = contentAreaY + logoPadding + 5; // Inside content area with padding from top, moved down a little
+      // Center the logo horizontally
+      const logoX = contentAreaX + (contentAreaWidth - logoSize) / 2; // Centered horizontally
+      const logoAreaHeight = logoSize + (2 * logoPadding) + 5; // Total height for logo area (including extra space)
+
+      // Add logo centered at top (no border around logo)
+      if (hasLogo) {
+        try {
+          // Add logo centered with padding from border
+          doc.image(logoPath, logoX, logoY, {
+            fit: [logoSize, logoSize]
+          });
+        } catch (err) {
+          console.error('Error adding logo:', err);
+        }
+      }
+
+      // Barcode position - below logo area, centered and bigger (10% increase)
+      const barcodeY = contentAreaY + logoAreaHeight + 3; // Start below logo area with small gap
+      const barcodeHeight = 44; // Barcode height increased by 10% (40 * 1.1 = 44)
+      const barcodeWidth = 165; // Barcode width increased by 10% (150 * 1.1 = 165)
+      
+      // Center the barcode horizontally
+      const barcodeX = contentAreaX + (contentAreaWidth - barcodeWidth) / 2; // Centered
+      
+      try {
+        const barcodeBuffer = await bwipjs.toBuffer({
+          bcid: 'code128',
+          text: barcode,
+          scale: 2, // Smaller scale (reduced from 3)
+          height: 10, // Smaller height (reduced from 15)
+          includetext: false,
+          textxalign: 'center',
+        });
+
+        // Use fit to maintain aspect ratio but limit size
+        doc.image(barcodeBuffer, barcodeX, barcodeY, {
+          fit: [barcodeWidth, barcodeHeight]
+        });
+      } catch (err) {
+        console.error('Error generating barcode:', err);
+      }
+    }
+
+    doc.end();
+
+    // Store generation info in a simple log (optional - you could save to DB)
+    const barcodeRange = `${barcodes[0]} - ${barcodes[barcodes.length - 1]}`;
+    console.log(`Generated ${amount} smart flyers: ${barcodeRange}`);
+
+  } catch (error) {
+    console.error('Error generating smart flyers:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to generate smart flyers: ' + error.message
+      });
+    }
+  }
+};
+
 module.exports = {
   getDashboardPage,
   getAdminDashboardData,
@@ -4756,6 +4925,10 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
+
+  // Smart Flyers
+  getPrintSmartFlyersPage,
+  generateSmartFlyers,
   bulkUpdateStock,
 
   // Shop Orders Management

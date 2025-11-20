@@ -332,4 +332,8 @@ router.get('/shop/products', adminController.getShopProductsPage);
 router.get('/shop/orders', adminController.getShopOrdersPage);
 router.get('/shop/orders/:id', adminController.getShopOrderDetailsPage);
 
+// Smart Flyers Management
+router.get('/print-smart-flyers', adminController.getPrintSmartFlyersPage);
+router.post('/generate-smart-flyers', adminController.generateSmartFlyers);
+
 module.exports = router;
