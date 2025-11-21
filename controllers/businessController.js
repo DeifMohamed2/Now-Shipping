@@ -2030,333 +2030,364 @@ function getDeliveryStatusText(orderType, amountType) {
   return statusMap[orderType] || 'DELIVER';
 }
 
-function getHtmlTemplate(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, watermarkDataUrl) {
+// Shared styles for all policy types
+const getSharedStyles = () => `
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    padding: 0;
+    margin: 0;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    background-color: white;
+    padding: 10px;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  .watermark {
+    position: absolute;
+    right: -150px;
+    top: 70%;
+    transform: translateY(-50%);
+    opacity: 0.1;
+    width: 652px;
+    height: auto;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    width: 150px;
+    height: auto;
+  }
+
+  .logo img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .awb-section {
+    text-align: center;
+    flex: 1;
+  }
+
+  .awb-label {
+    font-size: 20px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .awb-number {
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  .barcode-qr {
+    display: flex;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .barcode-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .barcode-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #000;
+    padding: 8px;
+    border-radius: 4px;
+  }
+
+  .barcode-label-box {
+    background-color: #000;
+    color: #fff;
+    padding: 20px 12px;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+  }
+
+  .barcode-wrapper {
+    background-color: #fff;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .barcode-wrapper img {
+    height: 64px;
+  }
+
+  .qr-code {
+    width: 112px;
+    height: 112px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    padding: 8px;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .qr-code img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .content {
+    display: grid;
+    grid-template-columns: 1fr 2.3fr;
+    gap: 24px;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+  }
+
+  .left-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .left-box {
+    border: 1px solid #9ca3af;
+  }
+
+  .right-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .right-box {
+    border: 1px solid #9ca3af;
+  }
+
+  .flex-1 {
+    flex: 1;
+  }
+
+  .form-row {
+    display: grid;
+    border-bottom: 1px solid #9ca3af;
+    min-height: 50px;
+  }
+
+  .form-row:last-child {
+    border-bottom: none;
+  }
+
+  .form-row-cod {
+    grid-template-columns: 1fr 1.5fr;
+  }
+
+  .form-row-reversed {
+    grid-template-columns: 1.5fr 1fr;
+  }
+
+  .form-row-normal {
+    grid-template-columns: 1.3fr 1.5fr;
+  }
+
+  .form-label {
+    padding: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    text-transform: uppercase;
+    border-right: 1px solid #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: #f9fafb;
+    white-space: nowrap;
+  }
+
+  .cod-label {
+    font-size: 20px;
+    font-weight: 800;
+    justify-content: center;
+  }
+
+  .arabic-label {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    justify-content: center;
+    background-color: #f9fafb;
+    padding: 12px;
+    border-left: none;
+    border-right: none;
+  }
+
+  .form-value {
+    padding: 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    text-align: center;
+    justify-content: center;
+    border-right: 1px solid #9ca3af;
+  }
+
+  .form-value-no-border {
+    border-right: none;
+  }
+
+  .description-value {
+    min-height: 100px;
+    align-items: flex-start;
+    padding-top: 12px;
+  }
+
+  .info-row {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    border-bottom: 1px solid #d1d5db;
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+  }
+
+  .info-label {
+    padding: 12px;
+    font-weight: bold;
+    background-color: #f9fafb;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-right: 1px solid #9ca3af;
+    min-width: 110px;
+  }
+
+  .info-value {
+    padding: 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    line-height: 1.4;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .address-value {
+    font-size: 14px;
+    line-height: 1.625;
+    min-height: 100px;
+    align-items: flex-start;
+  }
+
+  .notes-value {
+    min-height: 100px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .location-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .location-value {
+    padding: 12px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .location-value:last-child {
+    border-right: 1px solid #9ca3af;
+  }
+
+  .highlight-box {
+    background-color: #fef3c7;
+    border: 2px solid #f59e0b;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 4px;
+  }
+
+  .highlight-label {
+    font-weight: bold;
+    font-size: 16px;
+    color: #92400e;
+    margin-bottom: 8px;
+  }
+
+  .highlight-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #78350f;
+  }
+
+  .section-divider {
+    border-top: 2px solid #9ca3af;
+    margin: 16px 0;
+    padding-top: 16px;
+  }
+
+  @media print {
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      margin: 0;
+      padding: 10px;
+      page-break-after: avoid;
+    }
+  }
+`;
+
+// Delivery Policy Template (Original design)
+function getDeliveryPolicyTemplate(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, watermarkDataUrl) {
   return `
     <!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Delivery Document</title>
-      <style>
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        body {
-          font-family: Arial, sans-serif;
-          background-color: #fff;
-          padding: 0;
-          margin: 0;
-        }
-
-        .container {
-          width: 100%;
-          max-width: 100%;
-          margin: 0;
-          background-color: white;
-          padding: 10px;
-          box-sizing: border-box;
-          position: relative;
-        }
-
-        .watermark {
-          position: absolute;
-          right: -150px;
-          top: 70%;
-          transform: translateY(-50%);
-          opacity: 0.1;
-          width: 652px;
-          height: auto;
-          z-index: 0;
-          pointer-events: none;
-        }
-
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 32px;
-          gap: 16px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .logo {
-          width: 150px;
-          height: auto;
-        }
-
-        .logo img {
-          width: 100%;
-          height: auto;
-          display: block;
-        }
-
-        .awb-section {
-          text-align: center;
-          flex: 1;
-        }
-
-        .awb-label {
-          font-size: 20px;
-          font-weight: 800;
-          text-transform: uppercase;
-          margin-bottom: 12px;
-        }
-
-        .awb-number {
-          font-size: 24px;
-          font-weight: bold;
-        }
-
-        .barcode-qr {
-          display: flex;
-          gap: 64px;
-          align-items: center;
-        }
-
-        .barcode-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .barcode-container {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background-color: #000;
-          padding: 8px;
-          border-radius: 4px;
-        }
-
-        .barcode-label-box {
-          background-color: #000;
-          color: #fff;
-          padding: 20px 12px;
-          font-size: 14px;
-          font-weight: bold;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 50px;
-        }
-
-        .barcode-wrapper {
-          background-color: #fff;
-          padding: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .barcode-wrapper img {
-          height: 64px;
-        }
-
-        .qr-code {
-          width: 112px;
-          height: 112px;
-          border: 2px solid #d1d5db;
-          border-radius: 4px;
-          padding: 8px;
-          background-color: #fff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .qr-code img {
-          width: 100%;
-          height: 100%;
-        }
-
-        .content {
-          display: grid;
-          grid-template-columns: 1fr 2.3fr;
-          gap: 24px;
-          align-items: flex-start;
-          position: relative;
-          z-index: 1;
-        }
-
-        .left-section {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .left-box {
-          border: 1px solid #9ca3af;
-        }
-
-        .right-section {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .right-box {
-          border: 1px solid #9ca3af;
-        }
-
-        .flex-1 {
-          flex: 1;
-        }
-
-        .form-row {
-          display: grid;
-          border-bottom: 1px solid #9ca3af;
-          min-height: 50px;
-        }
-
-        .form-row:last-child {
-          border-bottom: none;
-        }
-
-        .form-row-cod {
-          grid-template-columns: 1fr 1.5fr;
-        }
-
-        .form-row-reversed {
-          grid-template-columns: 1.5fr 1fr;
-        }
-
-        .form-row-normal {
-          grid-template-columns: 1.3fr 1.5fr;
-        }
-
-        .form-label {
-          padding: 12px;
-          font-weight: bold;
-          font-size: 14px;
-          text-transform: uppercase;
-          border-right: 1px solid #9ca3af;
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          background-color: #f9fafb;
-          white-space: nowrap;
-        }
-
-        .cod-label {
-          font-size: 20px;
-          font-weight: 800;
-          justify-content: center;
-        }
-
-        .arabic-label {
-          font-size: 14px;
-          font-weight: bold;
-          text-align: center;
-          justify-content: center;
-          background-color: #f9fafb;
-          padding: 12px;
-          border-left: none;
-          border-right: none;
-        }
-
-        .form-value {
-          padding: 12px;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          font-weight: 500;
-          text-align: center;
-          justify-content: center;
-          border-right: 1px solid #9ca3af;
-        }
-
-        .form-value-no-border {
-          border-right: none;
-        }
-
-        .description-value {
-          min-height: 100px;
-          align-items: flex-start;
-          padding-top: 12px;
-        }
-
-        .info-row {
-          display: grid;
-          grid-template-columns: 1fr 110px;
-          border-bottom: 1px solid #d1d5db;
-        }
-
-        .info-row:last-child {
-          border-bottom: none;
-        }
-
-        .info-label {
-          padding: 12px;
-          font-weight: bold;
-          background-color: #f9fafb;
-          font-size: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          border-right: 1px solid #9ca3af;
-          min-width: 110px;
-        }
-
-        .info-value {
-          padding: 12px;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          line-height: 1.4;
-          text-align: center;
-          justify-content: center;
-        }
-
-        .address-value {
-          font-size: 14px;
-          line-height: 1.625;
-          min-height: 100px;
-          align-items: flex-start;
-        }
-
-        .notes-value {
-          min-height: 100px;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-        }
-
-        .location-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-        }
-
-        .location-value {
-          padding: 12px;
-          text-align: center;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .location-value:last-child {
-          border-right: 1px solid #9ca3af;
-        }
-
-        @media print {
-          body {
-            margin: 0;
-            padding: 0;
-          }
-          .container {
-            margin: 0;
-            padding: 10px;
-            page-break-after: avoid;
-          }
-        }
-      </style>
+      <title>Delivery Policy</title>
+      <style>${getSharedStyles()}</style>
     </head>
     <body>
       <div class="container">
@@ -2427,7 +2458,7 @@ function getHtmlTemplate(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, water
             <div class="left-box">
               <div class="form-row form-row-normal">
                 <div class="form-label" style="font-size: 12px; font-weight: 700; border-right: none;">ORDER REF</div>
-                <div class="form-value form-value-no-border" style="font-size: 15px; font-weight: 600;">${data.orderRef || ''}</div>
+                <div class="form-value form-value-no-border" style="font-size: 15px; font-weight: 600;">${data.orderRef || 'N/A'}</div>
               </div>
               <div class="form-row form-row-normal">
                 <div class="form-label" style="font-size: 12px; font-weight: 700; border-right: none;">CREATED ON</div>
@@ -2487,6 +2518,319 @@ function getHtmlTemplate(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, water
   `;
 }
 
+// Return Policy Template (Different design with original order number)
+function getReturnPolicyTemplate(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, watermarkDataUrl) {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Return Policy</title>
+      <style>${getSharedStyles()}</style>
+    </head>
+    <body>
+      <div class="container">
+        ${watermarkDataUrl ? `<img src="${watermarkDataUrl}" class="watermark" alt="Watermark">` : ''}
+        <div class="header">
+          <div class="logo">
+            ${logoDataUrl ? `<img src="${logoDataUrl}" alt="Logo">` : '<div style="font-size: 60px; font-weight: bold; color: #000;">now</div>'}
+          </div>
+          
+          <div class="awb-section">
+            <div class="awb-label">RETURN AWB NUMBER</div>
+            <div class="awb-number">${data.awbNumber}</div>
+          </div>
+
+          <div class="barcode-qr">
+            <div class="barcode-item">
+              <div class="barcode-container">
+                <div class="barcode-label-box">R-01</div>
+                <div class="barcode-wrapper">
+                  <img src="${barcodeDataUrl}" alt="Barcode">
+                </div>
+              </div>
+            </div>
+            
+            <div class="barcode-item">
+              <div class="qr-code">
+                <img src="${qrCodeDataUrl}" alt="QR Code">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="left-section">
+            <!-- Box 1: COD -->
+            <div class="left-box">
+              <div class="form-row form-row-cod">
+                <div class="form-label cod-label">COD</div>
+                <div class="form-value form-value-no-border">${data.cod}</div>
+              </div>
+            </div>
+
+            <!-- Box 1.5: حالة الشحنه -->
+            <div class="left-box">
+              <div class="form-row form-row-reversed">
+                <div class="form-value">RETURN</div>
+                <div class="arabic-label">حالة الشحنه</div>
+              </div>
+            </div>
+
+            <!-- Box 2: عدد القطع + فتح الشحنه + وصف الشحنه -->
+            <div class="left-box flex-1">
+              <div class="form-row form-row-reversed">
+                <div class="form-value">${data.numPieces || '1'}</div>
+                <div class="arabic-label">عدد القطع</div>
+              </div>
+              <div class="form-row form-row-reversed">
+                <div class="form-value">${data.openShipment || 'NO'}</div>
+                <div class="arabic-label">فتح الشحنه</div>
+              </div>
+              <div class="form-row form-row-reversed">
+                <div class="form-value description-value">${data.shipmentDescription || 'N/A'}</div>
+                <div class="arabic-label">وصف الشحنه</div>
+              </div>
+            </div>
+
+            <!-- Box 3: ORDER REF + CREATED ON -->
+            <div class="left-box">
+              <div class="form-row form-row-normal">
+                <div class="form-label" style="font-size: 12px; font-weight: 700; border-right: none;">ORDER REF</div>
+                <div class="form-value form-value-no-border" style="font-size: 15px; font-weight: 600;">${data.orderRef || 'N/A'}</div>
+              </div>
+              <div class="form-row form-row-normal">
+                <div class="form-label" style="font-size: 12px; font-weight: 700; border-right: none;">CREATED ON</div>
+                <div class="form-value form-value-no-border" style="font-size: 15px; font-weight: 600;">${data.createdOn || ''}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="right-section">
+            <!-- Box 1: من، الي، تليفون -->
+            <div class="right-box">
+              <div class="info-row">
+                <div class="info-value">${data.shippingFrom}</div>
+                <div class="info-label">من</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value">${data.recipientName}</div>
+                <div class="info-label">الي</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value">${data.recipientPhone}</div>
+                <div class="info-label">تليفون</div>
+              </div>
+            </div>
+
+            <!-- Box 2: المدينة، المنطقة، العنوان -->
+            <div class="right-box flex-1">
+              <div class="info-row">
+                <div class="location-row">
+                  <div class="location-value">${data.city}</div>
+                  <div class="location-value">${data.hub}</div>
+                </div>
+                <div class="info-label">المدينة</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value">${data.area}</div>
+                <div class="info-label">المنطقة</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value address-value">${data.address}</div>
+                <div class="info-label">العنوان</div>
+              </div>
+            </div>
+
+            <!-- Box 3: سبب الإرجاع + الملاحظات -->
+            <div class="right-box">
+              <div class="info-row">
+                <div class="info-value notes-value">${data.returnReason || 'N/A'}</div>
+                <div class="info-label">سبب الإرجاع</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value notes-value">${data.notes}</div>
+                <div class="info-label">الملاحظات</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Exchange Policy Template (Different design with exchange details)
+function getExchangePolicyTemplate(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, watermarkDataUrl) {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Exchange Policy</title>
+      <style>${getSharedStyles()}</style>
+    </head>
+    <body>
+      <div class="container">
+        ${watermarkDataUrl ? `<img src="${watermarkDataUrl}" class="watermark" alt="Watermark">` : ''}
+        <div class="header">
+          <div class="logo">
+            ${logoDataUrl ? `<img src="${logoDataUrl}" alt="Logo">` : '<div style="font-size: 60px; font-weight: bold; color: #000;">now</div>'}
+          </div>
+          
+          <div class="awb-section">
+            <div class="awb-label">EXCHANGE AWB NUMBER</div>
+            <div class="awb-number">${data.awbNumber}</div>
+          </div>
+
+          <div class="barcode-qr">
+            <div class="barcode-item">
+              <div class="barcode-container">
+                <div class="barcode-label-box">X-01</div>
+                <div class="barcode-wrapper">
+                  <img src="${barcodeDataUrl}" alt="Barcode">
+                </div>
+              </div>
+            </div>
+            
+            <div class="barcode-item">
+              <div class="qr-code">
+                <img src="${qrCodeDataUrl}" alt="QR Code">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="left-section">
+            <!-- Box 1: COD -->
+            <div class="left-box">
+              <div class="form-row form-row-cod">
+                <div class="form-label cod-label">COD</div>
+                <div class="form-value form-value-no-border">${data.cod}</div>
+              </div>
+            </div>
+
+            <!-- Box 1.5: حالة الشحنه -->
+            <div class="left-box">
+              <div class="form-row form-row-reversed">
+                <div class="form-value">EXCHANGE</div>
+                <div class="arabic-label">حالة الشحنه</div>
+              </div>
+            </div>
+
+            <!-- Box 2: عدد القطع + فتح الشحنه + وصف الشحنه -->
+            <div class="left-box flex-1">
+              <div class="form-row form-row-reversed">
+                <div class="form-value">${data.numPieces || '1'}</div>
+                <div class="arabic-label">عدد القطع</div>
+              </div>
+              <div class="form-row form-row-reversed">
+                <div class="form-value">${data.openShipment || 'NO'}</div>
+                <div class="arabic-label">فتح الشحنه</div>
+              </div>
+              <div class="form-row form-row-reversed">
+                <div class="form-value description-value">${data.shipmentDescription || 'N/A'}</div>
+                <div class="arabic-label">وصف الشحنه</div>
+              </div>
+            </div>
+
+            <!-- Box 3: ORDER REF + CREATED ON -->
+            <div class="left-box">
+              <div class="form-row form-row-normal">
+                <div class="form-label" style="font-size: 12px; font-weight: 700; border-right: none;">ORDER REF</div>
+                <div class="form-value form-value-no-border" style="font-size: 15px; font-weight: 600;">${data.orderRef || 'N/A'}</div>
+              </div>
+              <div class="form-row form-row-normal">
+                <div class="form-label" style="font-size: 12px; font-weight: 700; border-right: none;">CREATED ON</div>
+                <div class="form-value form-value-no-border" style="font-size: 15px; font-weight: 600;">${data.createdOn || ''}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="right-section">
+            <!-- Box 1: من، الي، تليفون -->
+            <div class="right-box">
+              <div class="info-row">
+                <div class="info-value">${data.shippingFrom}</div>
+                <div class="info-label">من</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value">${data.recipientName}</div>
+                <div class="info-label">الي</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value">${data.recipientPhone}</div>
+                <div class="info-label">تليفون</div>
+              </div>
+            </div>
+
+            <!-- Box 2: المدينة، المنطقة، العنوان -->
+            <div class="right-box flex-1">
+              <div class="info-row">
+                <div class="location-row">
+                  <div class="location-value">${data.city}</div>
+                  <div class="location-value">${data.hub}</div>
+                </div>
+                <div class="info-label">المدينة</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value">${data.area}</div>
+                <div class="info-label">المنطقة</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value address-value">${data.address}</div>
+                <div class="info-label">العنوان</div>
+              </div>
+            </div>
+
+            <!-- Box 3: Products Being Returned -->
+            <div class="right-box">
+              <div class="info-row">
+                <div class="info-value notes-value">${data.productDescription || 'N/A'}</div>
+                <div class="info-label">المنتج المراد إرجاعه</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value">${data.numberOfItems || '1'}</div>
+                <div class="info-label">عدد القطع المرجعة</div>
+              </div>
+            </div>
+
+            <!-- Box 4: New Product for Exchange -->
+            <div class="right-box">
+              <div class="info-row">
+                <div class="info-value notes-value">${data.productDescriptionReplacement || 'N/A'}</div>
+                <div class="info-label">المنتج الجديد للاستبدال</div>
+              </div>
+              <div class="info-row">
+                <div class="info-value">${data.numberOfItemsReplacement || '1'}</div>
+                <div class="info-label">عدد القطع الجديدة</div>
+              </div>
+            </div>
+
+            <!-- Box 5: الملاحظات -->
+            <div class="right-box">
+              <div class="info-row">
+                <div class="info-value notes-value">${data.notes}</div>
+                <div class="info-label">الملاحظات</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Legacy function for backward compatibility
+function getHtmlTemplate(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, watermarkDataUrl) {
+  return getDeliveryPolicyTemplate(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, watermarkDataUrl);
+}
+
 const printPolicy = async (req, res) => {
   let browser = null;
   
@@ -2499,10 +2843,14 @@ const printPolicy = async (req, res) => {
     }
 
     // Support both route params and query params for paper size
-    const paperSize = pageSize || req.query.paperSize || 'A4';
+    const paperSize = pageSize || req.query.paperSize || req.query.size || 'A4';
 
-    // Prepare data for PDF generation
-    const data = {
+    // Determine order type
+    const orderType = order.orderShipping?.orderType || 'Deliver';
+
+    // Prepare base data for PDF generation
+    // Use referralNumber for orderRef if it exists, otherwise don't include it
+    const baseData = {
       awbNumber: order.orderNumber || '',
       cod: order.orderShipping?.amountType === 'COD' || order.orderShipping?.amountType === 'CD' || order.orderShipping?.amountType === 'CC'
         ? `${order.orderShipping?.amount || '0'} EGP`
@@ -2514,14 +2862,50 @@ const printPolicy = async (req, res) => {
       hub: order.orderCustomer?.zone?.toUpperCase() || 'N/A',
       area: order.orderCustomer?.zone?.toUpperCase() || 'N/A',
       address: order.orderCustomer?.address || 'N/A',
-      notes: order.orderShipping?.returnNotes || order.orderShipping?.returnReason || 'N/A',
+      notes: order.orderShipping?.returnNotes || order.orderShipping?.returnReason || order.orderNotes || 'N/A',
       shippingFrom: order.business?.businessName || order.business?.fullName || 'Business',
-      orderRef: order.orderNumber || '',
+      orderRef: order.referralNumber || null, // Use referralNumber if it exists, otherwise null (will show N/A)
       createdOn: order.orderDate ? new Date(order.orderDate).toLocaleDateString('en-GB') : '',
       numPieces: order.orderShipping?.numberOfItems?.toString() || '1',
-      openShipment: 'NO', // Default value, can be customized based on your business logic
+      openShipment: 'NO',
       shipmentDescription: order.orderShipping?.productDescription || 'N/A'
     };
+
+    // Prepare data based on order type
+    let data = { ...baseData };
+    let templateFunction = getDeliveryPolicyTemplate;
+    let filenamePrefix = 'delivery';
+
+    if (orderType === 'Return') {
+      // Return order specific data
+      data = {
+        ...baseData,
+        returnReason: order.orderShipping?.returnReason || 'N/A',
+        notes: order.orderShipping?.returnNotes || order.orderShipping?.returnReason || order.orderNotes || 'N/A'
+      };
+      templateFunction = getReturnPolicyTemplate;
+      filenamePrefix = 'return';
+    } else if (orderType === 'Exchange') {
+      // Exchange order specific data
+      data = {
+        ...baseData,
+        productDescription: order.orderShipping?.productDescription || 'N/A',
+        numberOfItems: order.orderShipping?.numberOfItems?.toString() || '1',
+        productDescriptionReplacement: order.orderShipping?.productDescriptionReplacement || 'N/A',
+        numberOfItemsReplacement: order.orderShipping?.numberOfItemsReplacement?.toString() || '1',
+        notes: order.orderShipping?.returnNotes || order.orderShipping?.returnReason || order.orderNotes || 'N/A'
+      };
+      templateFunction = getExchangePolicyTemplate;
+      filenamePrefix = 'exchange';
+    } else if (orderType === 'Cash Collection') {
+      // Cash Collection uses delivery template but with different status
+      data = {
+        ...baseData,
+        deliveryStatus: 'CASH COLLECTION'
+      };
+      templateFunction = getDeliveryPolicyTemplate;
+      filenamePrefix = 'cash-collection';
+    }
 
     // Generate barcode and QR code
     const barcodeDataUrl = await generateBarcode(data.awbNumber);
@@ -2531,8 +2915,8 @@ const printPolicy = async (req, res) => {
     const logoDataUrl = getImageAsBase64('logo.png');
     const watermarkDataUrl = getImageAsBase64('watermark.png');
 
-    // Create HTML template
-    const htmlContent = getHtmlTemplate(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, watermarkDataUrl);
+    // Create HTML template based on order type
+    const htmlContent = templateFunction(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, watermarkDataUrl);
 
     // Launch browser
     console.log('Launching Puppeteer browser...');
@@ -2593,9 +2977,9 @@ const printPolicy = async (req, res) => {
       throw new Error('Generated PDF is empty');
     }
 
-    // Return PDF as downloadable file
+    // Return PDF as downloadable file with appropriate filename
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="delivery-${data.awbNumber}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${filenamePrefix}-policy-${data.awbNumber}.pdf"`);
     res.setHeader('Content-Length', pdfBuffer.length);
     res.setHeader('Cache-Control', 'no-cache');
     res.end(pdfBuffer, 'binary');

@@ -61,24 +61,6 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link menu-link" href="/admin/courier-tracking" role="button">
-            <i class="ri-map-pin-line" style="color: #F39720;"></i>
-            <span data-key="" style="color: #212529; font-size: 15px;">Courier Tracking</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link menu-link" href="/admin/notifications" role="button">
-            <i class="ri-notification-line" style="color: #F39720;"></i>
-            <span data-key="" style="color: #212529; font-size: 15px;">Send Courier Notifications</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link menu-link" href="/admin/notifications/businesses" role="button">
-            <i class="ri-notification-3-line" style="color: #F39720;"></i>
-            <span data-key="" style="color: #212529; font-size: 15px;">Send Business Notifications</span>
-          </a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link menu-link" href="#sidebarStockManagement" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarStockManagement">
             <i class="ri-store-line" style="color: #F39720;"></i>
             <span data-key="" style="color: #212529; font-size: 15px;">Stock Management</span>
@@ -176,6 +158,24 @@
         </li>
         <li class="menu-title"><span style="color: #212529; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">Tools</span></li>
         <li class="nav-item">
+          <a class="nav-link menu-link" href="/admin/notifications" role="button">
+            <i class="ri-notification-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Send Courier Notifications</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="/admin/notifications/businesses" role="button">
+            <i class="ri-notification-3-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Send Business Notifications</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link menu-link" href="/admin/courier-tracking" role="button">
+            <i class="ri-map-pin-line" style="color: #F39720;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;">Courier Tracking</span>
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link menu-link" href="/admin/print-smart-flyers" role="button">
             <i class="ri-printer-line" style="color: #F39720;"></i>
             <span data-key="" style="color: #212529; font-size: 15px;">Print Smart Flyers</span>
@@ -270,13 +270,22 @@
     text-align: center;
   }
 
-  .nav-link:hover {
-    background-color: rgba(243, 151, 32, 0.08);
+  .nav-link:hover,
+  .menu-link:hover,
+  .nav-link.menu-link:hover {
+    background-color: rgba(243, 151, 32, 0.1) !important;
+    background: rgba(243, 151, 32, 0.1) !important;
     color: #212529;
   }
 
-  .nav-link:hover i {
+  .nav-link:hover i,
+  .menu-link:hover i {
     color: #F39720;
+  }
+  
+  .collapse .nav-link:hover {
+    background-color: rgba(243, 151, 32, 0.1) !important;
+    background: rgba(243, 151, 32, 0.1) !important;
   }
 
   .nav-link.active {
@@ -345,7 +354,7 @@
   }
 
   .dropdown-item:hover {
-    background-color: rgba(243, 151, 32, 0.08);
+    background-color: rgba(243, 151, 32, 0.1) !important;
     color: #212529;
   }
 

@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const WHY_SMS_API_URL = 'https://bulk.whysms.com/api/v3/sms/send';
-const WHY_SMS_TOKEN = '900|FH1B9hPy6gDIJyTnXKuC90W6LjldaGVT27YgWn528cc069';
+const WHY_SMS_TOKEN = '900|FH1B9hv7Py6gDIJyTnXKuC90W6LjldaGVT27YgWn528cc069 9';
 const DEFAULT_SENDER_ID = 'NowShipping';
 
 function normalizeRecipient(recipient) {
