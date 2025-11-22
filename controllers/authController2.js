@@ -17,7 +17,7 @@ const { emailService } = require('../utils/email');
 //================================================= Landing Page =========================================================
 const index = (req, res) => {
   const lang = req.query.lang || req.cookies.language || 'en';
-  res.render('landing/comingsoon', { 
+  res.render('landing/index', { 
     title: 'Home', 
     layout: 'layouts/layout-without-nav',
     currentLang: lang
