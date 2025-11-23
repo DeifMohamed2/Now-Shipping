@@ -987,7 +987,12 @@ async function sendShopOrderAssignmentNotification(courierId, orderNumber, addit
 async function validateAndCleanupToken(token, userId = null, userType = 'business') {
   try {
     if (!token) {
-      return false;
+      return {
+        isValid: false,
+        reason: 'Token is missing or empty',
+        errorCode: 'missing-token',
+        errorMessage: 'No FCM token provided for validation'
+      };
     }
 
     // Try to send a test message to validate the token
@@ -1011,47 +1016,99 @@ async function validateAndCleanupToken(token, userId = null, userType = 'busines
 
     const messaging = getMessagingInstance(userType);
     await messaging.send(testMessage);
-    console.log(`Token validation successful for ${userType}`);
-    return true;
+    console.log(`✅ Token validation successful for ${userType}`);
+    return {
+      isValid: true,
+      reason: 'Token is valid and can receive notifications',
+      errorCode: null,
+      errorMessage: null
+    };
   } catch (error) {
-    console.error('Token validation failed:', error.message);
+    const errorCode = error.code || 'unknown-error';
+    const errorMessage = error.message || 'Unknown error occurred';
     
-    // If token is invalid, clean it up from database
-    if (error.code === 'messaging/invalid-registration-token' || 
-        error.code === 'messaging/registration-token-not-registered') {
-      
-      if (userId && userType) {
-        try {
-          const User = require('../models/user');
-          const Courier = require('../models/courier');
-          
-          if (userType === 'business') {
-            await User.findByIdAndUpdate(userId, { fcmToken: null });
-            console.log(`Cleaned up invalid FCM token for business user: ${userId}`);
-          } else if (userType === 'courier') {
-            await Courier.findByIdAndUpdate(userId, { fcmToken: null });
-            console.log(`Cleaned up invalid FCM token for courier: ${userId}`);
-          }
-        } catch (cleanupError) {
-          console.error('Error cleaning up invalid token:', cleanupError.message);
-        }
+    console.error('❌ Token validation failed:', errorMessage);
+    console.error('🔍 Validation error details:', {
+      code: errorCode,
+      errorInfo: error.errorInfo || 'N/A',
+      message: errorMessage,
+      userType,
+      userId: userId || 'N/A',
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'N/A'
+    });
+    
+    // Determine the reason for the validation failure
+    let reason = 'Unknown validation error';
+    
+    // List of error codes that indicate the token is permanently invalid
+    const invalidTokenCodes = [
+      'messaging/invalid-registration-token',
+      'messaging/registration-token-not-registered',
+      'messaging/invalid-argument',
+      'messaging/third-party-auth-error'
+    ];
+    
+    // Check if error message contains APNS or Web Push auth errors
+    const isAuthError = errorMessage && (
+      errorMessage.includes('Auth error from APNS') ||
+      errorMessage.includes('Auth error from Web Push Service') ||
+      errorMessage.includes('APNS') ||
+      errorMessage.includes('Web Push')
+    );
+    
+    // Provide detailed reasons based on error type
+    if (errorCode === 'messaging/invalid-registration-token') {
+      reason = 'Token format is invalid or malformed. The token may have been corrupted or is not a valid FCM registration token.';
+    } else if (errorCode === 'messaging/registration-token-not-registered') {
+      reason = 'Token is not registered with FCM. The app may have been uninstalled or the token was revoked.';
+    } else if (errorCode === 'messaging/invalid-argument') {
+      reason = 'Invalid argument provided to FCM. The token may be in an incorrect format or missing required fields.';
+    } else if (errorCode === 'messaging/third-party-auth-error' || isAuthError) {
+      if (errorMessage.includes('APNS')) {
+        reason = 'APNS (Apple Push Notification Service) authentication error. This usually means: (1) The APNS certificate/key is invalid or expired, (2) The token is for iOS but the APNS configuration is incorrect, (3) The app bundle ID doesn\'t match the APNS certificate, or (4) The device is not properly registered with APNS.';
+      } else if (errorMessage.includes('Web Push')) {
+        reason = 'Web Push Service authentication error. This usually means: (1) The VAPID keys are invalid or not configured correctly, (2) The web push subscription is invalid, or (3) The service worker registration has expired.';
+      } else {
+        reason = 'Third-party authentication error (APNS or Web Push). The push notification service authentication failed. Check your APNS/Web Push configuration and certificates.';
       }
+    } else if (errorCode === 'messaging/unavailable') {
+      reason = 'FCM service is temporarily unavailable. This is a temporary error and the token may still be valid.';
+    } else if (errorCode === 'messaging/internal-error') {
+      reason = 'Internal FCM server error. This is a temporary error and the token may still be valid.';
+    } else {
+      reason = `Validation failed with error: ${errorMessage}. Error code: ${errorCode}`;
     }
     
-    return false;
+    // Log warning but DO NOT clean up the token
+    if (invalidTokenCodes.includes(errorCode) || isAuthError) {
+      console.warn(`⚠️ Invalid FCM token detected (code: ${errorCode}, auth error: ${isAuthError})`);
+      console.warn(`📝 Reason: ${reason}`);
+      console.warn(`💾 Token will be kept in database for user: ${userId || 'N/A'}`);
+    } else {
+      console.warn(`⚠️ Token validation failed but token may still be valid (temporary error): ${errorCode}`);
+      console.warn(`📝 Reason: ${reason}`);
+    }
+    
+    return {
+      isValid: false,
+      reason: reason,
+      errorCode: errorCode,
+      errorMessage: errorMessage,
+      isPermanentError: invalidTokenCodes.includes(errorCode) || isAuthError
+    };
   }
 }
 
 /**
- * Clean up all invalid FCM tokens from database
- * @returns {Promise<object>} - Cleanup results
+ * Validate all FCM tokens (tokens are kept in database, not cleaned up)
+ * @returns {Promise<object>} - Validation results
  */
 async function cleanupInvalidTokens() {
   try {
     const User = require('../models/user');
     const Courier = require('../models/courier');
     
-    console.log('Starting FCM token cleanup...');
+    console.log('Starting FCM token validation (tokens will be kept)...');
     
     // Get all users with FCM tokens
     const businessUsers = await User.find({ 
@@ -1063,34 +1120,51 @@ async function cleanupInvalidTokens() {
       fcmToken: { $ne: null }
     });
     
-    let businessCleanupCount = 0;
-    let courierCleanupCount = 0;
+    let businessInvalidCount = 0;
+    let courierInvalidCount = 0;
+    const invalidTokens = [];
     
     // Validate business user tokens
     for (const user of businessUsers) {
-      const isValid = await validateAndCleanupToken(user.fcmToken, user._id, 'business');
-      if (!isValid) {
-        businessCleanupCount++;
+      const validationResult = await validateAndCleanupToken(user.fcmToken, user._id, 'business');
+      if (!validationResult.isValid) {
+        businessInvalidCount++;
+        invalidTokens.push({
+          userId: user._id,
+          userType: 'business',
+          reason: validationResult.reason,
+          errorCode: validationResult.errorCode,
+          errorMessage: validationResult.errorMessage
+        });
       }
     }
     
     // Validate courier tokens
     for (const courier of couriers) {
-      const isValid = await validateAndCleanupToken(courier.fcmToken, courier._id, 'courier');
-      if (!isValid) {
-        courierCleanupCount++;
+      const validationResult = await validateAndCleanupToken(courier.fcmToken, courier._id, 'courier');
+      if (!validationResult.isValid) {
+        courierInvalidCount++;
+        invalidTokens.push({
+          userId: courier._id,
+          userType: 'courier',
+          reason: validationResult.reason,
+          errorCode: validationResult.errorCode,
+          errorMessage: validationResult.errorMessage
+        });
       }
     }
     
-    console.log(`Token cleanup completed. Invalid tokens removed: ${businessCleanupCount} businesses, ${courierCleanupCount} couriers`);
+    console.log(`Token validation completed. Invalid tokens found: ${businessInvalidCount} businesses, ${courierInvalidCount} couriers`);
+    console.log(`💾 All tokens are kept in database (no cleanup performed)`);
     
     return {
-      businessCleanupCount,
-      courierCleanupCount,
-      totalCleanupCount: businessCleanupCount + courierCleanupCount
+      businessInvalidCount,
+      courierInvalidCount,
+      totalInvalidCount: businessInvalidCount + courierInvalidCount,
+      invalidTokens: invalidTokens
     };
   } catch (error) {
-    console.error('Error during token cleanup:', error);
+    console.error('Error during token validation:', error);
     throw error;
   }
 }
@@ -1106,17 +1180,67 @@ async function cleanupInvalidTokens() {
  */
 async function sendNotificationWithValidation(token, notification, data = {}, userId = null, userType = 'business') {
   try {
-    // First validate the token
-    const isValid = await validateAndCleanupToken(token, userId, userType);
+    // First try to validate the token (non-blocking)
+    // If validation fails, we'll still try to send the notification
+    // because validation might fail for temporary reasons
+    const validationResult = await validateAndCleanupToken(token, userId, userType);
     
-    if (!isValid) {
-      throw new Error('FCM token is invalid and has been cleaned up');
+    if (!validationResult.isValid) {
+      // Log the validation failure with detailed reason
+      console.warn(`⚠️ Token validation failed for ${userType} user: ${userId || 'N/A'}`);
+      console.warn(`📝 Validation reason: ${validationResult.reason}`);
+      console.warn(`🔍 Error code: ${validationResult.errorCode}`);
+      console.warn(`💾 Token will be kept in database - attempting to send notification anyway`);
+      
+      // Still try to send the notification - the actual send will handle the error properly
+      // This allows for cases where validation fails but the token might still work
     }
     
-    // Send the notification
+    // Send the notification (this will handle errors properly)
     return await sendNotification(token, notification, data, userType);
   } catch (error) {
-    console.error('Error in sendNotificationWithValidation:', error);
+    // Build detailed error message with reason
+    let errorMessage = error.message || 'Unknown error occurred';
+    const errorCode = error.code || 'unknown-error';
+    
+    // If error is about invalid token, provide detailed reason
+    if (errorCode === 'messaging/invalid-registration-token' || 
+        errorCode === 'messaging/registration-token-not-registered' ||
+        errorMessage.includes('Auth error from APNS') ||
+        errorMessage.includes('Auth error from Web Push Service')) {
+      
+      let reason = '';
+      if (errorMessage.includes('Auth error from APNS')) {
+        reason = 'APNS (Apple Push Notification Service) authentication error. Possible causes: (1) APNS certificate/key is invalid or expired, (2) iOS app bundle ID mismatch, (3) Device not properly registered with APNS, (4) APNS configuration issue in Firebase.';
+      } else if (errorMessage.includes('Auth error from Web Push Service')) {
+        reason = 'Web Push Service authentication error. Possible causes: (1) VAPID keys invalid or misconfigured, (2) Web push subscription expired, (3) Service worker registration issue.';
+      } else if (errorCode === 'messaging/invalid-registration-token') {
+        reason = 'Token format is invalid or malformed. The token may have been corrupted.';
+      } else if (errorCode === 'messaging/registration-token-not-registered') {
+        reason = 'Token is not registered with FCM. The app may have been uninstalled or token was revoked.';
+      }
+      
+      // Create enhanced error with reason
+      const enhancedError = new Error(`FCM token validation/send failed. ${reason} Error code: ${errorCode}. Token will be kept in database.`);
+      enhancedError.code = errorCode;
+      enhancedError.reason = reason;
+      enhancedError.originalError = error;
+      enhancedError.userId = userId;
+      enhancedError.userType = userType;
+      
+      console.error('❌ Error in sendNotificationWithValidation:', enhancedError.message);
+      console.error('🔍 Error details:', {
+        code: errorCode,
+        reason: reason,
+        userId: userId || 'N/A',
+        userType: userType || 'N/A',
+        tokenPreview: token ? `${token.substring(0, 20)}...` : 'N/A'
+      });
+      
+      throw enhancedError;
+    }
+    
+    console.error('❌ Error in sendNotificationWithValidation:', error);
     throw error;
   }
 }

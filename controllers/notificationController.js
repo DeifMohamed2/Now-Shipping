@@ -1048,28 +1048,29 @@ const getBusinessNotifications = async (req, res) => {
 };
 
 /**
- * Clean up invalid FCM tokens (Admin endpoint)
+ * Validate all FCM tokens (Admin endpoint - tokens are kept, not cleaned up)
  */
 const cleanupInvalidTokens = async (req, res) => {
   try {
-    console.log('Starting FCM token cleanup process...');
+    console.log('Starting FCM token validation process (tokens will be kept)...');
     
     const results = await firebase.cleanupInvalidTokens();
     
     return res.status(200).json({
       success: true,
-      message: 'Token cleanup completed successfully',
+      message: 'Token validation completed successfully. All tokens are kept in database.',
       results: {
-        businessCleanupCount: results.businessCleanupCount,
-        courierCleanupCount: results.courierCleanupCount,
-        totalCleanupCount: results.totalCleanupCount
+        businessInvalidCount: results.businessInvalidCount,
+        courierInvalidCount: results.courierInvalidCount,
+        totalInvalidCount: results.totalInvalidCount,
+        invalidTokens: results.invalidTokens // Detailed list of invalid tokens with reasons
       }
     });
   } catch (error) {
-    console.error('Error during token cleanup:', error);
+    console.error('Error during token validation:', error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to cleanup invalid tokens',
+      message: 'Failed to validate tokens',
       error: error.message
     });
   }
@@ -1124,16 +1125,23 @@ const testUserToken = async (req, res) => {
     }
     
     // Test the token
-    const isValid = await firebase.validateAndCleanupToken(user.fcmToken, user._id, userType);
+    const validationResult = await firebase.validateAndCleanupToken(user.fcmToken, user._id, userType);
     
     return res.status(200).json({
       success: true,
-      message: isValid ? 'FCM token is valid' : 'FCM token is invalid and has been cleaned up',
-      tokenValid: isValid,
+      message: validationResult.isValid ? 'FCM token is valid' : `FCM token is invalid. Reason: ${validationResult.reason}`,
+      tokenValid: validationResult.isValid,
+      validationDetails: {
+        isValid: validationResult.isValid,
+        reason: validationResult.reason,
+        errorCode: validationResult.errorCode,
+        errorMessage: validationResult.errorMessage,
+        isPermanentError: validationResult.isPermanentError
+      },
       user: {
         id: user._id,
         name: user.name,
-        fcmToken: isValid ? user.fcmToken : null
+        fcmToken: user.fcmToken // Token is kept in database
       }
     });
   } catch (error) {
@@ -1187,20 +1195,27 @@ const emergencyCleanupCourier = async (req, res) => {
       });
     }
     
-    // Test the token and clean up if invalid
-    const isValid = await firebase.validateAndCleanupToken(courier.fcmToken, courier._id, 'courier');
+    // Test the token (token will be kept in database)
+    const validationResult = await firebase.validateAndCleanupToken(courier.fcmToken, courier._id, 'courier');
     
     // Get updated courier info
     const updatedCourier = await Courier.findById(courierId);
     
     return res.status(200).json({
       success: true,
-      message: isValid ? 'FCM token is valid' : 'FCM token was invalid and has been cleaned up',
-      tokenValid: isValid,
+      message: validationResult.isValid ? 'FCM token is valid' : `FCM token is invalid. Reason: ${validationResult.reason}`,
+      tokenValid: validationResult.isValid,
+      validationDetails: {
+        isValid: validationResult.isValid,
+        reason: validationResult.reason,
+        errorCode: validationResult.errorCode,
+        errorMessage: validationResult.errorMessage,
+        isPermanentError: validationResult.isPermanentError
+      },
       courier: {
         id: updatedCourier._id,
         name: updatedCourier.name,
-        fcmToken: updatedCourier.fcmToken
+        fcmToken: updatedCourier.fcmToken // Token is kept in database
       }
     });
   } catch (error) {
