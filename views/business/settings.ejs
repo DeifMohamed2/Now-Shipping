@@ -1083,14 +1083,20 @@
           </div>
           <div class="col-md-6">
             <div class="form-group">
+              <label class="form-label">Account Number <span class="required">*</span></label>
+              <input type="text" class="form-control" id="accountNumber" name="accountNumber" value="<%= user.paymentMethod?.details?.accountNumber || '' %>" required placeholder="Example: 1234567890123456">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
               <label class="form-label">Account Name <span class="required">*</span></label>
               <input type="text" class="form-control" id="accountName" name="accountName" value="<%= user.paymentMethod?.details?.accountName || '' %>" required>
             </div>
           </div>
           <div class="col-md-12">
             <div class="form-group">
-              <label class="form-label">IBAN <span class="required">*</span></label>
-              <input type="text" class="form-control" id="IBAN" name="IBAN" value="<%= user.paymentMethod?.details?.IBAN || '' %>" required placeholder="Example: EG12 3456 7890 1234 5678 90">
+              <label class="form-label">IBAN (Optional)</label>
+              <input type="text" class="form-control" id="IBAN" name="IBAN" value="<%= user.paymentMethod?.details?.IBAN || '' %>" placeholder="Example: EG12 3456 7890 1234 5678 90">
             </div>
           </div>
         </div>
@@ -2201,8 +2207,13 @@
       paymentDetails.mobileWalletNumber = document.getElementById('mobileWalletNumber').value;
     } else if (paymentChoice === 'bankTransfer') {
       paymentDetails.bankName = document.getElementById('bankName').value;
+      paymentDetails.accountNumber = document.getElementById('accountNumber').value;
       paymentDetails.accountName = document.getElementById('accountName').value;
-      paymentDetails.IBAN = document.getElementById('IBAN').value;
+      // IBAN is optional, only include if provided
+      const ibanValue = document.getElementById('IBAN').value;
+      if (ibanValue) {
+        paymentDetails.IBAN = ibanValue;
+      }
     }
 
     const formData = {

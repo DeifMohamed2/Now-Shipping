@@ -510,6 +510,7 @@ const completionConfirm = async (req, res) => {
       IPAorPhoneNumber,
       mobileWalletNumber,
       accountName,
+      accountNumber,
       IBAN,
       bankName,
       brandName,
@@ -562,10 +563,14 @@ const completionConfirm = async (req, res) => {
       paymentDetails = { mobileWalletNumber };
     
     } else if (paymentMethod === "bankTransfer") {
-      if (!accountName || !IBAN || !bankName) {
-        return res.status(400).json({ error: "Account Name, IBAN, and Bank Name are required for Bank Transfer." });
+      if (!accountName || !accountNumber || !bankName) {
+        return res.status(400).json({ error: "Account Name, Account Number, and Bank Name are required for Bank Transfer." });
       }
-      paymentDetails = { accountName, IBAN, bankName };
+      paymentDetails = { accountName, accountNumber, bankName };
+      // Add IBAN if provided (optional)
+      if (IBAN) {
+        paymentDetails.IBAN = IBAN;
+      }
     } else {
       return res.status(400).json({ error: "Invalid payment method." });
     }

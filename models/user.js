@@ -191,7 +191,7 @@ const UserSchema = new mongoose.Schema(
             } else if (this.paymentMethod.paymentChoice === 'bankTransfer') {
               return (
                 value.hasOwnProperty('bankName') &&
-                value.hasOwnProperty('IBAN') &&
+                value.hasOwnProperty('accountNumber') &&
                 value.hasOwnProperty('accountName')
               );
             }

@@ -1092,9 +1092,11 @@
                           <option value="mashreq">Mashreq Bank Egypt / بنك المشرق مصر</option>
                           <option value="bank-ei">Bank of Egypt International (BEI) / بنك مصر الدولي</option>
                         </select>
-                        <label for="ibanNumber" class="form-label mt-3">Enter your IBAN:</label>
-                        <input type="text" id="ibanNumber" class="form-control" name="IBAN" placeholder="Example: EG12 3456 7890 1234 5678 90" required>
-                        <label for="accountName" class="form-label mt-3">Enter your Account Name:</label>
+                        <label for="accountNumber" class="form-label mt-3">Enter your Account Number <span class="text-danger">*</span>:</label>
+                        <input type="text" id="accountNumber" class="form-control" name="accountNumber" placeholder="Example: 1234567890123456" required>
+                        <label for="ibanNumber" class="form-label mt-3">Enter your IBAN (Optional):</label>
+                        <input type="text" id="ibanNumber" class="form-control" name="IBAN" placeholder="Example: EG12 3456 7890 1234 5678 90">
+                        <label for="accountName" class="form-label mt-3">Enter your Account Name <span class="text-danger">*</span>:</label>
                         <input type="text" id="accountName" class="form-control" name="accountName" placeholder="Example: John Doe" required>
                       </div>
                     </div>
