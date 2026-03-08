@@ -119,5 +119,9 @@
   },
   "resolutions": {
     "autoprefixer": "10.4.5"
+  },
+  "overrides": {
+    "serialize-javascript": "^7.0.3",
+    "@tootallnate/once": "^3.0.1"
   }
 }
