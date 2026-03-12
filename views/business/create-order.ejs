@@ -570,7 +570,7 @@
                 </div>
                 <div class="card-body">
                   <div class="row g-3">
-                    <div class="col-lg-3 col-sm-6">
+                    <div class="col-lg-4 col-sm-6" >
                       <div class="form-check card-radio">
                         <input id="paymentMethod01" name="orderType" type="radio" class="form-check-input" value="Deliver">
                         <label class="form-check-label" for="paymentMethod01">
@@ -579,7 +579,7 @@
                         </label>
                       </div>
                     </div>
-                    <div class="col-lg-3 col-sm-6">
+                    <div class="col-lg-4 col-sm-6">
                       <div class="form-check card-radio">
                         <input id="paymentMethod02" name="orderType" type="radio" class="form-check-input" value="Exchange">
                         <label class="form-check-label" for="paymentMethod02">
@@ -588,8 +588,8 @@
                         </label>
                       </div>
                     </div>
-                    <div class="col-lg-3 col-sm-6">
-                      <div class="form-check card-radio">
+                    <div class="col-lg-4 col-sm-6">
+                      <div class="form-check card-radio" >
                         <input id="paymentMethod03" name="orderType" type="radio" class="form-check-input" value="Return">
                         <label class="form-check-label" for="paymentMethod03">
                           <span class="fs-16 me-2"><i class="ri-arrow-go-back-line align-bottom"></i></span>
@@ -598,7 +598,7 @@
                       </div>
                     </div>
                     <div class="col-lg-3 col-sm-6">
-                      <div class="form-check card-radio">
+                      <div class="form-check card-radio" style="display: none;">
                         <input id="paymentMethod04" name="orderType" type="radio" class="form-check-input" value="Cash Collection">
                         <label class="form-check-label" for="paymentMethod04">
                           <span class="fs-16 me-2"><i class="ri-money-dollar-circle-line align-bottom"></i></span>
@@ -726,21 +726,9 @@
                       <button type="button" class="btn" id="increment-new">+</button>
                     </div>
                   </div>
-                  <!-- Enhanced Options Section - Side by Side -->
+                  <!-- Enhanced Options Section -->
                   <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label mb-2">Shipping Speed</label>
-                      <div class="enhanced-option-card" id="express-card-exchange">
-                        <input type="checkbox" name="isExpressShipping" id="express-shipping-exchange-checkbox">
-                        <div class="text-center">
-                          <div class="option-icon"><i class="ri-flashlight-line"></i></div>
-                          <div class="option-title">Express Shipping</div>
-                          <div class="option-description">Same day exchange service</div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="col-md-6 mb-3" id="cash-difference-section" style="display: none;">
+                    <div class="col-md-12 mb-3" id="cash-difference-section" style="display: none;">
                       <label class="form-label mb-2">Payment Collection</label>
                       <div class="enhanced-option-card" id="cd-card">
                         <input type="checkbox" name="CashDifference" id="cash-difference-checkbox">
@@ -869,23 +857,11 @@
                       <textarea class="form-control" name="returnNotes" id="return-notes" placeholder="Provide any additional details about the return..." rows="3"></textarea>
                     </div>
                   </div>
-                  
-                  <!-- Enhanced Express Shipping Option -->
-                  <div class="mb-3">
-                    <label class="form-label mb-2">Shipping Speed</label>
-                    <div class="enhanced-option-card" id="express-card-return">
-                      <input type="checkbox" name="isExpressShipping" id="express-shipping-return-checkbox">
-                      <div class="text-center">
-                        <div class="option-icon"><i class="ri-flashlight-line"></i></div>
-                        <div class="option-title">Express Return</div>
-                        <div class="option-description">Same day return pickup service</div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              <!-- Cash Collection Section -->
+              <!-- Cash Collection Section is hidden by request -->
+              <% /*
               <div id="cash-collection-section" class="card mb-4 hover-effect" style="display: none;">
                 <div class="card-header">
                   <h6 class="mb-0">Cash Collection Details</h6>
@@ -902,7 +878,6 @@
                       <input type="number" name="amountCashCollection" class="form-control" id="cash-collection-input" placeholder="Enter amount to collect">
                     </div>
                   </div>
-                  
                   <!-- Enhanced Express Shipping Option -->
                   <div class="mb-3">
                     <label class="form-label mb-2">Shipping Speed</label>
@@ -917,6 +892,7 @@
                   </div>
                 </div>
               </div>
+              */ %>
 
               <!-- Navigation Buttons -->
               <div class="d-flex align-items-start gap-3 mt-4">
@@ -1214,7 +1190,7 @@ document.addEventListener('DOMContentLoaded', function() {
     deliverSection.style.display = 'none';
     exchangeSection.style.display = 'none';
     returnSection.style.display = 'none';
-    cashCollectionSection.style.display = 'none';
+    if (cashCollectionSection) cashCollectionSection.style.display = 'none';
     // Disable all so they don't trigger validation
     setSectionDisabled(deliverSection, true);
     setSectionDisabled(exchangeSection, true);
@@ -1243,8 +1219,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function activateCashCollection() {
-    cashCollectionSection.style.display = 'block';
-    setSectionDisabled(cashCollectionSection, false);
+    if (cashCollectionSection) {
+      cashCollectionSection.style.display = 'block';
+      setSectionDisabled(cashCollectionSection, false);
+    }
   }
 
   orderTypeRadios.forEach(radio => {
@@ -1489,8 +1467,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Enhanced card interaction for new professional boxes
   function setupEnhancedCards() {
-    // Express Shipping cards
-    const expressCards = ['express-card', 'express-card-exchange', 'express-card-return', 'express-card-collection'];
+    // Express Shipping cards (only for Deliver orders)
+    const expressCards = ['express-card'];
     expressCards.forEach(cardId => {
       const card = document.getElementById(cardId);
       if (card) {

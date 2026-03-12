@@ -183,15 +183,14 @@ document.querySelectorAll('.form-steps').forEach((formSteps) => {
 
   // Submit Form
   const verificationForm = document.getElementById('verificationForm');
-const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
-const CLOUDINARY_UPLOAD_PRESET = 'order_project'; // Get this from Cloudinary settings
+const UPLOAD_URL = '/api/v1/upload/single';
 
 
 let uploadedPhotos = []; // Store uploaded image URLs
 const submitButton = document.getElementById('submitButton'); // Get Submit Button
 const photoCountDisplay = document.getElementById('photoCount'); // Get Photo Count Display
 
-// ✅ Handle Multiple File Uploads to Cloudinary (Keep Old Photos & Show Progress)
+// ✅ Handle Multiple File Uploads to Local Storage (Keep Old Photos & Show Progress)
 document.querySelectorAll('.filepond-input-multiple').forEach((input) => {
   input.addEventListener('change', async function (event) {
     const files = Array.from(event.target.files);
@@ -208,16 +207,16 @@ document.querySelectorAll('.filepond-input-multiple').forEach((input) => {
       const uploadPromises = files.map(async (file, index) => {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder', 'shop');
 
         try {
-          const response = await fetch(CLOUDINARY_URL, {
+          const response = await fetch(UPLOAD_URL, {
             method: 'POST',
             body: formData,
           });
           const data = await response.json();
-          if (data.secure_url) {
-            uploadedPhotos.push(data.secure_url);
+          if (data.url || data.secure_url) {
+            uploadedPhotos.push(data.url || data.secure_url);
             uploadedCount++;
 
             // ✅ Calculate Progress

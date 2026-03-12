@@ -1687,8 +1687,7 @@
 </script>
 
 <script>
-  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
-  const CLOUDINARY_UPLOAD_PRESET = 'order_project';
+  const UPLOAD_URL = '/api/v1/upload/single';
   let uploadedPhoto = '';
 
   document.getElementById('courierPhoto').addEventListener('change', async function(event) {
@@ -1702,11 +1701,11 @@
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'couriers');
 
       try {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', CLOUDINARY_URL, true);
+        xhr.open('POST', UPLOAD_URL, true);
 
         xhr.upload.onprogress = function(event) {
           if (event.lengthComputable) {

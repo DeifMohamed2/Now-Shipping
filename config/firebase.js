@@ -239,49 +239,35 @@ async function sendNotificationToUser(userId, userType, notification, data = {})
     const User = require('../models/user');
     const Courier = require('../models/courier');
     
+    // Handle case where userId is a populated object instead of an ID string
+    const id = (typeof userId === 'object' && userId !== null) ? (userId._id || userId) : userId;
+    
     let user;
     if (userType === 'business') {
-      user = await User.findById(userId);
+      user = await User.findById(id);
     } else if (userType === 'courier') {
-      user = await Courier.findById(userId);
+      user = await Courier.findById(id);
     } else {
-      const errorMsg = `❌ Invalid user type: "${userType}". Must be "business" or "courier"`;
-      console.error(errorMsg);
-      throw new Error(errorMsg);
+      throw new Error(`Invalid user type: "${userType}". Must be "business" or "courier"`);
     }
     
     if (!user) {
-      const errorMsg = `❌ ${userType} not found with ID: ${userId}`;
-      console.error(errorMsg);
-      console.error(`💡 Check if the ${userType} exists in the database`);
-      throw new Error(errorMsg);
+      console.warn(`⚠️ ${userType} not found - skipping notification`);
+      return null;
     }
     
     if (!user.fcmToken) {
       const userName = user.name || user.email || 'Unknown';
-      const errorMsg = `❌ ${userType} "${userName}" does not have a valid FCM token. User ID: ${userId}`;
-      console.error(errorMsg);
-      console.error(`💡 Solution: User needs to log in via mobile app to set FCM token`);
-      console.error(`📱 User details: Name: ${user.name || 'N/A'}, Email: ${user.email || 'N/A'}`);
-      throw new Error(errorMsg);
+      console.warn(`⚠️ ${userType} "${userName}" has no FCM token - skipping push notification`);
+      return null;
     }
     
-    console.log(`📱 Sending notification to ${userType}: ${user.name || user.email || 'Unknown'} (ID: ${userId})`);
-    console.log(`🔑 FCM Token: ${user.fcmToken.substring(0, 20)}...`);
-    console.log(`📋 Notification: ${notification.title} - ${notification.body}`);
+    console.log(`📱 Sending push to ${userType} "${user.name || user.email}": ${notification.title}`);
     
     return await sendNotification(user.fcmToken, notification, data, userType);
   } catch (error) {
-    console.error(`❌ Error sending notification to ${userType} (ID: ${userId}):`, error.message);
-    console.error(`📊 Error context:`, {
-      userType,
-      userId,
-      notificationTitle: notification?.title || 'N/A',
-      notificationBody: notification?.body || 'N/A',
-      errorCode: error.code || 'N/A',
-      errorType: error.constructor.name
-    });
-    throw error;
+    console.warn(`⚠️ Notification skipped for ${userType} (ID: ${userId}):`, error.message);
+    return null;
   }
 }
 
@@ -417,10 +403,11 @@ async function sendOrderStatusNotification(businessId, orderNumber, status, addi
     });
     
     await notification.save();
-    console.log(`📝 Order status notification saved to database for business ${businessId}`);
+    
+    const bizId = typeof businessId === 'object' ? (businessId._id || businessId) : businessId;
     
     // Send FCM notification
-    const fcmResponse = await sendNotificationToUser(businessId, 'business', message, data);
+    const fcmResponse = await sendNotificationToUser(bizId, 'business', message, data);
     
     // Update notification status based on FCM response
     if (fcmResponse) {
@@ -428,21 +415,12 @@ async function sendOrderStatusNotification(businessId, orderNumber, status, addi
       notification.deliveredAt = new Date();
       notification.fcmResponse = fcmResponse;
       await notification.save();
-      console.log(`✅ Order status notification delivered to business ${businessId}`);
     }
     
     return fcmResponse;
   } catch (error) {
-    console.error('❌ Error sending order status notification:', error.message);
-    console.error('🔍 Error context:', {
-      businessId,
-      orderNumber,
-      status,
-      errorCode: error.code || 'N/A',
-      errorType: error.constructor.name,
-      timestamp: new Date().toISOString()
-    });
-    throw error;
+    console.warn('⚠️ Order status notification skipped:', error.message);
+    return null;
   }
 }
 

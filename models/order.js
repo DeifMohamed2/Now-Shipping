@@ -136,7 +136,6 @@ const orderSchema = new mongoose.Schema(
     smartFlyerBarcode: {
       type: String,
       required: false,
-      default: null,
       sparse: true,
       unique: true,
     },
@@ -619,7 +618,15 @@ orderSchema.pre('save', function(next) {
   next();
 });
 
-// Pre-save: validate smartFlyerBarcode uniqueness
+// Pre-save: omit smartFlyerBarcode when null (sparse index excludes missing field; null causes duplicate key)
+orderSchema.pre('save', function(next) {
+  if (this.smartFlyerBarcode === null || this.smartFlyerBarcode === '') {
+    this.smartFlyerBarcode = undefined;
+  }
+  next();
+});
+
+// Pre-save: validate smartFlyerBarcode uniqueness when set
 orderSchema.pre('save', async function(next) {
   // Only validate if smartFlyerBarcode is being set or modified
   if (this.isModified('smartFlyerBarcode') && this.smartFlyerBarcode) {

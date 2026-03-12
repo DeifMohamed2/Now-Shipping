@@ -10,14 +10,19 @@ const assistantController = require('../../controllers/assistantController.js');
 
 async function authenticateUser(req, res, next) {
   const token = req.cookies.token;
+  
+  // Check if this is a JSON API request
+  const isApiRequest = 
+    req.path.startsWith('/api/') ||
+    req.path.includes('-data') ||  // Includes dashboard-data, order-data, etc.
+    req.headers['content-type'] === 'application/json' ||
+    req.xhr ||
+    (req.headers['accept'] && req.headers['accept'].includes('application/json'));
+  
   if (!token) {
     console.log('Token not found');
-    // For API requests, return JSON error instead of redirect
-    if (
-      req.path.startsWith('/api/') ||
-      req.headers['content-type'] === 'application/json'
-    ) {
-      return res.status(401).json({ error: 'Authentication required' });
+    if (isApiRequest) {
+      return res.status(401).json({ error: 'Authentication required', message: 'No token provided' });
     }
     return res.status(401).redirect('/login');
   }
@@ -34,12 +39,8 @@ async function authenticateUser(req, res, next) {
 
     if (!user) {
       res.clearCookie('token');
-      // For API requests, return JSON error instead of redirect
-      if (
-        req.path.startsWith('/api/') ||
-        req.headers['content-type'] === 'application/json'
-      ) {
-        return res.status(401).json({ error: 'User not found' });
+      if (isApiRequest) {
+        return res.status(401).json({ error: 'User not found', message: 'Invalid user credentials' });
       }
       return res.status(401).redirect('/login');
     }
@@ -48,22 +49,16 @@ async function authenticateUser(req, res, next) {
     const normalizedRole = (user && user.role ? String(user.role).toLowerCase() : '');
     const isCompleted = Boolean(user && user.isCompleted);
     if (normalizedRole === 'business' && !isCompleted) {
-      const allowedWhenIncomplete = new Set(['/dashboard', '/completionConfirm', '/request-verification']);
+      const allowedWhenIncomplete = new Set(['/dashboard', '/dashboard-data', '/completionConfirm', '/request-verification']);
 
       if (!allowedWhenIncomplete.has(req.path)) {
         // Expose flag to templates if needed
         res.locals.accountIncomplete = true;
 
-        // For API/JSON requests, respond with 403; otherwise, redirect to dashboard
-        if (
-          req.path.startsWith('/api/') ||
-          req.headers['content-type'] === 'application/json' ||
-          req.xhr ||
-          (req.headers['accept'] && req.headers['accept'].includes('application/json'))
-        ) {
+        if (isApiRequest) {
           return res
             .status(403)
-            .json({ error: 'Account not completed. Access restricted to dashboard.' });
+            .json({ error: 'Account not completed', message: 'Access restricted to dashboard.' });
         }
         return res.redirect('/business/dashboard');
       }
@@ -73,12 +68,8 @@ async function authenticateUser(req, res, next) {
   } catch (error) {
     console.error('Authentication error:', error);
     res.clearCookie('token');
-    // For API requests, return JSON error instead of redirect
-    if (
-      req.path.startsWith('/api/') ||
-      req.headers['content-type'] === 'application/json'
-    ) {
-      return res.status(401).json({ error: 'Invalid token' });
+    if (isApiRequest) {
+      return res.status(401).json({ error: 'Invalid token', message: error.message });
     }
     return res.status(401).redirect('/login');
   }

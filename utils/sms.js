@@ -46,11 +46,17 @@ async function sendSms({ recipient, message, senderId = DEFAULT_SENDER_ID, type 
 
   try {
     const response = await axios.post(WHY_SMS_API_URL, payload, { headers });
+    const status = response.data?.data?.status || response.data?.status;
+    console.log(`📱 SMS → ${normalizedRecipient} | ${status}`);
     return response.data;
   } catch (error) {
-    const details = error.response?.data || error.message;
+    const status = error.response?.status || 'NO_RESPONSE';
+    const detail = error.response?.data?.message || error.message;
+    console.error(`❌ SMS failed → ${normalizedRecipient} | ${status} | ${detail}`);
+    
     const err = new Error('WhySMS API error');
-    err.details = details;
+    err.details = error.response?.data || error.message;
+    err.response = error.response;
     throw err;
   }
 }

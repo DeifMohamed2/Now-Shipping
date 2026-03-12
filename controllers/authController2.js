@@ -227,31 +227,86 @@ const signup = async (req, res) => {
 const sendOTP = async (req, res) => {
   const { phoneNumber } = req.body;
 
+  console.log('\n========== OTP SEND REQUEST ==========');
+  console.log('Received phone number:', phoneNumber);
+
   if (!phoneNumber || !/^\d{11}$/.test(phoneNumber)) {
+    console.error('❌ Invalid phone number format:', phoneNumber);
     return res.status(400).json({ message: 'Invalid phone number' });
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
-
-  // Clear old OTPs
-  await OtpVerification.deleteMany({ phoneNumber });
-
-  // Save hashed OTP
-  await OtpVerification.create({ phoneNumber, otpHash });
-
-  // Format phone number to international
-  const internationalNumber = `20${phoneNumber.slice(1)}`; // Eg. "01123456789" -> "201123456789"
-
-  const smsMessage = `Your NowShipping verification code is: ${otp}`;
+  console.log('✅ OTP generated:', otp);
+  console.log('✅ OTP hash created');
 
   try {
-    await sms.sendSms({ recipient: internationalNumber, message: smsMessage });
+    // Clear old OTPs
+    console.log('🗑️  Clearing old OTPs for:', phoneNumber);
+    await OtpVerification.deleteMany({ phoneNumber });
+    console.log('✅ Old OTPs cleared');
 
-    return res.status(200).json({ message: `OTP sent successfully: ${otp}` });
+    // Save hashed OTP
+    console.log('💾 Saving OTP to database...');
+    await OtpVerification.create({ phoneNumber, otpHash });
+    console.log('✅ OTP saved to database');
+
+    // Format phone number to international
+    const internationalNumber = `20${phoneNumber.slice(1)}`; // Eg. "01123456789" -> "201123456789"
+    console.log('📱 Formatted international number:', internationalNumber);
+
+    const smsMessage = `Your NowShipping verification code is: ${otp}`;
+    console.log('📧 SMS message prepared:', smsMessage);
+
+    console.log('📤 Attempting to send SMS...');
+    const smsResult = await sms.sendSms({ 
+      recipient: internationalNumber, 
+      message: smsMessage 
+    });
+    
+    console.log('✅ SMS sent successfully!');
+    console.log('SMS API Response:', JSON.stringify(smsResult, null, 2));
+    console.log('======================================\n');
+
+    return res.status(200).json({ 
+      message: `OTP sent successfully to ${phoneNumber}`,
+      otp: otp // Remove this in production
+    });
+    
   } catch (err) {
-    console.error('SMS error:', err.details || err.message);
-    return res.status(500).json({ message: 'SMS service error' });
+    console.error('\n❌ ========== SMS SEND FAILED ==========');
+    console.error('Error type:', err.constructor.name);
+    console.error('Error message:', err.message);
+    
+    if (err.details) {
+      console.error('Error details:', JSON.stringify(err.details, null, 2));
+    }
+    
+    if (err.response) {
+      console.error('Error response status:', err.response.status);
+      console.error('Error response data:', JSON.stringify(err.response.data, null, 2));
+    }
+    
+    if (err.stack) {
+      console.error('Error stack trace:', err.stack);
+    }
+    
+    // Clean up the OTP from database since SMS failed
+    console.log('🗑️  Cleaning up OTP from database due to SMS failure...');
+    try {
+      await OtpVerification.deleteMany({ phoneNumber });
+      console.log('✅ OTP cleaned up from database');
+    } catch (cleanupErr) {
+      console.error('❌ Failed to cleanup OTP:', cleanupErr.message);
+    }
+    
+    console.error('======================================\n');
+    
+    return res.status(500).json({ 
+      message: 'Failed to send SMS. Please try again or contact support.',
+      error: err.message,
+      details: err.details || 'No additional details available'
+    });
   }
 };
 

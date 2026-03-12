@@ -931,7 +931,8 @@
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Yes, complete it!'
     }).then(async(result) => {
-      // Show loading
+      if (!result.isConfirmed) return;
+
       Swal.fire({
         title: 'Completing Pickup...',
         text: `Completing pickup #${pickupId}`,
@@ -940,34 +941,41 @@
           Swal.showLoading();
         }
       });
-      if (result.isConfirmed) {
+
+      try {
         const response = await fetch(`/courier/complete-pickup/${pickupId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify({ status: 'completed' }),
         });
+
+        const data = await response.json();
 
         if (response.ok) {
           Swal.fire({
             icon: 'success',
             title: 'Pickup Completed',
-            text: `Pickup #${pickupId} has been marked as completed.`,
+            text: data.message || `Pickup #${pickupId} has been marked as completed.`,
             timer: 2500
           }).then(() => {
             window.location.reload();
           });
         } else {
-          const result = await response.json();
           Swal.fire({
             icon: 'error',
             title: 'Completion Failed',
-            text: result.message || 'Failed to complete the pickup.',
+            text: data.message || 'Failed to complete the pickup.',
           });
         }
-      } else {
-       Swal.close();
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Something went wrong. Please try again.',
+        });
       }
     });
   }

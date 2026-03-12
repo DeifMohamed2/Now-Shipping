@@ -540,8 +540,12 @@ const updateOrderStatus = async (req, res) => {
       deliveryMan: courierId,
     })
       .populate('deliveryMan')
-      .populate('business')
+      .populate('business', 'name brandInfo email phoneNumber')
       .exec();
+
+    // Cache brand name before save() depopulates business
+    const businessBrandName = order?.business?.brandInfo?.brandName || order?.business?.name || 'NowShipping';
+
     if (!order) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Order not found' });
@@ -670,7 +674,7 @@ const completeOrder = async (req, res) => {
     return res.redirect('/courier/orders');
   }
   
-  const { collectionReceipt, exchangePhotos } = req.body || {}; // Parameters for Exchange and Cash Collection
+  const { collectionReceipt, exchangePhotos, otp } = req.body || {}; // Parameters for Exchange, Cash Collection, and OTP
   
   try {
     const order = await Order.findOne({
@@ -735,6 +739,29 @@ const completeOrder = async (req, res) => {
       }
       req.flash('error', `Order status ${order.orderStatus} is not valid for completion`);
       return res.redirect(`/courier/order-details/${orderNumber}`);
+    }
+
+    // OTP Validation for orders heading to customer (not return flows)
+    const isReturnFlow = order.orderStatus === 'returnInProgress' || order.orderStatus === 'headingToYou';
+    if (!isReturnFlow && order.orderStatus === 'headingToCustomer') {
+      // Check if OTP exists and is valid
+      if (!order.deliveryOtp || !order.deliveryOtp.otpHash || !order.deliveryOtp.expiresAt) {
+        return res.status(400).json({ message: 'Delivery OTP not generated. Please contact support.' });
+      }
+      if (new Date(order.deliveryOtp.expiresAt).getTime() < Date.now()) {
+        return res.status(400).json({ message: 'OTP expired. Please contact support to resend.' });
+      }
+      if (!otp) {
+        return res.status(400).json({ message: 'OTP is required to complete this order' });
+      }
+      const bcrypt = require('bcrypt');
+      const ok = await bcrypt.compare(String(otp), order.deliveryOtp.otpHash);
+      if (!ok) {
+        order.deliveryOtp.attempts = (order.deliveryOtp.attempts || 0) + 1;
+        await order.save();
+        return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
+      }
+      order.deliveryOtp.verifiedAt = new Date();
     }
 
     // Handle different completion types based on order type and status
@@ -931,15 +958,14 @@ const completeOrder = async (req, res) => {
     if (order.orderStatus === 'completed') {
       try {
         const phone = order.orderCustomer?.phoneNumber;
-        const brand = (order.business && order.business.brandInfo && order.business.brandInfo.brandName) || (order.business && order.business.name) || 'NowShipping';
         if (phone) {
           await sendSms({
             recipient: phone,
-            message: `NowShipping - ${brand}: Your order ${order.orderNumber} has been delivered by ${courierName}. Thank you!`
+            message: `NowShipping - ${businessBrandName}: Your order ${order.orderNumber} has been delivered by ${courierName}. Thank you!`
           });
         }
       } catch (e) {
-        console.error('SMS send error (order completed):', e.details || e.message);
+        console.error(`SMS completion error for ${order.orderNumber}:`, e.details || e.message);
       }
     }
     
@@ -1390,18 +1416,27 @@ const pickupReturn = async (req, res) => {
   } = req.body || {};
 
   try {
-    // Find the return order by scanning the ORIGINAL order number (not the return order number)
-    // The scanned orderNumber should match the originalOrderNumber field in the return order
+    // Try multiple lookup strategies to find the return order:
+    // 1. By the return order's own orderNumber
+    // 2. By originalOrderNumber field
+    // 3. By smartFlyerBarcode of the original deliver order
     let order = await Order.findOne({
-      'orderShipping.originalOrderNumber': orderNumber,
+      orderNumber: orderNumber,
       'orderShipping.orderType': 'Return',
       orderStatus: 'returnAssigned',
       deliveryMan: courierId,
     });
-    
-    // If not found by originalOrderNumber, also try finding via smartFlyerBarcode of the original order
+
     if (!order) {
-      // First, try to find the original deliver order by smartFlyerBarcode
+      order = await Order.findOne({
+        'orderShipping.originalOrderNumber': orderNumber,
+        'orderShipping.orderType': 'Return',
+        orderStatus: 'returnAssigned',
+        deliveryMan: courierId,
+      });
+    }
+    
+    if (!order) {
       const originalOrder = await Order.findOne({
         $or: [
           { orderNumber: orderNumber },
@@ -1411,28 +1446,22 @@ const pickupReturn = async (req, res) => {
       });
       
       if (originalOrder) {
-        // Then find the return order that references this original order
-        const returnOrder = await Order.findOne({
+        order = await Order.findOne({
           'orderShipping.originalOrderNumber': originalOrder.orderNumber,
           'orderShipping.orderType': 'Return',
           orderStatus: 'returnAssigned',
           deliveryMan: courierId,
         });
-        
-        if (returnOrder) {
-          // Use the return order found via original order lookup
-          order = returnOrder;
-        }
       }
     }
     
     if (!order) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ 
-          message: 'Return order not found. Please scan the ORIGINAL order number, not the return order number.' 
+          message: 'Return order not found or not assigned to you.' 
         });
       }
-      req.flash('error', 'Return order not found. Please scan the ORIGINAL order number.');
+      req.flash('error', 'Return order not found.');
       return res.redirect('/courier/returns');
     }
 
@@ -1555,8 +1584,9 @@ const pickupReturn = async (req, res) => {
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(200).json({
+        success: true,
         message: 'Return picked up successfully',
-        order: order,
+        orderNumber: order.orderNumber,
         nextAction: 'Deliver to warehouse',
       });
     }
@@ -1565,9 +1595,12 @@ const pickupReturn = async (req, res) => {
     req.flash('success', 'Return picked up successfully');
     res.redirect(`/courier/return-orders/${order.orderNumber}`);
   } catch (error) {
-    console.log(error.message);
+    console.error('Error in pickupReturn:', error);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(500).json({ message: error.message });
+      return res.status(500).json({ 
+        success: false,
+        message: error.message || 'Internal Server Error' 
+      });
     }
     req.flash('error', 'Internal Server Error');
     res.redirect('/courier/returns');
@@ -2350,7 +2383,6 @@ const completePickup = async (req, res) => {
     for (const order of pickup.ordersPickedUp) {
       order.orderStatus = 'pickedUp';
       order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
-      // Update packed stage for pickup completion
       if (!order.orderStages.packed.isCompleted) {
         order.orderStages.packed.isCompleted = true;
         order.orderStages.packed.completedAt = new Date();
@@ -2361,10 +2393,11 @@ const completePickup = async (req, res) => {
 
     await pickup.save();
 
-    // Send push notification to business about pickup completion
+    // Send push notification to business
+    const businessId = pickup.business?._id || pickup.business;
     try {
       await firebase.sendOrderStatusNotification(
-        pickup.business,
+        businessId,
         pickup.pickupNumber,
         'pickedUp',
         {
@@ -2374,10 +2407,16 @@ const completePickup = async (req, res) => {
           pickupFees: pickup.pickupFees
         }
       );
-      console.log(`📱 Push notification sent to business ${pickup.business} about pickup completion for pickup ${pickup.pickupNumber}`);
+      console.log(`📱 Push notification sent for pickup ${pickup.pickupNumber}`);
     } catch (notificationError) {
-      console.error(`❌ Failed to send push notification for pickup completion ${pickup.pickupNumber}:`, notificationError);
-      // Don't fail the pickup completion if notification fails
+      console.error(`❌ Push notification failed for pickup ${pickup.pickupNumber}:`, notificationError.message);
+    }
+
+    // Send WhatsApp notifications to customers
+    const { sendOrderPickedUpNotification } = require('../utils/whatsapp');
+    for (const order of pickup.ordersPickedUp) {
+      sendOrderPickedUpNotification(order)
+        .catch(e => console.error(`❌ WhatsApp failed for order ${order.orderNumber}:`, e.message));
     }
 
     // Check if request expects JSON response (API call)
@@ -2424,7 +2463,7 @@ const scanFastShippingOrder = async (req, res) => {
         { smartFlyerBarcode: orderNumber }
       ]
     })
-      .populate('business', 'name email phoneNumber')
+      .populate('business', 'name brandInfo email phoneNumber')
       .populate('deliveryMan', 'name phoneNumber');
 
     if (!order) {
@@ -2434,7 +2473,6 @@ const scanFastShippingOrder = async (req, res) => {
       });
     }
 
-    // Verify this is a fast shipping order
     if (!order.orderShipping || !order.orderShipping.isExpressShipping) {
       return res.status(400).json({ 
         success: false, 
@@ -2442,7 +2480,6 @@ const scanFastShippingOrder = async (req, res) => {
       });
     }
 
-    // Verify the order is in progress and assigned to this courier
     if (order.orderStatus !== 'inProgress') {
       return res.status(400).json({ 
         success: false, 
@@ -2457,10 +2494,8 @@ const scanFastShippingOrder = async (req, res) => {
       });
     }
 
-    // Mark all previous stages as completed and update status
     const now = new Date();
     
-    // Mark packed stage as completed
     if (!order.orderStages.packed.isCompleted) {
       order.orderStages.packed = {
         isCompleted: true,
@@ -2469,7 +2504,6 @@ const scanFastShippingOrder = async (req, res) => {
       };
     }
 
-    // Mark shipping stage as completed
     if (!order.orderStages.shipping.isCompleted) {
       order.orderStages.shipping = {
         isCompleted: true,
@@ -2478,7 +2512,6 @@ const scanFastShippingOrder = async (req, res) => {
       };
     }
 
-    // Mark outForDelivery stage as completed
     if (!order.orderStages.outForDelivery.isCompleted) {
       order.orderStages.outForDelivery = {
         isCompleted: true,
@@ -2487,21 +2520,18 @@ const scanFastShippingOrder = async (req, res) => {
       };
     }
 
-    // Update order status to headingToCustomer
     order.orderStatus = 'headingToCustomer';
     order.statusCategory = 'PROCESSING';
 
-    // Add to courier history
     order.courierHistory.push({
       courier: courierId,
       assignedAt: now,
       action: 'pickup_from_warehouse',
-      notes: 'Fast shipping order scanned - stages marked as completed, proceeding to customer delivery'
+      notes: 'Fast shipping order scanned - proceeding to customer delivery'
     });
 
-    // Generate and send 24h OTP to customer for delivery verification
+    // Generate 24h OTP for delivery verification
     const otp = String(Math.floor(100000 + Math.random() * 900000));
-    // Hash OTP using bcrypt already available in this controller
     order.deliveryOtp = {
       otpHash: require('bcrypt').hashSync(otp, 10),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -2509,16 +2539,22 @@ const scanFastShippingOrder = async (req, res) => {
       attempts: 0,
     };
 
-    // Send SMS (best-effort; non-blocking failures)
+    await order.save();
+
+    // Send SMS OTP to customer
     const phone = order.orderCustomer?.phoneNumber;
-    const brand = order.business?.brandInfo?.brandName || order.business?.name || 'Your Order';
+    const brand = order.business?.brandInfo?.brandName || order.business?.name || 'NowShipping';
     if (phone) {
       sendSms({ recipient: phone, message: `NowShipping - ${brand}: Your delivery OTP for order ${order.orderNumber} is ${otp}. Valid for 24 hours.` })
-        .catch((e) => console.error('SMS send error (delivery OTP):', e.details || e.message));
+        .catch((e) => console.error(`SMS OTP error for ${order.orderNumber}:`, e.details || e.message));
+    } else {
+      console.warn(`⚠️ No phone number for order ${order.orderNumber} - SMS OTP skipped`);
     }
 
-    // Save the order
-    await order.save();
+    // Send WhatsApp notification to customer
+    const { sendHeadingToCustomerNotification } = require('../utils/whatsapp');
+    sendHeadingToCustomerNotification(order)
+      .catch(e => console.error(`WhatsApp error for ${order.orderNumber}:`, e.message));
 
     res.status(200).json({
       success: true,

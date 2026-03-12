@@ -4,7 +4,7 @@ document.querySelectorAll('input[name="orderType"]').forEach(function(element) {
         document.getElementById('deliver-section').style.display = 'none';
         document.getElementById('exchange-section').style.display = 'none';
         document.getElementById('return-section').style.display = 'none';
-        document.getElementById('cash-collection-section').style.display = 'none';
+        // document.getElementById('cash-collection-section').style.display = 'none';
         document.getElementById('cash-on-delivery-section').style.display = 'none';
         document.getElementById('cash-difference-section').style.display = 'none';
 
@@ -19,9 +19,7 @@ document.querySelectorAll('input[name="orderType"]').forEach(function(element) {
             document.getElementById('orderCanbeOpened').style.display = 'block';
         } else if (this.id === 'paymentMethod03') {
             document.getElementById('return-section').style.display = 'block';
-        } else if (this.id === 'paymentMethod04') {
-            document.getElementById('cash-collection-section').style.display = 'block';
-            document.getElementById('orderCanbeOpened').style.display = 'none';
+        // Cash Collection option is hidden/disabled
         }
     });
 });
@@ -417,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function () {
         deliverSection.style.display = id === 'paymentMethod01' ? 'block' : 'none';
         exchangeSection.style.display = id === 'paymentMethod02' ? 'block' : 'none';
         returnSection.style.display = id === 'paymentMethod03' ? 'block' : 'none';
-        cashCollectionSection.style.display = id === 'paymentMethod04' ? 'block' : 'none';
+        if (cashCollectionSection) cashCollectionSection.style.display = id === 'paymentMethod04' ? 'block' : 'none';
     }
 
     // Wire change handlers

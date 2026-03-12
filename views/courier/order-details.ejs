@@ -5,6 +5,62 @@
 
 <%- contentFor('body') %>
 <style>
+  /* OTP Modal Custom Styles */
+  .otp-modal-popup {
+    border-radius: 16px !important;
+    padding: 2rem !important;
+  }
+  
+  .otp-modal-popup .swal2-title {
+    padding: 0 0 1rem 0 !important;
+  }
+  
+  .otp-modal-popup .swal2-html-container {
+    margin: 0 !important;
+  }
+  
+  .otp-modal-popup .swal2-actions {
+    margin-top: 2rem !important;
+    gap: 1rem;
+  }
+  
+  .otp-modal-popup .btn {
+    border-radius: 10px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+  }
+  
+  .otp-modal-popup .btn-primary {
+    background-color: #F39720;
+  }
+  
+  .otp-modal-popup .btn-primary:hover {
+    background-color: #e08a18;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(243, 151, 32, 0.3);
+  }
+  
+  .otp-modal-popup .btn-secondary {
+    background-color: #6c757d;
+  }
+  
+  .otp-modal-popup .btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+  }
+  
+  .swal2-validation-message {
+    background-color: #fff3cd !important;
+    border: 1px solid #ffc107 !important;
+    color: #856404 !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    margin-top: 1rem !important;
+  }
+  </style>
+<style>
   .order-card {
     border-radius: 10px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
@@ -1137,13 +1193,101 @@
   // Complete order delivery
   async function completeOrder(orderNumber) {
     try {
+      const orderStatus = '<%= order.orderStatus %>';
+      const orderType = '<%= order.orderShipping.orderType %>';
+      
+      // Check if OTP is required (for orders heading to customer, not returns)
+      const isReturnFlow = orderStatus === 'returnInProgress' || orderStatus === 'headingToYou';
+      const requiresOTP = !isReturnFlow && orderStatus === 'headingToCustomer';
+      
+      let otp = null;
+      
+      if (requiresOTP) {
+        // Show OTP input modal
+        const { value: otpValue } = await Swal.fire({
+          title: '<strong style="color: #2c3e50; font-size: 1.5rem;">Enter Delivery OTP</strong>',
+          html: `
+            <div style="padding: 1rem 0;">
+              <p style="color: #6c757d; font-size: 0.95rem; margin-bottom: 1.5rem;">
+                <i class="ri-message-2-line" style="color: #F39720; font-size: 1.2rem; vertical-align: middle;"></i>
+                Please enter the 6-digit OTP sent to the customer
+              </p>
+              <input 
+                type="text" 
+                id="otp-input" 
+                class="form-control" 
+                placeholder="• • • • • •" 
+                maxlength="6" 
+                pattern="[0-9]{6}" 
+                style="
+                  font-size: 2rem; 
+                  text-align: center; 
+                  letter-spacing: 1rem; 
+                  font-weight: 600;
+                  border: 2px solid #e0e0e0;
+                  border-radius: 12px;
+                  padding: 1rem;
+                  transition: all 0.3s ease;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                "
+                onfocus="this.style.borderColor='#F39720'; this.style.boxShadow='0 0 0 0.2rem rgba(243, 151, 32, 0.25)';"
+                onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)';"
+              >
+              <p style="color: #95a5a6; font-size: 0.85rem; margin-top: 1rem; margin-bottom: 0;">
+                <i class="ri-time-line"></i> OTP is valid for 24 hours
+              </p>
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonText: '<i class="ri-check-line"></i> Verify & Complete',
+          cancelButtonText: '<i class="ri-close-line"></i> Cancel',
+          confirmButtonColor: '#F39720',
+          cancelButtonColor: '#6c757d',
+          customClass: {
+            popup: 'otp-modal-popup',
+            confirmButton: 'btn btn-primary px-4',
+            cancelButton: 'btn btn-secondary px-4'
+          },
+          buttonsStyling: false,
+          width: '500px',
+          preConfirm: () => {
+            const otpInput = document.getElementById('otp-input').value;
+            if (!otpInput || otpInput.length !== 6) {
+              Swal.showValidationMessage('<i class="ri-error-warning-line"></i> Please enter a valid 6-digit OTP');
+              return false;
+            }
+            return otpInput;
+          },
+          didOpen: () => {
+            const input = document.getElementById('otp-input');
+            input.focus();
+            // Only allow numbers
+            input.addEventListener('input', (e) => {
+              e.target.value = e.target.value.replace(/[^0-9]/g, '');
+              // Add visual feedback when complete
+              if (e.target.value.length === 6) {
+                e.target.style.borderColor = '#28a745';
+                e.target.style.boxShadow = '0 0 0 0.2rem rgba(40, 167, 69, 0.25)';
+              }
+            });
+          }
+        });
+        
+        if (!otpValue) {
+          return; // User cancelled
+        }
+        
+        otp = otpValue;
+      }
+      
       const response = await fetch(`/courier/orders/${orderNumber}/complete`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        body: JSON.stringify({ otp })
       });
       
       const data = await response.json();
@@ -1175,7 +1319,6 @@
   // Complete return pickup
   async function completeReturn(orderNumber) {
     try {
-      // Show popup for notes
       const { value: notes } = await Swal.fire({
         title: 'Return Pickup',
         input: 'textarea',
@@ -1183,33 +1326,31 @@
         inputPlaceholder: 'Add any notes about the return pickup...',
         showCancelButton: true,
         confirmButtonText: 'Complete Pickup',
-        inputValidator: (value) => {
-          // Notes are optional
-          return null;
-        }
       });
       
-      if (notes === undefined) {
-        // User cancelled
-        return;
-      }
+      if (notes === undefined) return;
       
-      // Process the return pickup
-      const response = await fetch(`/api/v1/courier/orders/${orderNumber}/pickup-return`, {
+      const response = await fetch(`/courier/orders/${orderNumber}/pickup-return`, {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ notes })
+        credentials: 'same-origin',
+        body: JSON.stringify({ notes: notes || '' })
       });
       
-      const data = await response.json();
+      let data;
+      const text = await response.text();
+      try { data = JSON.parse(text); } catch (e) {
+        throw new Error('Server returned an unexpected response. Please try again.');
+      }
       
       if (response.ok) {
         Swal.fire({
           icon: 'success',
           title: 'Success!',
-          text: 'Return has been picked up and marked as in return stock.',
+          text: 'Return has been picked up successfully.',
           confirmButtonText: 'OK',
           timer: 2000
         }).then(() => {
@@ -1353,11 +1494,13 @@
         return; // User cancelled
       }
       
-      const response = await fetch(`/api/v1/courier/orders/${orderNumber}/pickup-return`, {
+      const response = await fetch(`/courier/orders/${orderNumber}/pickup-return`, {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
+        credentials: 'same-origin',
         body: JSON.stringify({ notes })
       });
       
@@ -1405,11 +1548,13 @@
         return; // User cancelled
       }
       
-      const response = await fetch(`/api/v1/courier/orders/${orderNumber}/deliver-to-warehouse`, {
+      const response = await fetch(`/courier/orders/${orderNumber}/deliver-to-warehouse`, {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
+        credentials: 'same-origin',
         body: JSON.stringify({ notes })
       });
       
@@ -1457,11 +1602,13 @@
         return; // User cancelled
       }
       
-      const response = await fetch(`/api/v1/courier/orders/${orderNumber}/complete-return-to-business`, {
+      const response = await fetch(`/courier/orders/${orderNumber}/complete-return-to-business`, {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
+        credentials: 'same-origin',
         body: JSON.stringify({ notes })
       });
       

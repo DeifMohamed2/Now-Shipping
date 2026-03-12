@@ -3,7 +3,7 @@ const TicketMessage = require('../models/ticketMessage');
 const Order = require('../models/order');
 const User = require('../models/user');
 const Admin = require('../models/admin');
-const cloudinary = require('../utils/cloudinary');
+const { uploadMultipleFiles } = require('../utils/fileUpload');
 
 // Create a new ticket
 exports.createTicket = async (req, res) => {
@@ -710,38 +710,10 @@ exports.uploadMessageAttachment = async (req, res) => {
       });
     }
 
-    // Upload files to Cloudinary
-    const uploadPromises = req.files.map(async (file) => {
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: 'tickets',
-        resource_type: 'auto',
-      });
-
-      // Determine file type
-      let fileType = 'file';
-      if (result.resource_type === 'image') {
-        fileType = 'image';
-      } else if (result.resource_type === 'video') {
-        fileType = 'video';
-      } else if (result.format === 'mp3' || result.format === 'wav') {
-        fileType = 'audio';
-      }
-
-      return {
-        type: fileType,
-        url: result.secure_url,
-        publicId: result.public_id,
-        filename: file.originalname,
-        filesize: file.size,
-        mimetype: file.mimetype,
-        thumbnailUrl:
-          result.resource_type === 'video'
-            ? result.secure_url.replace(/\.[^/.]+$/, '.jpg')
-            : null,
-      };
-    });
-
-    const attachments = await Promise.all(uploadPromises);
+    // Upload files to local storage
+    console.log('📤 Uploading files to local storage...');
+    const attachments = await uploadMultipleFiles(req.files, 'tickets');
+    console.log('✅ Files uploaded successfully:', attachments.length);
 
     // If messageId provided, update existing message
     if (messageId) {

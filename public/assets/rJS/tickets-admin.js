@@ -14,9 +14,8 @@
   let currentPriorityFilter = 'all';
   let currentTypeFilter = 'all';
   
-  // Cloudinary configuration
-  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
-  const CLOUDINARY_UPLOAD_PRESET = 'order_project';
+  // Local upload configuration
+  const UPLOAD_URL = '/api/v1/upload/single';
 
   // Initialize Socket.IO
   function initSocket() {
@@ -368,12 +367,12 @@
     chatMessages.appendChild(messageDiv);
   }
 
-  // Upload image to Cloudinary
+  // Upload image to local storage
   async function uploadImageToCloudinary(file) {
     return new Promise((resolve, reject) => {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'tickets');
 
       const xhr = new XMLHttpRequest();
       
@@ -391,7 +390,7 @@
           setTimeout(() => {
             updateUploadProgress(0);
           }, 500);
-          resolve(response.secure_url);
+          resolve(response.url || response.secure_url);
         } else {
           reject(new Error('Upload failed'));
         }
@@ -401,7 +400,7 @@
         reject(new Error('Upload failed'));
       };
 
-      xhr.open('POST', CLOUDINARY_URL, true);
+      xhr.open('POST', UPLOAD_URL, true);
       xhr.send(formData);
     });
   }

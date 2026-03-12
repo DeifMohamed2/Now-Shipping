@@ -15,17 +15,17 @@ const governmentCategories = {
 };
 
 const orderBaseFees = {
-  'Cairo': { Deliver: 80, Return: 70, CashCollection: 70, Exchange: 95 },
-  'Alexandria': { Deliver: 85, Return: 75, CashCollection: 75, Exchange: 100 },
-  'Delta-Canal': { Deliver: 91, Return: 81, CashCollection: 81, Exchange: 106 },
-  'Upper-RedSea': { Deliver: 116, Return: 106, CashCollection: 106, Exchange: 131 },
+  'Cairo': { Deliver: 100, Return: 100, Exchange: 100, 'Cash Collection': 100 },
+  'Alexandria': { Deliver: 100, Return: 100, Exchange: 100, 'Cash Collection': 100 },
+  'Delta-Canal': { Deliver: 100, Return: 100, Exchange: 100, 'Cash Collection': 100 },
+  'Upper-RedSea': { Deliver: 100, Return: 100, Exchange: 100, 'Cash Collection': 100 },
 };
 
 const pickupBaseFees = {
-  'Cairo': 50,
-  'Alexandria': 55,
-  'Delta-Canal': 60,
-  'Upper-RedSea': 80,
+  'Cairo': 100,
+  'Alexandria': 100,
+  'Delta-Canal': 100,
+  'Upper-RedSea': 100,
 };
 
 function resolveCategoryByCity(city) {
@@ -39,14 +39,13 @@ function resolveCategoryByCity(city) {
 function calculateOrderFee(city, orderType, isExpressShipping) {
   const category = resolveCategoryByCity(city);
   let fee = orderBaseFees[category]?.[orderType] || 0;
-  if (isExpressShipping) fee *= 2;
+  // Fast shipping (isExpressShipping) is always 200 EGP
+  if (isExpressShipping) return 200;
   return fee;
 }
 
 function calculatePickupFee(city, pickedCount) {
-  const category = resolveCategoryByCity(city);
-  const base = pickupBaseFees[category] || 50;
-  return pickedCount < 3 ? Math.round(base * 1.3) : base;
+  return 100; // All pickup fees 100 EGP
 }
 
 module.exports = {

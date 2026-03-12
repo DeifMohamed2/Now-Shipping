@@ -282,8 +282,7 @@
 <script>
   let productsData = [];
   let uploadedImages = [];
-  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
-  const CLOUDINARY_UPLOAD_PRESET = 'order_project';
+  const UPLOAD_URL = '/api/v1/upload/single';
 
   document.addEventListener('DOMContentLoaded', function() {
     initializeFilePond();
@@ -332,11 +331,11 @@
           // Create form data
           const formData = new FormData();
           formData.append('file', file);
-          formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+          formData.append('folder', 'shop');
 
           // Create and send XHR request
           const xhr = new XMLHttpRequest();
-          xhr.open('POST', CLOUDINARY_URL, true);
+          xhr.open('POST', UPLOAD_URL, true);
 
           // Update progress
           xhr.upload.onprogress = (e) => {
@@ -355,12 +354,12 @@
           xhr.onload = function() {
             if (xhr.status >= 200 && xhr.status < 300) {
               const response = JSON.parse(xhr.responseText);
-              uploadedImages.push(response.secure_url);
+              uploadedImages.push(response.url || response.secure_url);
 
               // Update hidden input with uploaded URLs
               document.getElementById('productImageUrls').value = JSON.stringify(uploadedImages);
 
-              load(response.secure_url);
+              load(response.url || response.secure_url);
             } else {
               error('Upload failed');
               showError('Image upload failed. Please try again.');

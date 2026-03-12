@@ -2046,8 +2046,7 @@
       });
 
       // File Upload Handling
-      const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dusod9wxt/upload';
-      const CLOUDINARY_UPLOAD_PRESET = 'order_project';
+      const UPLOAD_URL = '/api/v1/upload/single';
 
       let uploadedPhotos = [];
       const photoCountDisplay = document.getElementById('photoCount');
@@ -2089,11 +2088,11 @@
               // Create form data
               const formData = new FormData();
               formData.append('file', file);
-              formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+              formData.append('folder', 'shop');
 
               // Create and send XHR request
               const xhr = new XMLHttpRequest();
-              xhr.open('POST', CLOUDINARY_URL, true);
+              xhr.open('POST', UPLOAD_URL, true);
 
               // Update progress
               xhr.upload.onprogress = (e) => {
@@ -2112,7 +2111,7 @@
               xhr.onload = function() {
                 if (xhr.status >= 200 && xhr.status < 300) {
                   const response = JSON.parse(xhr.responseText);
-                  uploadedPhotos.push(response.secure_url);
+                  uploadedPhotos.push(response.url || response.secure_url);
 
                   // Update photo count display
                   if (photoCountDisplay) {

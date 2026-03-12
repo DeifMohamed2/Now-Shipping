@@ -10,7 +10,8 @@ const nodemailer = require('nodemailer');
 const statusHelper = require('../utils/statusHelper');
 const ExcelJS = require('exceljs');
 const { emailService } = require('../utils/email');
-const cloudinary = require('../utils/cloudinary');
+const { uploadFile } = require('../utils/fileUpload');
+const { calculateOrderFee, calculatePickupFee: calcPickupFee } = require('../utils/fees');
 const puppeteer = require('puppeteer');
 const JsBarcode = require('jsbarcode');
 const QRCode = require('qrcode');
@@ -1165,20 +1166,6 @@ const submitOrder = async (req, res) => {
 
     // Cash Difference amount is optional for Exchange orders
     // No validation required for amountCashDifference
-  } else if (orderType === 'Cash Collection') {
-    if (!amountCashCollection) {
-      return res
-        .status(400)
-        .json({ error: 'Cash collection amount is required.' });
-    }
-    
-    // Cash Collection doesn't need product description or number of items
-    // But we'll validate the amount is positive
-    if (parseFloat(amountCashCollection) <= 0) {
-      return res
-        .status(400)
-        .json({ error: 'Cash collection amount must be greater than zero.' });
-    }
   }
 
   // ✅ 3. Calculate order fees using server-side calculator
@@ -3697,41 +3684,9 @@ const createPickup = async (req, res) => {
       selectedAddress = business.pickUpAddresses.find(addr => addr.isDefault) || business.pickUpAddresses[0];
     }
     
-    const businessCity = selectedAddress?.city || business?.pickUpAdress?.city || '';
-
-    const governmentCategories = {
-      'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
-      'Alexandria': ['Alexandria', 'Beheira', 'Matrouh'],
-      'Delta-Canal': [
-        'Dakahlia', 'Sharqia', 'Monufia', 'Gharbia',
-        'Kafr el-Sheikh', 'Damietta', 'Port Said', 'Ismailia', 'Suez'
-      ],
-      'Upper-RedSea': [
-        'Fayoum', 'Beni Suef', 'Minya', 'Asyut',
-        'Sohag', 'Qena', 'Luxor', 'Aswan', 'Red Sea',
-        'North Sinai', 'South Sinai', 'New Valley'
-      ]
-    };
-
-    function getPickupBaseFeeByCity(city){
-      let category = 'Cairo';
-      for (const [cat, govs] of Object.entries(governmentCategories)) {
-        if (govs.includes(city)) { category = cat; break; }
-      }
-      // Base pickup fees by category (tunable)
-      const baseByCategory = {
-        'Cairo': 50,
-        'Alexandria': 55,
-        'Delta-Canal': 60,
-        'Upper-RedSea': 80,
-      };
-      return baseByCategory[category] || 50;
-    }
-
-    const basePickupFee = getPickupBaseFeeByCity(businessCity);
-    // Initially 0 picked orders, so apply < 3 rule
+    const businessCity = selectedAddress?.city || business?.pickUpAdress?.city || 'Cairo';
     const initialPickedCount = 0;
-    const computedPickupFee = initialPickedCount < 3 ? Math.round(basePickupFee * 1.3) : basePickupFee;
+    const computedPickupFee = calcPickupFee(businessCity, initialPickedCount);
 
     // ✅ 3. Create Pickup
     // Use selected address phone if available, otherwise use provided phoneNumber
@@ -4844,67 +4799,9 @@ const logOut = (req, res) => {
 }
 
 const calculateFees = (government, orderType, isExpressShipping) => {
-  // Define fee configuration
-  const feeConfig = {
-    governments: {
-      'Cairo': {
-        Deliver: 80,
-        Return: 70,
-        CashCollection: 70,
-        Exchange: 95,
-      },
-      'Alexandria': {
-        Deliver: 85,
-        Return: 75,
-        CashCollection: 75,
-        Exchange: 100,
-      },
-      'Delta-Canal': {
-        Deliver: 91,
-        Return: 81,
-        CashCollection: 81,
-        Exchange: 106,
-      },
-      'Upper-RedSea': {
-        Deliver: 116,
-        Return: 106,
-        CashCollection: 106,
-        Exchange: 131,
-      }
-    },
-    governmentCategories: {
-      'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
-      'Alexandria': ['Alexandria', 'Beheira', 'Matrouh'],
-      'Delta-Canal': [
-        'Dakahlia', 'Sharqia', 'Monufia', 'Gharbia', 
-        'Kafr el-Sheikh', 'Damietta', 'Port Said', 'Ismailia', 'Suez'
-      ],
-      'Upper-RedSea': [
-        'Fayoum', 'Beni Suef', 'Minya', 'Asyut', 
-        'Sohag', 'Qena', 'Luxor', 'Aswan', 'Red Sea', 
-        'North Sinai', 'South Sinai', 'New Valley'
-      ]
-    }
-  };
-
-  // Find the category for the government
-  let category = 'Cairo'; // Default
-  for (const [cat, govs] of Object.entries(feeConfig.governmentCategories)) {
-    if (govs.includes(government)) {
-      category = cat;
-      break;
-    }
-  }
-
-  // Get base fee from config
-  let fee = feeConfig.governments[category][orderType] || 0;
-
-  // Apply express shipping multiplier if needed
-  if (isExpressShipping) {
-    fee *= 2;
-  }
-
-  return fee;
+  // Normalize order type (e.g. "Cash Collection" from form)
+  const normalizedType = orderType === 'CashCollection' ? 'Cash Collection' : orderType;
+  return calculateOrderFee(government, normalizedType, isExpressShipping);
 };
 
 // Helper function to generate a unique order number
@@ -5027,40 +4924,14 @@ const validateOriginalOrder = async (req, res) => {
   }
 };
 
-// Calculate pickup fee (server-side) based on user's city and number of orders (<3 => 1.3x)
+// Calculate pickup fee (server-side) using centralized fees
 const calculatePickupFee = async (req, res) => {
   try {
     const { numberOfOrders } = req.body;
     const user = await User.findById(req.userData._id);
-    const city = user?.pickUpAdress?.city || '';
-
-    const governmentCategories = {
-      'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
-      'Alexandria': ['Alexandria', 'Beheira', 'Matrouh'],
-      'Delta-Canal': [
-        'Dakahlia', 'Sharqia', 'Monufia', 'Gharbia', 
-        'Kafr el-Sheikh', 'Damietta', 'Port Said', 'Ismailia', 'Suez'
-      ],
-      'Upper-RedSea': [
-        'Fayoum', 'Beni Suef', 'Minya', 'Asyut', 
-        'Sohag', 'Qena', 'Luxor', 'Aswan', 'Red Sea', 
-        'North Sinai', 'South Sinai', 'New Valley'
-      ]
-    };
-
-    let category = 'Cairo';
-    for (const [cat, govs] of Object.entries(governmentCategories)) {
-      if (govs.includes(city)) { category = cat; break; }
-    }
-    const baseByCategory = {
-      'Cairo': 50,
-      'Alexandria': 55,
-      'Delta-Canal': 60,
-      'Upper-RedSea': 80,
-    };
-    const base = baseByCategory[category] || 50;
+    const city = user?.pickUpAdress?.city || 'Cairo';
     const count = parseInt(numberOfOrders || '0');
-    const fee = (isNaN(count) || count < 3) ? Math.round(base * 1.3) : base;
+    const fee = calcPickupFee(city, count);
     return res.json({ fee });
   } catch (error) {
     console.error('Error calculating pickup fee:', error);
@@ -5490,11 +5361,10 @@ const updateSettings = async (req, res) => {
     
     // Handle profile image upload
     if (req.files && req.files.profileImage) {
-      const result = await cloudinary.uploader.upload(req.files.profileImage.path, {
-        folder: 'profiles',
-        resource_type: 'image'
-      });
-      updateData.profileImage = result.secure_url;
+      console.log('📤 Uploading profile image to local storage...');
+      const result = await uploadFile(req.files.profileImage, 'profiles');
+      updateData.profileImage = result.url;
+      console.log('✅ Profile image uploaded:', result.url);
     } else if (req.body.profileImage !== undefined) {
       updateData.profileImage = req.body.profileImage;
     }

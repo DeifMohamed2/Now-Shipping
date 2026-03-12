@@ -1702,7 +1702,8 @@ const courier_received = async (req, res) => {
     const orders = await Order.find({
       deliveryMan: courierId,
       orderStatus: 'inProgress',
-    });
+    }).populate('business', 'name brandInfo');
+
     if (!orders.length) {
       return res
         .status(404)
@@ -1712,7 +1713,6 @@ const courier_received = async (req, res) => {
     const updatePromises = orders.map((order) => {
       order.orderStatus = 'headingToCustomer';
 
-      // Update inProgress stage
       if (!order.orderStages.inProgress.isCompleted) {
         order.orderStages.inProgress.isCompleted = true;
         order.orderStages.inProgress.completedAt = new Date();
@@ -1724,9 +1724,8 @@ const courier_received = async (req, res) => {
         order.orderStages.outForDelivery.notes = `Order marked as received by courier ${courier.name}`;
       }
 
-      // Generate and send 24h OTP to customer for delivery verification
+      // Generate 24h OTP for delivery verification
       const otp = String(Math.floor(100000 + Math.random() * 900000));
-      // Hash OTP using bcrypt already available in this controller
       order.deliveryOtp = {
         otpHash: require('bcrypt').hashSync(otp, 10),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -1734,20 +1733,28 @@ const courier_received = async (req, res) => {
         attempts: 0,
       };
 
-      // Send SMS (best-effort; non-blocking failures)
+      // Send SMS OTP to customer
       const phone = order.orderCustomer?.phoneNumber;
-      const brand = order.business?.brandInfo?.brandName || order.business?.name || 'Your Order';
+      const brand = order.business?.brandInfo?.brandName || order.business?.name || 'NowShipping';
       if (phone) {
         sendSms({
           recipient: phone,
           message: `NowShipping - ${brand}: Your delivery OTP for order ${order.orderNumber} is ${otp}. Valid for 24 hours.`
-        }).catch((e) => console.error('SMS send error (delivery OTP):', e.details || e.message));
+        }).catch((e) => console.error(`SMS OTP error for ${order.orderNumber}:`, e.details || e.message));
       }
 
       return order.save();
     });
 
     await Promise.all(updatePromises);
+
+    // Send WhatsApp notifications to customers
+    const { sendHeadingToCustomerNotification } = require('../utils/whatsapp');
+    for (const order of orders) {
+      order.deliveryMan = courier;
+      sendHeadingToCustomerNotification(order)
+        .catch(e => console.error(`WhatsApp error for ${order.orderNumber}:`, e.message));
+    }
 
     res
       .status(200)
