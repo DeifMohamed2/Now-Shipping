@@ -5237,7 +5237,7 @@ const sendPhoneOtp = async (req, res) => {
     // Format phone number to international
     const internationalNumber = `20${phoneNumber.slice(1)}`; // Eg. "01123456789" -> "201123456789"
 
-    const smsMessage = `Your NowShipping verification code is: ${otp}`;
+    const smsMessage = `Your NowShipping verification is: ${otp}`;
 
     try {
       await sms.sendSms({ recipient: internationalNumber, message: smsMessage });
