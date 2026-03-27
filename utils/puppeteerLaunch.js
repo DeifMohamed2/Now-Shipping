@@ -1,6 +1,16 @@
 /**
  * Server-safe Puppeteer launch: production Linux often lacks a working bundled Chromium
  * or needs system Chrome. Prefer env and common distro paths, then Puppeteer's download.
+ *
+ * Env (first match wins): PUPPETEER_EXECUTABLE_PATH, CHROME_PATH, GOOGLE_CHROME_BIN
+ *
+ * Ubuntu 24.04 (Noble) production — install Chromium (package name must be exact):
+ *   sudo apt-get update && sudo apt-get install -y chromium
+ *   # or: sudo apt-get install -y chromium-browser
+ *   # Invalid: chromium-browse (typo — installs nothing)
+ * Then: which chromium && pm2 restart <app> --update-env
+ *
+ * If apt fails, from app root: npx puppeteer browsers install chrome
  */
 const fs = require('fs');
 const path = require('path');
@@ -14,6 +24,9 @@ const SYSTEM_CHROME_CANDIDATES = [
   '/usr/bin/google-chrome',
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
+  // Debian/Ubuntu transitional or non-/usr/bin layouts
+  '/usr/lib/chromium-browser/chromium-browser',
+  '/usr/lib/chromium/chromium',
   '/usr/bin/microsoft-edge-stable',
   '/snap/bin/chromium',
 ];
@@ -50,6 +63,12 @@ function resolveChromeExecutablePath() {
  */
 function getPuppeteerLaunchOptions() {
   const executablePath = resolveChromeExecutablePath();
+  if (!executablePath) {
+    console.warn(
+      '[puppeteerLaunch] No Chrome/Chromium binary resolved. Install chromium (Ubuntu Noble: ' +
+        'sudo apt install chromium) or run: npx puppeteer browsers install chrome — then restart the app.'
+    );
+  }
   const args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',

@@ -2988,6 +2988,7 @@ const printPolicy = async (req, res) => {
         '[printPolicy] Chrome/Chromium not usable on this host. Install chromium/google-chrome-stable, ' +
           'or set PUPPETEER_EXECUTABLE_PATH to the browser binary, or run: npx puppeteer browsers install chrome'
       );
+      console.error('[printPolicy] Check server logs: pm2 logs nowShipping --lines 80');
     }
     
     // Make sure we don't try to send response twice
