@@ -1973,8 +1973,9 @@ const deleteOrder = async (req, res) => {
 async function generateBarcode(awbNumber) {
   return new Promise((resolve, reject) => {
     try {
+      const safe = awbNumber != null && String(awbNumber).trim() !== '' ? String(awbNumber) : '0';
       const canvas = createCanvas(300, 100);
-      JsBarcode(canvas, awbNumber, {
+      JsBarcode(canvas, safe, {
         format: 'CODE128',
         width: 2,
         height: 50,
@@ -1988,7 +1989,8 @@ async function generateBarcode(awbNumber) {
 }
 
 async function generateQRCode(awbNumber) {
-  const qrCode = await QRCode.toDataURL(awbNumber, {
+  const payload = awbNumber != null && String(awbNumber).trim() !== '' ? String(awbNumber) : '0';
+  const qrCode = await QRCode.toDataURL(payload, {
     width: 150,
     margin: 1,
     color: { dark: '#000000', light: '#FFFFFF' }
@@ -2834,25 +2836,33 @@ const printPolicy = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Support both route params and query params for paper size
-    const paperSize = pageSize || req.query.paperSize || req.query.size || 'A4';
+    // Support both route params and query params for paper size (Puppeteer format names)
+    const rawPaper = pageSize || req.query.paperSize || req.query.size || 'A4';
+    const u = String(rawPaper).trim().toUpperCase();
+    let paperSize = 'A4';
+    if (u === 'A3' || u === 'A4' || u === 'A5') paperSize = u;
+    else if (u === 'LETTER') paperSize = 'Letter';
+    else if (u === 'LEGAL') paperSize = 'Legal';
+    else if (u === 'TABLOID') paperSize = 'Tabloid';
 
     // Determine order type
     const orderType = order.orderShipping?.orderType || 'Deliver';
 
     // Prepare base data for PDF generation
     // Use referralNumber for orderRef if it exists, otherwise don't include it
+    // Coerce government/zone with String() — DB may store numeric codes; optional chaining
+    // does not prevent calling .toUpperCase on a number (throws TypeError).
     const baseData = {
-      awbNumber: order.orderNumber || '',
+      awbNumber: order.orderNumber != null ? String(order.orderNumber) : '',
       cod: order.orderShipping?.amountType === 'COD' || order.orderShipping?.amountType === 'CD' || order.orderShipping?.amountType === 'CC'
         ? `${order.orderShipping?.amount || '0'} EGP`
         : 'N/A',
       deliveryStatus: getDeliveryStatusText(order.orderShipping?.orderType, order.orderShipping?.amountType),
       recipientName: order.orderCustomer?.fullName || 'N/A',
-      recipientPhone: order.orderCustomer?.phoneNumber || 'N/A',
-      city: order.orderCustomer?.government?.toUpperCase() || 'N/A',
-      hub: order.orderCustomer?.zone?.toUpperCase() || 'N/A',
-      area: order.orderCustomer?.zone?.toUpperCase() || 'N/A',
+      recipientPhone: order.orderCustomer?.phoneNumber != null ? String(order.orderCustomer.phoneNumber) : 'N/A',
+      city: String(order.orderCustomer?.government ?? '').toUpperCase() || 'N/A',
+      hub: String(order.orderCustomer?.zone ?? '').toUpperCase() || 'N/A',
+      area: String(order.orderCustomer?.zone ?? '').toUpperCase() || 'N/A',
       address: order.orderCustomer?.address || 'N/A',
       notes: order.orderShipping?.returnNotes || order.orderShipping?.returnReason || order.orderNotes || 'N/A',
       shippingFrom: order.business?.businessName || order.business?.fullName || 'Business',
@@ -2928,7 +2938,7 @@ const printPolicy = async (req, res) => {
     
     console.log('Setting page content...');
     await page.setContent(htmlContent, { 
-      waitUntil: 'networkidle0',
+      waitUntil: 'load',
       timeout: 30000 
     });
 
