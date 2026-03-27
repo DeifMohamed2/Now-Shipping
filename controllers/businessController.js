@@ -13,9 +13,9 @@ const { emailService } = require('../utils/email');
 const { uploadFile } = require('../utils/fileUpload');
 const { calculateOrderFee, calculatePickupFee: calcPickupFee } = require('../utils/fees');
 const puppeteer = require('puppeteer');
-const JsBarcode = require('jsbarcode');
+const bwipjs = require('bwip-js');
 const QRCode = require('qrcode');
-const { createCanvas } = require('canvas');
+const { getPuppeteerLaunchOptions } = require('../utils/puppeteerLaunch');
 const fs = require('fs');
 const path = require('path');
 
@@ -1971,21 +1971,16 @@ const deleteOrder = async (req, res) => {
 
 // Helper functions for PDF generation
 async function generateBarcode(awbNumber) {
-  return new Promise((resolve, reject) => {
-    try {
-      const safe = awbNumber != null && String(awbNumber).trim() !== '' ? String(awbNumber) : '0';
-      const canvas = createCanvas(300, 100);
-      JsBarcode(canvas, safe, {
-        format: 'CODE128',
-        width: 2,
-        height: 50,
-        displayValue: false
-      });
-      resolve(canvas.toDataURL());
-    } catch (error) {
-      reject(error);
-    }
+  // bwip-js is pure JS (no node-canvas). node-canvas often breaks on Linux VPS without Cairo build deps.
+  const safe = awbNumber != null && String(awbNumber).trim() !== '' ? String(awbNumber) : '0';
+  const png = await bwipjs.toBuffer({
+    bcid: 'code128',
+    text: safe,
+    scale: 3,
+    height: 12,
+    includetext: false,
   });
+  return `data:image/png;base64,${png.toString('base64')}`;
 }
 
 async function generateQRCode(awbNumber) {
@@ -2920,17 +2915,13 @@ const printPolicy = async (req, res) => {
     // Create HTML template based on order type
     const htmlContent = templateFunction(data, barcodeDataUrl, qrCodeDataUrl, logoDataUrl, watermarkDataUrl);
 
-    // Launch browser
-    console.log('Launching Puppeteer browser...');
-    browser = await puppeteer.launch({
-      headless: "new",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu"
-      ]
-    });
+    // Launch browser (system Chrome/Chromium when available — reliable on production Linux)
+    const launchOpts = getPuppeteerLaunchOptions();
+    console.log(
+      'Launching Puppeteer browser...',
+      launchOpts.executablePath ? `executable=${launchOpts.executablePath}` : 'executable=(puppeteer default)'
+    );
+    browser = await puppeteer.launch(launchOpts);
 
     console.log('Creating new page...');
     const page = await browser.newPage();
@@ -2988,6 +2979,16 @@ const printPolicy = async (req, res) => {
   } catch (error) {
     console.error('Error generating document:', error);
     console.error('Error stack:', error.stack);
+    if (
+      /Could not find Chrome|Failed to launch|Browser process|spawn .* ENOENT/i.test(
+        String(error && error.message)
+      )
+    ) {
+      console.error(
+        '[printPolicy] Chrome/Chromium not usable on this host. Install chromium/google-chrome-stable, ' +
+          'or set PUPPETEER_EXECUTABLE_PATH to the browser binary, or run: npx puppeteer browsers install chrome'
+      );
+    }
     
     // Make sure we don't try to send response twice
     if (!res.headersSent) {
