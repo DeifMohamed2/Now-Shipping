@@ -1,6 +1,7 @@
 const Order = require('../models/order');
 const Transaction = require('../models/transactions');
 const User = require('../models/user');
+const { businessRoleFilter } = require('./businessRoleQuery');
 const JobLog = require('../models/JobLog');
 
 /**
@@ -259,7 +260,7 @@ class FinancialReconciliation {
     try {
       console.log('Validating business balances against transactions');
       
-      const businesses = await User.find({ role: 'business' });
+      const businesses = await User.find(businessRoleFilter());
       const validationResults = [];
       
       for (const business of businesses) {

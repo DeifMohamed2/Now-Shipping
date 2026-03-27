@@ -3,6 +3,7 @@ const Courier = require('../models/courier');
 const Pickup = require('../models/pickup');
 const Release = require('../models/releases');
 const User = require('../models/user');
+const { businessRoleFilter } = require('../utils/businessRoleQuery');
 const Transaction = require('../models/transactions');
 const ShopProduct = require('../models/shopProduct');
 const ShopOrder = require('../models/shopOrder');
@@ -356,12 +357,39 @@ const get_orderDetailsPage = async (req, res) => {
   }
 };
 
+/**
+ * Match couriers whose assignedZones list covers order zone labels.
+ * Order zones may be short (e.g. "ElBasatin") while courier zones are
+ * long (e.g. "ElMaadi - ElGezira (ElBasatin)"); exact equality failed before.
+ * @param {string|string[]|undefined} zoneParam - one zone or Express `req.query.zone` (string or array)
+ * @returns {object|null} Mongo filter or null if no zones
+ */
+function courierAssignedZonesMatchQuery(zoneParam) {
+  const raw = zoneParam == null ? [] : Array.isArray(zoneParam) ? zoneParam : [zoneParam];
+  const zones = raw.map((z) => (z != null ? String(z).trim() : '')).filter(Boolean);
+  if (zones.length === 0) return null;
+
+  const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const oneZone = (z) => ({
+    $or: [
+      { assignedZones: z },
+      { assignedZones: { $regex: escapeRegex(z), $options: 'i' } },
+    ],
+  });
+
+  return zones.length === 1 ? oneZone(zones[0]) : { $and: zones.map(oneZone) };
+}
+
 const get_deliveryMenByZone = async (req, res) => {
   const { zone } = req.query;
   try {
+    const zoneQuery = courierAssignedZonesMatchQuery(zone);
+    if (!zoneQuery) {
+      return res.status(200).json([]);
+    }
     const deliveryMen = await Courier.find({
-      assignedZones: zone,
-      isAvailable: true,
+      $and: [zoneQuery, { isAvailable: true }],
     });
     res.status(200).json(deliveryMen);
   } catch (error) {
@@ -1058,9 +1086,12 @@ const get_pickupMenByZone = async (req, res) => {
     
     console.log('Looking for couriers in zone/city:', searchZone);
     
+    const zoneQuery = courierAssignedZonesMatchQuery(searchZone);
+    if (!zoneQuery) {
+      return res.status(200).json([]);
+    }
     const deliveryMen = await Courier.find({
-      assignedZones: searchZone,
-      isAvailable: true,
+      $and: [zoneQuery, { isAvailable: true }],
     });
     
     console.log(`Found ${deliveryMen.length} couriers for zone: ${searchZone}`);
@@ -1476,7 +1507,11 @@ const add_to_stock = async (req, res) => {
 const get_couriers_by_zone = async (req, res) => {
   const { zone } = req.query;
   try {
-    const couriers = await Courier.find({ assignedZones: zone });
+    const zoneQuery = courierAssignedZonesMatchQuery(zone);
+    if (!zoneQuery) {
+      return res.status(200).json([]);
+    }
+    const couriers = await Courier.find(zoneQuery);
     res.status(200).json(couriers || []);
   } catch (error) {
     console.error('Error in get_couriers_by_zone:', error);
@@ -2862,7 +2897,7 @@ const get_businesses = async (req, res) => {
       dateTo,
     } = req.query;
 
-    const query = { role: 'business', isCompleted: true };
+    const query = { ...businessRoleFilter(), isCompleted: true };
 
     // Search functionality
     if (search && search.trim() !== '') {

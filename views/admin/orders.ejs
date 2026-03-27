@@ -737,7 +737,9 @@
 
     try {
       // Using the same endpoint to get couriers by zone
-      const response = await fetch(`/admin/get-couriers-by-zone?zone=${zone || ''}`);
+      const params = new URLSearchParams();
+      if (zone) params.append('zone', zone);
+      const response = await fetch(`/admin/get-couriers-by-zone?${params.toString()}`);
       const couriers = await response.json();
 
       if (response.ok) {

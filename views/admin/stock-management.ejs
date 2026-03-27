@@ -1420,8 +1420,10 @@
     document.getElementById('courierZone').value = zone || '';
     document.getElementById('courierLoader').style.display = 'block';
     
-    // Fetch available couriers from API
-    await fetch(`/admin/get-couriers-by-zone?zone=${zone || ''}`, {
+    // Fetch available couriers from API (substring zone match + proper encoding)
+    const params = new URLSearchParams();
+    if (zone) params.append('zone', zone);
+    await fetch(`/admin/get-couriers-by-zone?${params.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -1429,6 +1431,9 @@
     })
     .then(response => response.json()) 
     .then(couriers => {
+      if (couriers && couriers.error) {
+        throw new Error(couriers.error);
+      }
       const courierSelect = document.getElementById('courierSelect');
       courierSelect.innerHTML = '<option value="">Select a courier</option>';
       
@@ -1470,15 +1475,16 @@
 
     document.getElementById('courierOrderIds').value = selectedItems.join(',');
     document.getElementById('courierLoader').style.display = 'block';
-    console.log(selectedItems[0]);
-    // Get zone of first selected item
-    const firstItemZone = document.querySelector(`input[data-order-id="${selectedItems[0]}"]`)?.getAttribute('data-zone');
-    
-    document.getElementById('courierZone').value = firstItemZone || '';
-    console.log(firstItemZone);
+    const uniqueZones = [...new Set(
+      selectedItems.map((id) =>
+        document.querySelector(`input[data-order-id="${id}"]`)?.getAttribute('data-zone')
+      ).filter(Boolean)
+    )];
+    document.getElementById('courierZone').value = uniqueZones.join(', ');
     try {
-      // Fetch available couriers from API
-      const response = await fetch(`/admin/get-couriers-by-zone?zone=${firstItemZone || ''}`, {
+      const params = new URLSearchParams();
+      uniqueZones.forEach((z) => params.append('zone', z));
+      const response = await fetch(`/admin/get-couriers-by-zone?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -1486,7 +1492,9 @@
       });
 
       const couriers = await response.json();
-      console.log(couriers);    
+      if (couriers && couriers.error) {
+        throw new Error(couriers.error);
+      }
       const courierSelect = document.getElementById('courierSelect');
       courierSelect.innerHTML = '<option value="">Select a courier</option>';
       

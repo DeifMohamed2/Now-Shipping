@@ -1,5 +1,6 @@
 const admin = require('firebase-admin');
 const path = require('path');
+const { businessRoleFilter } = require('../utils/businessRoleQuery');
 
 // Initialize Firebase Admin SDK for Business (default app)
 let businessApp;
@@ -1089,9 +1090,9 @@ async function cleanupInvalidTokens() {
     console.log('Starting FCM token validation (tokens will be kept)...');
     
     // Get all users with FCM tokens
-    const businessUsers = await User.find({ 
+    const businessUsers = await User.find({
       fcmToken: { $ne: null },
-      role: 'business'
+      ...businessRoleFilter(),
     });
     
     const couriers = await Courier.find({ 

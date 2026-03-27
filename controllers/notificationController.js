@@ -1,5 +1,6 @@
 const Courier = require('../models/courier');
 const User = require('../models/user');
+const { businessRoleFilter } = require('../utils/businessRoleQuery');
 const Notification = require('../models/notification');
 const firebase = require('../config/firebase');
 
@@ -385,7 +386,7 @@ const getNotificationsPage = async (req, res) => {
 const getBusinessNotificationsPage = async (req, res) => {
   try {
     // Get all businesses for the dropdown
-    const businesses = await User.find({ role: 'business' }).select('name email');
+    const businesses = await User.find(businessRoleFilter()).select('name email');
     
     res.render('admin/send-notifications-business', {
       title: 'Send Business Notifications',
@@ -734,9 +735,9 @@ const sendNotificationToAllBusinesses = async (req, res) => {
     }
 
     // Find all businesses with FCM tokens
-    const businesses = await User.find({ 
+    const businesses = await User.find({
       fcmToken: { $ne: null },
-      role: 'business'
+      ...businessRoleFilter(),
     });
     
     if (businesses.length === 0) {
