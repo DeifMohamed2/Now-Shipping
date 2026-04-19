@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
+  const __NSEO =
+    typeof window !== 'undefined' && window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.editOrder
+      ? window.__NS_BUSINESS_I18N.editOrder
+      : {};
+
   // Order Type Toggle Logic
   const orderTypeRadios = document.querySelectorAll('input[name="orderType_display"]');
   const deliverSection = document.getElementById('deliver-section');
@@ -22,8 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
       if (deliverSection) deliverSection.style.display = 'block';
     } else if (orderType === 'Exchange') {
       if (exchangeSection) exchangeSection.style.display = 'block';
-    } else if (orderType === 'Cash Collection') {
-      if (cashCollectionSection) cashCollectionSection.style.display = 'block';
     }
   }
   
@@ -57,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const previouslySelectedZone = zoneSelect.getAttribute('data-selected-zone');
     
     // Clear the zone select dropdown first
-    zoneSelect.innerHTML = '<option value="">Select Area</option>';
+    zoneSelect.innerHTML = '<option value="">' + (__NSEO.selectArea || 'Select Area') + '</option>';
     
     // If no government is selected, just leave the empty dropdown
     if (!selectedGovernment) {
@@ -233,15 +236,15 @@ document.addEventListener('DOMContentLoaded', function () {
         !formValues.government || !formValues.zone) {
       Swal.fire({
         icon: 'error',
-        title: 'Validation Error',
-        text: 'Please fill in all required customer information fields.',
+        title: __NSEO.validationError || 'Validation Error',
+        text: __NSEO.fillRequiredFields || 'Please fill in all required customer information fields.',
       });
       return;
     }
     
     const updateBtn = document.getElementById('updateOrderBtn');
     updateBtn.disabled = true;
-    updateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+    updateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ' + (__NSEO.updating || 'Updating…');
     
     const orderId = this.getAttribute('data-order-id');
     
@@ -259,8 +262,8 @@ document.addEventListener('DOMContentLoaded', function () {
       if (response.ok) {
         Swal.fire({
           icon: 'success',
-          title: 'Order Updated',
-          text: 'Order has been updated successfully!',
+          title: __NSEO.orderUpdated || 'Order Updated',
+          text: __NSEO.orderUpdatedText || 'Order has been updated successfully!',
           confirmButtonText: 'View Order',
         }).then((result) => {
           if (result.isConfirmed) {
@@ -270,20 +273,20 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         Swal.fire({
           icon: 'error',
-          title: 'Update Failed',
-          text: data.error || 'An error occurred while updating the order.',
+          title: __NSEO.updateFailed || 'Update Failed',
+          text: data.error || (__NSEO.updateFailedText || 'An error occurred while updating the order.'),
         });
       }
     } catch (error) {
       console.error('An error occurred:', error);
       Swal.fire({
         icon: 'error',
-        title: 'Update Failed',
-        text: 'An error occurred while updating the order.',
+        title: __NSEO.updateFailed || 'Update Failed',
+        text: __NSEO.updateFailedText || 'An error occurred while updating the order.',
       });
     } finally {
       updateBtn.disabled = false;
-      updateBtn.innerHTML = '<i class="ri-save-line align-middle me-1"></i> Update Order';
+      updateBtn.innerHTML = '<i class="ri-save-line align-middle me-1"></i> ' + (__NSEO.updateOrder || 'Update Order');
     }
   });
 
@@ -300,8 +303,8 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
           Swal.fire({
             icon: 'warning',
-            title: 'Invalid Value',
-            text: 'Number of items cannot be zero or negative.',
+            title: __NSEO.invalidValue || 'Invalid Value',
+            text: __NSEO.itemsCannotBeZero || 'Number of items cannot be zero or negative.',
           });
         }
       }
@@ -315,8 +318,8 @@ document.addEventListener('DOMContentLoaded', function () {
       if(value <= 0) {
         Swal.fire({
           icon: 'warning',
-          title: 'Invalid Value',
-          text: 'Number of items cannot be zero or negative.',
+          title: __NSEO.invalidValue || 'Invalid Value',
+          text: __NSEO.itemsCannotBeZero || 'Number of items cannot be zero or negative.',
         });
         this.value = 1;
       }

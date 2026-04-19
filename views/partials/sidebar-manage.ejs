@@ -12,12 +12,22 @@
   <div class="dropdown sidebar-user m-2 rounded shadow-sm">
     <button type="button" class="btn w-100 d-flex justify-content-between align-items-center" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       <span class="d-flex align-items-center gap-2">
-        <img class="rounded-circle header-profile-user" src="/assets/images/users/avatar-1.jpg" alt="Header Avatar">
+        <% 
+          var sbAdminProfileFallback = '/assets/rImages/logo.png';
+          var sbAdminName = 'Admin';
+          var sbAdminPhoto = sbAdminProfileFallback;
+          if (typeof adminData !== 'undefined' && adminData) {
+            sbAdminName = adminData.name || 'Admin';
+            sbAdminPhoto = (adminData.profileImage && String(adminData.profileImage).trim()) ? String(adminData.profileImage).trim() : sbAdminProfileFallback;
+          }
+          var sbAdminProfileIsFallback = sbAdminPhoto === sbAdminProfileFallback;
+        %>
+        <img class="rounded-circle header-profile-user<%= sbAdminProfileIsFallback ? ' profile-img--fallback' : '' %>" src="<%= sbAdminPhoto %>" alt="<%= sbAdminName %>" onerror="this.onerror=null;this.src='<%= sbAdminProfileFallback %>';this.classList.add('profile-img--fallback');" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #F39720;">
         <span class="text-start">
-          <span class="d-block fw-semibold sidebar-user-name-text" style="color: #212529; font-size: 14px;">Anna Adame</span>
-          <span class="d-block fs-12 sidebar-user-name-sub-text" style="color: #6c757d;"><i class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span class="align-middle">Online</span>
-          </span>
+          <span class="d-block fw-semibold sidebar-user-name-text" style="color: #212529; font-size: 14px;"><%= sbAdminName %></span>
+          <span class="d-block fs-12 sidebar-user-name-sub-text" style="color: #6c757d;"><i class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span class="align-middle">Administrator</span></span>
         </span>
+      </span>
         <i class="ri-chevron-down-line fs-16" style="color: #6c757d;"></i>
     </button>
     <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg py-2">
@@ -96,27 +106,9 @@
           <div class="collapse ms-3" id="sidebarWallet">
             <ul class="nav flex-column">
               <li class="nav-item">
-                <a class="nav-link" href="/admin/release-amounts">
-                  <i class="ri-file-list-3-line" style="color: #F39720;"></i>
-                  <span data-key="t-overview" style="color: #212529; font-size: 14px;">Release Amounts</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/admin/financial-processing">
-                  <i class="ri-settings-3-line" style="color: #F39720;"></i>
-                  <span data-key="t-processing" style="color: #212529; font-size: 14px;">Financial Processing</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/admin/release-amounts">
-                  <i class="ri-exchange-dollar-line" style="color: #F39720;"></i>
-                  <span data-key="t-transactions" style="color: #212529; font-size: 14px;">Orders</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/admin/release-amounts">
-                  <i class="ri-money-dollar-box-line" style="color: #F39720;"></i>
-                  <span data-key="t-deposits" style="color: #212529; font-size: 14px;">Deposits</span>
+                <a class="nav-link" href="/admin/payouts">
+                  <i class="ri-bank-line" style="color: #F39720;"></i>
+                  <span data-key="t-payouts" style="color: #212529; font-size: 14px;">Payouts</span>
                 </a>
               </li>
             </ul>

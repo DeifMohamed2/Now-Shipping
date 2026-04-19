@@ -3,13 +3,14 @@
 <link rel="stylesheet" href="/assets/rCSS/business.css">
 
 <%- contentFor('body') %>
-<div class="row">
+<% var So = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.shopOrders) ? translation.business.pages.shopOrders : {}; %>
+<div class="row g-2">
   <div class="col-12">
-    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-      <h4 class="mb-sm-0">Shop Orders</h4>
+    <div class="page-title-box d-sm-flex align-items-center justify-content-between flex-wrap gap-2">
+      <h4 class="mb-sm-0"><%= So.heading || 'Shop Orders' %></h4>
       <div class="page-title-right">
         <a href="/business/shop" class="btn btn-primary">
-          <i class="ri-shopping-bag-line align-middle me-1"></i> Continue Shopping
+          <i class="ri-shopping-bag-line align-middle me-1"></i> <%= So.continueShopping || 'Continue Shopping' %>
         </a>
       </div>
     </div>
@@ -17,13 +18,13 @@
 </div>
 
 <!-- Stats Cards -->
-<div class="row mb-3">
-  <div class="col-xl-3 col-md-6">
+<div class="row mb-3 g-3">
+  <div class="col-12 col-sm-6 col-xl-3">
     <div class="card card-animate">
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="flex-grow-1">
-            <p class="text-uppercase fw-medium text-muted mb-0">Active Orders</p>
+            <p class="text-uppercase fw-medium text-muted mb-0"><%= So.activeOrders || 'Active Orders' %></p>
           </div>
           <div class="flex-shrink-0">
             <h5 class="text-primary mb-0" id="activeCount">0</h5>
@@ -32,12 +33,12 @@
       </div>
     </div>
   </div>
-  <div class="col-xl-3 col-md-6">
+  <div class="col-12 col-sm-6 col-xl-3">
     <div class="card card-animate">
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="flex-grow-1">
-            <p class="text-uppercase fw-medium text-muted mb-0">In Transit</p>
+            <p class="text-uppercase fw-medium text-muted mb-0"><%= So.inTransit || 'In Transit' %></p>
           </div>
           <div class="flex-shrink-0">
             <h5 class="text-info mb-0" id="inTransitCount">0</h5>
@@ -46,12 +47,12 @@
       </div>
     </div>
   </div>
-  <div class="col-xl-3 col-md-6">
+  <div class="col-12 col-sm-6 col-xl-3">
     <div class="card card-animate">
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="flex-grow-1">
-            <p class="text-uppercase fw-medium text-muted mb-0">Delivered</p>
+            <p class="text-uppercase fw-medium text-muted mb-0"><%= So.statDelivered || 'Delivered' %></p>
           </div>
           <div class="flex-shrink-0">
             <h5 class="text-success mb-0" id="deliveredCount">0</h5>
@@ -60,12 +61,12 @@
       </div>
     </div>
   </div>
-  <div class="col-xl-3 col-md-6">
+  <div class="col-12 col-sm-6 col-xl-3">
     <div class="card card-animate">
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="flex-grow-1">
-            <p class="text-uppercase fw-medium text-muted mb-0">Total Spent</p>
+            <p class="text-uppercase fw-medium text-muted mb-0"><%= So.statTotalSpent || 'Total Spent' %></p>
           </div>
           <div class="flex-shrink-0">
             <h5 class="text-warning mb-0" id="totalSpent">EGP 0</h5>
@@ -83,18 +84,18 @@
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-4">
-            <label class="form-label">Filter by Status</label>
+            <label class="form-label"><%= So.filterByStatus || 'Filter by Status' %></label>
             <select class="form-select" id="statusFilter">
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="processing">Processing</option>
-              <option value="ready">Ready</option>
-              <option value="assigned">Assigned to Courier</option>
-              <option value="picked_up">Picked Up</option>
-              <option value="in_transit">In Transit</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
+              <option value=""><%= So.allStatus || 'All Status' %></option>
+              <option value="pending"><%= So.filterPending || 'Pending' %></option>
+              <option value="confirmed"><%= So.filterConfirmed || 'Confirmed' %></option>
+              <option value="processing"><%= So.filterProcessing || 'Processing' %></option>
+              <option value="ready"><%= So.filterReady || 'Ready' %></option>
+              <option value="assigned"><%= So.filterAssigned || 'Assigned to Courier' %></option>
+              <option value="picked_up"><%= So.filterPickedUp || 'Picked Up' %></option>
+              <option value="in_transit"><%= So.filterInTransit || 'In Transit' %></option>
+              <option value="delivered"><%= So.filterDelivered || 'Delivered' %></option>
+              <option value="cancelled"><%= So.filterCancelled || 'Cancelled' %></option>
             </select>
           </div>
         </div>
@@ -112,13 +113,13 @@
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
-                <th>Order #</th>
-                <th>Date</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Courier</th>
-                <th>Actions</th>
+                <th><%= So.colOrderNum || 'Order #' %></th>
+                <th><%= So.colDate || 'Date' %></th>
+                <th><%= So.colItems || 'Items' %></th>
+                <th><%= So.colTotal || 'Total' %></th>
+                <th><%= So.colStatus || 'Status' %></th>
+                <th><%= So.colCourier || 'Courier' %></th>
+                <th><%= So.colActions || 'Actions' %></th>
               </tr>
             </thead>
             <tbody id="ordersTableBody">
@@ -142,7 +143,7 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Order Details</h5>
+        <h5 class="modal-title"><%= So.modalTitle || 'Order Details' %></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" id="orderDetailsBody">
@@ -155,6 +156,52 @@
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 <script>
+  var __NS_SO_I18N = {
+    noOrdersFound: "<%= So.noOrders || 'No orders found' %>",
+    loading: "<%= So.loading || 'Loading…' %>",
+    statusPending: "<%= So.filterPending || 'Pending' %>",
+    statusConfirmed: "<%= So.filterConfirmed || 'Confirmed' %>",
+    statusProcessing: "<%= So.filterProcessing || 'Processing' %>",
+    statusReady: "<%= So.filterReady || 'Ready' %>",
+    statusAssigned: "<%= So.filterAssigned || 'Assigned' %>",
+    statusPickedUp: "<%= So.filterPickedUp || 'Picked Up' %>",
+    statusInTransit: "<%= So.filterInTransit || 'In Transit' %>",
+    statusDelivered: "<%= So.filterDelivered || 'Delivered' %>",
+    statusCancelled: "<%= So.filterCancelled || 'Cancelled' %>",
+    statusReturned: "<%= So.filterReturned || 'Returned' %>",
+    colItems: "<%= So.colItems || 'items' %>",
+    notAssigned: "<%= So.notAssigned || 'Not assigned' %>",
+    orderInfoTitle: "<%= So.orderInfoTitle || 'Order Information' %>",
+    deliveryInfoTitle: "<%= So.deliveryInfoTitle || 'Delivery Information' %>",
+    orderItems: "<%= So.orderItemsTitle || 'Order Items' %>",
+    trackingHistory: "<%= So.trackingHistory || 'Tracking History' %>",
+    colProduct: "<%= So.colProduct || 'Product' %>",
+    colQty: "<%= So.colQty || 'Quantity' %>",
+    colPrice: "<%= So.colPrice || 'Price' %>",
+    colSubtotal: "<%= So.colSubtotal || 'Subtotal' %>",
+    subtotalLabel: "<%= So.subtotalLabel || 'Subtotal:' %>",
+    discountLabel: "<%= So.discountLabel || 'Discount:' %>",
+    taxLabel: "<%= So.taxLabel || 'Tax:' %>",
+    deliveryFeeLabel: "<%= So.deliveryFeeLabel || 'Delivery Fee:' %>",
+    totalLabel: "<%= So.totalLabel || 'Total:' %>",
+    cancelTitle: "<%= So.cancelTitle || 'Cancel Order' %>",
+    cancelReasonLabel: "<%= So.cancelReasonLabel || 'Reason for cancellation' %>",
+    cancelReasonPlaceholder: "<%= So.cancelReasonPlaceholder || 'Please provide a reason...' %>",
+    cancelConfirmBtn: "<%= So.cancelConfirmBtn || 'Yes, cancel it' %>",
+    cancelDismissBtn: "<%= So.cancelDismissBtn || 'No, keep it' %>",
+    cancelReasonRequired: "<%= So.cancelReasonRequired || 'You need to provide a reason!' %>",
+    successTitle: "<%= So.successTitle || 'Success!' %>",
+    errorTitle: "<%= So.errorTitle || 'Error!' %>",
+    infoTitle: "<%= So.infoTitle || 'Info' %>",
+    trackingComingSoon: "<%= So.trackingComingSoon || 'Tracking functionality coming soon!' %>",
+    unknownProduct: "<%= So.unknownProduct || 'Unknown Product' %>",
+    noItemsFound: "<%= So.noItemsFound || 'No items found' %>",
+    discountText: "<%= So.discountText || 'Discount' %>",
+    notesLabel: "<%= So.notesLabel || 'Notes:' %>",
+    locationLabel: "<%= So.locationLabel || 'Location:' %>",
+    unknownTime: "<%= So.unknownTime || 'Unknown time' %>",
+    locale: "<%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US' %>"
+  };
   let ordersData = [];
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -193,7 +240,7 @@
     const tbody = document.getElementById('ordersTableBody');
 
     if (orders.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No orders found</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">' + __NS_SO_I18N.noOrdersFound + '</td></tr>';
       return;
     }
 
@@ -214,7 +261,7 @@
           </div>
         </td>
         <td>
-          <span class="badge badge-soft-info">${order.items.length} items</span>
+          <span class="badge badge-soft-info">${order.items.length} ${__NS_SO_I18N.colItems}</span>
         </td>
         <td>
           <strong>EGP ${order.totalAmount.toFixed(2)}</strong>
@@ -226,7 +273,7 @@
               <i class="ri-user-line me-1"></i>${order.courierName}
               <br><small class="text-muted">${order.courierPhone}</small>
             </div>
-          ` : '<span class="text-muted">Not assigned</span>'}
+          ` : `<span class="text-muted">${__NS_SO_I18N.notAssigned}</span>`}
         </td>
         <td>
           <div class="hstack gap-1">
@@ -257,52 +304,52 @@
     const statusConfig = {
       pending: {
         color: 'warning',
-        text: 'Pending',
+        text: __NS_SO_I18N.statusPending,
         icon: 'ri-time-line'
       },
       confirmed: {
         color: 'info',
-        text: 'Confirmed',
+        text: __NS_SO_I18N.statusConfirmed,
         icon: 'ri-checkbox-circle-line'
       },
       processing: {
         color: 'primary',
-        text: 'Processing',
+        text: __NS_SO_I18N.statusProcessing,
         icon: 'ri-loader-4-line'
       },
       ready: {
         color: 'secondary',
-        text: 'Ready',
+        text: __NS_SO_I18N.statusReady,
         icon: 'ri-check-double-line'
       },
       assigned: {
         color: 'info',
-        text: 'Assigned',
+        text: __NS_SO_I18N.statusAssigned,
         icon: 'ri-user-follow-line'
       },
       picked_up: {
         color: 'info',
-        text: 'Picked Up',
+        text: __NS_SO_I18N.statusPickedUp,
         icon: 'ri-hand-coin-line'
       },
       in_transit: {
         color: 'primary',
-        text: 'In Transit',
+        text: __NS_SO_I18N.statusInTransit,
         icon: 'ri-truck-line'
       },
       delivered: {
         color: 'success',
-        text: 'Delivered',
+        text: __NS_SO_I18N.statusDelivered,
         icon: 'ri-check-line'
       },
       cancelled: {
         color: 'danger',
-        text: 'Cancelled',
+        text: __NS_SO_I18N.statusCancelled,
         icon: 'ri-close-line'
       },
       returned: {
         color: 'warning',
-        text: 'Returned',
+        text: __NS_SO_I18N.statusReturned,
         icon: 'ri-arrow-go-back-line'
       }
     };
@@ -356,30 +403,29 @@
       const detailsHtml = `
       <div class="row mb-4">
         <div class="col-md-6">
-          <h6 class="text-muted mb-2">Order Information</h6>
-          <p><strong>Order Number:</strong> ${order.orderNumber || 'N/A'}</p>
-          <p><strong>Status:</strong> ${getStatusBadge(order.status)}</p>
-          <p><strong>Date:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</p>
-          <p><strong>Payment Method:</strong> ${order.paymentMethod || 'N/A'}</p>
+          <h6 class="text-muted mb-2">${__NS_SO_I18N.orderInfoTitle}</h6>
+          <p><strong>${__NS_SO_I18N.colOrderNum || 'Order #'}:</strong> ${order.orderNumber || 'N/A'}</p>
+          <p><strong>${__NS_SO_I18N.colStatus || 'Status'}:</strong> ${getStatusBadge(order.status)}</p>
+          <p><strong>${__NS_SO_I18N.colDate || 'Date'}:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleString(__NS_SO_I18N.locale) : 'N/A'}</p>
         </div>
         <div class="col-md-6">
-          <h6 class="text-muted mb-2">Delivery Information</h6>
-          <p><strong>Name:</strong> ${order.contactInfo?.name || order.orderCustomer?.fullName || 'N/A'}</p>
-          <p><strong>Phone:</strong> ${order.contactInfo?.phone || order.orderCustomer?.phoneNumber || 'N/A'}</p>
-          <p><strong>Address:</strong> ${order.orderCustomer?.address || 'N/A'}</p>
-          ${order.courierName ? `<p><strong>Courier:</strong> ${order.courierName} - ${order.courierPhone || 'N/A'}</p>` : ''}
+          <h6 class="text-muted mb-2">${__NS_SO_I18N.deliveryInfoTitle}</h6>
+          <p>${order.contactInfo?.name || order.orderCustomer?.fullName || 'N/A'}</p>
+          <p>${order.contactInfo?.phone || order.orderCustomer?.phoneNumber || 'N/A'}</p>
+          <p>${order.orderCustomer?.address || 'N/A'}</p>
+          ${order.courierName ? `<p><i class="ri-user-line me-1"></i>${order.courierName} - ${order.courierPhone || 'N/A'}</p>` : ''}
         </div>
       </div>
       
-      <h6 class="mb-3">Order Items</h6>
+      <h6 class="mb-3">${__NS_SO_I18N.orderItems}</h6>
       <div class="table-responsive mb-4">
         <table class="table table-sm table-bordered">
           <thead class="table-light">
             <tr>
-              <th>Product</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              <th>Subtotal</th>
+              <th>${__NS_SO_I18N.colProduct}</th>
+              <th>${__NS_SO_I18N.colQty}</th>
+              <th>${__NS_SO_I18N.colPrice}</th>
+              <th>${__NS_SO_I18N.colSubtotal}</th>
             </tr>
           </thead>
           <tbody>
@@ -388,11 +434,11 @@
                 <td>
                   <div class="d-flex align-items-center">
                     ${item.product && item.product.images && item.product.images[0] ? 
-                      `<img src="${item.product.images[0]}" alt="${item.productName || 'Product'}" 
+                      `<img src="${item.product.images[0]}" alt="${item.productName || __NS_SO_I18N.unknownProduct}" 
                            style="width: 40px; height: 40px; object-fit: cover;" class="rounded me-2">` : ''}
                     <div>
-                      <strong>${item.productName || 'Unknown Product'}</strong>
-                      ${item.discount > 0 ? `<br><small class="text-success">Discount: ${item.discount}%</small>` : ''}
+                      <strong>${item.productName || __NS_SO_I18N.unknownProduct}</strong>
+                      ${item.discount > 0 ? `<br><small class="text-success">${__NS_SO_I18N.discountText}: ${item.discount}%</small>` : ''}
                     </div>
                   </div>
                 </td>
@@ -400,31 +446,31 @@
                 <td>EGP ${(item.unitPrice || 0).toFixed(2)}</td>
                 <td>EGP ${(item.subtotal || 0).toFixed(2)}</td>
               </tr>
-            `).join('') : '<tr><td colspan="4" class="text-center">No items found</td></tr>'}
+            `).join('') : `<tr><td colspan="4" class="text-center">${__NS_SO_I18N.noItemsFound}</td></tr>`}
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+              <td colspan="3" class="text-end"><strong>${__NS_SO_I18N.subtotalLabel}</strong></td>
               <td><strong>EGP ${(order.subtotal || 0).toFixed(2)}</strong></td>
             </tr>
             ${(order.discount || 0) > 0 ? `
             <tr>
-              <td colspan="3" class="text-end">Discount:</td>
+              <td colspan="3" class="text-end">${__NS_SO_I18N.discountLabel}</td>
               <td>- EGP ${(order.discount || 0).toFixed(2)}</td>
             </tr>
             ` : ''}
             ${(order.tax || 0) > 0 ? `
             <tr>
-              <td colspan="3" class="text-end">Tax:</td>
+              <td colspan="3" class="text-end">${__NS_SO_I18N.taxLabel}</td>
               <td>EGP ${(order.tax || 0).toFixed(2)}</td>
             </tr>
             ` : ''}
             <tr>
-              <td colspan="3" class="text-end">Delivery Fee:</td>
+              <td colspan="3" class="text-end">${__NS_SO_I18N.deliveryFeeLabel}</td>
               <td>EGP ${(order.deliveryFee || 0).toFixed(2)}</td>
             </tr>
             <tr class="table-active">
-              <td colspan="3" class="text-end"><strong>Total:</strong></td>
+              <td colspan="3" class="text-end"><strong>${__NS_SO_I18N.totalLabel}</strong></td>
               <td><strong>EGP ${(order.totalAmount || 0).toFixed(2)}</strong></td>
             </tr>
           </tfoot>
@@ -432,7 +478,7 @@
       </div>
       
       ${order.trackingHistory && order.trackingHistory.length > 0 ? `
-        <h6 class="mb-3">Tracking History</h6>
+        <h6 class="mb-3">${__NS_SO_I18N.trackingHistory}</h6>
         <div class="timeline-container">
           ${order.trackingHistory.map((track, index) => `
             <div class="timeline-item ${index === 0 ? 'timeline-item-active' : ''}">
@@ -441,15 +487,15 @@
               </div>
               <div class="timeline-content">
                 <div class="timeline-header">
-                  <h6 class="timeline-title mb-1">${track.description || 'Status update'}</h6>
+                  <h6 class="timeline-title mb-1">${track.description || ''}</h6>
                   <span class="timeline-time">
-                    <i class="ri-time-line me-1"></i>${track.timestamp ? new Date(track.timestamp).toLocaleString() : 'Unknown time'}
+                    <i class="ri-time-line me-1"></i>${track.timestamp ? new Date(track.timestamp).toLocaleString(__NS_SO_I18N.locale) : __NS_SO_I18N.unknownTime}
                   </span>
                 </div>
                 ${track.location ? `
                   <div class="timeline-location mt-2">
                     <i class="ri-map-pin-line me-1 text-primary"></i>
-                    <span class="text-muted">Location: ${track.location.lat}, ${track.location.lng}</span>
+                    <span class="text-muted">${__NS_SO_I18N.locationLabel} ${track.location.lat}, ${track.location.lng}</span>
                   </div>
                 ` : ''}
                 ${track.notes ? `
@@ -465,7 +511,7 @@
       
       ${order.notes ? `
         <div class="alert alert-info mt-3">
-          <strong>Notes:</strong> ${order.notes}
+          <strong>${__NS_SO_I18N.notesLabel}</strong> ${order.notes}
         </div>
       ` : ''}
     `;
@@ -482,17 +528,17 @@
     const {
       value: reason
     } = await Swal.fire({
-      title: 'Cancel Order',
+      title: __NS_SO_I18N.cancelTitle,
       input: 'textarea',
-      inputLabel: 'Reason for cancellation',
-      inputPlaceholder: 'Please provide a reason...',
+      inputLabel: __NS_SO_I18N.cancelReasonLabel,
+      inputPlaceholder: __NS_SO_I18N.cancelReasonPlaceholder,
       showCancelButton: true,
       confirmButtonColor: '#d33',
-      confirmButtonText: 'Yes, cancel it',
-      cancelButtonText: 'No, keep it',
+      confirmButtonText: __NS_SO_I18N.cancelConfirmBtn,
+      cancelButtonText: __NS_SO_I18N.cancelDismissBtn,
       inputValidator: (value) => {
         if (!value) {
-          return 'You need to provide a reason!';
+          return __NS_SO_I18N.cancelReasonRequired;
         }
       }
     });
@@ -526,13 +572,13 @@
 
   function trackOrder(orderId) {
     // This would integrate with a tracking map or similar
-    showInfo('Tracking functionality coming soon!');
+    showInfo(__NS_SO_I18N.trackingComingSoon);
   }
 
   function showSuccess(message) {
     Swal.fire({
       icon: 'success',
-      title: 'Success!',
+      title: __NS_SO_I18N.successTitle,
       text: message,
       timer: 2000,
       showConfirmButton: false
@@ -542,7 +588,7 @@
   function showError(message) {
     Swal.fire({
       icon: 'error',
-      title: 'Error!',
+      title: __NS_SO_I18N.errorTitle,
       text: message
     });
   }
@@ -550,7 +596,7 @@
   function showInfo(message) {
     Swal.fire({
       icon: 'info',
-      title: 'Info',
+      title: __NS_SO_I18N.infoTitle,
       text: message
     });
   }

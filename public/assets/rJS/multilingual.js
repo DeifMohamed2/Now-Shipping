@@ -59,6 +59,10 @@ class MultilingualManager {
         if (document.getElementById('languageSwitcher')) {
             return;
         }
+        // Marketing pages: navbar partial already has <select id="ns-marketing-lang">
+        if (document.getElementById('ns-marketing-lang')) {
+            return;
+        }
 
         const switcherHTML = `
             <div class="language-switcher" id="languageSwitcher">
@@ -159,35 +163,33 @@ class MultilingualManager {
             const menu = document.getElementById('languageMenu');
             const options = document.querySelectorAll('.language-option');
 
+            if (!toggle || !menu) {
+                return;
+            }
+
             console.log('Language switcher elements:', { toggle, menu, options: options.length });
 
-            if (toggle) {
-                // Remove any existing event listeners to prevent duplicates
-                toggle.removeEventListener('click', this.toggleHandler);
-                
-                // Create bound handler
-                this.toggleHandler = (e) => {
+            // Remove any existing event listeners to prevent duplicates
+            toggle.removeEventListener('click', this.toggleHandler);
+
+            this.toggleHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Toggle clicked');
+                this.toggleMenu();
+            };
+
+            toggle.addEventListener('click', this.toggleHandler);
+
+            toggle.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Toggle clicked');
                     this.toggleMenu();
-                };
-                
-                toggle.addEventListener('click', this.toggleHandler);
-
-                // Keyboard support
-                toggle.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.toggleMenu();
-                    } else if (e.key === 'Escape') {
-                        this.closeMenu();
-                    }
-                });
-            } else {
-                console.error('Language toggle button not found!');
-            }
+                } else if (e.key === 'Escape') {
+                    this.closeMenu();
+                }
+            });
 
             options.forEach(option => {
                 // Remove any existing event listeners

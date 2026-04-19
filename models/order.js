@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const cron = require('node-cron');
-const Transaction = require('./transactions');
 
 
 const orderStagesSchema = new mongoose.Schema({
@@ -101,6 +99,23 @@ const orderStagesSchema = new mongoose.Schema({
         notes: { type: String, default: '' },
         returnOrderCompleted: { type: Boolean, default: false },
         returnOrderCompletedAt: { type: Date, default: null }
+    },
+    // Exchange-specific stages
+    exchangePickup: {
+        isCompleted: { type: Boolean, default: false },
+        completedAt: { type: Date, default: null },
+        notes: { type: String, default: '' },
+        pickedUpBy: { type: mongoose.Schema.Types.ObjectId, ref: 'courier', default: null },
+        pickupLocation: { type: String, default: null },
+        originalItemPhotos: [{ type: String }]
+    },
+    // Cancellation stage
+    canceled: {
+        isCompleted: { type: Boolean, default: false },
+        completedAt: { type: Date, default: null },
+        notes: { type: String, default: '' },
+        canceledBy: { type: String, default: null },
+        reason: { type: String, default: null }
     }
 });
 
@@ -118,7 +133,18 @@ const courierHistorySchema = new mongoose.Schema({
     action: {
       type: String,
       required: true,
-      enum: ['assigned', 'pickup_from_customer', 'delivered_to_warehouse', 'pickup_from_warehouse', 'delivered_to_business', 'completed']
+      enum: [
+        'assigned',
+        'pickup_from_customer',
+        'delivered_to_warehouse',
+        'pickup_from_warehouse',
+        'delivered_to_business',
+        'completed',
+        'exchange_pickup',
+        'exchange_delivery',
+        'cash_collected',
+        'courier_changed'
+      ]
     },
     notes: {
       type: String,
@@ -146,24 +172,6 @@ const orderSchema = new mongoose.Schema(
     orderFees: {
       type: Number,
       required: true,
-    },
-    returnFees: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-    totalFees: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-    feeBreakdown: {
-      deliveryFee: { type: Number, default: 0 },
-      returnFee: { type: Number, default: 0 },
-      expressFee: { type: Number, default: 0 },
-      processingFee: { type: Number, default: 0 },
-      inspectionFee: { type: Number, default: 0 },
-      total: { type: Number, default: 0 }
     },
     orderStatus: {
       type: String,
@@ -205,6 +213,10 @@ const orderSchema = new mongoose.Schema(
         'deliveryFailed',       // Delivery failed/customer rejected
         'autoReturnInitiated',  // System automatically initiated return
         'returnLinked',         // Return order linked to deliver order
+
+        // Exchange: legacy orderStatus `exchangePickup` may exist on old documents; new flow uses inReturnStock
+        'exchangePickup',
+
       ],
     },
     
@@ -240,6 +252,16 @@ const orderSchema = new mongoose.Schema(
           enum: ['NEW', 'PROCESSING', 'PAUSED', 'SUCCESSFUL', 'UNSUCCESSFUL'],
           required: false
         },
+        notes: {
+          type: String,
+          required: false,
+          default: null
+        },
+        reason: {
+          type: String,
+          required: false,
+          default: null
+        }
       },
     ],
     orderCustomer: {
@@ -300,12 +322,12 @@ const orderSchema = new mongoose.Schema(
       orderType: {
         type: String,
         required: true,
-        enum: ['Deliver', 'Return', 'Exchange', 'Cash Collection'],
+        enum: ['Deliver', 'Return', 'Exchange'],
       },
       amountType: {
         type: String,
         required: true,
-        enum: ['COD', 'CD', 'CC', 'NA'], // COD for Cash On Delvirt and CD for Cash Differnce and CC for Cash Collection
+        enum: ['COD', 'CD', 'NA'], // COD: cash on delivery or cash to collect (see orderType); CD: cash difference; NA: none
       },
       amount: {
         type: Number,
@@ -429,16 +451,7 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    isMoneyRecivedFromCourier: { // this is the status of the money that is recived from the courier
-      type: Boolean,
-      required: true,
-      default: false,
-    },
     completedDate: {
-      type: Date,
-      required: false,
-    },
-    moneyReleaseDate: {
       type: Date,
       required: false,
     },
@@ -446,37 +459,6 @@ const orderSchema = new mongoose.Schema(
       type: Date,
       required: false,
     },
-    // Financial processing tracking
-    financialProcessing: {
-      isProcessed: {
-        type: Boolean,
-        default: false,
-        required: true
-      },
-      processedAt: {
-        type: Date,
-        required: false
-      },
-      processedBy: {
-        type: String,
-        enum: ['dailyJob', 'manual', 'system'],
-        required: false
-      },
-      processingBatchId: {
-        type: String,
-        required: false
-      },
-      transactionIds: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Transaction',
-        required: false
-      }],
-      processingNotes: {
-        type: String,
-        required: false
-      }
-    },
-
     // Delivery OTP for customer verification (24h validity)
     deliveryOtp: {
       otpHash: { type: String, required: false, default: null },
@@ -484,12 +466,29 @@ const orderSchema = new mongoose.Schema(
       verifiedAt: { type: Date, required: false, default: null },
       attempts: { type: Number, required: true, default: 0 }
     },
+    // Return pickup OTP — sent to customer when admin assigns a courier for return pickup
+    returnOtp: {
+      otpHash:   { type: String, required: false, default: null },
+      expiresAt: { type: Date,   required: false, default: null },
+      verifiedAt:{ type: Date,   required: false, default: null },
+      issuedAt:  { type: Date,   required: false, default: null },
+      attempts:  { type: Number, required: true,  default: 0 },
+    },
   },
   {
     timestamps: true,
 });
 
-
+// Legacy: amountType "CC" was removed; coerce to COD on save so older documents remain valid
+orderSchema.pre('save', function (next) {
+  if (
+    this.orderShipping &&
+    this.orderShipping.amountType === 'CC'
+  ) {
+    this.orderShipping.amountType = 'COD';
+  }
+  next();
+});
 
 // Middleware to check pickup status when order status changes to inStock
 // Post-save: update related pickup when this order reaches inStock (no re-saving order here)
@@ -538,9 +537,13 @@ orderSchema.pre('save', function(next) {
       category = 'NEW';
     }
     // PROCESSING category
-    else if (['pickedUp', 'inStock', 'inReturnStock', 'inProgress', 'headingToCustomer', 
-              'returnToWarehouse', 'headingToYou', 'rescheduled', 'returnInitiated',
-              'returnAssigned', 'returnPickedUp', 'returnAtWarehouse', 'returnToBusiness'].includes(newStatus)) {
+    else if ([
+      'pickedUp', 'inStock', 'inReturnStock', 'inProgress', 'headingToCustomer',
+      'returnToWarehouse', 'headingToYou', 'rescheduled', 'returnInitiated',
+      'returnAssigned', 'returnPickedUp', 'returnAtWarehouse', 'returnToBusiness',
+      'returnLinked',
+      'exchangePickup'
+    ].includes(newStatus)) {
       category = 'PROCESSING';
     }
     // PAUSED category
@@ -572,28 +575,11 @@ orderSchema.pre('save', function(next) {
   next();
 });
 
-// Pre-save: set money release date and completed date on transition to orders that need financial processing
+// Pre-save: set completedDate when order reaches a terminal status
 orderSchema.pre('save', function(next) {
-  // Orders that need financial processing and money release dates
-  const financialProcessingStatuses = ['completed', 'returned', 'canceled', 'returnCompleted'];
-  
-  if (this.isModified('orderStatus') && financialProcessingStatuses.includes(this.orderStatus) && !this.moneyReleaseDate) {
-    const completionDate = new Date();
-    const dayOfWeek = completionDate.getDay();
-    const daysUntilWednesday = (3 - dayOfWeek + 7) % 7;
-    const releaseDate = new Date(completionDate);
-    
-    // Calculate next Wednesday for money release
-    if (dayOfWeek === 3) {
-      releaseDate.setDate(releaseDate.getDate() + 7);
-    } else if (daysUntilWednesday > 0) {
-      releaseDate.setDate(releaseDate.getDate() + daysUntilWednesday);
-    }
-    
-    this.moneyReleaseDate = releaseDate;
+  const terminalStatuses = ['completed', 'returned', 'canceled', 'returnCompleted'];
+  if (this.isModified('orderStatus') && terminalStatuses.includes(this.orderStatus) && !this.completedDate) {
     this.completedDate = new Date();
-    
-    console.log(`Setting money release date for order ${this.orderNumber} (status: ${this.orderStatus}) to: ${releaseDate.toISOString()}`);
   }
   next();
 });
@@ -707,6 +693,19 @@ orderSchema.methods.assignSmartFlyerBarcode = async function(barcode) {
   
   return barcode;
 };
+
+// Post-save: write ledger entries when order reaches a financial terminal status
+orderSchema.post('save', async function () {
+  const financialStatuses = ['completed', 'returned', 'canceled', 'returnCompleted'];
+  if (financialStatuses.includes(this.orderStatus)) {
+    try {
+      const ledgerService = require('../utils/ledgerService');
+      await ledgerService.createOrderEntries(this);
+    } catch (err) {
+      console.error(`ledger post-save error for order ${this.orderNumber}:`, err);
+    }
+  }
+});
 
 const Order = mongoose.model('order', orderSchema);
 

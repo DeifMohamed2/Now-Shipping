@@ -6,525 +6,15 @@
 <link rel="stylesheet" href="/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css">
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="/assets/css/area-selection-modal.css">
-
-<style>
-  :root {
-    --primary-color: #F39720;
-    --primary-hover: #e08a18;
-    --primary-light: #fef4e8;
-    --secondary-color: #FDB614;
-    --text-dark: #333333;
-    --text-medium: #555555;
-    --text-light: #777777;
-    --border-color: #e0e0e0;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
-  }
-
-  body {
-    font-family: 'Poppins', sans-serif;
-    color: var(--text-dark);
-    background-color: #f8f9fa;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Global touch support for all interactive elements */
-  button, .btn, .nav-tab, .payment-option, .brand-option, .profile-image-overlay {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .settings-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-
-  .settings-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    color: white;
-    box-shadow: var(--card-shadow);
-  }
-
-  .settings-header h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-
-  .settings-header p {
-    opacity: 0.9;
-    margin: 0;
-  }
-
-  .settings-nav {
-    background: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--card-shadow);
-  }
-
-  .settings-nav-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 1rem;
-    margin-bottom: 0;
-  }
-
-  .nav-tab {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    background: transparent;
-    color: var(--text-medium);
-    font-weight: 500;
-    cursor: pointer;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .nav-tab:hover {
-    background: var(--primary-light);
-    color: var(--primary-color);
-  }
-
-  .nav-tab.active {
-    color: var(--primary-color);
-    background: var(--primary-light);
-  }
-
-  .nav-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1rem;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--primary-color);
-    border-radius: 3px 3px 0 0;
-  }
-
-  .settings-content {
-    display: none;
-  }
-
-  .settings-content.active {
-    display: block;
-    animation: fadeIn 0.3s ease;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .settings-card {
-    background: white;
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--card-shadow);
-    transition: all 0.3s ease;
-  }
-
-  .settings-card:hover {
-    box-shadow: var(--card-shadow-hover);
-  }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid var(--border-color);
-  }
-
-  .card-header i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-  }
-
-  .card-header h3 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-dark);
-  }
-
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: var(--text-dark);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .form-label .required {
-    color: var(--danger-color);
-  }
-
-  .form-control,
-  .form-select {
-    border: 2px solid var(--border-color);
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-  }
-
-  .form-control:focus,
-  .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(243, 151, 32, 0.25);
-    outline: none;
-  }
-
-  .form-control:disabled {
-    background-color: #f8f9fa;
-    opacity: 0.7;
-  }
-
-  .btn-save {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    border: none;
-    color: white;
-    padding: 0.75rem 2rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .btn-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(243, 151, 32, 0.3);
-  }
-
-  .btn-save:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .btn-secondary-custom {
-    background: white;
-    border: 2px solid var(--border-color);
-    color: var(--text-medium);
-    padding: 0.75rem 2rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .btn-secondary-custom:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-  }
-
-  .profile-image-container {
-    position: relative;
-    display: inline-block;
-    margin-bottom: 1rem;
-  }
-
-  .profile-image {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid var(--primary-color);
-    box-shadow: var(--card-shadow);
-  }
-
-  .profile-image-overlay {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    background: var(--primary-color);
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: var(--card-shadow);
-    transition: all 0.3s ease;
-  }
-
-  .profile-image-overlay:hover {
-    background: var(--primary-hover);
-    transform: scale(1.1);
-  }
-
-  .badge-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  .badge-verified {
-    background: rgba(40, 167, 69, 0.1);
-    color: var(--success-color);
-  }
-
-  .badge-unverified {
-    background: rgba(220, 53, 69, 0.1);
-    color: var(--danger-color);
-  }
-
-  .badge-completed {
-    background: rgba(243, 151, 32, 0.1);
-    color: var(--primary-color);
-  }
-
-  .info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: var(--primary-light);
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .info-row label {
-    font-weight: 500;
-    color: var(--text-medium);
-    margin: 0;
-  }
-
-  .info-row span {
-    color: var(--text-dark);
-    font-weight: 600;
-  }
-
-  .tags-input {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    border: 2px solid var(--border-color);
-    border-radius: 0.5rem;
-    min-height: 50px;
-  }
-
-  .tag {
-    background: var(--primary-color);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .tag-remove {
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  .tag-input {
-    border: none;
-    outline: none;
-    flex: 1;
-    min-width: 100px;
-    padding: 0.25rem;
-  }
-
-  .map-container {
-    height: 300px;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    margin-top: 1rem;
-    border: 2px solid var(--border-color);
-  }
-
-  .payment-option,
-  .brand-option {
-    cursor: pointer;
-    border: 2px solid var(--border-color);
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-    background: white;
-  }
-
-  .payment-option:hover,
-  .brand-option:hover {
-    border-color: var(--primary-color);
-    background: var(--primary-light);
-  }
-
-  .payment-option.selected,
-  .brand-option.selected {
-    border-color: var(--primary-color);
-    background: var(--primary-light);
-    box-shadow: 0 0 0 0.2rem rgba(243, 151, 32, 0.25);
-  }
-
-  .payment-option i,
-  .brand-option i {
-    font-size: 2.5rem;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-  }
-
-  .alert {
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
-  .alert.show {
-    display: block;
-    animation: slideDown 0.3s ease;
-  }
-
-  .alert-success {
-    background: rgba(40, 167, 69, 0.1);
-    color: var(--success-color);
-    border: 1px solid var(--success-color);
-  }
-
-  .alert-error {
-    background: rgba(220, 53, 69, 0.1);
-    color: var(--danger-color);
-    border: 1px solid var(--danger-color);
-  }
-
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 26px;
-  }
-
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 26px;
-  }
-
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-  }
-
-  input:checked + .slider {
-    background-color: var(--primary-color);
-  }
-
-  input:checked + .slider:before {
-    transform: translateX(24px);
-  }
-
-  @media (max-width: 768px) {
-    .settings-container {
-      padding: 1rem;
-    }
-
-    .settings-nav-tabs {
-      flex-direction: column;
-    }
-
-    .nav-tab {
-      width: 100%;
-    }
-
-    .settings-card {
-      padding: 1.5rem;
-    }
-
-    /* Get Current Location Button - Mobile */
-    #getCurrentLocationBtn {
-      white-space: nowrap;
-      font-size: 0.875rem;
-      padding: 0.5rem 0.75rem;
-    }
-
-    .d-flex.gap-2.mb-2 {
-      flex-wrap: wrap;
-    }
-
-    .d-flex.gap-2.mb-2 input {
-      flex: 1;
-      min-width: 200px;
-    }
-  }
-</style>
+<link rel="stylesheet" href="/assets/rCSS/business-settings.css" />
 
 <%- contentFor('body') %>
+<% var St = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.settings) ? translation.business.pages.settings : {}; %>
 <div class="settings-container">
   <!-- Header -->
   <div class="settings-header">
-    <h1><i class="ri-settings-3-line me-2"></i>Settings</h1>
-    <p>Manage your account preferences and information</p>
+    <h1><i class="ri-settings-3-line me-2"></i><%= St.title || 'Settings' %></h1>
+    <p><%= St.headerLead || 'Manage your account preferences and information' %></p>
   </div>
 
   <!-- Navigation Tabs -->
@@ -532,31 +22,27 @@
     <div class="settings-nav-tabs">
       <button class="nav-tab active" data-tab="profile">
         <i class="ri-user-line"></i>
-        <span>Profile</span>
+        <span><%= St.tabProfile || 'Profile' %></span>
       </button>
       <button class="nav-tab" data-tab="brand">
         <i class="ri-store-line"></i>
-        <span>Brand Info</span>
+        <span><%= St.tabBrand || 'Brand Info' %></span>
       </button>
       <button class="nav-tab" data-tab="address">
         <i class="ri-map-pin-line"></i>
-        <span>Pickup Address</span>
+        <span><%= St.tabAddress || 'Pickup Address' %></span>
       </button>
       <button class="nav-tab" data-tab="payment">
         <i class="ri-bank-card-line"></i>
-        <span>Payment Method</span>
-      </button>
-      <button class="nav-tab" data-tab="brand-type">
-        <i class="ri-file-text-line"></i>
-        <span>Brand Type</span>
+        <span><%= St.tabPayment || 'Payment Method' %></span>
       </button>
       <button class="nav-tab" data-tab="preferences">
         <i class="ri-settings-line"></i>
-        <span>Preferences</span>
+        <span><%= St.tabPreferences || 'Preferences' %></span>
       </button>
       <button class="nav-tab" data-tab="security">
         <i class="ri-shield-check-line"></i>
-        <span>Security</span>
+        <span><%= St.tabSecurity || 'Security' %></span>
       </button>
     </div>
   </div>
@@ -567,58 +53,85 @@
   <!-- Profile Tab -->
   <div id="profile" class="settings-content active">
     <form id="profileForm" class="settings-card">
+      <%
+        const profileImgRaw = (typeof user !== 'undefined' && user && typeof user.profileImage === 'string') ? String(user.profileImage).trim() : '';
+        const useProfilePlaceholder = !profileImgRaw || profileImgRaw.indexOf('default-avatar') !== -1;
+        const nmInit = (typeof user !== 'undefined' && user && user.name) ? String(user.name).trim() : '';
+        const emInit = (typeof user !== 'undefined' && user && user.email) ? String(user.email).trim() : '';
+        let profileInitials = '?';
+        if (nmInit) {
+          const parts = nmInit.split(/\s+/).filter(Boolean);
+          if (parts.length >= 2) {
+            profileInitials = (parts[0][0] + parts[1][0]).toUpperCase();
+          } else if (parts.length === 1 && parts[0].length >= 2) {
+            profileInitials = parts[0].slice(0, 2).toUpperCase();
+          } else if (parts.length === 1) {
+            profileInitials = parts[0][0].toUpperCase();
+          }
+        } else if (emInit) {
+          const alnum = emInit.replace(/[^a-zA-Z0-9]/g, '');
+          profileInitials = (alnum.slice(0, 2) || '?').toUpperCase();
+        }
+      %>
       <div class="card-header">
         <i class="ri-user-line"></i>
-        <h3>Profile Information</h3>
+        <h3><%= St.sectionProfile || 'Profile Information' %></h3>
       </div>
 
-      <div class="row">
-        <div class="col-md-4 text-center">
-          <div class="profile-image-container">
-            <img id="profileImagePreview" src="<%= typeof user.profileImage === 'string' && user.profileImage ? user.profileImage.replace(/&/g, '&amp;') : '/assets/images/default-avatar.png' %>" alt="Profile" class="profile-image" onerror="this.onerror=null; this.src='/assets/images/default-avatar.png';">
-            <div class="profile-image-overlay" id="profileImageOverlay">
-              <i class="ri-camera-line"></i>
-            </div>
-            <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
+      <div class="row align-items-start">
+        <div class="col-lg-4 text-center mb-4 mb-lg-0">
+          <div class="profile-photo-panel">
+            <button type="button" class="profile-photo-hitbox" id="profilePhotoTrigger" aria-label="Upload or change profile photo">
+              <div class="profile-photo-frame<%= useProfilePlaceholder ? '' : ' profile-photo-frame--filled' %>" id="profilePhotoFrame">
+                <img id="profileImagePreview" src="<%= !useProfilePlaceholder ? profileImgRaw.replace(/&/g, '&amp;') : 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22/%3E' %>" alt="" class="profile-image<%= useProfilePlaceholder ? ' d-none' : '' %>" data-using-placeholder="<%= useProfilePlaceholder ? '1' : '0' %>">
+                <div id="profilePhotoPlaceholder" class="profile-photo-placeholder<%= useProfilePlaceholder ? '' : ' d-none' %>">
+                  <span class="profile-photo-placeholder__initials" id="profileInitialsDisplay"><%= profileInitials %></span>
+                  <span class="profile-photo-placeholder__hint"><%= St.profileNoPhoto || 'No photo yet' %></span>
+                  <i class="ri-camera-3-line profile-photo-placeholder__icon" aria-hidden="true"></i>
+                </div>
+              </div>
+              <span class="profile-photo-badge" aria-hidden="true"><i class="ri-camera-line"></i></span>
+            </button>
+            <input type="file" id="profileImageInput" accept="image/*" class="visually-hidden">
+            <p class="profile-photo-help"><%= St.profilePhotoHelp || 'Tap to upload. PNG or JPG, square works best. Large files are compressed on save.' %></p>
           </div>
-          <p class="text-muted mt-2">Click to change profile picture</p>
         </div>
-        <div class="col-md-8">
+        <div class="col-lg-8">
           <div class="form-group">
-            <label class="form-label">Full Name <span class="required">*</span></label>
+            <label class="form-label"><%= St.profileName || 'Full Name' %> <span class="required">*</span></label>
             <input type="text" class="form-control" id="name" name="name" value="<%= user.name || '' %>" required>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Email Address <span class="required">*</span></label>
+            <label class="form-label"><%= St.profileEmail || 'Email Address' %> <span class="required">*</span></label>
             <div class="input-group">
               <input type="email" class="form-control" id="email" name="email" value="<%= user.email || '' %>" required readonly>
-              <button type="button" class="btn btn-outline-secondary" id="editEmailBtn">
-                <i class="ri-edit-line"></i> Edit
+              <button type="button" class="btn btn-settings-edit" id="editEmailBtn">
+                <i class="ri-edit-line"></i> <%= St.editBtn || 'Edit' %>
               </button>
             </div>
             <!-- OTP Verification for Email -->
             <div id="emailOtpContainer" style="display: none;" class="mt-3">
               <div class="alert alert-info">
                 <i class="ri-information-line me-2"></i>
-                OTP verification required to change email address
+                <%= St.otpEmailRequired || 'OTP verification required to change email address' %>
               </div>
               <div class="input-group mb-2">
-                <input type="email" class="form-control" id="newEmail" name="newEmail" placeholder="Enter new email address">
+                <input type="email" class="form-control" id="newEmail" name="newEmail" placeholder="<%= St.newEmailPlaceholder || 'Enter new email address' %>">
                 <button type="button" class="btn btn-primary" id="sendEmailOtpBtn">
-                  <i class="ri-mail-send-line me-1"></i> Send OTP
+                  <i class="ri-mail-send-line me-1"></i> <%= St.securitySendOtp || 'Send OTP' %>
                 </button>
               </div>
               <div id="emailOtpInputContainer" style="display: none;">
                 <div class="input-group mb-2">
-                  <input type="text" class="form-control" id="emailOtp" name="emailOtp" placeholder="Enter 6-digit OTP" maxlength="6">
+                  <input type="text" class="form-control" id="emailOtp" name="emailOtp" placeholder="<%= St.otpPlaceholder || 'Enter 6-digit OTP' %>" maxlength="6">
                   <button type="button" class="btn btn-success" id="verifyEmailOtpBtn">
-                    <i class="ri-check-line me-1"></i> Verify
+                    <i class="ri-check-line me-1"></i> <%= St.verifyBtn || 'Verify' %>
                   </button>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <small class="text-muted" id="emailOtpTimer"></small>
-                  <button type="button" class="btn btn-link btn-sm p-0" id="resendEmailOtpBtn" disabled>Resend OTP</button>
+                  <button type="button" class="btn btn-link btn-sm p-0" id="resendEmailOtpBtn" disabled><%= St.resendOtp || 'Resend OTP' %></button>
                 </div>
               </div>
               <div id="emailOtpStatus" class="mt-2"></div>
@@ -626,35 +139,35 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Phone Number <span class="required">*</span></label>
+            <label class="form-label"><%= St.profilePhone || 'Phone Number' %> <span class="required">*</span></label>
             <div class="input-group">
               <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" value="<%= user.phoneNumber || '' %>" required readonly>
-              <button type="button" class="btn btn-outline-secondary" id="editPhoneBtn">
-                <i class="ri-edit-line"></i> Edit
+              <button type="button" class="btn btn-settings-edit" id="editPhoneBtn">
+                <i class="ri-edit-line"></i> <%= St.editBtn || 'Edit' %>
               </button>
             </div>
             <!-- OTP Verification for Phone -->
             <div id="phoneOtpContainer" style="display: none;" class="mt-3">
               <div class="alert alert-info">
                 <i class="ri-information-line me-2"></i>
-                OTP verification required to change phone number
+                <%= St.otpPhoneRequired || 'OTP verification required to change phone number' %>
               </div>
               <div class="input-group mb-2">
-                <input type="tel" class="form-control" id="newPhoneNumber" name="newPhoneNumber" placeholder="Enter new phone number (11 digits)">
+                <input type="tel" class="form-control" id="newPhoneNumber" name="newPhoneNumber" placeholder="<%= St.newPhonePlaceholder || 'Enter new phone number (11 digits)' %>">
                 <button type="button" class="btn btn-primary" id="sendPhoneOtpBtn">
-                  <i class="ri-phone-send-line me-1"></i> Send OTP
+                  <i class="ri-phone-send-line me-1"></i> <%= St.securitySendOtp || 'Send OTP' %>
                 </button>
               </div>
               <div id="phoneOtpInputContainer" style="display: none;">
                 <div class="input-group mb-2">
-                  <input type="text" class="form-control" id="phoneOtp" name="phoneOtp" placeholder="Enter 6-digit OTP" maxlength="6">
+                  <input type="text" class="form-control" id="phoneOtp" name="phoneOtp" placeholder="<%= St.otpPlaceholder || 'Enter 6-digit OTP' %>" maxlength="6">
                   <button type="button" class="btn btn-success" id="verifyPhoneOtpBtn">
-                    <i class="ri-check-line me-1"></i> Verify
+                    <i class="ri-check-line me-1"></i> <%= St.verifyBtn || 'Verify' %>
                   </button>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <small class="text-muted" id="phoneOtpTimer"></small>
-                  <button type="button" class="btn btn-link btn-sm p-0" id="resendPhoneOtpBtn" disabled>Resend OTP</button>
+                  <button type="button" class="btn btn-link btn-sm p-0" id="resendPhoneOtpBtn" disabled><%= St.resendOtp || 'Resend OTP' %></button>
                 </div>
               </div>
               <div id="phoneOtpStatus" class="mt-2"></div>
@@ -662,23 +175,23 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Account Status</label>
+            <label class="form-label"><%= St.accountStatus || 'Account Status' %></label>
             <div class="d-flex gap-2 flex-wrap">
               <% if (user.isVerified) { %>
                 <span class="badge-status badge-verified">
                   <i class="ri-checkbox-circle-line"></i>
-                  Email Verified
+                  <%= St.emailVerified || 'Email Verified' %>
                 </span>
               <% } else { %>
                 <span class="badge-status badge-unverified">
                   <i class="ri-close-circle-line"></i>
-                  Email Not Verified
+                  <%= St.emailNotVerified || 'Email Not Verified' %>
                 </span>
               <% } %>
               <% if (user.isCompleted) { %>
                 <span class="badge-status badge-completed">
                   <i class="ri-check-double-line"></i>
-                  Account Completed
+                  <%= St.accountCompleted || 'Account Completed' %>
                 </span>
               <% } %>
             </div>
@@ -689,7 +202,7 @@
       <div class="text-end mt-4">
         <button type="submit" class="btn-save">
           <i class="ri-save-line"></i>
-          Save Changes
+          <%= St.profileSave || 'Save Changes' %>
         </button>
       </div>
     </form>
@@ -700,25 +213,25 @@
     <form id="brandForm" class="settings-card">
       <div class="card-header">
         <i class="ri-store-line"></i>
-        <h3>Brand Information</h3>
+        <h3><%= St.tabBrand || 'Brand Information' %></h3>
       </div>
 
       <div class="mb-4">
-        <h4 class="fw-bold">Brand Profile</h4>
-        <p class="text-muted">Add your business details</p>
+        <h4 class="fw-bold"><%= St.brandProfileTitle || 'Brand Profile' %></h4>
+        <p class="text-muted"><%= St.brandProfileLead || 'Add your business details' %></p>
       </div>
 
       <div class="form-group">
-        <label class="form-label fw-semibold">Brand Name <span class="required">*</span></label>
-        <input type="text" class="form-control" id="brandName" name="brandName" value="<%= user.brandInfo?.brandName || '' %>" placeholder="Enter your brand name" required>
+        <label class="form-label fw-semibold"><%= St.brandName || 'Brand Name' %> <span class="required">*</span></label>
+        <input type="text" class="form-control" id="brandName" name="brandName" value="<%= user.brandInfo?.brandName || '' %>" placeholder="<%= St.brandNamePlaceholder || 'Enter your brand name' %>" required>
       </div>
 
       <div class="row g-3">
         <div class="col-md-6">
           <div class="form-group">
-            <label class="form-label fw-semibold">Industry <span class="required">*</span></label>
+            <label class="form-label fw-semibold"><%= St.industryLabel || 'Industry' %> <span class="required">*</span></label>
             <select class="form-select" id="industry" name="industry" required>
-              <option value="">Select an industry...</option>
+              <option value=""><%= St.industrySelectPlaceholder || 'Select an industry...' %></option>
               <option value="Books, Arts & Media" <%= user.brandInfo?.industry === 'Books, Arts & Media' ? 'selected' : '' %>>Books, Arts & Media</option>
               <option value="Fashion & Clothing" <%= user.brandInfo?.industry === 'Fashion & Clothing' ? 'selected' : '' %>>Fashion & Clothing</option>
               <option value="Electronics" <%= user.brandInfo?.industry === 'Electronics' ? 'selected' : '' %>>Electronics</option>
@@ -730,9 +243,9 @@
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label class="form-label fw-semibold">Monthly Order Volume <span class="required">*</span></label>
+            <label class="form-label fw-semibold"><%= St.monthlyOrdersLabel || 'Monthly Order Volume' %> <span class="required">*</span></label>
             <select class="form-select" id="monthlyOrders" name="monthlyOrders" required>
-              <option value="">Select...</option>
+              <option value=""><%= St.selectPlaceholder || 'Select...' %></option>
               <option value="1 - 10" <%= user.brandInfo?.monthlyOrders === '1 - 10' ? 'selected' : '' %>>1 - 10</option>
               <option value="11 - 50" <%= user.brandInfo?.monthlyOrders === '11 - 50' ? 'selected' : '' %>>11 - 50</option>
               <option value="51 - 200" <%= user.brandInfo?.monthlyOrders === '51 - 200' ? 'selected' : '' %>>51 - 200</option>
@@ -744,8 +257,8 @@
       </div>
 
       <div class="mt-4">
-        <h5 class="fw-bold">Where do you sell your products?</h5>
-        <p class="text-muted">Select all the sales channels you use.</p>
+        <h5 class="fw-bold"><%= St.sellingChannelsTitle || 'Where do you sell your products?' %></h5>
+        <p class="text-muted"><%= St.sellingChannelsLead || 'Select all the sales channels you use.' %></p>
       </div>
 
       <div class="row g-3">
@@ -757,7 +270,7 @@
                 <i class="ri-instagram-line me-2 fs-5 text-danger"></i> Instagram
               </label>
               <div class="social-link-input <%= user.brandInfo?.socialLinks?.instagram ? 'active' : '' %>" id="instagram-link-input">
-                <label for="instagram-link" class="form-label">Instagram Profile URL</label>
+                <label for="instagram-link" class="form-label"><%= St.instagramUrlLabel || 'Instagram Profile URL' %></label>
                 <input type="url" class="form-control" id="instagram-link" name="instagramLink" value="<%= user.brandInfo?.socialLinks?.instagram || '' %>" placeholder="https://instagram.com/yourbrand">
               </div>
             </div>
@@ -767,7 +280,7 @@
                 <i class="ri-tiktok-line me-2 fs-5 text-dark"></i> TikTok
               </label>
               <div class="social-link-input <%= user.brandInfo?.socialLinks?.tiktok ? 'active' : '' %>" id="tiktok-link-input">
-                <label for="tiktok-link" class="form-label">TikTok Profile URL</label>
+                <label for="tiktok-link" class="form-label"><%= St.tiktokUrlLabel || 'TikTok Profile URL' %></label>
                 <input type="url" class="form-control" id="tiktok-link" name="tiktokLink" value="<%= user.brandInfo?.socialLinks?.tiktok || '' %>" placeholder="https://tiktok.com/@yourbrand">
               </div>
             </div>
@@ -777,7 +290,7 @@
                 <i class="ri-store-2-line me-2 fs-5 text-primary"></i> WooCommerce
               </label>
               <div class="social-link-input <%= user.brandInfo?.socialLinks?.woocommerce ? 'active' : '' %>" id="woocommerce-link-input">
-                <label for="woocommerce-link" class="form-label">WooCommerce Store URL</label>
+                <label for="woocommerce-link" class="form-label"><%= St.woocommerceUrlLabel || 'WooCommerce Store URL' %></label>
                 <input type="url" class="form-control" id="woocommerce-link" name="woocommerceLink" value="<%= user.brandInfo?.socialLinks?.woocommerce || '' %>" placeholder="https://yourstore.com">
               </div>
             </div>
@@ -787,7 +300,7 @@
                 <i class="ri-global-line me-2 fs-5 text-secondary"></i> Custom Website
               </label>
               <div class="social-link-input <%= user.brandInfo?.socialLinks?.customWebsite ? 'active' : '' %>" id="customWebsite-link-input">
-                <label for="website-link" class="form-label">Website URL</label>
+                <label for="website-link" class="form-label"><%= St.websiteUrlLabel || 'Website URL' %></label>
                 <input type="url" class="form-control" id="website-link" name="websiteLink" value="<%= user.brandInfo?.socialLinks?.customWebsite || '' %>" placeholder="https://yourwebsite.com">
               </div>
             </div>
@@ -801,7 +314,7 @@
                 <i class="ri-facebook-circle-line me-2 fs-5 text-primary"></i> Facebook Shop
               </label>
               <div class="social-link-input <%= user.brandInfo?.socialLinks?.facebookShop ? 'active' : '' %>" id="facebookShop-link-input">
-                <label for="facebook-shop-link" class="form-label">Facebook Shop URL</label>
+                <label for="facebook-shop-link" class="form-label"><%= St.fbShopUrlLabel || 'Facebook Shop URL' %></label>
                 <input type="url" class="form-control" id="facebook-shop-link" name="facebookShopLink" value="<%= user.brandInfo?.socialLinks?.facebookShop || '' %>" placeholder="https://facebook.com/yourbrand/shop">
               </div>
             </div>
@@ -811,7 +324,7 @@
                 <i class="ri-messenger-line me-2 fs-5 text-info"></i> Facebook Messenger
               </label>
               <div class="social-link-input <%= user.brandInfo?.socialLinks?.facebookMessenger ? 'active' : '' %>" id="facebookMessenger-link-input">
-                <label for="messenger-link" class="form-label">Facebook Page URL</label>
+                <label for="messenger-link" class="form-label"><%= St.fbPageUrlLabel || 'Facebook Page URL' %></label>
                 <input type="url" class="form-control" id="messenger-link" name="messengerLink" value="<%= user.brandInfo?.socialLinks?.facebookMessenger || '' %>" placeholder="https://facebook.com/yourbrand">
               </div>
             </div>
@@ -821,7 +334,7 @@
                 <i class="ri-shopping-cart-line me-2 fs-5 text-success"></i> Shopify
               </label>
               <div class="social-link-input <%= user.brandInfo?.socialLinks?.shopify ? 'active' : '' %>" id="shopify-link-input">
-                <label for="shopify-link" class="form-label">Shopify Store URL</label>
+                <label for="shopify-link" class="form-label"><%= St.shopifyUrlLabel || 'Shopify Store URL' %></label>
                 <input type="url" class="form-control" id="shopify-link" name="shopifyLink" value="<%= user.brandInfo?.socialLinks?.shopify || '' %>" placeholder="https://yourstore.myshopify.com">
               </div>
             </div>
@@ -832,7 +345,7 @@
       <div class="text-end mt-4">
         <button type="submit" class="btn-save">
           <i class="ri-save-line"></i>
-          Save Changes
+          <%= St.profileSave || 'Save Changes' %>
         </button>
       </div>
     </form>
@@ -844,10 +357,10 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <div>
           <i class="ri-map-pin-line"></i>
-          <h3>Pickup Addresses</h3>
+          <h3><%= St.pickupAddressesTitle || 'Pickup Addresses' %></h3>
         </div>
         <button type="button" class="btn-save" id="addNewAddressBtn">
-          <i class="ri-add-line"></i> Add New Address
+          <i class="ri-add-line"></i> <%= St.addNewAddress || 'Add New Address' %>
         </button>
       </div>
 
@@ -862,7 +375,7 @@
                     <h5 class="mb-1">
                       <%= address.addressName || 'Address ' + (index + 1) %>
                       <% if (address.isDefault) { %>
-                        <span class="badge-status badge-verified ms-2">Default</span>
+                        <span class="badge-status badge-verified ms-2"><%= St.defaultBadge || 'Default' %></span>
                       <% } %>
                     </h5>
                     <p class="text-muted mb-0">
@@ -876,22 +389,22 @@
                     <% } %>
                     <% if (address.otherPickupPhone) { %>
                       <p class="text-muted mb-0 mt-1">
-                        <i class="ri-phone-line"></i> <%= address.otherPickupPhone %> <span class="badge bg-secondary badge-sm ms-1">Alternative</span>
+                        <i class="ri-phone-line"></i> <%= address.otherPickupPhone %> <span class="badge bg-secondary badge-sm ms-1"><%= St.alternativeBadge || 'Alternative' %></span>
                       </p>
                     <% } %>
                   </div>
                   <div class="d-flex gap-2">
                     <% if (!address.isDefault) { %>
                       <button type="button" class="btn btn-sm btn-outline-primary set-default-btn" data-address-id="<%= address.addressId %>">
-                        <i class="ri-star-line"></i> Set Default
+                        <i class="ri-star-line"></i> <%= St.setDefaultBtn || 'Set Default' %>
                       </button>
                     <% } %>
                     <button type="button" class="btn btn-sm btn-outline-secondary edit-address-btn" data-address-id="<%= address.addressId %>">
-                      <i class="ri-edit-line"></i> Edit
+                      <i class="ri-edit-line"></i> <%= St.editBtn || 'Edit' %>
                     </button>
                     <% if (user.pickUpAddresses.length > 1) { %>
                       <button type="button" class="btn btn-sm btn-outline-danger delete-address-btn" data-address-id="<%= address.addressId %>">
-                        <i class="ri-delete-bin-line"></i> Delete
+                        <i class="ri-delete-bin-line"></i> <%= St.deleteBtn || 'Delete' %>
                       </button>
                     <% } %>
                   </div>
@@ -902,7 +415,7 @@
         <% } else { %>
           <div class="alert alert-info">
             <i class="ri-information-line me-2"></i>
-            No pickup addresses added yet. Click "Add New Address" to get started.
+            <%= St.noAddressesMsg || 'No pickup addresses added yet. Click "Add New Address" to get started.' %>
           </div>
         <% } %>
       </div>
@@ -912,30 +425,30 @@
     <form id="addressForm" class="settings-card" style="display: none;">
       <div class="card-header">
         <i class="ri-map-pin-line"></i>
-        <h3 id="addressFormTitle">Add Pickup Address</h3>
+        <h3 id="addressFormTitle"><%= St.addAddressTitle || 'Add Pickup Address' %></h3>
       </div>
       <input type="hidden" id="editAddressId">
 
       <div class="form-group">
-        <label class="form-label">Address Name</label>
-        <input type="text" class="form-control" id="addressName" name="addressName" placeholder="e.g. Main Warehouse, Branch Office">
-        <small class="text-muted">Give this address a name to easily identify it</small>
+        <label class="form-label"><%= St.addressNameLabel || 'Address Name' %></label>
+        <input type="text" class="form-control" id="addressName" name="addressName" placeholder="<%= St.addressNamePlaceholder || 'e.g. Main Warehouse, Branch Office' %>">
+        <small class="text-muted"><%= St.addressNameHint || 'Give this address a name to easily identify it' %></small>
       </div>
 
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label class="form-label">Country <span class="required">*</span></label>
+            <label class="form-label"><%= St.countryLabel || 'Country' %> <span class="required">*</span></label>
             <select class="form-control" id="pickupCountry" name="pickupCountry" required>
-              <option value="egypt" selected>Egypt</option>
+              <option value="egypt" selected><%= St.countryEgypt || 'Egypt' %></option>
             </select>
           </div>
         </div>
         <div class="col-md-8">
           <div class="form-group">
-            <label class="form-label">Governorate and Area <span class="required">*</span></label>
+            <label class="form-label"><%= St.governorateAreaLabel || 'Governorate and Area' %> <span class="required">*</span></label>
             <button type="button" class="btn btn-outline-secondary w-100 text-start select-area-btn" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
-              <span id="selectedAreaDisplay">Select Area</span>
+              <span id="selectedAreaDisplay"><%= St.selectAreaPlaceholder || 'Select Area' %></span>
               <i class="ri-arrow-down-s-line"></i>
             </button>
             <input type="hidden" id="pickupCity" name="pickupCity">
@@ -945,36 +458,36 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Address Details <span class="required">*</span></label>
+        <label class="form-label"><%= St.addressDetailsLabel || 'Address Details' %> <span class="required">*</span></label>
         <textarea class="form-control" id="pickupAddressDetails" name="pickupAddressDetails" rows="3" required></textarea>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Nearby Landmark</label>
+        <label class="form-label"><%= St.nearbyLandmarkLabel || 'Nearby Landmark' %></label>
         <input type="text" class="form-control" id="pickupNearbyLandmark" name="pickupNearbyLandmark">
       </div>
 
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label class="form-label">Pickup Phone <span class="required">*</span></label>
+            <label class="form-label"><%= St.pickupPhoneLabel || 'Pickup Phone' %> <span class="required">*</span></label>
             <input type="tel" class="form-control" id="pickupPhone" name="pickupPhone" required>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label class="form-label">Other Pickup Phone (Optional)</label>
-            <input type="tel" class="form-control" id="otherPickupPhone" name="otherPickupPhone" placeholder="Alternative phone number">
+            <label class="form-label"><%= St.otherPickupPhoneLabel || 'Other Pickup Phone (Optional)' %></label>
+            <input type="tel" class="form-control" id="otherPickupPhone" name="otherPickupPhone" placeholder="<%= St.altPhonePlaceholder || 'Alternative phone number' %>">
           </div>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Location on Map</label>
+        <label class="form-label"><%= St.locationOnMapLabel || 'Location on Map' %></label>
         <div class="d-flex gap-2 mb-2">
-          <input type="text" class="form-control" id="pickupPointInMaps" name="pickupPointInMaps" placeholder="Search for location...">
-          <button type="button" class="btn btn-primary" id="getCurrentLocationBtn" title="Get Current Location">
-            <i class="ri-map-pin-2-line me-1"></i> Get Current Location
+          <input type="text" class="form-control" id="pickupPointInMaps" name="pickupPointInMaps" placeholder="<%= St.searchLocationPlaceholder || 'Search for location...' %>">
+          <button type="button" class="btn btn-primary" id="getCurrentLocationBtn" title="<%= St.getCurrentLocationBtn || 'Get Current Location' %>">
+            <i class="ri-map-pin-2-line me-1"></i> <%= St.getCurrentLocationBtn || 'Get Current Location' %>
           </button>
         </div>
         <div class="map-container" id="pickupMap"></div>
@@ -984,7 +497,7 @@
       <div class="text-end mt-4">
         <button type="submit" class="btn-save">
           <i class="ri-save-line"></i>
-          Save Changes
+          <%= St.profileSave || 'Save Changes' %>
         </button>
       </div>
     </form>
@@ -995,11 +508,11 @@
     <form id="paymentForm" class="settings-card">
       <div class="card-header">
         <i class="ri-bank-card-line"></i>
-        <h3>Payment Method</h3>
+        <h3><%= St.tabPayment || 'Payment Method' %></h3>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Select Payment Method <span class="required">*</span></label>
+        <label class="form-label"><%= St.selectPaymentLabel || 'Select Payment Method' %> <span class="required">*</span></label>
         <div class="row g-3">
           <div class="col-md-4" style="display: none;">
             <div class="payment-option <%= user.paymentMethod?.paymentChoice === 'instaPay' ? 'selected' : '' %>" data-value="instaPay">
@@ -1026,7 +539,7 @@
       <!-- InstaPay Details -->
       <div id="instaPayDetails" class="payment-details" style="display: none;">
         <div class="form-group">
-          <label class="form-label">IPA or Phone Number <span class="required">*</span></label>
+          <label class="form-label"><%= St.ipaOrPhoneLabel || 'IPA or Phone Number' %> <span class="required">*</span></label>
           <input type="text" class="form-control" id="IPAorPhoneNumber" name="IPAorPhoneNumber" value="<%= user.paymentMethod?.details?.IPAorPhoneNumber || '' %>" disabled>
         </div>
       </div>
@@ -1034,7 +547,7 @@
       <!-- Mobile Wallet Details -->
       <div id="mobileWalletDetails" class="payment-details" style="display: none;">
         <div class="form-group">
-          <label class="form-label">Mobile Wallet Number <span class="required">*</span></label>
+          <label class="form-label"><%= St.mobileWalletLabel || 'Mobile Wallet Number' %> <span class="required">*</span></label>
           <input type="text" class="form-control" id="mobileWalletNumber" name="mobileWalletNumber" value="<%= user.paymentMethod?.details?.mobileWalletNumber || '' %>" disabled>
         </div>
       </div>
@@ -1044,7 +557,7 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label class="form-label">Bank Name <span class="required">*</span></label>
+              <label class="form-label"><%= St.paymentBankName || 'Bank Name' %> <span class="required">*</span></label>
               <select class="form-select" id="bankName" name="bankName" required>
                 <option value="">Choose your bank / اختر البنك</option>
                 <option value="nbe" <%= user.paymentMethod?.details?.bankName === 'nbe' ? 'selected' : '' %>>National Bank of Egypt / البنك الأهلي المصري</option>
@@ -1083,19 +596,19 @@
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label class="form-label">Account Number <span class="required">*</span></label>
+              <label class="form-label"><%= St.accountNumberLabel || 'Account Number' %> <span class="required">*</span></label>
               <input type="text" class="form-control" id="accountNumber" name="accountNumber" value="<%= user.paymentMethod?.details?.accountNumber || '' %>" required placeholder="Example: 1234567890123456">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label class="form-label">Account Name <span class="required">*</span></label>
+              <label class="form-label"><%= St.accountNameLabel || 'Account Name' %> <span class="required">*</span></label>
               <input type="text" class="form-control" id="accountName" name="accountName" value="<%= user.paymentMethod?.details?.accountName || '' %>" required>
             </div>
           </div>
           <div class="col-md-12">
             <div class="form-group">
-              <label class="form-label">IBAN (Optional)</label>
+              <label class="form-label"><%= St.ibanLabel || 'IBAN (Optional)' %></label>
               <input type="text" class="form-control" id="IBAN" name="IBAN" value="<%= user.paymentMethod?.details?.IBAN || '' %>" placeholder="Example: EG12 3456 7890 1234 5678 90">
             </div>
           </div>
@@ -1105,69 +618,7 @@
       <div class="text-end mt-4">
         <button type="submit" class="btn-save">
           <i class="ri-save-line"></i>
-          Save Changes
-        </button>
-      </div>
-    </form>
-  </div>
-
-  <!-- Brand Type Tab -->
-  <div id="brand-type" class="settings-content">
-    <form id="brandTypeForm" class="settings-card">
-      <div class="card-header">
-        <i class="ri-file-text-line"></i>
-        <h3>Brand Type</h3>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Brand Type <span class="required">*</span></label>
-        <div class="row g-3">
-          <div class="col-md-6">
-            <div class="brand-option <%= user.brandType?.brandChoice === 'personal' ? 'selected' : '' %>" data-value="personal">
-              <i class="ri-user-line"></i>
-              <h5>Personal</h5>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="brand-option <%= user.brandType?.brandChoice === 'company' ? 'selected' : '' %>" data-value="company">
-              <i class="ri-building-line"></i>
-              <h5>Company</h5>
-            </div>
-          </div>
-        </div>
-        <input type="hidden" id="brandTypeChoice" name="brandTypeChoice" value="<%= user.brandType?.brandChoice || '' %>">
-      </div>
-
-      <!-- Personal Details -->
-      <div id="personalDetails" class="brand-details" style="display: <%= user.brandType?.brandChoice === 'personal' ? 'block' : 'none' %>;">
-        <div class="form-group">
-          <label class="form-label">National ID <span class="required">*</span></label>
-          <input type="text" class="form-control" id="nationalId" name="nationalId" value="<%= user.brandType?.brandDetails?.nationalId || '' %>">
-        </div>
-        <div class="form-group">
-          <label class="form-label">ID Photos</label>
-          <input type="file" class="form-control" id="personalPhotos" name="personalPhotos" multiple accept="image/*">
-          <small class="text-muted">Upload photos of your national ID</small>
-        </div>
-      </div>
-
-      <!-- Company Details -->
-      <div id="companyDetails" class="brand-details" style="display: <%= user.brandType?.brandChoice === 'company' ? 'block' : 'none' %>;">
-        <div class="form-group">
-          <label class="form-label">Tax Number <span class="required">*</span></label>
-          <input type="text" class="form-control" id="taxNumber" name="taxNumber" value="<%= user.brandType?.brandDetails?.taxNumber || '' %>">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Tax Certificate Photos</label>
-          <input type="file" class="form-control" id="companyPhotos" name="companyPhotos" multiple accept="image/*">
-          <small class="text-muted">Upload photos of your tax certificate</small>
-        </div>
-      </div>
-
-      <div class="text-end mt-4">
-        <button type="submit" class="btn-save">
-          <i class="ri-save-line"></i>
-          Save Changes
+          <%= St.profileSave || 'Save Changes' %>
         </button>
       </div>
     </form>
@@ -1178,22 +629,22 @@
     <form id="preferencesForm" class="settings-card">
       <div class="card-header">
         <i class="ri-settings-line"></i>
-        <h3>Preferences</h3>
+        <h3><%= St.tabPreferences || 'Preferences' %></h3>
       </div>
 
       <div class="info-row">
-        <label>Storage Service</label>
+        <label><%= St.storageServiceLabel || 'Storage Service' %></label>
         <label class="switch">
           <input type="checkbox" id="isNeedStorage" name="isNeedStorage" <%= user.isNeedStorage ? 'checked' : '' %>>
           <span class="slider"></span>
         </label>
       </div>
-      <p class="text-muted">Enable storage service for your orders</p>
+      <p class="text-muted"><%= St.storageServiceHint || 'Enable storage service for your orders' %></p>
 
       <div class="text-end mt-4">
         <button type="submit" class="btn-save">
           <i class="ri-save-line"></i>
-          Save Changes
+          <%= St.profileSave || 'Save Changes' %>
         </button>
       </div>
     </form>
@@ -1204,60 +655,60 @@
     <div class="settings-card">
       <div class="card-header">
         <i class="ri-shield-check-line"></i>
-        <h3>Security & Account</h3>
+        <h3><%= St.securityTitle || 'Security & Account' %></h3>
       </div>
 
       <div class="info-row">
         <div>
-          <label>Email Verification</label>
-          <p class="text-muted mb-0">Status: <%= user.isVerified ? 'Verified' : 'Not Verified' %></p>
+          <label><%= St.emailVerificationLabel || 'Email Verification' %></label>
+          <p class="text-muted mb-0"><%= St.securityStatus || 'Status' %>: <%= user.isVerified ? (St.statusVerified || 'Verified') : (St.statusNotVerified || 'Not Verified') %></p>
         </div>
         <% if (!user.isVerified) { %>
           <button class="btn btn-primary" onclick="requestVerification()">
             <i class="ri-mail-send-line me-1"></i>
-            Request Verification
+            <%= St.requestVerificationBtn || 'Request Verification' %>
           </button>
         <% } else { %>
           <span class="badge-status badge-verified">
             <i class="ri-checkbox-circle-line"></i>
-            Verified
+            <%= St.statusVerified || 'Verified' %>
           </span>
         <% } %>
       </div>
 
       <div class="info-row">
         <div>
-          <label>Account Completion</label>
-          <p class="text-muted mb-0">Status: <%= user.isCompleted ? 'Completed' : 'Incomplete' %></p>
+          <label><%= St.accountCompletionLabel || 'Account Completion' %></label>
+          <p class="text-muted mb-0"><%= St.securityStatus || 'Status' %>: <%= user.isCompleted ? (St.statusCompleted || 'Completed') : (St.statusIncomplete || 'Incomplete') %></p>
         </div>
         <% if (!user.isCompleted) { %>
           <a href="/business/dashboard" class="btn btn-primary">
             <i class="ri-arrow-right-line me-1"></i>
-            Complete Account
+            <%= St.completeAccountBtn || 'Complete Account' %>
           </a>
         <% } else { %>
           <span class="badge-status badge-completed">
             <i class="ri-check-double-line"></i>
-            Completed
+            <%= St.statusCompleted || 'Completed' %>
           </span>
         <% } %>
       </div>
 
       <div class="info-row">
         <div>
-          <label>Account Balance</label>
+          <label><%= St.accountBalanceLabel || 'Account Balance' %></label>
           <p class="text-muted mb-0">EGP <%= (user.balance || 0).toFixed(2) %></p>
         </div>
         <a href="/business/wallet/total-balance" class="btn btn-secondary-custom">
           <i class="ri-wallet-line me-1"></i>
-          View Wallet
+          <%= St.viewWalletBtn || 'View Wallet' %>
         </a>
       </div>
 
       <div class="info-row">
         <div>
-          <label>Member Since</label>
-          <p class="text-muted mb-0"><%= new Date(user.createdAt).toLocaleDateString() %></p>
+          <label><%= St.memberSinceLabel || 'Member Since' %></label>
+          <p class="text-muted mb-0"><%= new Date(user.createdAt).toLocaleDateString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US') %></p>
         </div>
       </div>
     </div>
@@ -1324,30 +775,74 @@
       tab.addEventListener('touchend', handleTabSwitch);
     });
 
-  // Profile Image Upload with Touch Support
+  // Profile photo upload + placeholder
   const profileImageInput = document.getElementById('profileImageInput');
   const profileImagePreview = document.getElementById('profileImagePreview');
-  const profileImageOverlay = document.getElementById('profileImageOverlay');
-  
-  if (profileImageOverlay) {
+  const profilePhotoTrigger = document.getElementById('profilePhotoTrigger');
+  const profilePhotoPlaceholder = document.getElementById('profilePhotoPlaceholder');
+  const profilePhotoFrame = document.getElementById('profilePhotoFrame');
+
+  function revealProfilePreview(src) {
+    if (!profileImagePreview || !src) return;
+    profileImagePreview.src = src;
+    profileImagePreview.classList.remove('d-none');
+    profileImagePreview.dataset.usingPlaceholder = '0';
+    if (profilePhotoPlaceholder) profilePhotoPlaceholder.classList.add('d-none');
+    if (profilePhotoFrame) profilePhotoFrame.classList.add('profile-photo-frame--filled');
+  }
+
+  function initialsFromName(nameStr) {
+    const nm = (nameStr || '').trim();
+    if (!nm) return '?';
+    const parts = nm.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    if (parts[0].length >= 2) return parts[0].slice(0, 2).toUpperCase();
+    return parts[0][0].toUpperCase();
+  }
+
+  if (profilePhotoTrigger && profileImageInput) {
     function triggerImageInput(e) {
-      if (e) e.preventDefault();
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       profileImageInput.click();
     }
-    profileImageOverlay.addEventListener('click', triggerImageInput);
-    profileImageOverlay.addEventListener('touchend', triggerImageInput);
+    profilePhotoTrigger.addEventListener('click', triggerImageInput);
+    profilePhotoTrigger.addEventListener('touchend', triggerImageInput);
   }
-  
-  profileImageInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        profileImagePreview.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  });
+
+  if (profileImageInput) {
+    profileImageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => revealProfilePreview(ev.target.result);
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (profileImagePreview) {
+    profileImagePreview.addEventListener('error', () => {
+      profileImagePreview.src = 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22/%3E';
+      profileImagePreview.classList.add('d-none');
+      profileImagePreview.dataset.usingPlaceholder = '1';
+      if (profilePhotoPlaceholder) profilePhotoPlaceholder.classList.remove('d-none');
+      if (profilePhotoFrame) profilePhotoFrame.classList.remove('profile-photo-frame--filled');
+    });
+  }
+
+  const nameInputEl = document.getElementById('name');
+  if (nameInputEl) {
+    nameInputEl.addEventListener('input', () => {
+      const ph = document.getElementById('profilePhotoPlaceholder');
+      const initialsEl = document.getElementById('profileInitialsDisplay');
+      if (ph && initialsEl && !ph.classList.contains('d-none')) {
+        initialsEl.textContent = initialsFromName(nameInputEl.value);
+      }
+    });
+  }
 
   // Social Media Channel Selection (matching dashboard.ejs)
   document.querySelectorAll('.channel-checkbox').forEach((checkbox) => {
@@ -1410,23 +905,6 @@
       document.getElementById('bankTransferDetails').style.display = 'block';
     }
   }
-
-  // Brand Type Selection with Touch Support
-  document.querySelectorAll('.brand-option').forEach(option => {
-    function handleSelection(e) {
-      if (e) e.preventDefault();
-      document.querySelectorAll('.brand-option').forEach(o => o.classList.remove('selected'));
-      option.classList.add('selected');
-      document.getElementById('brandTypeChoice').value = option.getAttribute('data-value');
-      
-      // Show/hide brand details
-      document.querySelectorAll('.brand-details').forEach(d => d.style.display = 'none');
-      const detailsId = option.getAttribute('data-value') === 'personal' ? 'personalDetails' : 'companyDetails';
-      document.getElementById(detailsId).style.display = 'block';
-    }
-    option.addEventListener('click', handleSelection);
-    option.addEventListener('touchend', handleSelection);
-  });
 
   // Show Alert
   function showAlert(message, type = 'success') {
@@ -1854,7 +1332,7 @@
         showAlert('Profile updated successfully!', 'success');
         if (data.user && data.user.profileImage) {
           const imageUrl = data.user.profileImage.replace(/&/g, '&amp;');
-          document.getElementById('profileImagePreview').src = imageUrl;
+          revealProfilePreview(imageUrl);
         }
         // Reset OTP containers and states
         if (emailChanged) {
@@ -2235,39 +1713,6 @@
       }
     } catch (error) {
       showAlert('Error updating payment method', 'error');
-    }
-  });
-
-  document.getElementById('brandTypeForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const brandTypeChoice = document.getElementById('brandTypeChoice').value;
-    let brandDetails = {};
-
-    if (brandTypeChoice === 'personal') {
-      brandDetails.nationalId = document.getElementById('nationalId').value;
-    } else if (brandTypeChoice === 'company') {
-      brandDetails.taxNumber = document.getElementById('taxNumber').value;
-    }
-
-    const formData = {
-      brandTypeChoice: brandTypeChoice,
-      brandTypeDetails: brandDetails
-    };
-
-    try {
-      const response = await fetch('/business/settings/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      const data = await response.json();
-      if (response.ok) {
-        showAlert('Brand type updated successfully!', 'success');
-      } else {
-        showAlert(data.error || 'Failed to update brand type', 'error');
-      }
-    } catch (error) {
-      showAlert('Error updating brand type', 'error');
     }
   });
 

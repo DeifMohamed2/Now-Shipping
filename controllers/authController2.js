@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const sms = require('../utils/sms');
 const { emailService } = require('../utils/email');
+const Order = require('../models/order');
 
 // Transporter moved to centralized emailService
 
@@ -67,6 +68,110 @@ const privacyPolicyPage = (req, res) => {
     title: 'Privacy Policy', 
     layout: 'layouts/layout-without-nav',
     currentLang: lang
+  });
+};
+
+/** Public order tracking (search + /t/:orderNumber for WhatsApp links) */
+const trackingPage = async (req, res) => {
+  const lang = req.query.lang || req.cookies.language || 'en';
+  const fromParam = (req.params.orderNumber || '').trim();
+  const fromQuery = (req.query.q || req.query.order || '').toString().trim();
+  const raw = fromParam || fromQuery;
+  const orderNumber = raw
+    ? decodeURIComponent(raw).replace(/[^\w\-]/g, '')
+    : '';
+
+  let orderData = null;
+  let trackingError = null;
+
+  if (orderNumber) {
+    try {
+      const order = await Order.findOne({
+        $or: [{ orderNumber }, { smartFlyerBarcode: orderNumber }],
+      })
+        .populate('business', 'name brandInfo')
+        .populate('deliveryMan', 'name phoneNumber')
+        .lean();
+
+      if (!order) {
+        trackingError = 'not_found';
+      } else {
+        const cust = order.orderCustomer || {};
+        const full = (cust.fullName || '').trim();
+        const firstName = full.split(/\s+/)[0] || 'Customer';
+
+        const showCourier =
+          order.orderStatus === 'headingToCustomer' &&
+          order.deliveryMan &&
+          typeof order.deliveryMan === 'object';
+
+        orderData = {
+          orderNumber: order.orderNumber,
+          smartFlyerBarcode: order.smartFlyerBarcode || null,
+          orderStatus: order.orderStatus,
+          statusCategory: order.statusCategory || null,
+          orderDate: order.orderDate,
+          completedDate: order.completedDate || null,
+          orderStatusHistory: (order.orderStatusHistory || [])
+            .slice()
+            .sort((a, b) => new Date(b.date) - new Date(a.date)),
+          orderShipping: {
+            productDescription: order.orderShipping?.productDescription || '',
+            numberOfItems: order.orderShipping?.numberOfItems,
+            orderType: order.orderShipping?.orderType || 'Deliver',
+            amountType: order.orderShipping?.amountType,
+            amount: order.orderShipping?.amount,
+            isExpressShipping: !!order.orderShipping?.isExpressShipping,
+          },
+          orderCustomer: {
+            firstName,
+            government: cust.government || '',
+            zone: cust.zone || '',
+          },
+          businessName:
+            order.business?.brandInfo?.brandName ||
+            order.business?.name ||
+            null,
+          deliveryMan: showCourier
+            ? {
+                name: order.deliveryMan.name,
+                phoneNumber: order.deliveryMan.phoneNumber,
+              }
+            : null,
+        };
+      }
+    } catch (e) {
+      console.error('trackingPage:', e.message);
+      trackingError = 'server';
+    }
+  }
+
+  const host = req.get('host') || '';
+  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'https').toString().split(',')[0].trim();
+  const trackingShareUrl =
+    orderData && host
+      ? `${proto}://${host}/t/${encodeURIComponent(orderData.orderNumber)}`
+      : orderData
+        ? `/t/${encodeURIComponent(orderData.orderNumber)}`
+        : null;
+
+  return res.render('landing/tracking', {
+    title: 'Track Order',
+    layout: 'layouts/layout-without-nav',
+    currentLang: lang,
+    orderData,
+    trackingError,
+    searchedNumber: orderNumber || null,
+    trackingShareUrl,
+  });
+};
+
+const comingSoonPage = (req, res) => {
+  const lang = req.query.lang || req.cookies.language || 'en';
+  res.render('landing/comingsoon', {
+    title: 'Coming Soon',
+    layout: 'layouts/layout-without-nav',
+    currentLang: lang,
   });
 };
 
@@ -547,17 +652,18 @@ const loginAsAdmin = async (req, res) => {
     }
 };
 
+/** Courier web login page removed — mobile app + POST /api/v1/auth/courier-login (JWT). */
 const courierLogin = (req, res) => {
-    const lang = req.query.lang || req.cookies.language || 'en';
-    return res.render('auth/courier-login', {
-      title: 'Courier Login',
-      layout: 'layouts/layout-without-nav',
-        message: req.flash('message'),
-        error: req.flash('error'),
-        currentLang: lang,
-        translation: res.locals.translation // Ensure translation is passed
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    return res.status(410).json({
+      status: 'deprecated',
+      code: 'COURIER_WEB_LOGIN_REMOVED',
+      message:
+        'Courier web login is discontinued. Use the mobile app, or POST /api/v1/auth/courier-login with JSON { email, password } to receive a JWT for /api/v1/courier.',
     });
-}
+  }
+  return res.redirect(302, '/mobileApp');
+};
 
 const loginAsCourier = async (req, res) => {
     const { email, password } = req.body;
@@ -650,6 +756,8 @@ module.exports = {
   aboutusPage,
   faqPage,
   privacyPolicyPage,
+  trackingPage,
+  comingSoonPage,
   //Auth
   loginPage,
   adminLogin,

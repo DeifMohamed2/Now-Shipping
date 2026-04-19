@@ -37,7 +37,8 @@ const StatusHelper = {
     'returnPickedUp': { category: 'PROCESSING', label: 'Return Picked Up', description: 'Return has been picked up from customer' },
     'returnAtWarehouse': { category: 'PROCESSING', label: 'Return at Warehouse', description: 'Return is at warehouse' },
     'returnToBusiness': { category: 'PROCESSING', label: 'Return to Business', description: 'Return is on the way to business' },
-    
+    'exchangePickup': { category: 'PROCESSING', label: 'Exchange Pickup (legacy)', description: 'Legacy exchange status' },
+
     // PAUSED category
     'waitingAction': { category: 'PAUSED', label: 'Awaiting Action', description: 'Order is waiting for business action' },
     'rejected': { category: 'PAUSED', label: 'Rejected', description: 'Order has been rejected by courier' },
@@ -86,7 +87,6 @@ const StatusHelper = {
     'Deliver': { label: 'Deliver', description: 'Standard delivery order' },
     'Return': { label: 'Return', description: 'Return order' },
     'Exchange': { label: 'Exchange', description: 'Exchange order' },
-    'Cash Collection': { label: 'Cash Collection', description: 'Cash collection order' },
     'Sign & Return': { label: 'Sign & Return', description: 'Sign and return order' }
   },
 

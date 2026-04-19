@@ -1,6 +1,7 @@
 <%- contentFor('HeaderCss') %>
 <link rel="stylesheet" href="/assets/css/area-selection-modal.css">
 <%- contentFor('body') %>
+<% var Eo = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.editOrder) ? translation.business.pages.editOrder : {}; %>
   <style>
     /* Enhanced Design */
     .hover-effect:hover {
@@ -168,46 +169,46 @@
   <% if (order) { %>
    
 
-  <div class="container py-4">
+  <div class="container-fluid container-lg py-4 px-2 px-sm-3">
     <div class="row justify-content-center">
-      <div class="col-xl-10">
-        <h2 class="mb-4 text-center" >Edit Order-<%= order.orderNumber  %></h2>
+      <div class="col-12 col-xl-10">
+        <h2 class="mb-4 text-center" ><%= (Eo.headingWithNumber || 'Edit Order — {number}').replace('{number}', order.orderNumber) %></h2>
 
         <div class="card">
           <div class="card-body">
             <form id="editOrderForm" data-order-id="<%= order._id %>">
               <input type="hidden" name="orderId" value="<%= order._id %>">
               <!-- Two-column layout for larger screens -->
-              <div class="row">
+              <div class="row g-3">
                 <!-- Left column -->
-                <div class="col-lg-6">
+                <div class="col-12 col-lg-6">
                   <!-- Customer Information Section -->
                   <div class="card mb-4">
                     <div class="card-header">
-                      <h5 class="mb-0"><i class="ri-user-2-line me-2"></i>Customer Information</h5>
+                      <h5 class="mb-0"><i class="ri-user-2-line me-2"></i><%= Eo.sectionCustomer || 'Customer Information' %></h5>
                     </div>
                     <div class="card-body">
                       <div class="mb-3">
-                        <label for="fullName" class="form-label">Full Name</label>
-                        <input type="text" class="form-control" name="fullName" id="fullName" placeholder="Enter Full Name" value="<%= order.orderCustomer.fullName %>">
+                        <label for="fullName" class="form-label"><%= Eo.fullName || 'Full Name' %></label>
+                        <input type="text" class="form-control" name="fullName" id="fullName" placeholder="<%= Eo.fullName || 'Full Name' %>" value="<%= order.orderCustomer.fullName %>">
                       </div>
                       <div class="mb-3">
-                        <label for="phoneNumber" class="form-label">Phone Number</label>
-                        <input type="number" class="form-control" name="phoneNumber" id="phoneNumber" placeholder="Enter Phone Number" value="<%= order.orderCustomer.phoneNumber %>">
+                        <label for="phoneNumber" class="form-label"><%= Eo.phone || 'Phone Number' %></label>
+                        <input type="number" class="form-control" name="phoneNumber" id="phoneNumber" placeholder="<%= Eo.phone || 'Phone Number' %>" value="<%= order.orderCustomer.phoneNumber %>">
                       </div>
                       <div class="mb-3">
-                        <label for="otherPhoneNumber" class="form-label">Other Phone Number (Optional)</label>
-                        <input type="number" class="form-control" name="otherPhoneNumber" id="otherPhoneNumber" placeholder="Enter alternative phone number" value="<%= order.orderCustomer.otherPhoneNumber || '' %>">
+                        <label for="otherPhoneNumber" class="form-label"><%= Eo.altPhone || 'Other Phone Number (Optional)' %></label>
+                        <input type="number" class="form-control" name="otherPhoneNumber" id="otherPhoneNumber" placeholder="<%= Eo.altPhone || 'Alternative phone' %>" value="<%= order.orderCustomer.otherPhoneNumber || '' %>">
                       </div>
                       <div class="mb-3">
-                        <label for="address" class="form-label">Address</label>
-                        <textarea class="form-control" name="address" id="address" placeholder="Enter address" rows="2"><%= order.orderCustomer.address %></textarea>
+                        <label for="address" class="form-label"><%= Eo.address || 'Address' %></label>
+                        <textarea class="form-control" name="address" id="address" placeholder="<%= Eo.address || 'Enter address' %>" rows="2"><%= order.orderCustomer.address %></textarea>
                       </div>
                       <div class="mb-3">
                         <div class="form-check">
                           <input class="form-check-input" type="checkbox" name="deliverToWorkAddress" id="deliverToWorkAddress-checkbox" <%= order.orderCustomer.deliverToWorkAddress ? 'checked' : '' %>>
                           <label class="form-check-label" for="deliverToWorkAddress-checkbox">
-                            Deliver to work address
+                            <%= Eo.landmark || 'Deliver to work address' %>
                           </label>
                         </div>
                       </div>
@@ -261,34 +262,25 @@
                             </label>
                           </div>
                         </div>
-                        <div class="col-md-6">
-                          <div class="form-check card-radio hover-effect">
-                            <input id="orderTypeCashCollection" name="orderType_display" type="radio" class="form-check-input" value="Cash Collection" <%= order.orderShipping.orderType === 'Cash Collection' ? 'checked' : '' %> disabled>
-                            <label class="form-check-label" for="orderTypeCashCollection">
-                              <span class="fs-16 text-muted me-2"><i class="ri-money-dollar-circle-line align-bottom"></i></span>
-                              <span class="fs-14 text-wrap">Cash Collection</span>
-                            </label>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Right column -->
-                <div class="col-lg-6">
+                <div class="col-12 col-lg-6">
                   <!-- Deliver Details Section -->
                     <div id="deliver-section" class="card mb-4" <%= order.orderShipping.orderType === 'Deliver' || order.orderShipping.orderType === 'Return' ? 'style="display: block;"' : 'style="display: none;"' %>>
                     <div class="card-header">
-                      <h5 class="mb-0"><i class="ri-truck-line me-2"></i>Deliver Details</h5>
+                      <h5 class="mb-0"><i class="ri-truck-line me-2"></i><%= Eo.sectionShipping || 'Shipping Details' %></h5>
                     </div>
                     <div class="card-body">
                       <div class="mb-3">
-                        <label for="productDescription" class="form-label">Product/s Description</label>
-                        <textarea class="form-control" name="productDescription" id="productDescription" placeholder="Enter product description" rows="2"><%= order.orderShipping.productDescription %></textarea>
+                        <label for="productDescription" class="form-label"><%= Eo.notes || 'Product/s Description' %></label>
+                        <textarea class="form-control" name="productDescription" id="productDescription" placeholder="<%= Eo.notes || 'Enter product description' %>" rows="2"><%= order.orderShipping.productDescription %></textarea>
                       </div>
                       <div class="mb-3">
-                        <label for="numberOfItems" class="form-label">Number of Items</label>
+                        <label for="numberOfItems" class="form-label"><%= Eo.itemsCount || 'Number of Items' %></label>
                         <div class="input-group">
                           <button type="button" class="btn btn-outline-secondary" id="decrement-shipping">-</button>
                           <input type="number" name="numberOfItems" class="form-control text-center" id="numberOfItems" placeholder="Enter number of items" value="<%= order.orderShipping.numberOfItems %>" min="0">
@@ -299,11 +291,11 @@
                         <div class="form-check mb-2">
                           <input class="form-check-input" name="COD" type="checkbox" id="cash-on-delivery-checkbox" <%= order.orderShipping.amountType === 'COD' ? 'checked' : '' %>>
                           <label class="form-check-label" for="cash-on-delivery-checkbox">
-                            Cash on Delivery
+                            <%= Eo.codAmount || 'Cash on Delivery' %>
                           </label>
                         </div>
                         <div class="mb-3" id="cash-on-delivery-amount" <%= order.orderShipping.amountType === 'COD' ? 'style="display: block;"' : 'style="display: none;"' %>>
-                          <label for="amountCOD" class="form-label">Amount COD</label>
+                          <label for="amountCOD" class="form-label"><%= Eo.codAmount || 'Amount COD' %></label>
                             <input type="number" name="amountCOD" class="form-control" id="amountCOD" placeholder="Enter amount" value="<%= order.orderShipping.amountType === 'COD' ? order.orderShipping.amount : '' %>">
                         </div>
                       </div>
@@ -367,25 +359,6 @@
                     </div>
                   </div>
 
-                  <!-- Cash Collection Section (initially hidden) -->
-                  <div id="cash-collection-section" class="card mb-4" <%= order.orderShipping.orderType === 'CC' ? 'style="display: block;"' : 'style="display: none;"' %>>
-                    <div class="card-header">
-                      <h5 class="mb-0"><i class="ri-money-dollar-circle-line me-2"></i>Cash Collection Details</h5>
-                    </div>
-                    <div class="card-body">
-                      <div class="mb-3">
-                        <label for="amountCashCollection" class="form-label">Cash Collection Amount</label>
-                        <input type="number" name="amountCashCollection" class="form-control" id="amountCashCollection" placeholder="Enter cash collection amount" value="<%= order.orderShipping.amountType === 'CC' ? order.orderShipping.amount : '' %>">
-                      </div>
-                      <div class="form-check mb-3">
-                        <input class="form-check-input" name="isExpressShipping" type="checkbox" id="express-shipping-collection-checkbox" <%= order.orderShipping.isExpressShipping ? 'checked' : '' %>>
-                        <label class="form-check-label" for="express-shipping-collection-checkbox">
-                          Express Collection <i class="ri-information-line text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Same day collection service. Doubles the shipping fee but ensures faster collection."></i>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
                   <!-- Extra Details Section -->
                   <div class="card mb-4">
                     <div class="card-header">
@@ -436,10 +409,10 @@
               <!-- Action buttons -->
               <div class="d-flex justify-content-end mt-4">
                 <a href="/business/orders" class="btn btn-light me-2">
-                  <i class="ri-arrow-left-line align-middle me-1"></i> Back
+                  <i class="ri-arrow-left-line align-middle me-1"></i> <%= Eo.btnCancel || 'Back' %>
                 </a>
                 <button type="submit" id="updateOrderBtn" class="btn btn-primary">
-                  <i class="ri-save-line align-middle me-1"></i> Update Order
+                  <i class="ri-save-line align-middle me-1"></i> <%= Eo.btnUpdate || 'Update Order' %>
                 </button>
               </div>
             </form>
@@ -450,9 +423,9 @@
   </div>
   <% } else{ %>
 
-  <div class="container py-4">
+  <div class="container-fluid container-lg py-4 px-2 px-sm-3">
     <div class="row justify-content-center">
-      <div class="col-xl-10">
+      <div class="col-12 col-xl-10">
         <div class="text-center">
           <img src="/assets/images/empty/empty-cart.png" alt="Empty Cart" height="200">
           <h3 class="mt-4">No Order Found</h3>
@@ -611,6 +584,23 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script>
+  window.__NS_BUSINESS_I18N = window.__NS_BUSINESS_I18N || {};
+  window.__NS_BUSINESS_I18N.editOrder = {
+    selectArea: "<%= Eo.jsSelectArea || 'Select Area' %>",
+    updating: "<%= Eo.jsUpdating || 'Updating…' %>",
+    updateOrder: "<%= Eo.jsUpdateOrder || 'Update Order' %>",
+    validationError: "<%= Eo.jsValidationError || 'Validation Error' %>",
+    fillRequiredFields: "<%= Eo.jsFillRequiredFields || 'Please fill in all required customer information fields.' %>",
+    orderUpdated: "<%= Eo.jsOrderUpdated || 'Order Updated' %>",
+    orderUpdatedText: "<%= Eo.jsOrderUpdatedText || 'Order has been updated successfully!' %>",
+    updateFailed: "<%= Eo.jsUpdateFailed || 'Update Failed' %>",
+    updateFailedText: "<%= Eo.jsUpdateFailedText || 'An error occurred while updating the order.' %>",
+    invalidValue: "<%= Eo.jsInvalidValue || 'Invalid Value' %>",
+    itemsCannotBeZero: "<%= Eo.jsItemsCannotBeZero || 'Number of items cannot be zero or negative.' %>",
+    locale: "<%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US' %>"
+  };
+</script>
 <script src="/assets/rJS/business/edit-order.js"></script>
 <script src="/assets/js/area-selection-modal.js"></script>
 

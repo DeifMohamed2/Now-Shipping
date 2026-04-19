@@ -18,6 +18,8 @@ router.get('/location/status', verifyToken, courierLocationController.getLocatio
 router.post('/update-fcm-token', verifyToken, notificationController.updateFcmToken);
 router.get('/notifications', verifyToken, notificationController.getCourierNotifications);
 router.put('/notifications/:notificationId/read', verifyToken, notificationController.markNotificationAsRead);
+router.get('/language', verifyToken, courierController.getCourierLanguage);
+router.put('/language', verifyToken, courierController.updateCourierLanguage);
 
 // Order routes
 router.get('/orders', verifyToken, courierController.get_orders);

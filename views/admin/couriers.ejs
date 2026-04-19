@@ -973,7 +973,7 @@
 </style>
 
 <div class="container-fluid">
-  <div class="card couriers-management-card" id="courierList">
+  <div class="card couriers-management-card admin-data-card" id="courierList">
     <div class="card-header couriers-header border-0">
       <div class="row align-items-center gy-3">
         <div class="col-sm">
@@ -987,9 +987,14 @@
             <button type="button" class="btn btn-info">
               <i class="ri-file-download-line align-bottom me-1"></i> Export
             </button>
-            <button class="btn btn-soft-danger" id="remove-actions">
-              <i class="ri-delete-bin-2-line"></i>
-            </button>
+            <div id="courier-bulk-toolbar" class="d-none flex-wrap gap-2 align-items-center" aria-live="polite">
+              <button type="button" class="btn btn-soft-warning" id="bulk-deactivate-couriers" title="Deactivate selected">
+                <i class="ri-user-unfollow-line"></i> Deactivate
+              </button>
+              <button type="button" class="btn btn-soft-danger" id="remove-actions" title="Delete selected">
+                <i class="ri-delete-bin-2-line"></i> Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1045,8 +1050,8 @@
 
     <div class="card-body pt-0">
       <div>
-        <div class="table-responsive table-card mb-1">
-          <table class="table table-nowrap align-middle" id="courierTable">
+        <div class="admin-table-scroll mb-1">
+          <table class="table table-nowrap table-striped align-middle admin-data-table" id="courierTable">
             <thead class="text-muted table-light">
               <tr class="text-uppercase">
                 <th scope="col" style="width: 25px;">
@@ -1906,16 +1911,17 @@
             </td>
             <td class="date">${new Date(courier.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
             <td>
-                <div class="dropdown dropdown-fix">
-                    <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="ri-more-fill align-middle"></i>
+                <div class="orders-table-dropdown" data-courier-id="${courier.courierID}">
+                    <button type="button" class="dropdown-toggle" data-dropdown-toggle aria-expanded="false" aria-label="Courier actions">
+                        <i class="ri-more-fill"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/admin/courier-details/${courier.courierID}"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View Details</a></li>
-                        <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#assignZonesModal" data-courier-id="${courier.courierID}"><i class="ri-map-pin-line align-bottom me-2 text-muted"></i> Assign Zones</button></li>
-                        <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editCourierModal" data-courier-id="${courier.courierID}"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</button></li>
-                        <li class="dropdown-divider"></li>
-                        <li><button class="dropdown-item text-danger"><i class="ri-delete-bin-fill align-bottom me-2"></i> Delete</button></li>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/courier-details/${courier.courierID}"><i class="ri-eye-fill text-muted"></i><span>View Details</span></a></li>
+                        <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#assignZonesModal" data-courier-id="${courier.courierID}"><i class="ri-map-pin-line text-muted"></i><span>Assign Zones</span></button></li>
+                        <li><button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editCourierModal" data-courier-id="${courier.courierID}"><i class="ri-pencil-fill text-muted"></i><span>Edit</span></button></li>
+                        <li><hr class="dropdown-divider my-1" /></li>
+                        <li><button type="button" class="dropdown-item text-danger" data-act="deactivate-courier" data-courier-id="${courier.courierID}"><i class="ri-user-unfollow-line"></i><span>Deactivate</span></button></li>
+                        <li><button type="button" class="dropdown-item text-danger" data-act="delete-courier" data-courier-id="${courier.courierID}"><i class="ri-delete-bin-fill"></i><span>Delete</span></button></li>
                     </ul>
                 </div>
             </td>
@@ -1923,6 +1929,149 @@
 
       tableBody.appendChild(row);
     });
+    updateCourierBulkToolbar();
+  }
+
+  function updateCourierBulkToolbar() {
+    const n = document.querySelectorAll('#couriersTable input[name="checkAll[]"]:checked').length;
+    const bar = document.getElementById('courier-bulk-toolbar');
+    if (bar) {
+      bar.classList.toggle('d-none', n === 0);
+      bar.classList.toggle('d-flex', n > 0);
+    }
+  }
+
+  async function bulkDeactivateSelectedCouriers() {
+    const ids = [...document.querySelectorAll('#couriersTable input[name="checkAll[]"]:checked')].map((cb) => cb.value);
+    if (!ids.length) return;
+    const r = await Swal.fire({
+      title: 'Deactivate couriers?',
+      text: `${ids.length} courier(s) will be set unavailable.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Deactivate',
+    });
+    if (!r.isConfirmed) return;
+    const res = await fetch('/admin/couriers/bulk-deactivate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courierIDs: ids }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      Swal.fire({ icon: 'success', title: 'Done', text: data.message || 'Updated' });
+      fetchCouriers();
+    } else {
+      Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Request failed' });
+    }
+  }
+
+  async function bulkDeleteSelectedCouriers() {
+    const ids = [...document.querySelectorAll('#couriersTable input[name="checkAll[]"]:checked')].map((cb) => cb.value);
+    if (!ids.length) return;
+    const r = await Swal.fire({
+      title: 'Delete couriers?',
+      text: `${ids.length} courier(s) will be permanently deleted if they have no active assignments.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      confirmButtonColor: '#d33',
+    });
+    if (!r.isConfirmed) return;
+    const res = await fetch('/admin/couriers/bulk-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courierIDs: ids }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const msg = `Deleted: ${(data.deleted || []).length}. Skipped: ${(data.skipped || []).length}`;
+      Swal.fire({ icon: 'success', title: 'Done', text: msg });
+      fetchCouriers();
+    } else {
+      Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Request failed' });
+    }
+  }
+
+  function onCourierRowActionClick(e) {
+    const deact = e.target.closest('[data-act="deactivate-courier"]');
+    const del = e.target.closest('[data-act="delete-courier"]');
+    if (deact) {
+      e.preventDefault();
+      const id = deact.getAttribute('data-courier-id');
+      Swal.fire({
+        title: 'Deactivate this courier?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Deactivate',
+      }).then(async (r) => {
+        if (!r.isConfirmed) return;
+        const res = await fetch('/admin/couriers/bulk-deactivate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ courierIDs: [id] }),
+        });
+        if (res.ok) {
+          Swal.fire({ icon: 'success', title: 'Updated' });
+          fetchCouriers();
+        } else {
+          const d = await res.json().catch(() => ({}));
+          Swal.fire({ icon: 'error', text: d.error || 'Failed' });
+        }
+      });
+      return;
+    }
+    if (del) {
+      e.preventDefault();
+      const id = del.getAttribute('data-courier-id');
+      Swal.fire({
+        title: 'Delete this courier?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        confirmButtonColor: '#d33',
+      }).then(async (r) => {
+        if (!r.isConfirmed) return;
+        const res = await fetch('/admin/couriers/bulk-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ courierIDs: [id] }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          if (data.deleted && data.deleted.indexOf(id) !== -1) Swal.fire({ icon: 'success', title: 'Deleted' });
+          else if (data.skipped && data.skipped.length)
+            Swal.fire({ icon: 'info', text: data.skipped[0].reason || 'Skipped' });
+          fetchCouriers();
+        } else {
+          Swal.fire({ icon: 'error', text: data.error || 'Failed' });
+        }
+      });
+    }
+  }
+
+  function initCourierSelectionAndBulk() {
+    const table = document.getElementById('courierTable');
+    const checkAll = document.getElementById('checkAll');
+    if (table && checkAll) {
+      if (
+        window.AdminTableDropdowns &&
+        typeof window.AdminTableDropdowns.bindTableSelection === 'function'
+      ) {
+        window.AdminTableDropdowns.bindTableSelection(
+          table,
+          checkAll,
+          updateCourierBulkToolbar
+        );
+      } else {
+        console.error(
+          '[couriers] AdminTableDropdowns.bindTableSelection missing. Load admin-table-dropdowns.js in admin layout.'
+        );
+      }
+    }
+    document.getElementById('bulk-deactivate-couriers')?.addEventListener('click', bulkDeactivateSelectedCouriers);
+    document.getElementById('remove-actions')?.addEventListener('click', bulkDeleteSelectedCouriers);
+    document.getElementById('couriersTable')?.addEventListener('click', onCourierRowActionClick);
   }
 
   // Helper function to get readable zone labels
@@ -1953,7 +2102,10 @@
   }
 
   // Fetch couriers on page load
-  document.addEventListener("DOMContentLoaded", () => fetchCouriers());
+  document.addEventListener("DOMContentLoaded", () => {
+    initCourierSelectionAndBulk();
+    fetchCouriers();
+  });
 
   // Function to remove a zone from currently assigned zones
   async function removeCurrentZone(zoneValue, courierId) {

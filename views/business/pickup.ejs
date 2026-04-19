@@ -6,6 +6,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <%- contentFor('body') %>
+<% var Pip = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.pickup) ? translation.business.pages.pickup : {}; %>
+<% var Pp = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.pickup) ? translation.business.pages.pickup : {}; %>
 <style>
   /* Fix for dropdown menus in tables */
   .dropdown-fix .dropdown-menu {
@@ -13,18 +15,38 @@
     z-index: 1050 !important;
   }
 
-  /* Ensure the table doesn't constrain the dropdown */
-  #orderTable {
-    overflow: visible !important;
+  /* Keep wide tables inside the card — scroll here, not the whole page */
+  #orderList.card {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
-    .table-responsive{
-      overflow: scroll !important;
-    }
-  /* Make sure parent containers don't clip the dropdown */
-  .card-body,
-  .card {
-    overflow: visible !important;
+  #orderList > .card-body {
+    min-width: 0;
+  }
+
+  #orderList .card-body.pt-0 > div {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #orderList .pickups-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 280px;
+    max-height: 70vh;
+    overflow-x: auto;
+    overflow-y: auto;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Cancel Velzon .table-card negative margins if class is present */
+  #orderList .pickups-table-wrap.table-responsive {
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .btn-close {
@@ -131,15 +153,10 @@
       vertical-align: top;
     }
 
-.table-responsive.table-card {
-  max-height: 70vh;
-  overflow-y: auto;
-  min-height: 300px;
-}
 .pagination-wrap { padding-top: 10px; }
 </style>
-<div class="row">
-  <div class="col-lg-12">
+<div class="row g-3">
+  <div class="col-12">
     <div class="card" id="orderList">
       <div class="card-header border-0">
         <div class="row align-items-center gy-3">
@@ -148,8 +165,8 @@
           </div>
           <div class="col-sm-auto">
             <div class="d-flex gap-1 flex-wrap">
-              <button type="button" class="btn btn-success add-btn" data-bs-toggle="modal" id="create-btn" data-bs-target="#showModal"><i class="ri-add-line align-bottom me-1"></i> Create PickUp</button>
-              <button type="button" class="btn btn-info" onclick="exportPickupsToExcel()"><i class="ri-file-download-line align-bottom me-1"></i> Export</button>
+              <button type="button" class="btn btn-success add-btn" data-bs-toggle="modal" id="create-btn" data-bs-target="#showModal"><i class="ri-add-line align-bottom me-1"></i> <%= Pp.createPickup || 'Create PickUp' %></button>
+              <button type="button" class="btn btn-info" onclick="exportPickupsToExcel()"><i class="ri-file-download-line align-bottom me-1"></i> <%= Pp.export || 'Export' %></button>
             </div>
           </div>
         </div>
@@ -173,14 +190,14 @@
             <div class="col-xxl-2 col-sm-4">
               <div>
                 <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="idStatus">
-                  <option value="">Status</option>
-                  <option value="all" selected>All</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Inprogress">Inprogress</option>
-                  <option value="Cancelled">Cancelled</option>
-                  <option value="Pickups">Pickups</option>
-                  <option value="Returns">Returns</option>
-                  <option value="Delivered">Delivered</option>
+                  <option value=""><%= Pip.filterStatus || 'Status' %></option>
+                  <option value="all" selected><%= Pip.filterAll || 'All' %></option>
+                  <option value="Pending"><%= Pip.tabPending || 'Pending' %></option>
+                  <option value="Inprogress"><%= Pip.tabInProgress || 'In Progress' %></option>
+                  <option value="Cancelled"><%= Pip.tabCancelled || 'Cancelled' %></option>
+                  <option value="Pickups"><%= Pip.tabAll || 'Pickups' %></option>
+                  <option value="Returns"><%= Pip.tabReturns || 'Returns' %></option>
+                  <option value="Delivered"><%= Pip.tabCompleted || 'Delivered' %></option>
                 </select>
               </div>
             </div>
@@ -215,32 +232,32 @@
             <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
             <li class="nav-item">
               <button class="btn btn-link nav-link active All py-3" data-bs-toggle="tab" id="All" role="tab" aria-selected="true" onClick="filterPickups('Upcoming')">
-              <i class="ri-calendar-event-fill me-1 align-bottom"></i> Upcoming Pickups
+              <i class="ri-calendar-event-fill me-1 align-bottom"></i> <%= Pip.tabUpcoming || 'Upcoming Pickups' %>
               </button>
             </li>
             <li class="nav-item">
               <button class="btn btn-link nav-link py-3 Delivered" data-bs-toggle="tab" id="Delivered" role="tab" aria-selected="false" onClick="filterPickups('Completed')">
-              <i class="ri-history-line me-1 align-bottom"></i> Past Pickups
+              <i class="ri-history-line me-1 align-bottom"></i> <%= Pip.tabPast || 'Past Pickups' %>
               </button>
             </li>
             </ul>
 
-          <div class="table-responsive table-card mb-1">
+          <div class="table-responsive pickups-table-wrap mb-1">
             <table class="table table-nowrap align-middle" id="orderTable">
            <thead class="text-muted table-light">
              <tr class="text-uppercase">
                <th scope="col" style="width: 25px;">
                  <div class="form-check"> <input class="form-check-input" type="checkbox" id="checkAll" value="option"> </div>
                </th>
-                 <th class="sort" data-sort="pickupNumber">Pickup Number</th>
-                 <th class="sort" data-sort="pickup_address">Pickup Address</th>
-                 <th class="sort" data-sort="contact_info">Contact Info</th>
-                 <th class="sort" data-sort="pickup_date">Pickup Date</th>
-                 <th class="sort" data-sort="number_of_items">Number of Items</th>
-                 <th class="sort" data-sort="pickup_fee">Pickup Fee</th>
-                 <th class="sort" data-sort="status">Status</th>
-                 <th class="sort" data-sort="delivery_man">Delivery Man</th>
-                 <th data-sort="action">Action</th>
+                 <th class="sort" data-sort="pickupNumber"><%= Pip.colPickupId || 'Pickup Number' %></th>
+                 <th class="sort" data-sort="pickup_address"><%= Pip.modalPickupAddress || 'Pickup Address' %></th>
+                 <th class="sort" data-sort="contact_info"><%= Pip.contactInfo || 'Contact Info' %></th>
+                 <th class="sort" data-sort="pickup_date"><%= Pip.colDate || 'Pickup Date' %></th>
+                 <th class="sort" data-sort="number_of_items"><%= Pip.colOrders || 'Number of Items' %></th>
+                 <th class="sort" data-sort="pickup_fee"><%= Pip.pickupFee || 'Pickup Fee' %></th>
+                 <th class="sort" data-sort="status"><%= Pip.colStatus || 'Status' %></th>
+                 <th class="sort" data-sort="delivery_man"><%= Pip.deliveryMan || 'Delivery Man' %></th>
+                 <th data-sort="action"><%= Pip.colAction || 'Action' %></th>
              </tr>
            </thead>
               <tbody class="list form-check-all " id="TBody">
@@ -269,7 +286,7 @@
           </div>
         </div>
       <div class="modal fade" id="showModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
           <div class="modal-content shadow">
             <div class="modal-header p-3">
               <h5 class="modal-title" id="exampleModalLabel">
@@ -283,8 +300,8 @@
                 <input type="hidden" id="id-field" />
 
                 <div class="mb-4">
-                  <label for="numberOfOrders" class="form-label">Number of Orders <span class="required-asterisk">*</span></label>
-                  <input type="number" min="1" id="numberOfOrders" name="numberOfOrders" class="form-control" placeholder="Enter number of orders" required />
+                  <label for="numberOfOrders" class="form-label"><%= Pip.colOrders || 'Number of Orders' %> <span class="required-asterisk">*</span></label>
+                  <input type="number" min="1" id="numberOfOrders" name="numberOfOrders" class="form-control" placeholder="<%= Pip.colOrders || 'Number of Orders' %>" required />
                   <div id="orderWarning" class="order-warning">
                     <i class="ri-information-line me-1"></i> For efficiency, we recommend at least 3 orders per pickup.
                   </div>
@@ -295,7 +312,7 @@
                 </div>
 
                 <div class="mb-4">
-                  <label for="pickup-address-select" class="form-label">Select Pickup Address <span class="required-asterisk">*</span></label>
+                  <label for="pickup-address-select" class="form-label"><%= Pip.selectAddress || 'Select Pickup Address' %> <span class="required-asterisk">*</span></label>
                   <select class="form-control" id="pickup-address-select" name="pickupAddressId" required>
                     <option value="">Select pickup address...</option>
                     <% if (userData && userData.pickUpAddresses && userData.pickUpAddresses.length > 0) { %>
@@ -333,7 +350,7 @@
                 </div>
 
                 <div class="mb-4">
-                  <label for="date-field" class="form-label">Pick Up Date <span class="required-asterisk">*</span></label>
+                  <label for="date-field" class="form-label"><%= Pip.modalPickupDate || 'Pickup Date' %> <span class="required-asterisk">*</span></label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="ri-calendar-line"></i></span>
                     <input type="text" id="date-field" name="pickupDate" class="form-control" data-provider="flatpickr" required placeholder="Select date" />
@@ -341,8 +358,8 @@
                 </div>
 
                 <div class="mb-4">
-                  <label for="pickup-notes" class="form-label">Pickup Notes</label>
-                  <textarea id="pickup-notes" name="pickupNotes" class="form-control" placeholder="Enter any special instructions or notes for the pickup"></textarea>
+                  <label for="pickup-notes" class="form-label"><%= Pip.modalNotes || 'Pickup Notes' %></label>
+                  <textarea id="pickup-notes" name="pickupNotes" class="form-control" placeholder="<%= Pip.modalNotes || 'Enter any notes for the pickup' %>"></textarea>
                 </div>
 
                 <div class="row justify-content-between">

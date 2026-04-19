@@ -5,3 +5,5 @@ node_modules
 # Firebase Service Account Key
 serviceAccountKey.json
 serviceAccountKey-Courier.json
+
+public/uploads/

@@ -31,11 +31,10 @@ const ticketRouterApi = require('./routes/api/v1/ticketRoutes');
 const uploadRouterApi = require('./routes/api/v1/upload');
 
 // Import jobs
-const { dailyOrderProcessing } = require('./jobs/dailyOrderProcessing');
-const releasesProccessing = require('./jobs/releasesProccessing');
+const { initPayoutProcessing } = require('./jobs/payoutProcessing');
 
-// dailyOrderProcessing();
-// releasesProccessing();
+// Start the Wednesday payout cron
+initPayoutProcessing();
 
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
@@ -56,7 +55,25 @@ app.use(urlencodeParser);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-app.use(upload());
+
+// express-fileupload and multer both parse multipart bodies; running both on the same
+// request consumes the stream and breaks the second parser ("Unexpected end of form", 400).
+function shouldSkipExpressFileUpload(req) {
+  const p = req.path || '';
+  if (p === '/business/orders-import-validate' || p === '/business/orders-import-commit') {
+    return true;
+  }
+  if (req.method === 'POST' && /^\/api\/v1\/tickets\/[^/]+\/upload$/.test(p)) {
+    return true;
+  }
+  return false;
+}
+app.use((req, res, next) => {
+  if (shouldSkipExpressFileUpload(req)) {
+    return next();
+  }
+  return upload()(req, res, next);
+});
 
 app.use(express.json());
 app.use(
@@ -111,8 +128,11 @@ mongoose
 // for i18 use
 app.use(
   i18n({
-    translationsPath: path.join(__dirname, 'i18n'), // <--- use here. Specify translations files path.
-    siteLangs: ['ar', 'ch', 'en', 'fr', 'ru', 'it', 'gr', 'sp'],
+    translationsPath: path.join(__dirname, 'i18n'),
+    siteLangs: ['ar', 'en'],
+    defaultLang: 'en',
+    cookieLangName: 'language',
+    paramLangName: 'lang',
     textsVarName: 'translation',
   })
 );

@@ -3,21 +3,22 @@
 <link rel="stylesheet" href="/assets/rCSS/business.css">
 
 <%- contentFor('body') %>
+<% var Sod = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.shopOrderDetails) ? translation.business.pages.shopOrderDetails : {}; %>
 
 <% if (order) { %>
 
 
 <!-- Order Status Card -->
-<div class="row mb-4">
+<div class="row mb-4 g-3">
   <div class="col-12">
     <div class="card">
       <div class="card-header">
         <div class="d-sm-flex align-items-center">
-          <h5 class="card-title flex-grow-1 mb-0">Order Status - <span style="color: #007bff;"><strong><%= order.orderNumber %></strong></span></h5>
+          <h5 class="card-title flex-grow-1 mb-0"><%= Sod.statusPrefix || 'Order Status' %> — <span style="color: #007bff;"><strong class="ltr-embed"><%= order.orderNumber %></strong></span></h5>
           <div class="flex-shrink-0 mt-2 mt-sm-0">
             <% if (['pending', 'confirmed'].includes(order.status)) { %>
             <button class="btn btn-soft-danger material-shadow-none btn-sm mt-2 mt-sm-0" onclick="cancelOrder('<%= order._id %>')">
-              <i class="ri-close-circle-line align-middle me-1"></i> Cancel Order
+              <i class="ri-close-circle-line align-middle me-1"></i> <%= Sod.cancelOrder || 'Cancel Order' %>
             </button>
             <% } %>
           </div>
@@ -37,7 +38,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-0 fw-semibold">Order Placed - <span class="fw-normal"><%= new Date(order.createdAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-0 fw-semibold"><%= Sod.stageOrderPlaced || 'Order Placed' %> - <span class="fw-normal"><%= new Date(order.createdAt).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
                 </a>
@@ -56,7 +57,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Order Confirmed</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Sod.stageConfirmed || 'Order Confirmed' %></h6>
                     </div>
                   </div>
                 </a>
@@ -76,7 +77,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Processing</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Sod.stageProcessing || 'Processing' %></h6>
                     </div>
                   </div>
                 </a>
@@ -96,7 +97,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Ready for Pickup</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Sod.stageReadyForPickup || 'Ready for Pickup' %></h6>
                     </div>
                   </div>
                 </a>
@@ -116,7 +117,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Assigned to Courier</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Sod.stageAssigned || 'Assigned to Courier' %></h6>
                     </div>
                   </div>
                 </a>
@@ -136,7 +137,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Picked Up</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Sod.stagePickedUp || 'Picked Up' %></h6>
                     </div>
                   </div>
                 </a>
@@ -156,7 +157,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">In Transit</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Sod.stageInTransit || 'In Transit' %></h6>
                     </div>
                   </div>
                 </a>
@@ -176,7 +177,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Delivered</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Sod.stageDelivered || 'Delivered' %></h6>
                     </div>
                   </div>
                 </a>
@@ -196,7 +197,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Order Cancelled</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Sod.stageCancelled || 'Order Cancelled' %></h6>
                     </div>
                   </div>
                 </a>
@@ -211,34 +212,34 @@
 </div>
 
 <!-- Customer Information Card -->
-<div class="row mb-4">
+<div class="row mb-4 g-3">
   <div class="col-12">
     <div class="card">
       <div class="card-header">
         <h5 class="card-title mb-0">
-          <i class="ri-user-line me-2"></i>Customer Information
+          <i class="ri-user-line me-2"></i><%= Sod.sectionCustomer || 'Customer Information' %>
         </h5>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-6">
             <div class="mb-3">
-              <label class="form-label fw-semibold">Customer Name</label>
-              <p class="mb-0"><%= order.contactInfo?.name || order.orderCustomer?.fullName || 'Not specified' %></p>
+              <label class="form-label fw-semibold"><%= Sod.customerName || 'Customer Name' %></label>
+              <p class="mb-0"><%= order.contactInfo?.name || order.orderCustomer?.fullName || (Sod.notSpecified || 'Not specified') %></p>
             </div>
             <div class="mb-3">
-              <label class="form-label fw-semibold">Phone Number</label>
-              <p class="mb-0"><%= order.contactInfo?.phone || order.orderCustomer?.phoneNumber || 'Not specified' %></p>
+              <label class="form-label fw-semibold"><%= Sod.phoneNumber || 'Phone Number' %></label>
+              <p class="mb-0"><%= order.contactInfo?.phone || order.orderCustomer?.phoneNumber || (Sod.notSpecified || 'Not specified') %></p>
             </div>
           </div>
           <div class="col-md-6">
             <div class="mb-3">
-              <label class="form-label fw-semibold">Delivery Address</label>
-              <p class="mb-0"><%= order.orderCustomer?.address || 'Not specified' %></p>
+              <label class="form-label fw-semibold"><%= Sod.deliveryAddress || 'Delivery Address' %></label>
+              <p class="mb-0"><%= order.orderCustomer?.address || (Sod.notSpecified || 'Not specified') %></p>
             </div>
             <div class="mb-3">
-              <label class="form-label fw-semibold">Zone</label>
-              <p class="mb-0"><%= order.orderCustomer?.zone || 'Not specified' %></p>
+              <label class="form-label fw-semibold"><%= Sod.zone || 'Zone' %></label>
+              <p class="mb-0"><%= order.orderCustomer?.zone || (Sod.notSpecified || 'Not specified') %></p>
             </div>
           </div>
         </div>
@@ -248,12 +249,12 @@
 </div>
 
 <!-- Order Items Card -->
-<div class="row mb-4">
+<div class="row mb-4 g-3">
   <div class="col-12">
     <div class="card">
       <div class="card-header">
         <h5 class="card-title mb-0">
-          <i class="ri-shopping-cart-line me-2"></i>Order Items
+          <i class="ri-shopping-cart-line me-2"></i><%= Sod.sectionItems || 'Order Items' %>
         </h5>
       </div>
       <div class="card-body">
@@ -261,11 +262,11 @@
           <table class="table table-hover">
             <thead class="table-light">
               <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Discount</th>
-                <th>Subtotal</th>
+                <th><%= Sod.colProduct || 'Product' %></th>
+                <th><%= Sod.colQty || 'Quantity' %></th>
+                <th><%= Sod.colUnitPrice || 'Unit Price' %></th>
+                <th><%= Sod.colDiscount || 'Discount' %></th>
+                <th><%= Sod.colSubtotal || 'Subtotal' %></th>
               </tr>
             </thead>
             <tbody>
@@ -288,39 +289,39 @@
                   </td>
                   <td><%= item.quantity %></td>
                   <td>EGP <%= item.unitPrice.toFixed(2) %></td>
-                  <td><%= item.discount > 0 ? item.discount + '%' : 'No discount' %></td>
+                  <td><%= item.discount > 0 ? item.discount + '%' : (Sod.noDiscount || 'No discount') %></td>
                   <td>EGP <%= item.subtotal.toFixed(2) %></td>
                 </tr>
                 <% }); %>
               <% } else { %>
                 <tr>
-                  <td colspan="5" class="text-center">No items found</td>
+                  <td colspan="5" class="text-center"><%= Sod.noItemsFound || 'No items found' %></td>
                 </tr>
               <% } %>
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                <td colspan="4" class="text-end"><strong><%= Sod.subtotal || 'Subtotal:' %></strong></td>
                 <td><strong>EGP <%= order.subtotal.toFixed(2) %></strong></td>
               </tr>
               <% if (order.discount > 0) { %>
               <tr>
-                <td colspan="4" class="text-end">Discount:</td>
+                <td colspan="4" class="text-end"><%= Sod.discount || 'Discount:' %></td>
                 <td>- EGP <%= order.discount.toFixed(2) %></td>
               </tr>
               <% } %>
               <% if (order.tax > 0) { %>
               <tr>
-                <td colspan="4" class="text-end">Tax:</td>
+                <td colspan="4" class="text-end"><%= Sod.tax || 'Tax:' %></td>
                 <td>EGP <%= order.tax.toFixed(2) %></td>
               </tr>
               <% } %>
               <tr>
-                <td colspan="4" class="text-end">Delivery Fee:</td>
+                <td colspan="4" class="text-end"><%= Sod.deliveryFee || 'Delivery Fee:' %></td>
                 <td>EGP <%= order.deliveryFee.toFixed(2) %></td>
               </tr>
               <tr class="table-active">
-                <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                <td colspan="4" class="text-end"><strong><%= Sod.total || 'Total:' %></strong></td>
                 <td><strong>EGP <%= order.totalAmount.toFixed(2) %></strong></td>
               </tr>
             </tfoot>
@@ -333,12 +334,12 @@
 
 <!-- Tracking History Card -->
 <% if (order.trackingHistory && order.trackingHistory.length > 0) { %>
-<div class="row mb-4">
+<div class="row mb-4 g-3">
   <div class="col-12">
     <div class="card">
       <div class="card-header">
         <h5 class="card-title mb-0">
-          <i class="ri-map-pin-line me-2"></i>Tracking History
+          <i class="ri-map-pin-line me-2"></i><%= Sod.sectionTimeline || 'Tracking History' %>
         </h5>
       </div>
       <div class="card-body">
@@ -352,13 +353,13 @@
                 <div class="timeline-header">
                   <h6 class="timeline-title mb-1"><%= track.description %></h6>
                   <span class="timeline-time">
-                    <i class="ri-time-line me-1"></i><%= new Date(track.timestamp).toLocaleString() %>
+                    <i class="ri-time-line me-1"></i><%= new Date(track.timestamp).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US') %>
                   </span>
                 </div>
                 <% if (track.location) { %>
                   <div class="timeline-location mt-2">
                     <i class="ri-map-pin-line me-1 text-primary"></i>
-                    <span class="text-muted">Location: <%= track.location.lat %>, <%= track.location.lng %></span>
+                    <span class="text-muted"><%= Sod.locationLabel || 'Location:' %> <%= track.location.lat %>, <%= track.location.lng %></span>
                   </div>
                 <% } %>
                 <% if (track.notes) { %>
@@ -378,18 +379,18 @@
 
 <!-- Business Actions Card -->
 <% if (['pending', 'confirmed'].includes(order.status)) { %>
-<div class="row mb-4">
+<div class="row mb-4 g-3">
   <div class="col-12">
     <div class="card">
       <div class="card-header">
         <h5 class="card-title mb-0">
-          <i class="ri-settings-line me-2"></i>Order Actions
+          <i class="ri-settings-line me-2"></i><%= Sod.orderActions || 'Order Actions' %>
         </h5>
       </div>
       <div class="card-body">
         <div class="d-flex gap-2">
           <button class="btn btn-danger" onclick="cancelOrder('<%= order._id %>')">
-            <i class="ri-close-circle-line me-1"></i>Cancel Order
+            <i class="ri-close-circle-line me-1"></i><%= Sod.cancelOrder || 'Cancel Order' %>
           </button>
         </div>
       </div>
@@ -406,8 +407,8 @@
       <div class="card-body">
         <div class="text-center">
           <img src="/assets/images/empty.svg" alt="" class="img-fluid" style="max-width: 220px;">
-          <h4 class="mt-4">No Order Found</h4>
-          <p class="text-muted mb-0">We couldn't find the order you are looking for.</p>
+          <h4 class="mt-4"><%= Sod.noOrderFound || 'No Order Found' %></h4>
+          <p class="text-muted mb-0"><%= Sod.noOrderMsg || "We couldn't find the order you are looking for." %></p>
         </div>
       </div>
     </div>
@@ -419,19 +420,31 @@
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 <script>
+  var __NS_SOD_I18N = {
+    cancelTitle: "<%= Sod.cancelOrder || 'Cancel Order' %>",
+    cancelReasonLabel: "<%= Sod.cancelReasonLabel || 'Reason for cancellation' %>",
+    cancelReasonPlaceholder: "<%= Sod.cancelReasonPlaceholder || 'Please provide a reason...' %>",
+    cancelConfirmBtn: "<%= Sod.cancelConfirmBtn || 'Yes, cancel it' %>",
+    cancelDismissBtn: "<%= Sod.cancelDismissBtn || 'No, keep it' %>",
+    cancelReasonRequired: "<%= Sod.cancelReasonRequired || 'You need to provide a reason!' %>",
+    successTitle: "<%= Sod.successTitle || 'Success!' %>",
+    errorTitle: "<%= Sod.errorTitle || 'Error!' %>",
+    failedCancel: "<%= Sod.failedCancel || 'Failed to cancel order' %>"
+  };
+
   async function cancelOrder(orderId) {
     const { value: reason } = await Swal.fire({
-      title: 'Cancel Order',
+      title: __NS_SOD_I18N.cancelTitle,
       input: 'textarea',
-      inputLabel: 'Reason for cancellation',
-      inputPlaceholder: 'Please provide a reason...',
+      inputLabel: __NS_SOD_I18N.cancelReasonLabel,
+      inputPlaceholder: __NS_SOD_I18N.cancelReasonPlaceholder,
       showCancelButton: true,
       confirmButtonColor: '#d33',
-      confirmButtonText: 'Yes, cancel it',
-      cancelButtonText: 'No, keep it',
+      confirmButtonText: __NS_SOD_I18N.cancelConfirmBtn,
+      cancelButtonText: __NS_SOD_I18N.cancelDismissBtn,
       inputValidator: (value) => {
         if (!value) {
-          return 'You need to provide a reason!';
+          return __NS_SOD_I18N.cancelReasonRequired;
         }
       }
     });
@@ -451,7 +464,7 @@
         if (response.ok) {
           Swal.fire({
             icon: 'success',
-            title: 'Success!',
+            title: __NS_SOD_I18N.successTitle,
             text: result.message,
             timer: 2000,
             showConfirmButton: false
@@ -461,16 +474,16 @@
         } else {
           Swal.fire({
             icon: 'error',
-            title: 'Error!',
-            text: result.error || 'Failed to cancel order'
+            title: __NS_SOD_I18N.errorTitle,
+            text: result.error || __NS_SOD_I18N.failedCancel
           });
         }
       } catch (error) {
         console.error('Error cancelling order:', error);
         Swal.fire({
           icon: 'error',
-          title: 'Error!',
-          text: 'Failed to cancel order'
+          title: __NS_SOD_I18N.errorTitle,
+          text: __NS_SOD_I18N.failedCancel
         });
       }
     }

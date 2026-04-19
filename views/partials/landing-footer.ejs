@@ -1,0 +1,195 @@
+<!-- Same footer structure & styling as landing index -->
+<style>
+  .site-footer-marketing {
+    --primary: #F39720;
+    --secondary: #FDB614;
+    --accent: #8FCAES;
+    --dark: #1E293B;
+    --border-radius-full: 9999px;
+    --border-radius: 0.5rem;
+  }
+
+  .site-footer-marketing footer {
+    background-color: var(--dark);
+    color: white;
+    padding: 5rem 0 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .site-footer-marketing footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+  }
+
+  .site-footer-marketing .container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .site-footer-marketing .footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 3rem;
+    margin-bottom: 4rem;
+  }
+
+  .site-footer-marketing .footer-column {
+    flex: 1;
+    min-width: 240px;
+  }
+
+  .site-footer-marketing .footer-column h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 1rem;
+    color: white;
+  }
+
+  .site-footer-marketing .footer-column h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: var(--border-radius-full);
+  }
+
+  .site-footer-marketing .footer-column ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .site-footer-marketing .footer-column ul li {
+    margin-bottom: 1rem;
+  }
+
+  .site-footer-marketing .footer-column ul li a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .site-footer-marketing .footer-column ul li a i {
+    color: var(--primary);
+    font-size: 0.9rem;
+  }
+
+  .site-footer-marketing .footer-column ul li a:hover {
+    color: var(--primary);
+    transform: translateX(5px);
+  }
+
+  .site-footer-marketing .social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .site-footer-marketing .social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .site-footer-marketing .social-icon:hover {
+    background-color: var(--primary);
+    transform: translateY(-5px);
+    color: #fff;
+  }
+
+  .site-footer-marketing .footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+  }
+
+  .site-footer-marketing .footer-bottom p {
+    margin: 0;
+  }
+
+  .site-footer-marketing .footer-column p {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.6;
+  }
+</style>
+
+<div class="site-footer-marketing">
+<footer>
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-column">
+        <h3><%= translation.footer.company.title %></h3>
+        <ul>
+          <li><a href="/aboutus"><i class="fas fa-angle-right"></i> <%= translation.footer.company.about %></a></li>
+
+          <li><a href="/faq"><i class="fas fa-angle-right"></i> <%= translation.navigation.faq %></a></li>
+          <li><a href="/privacypolicy"><i class="fas fa-angle-right"></i> <%= translation.navigation.privacyPolicy %></a></li>
+          <li><a href="/login"><i class="fas fa-angle-right"></i> <%= translation.footer.company.contact %></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3><%= translation.footer.services.title %></h3>
+        <ul>
+
+          <li><a href="/tracking"><i class="fas fa-angle-right"></i> <%= translation.footer.services.tracking %></a></li>
+          <li><a href="/register"><i class="fas fa-angle-right"></i> <%= translation.footer.services.storage %></a></li>
+          <li><a href="/business/dashboard"><i class="fas fa-angle-right"></i> <%= translation.footer.services.analytics %></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3><%= translation.footer.resources.title %></h3>
+        <ul>
+          <li><a href="/faq"><i class="fas fa-angle-right"></i> <%= translation.footer.resources.help %></a></li>
+          <li><a href="/tracking"><i class="fas fa-angle-right"></i> <%= translation.footer.resources.tracking %></a></li>
+          <li><a href="/mobileApp"><i class="fas fa-angle-right"></i> <%= translation.navigation.mobileApp %></a></li>
+          <li><a href="/privacypolicy"><i class="fas fa-angle-right"></i> <%= translation.footer.legal.privacy %></a></li>
+          <li><a href="/privacypolicy"><i class="fas fa-angle-right"></i> <%= translation.footer.resources.terms %></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h3><%= translation.landing.footer.connect %></h3>
+        <p><%= translation.landing.footer.connectDescription %></p>
+        <div class="social-icons">
+          <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; <%= new Date().getFullYear() %> Now Shipping. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+</div>

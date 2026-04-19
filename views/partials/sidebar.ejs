@@ -1,5 +1,12 @@
 <!-- ========== App Menu ========== -->
+<% var BS = (typeof translation !== 'undefined' && translation.business && translation.business.shell) ? translation.business.shell : {}; %>
 <div class="app-menu navbar-menu">
+  <div class="sidebar-mobile-bar" role="presentation">
+    <span class="sidebar-mobile-bar__label text-uppercase"><%= BS.menu || 'Menu' %></span>
+    <button type="button" class="sidebar-mobile-close" id="sidebar-mobile-close" aria-label="<%= BS.closeMenu || 'Close menu' %>">
+      <i class="ri-close-line" aria-hidden="true"></i>
+    </button>
+  </div>
   <!-- LOGO -->
   <div class="navbar-brand-box">
     <!-- Logo -->
@@ -12,10 +19,26 @@
   <div class="dropdown sidebar-user m-2 rounded shadow-sm">
     <button type="button" class="btn w-100 d-flex justify-content-between align-items-center" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       <span class="d-flex align-items-center gap-2">
-        <img class="rounded-circle header-profile-user" src="/assets/images/users/avatar-1.jpg" alt="Header Avatar">
+        <% 
+          var sbProfileFallback = '/assets/rImages/logo.png';
+          var sbUserName = BS.userFallback || 'User';
+          var sbUserSub = BS.roleBusiness || 'Business';
+          var sbUserPhoto = sbProfileFallback;
+          if (typeof userData !== 'undefined' && userData) {
+            sbUserName = userData.brandInfo?.brandName || userData.name || 'User';
+            sbUserSub = userData.role === 'business' ? (BS.roleBusiness || 'Business') : (userData.role || (BS.roleAccount || 'Account'));
+            sbUserPhoto = (userData.profileImage && String(userData.profileImage).trim()) ? String(userData.profileImage).trim() : sbProfileFallback;
+          } else if (typeof user !== 'undefined' && user) {
+            sbUserName = user.brandInfo?.brandName || user.name || 'User';
+            sbUserSub = user.role === 'business' ? (BS.roleBusiness || 'Business') : (user.role || (BS.roleAccount || 'Account'));
+            sbUserPhoto = (user.profileImage && String(user.profileImage).trim()) ? String(user.profileImage).trim() : sbProfileFallback;
+          }
+          var sbProfileIsFallback = sbUserPhoto === sbProfileFallback;
+        %>
+        <img class="rounded-circle header-profile-user<%= sbProfileIsFallback ? ' profile-img--fallback' : '' %>" src="<%= sbUserPhoto %>" alt="<%= sbUserName %>" onerror="this.onerror=null;this.src='<%= sbProfileFallback %>';this.classList.add('profile-img--fallback');" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #F39720;">
         <span class="text-start">
-          <span class="d-block fw-semibold sidebar-user-name-text" style="color: #212529; font-size: 14px;">Anna Adame</span>
-          <span class="d-block fs-12 sidebar-user-name-sub-text" style="color: #6c757d;"><i class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span class="align-middle">Online</span></span>
+          <span class="d-block fw-semibold sidebar-user-name-text" style="color: #212529; font-size: 14px;"><%= sbUserName %></span>
+          <span class="d-block fs-12 sidebar-user-name-sub-text" style="color: #6c757d;"><i class="ri ri-circle-fill fs-10 text-success align-baseline"></i> <span class="align-middle text-capitalize"><%= sbUserSub %></span></span>
         </span>
       </span>
       <i class="ri-chevron-down-line fs-16" style="color: #6c757d;"></i>
@@ -23,29 +46,29 @@
     <div class="dropdown-menu dropdown-menu-end border-0 shadow-lg py-2 sidebar-dropdown-menu">
       <!-- item-->
       <div class="dropdown-header px-3 py-2 sidebar-dropdown-header">
-        <span style="color: #212529; font-weight: 600;">Welcome!</span>
+        <span style="color: #212529; font-weight: 600;"><%= BS.welcome || 'Welcome!' %></span>
       </div>
       <div class="dropdown-divider my-1"></div>
       <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item" href="/business/settings">
-        <i class="ri-user-line fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Profile Settings</span>
+        <i class="ri-user-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+        <span class="align-middle" style="color: #212529;"><%= BS.profileSettings || 'Profile Settings' %></span>
       </a>
       <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item" href="/business/dashboard">
-        <i class="ri-dashboard-line fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">Dashboard</span>
+        <i class="ri-dashboard-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+        <span class="align-middle" style="color: #212529;"><%= BS.dashboard || 'Dashboard' %></span>
       </a>
       <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item" href="/business/orders">
-        <i class="ri-shopping-cart-line fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">My Orders</span>
+        <i class="ri-shopping-cart-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+        <span class="align-middle" style="color: #212529;"><%= BS.myOrders || 'My Orders' %></span>
       </a>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item" href="/business/wallet/total-balance">
-        <i class="ri-wallet-line fs-16 align-middle me-2" style="color: #F39720;"></i>
-        <span class="align-middle" style="color: #212529;">My Wallet</span>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item" href="/business/wallet">
+        <i class="ri-wallet-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+        <span class="align-middle" style="color: #212529;"><%= BS.myWallet || 'My Wallet' %></span>
       </a>
       <div class="dropdown-divider my-2"></div>
       <a class="dropdown-item d-flex align-items-center px-3 py-2 sidebar-dropdown-item text-danger" href="/business/logout">
         <i class="ri-logout-box-r-line fs-16 align-middle me-2"></i>
-        <span class="align-middle fw-semibold" style="color: #dc3545;">Logout</span>
+        <span class="align-middle fw-semibold" style="color: #dc3545;"><%= BS.logoutNav || 'Logout' %></span>
       </a>
     </div>
   </div>
@@ -54,23 +77,23 @@
       <div id="two-column-menu">
       </div>
       <ul class="navbar-nav" id="navbar-nav">
-        <li class="menu-title"><span style="color: #212529; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">Dashboard</span></li>
+        <li class="menu-title"><span style="color: #212529; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;"><%= BS.sectionDashboard || 'Dashboard' %></span></li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/business/dashboard" role="button" aria-expanded="false" aria-controls="sidebarDashboards">
-            <i class="ri-dashboard-2-line" style="color: #F39720;"></i>
-            <span data-key="t-dashboards" style="color: #212529; font-size: 15px;">Dashboard</span>
+            <i class="ri-dashboard-2-line" style="color: #E4A24A;"></i>
+            <span data-key="t-dashboards" style="color: #212529; font-size: 15px;"><%= BS.dashboard || 'Dashboard' %></span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/business/orders" role="button">
-            <i class="ri-shopping-cart-line" style="color: #F39720;"></i>
-            <span data-key="" style="color: #212529; font-size: 15px;">Orders</span>
+            <i class="ri-shopping-cart-line" style="color: #E4A24A;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;"><%= BS.myOrders || 'Orders' %></span>
           </a>
         </li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/business/pickups" role="button">
-            <i class="ri-truck-line" style="color: #F39720;"></i>
-            <span data-key="" style="color: #212529; font-size: 15px;">Pickup</span>
+            <i class="ri-truck-line" style="color: #E4A24A;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;"><%= BS.pickup || 'Pickup' %></span>
           </a>
         </li>
 
@@ -82,46 +105,39 @@
 
         <li class="nav-item">
           <a class="nav-link menu-link" href="#sidebarWallet" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarWallet">
-            <i class="ri-wallet-line" style="color: #F39720;"></i>
-            <span data-key="t-wallet" style="color: #212529; font-size: 15px;">My Wallet</span>
+            <i class="ri-wallet-line" style="color: #E4A24A;"></i>
+            <span data-key="t-wallet" style="color: #212529; font-size: 15px;"><%= BS.myWallet || 'My Wallet' %></span>
             <!-- <i class="ri-arrow-down-s-line menu-arrow ms-auto"></i> -->
           </a>
           <div class="collapse ms-3" id="sidebarWallet">
             <ul class="nav flex-column">
               <li class="nav-item">
-                <a class="nav-link" href="/business/wallet/total-balance">
-                  <i class="ri-wallet-3-line" style="color: #F39720;"></i>
-                  <span data-key="t-balance" style="color: #212529; font-size: 14px;">Account Balance</span>
+                <a class="nav-link" href="/business/wallet">
+                  <i class="ri-wallet-3-line" style="color: #E4A24A;"></i>
+                  <span data-key="t-wallet" style="color: #212529; font-size: 14px;"><%= BS.myWallet || 'My Wallet' %></span>
                 </a>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/business/wallet/cash-cycles">
-                  <i class="ri-exchange-cny-line" style="color: #F39720;"></i>
-                  <span data-key="t-transactions" style="color: #212529; font-size: 14px;">Order Finances</span>
-                </a>
-              </li>
-
             </ul>
           </div>
         </li>
 
         <li class="nav-item">
           <a class="nav-link menu-link" href="#sidebarShop" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarShop">
-            <i class="ri-store-2-line" style="color: #F39720;"></i>
-            <span data-key="t-shop" style="color: #212529; font-size: 15px;">Shop</span>
+            <i class="ri-store-2-line" style="color: #E4A24A;"></i>
+            <span data-key="t-shop" style="color: #212529; font-size: 15px;"><%= BS.shop || 'Shop' %></span>
           </a>
           <div class="collapse ms-3" id="sidebarShop">
             <ul class="nav flex-column">
               <li class="nav-item">
                 <a class="nav-link" href="/business/shop">
-                  <i class="ri-shopping-basket-line" style="color: #F39720;"></i>
-                  <span data-key="" style="color: #212529; font-size: 14px;">Browse Shop</span>
+                  <i class="ri-shopping-basket-line" style="color: #E4A24A;"></i>
+                  <span data-key="" style="color: #212529; font-size: 14px;"><%= BS.browseShop || 'Browse Shop' %></span>
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="/business/shop/orders">
-                  <i class="ri-file-list-3-line" style="color: #F39720;"></i>
-                  <span data-key="" style="color: #212529; font-size: 14px;">My Shop Orders</span>
+                  <i class="ri-file-list-3-line" style="color: #E4A24A;"></i>
+                  <span data-key="" style="color: #212529; font-size: 14px;"><%= BS.myShopOrders || 'My Shop Orders' %></span>
                 </a>
               </li>
             </ul>
@@ -130,23 +146,23 @@
 
         <li class="nav-item">
           <a class="nav-link menu-link" href="/business/tickets" role="button">
-            <i class="ri-ticket-line" style="color: #F39720;"></i>
-            <span data-key="" style="color: #212529; font-size: 15px;">Tickets</span>
+            <i class="ri-ticket-line" style="color: #E4A24A;"></i>
+            <span data-key="" style="color: #212529; font-size: 15px;"><%= BS.tickets || 'Tickets' %></span>
           </a>
         </li>
 
-        <li class="menu-title"><span style="color: #212529; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;">Account</span></li>
+        <li class="menu-title"><span style="color: #212529; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;"><%= BS.account || 'Account' %></span></li>
         <li class="nav-item">
           <a class="nav-link menu-link" href="/business/settings" role="button">
-            <i class="ri-settings-3-line" style="color: #F39720;"></i>
-            <span data-key="t-settings" style="color: #212529; font-size: 15px;">Settings</span>
+            <i class="ri-settings-3-line" style="color: #E4A24A;"></i>
+            <span data-key="t-settings" style="color: #212529; font-size: 15px;"><%= BS.settings || 'Settings' %></span>
           </a>
         </li>
 
         <li class="nav-item">
           <a class="nav-link menu-link" href="/business/logout" role="button">
-            <i class="ri-logout-box-line" style="color: #F39720;"></i>
-            <span data-key="t-logout" style="color: #212529; font-size: 15px;">Log Out</span>
+            <i class="ri-logout-box-line" style="color: #E4A24A;"></i>
+            <span data-key="t-logout" style="color: #212529; font-size: 15px;"><%= BS.logOut || 'Log Out' %></span>
           </a>
         </li>
       </ul>
@@ -202,7 +218,7 @@
   [data-sidebar-size="sm"] .nav-link.active i,
   [aria-expanded="true"].menu-link i,
   .collapse.show .nav-link:hover i {
-    color: #F39720 !important;
+    color: #E4A24A !important;
   }
 
   /* Ensure text is visible in collapsed state - override white colors */
@@ -220,7 +236,7 @@
 
   /* Icons should be orange on hover in collapsed state */
   [data-sidebar-size="sm"] .nav-link:hover i {
-    color: #F39720 !important;
+    color: #E4A24A !important;
   }
 
 
@@ -300,7 +316,7 @@
   }
 
   .nav-link:hover i {
-    color: #F39720 !important;
+    color: #E4A24A !important;
   }
 
   .nav-link.active {
@@ -310,7 +326,7 @@
   }
 
   .nav-link.active i {
-    color: #F39720 !important;
+    color: #E4A24A !important;
   }
 
   /* Menu arrow */
@@ -369,12 +385,12 @@
   }
 
   .dropdown-item:hover {
-    background-color: rgba(243, 151, 32, 0.08);
+    background-color: rgba(228, 162, 74, 0.08);
     color: #212529;
   }
 
   .dropdown-item:hover i {
-    color: #F39720;
+    color: #E4A24A;
   }
 
   /* Enhanced sidebar dropdown */
@@ -382,7 +398,7 @@
     border-radius: 10px;
     min-width: 220px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-    border: 1px solid rgba(243, 151, 32, 0.1);
+    border: 1px solid rgba(228, 162, 74, 0.1);
   }
 
   .sidebar-dropdown-header {
@@ -402,7 +418,7 @@
   }
 
   .sidebar-dropdown-item:hover i {
-    color: #F39720;
+    color: #E4A24A;
   }
 
   .sidebar-dropdown-item.text-danger:hover {
@@ -440,7 +456,7 @@
   }
 
   #scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #F39720;
+    background: #E4A24A;
   }
 
   /* Submenu styling */
@@ -460,7 +476,7 @@
     transform: translateY(-50%);
     height: 60%;
     width: 3px;
-    background-color: #F39720;
+    background-color: #E4A24A;
     border-radius: 0 3px 3px 0;
   }
 
@@ -547,7 +563,7 @@
   }
 
   [data-sidebar-size="sm"] .nav-link:hover i {
-    color: #F39720 !important;
+    color: #E4A24A !important;
   }
 
   [data-sidebar-size="sm"] .nav-link:hover span {
@@ -560,7 +576,7 @@
   }
 
   [data-sidebar-size="sm"] .nav-link.active i {
-    color: #F39720 !important;
+    color: #E4A24A !important;
   }
 
   [data-sidebar-size="sm"] .sidebar-user {
@@ -576,7 +592,7 @@
   /* Hamburger icon animation */
   .hamburger-icon.open span:nth-child(1) {
     transform: rotate(45deg) translate(5px, 5px);
-    background-color: #F39720;
+    background-color: #E4A24A;
   }
 
   .hamburger-icon.open span:nth-child(2) {
@@ -585,7 +601,7 @@
 
   .hamburger-icon.open span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -6px);
-    background-color: #F39720;
+    background-color: #E4A24A;
   }
 
   /* Enhanced transitions */
@@ -610,7 +626,7 @@
   }
 
   [aria-expanded="true"].menu-link i {
-    color: #F39720 !important;
+    color: #E4A24A !important;
   }
 
   [aria-expanded="true"].menu-link span {
@@ -638,7 +654,7 @@
   }
 
   .collapse.show .nav-link:hover i {
-    color: #F39720 !important;
+    color: #E4A24A !important;
   }
 
   /* Force override ALL CSS variable-based colors - Maximum specificity */
@@ -660,7 +676,7 @@
 
   html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .nav-link:hover i,
   html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .app-menu .navbar-menu .navbar-nav .menu-link:hover i {
-    color: #F39720 !important;
+    color: #E4A24A !important;
   }
 
   /* Override CSS variables at root level for collapsed sidebar */
@@ -668,5 +684,54 @@
     --vz-vertical-menu-item-hover-color: #212529 !important;
     --vz-vertical-menu-item-active-color: #212529 !important;
     --vz-vertical-menu-item-color: #212529 !important;
+  }
+
+  /* ── RTL overrides ────────────────────────────────────────── */
+  html[dir='rtl'] .nav-link i {
+    margin-right: 0;
+    margin-left: 10px;
+  }
+
+  html[dir='rtl'] [data-sidebar-size="sm"] .nav-link i {
+    margin-left: 0;
+  }
+
+  html[dir='rtl'] .nav-link.active::before {
+    left: auto;
+    right: 0;
+    border-radius: 3px 0 0 3px;
+  }
+
+  html[dir='rtl'] .menu-title {
+    padding-left: 0;
+    padding-right: 18px;
+  }
+
+  html[dir='rtl'] .collapse .nav-link {
+    margin-left: 0;
+    margin-right: 10px;
+    border-left: none;
+    border-right: 1px solid #f0f0f0;
+    padding-left: 12px;
+    padding-right: 15px;
+  }
+
+  html[dir='rtl'] .app-menu.navbar-menu {
+    border-right: none;
+    border-left: 1px solid #e9ecef;
+  }
+
+  html[dir='rtl'] [data-sidebar-size="sm"] .app-menu {
+    border-right: none;
+    border-left: 1px solid #e9ecef;
+  }
+
+  html[dir='rtl'] .sidebar-mobile-bar__label {
+    text-align: right;
+  }
+
+  html[dir='rtl'] .sidebar-mobile-close {
+    margin-left: 0;
+    margin-right: auto;
   }
 </style>

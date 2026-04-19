@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
+<html lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>" dir="<%= typeof direction !== 'undefined' ? direction : 'ltr' %>" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
 
 <head>
 
   <meta charset="utf-8" />
-  <title>Starter | Velzon - Admin & Dashboard Template</title>
+  <title><%= typeof page_title !== 'undefined' && page_title ? page_title + ' | ' : '' %><%= typeof translation !== 'undefined' && translation.business && translation.business.meta ? translation.business.meta.defaultTitle : 'Now Shipping' %></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta content="Professional shipping services - fast and reliable delivery for your cargo." name="description" />
+<meta content="<%= typeof translation !== 'undefined' && translation.business && translation.business.meta ? translation.business.meta.description : 'Professional shipping services.' %>" name="description" />
 <meta content="Now Shipping" name="author" />
   <!-- Font Awesome CDN -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -14,11 +14,12 @@
   <link rel="shortcut icon" href="/assets/rImages/mainlogospining.png">
 <%- typeof HeaderCss !== 'undefined' ? HeaderCss : '' %>
   <%- include ('../partials/head-css.ejs') %>
+  <link rel="stylesheet" href="/assets/rCSS/business-layout.css" />
 
 
 </head>
 
-<body>
+<body class="<%= typeof isRTL !== 'undefined' && isRTL ? 'lang-ar rtl' : 'lang-en ltr' %>">
 
   <!-- Begin page -->
   <div id="layout-wrapper">
@@ -54,6 +55,20 @@
 
 
   <%- include ('../partials/vendor-scripts') %>
+  <% if (typeof translation !== 'undefined' && translation.business && translation.business.js) { %>
+  <script id="ns-business-i18n-json" type="application/json"><%- JSON.stringify(translation.business.js) %></script>
+  <script>
+    (function () {
+      try {
+        var el = document.getElementById('ns-business-i18n-json');
+        window.__NS_BUSINESS_I18N = el ? JSON.parse(el.textContent || '{}') : {};
+      } catch (e) {
+        window.__NS_BUSINESS_I18N = {};
+      }
+    })();
+  </script>
+  <% } %>
+  <script src="/assets/rJS/business/main.js" defer></script>
   <%- typeof FooterJs !== 'undefined' ? FooterJs : '' %>
 
   <!-- Add the assistant floating button and container before the closing body tag -->

@@ -1,390 +1,398 @@
 <%- contentFor('HeaderCss') %>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
-<link rel="stylesheet" href="/assets/rCSS/admin.css">
 <style>
-  /* Core Styles */
-  .business-card {
-    cursor: pointer;
-    border-radius: 12px;
-    border: none;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
-    overflow: hidden;
-    height: 100%;
-    position: relative;
+  .admin-biz-page {
+    --biz-brand: #f39720;
+    --biz-brand-dark: #c97d12;
+    --biz-brand-soft: rgba(243, 151, 32, 0.18);
+    --biz-brand-ink: #8a5a0f;
   }
-
-  .business-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  .admin-biz-page .admin-biz-hero {
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #f39720 0%, #c97d12 55%, #a86a0f 100%);
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
   }
-
-  .business-card .card-body {
-    padding: 1.5rem;
+  .admin-biz-page .admin-biz-hero h5 {
+    color: #fff;
   }
-
-  .business-header {
+  .admin-biz-leaderboard {
     display: flex;
-    align-items: flex-start;
-    margin-bottom: 1.25rem;
-    gap: 1rem;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    margin-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
   }
-
-  .business-logo {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
+  .admin-biz-leaderboard::-webkit-scrollbar {
+    height: 6px;
+  }
+  .admin-biz-leaderboard::-webkit-scrollbar-thumb {
+    background: rgba(243, 151, 32, 0.45);
+    border-radius: 4px;
+  }
+  .admin-biz-lb-card {
+    flex: 0 0 auto;
+    min-width: 200px;
+    max-width: 240px;
+    border: 1px solid var(--vz-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .admin-biz-lb-card:hover {
+    box-shadow: 0 0.35rem 1rem rgba(243, 151, 32, 0.2);
+    transform: translateY(-2px);
+  }
+  .admin-biz-lb-rank {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #878a99;
+  }
+  .admin-biz-lb-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    font-size: 1.5rem;
     font-weight: 700;
-    flex-shrink: 0;
+    color: #fff;
+    background: linear-gradient(135deg, #f39720, #e8891a);
     overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
   }
-
-  .business-logo img {
+  .admin-biz-lb-avatar .admin-biz-logo-letter {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+  .admin-biz-lb-avatar .admin-biz-logo-img {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-
-  .business-info {
-    flex: 1;
+  .admin-biz-rate-bar {
+    height: 6px;
+    border-radius: 4px;
+    background: #eef0f7;
+    overflow: hidden;
+    margin-top: 0.35rem;
   }
-
-  .business-name {
-    font-size: 1.125rem;
+  .admin-biz-rate-bar > span {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #ffb45c, #f39720);
+  }
+  .admin-biz-table-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     font-weight: 700;
-    margin-bottom: 0.25rem;
-    color: #212529;
-  }
-
-  .business-industry {
-    font-size: 0.875rem;
-    color: #6c757d;
-    margin-bottom: 0.5rem;
-  }
-
-  .business-meta {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .meta-item {
-    display: flex;
-    align-items: center;
-    font-size: 0.8125rem;
-    color: #6c757d;
-  }
-
-  .meta-item i {
-    margin-right: 0.25rem;
-    font-size: 0.875rem;
-  }
-
-  .business-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .stat-box {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 0.75rem;
-    text-align: center;
-  }
-
-  .stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #405189;
-    margin-bottom: 0.25rem;
-  }
-
-  .stat-label {
-    font-size: 0.7rem;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .business-footer {
-    border-top: 1px solid #e9ecef;
-    padding-top: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .balance-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .balance-amount {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #0ab39c;
-  }
-
-  .balance-label {
-    font-size: 0.75rem;
-    color: #6c757d;
-  }
-
-  .status-badge {
-    padding: 0.375rem 0.75rem;
-    border-radius: 50px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
-  .status-verified {
-    background-color: #e6f7f5;
-    color: #0ab39c;
-  }
-
-  .status-unverified {
-    background-color: #fff8e6;
-    color: #f7b84b;
-  }
-
-  .filter-section {
-    background-color: #fff;
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  }
-
-  .search-box {
+    font-size: 1rem;
+    color: #fff;
+    background: linear-gradient(135deg, #f39720, #e8891a);
+    overflow: hidden;
+    flex-shrink: 0;
     position: relative;
   }
-
-  .search-box i {
+  .admin-biz-table-logo .admin-biz-logo-letter {
     position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6c757d;
-    font-size: 1.125rem;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
   }
-
-  .search-box .form-control {
-    padding-left: 3rem;
-    height: 48px;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
+  .admin-biz-table-logo .admin-biz-logo-img {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
-
-  .search-box .form-control:focus {
-    border-color: #405189;
-    box-shadow: 0 0 0 0.2rem rgba(64, 81, 137, 0.1);
+  .admin-biz-mini-rate {
+    min-width: 120px;
   }
-
-  @media (max-width: 767.98px) {
-    .business-stats {
-      grid-template-columns: repeat(2, 1fr);
-    }
+  .admin-biz-mini-rate .progress {
+    height: 6px;
+    border-radius: 4px;
+    background: #eef0f7;
   }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
+  .admin-biz-mini-rate .progress-bar {
+    border-radius: 4px;
   }
-
-  .empty-state i {
-    font-size: 4rem;
-    color: #e9ecef;
-    margin-bottom: 1rem;
+  tr.admin-biz-row {
+    cursor: pointer;
   }
-
-  .empty-state h5 {
-    color: #6c757d;
-    margin-bottom: 0.5rem;
+  tr.admin-biz-row:hover {
+    background-color: rgba(243, 151, 32, 0.06) !important;
   }
-
-  .empty-state p {
-    color: #adb5bd;
+  .admin-biz-page .admin-biz-kpi-icon-brand {
+    background: var(--biz-brand-soft) !important;
+    color: var(--biz-brand-dark) !important;
+  }
+  .admin-biz-page .admin-biz-badge-accent {
+    background: var(--biz-brand-soft);
+    color: var(--biz-brand-ink);
+    border: 1px solid rgba(243, 151, 32, 0.35);
+  }
+  .admin-biz-page .admin-biz-badge-rate {
+    background: var(--biz-brand-soft);
+    color: var(--biz-brand-ink);
+    font-weight: 600;
+  }
+  .admin-biz-page .admin-biz-progress-brand {
+    background: linear-gradient(90deg, #ffd08a, #f39720) !important;
+  }
+  .admin-biz-page #adminBusinessesCard .btn-primary {
+    background-color: var(--biz-brand);
+    border-color: var(--biz-brand);
+  }
+  .admin-biz-page #adminBusinessesCard .btn-primary:hover {
+    background-color: var(--biz-brand-dark);
+    border-color: var(--biz-brand-dark);
+  }
+  .admin-biz-page #adminBusinessesCard .pagination .page-item.active .page-link {
+    background-color: var(--biz-brand);
+    border-color: var(--biz-brand);
+    color: #fff;
+  }
+  .admin-biz-page #adminBusinessesCard .btn-soft-primary {
+    color: var(--biz-brand-ink) !important;
+    background: var(--biz-brand-soft) !important;
+    border-color: rgba(243, 151, 32, 0.35) !important;
+  }
+  .admin-biz-page #adminBusinessesCard .spinner-border {
+    color: var(--biz-brand);
+    border-right-color: transparent;
+  }
+  .admin-biz-row-actions .btn {
+    pointer-events: auto;
+  }
+  tr.admin-biz-row .admin-biz-row-actions {
+    pointer-events: none;
+  }
+  tr.admin-biz-row .admin-biz-row-actions .dropdown,
+  tr.admin-biz-row .admin-biz-row-actions .btn,
+  tr.admin-biz-row .admin-biz-row-actions a {
+    pointer-events: auto;
   }
 </style>
 
 <%- contentFor('body') %>
-<!-- Page Title -->
-<div class="row mb-4">
-  <div class="col-12">
-    <div class="d-flex justify-content-between align-items-center">
-      <div>
-        <h4 class="mb-1 fw-bold">Businesses Management</h4>
-        <p class="text-muted mb-0">Manage and monitor all registered businesses</p>
-      </div>
-      <div>
-        <span class="badge bg-soft-primary text-primary fs-6 px-3 py-2">
-          <i class="ri-building-line me-1"></i>
-          <span id="totalBusinessesCount">0</span> Total Businesses
-        </span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Statistics Cards -->
-<div class="row mb-4">
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="flex-shrink-0">
-            <div class="avatar-sm">
-              <div class="avatar-title bg-soft-success text-success rounded fs-3">
-                <i class="ri-check-double-line"></i>
-              </div>
-            </div>
-          </div>
-          <div class="flex-grow-1 ms-3">
-            <p class="text-muted mb-1">Verified</p>
-            <h4 class="mb-0" id="verifiedCount">0</h4>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="flex-shrink-0">
-            <div class="avatar-sm">
-              <div class="avatar-title bg-soft-warning text-warning rounded fs-3">
-                <i class="ri-time-line"></i>
-              </div>
-            </div>
-          </div>
-          <div class="flex-grow-1 ms-3">
-            <p class="text-muted mb-1">Pending</p>
-            <h4 class="mb-0" id="pendingCount">0</h4>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="flex-shrink-0">
-            <div class="avatar-sm">
-              <div class="avatar-title bg-soft-info text-info rounded fs-3">
-                <i class="ri-store-2-line"></i>
-              </div>
-            </div>
-          </div>
-          <div class="flex-grow-1 ms-3">
-            <p class="text-muted mb-1">Storage Users</p>
-            <h4 class="mb-0" id="storageCount">0</h4>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        <div class="d-flex align-items-center">
-          <div class="flex-shrink-0">
-            <div class="avatar-sm">
-              <div class="avatar-title bg-soft-primary text-primary rounded fs-3">
-                <i class="ri-user-add-line"></i>
-              </div>
-            </div>
-          </div>
-          <div class="flex-grow-1 ms-3">
-            <p class="text-muted mb-1">This Month</p>
-            <h4 class="mb-0" id="thisMonthCount">0</h4>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Search and Filters -->
-<div class="row mb-4">
+<div class="row admin-biz-page">
   <div class="col-lg-12">
-    <div class="filter-section">
-      <div class="row g-3">
-        <!-- Search -->
-        <div class="col-lg-4">
-          <div class="search-box">
-            <i class="ri-search-line"></i>
-            <input type="text" id="searchInput" class="form-control" placeholder="Search by name, email, brand...">
+    <div class="card admin-data-card" id="adminBusinessesCard">
+      <div class="card-header border-0">
+        <div class="row align-items-center gy-3">
+          <div class="col-sm">
+            <h5 class="card-title mb-0">Businesses</h5>
+            <p class="text-muted small mb-0 mt-1">
+              Search, filter, and rank businesses by performance. Data loads from your database in real time.
+            </p>
+          </div>
+          <div class="col-sm-auto d-flex flex-wrap gap-2 align-items-center">
+            <span class="badge admin-biz-badge-accent fs-6 px-3 py-2">
+              <i class="ri-building-line me-1"></i>
+              <span id="summaryTotalDisplay">0</span> in view
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body border-bottom">
+        <div class="row g-3">
+          <div class="col-lg-3 col-md-6">
+            <div class="d-flex align-items-center p-3 rounded border border-dashed">
+              <div class="avatar-sm flex-shrink-0">
+                <div class="avatar-title admin-biz-kpi-icon-brand rounded fs-4">
+                  <i class="ri-building-4-line"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="text-muted mb-1 small">Total (filtered)</p>
+                <h5 class="mb-0" id="kpiTotal">0</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="d-flex align-items-center p-3 rounded border border-dashed">
+              <div class="avatar-sm flex-shrink-0">
+                <div class="avatar-title bg-soft-success text-success rounded fs-4">
+                  <i class="ri-check-double-line"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="text-muted mb-1 small">Verified (all)</p>
+                <h5 class="mb-0" id="kpiVerified">0</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="d-flex align-items-center p-3 rounded border border-dashed">
+              <div class="avatar-sm flex-shrink-0">
+                <div class="avatar-title bg-soft-warning text-warning rounded fs-4">
+                  <i class="ri-time-line"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="text-muted mb-1 small">Pending (all)</p>
+                <h5 class="mb-0" id="kpiPending">0</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="d-flex align-items-center p-3 rounded border border-dashed">
+              <div class="avatar-sm flex-shrink-0">
+                <div class="avatar-title bg-soft-info text-info rounded fs-4">
+                  <i class="ri-calendar-check-line"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="text-muted mb-1 small">Joined this month</p>
+                <h5 class="mb-0" id="kpiThisMonth">0</h5>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Status Filter -->
-        <div class="col-lg-2">
-          <select id="statusFilter" class="form-select">
-            <option value="">All Status</option>
-            <option value="verified">Verified</option>
-            <option value="unverified">Unverified</option>
-          </select>
+        <div class="admin-biz-hero mt-3">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <h5 class="mb-1 fw-semibold">
+                <i class="ri-trophy-line me-1"></i> Top success rate
+              </h5>
+              <p class="mb-0 small opacity-75">Best performers by delivery success (min. 1 order).</p>
+            </div>
+          </div>
+          <div class="admin-biz-leaderboard mt-3" id="leaderboardStrip">
+            <div class="text-white-50 small">Loading leaderboard…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body border border-dashed border-end-0 border-start-0">
+        <form class="admin-data-filters" id="adminBusinessesFilters" onsubmit="return false;">
+          <div class="row g-3 align-items-end">
+            <div class="col-xxl-4 col-lg-6">
+              <label class="form-label mb-1">Search</label>
+              <div class="search-box">
+                <input
+                  type="text"
+                  class="form-control search"
+                  id="searchInput"
+                  placeholder="Name, email, phone, brand, industry…"
+                  autocomplete="off"
+                />
+                <i class="ri-search-line search-icon"></i>
+              </div>
+            </div>
+            <div class="col-xxl-2 col-md-6">
+              <label class="form-label mb-1">Verification</label>
+              <select id="statusFilter" class="form-select">
+                <option value="">All status</option>
+                <option value="verified">Verified</option>
+                <option value="unverified">Unverified</option>
+              </select>
+            </div>
+            <div class="col-xxl-2 col-md-6">
+              <label class="form-label mb-1">Sort by</label>
+              <select id="sortByFilter" class="form-select">
+                <option value="createdAt|desc">Newest first</option>
+                <option value="name|asc">Name A–Z</option>
+                <option value="balance|desc">Balance (high)</option>
+                <option value="totalOrders|desc">Orders (most)</option>
+                <option value="successRate|desc">Success rate (best)</option>
+              </select>
+            </div>
+            <div class="col-xxl-3 col-md-6">
+              <label class="form-label mb-1">Registered date range</label>
+              <input
+                type="text"
+                id="dateRangeFilter"
+                class="form-control"
+                placeholder="Select range"
+                autocomplete="off"
+              />
+            </div>
+            <div class="col-xxl-1 col-md-6 d-flex gap-2">
+              <button type="button" class="btn btn-primary flex-grow-1" id="applyFiltersBtn" title="Apply filters">
+                <i class="ri-filter-3-line"></i>
+              </button>
+              <button type="button" class="btn btn-soft-secondary" id="resetFilters" title="Clear">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="card-body pt-0">
+        <div class="admin-table-scroll admin-orders-table-wrap mb-1">
+          <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table" id="businessesTable">
+            <thead class="text-muted">
+              <tr>
+                <th scope="col" style="width: 48px;">#</th>
+                <th>Business</th>
+                <th>Industry</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Orders</th>
+                <th>Success rate</th>
+                <th>Balance</th>
+                <th>Status</th>
+                <th style="width: 56px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="businessesTableBody">
+              <tr>
+                <td colspan="10" class="text-center py-5 text-muted">
+                  <div class="spinner-border text-primary" role="status"></div>
+                  <p class="mt-2 mb-0">Loading businesses…</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <!-- Sort By -->
-        <div class="col-lg-2">
-          <select id="sortByFilter" class="form-select">
-            <option value="createdAt">Newest First</option>
-            <option value="name">Name A-Z</option>
-            <option value="balance">Balance</option>
-          </select>
+        <div class="noresult py-5" id="businessesNoResult" style="display: none">
+          <div class="text-center">
+            <lord-icon
+              src="https://cdn.lordicon.com/msoeawqm.json"
+              trigger="loop"
+              colors="primary:#F39720,secondary:#c97d12"
+              style="width: 75px; height: 75px"
+            ></lord-icon>
+            <h5 class="mt-2">No businesses match your filters</h5>
+            <p class="text-muted mb-0">Try clearing filters or broadening the date range.</p>
+          </div>
         </div>
 
-        <!-- Date Range -->
-        <div class="col-lg-3">
-          <input type="text" id="dateRangeFilter" class="form-control" placeholder="Select date range">
-        </div>
-
-        <!-- Reset Button -->
-        <div class="col-lg-1">
-          <button id="resetFilters" class="btn btn-light w-100">
-            <i class="ri-refresh-line"></i>
-          </button>
+        <div class="d-flex justify-content-end mt-2">
+          <div class="pagination-wrap hstack gap-2">
+            <a class="page-item pagination-prev disabled" href="javascript:void(0);" id="bizPagePrev">Previous</a>
+            <ul class="pagination mb-0" id="paginationContainer"></ul>
+            <a class="page-item pagination-next" href="javascript:void(0);" id="bizPageNext">Next</a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- All Businesses Grid -->
-<div class="row" id="businessesContainer">
-  <!-- Business cards will be loaded here -->
-  <div class="col-12 text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-    <p class="mt-3 text-muted">Loading businesses...</p>
-  </div>
-</div>
-
-<!-- Pagination -->
-<div class="row">
-  <div class="col-12">
-    <nav aria-label="Page navigation">
-      <ul class="pagination justify-content-center" id="paginationContainer">
-        <!-- Pagination will be loaded here -->
-      </ul>
-    </nav>
   </div>
 </div>
 
@@ -394,283 +402,351 @@
 
 <script>
   let currentPage = 1;
-  let filters = {
+  let lastPagination = { totalPages: 1, currentPage: 1 };
+  let datePickerInstance = null;
+  let searchDebounce = null;
+
+  const filters = {
     search: '',
     status: '',
     sortBy: 'createdAt',
     sortOrder: 'desc',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
   };
 
-  // Initialize
-  document.addEventListener("DOMContentLoaded", function() {
-    initializeDatePicker();
-    loadBusinesses();
-    setupEventListeners();
-  });
+  function parseSortSelect() {
+    const v = document.getElementById('sortByFilter').value || 'createdAt|desc';
+    const [sortBy, sortOrder] = v.split('|');
+    filters.sortBy = sortBy;
+    filters.sortOrder = sortOrder || 'desc';
+  }
 
-  // Initialize date picker
-  function initializeDatePicker() {
-    flatpickr("#dateRangeFilter", {
-      mode: "range",
-      dateFormat: "Y-m-d",
-      onChange: function(selectedDates) {
+  function initDatePicker() {
+    datePickerInstance = flatpickr('#dateRangeFilter', {
+      mode: 'range',
+      dateFormat: 'Y-m-d',
+      onClose(selectedDates) {
         if (selectedDates.length === 2) {
           filters.dateFrom = selectedDates[0].toISOString().split('T')[0];
           filters.dateTo = selectedDates[1].toISOString().split('T')[0];
-          currentPage = 1;
-          loadBusinesses();
+        } else if (selectedDates.length === 0) {
+          filters.dateFrom = '';
+          filters.dateTo = '';
         }
-      }
+      },
     });
   }
 
-  // Setup event listeners
-  function setupEventListeners() {
-    // Search
-    let searchTimeout;
-    document.getElementById('searchInput').addEventListener('input', function() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        filters.search = this.value;
-        currentPage = 1;
-        loadBusinesses();
-      }, 500);
-    });
-
-    // Status filter
-    document.getElementById('statusFilter').addEventListener('change', function() {
-      filters.status = this.value;
-      currentPage = 1;
-      loadBusinesses();
-    });
-
-    // Sort by
-    document.getElementById('sortByFilter').addEventListener('change', function() {
-      filters.sortBy = this.value;
-      currentPage = 1;
-      loadBusinesses();
-    });
-
-    // Reset filters
-    document.getElementById('resetFilters').addEventListener('click', function() {
-      filters = {
-        search: '',
-        status: '',
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-        dateFrom: '',
-        dateTo: ''
-      };
-      document.getElementById('searchInput').value = '';
-      document.getElementById('statusFilter').value = '';
-      document.getElementById('sortByFilter').value = 'createdAt';
-      document.getElementById('dateRangeFilter')._flatpickr.clear();
-      currentPage = 1;
-      loadBusinesses();
-    });
-  }
-
-  // Load businesses
   async function loadBusinesses() {
-    try {
-      const params = new URLSearchParams({
-        page: currentPage,
-        limit: 12,
-        ...filters
-      });
+    parseSortSelect();
+    const limit = 12;
+    const params = new URLSearchParams({
+      page: currentPage,
+      limit,
+      search: filters.search,
+      status: filters.status,
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
+    });
 
+    try {
       const response = await fetch(`/admin/get-businesses?${params}`);
       const data = await response.json();
 
-      if (data.businesses) {
-        renderBusinesses(data.businesses);
-        renderPagination(data.pagination);
-        updateStatistics(data.businesses);
+      if (!data.businesses) {
+        showError('Invalid response from server');
+        return;
       }
-    } catch (error) {
-      console.error('Error loading businesses:', error);
+
+      renderLeaderboard(data.leaderboard || []);
+      updateSummary(data.summary, data.pagination);
+      renderTable(data.businesses, data.pagination);
+      lastPagination = data.pagination || lastPagination;
+      renderPagination(data.pagination);
+    } catch (e) {
+      console.error(e);
       showError('Failed to load businesses');
     }
   }
 
-  // Render businesses
-  function renderBusinesses(businesses) {
-    const container = document.getElementById('businessesContainer');
-    
-    if (businesses.length === 0) {
-      container.innerHTML = `
-        <div class="col-12">
-          <div class="empty-state">
-            <i class="ri-building-line"></i>
-            <h5>No businesses found</h5>
-            <p>Try adjusting your filters</p>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = businesses.map(business => `
-      <div class="col-lg-6 col-xl-4 mb-4">
-        <div class="card business-card" onclick="window.location.href='/admin/business-details/${business._id}'">
-          <div class="card-body">
-            <div class="business-header">
-              <div class="business-logo">
-                ${business.profileImage ? 
-                  `<img src="${business.profileImage}" alt="${business.name}">` :
-                  `${(business.brandInfo?.brandName || business.name).charAt(0).toUpperCase()}`
-                }
-              </div>
-              <div class="business-info">
-                <h6 class="business-name">${business.brandInfo?.brandName || business.name}</h6>
-                <div class="business-industry">${business.brandInfo?.industry || 'Not specified'}</div>
-                <div class="business-meta">
-                  <div class="meta-item">
-                    <i class="ri-mail-line"></i>
-                    ${business.email}
-                  </div>
-                  <div class="meta-item">
-                    <i class="ri-phone-line"></i>
-                    ${business.phoneNumber}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="business-stats">
-              <div class="stat-box">
-                <div class="stat-value">${business.stats?.totalOrders || 0}</div>
-                <div class="stat-label">Orders</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-value">${business.stats?.totalPickups || 0}</div>
-                <div class="stat-label">Pickups</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-value">${business.stats?.totalShopOrders || 0}</div>
-                <div class="stat-label">Shop Orders</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-value">${business.stats?.successRate || 0}%</div>
-                <div class="stat-label">Success</div>
-              </div>
-            </div>
-
-            <div class="business-footer">
-              <div class="balance-info">
-                <div>
-                  <div class="balance-label">Current Balance</div>
-                  <div class="balance-amount">${formatCurrency(business.balance || 0)}</div>
-                </div>
-              </div>
-              <div>
-                <span class="status-badge ${business.isVerified ? 'status-verified' : 'status-unverified'}">
-                  <i class="ri-${business.isVerified ? 'check' : 'time'}-line me-1"></i>
-                  ${business.isVerified ? 'Verified' : 'Pending'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `).join('');
+  function updateSummary(summary, pagination) {
+    const s = summary || {};
+    document.getElementById('kpiTotal').textContent =
+      pagination && typeof pagination.totalCount === 'number'
+        ? pagination.totalCount
+        : 0;
+    document.getElementById('summaryTotalDisplay').textContent =
+      pagination && typeof pagination.totalCount === 'number'
+        ? pagination.totalCount
+        : 0;
+    document.getElementById('kpiVerified').textContent = s.verified ?? '—';
+    document.getElementById('kpiPending').textContent = s.pending ?? '—';
+    document.getElementById('kpiThisMonth').textContent = s.thisMonth ?? '—';
   }
 
-  // Render pagination
+  function renderLeaderboard(items) {
+    const el = document.getElementById('leaderboardStrip');
+    if (!items.length) {
+      el.innerHTML =
+        '<span class="text-white-50 small">No ranking data yet (no orders in the system).</span>';
+      return;
+    }
+    el.innerHTML = items
+      .map((b, i) => {
+        const initial = (b.brandName || 'B').charAt(0).toUpperCase();
+        const rate = b.stats && typeof b.stats.successRate === 'number' ? b.stats.successRate : 0;
+        const w = Math.min(100, Math.max(0, rate));
+        const id = b._id || b.id;
+        return `
+        <div class="admin-biz-lb-card" role="button" data-biz-id="${escapeAttr(String(id))}">
+          <div class="admin-biz-lb-rank mb-2">#${i + 1} · ${b.stats?.totalOrders || 0} orders</div>
+          <div class="d-flex align-items-center gap-2">
+            ${businessLogoMarkup(initial, b.profileImage, 'admin-biz-lb-avatar')}
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-semibold text-truncate">${escapeHtml(b.brandName || 'Business')}</div>
+              <div class="d-flex align-items-center gap-1 mt-1">
+                <span class="badge bg-success">${rate.toFixed(1)}%</span>
+                ${b.isVerified ? '<i class="ri-checkbox-circle-fill text-success" title="Verified"></i>' : ''}
+              </div>
+              <div class="admin-biz-rate-bar"><span style="width:${w}%"></span></div>
+            </div>
+          </div>
+        </div>`;
+      })
+      .join('');
+
+    el.querySelectorAll('.admin-biz-lb-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-biz-id');
+        if (id) window.location.href = `/admin/business-details/${id}`;
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function escapeAttr(s) {
+    return escapeHtml(s).replace(/'/g, '&#39;');
+  }
+
+  /** Letter fallback when missing URL or when image fails to load (broken link). */
+  function businessLogoMarkup(initial, imageUrl, wrapClass) {
+    const ini = escapeHtml((initial || 'B').charAt(0).toUpperCase());
+    const url = imageUrl && String(imageUrl).trim();
+    if (!url) {
+      return `<div class="${wrapClass}"><span class="admin-biz-logo-letter">${ini}</span></div>`;
+    }
+    return `<div class="${wrapClass}"><span class="admin-biz-logo-letter">${ini}</span><img class="admin-biz-logo-img" src="${escapeAttr(
+      url
+    )}" alt="" loading="lazy" onerror="this.style.display='none'"></div>`;
+  }
+
+  function rateBarClass() {
+    return 'admin-biz-progress-brand';
+  }
+
+  function renderTable(businesses, pagination) {
+    const tbody = document.getElementById('businessesTableBody');
+    const noResult = document.getElementById('businessesNoResult');
+    const tableWrap = document.querySelector('#adminBusinessesCard .admin-table-scroll');
+
+    if (!businesses.length) {
+      tbody.innerHTML = '';
+      noResult.style.display = 'block';
+      if (tableWrap) tableWrap.style.display = 'none';
+      return;
+    }
+    noResult.style.display = 'none';
+    if (tableWrap) tableWrap.style.display = '';
+
+    const offset = ((pagination?.currentPage || 1) - 1) * (pagination?.limit || 12);
+
+    tbody.innerHTML = businesses
+      .map((b, idx) => {
+        const id = b._id || b.id;
+        const name = b.brandInfo?.brandName || b.name || '—';
+        const industry = b.brandInfo?.industry || '—';
+        const orders = b.stats?.totalOrders ?? 0;
+        const rate = parseFloat(b.stats?.successRate) || 0;
+        const rateW = Math.min(100, Math.max(0, rate));
+        const bal = b.balance || 0;
+        const balClass = bal >= 0 ? 'text-success' : 'text-danger';
+        const initial = name.charAt(0).toUpperCase();
+        const statusHtml = b.isVerified
+          ? '<span class="badge bg-soft-success text-success">Verified</span>'
+          : '<span class="badge bg-soft-warning text-warning">Pending</span>';
+
+        return `
+        <tr class="admin-biz-row" data-href="/admin/business-details/${escapeAttr(String(id))}">
+          <td class="text-muted">${offset + idx + 1}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              ${businessLogoMarkup(initial, b.profileImage, 'admin-biz-table-logo')}
+              <div class="min-w-0">
+                <div class="fw-semibold text-truncate">${escapeHtml(name)}</div>
+                <div class="text-muted small text-truncate d-md-none">${escapeHtml(b.email || '')}</div>
+              </div>
+            </div>
+          </td>
+          <td class="cell-muted small">${escapeHtml(industry)}</td>
+          <td class="small"><span class="text-truncate d-inline-block" style="max-width:200px">${escapeHtml(b.email || '—')}</span></td>
+          <td class="cell-compact small">${escapeHtml(b.phoneNumber || '—')}</td>
+          <td><span class="fw-semibold">${orders}</span></td>
+          <td class="admin-biz-mini-rate">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge admin-biz-badge-rate">${rate.toFixed(1)}%</span>
+            </div>
+            <div class="progress mt-1">
+              <div class="progress-bar ${rateBarClass()}" style="width:${rateW}%"></div>
+            </div>
+          </td>
+          <td class="fw-semibold ${balClass}">${formatCurrency(bal)}</td>
+          <td>${statusHtml}</td>
+          <td class="admin-biz-row-actions text-end" onclick="event.stopPropagation()">
+            <div class="dropdown">
+              <button class="btn btn-sm btn-icon btn-ghost-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="ri-more-2-fill"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="/admin/business-details/${escapeAttr(String(id))}"><i class="ri-eye-line me-2"></i>View details</a></li>
+              </ul>
+            </div>
+          </td>
+        </tr>`;
+      })
+      .join('');
+
+    tbody.querySelectorAll('tr.admin-biz-row').forEach((row) => {
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.dropdown')) return;
+        const href = row.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+    });
+  }
+
   function renderPagination(pagination) {
-    const container = document.getElementById('paginationContainer');
-    
-    if (pagination.totalPages <= 1) {
-      container.innerHTML = '';
+    const ul = document.getElementById('paginationContainer');
+    const prev = document.getElementById('bizPagePrev');
+    const next = document.getElementById('bizPageNext');
+    if (!pagination || pagination.totalPages <= 1) {
+      ul.innerHTML = '';
+      prev.classList.add('disabled');
+      next.classList.add('disabled');
       return;
     }
+    const { currentPage: p, totalPages: total } = pagination;
+    prev.classList.toggle('disabled', p <= 1);
+    next.classList.toggle('disabled', p >= total);
 
-    let paginationHTML = '';
-    
-    // Previous button
-    paginationHTML += `
-      <li class="page-item ${pagination.currentPage === 1 ? 'disabled' : ''}">
-        <a class="page-link" href="#" onclick="changePage(${pagination.currentPage - 1}); return false;">
-          <i class="ri-arrow-left-s-line"></i>
-        </a>
-      </li>
-    `;
-
-    // Page numbers
-    for (let i = 1; i <= pagination.totalPages; i++) {
-      if (
-        i === 1 ||
-        i === pagination.totalPages ||
-        (i >= pagination.currentPage - 2 && i <= pagination.currentPage + 2)
-      ) {
-        paginationHTML += `
-          <li class="page-item ${i === pagination.currentPage ? 'active' : ''}">
-            <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
-          </li>
-        `;
-      } else if (i === pagination.currentPage - 3 || i === pagination.currentPage + 3) {
-        paginationHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+    const pages = new Set([1, total, p, p - 1, p + 1, p - 2, p + 2]);
+    const sorted = [...pages].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+    let html = '';
+    let last = 0;
+    sorted.forEach((i) => {
+      if (last && i > last + 1) {
+        html += `<li class="page-item disabled"><span class="page-link">…</span></li>`;
       }
-    }
-
-    // Next button
-    paginationHTML += `
-      <li class="page-item ${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}">
-        <a class="page-link" href="#" onclick="changePage(${pagination.currentPage + 1}); return false;">
-          <i class="ri-arrow-right-s-line"></i>
-        </a>
-      </li>
-    `;
-
-    container.innerHTML = paginationHTML;
+      html += `<li class="page-item ${i === p ? 'active' : ''}">
+        <a class="page-link" href="javascript:void(0);" data-page="${i}">${i}</a>
+      </li>`;
+      last = i;
+    });
+    ul.innerHTML = html;
+    ul.querySelectorAll('a.page-link[data-page]').forEach((a) => {
+      a.addEventListener('click', () => {
+        const pg = parseInt(a.getAttribute('data-page'), 10);
+        if (!Number.isNaN(pg)) goToPage(pg);
+      });
+    });
   }
 
-  // Update statistics
-  function updateStatistics(businesses) {
-    const verified = businesses.filter(b => b.isVerified).length;
-    const unverified = businesses.filter(b => !b.isVerified).length;
-    const storage = businesses.filter(b => b.isNeedStorage).length;
-    
-    const now = new Date();
-    const thisMonth = businesses.filter(b => {
-      const createdAt = new Date(b.createdAt);
-      return createdAt.getMonth() === now.getMonth() && 
-             createdAt.getFullYear() === now.getFullYear();
-    }).length;
-
-    document.getElementById('totalBusinessesCount').textContent = businesses.length;
-    document.getElementById('verifiedCount').textContent = verified;
-    document.getElementById('pendingCount').textContent = unverified;
-    document.getElementById('storageCount').textContent = storage;
-    document.getElementById('thisMonthCount').textContent = thisMonth;
-  }
-
-  // Change page
-  function changePage(page) {
-    currentPage = page;
+  function goToPage(p) {
+    currentPage = p;
     loadBusinesses();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Format currency
   function formatCurrency(amount) {
     return new Intl.NumberFormat('en-EG', {
       style: 'currency',
       currency: 'EGP',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   }
 
-  // Show error
   function showError(message) {
     Swal.fire({
       icon: 'error',
       title: 'Error',
       text: message,
-      confirmButtonColor: '#405189'
+      confirmButtonColor: '#F39720',
     });
   }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initDatePicker();
+    loadBusinesses();
+
+    document.getElementById('applyFiltersBtn').addEventListener('click', () => {
+      currentPage = 1;
+      loadBusinesses();
+    });
+
+    document.getElementById('resetFilters').addEventListener('click', () => {
+      filters.search = '';
+      filters.status = '';
+      filters.sortBy = 'createdAt';
+      filters.sortOrder = 'desc';
+      filters.dateFrom = '';
+      filters.dateTo = '';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('statusFilter').value = '';
+      document.getElementById('sortByFilter').value = 'createdAt|desc';
+      if (datePickerInstance) datePickerInstance.clear();
+      currentPage = 1;
+      loadBusinesses();
+    });
+
+    document.getElementById('statusFilter').addEventListener('change', () => {
+      filters.status = document.getElementById('statusFilter').value;
+      currentPage = 1;
+      loadBusinesses();
+    });
+
+    document.getElementById('sortByFilter').addEventListener('change', () => {
+      currentPage = 1;
+      loadBusinesses();
+    });
+
+    document.getElementById('searchInput').addEventListener('input', function () {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        filters.search = this.value;
+        currentPage = 1;
+        loadBusinesses();
+      }, 450);
+    });
+
+    document.getElementById('bizPagePrev').addEventListener('click', function () {
+      if (this.classList.contains('disabled')) return;
+      if (currentPage > 1) goToPage(currentPage - 1);
+    });
+    document.getElementById('bizPageNext').addEventListener('click', function () {
+      if (this.classList.contains('disabled')) return;
+      const max = lastPagination.totalPages || 1;
+      if (currentPage < max) goToPage(currentPage + 1);
+    });
+  });
 </script>

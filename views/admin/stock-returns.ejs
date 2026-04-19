@@ -5,12 +5,6 @@
 
 <%- contentFor('body') %>
 <style>
-  /* Fix for dropdown menus in tables */
-  .table-responsive {
-    overflow: visible !important;
-    /* Prevent clipping inside table container */
-  }
-
   .stats-card {
     transition: all 0.3s ease;
     border-radius: 10px;
@@ -136,77 +130,6 @@
     border-radius: 4px;
   }
 
-  /* Custom Dropdown Styles */
-  .custom-dropdown {
-    position: relative;
-    display: inline-block;
-  }
-
-  .custom-dropdown-toggle {
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 6px 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .custom-dropdown-toggle:hover {
-    background-color: #e5e5e5;
-  }
-
-  .custom-dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: auto;
-    right: 0;
-    z-index: 1050;
-    /* Ensure it appears above other elements */
-    display: none;
-    min-width: 200px;
-    padding: 8px 0;
-    margin: 0;
-    background-color: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 4px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-    overflow: visible;
-    /* Prevent clipping */
-  }
-
-  .custom-dropdown-menu.show {
-    display: block;
-  }
-
-  .custom-dropdown-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    clear: both;
-    font-weight: 400;
-    color: #212529;
-    text-align: inherit;
-    white-space: nowrap;
-    background-color: transparent;
-    border: 0;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .custom-dropdown-item:hover {
-    color: #16181b;
-    text-decoration: none;
-    background-color: #f8f9fa;
-  }
-
-  .custom-dropdown-item i {
-    margin-right: 8px;
-    font-size: 14px;
-  }
 </style>
 
 <div class="row">
@@ -264,13 +187,15 @@
             <h5 class="card-title mb-0">Returns Management</h5>
           </div>
           <div class="col-sm-auto">
-            <div class="d-flex gap-1 flex-wrap">
+            <div class="d-flex gap-1 flex-wrap align-items-center">
               <button type="button" class="btn btn-info" id="exportReturnsBtn">
                 <i class="ri-file-download-line align-bottom me-1"></i> Export
               </button>
-              <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()">
-                <i class="ri-delete-bin-2-line"></i>
-              </button>
+              <div id="returns-header-remove-toolbar" class="d-none gap-2 align-items-center flex-wrap" aria-live="polite">
+                <button type="button" class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()">
+                  <i class="ri-delete-bin-2-line me-1"></i> Remove selected
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -340,6 +265,13 @@
               </button>
             </li>
           </ul>
+
+          <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+            <div class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" id="checkAll" title="Select all visible items">
+              <label class="form-check-label small text-muted mb-0" for="checkAll">Select all</label>
+            </div>
+          </div>
 
           <!-- Bulk Actions Bar (Initially Hidden) -->
           <div id="bulkActionsBar" class="bulk-actions mb-3">
@@ -592,28 +524,6 @@
   const selectedItemsCount = document.getElementById("selectedItemsCount");
   let selectedItems = [];
 
-  // Close all dropdowns when clicking outside
-  document.addEventListener('click', function(event) {
-    const dropdowns = document.querySelectorAll('.custom-dropdown-menu.show');
-    dropdowns.forEach(dropdown => {
-      // Check if click is outside the dropdown
-      if (!dropdown.parentElement.contains(event.target)) {
-        dropdown.classList.remove('show');
-      }
-    });
-  });
-
-  // Handle "check all" checkbox
-  if (checkAll) {
-    checkAll.addEventListener("change", function() {
-      const checkboxes = document.querySelectorAll("input[name='checkAll[]']");
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = checkAll.checked;
-        handleCheckboxChange(checkbox);
-      });
-    });
-  }
-
   // Quick Add Form Submission
   document.getElementById("quickAddForm").addEventListener("submit", async function(e) {
     e.preventDefault();
@@ -678,24 +588,6 @@
       });
     }
   });
-
-  // Toggle custom dropdown
-  function toggleDropdown(dropdownId, event) {
-    const dropdown = document.getElementById(dropdownId);
-
-    // Close all other dropdowns first
-    document.querySelectorAll('.custom-dropdown-menu.show').forEach(menu => {
-      if (menu.id !== dropdownId) {
-        menu.classList.remove('show');
-      }
-    });
-
-    // Toggle this dropdown
-    dropdown.classList.toggle('show');
-
-    // Prevent event from bubbling up
-    event.stopPropagation();
-  }
 
   // Fetch return items from server
   async function fetchReturnItems(status = "all") {
@@ -797,10 +689,10 @@
 
       // Create zone table
       const tableContainer = document.createElement('div');
-      tableContainer.className = 'table-responsive table-card mb-3';
+      tableContainer.className = 'admin-table-scroll mb-3';
 
       const table = document.createElement('table');
-      table.className = 'table table-nowrap align-middle';
+      table.className = 'table table-nowrap table-striped align-middle admin-data-table';
 
       // Table header
       const thead = document.createElement('thead');
@@ -850,11 +742,6 @@
           returnReasonDisplay = `
             <div><strong>Exchange:</strong> ${item.orderShipping.productDescription || ''} → ${item.orderShipping.productDescriptionReplacement || ''}</div>
           `;
-        } else if (item.orderShipping.orderType === 'Cash Collection') {
-          reasonDetails = { badgeClass: 'bg-info-subtle text-info', reasonText: 'Cash Collection' };
-          returnReasonDisplay = `
-            <div><strong>Amount:</strong> ${item.orderShipping.amount || 0} EGP</div>
-          `;
         } else {
           reasonDetails = getReturnReasonDetails(item.UnavailableReason[0] || 'other');
           returnReasonDisplay = `
@@ -877,9 +764,6 @@
         const truncatedLocation = shouldShowMoreAddress ? address.substring(0, 20) + '...' : address || '';
         const showMoreAddressBtn = shouldShowMoreAddress ?
           `<button class="btn btn-link btn-sm p-0" onclick="showFullAddress('${address}')">Show More</button>` : '';
-
-        // Create unique dropdown ID for this row
-        const dropdownId = `dropdown-menu-${zone.replace(/\s+/g, '-')}-${index}`;
 
         row.innerHTML = `
           <th scope="row">
@@ -912,22 +796,15 @@
             <span class="${daysInSystem > 7 ? 'text-danger fw-medium' : ''}">${daysInSystem} days</span>
           </td>
           <td>
-            <div class="custom-dropdown">
-              <button class="custom-dropdown-toggle" onclick="toggleDropdown('${dropdownId}', event)">
-                <i class="ri-more-fill align-middle"></i>
+            <div class="orders-table-dropdown">
+              <button type="button" class="dropdown-toggle" data-dropdown-toggle aria-expanded="false" aria-label="Row actions">
+                <i class="ri-more-fill"></i>
               </button>
-              <div id="${dropdownId}" class="custom-dropdown-menu">
-                <button class="custom-dropdown-item" onclick="updateReturnStatus('${item.orderNumber}')">
-                  <i class="ri-edit-2-fill text-warning"></i> <span>Update Status</span>
-                </button>
-                <button class="custom-dropdown-item" onclick="getCouriers('${item.orderNumber}', '${zone}')">
-                  <i class="ri-user-add-line text-success"></i> <span>Assign to Courier</span>
-                </button>
-          
-                <button class="custom-dropdown-item" onclick="removeFromReturns('${item.orderNumber}')">
-                  <i class="ri-delete-bin-6-fill text-danger"></i> <span>Remove</span>
-                </button>
-              </div>
+              <ul class="dropdown-menu">
+                <li><button type="button" class="dropdown-item" onclick="updateReturnStatus('${item.orderNumber}')"><i class="ri-edit-2-fill text-warning"></i><span>Update Status</span></button></li>
+                <li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${zone}')"><i class="ri-user-add-line text-success"></i><span>Assign to Courier</span></button></li>
+                <li><button type="button" class="dropdown-item" onclick="removeFromReturns('${item.orderNumber}')"><i class="ri-delete-bin-6-fill text-danger"></i><span>Remove</span></button></li>
+              </ul>
             </div>
           </td>
         `;
@@ -942,9 +819,6 @@
 
       returnItemsByZone.appendChild(zoneContainer);
     });
-
-    // Add event listeners for checkboxes
-    addCheckboxEventListeners();
   }
 
   // Display in progress returns
@@ -1154,27 +1028,71 @@
     });
   }
 
-  // Add event listeners for checkboxes
-  function addCheckboxEventListeners() {
-    // Zone check all checkboxes
-    document.querySelectorAll('.zone-check-all').forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        const zone = this.getAttribute('data-zone');
-        const zoneCheckboxes = document.querySelectorAll(`input[name="checkAll[]"][data-zone="${zone}"]`);
+  function syncReturnsGlobalCheckAll() {
+    const el = document.getElementById('checkAll');
+    if (!el) return;
+    const boxes = document.querySelectorAll('input[name="checkAll[]"]');
+    let n = 0;
+    let c = 0;
+    boxes.forEach((b) => {
+      n++;
+      if (b.checked) c++;
+    });
+    el.checked = n > 0 && c === n;
+    el.indeterminate = c > 0 && c < n;
+  }
 
-        zoneCheckboxes.forEach(cb => {
-          cb.checked = this.checked;
+  function syncReturnsZoneCheckAllFromRows(zone) {
+    if (!zone) return;
+    let zh = null;
+    document.querySelectorAll('.zone-check-all').forEach((z) => {
+      if (z.getAttribute('data-zone') === zone) zh = z;
+    });
+    if (!zh) return;
+    let n = 0;
+    let c = 0;
+    document.querySelectorAll('input[name="checkAll[]"]').forEach((b) => {
+      if (b.getAttribute('data-zone') !== zone) return;
+      n++;
+      if (b.checked) c++;
+    });
+    zh.checked = n > 0 && c === n;
+    zh.indeterminate = c > 0 && c < n;
+  }
+
+  function onReturnsListCheckboxChange(e) {
+    const t = e.target;
+    if (!t || !t.matches || !t.matches('input.form-check-input')) return;
+    if (t.id === 'checkAll') {
+      document.querySelectorAll('input[name="checkAll[]"]').forEach((cb) => {
+        cb.checked = t.checked;
+        handleCheckboxChange(cb);
+      });
+      document.querySelectorAll('.zone-check-all').forEach((z) => {
+        z.checked = t.checked;
+        z.indeterminate = false;
+      });
+      return;
+    }
+    if (t.classList.contains('zone-check-all')) {
+      const zone = t.getAttribute('data-zone');
+      if (!zone) return;
+      document.querySelectorAll('input[name="checkAll[]"]').forEach((cb) => {
+        if (cb.getAttribute('data-zone') === zone) {
+          cb.checked = t.checked;
           handleCheckboxChange(cb);
-        });
+        }
       });
-    });
-
-    // Individual checkboxes
-    document.querySelectorAll('input[name="checkAll[]"]').forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        handleCheckboxChange(this);
-      });
-    });
+      t.indeterminate = false;
+      syncReturnsGlobalCheckAll();
+      return;
+    }
+    if (t.name === 'checkAll[]') {
+      handleCheckboxChange(t);
+      const zone = t.getAttribute('data-zone');
+      if (zone) syncReturnsZoneCheckAllFromRows(zone);
+      syncReturnsGlobalCheckAll();
+    }
   }
 
   // Handle checkbox change
@@ -1201,6 +1119,11 @@
     } else {
       bulkActionsBar.classList.remove('show');
     }
+    const headerRm = document.getElementById('returns-header-remove-toolbar');
+    if (headerRm) {
+      headerRm.classList.toggle('d-none', selectedItems.length === 0);
+      headerRm.classList.toggle('d-flex', selectedItems.length > 0);
+    }
   }
 
   // Clear selection
@@ -1213,14 +1136,23 @@
       checkbox.checked = false;
     });
 
-    if (checkAll) {
-      checkAll.checked = false;
+    const ca = document.getElementById('checkAll');
+    if (ca) {
+      ca.checked = false;
+      ca.indeterminate = false;
     }
 
     selectedItems = [];
     selectedItemsCount.textContent = '0';
     bulkActionsBar.classList.remove('show');
+    const headerRm = document.getElementById('returns-header-remove-toolbar');
+    if (headerRm) {
+      headerRm.classList.add('d-none');
+      headerRm.classList.remove('d-flex');
+    }
   }
+
+  document.getElementById('returnsList').addEventListener('change', onReturnsListCheckboxChange);
 
   // Filter return items by status
   function filterReturns(status) {
@@ -1649,13 +1581,7 @@
       statusText = 'Damaged';
     } else if (status === 'exchangePickup') {
       badgeClass = 'bg-info-subtle text-info';
-      statusText = 'Exchange Pickup';
-    } else if (status === 'exchangeDelivery') {
-      badgeClass = 'bg-success-subtle text-success';
-      statusText = 'Exchange Delivery';
-    } else if (status === 'collectionComplete') {
-      badgeClass = 'bg-success-subtle text-success';
-      statusText = 'Collection Complete';
+      statusText = 'Exchange Pickup (legacy)';
     } else {
       badgeClass = 'bg-secondary-subtle text-secondary';
       statusText = status.charAt(0).toUpperCase() + status.slice(1).replace(/([A-Z])/g, ' $1');

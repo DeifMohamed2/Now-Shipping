@@ -11,22 +11,6 @@
     z-index: 1050 !important;
   }
 
-    /* Fix for dropdown menus in tables */
-    .table-responsive {
-    overflow: visible !important;
-    /* Prevent clipping inside table container */
-    }
-  /* Ensure the table doesn't constrain the dropdown */
-  #stockTable {
-    overflow: visible !important;
-  }
-  
-  /* Make sure parent containers don't clip the dropdown */
-  .card-body,
-  .card {
-    overflow: visible !important;
-  }
-
   .stats-card {
     transition: all 0.3s ease;
     border-radius: 10px;
@@ -144,70 +128,6 @@
   .bulk-actions-buttons {
     display: flex;
     gap: 8px;
-  }
-</style>
-<style>
-  .custom-dropdown {
-    position: relative;
-    display: inline-block;
-  }
-
-  .custom-dropdown-toggle {
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 6px 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .custom-dropdown-toggle:hover {
-    background-color: #e5e5e5;
-  }
-
-  .custom-dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: auto;
-    right: 0;
-    z-index: 1050;
-    display: none;
-    min-width: 200px;
-    padding: 8px 0;
-    margin: 0;
-    background-color: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 4px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-  }
-
-  .custom-dropdown-menu.show {
-    display: block;
-  }
-
-  .custom-dropdown-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    font-weight: 400;
-    color: #212529;
-    text-align: left;
-    background-color: transparent;
-    border: 0;
-    width: 100%;
-    cursor: pointer;
-  }
-
-  .custom-dropdown-item:hover {
-    background-color: #f8f9fa;
-  }
-
-  .custom-dropdown-item i {
-    margin-right: 8px;
-    font-size: 14px;
   }
 </style>
 
@@ -361,13 +281,15 @@
             <h5 class="card-title mb-0">Stock Management</h5>
           </div>
           <div class="col-sm-auto">
-            <div class="d-flex gap-1 flex-wrap">
+            <div class="d-flex gap-1 flex-wrap align-items-center">
               <button type="button" class="btn btn-info" id="exportStockBtn">
                 <i class="ri-file-download-line align-bottom me-1"></i> Export
               </button>
-              <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()">
-                <i class="ri-delete-bin-2-line"></i>
-              </button>
+              <div id="stock-header-remove-toolbar" class="d-none gap-2 align-items-center flex-wrap" aria-live="polite">
+                <button type="button" class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()">
+                  <i class="ri-delete-bin-2-line me-1"></i> Remove selected
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -463,6 +385,13 @@
               </button>
             </li> -->
           </ul>
+
+          <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+            <div class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" id="checkAll" title="Select all visible items">
+              <label class="form-check-label small text-muted mb-0" for="checkAll">Select all</label>
+            </div>
+          </div>
 
           <!-- Bulk Actions Bar (Initially Hidden) -->
           <div id="bulkActionsBar" class="bulk-actions mb-3">
@@ -724,17 +653,6 @@
   const selectedItemsCount = document.getElementById("selectedItemsCount");
   let selectedItems = [];
 
-  // Handle "check all" checkbox
-  if (checkAll) {
-    checkAll.addEventListener("change", function() {
-      const checkboxes = document.querySelectorAll("input[name='checkAll[]']");
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = checkAll.checked;
-        handleCheckboxChange(checkbox);
-      });
-    });
-  }
-
   // Quick Add Form Submission
   document.getElementById("quickAddForm").addEventListener("submit",async function(e) {
     e.preventDefault();
@@ -895,10 +813,10 @@
       
       // Create zone table
       const tableContainer = document.createElement('div');
-      tableContainer.className = 'table-responsive table-card mb-3';
+      tableContainer.className = 'admin-table-scroll mb-3';
       
       const table = document.createElement('table');
-      table.className = 'table table-nowrap align-middle';
+      table.className = 'table table-nowrap table-striped align-middle admin-data-table';
       
       // Table header
       const thead = document.createElement('thead');
@@ -986,51 +904,25 @@
           }
         }
         
-        // Determine appropriate action buttons based on order type and status
+        // Same row actions for all order types (Exchange follows Deliver: pickup → add to stock → assign from here)
         let actionButtons = '';
-        
-        // Handle Exchange orders based on their status
-        if (item.orderShipping.orderType === 'Exchange') {
-          if (item.orderStatus === 'new') {
-            actionButtons = `
-              <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
-                <i class="ri-user-received-2-line text-success"></i> Assign Courier for Pickup
-              </button>
-            `;
-          } else if (item.orderStatus === 'pickedUp') {
-            actionButtons = `
-              <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
-                <i class="ri-store-2-line text-info"></i> Receive in Stock
-              </button>
-            `;
-          } else if (item.orderStatus === 'inStock') {
-            actionButtons = `
-              <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
-                <i class="ri-user-received-2-line text-success"></i> Assign Courier for Delivery
-              </button>
-            `;
-          } else {
-            actionButtons = `
-              <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
-                <i class="ri-user-received-2-line text-success"></i> Assign to Courier
-              </button>
-            `;
-          }
+        if (item.orderStatus === 'inStock') {
+          actionButtons = `
+            <li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')"><i class="ri-user-received-2-line text-success"></i><span>Assign courier for delivery</span></button></li>
+          `;
+        } else if (item.orderStatus === 'inProgress') {
+          actionButtons = `
+            <li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')"><i class="ri-user-received-2-line text-success"></i><span>Assign / reassign courier</span></button></li>
+          `;
         } else if (item.orderStatus === 'inReturnStock') {
           actionButtons = `
-            <button class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')">
-              <i class="ri-user-received-2-line text-success"></i> Assign to Courier (Return)
-            </button>
+            <li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')"><i class="ri-user-received-2-line text-success"></i><span>Assign to Courier (Return)</span></button></li>
           `;
         }
         
         actionButtons += `
-          <a href="/admin/order/${item.orderNumber}" class="dropdown-item">
-            <i class="ri-eye-line text-primary"></i> View Details
-          </a>
-          <button class="dropdown-item" onclick="printLabel('${item.orderNumber}')">
-            <i class="ri-printer-line text-info"></i> Print Label
-          </button>
+          <li><a class="dropdown-item" href="/admin/order/${item.orderNumber}"><i class="ri-eye-line text-primary"></i><span>View Details</span></a></li>
+          <li><button type="button" class="dropdown-item" onclick="printLabel('${item.orderNumber}')"><i class="ri-printer-line text-info"></i><span>Print Label</span></button></li>
         `;
 
         row.innerHTML = `
@@ -1066,13 +958,13 @@
             <span class="${daysInStock > 7 ? 'text-danger fw-medium' : ''}">${daysInStock} days</span>
           </td>
           <td>
-            <div class="custom-dropdown">
-              <button class="custom-dropdown-toggle btn btn-soft-secondary btn-sm" onclick="toggleDropdown('dropdown-${item.orderNumber}', event)">
-                <i class="ri-more-2-fill"></i>
+            <div class="orders-table-dropdown">
+              <button type="button" class="dropdown-toggle" data-dropdown-toggle aria-expanded="false" aria-label="Row actions">
+                <i class="ri-more-fill"></i>
               </button>
-              <div id="dropdown-${item.orderNumber}" class="custom-dropdown-menu">
+              <ul class="dropdown-menu">
                 ${actionButtons}
-              </div>
+              </ul>
             </div>
           </td>
         `;
@@ -1087,9 +979,6 @@
       
       stockItemsByZone.appendChild(zoneContainer);
     });
-    
-    // Add event listeners for checkboxes
-    addCheckboxEventListeners();
   }
 
   // fetch in progress orders
@@ -1309,27 +1198,71 @@
       }
     });
   }
-  // Add event listeners for checkboxes
-  function addCheckboxEventListeners() {
-    // Zone check all checkboxes
-    document.querySelectorAll('.zone-check-all').forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        const zone = this.getAttribute('data-zone');
-        const zoneCheckboxes = document.querySelectorAll(`input[name="checkAll[]"][data-zone="${zone}"]`);
-        
-        zoneCheckboxes.forEach(cb => {
-          cb.checked = this.checked;
+  function syncStockGlobalCheckAll() {
+    const el = document.getElementById('checkAll');
+    if (!el) return;
+    const boxes = document.querySelectorAll('input[name="checkAll[]"]');
+    let n = 0;
+    let c = 0;
+    boxes.forEach((b) => {
+      n++;
+      if (b.checked) c++;
+    });
+    el.checked = n > 0 && c === n;
+    el.indeterminate = c > 0 && c < n;
+  }
+
+  function syncZoneCheckAllFromRows(zone) {
+    if (!zone) return;
+    let zh = null;
+    document.querySelectorAll('.zone-check-all').forEach((z) => {
+      if (z.getAttribute('data-zone') === zone) zh = z;
+    });
+    if (!zh) return;
+    let n = 0;
+    let c = 0;
+    document.querySelectorAll('input[name="checkAll[]"]').forEach((b) => {
+      if (b.getAttribute('data-zone') !== zone) return;
+      n++;
+      if (b.checked) c++;
+    });
+    zh.checked = n > 0 && c === n;
+    zh.indeterminate = c > 0 && c < n;
+  }
+
+  function onStockListCheckboxChange(e) {
+    const t = e.target;
+    if (!t || !t.matches || !t.matches('input.form-check-input')) return;
+    if (t.id === 'checkAll') {
+      document.querySelectorAll('input[name="checkAll[]"]').forEach((cb) => {
+        cb.checked = t.checked;
+        handleCheckboxChange(cb);
+      });
+      document.querySelectorAll('.zone-check-all').forEach((z) => {
+        z.checked = t.checked;
+        z.indeterminate = false;
+      });
+      return;
+    }
+    if (t.classList.contains('zone-check-all')) {
+      const zone = t.getAttribute('data-zone');
+      if (!zone) return;
+      document.querySelectorAll('input[name="checkAll[]"]').forEach((cb) => {
+        if (cb.getAttribute('data-zone') === zone) {
+          cb.checked = t.checked;
           handleCheckboxChange(cb);
-        });
+        }
       });
-    });
-    
-    // Individual checkboxes
-    document.querySelectorAll('input[name="checkAll[]"]').forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        handleCheckboxChange(this);
-      });
-    });
+      t.indeterminate = false;
+      syncStockGlobalCheckAll();
+      return;
+    }
+    if (t.name === 'checkAll[]') {
+      handleCheckboxChange(t);
+      const zone = t.getAttribute('data-zone');
+      if (zone) syncZoneCheckAllFromRows(zone);
+      syncStockGlobalCheckAll();
+    }
   }
 
   // Handle checkbox change
@@ -1356,6 +1289,11 @@
     } else {
       bulkActionsBar.classList.remove('show');
     }
+    const headerRm = document.getElementById('stock-header-remove-toolbar');
+    if (headerRm) {
+      headerRm.classList.toggle('d-none', selectedItems.length === 0);
+      headerRm.classList.toggle('d-flex', selectedItems.length > 0);
+    }
   }
 
   // Clear selection
@@ -1368,14 +1306,23 @@
       checkbox.checked = false;
     });
     
-    if (checkAll) {
-      checkAll.checked = false;
+    const ca = document.getElementById('checkAll');
+    if (ca) {
+      ca.checked = false;
+      ca.indeterminate = false;
     }
     
     selectedItems = [];
     selectedItemsCount.textContent = '0';
     bulkActionsBar.classList.remove('show');
+    const headerRm = document.getElementById('stock-header-remove-toolbar');
+    if (headerRm) {
+      headerRm.classList.add('d-none');
+      headerRm.classList.remove('d-flex');
+    }
   }
+
+  document.getElementById('stockList').addEventListener('change', onStockListCheckboxChange);
 
   // Filter stock items by status
   function filterStock(status) {
@@ -1656,21 +1603,16 @@
     document.getElementById('readyForDispatch').textContent = stockItems.filter(item => item.orderStatus === 'inStock').length;
     document.getElementById('processingOrders').textContent = stockItems.filter(item => 
       item.orderStatus === 'inProgress' || 
-      item.orderStatus === 'exchangePickup' || 
-      item.orderStatus === 'exchangeDelivery'
+      item.orderStatus === 'headingToCustomer' ||
+      item.orderStatus === 'returnToBusiness'
     ).length;
     
-    // Count Exchange and Cash Collection orders
+    // Count Exchange orders
     const exchangeOrders = stockItems.filter(item => item.orderShipping?.orderType === 'Exchange').length;
-    const cashCollectionOrders = stockItems.filter(item => item.orderShipping?.orderType === 'Cash Collection').length;
     
     // Update additional stats if elements exist
     if (document.getElementById('exchangeOrders')) {
       document.getElementById('exchangeOrders').textContent = exchangeOrders;
-    }
-    
-    if (document.getElementById('cashCollectionOrders')) {
-      document.getElementById('cashCollectionOrders').textContent = cashCollectionOrders;
     }
   }
 
@@ -1702,13 +1644,7 @@
       statusText = 'Returned';
     } else if (status === 'exchangePickup') {
       badgeClass = 'bg-info-subtle text-info';
-      statusText = 'Exchange Pickup';
-    } else if (status === 'exchangeDelivery') {
-      badgeClass = 'bg-success-subtle text-success';
-      statusText = 'Exchange Delivery';
-    } else if (status === 'collectionComplete') {
-      badgeClass = 'bg-success-subtle text-success';
-      statusText = 'Collection Complete';
+      statusText = 'Exchange Pickup (legacy)';
     } else {
       badgeClass = 'bg-secondary-subtle text-secondary';
       statusText = status.charAt(0).toUpperCase() + status.slice(1);
@@ -1848,33 +1784,4 @@
 
   // Fetch stock items on page load
   document.addEventListener("DOMContentLoaded", () => fetchStockItems());
-</script>
-<script>
-  // Toggle custom dropdown
-  function toggleDropdown(dropdownId, event) {
-    const dropdown = document.getElementById(dropdownId);
-
-    // Close all other dropdowns first
-    document.querySelectorAll('.custom-dropdown-menu.show').forEach(menu => {
-      if (menu.id !== dropdownId) {
-        menu.classList.remove('show');
-      }
-    });
-
-    // Toggle this dropdown
-    dropdown.classList.toggle('show');
-
-    // Prevent event from bubbling up
-    event.stopPropagation();
-  }
-
-  // Close all dropdowns when clicking outside
-  document.addEventListener('click', function(event) {
-    const dropdowns = document.querySelectorAll('.custom-dropdown-menu.show');
-    dropdowns.forEach(dropdown => {
-      if (!dropdown.parentElement.contains(event.target)) {
-        dropdown.classList.remove('show');
-      }
-    });
-  });
 </script>

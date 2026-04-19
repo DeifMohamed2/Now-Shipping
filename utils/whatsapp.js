@@ -86,6 +86,10 @@ async function sendOrderPickedUpNotification(order) {
     const canOpen = populatedOrder.isOrderAvailableForPreview ? 'نعم' : 'لا';
     const amount = populatedOrder.orderShipping?.amount || 0;
     const description = populatedOrder.orderShipping?.productDescription || 'شحنة';
+    const orderType = populatedOrder.orderShipping?.orderType || 'Deliver';
+    const flyerBarcode = populatedOrder.smartFlyerBarcode
+      ? `\n🏷️ باركود الفلاير: *${populatedOrder.smartFlyerBarcode}*`
+      : '';
     const address = customer.address || '';
     const zone = customer.zone || '';
     const government = customer.government || '';
@@ -96,6 +100,7 @@ async function sendOrderPickedUpNotification(order) {
 
 📅 التاريخ المتوقع للتوصيل: *${getTomorrowFormatted()}*
 🚚 رقم الشحنة: *${populatedOrder.orderNumber}*
+📋 نوع الطلب: *${orderType}*${flyerBarcode}
 📝 وصف الشحنة: *${description}*
 💰 مبلغ التحصيل: *${amount}*
 📦 إمكانية فتح الشحنة: *${canOpen}*
@@ -129,6 +134,10 @@ async function sendHeadingToCustomerNotification(order) {
     const courierPhone = populatedOrder.deliveryMan?.phoneNumber || '';
     const trackingUrl = `${TRACKING_BASE_URL}/${populatedOrder.orderNumber}`;
     const amount = populatedOrder.orderShipping?.amount || 0;
+    const orderType = populatedOrder.orderShipping?.orderType || 'Deliver';
+    const flyerBarcode = populatedOrder.smartFlyerBarcode
+      ? `\n🏷️ باركود الفلاير: *${populatedOrder.smartFlyerBarcode}*`
+      : '';
 
     const message = `👋 *مرحبًا ${customer.fullName}*
 
@@ -141,6 +150,7 @@ async function sendHeadingToCustomerNotification(order) {
 📞 رقم المندوب: *${courierPhone}*
 
 💰 مبلغ التحصيل: *${amount}*
+📋 نوع الطلب: *${orderType}*${flyerBarcode}
 
 يمكنك التواصل مع المندوب لمزيد من التفاصيل حول التوصيل.
 
@@ -156,8 +166,51 @@ async function sendHeadingToCustomerNotification(order) {
   }
 }
 
+/**
+ * Exchange phase 1: replacement delivered + original collected at customer
+ */
+async function sendExchangePickupNotification(order) {
+  try {
+    const customer = order.orderCustomer;
+    if (!customer?.phoneNumber) {
+      return { success: false, message: 'No customer phone number' };
+    }
+
+    const populatedOrder = await ensurePopulated(order);
+
+    const businessName =
+      populatedOrder.business?.brandInfo?.brandName ||
+      populatedOrder.business?.name ||
+      'المتجر';
+    const trackingUrl = `${TRACKING_BASE_URL}/${populatedOrder.orderNumber}`;
+    const orderType = populatedOrder.orderShipping?.orderType || 'Exchange';
+    const flyerBarcode = populatedOrder.smartFlyerBarcode
+      ? `\n🏷️ باركود الفلاير: *${populatedOrder.smartFlyerBarcode}*`
+      : '';
+
+    const message = `👋 *مرحبًا ${customer.fullName}*
+
+تم إتمام خطوة الاستبدال من *${businessName}* ✅
+
+تم تسليم المنتج البديل وجمع المنتج الأصلي. المنتج الأصلي في طريقه للمخزن ثم للمتجر.
+
+📋 نوع الطلب: *${orderType}*${flyerBarcode}
+
+📍 لمتابعة حالة الشحنة:
+*${trackingUrl}*
+
+شكرًا لاستخدامك Now Shipping.`;
+
+    return await sendWhatsAppMessage(customer.phoneNumber, message);
+  } catch (error) {
+    console.error('WhatsApp exchange pickup notification error:', error.message);
+    return { success: false, message: error.message };
+  }
+}
+
 module.exports = {
   sendWhatsAppMessage,
   sendOrderPickedUpNotification,
   sendHeadingToCustomerNotification,
+  sendExchangePickupNotification,
 };

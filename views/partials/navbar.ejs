@@ -1,7 +1,7 @@
-<!-- Professional Navbar Partial -->
+<!-- Professional Navbar Partial — matches landing index (tokens + language + auth) -->
 <header id="main-header">
   <a href="/" class="logo">
-    <img src="/assets/rImages/logo.png" alt="ShipFast Logo">
+    <img src="/assets/rImages/logo.png" alt="Now Shipping">
   </a>
 
   <div class="mobile-menu-btn" id="mobile-menu-toggle">
@@ -29,12 +29,7 @@
             <span><%= translation.navigation.mobileApp %></span>
           </a>
         </li>
-        <li class="<%= typeof activePage !== 'undefined' && activePage === 'pricing' ? 'active' : '' %>">
-          <a href="/pricing">
-            <i class="fas fa-tag"></i>
-            <span><%= translation.navigation.pricing %></span>
-          </a>
-        </li>
+
         <li class="<%= typeof activePage !== 'undefined' && activePage === 'tracking' ? 'active' : '' %>">
           <a href="/tracking">
             <i class="fas fa-search"></i>
@@ -44,22 +39,44 @@
       </ul>
     </nav>
 
-    <div class="auth-buttons">
-      <a href="/login" class="btn btn-secondary">
-        <i class="fas fa-sign-in-alt"></i>
-        <span><%= translation.navigation.login %></span>
-      </a>
-      <a href="/register" class="btn btn-primary">
-        <i class="fas fa-user-plus"></i>
-        <span><%= translation.navigation.register %></span>
-      </a>
+    <div class="nav-actions">
+      <div class="nav-lang">
+        <label for="ns-marketing-lang" class="ns-marketing-lang-label">Language</label>
+        <% var __navLang = typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar' : 'en'; %>
+        <select id="ns-marketing-lang" class="ns-marketing-lang-select" aria-label="Language" autocomplete="off">
+          <option value="en" <%= __navLang === 'en' ? 'selected' : '' %>>🇺🇸 English</option>
+          <option value="ar" <%= __navLang === 'ar' ? 'selected' : '' %>>🇪🇬 العربية</option>
+        </select>
+      </div>
+
+      <div class="auth-buttons">
+        <a href="/login" class="btn btn-outline">
+          <i class="fas fa-sign-in-alt"></i>
+          <span><%= translation.navigation.login %></span>
+        </a>
+        <a href="/register" class="btn btn-primary">
+          <i class="fas fa-user-plus"></i>
+          <span><%= translation.navigation.register %></span>
+        </a>
+      </div>
     </div>
   </div>
 </header>
 
 <style>
-/* Professional Navbar Styles */
+/* Design tokens + layout — matches landing index on every page */
 #main-header {
+  --primary: #F39720;
+  --secondary: #FDB614;
+  --accent: #8FCAES;
+  --accent-dark: #3D9BC5;
+  --dark: #1E293B;
+  --dark-secondary: #334155;
+  --gray: #64748B;
+  --border-radius: 0.5rem;
+  --border-radius-full: 9999px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --transition: all 0.3s ease;
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -113,6 +130,70 @@
   height: auto;
   flex: 1;
   justify-content: space-between;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.nav-lang {
+  position: relative;
+}
+
+/* Single native control — avoids duplicate pill / dropdown bugs */
+.ns-marketing-lang-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#main-header .ns-marketing-lang-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  display: inline-block;
+  color: #fff;
+  border: none;
+  border-radius: var(--border-radius-full);
+  padding: 0.55rem 2.35rem 0.55rem 0.85rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(243, 151, 32, 0.35);
+  transition: var(--transition);
+  min-width: 10.75rem;
+  text-align: left;
+  line-height: 1.25;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, var(--primary), #ea8c16);
+  background-repeat: no-repeat, no-repeat;
+  background-position: right 0.72rem center, center;
+  background-size: 11px 11px, 100% 100%;
+}
+
+#main-header .ns-marketing-lang-select:hover {
+  filter: brightness(1.05);
+}
+
+#main-header .ns-marketing-lang-select:focus {
+  outline: 2px solid var(--dark);
+  outline-offset: 2px;
+}
+
+#main-header .ns-marketing-lang-select option {
+  color: #1e293b;
+  background: #fff;
 }
 
 nav {
@@ -406,6 +487,24 @@ nav ul li.active a {
     height: 70%;
   }
 
+  .nav-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .nav-lang {
+    width: 100%;
+  }
+
+  #main-header .ns-marketing-lang-select {
+    width: 100%;
+    text-align: center;
+    padding-left: 1rem;
+    padding-right: 2.35rem;
+  }
+
   .auth-buttons {
     width: 100% !important;
     flex-direction: column;
@@ -496,4 +595,15 @@ function checkMobileView() {
 // Check on load and resize
 checkMobileView();
 window.addEventListener('resize', checkMobileView);
+
+// Language: single <select> → ?lang= (languageMiddleware + handleLanguageSwitch)
+(function () {
+  var sel = document.getElementById('ns-marketing-lang');
+  if (!sel) return;
+  sel.addEventListener('change', function () {
+    var url = new URL(window.location.href);
+    url.searchParams.set('lang', sel.value);
+    window.location.href = url.toString();
+  });
+})();
 </script>

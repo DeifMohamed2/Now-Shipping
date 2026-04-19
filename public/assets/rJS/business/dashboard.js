@@ -1,3 +1,8 @@
+const __NSD =
+  typeof window !== 'undefined' && window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.dashboard
+    ? window.__NS_BUSINESS_I18N.dashboard
+    : {};
+
 // Helper function to check if an element is visible
 function isVisible(el) {
   return el.offsetParent !== null; // Ensures only displayed elements are considered
@@ -81,7 +86,7 @@ document.querySelectorAll('.form-steps').forEach((formSteps) => {
       const currentTabPane = document.querySelector('.tab-pane.show.active');
       if (currentTabPane && !validateCurrentStep(currentTabPane)) {
         e.preventDefault();
-        alert('Please fill all required fields before leaving this step.');
+        alert(__NSD.fillRequiredStep || 'Please fill all required fields before leaving this step.');
         return false;
       }
     });
@@ -162,7 +167,7 @@ document.querySelectorAll('.form-steps').forEach((formSteps) => {
     nextBtn.addEventListener('click', function () {
       const currentTabPane = formSteps.querySelector('.tab-pane.show.active');
       if (!validateCurrentStep(currentTabPane)) {
-        alert('Please complete all required fields before continuing.');
+        alert(__NSD.fillRequiredContinue || 'Please complete all required fields before continuing.');
         return;
       }
 
@@ -198,7 +203,7 @@ document.querySelectorAll('.filepond-input-multiple').forEach((input) => {
 
     if (files.length > 0) {
       submitButton.disabled = true;
-      submitButton.innerText = 'Uploading Photos... 0%';
+      submitButton.innerText = (__NSD.uploadingPhotos || 'Uploading Photos… {pct}%').replace('{pct}', '0');
 
       const totalFiles = files.length;
       let uploadedCount = 0;
@@ -228,7 +233,9 @@ document.querySelectorAll('.filepond-input-multiple').forEach((input) => {
               Math.round(avgTimePerFile * (totalFiles - uploadedCount))
             );
 
-            submitButton.innerText = `Uploading Photos... ${progress}% (${remainingTime}s left)`;
+            submitButton.innerText = (__NSD.uploadingPhotosEta || 'Uploading Photos… {pct}% ({sec}s left)')
+              .replace('{pct}', String(progress))
+              .replace('{sec}', String(remainingTime));
           }
         } catch (error) {
           console.error('Error uploading image:', error);
@@ -238,8 +245,11 @@ document.querySelectorAll('.filepond-input-multiple').forEach((input) => {
       await Promise.all(uploadPromises);
 
       submitButton.disabled = false;
-      submitButton.innerText = 'Submit All';
-      photoCountDisplay.innerText = `Uploaded Photos: ${uploadedPhotos.length}`;
+      submitButton.innerText = __NSD.submitAll || 'Submit All';
+      photoCountDisplay.innerText = (__NSD.uploadedPhotosCount || 'Uploaded Photos: {count}').replace(
+        '{count}',
+        String(uploadedPhotos.length)
+      );
       console.log('Uploaded Photos:', uploadedPhotos);
     }
   });
@@ -254,7 +264,7 @@ document
 
     const lastStep = document.querySelector('.tab-pane.show.active');
     if (!validateCurrentStep(lastStep)) {
-      alert('Please complete all required fields before submitting.');
+      alert(__NSD.fillRequiredSubmit || 'Please complete all required fields before submitting.');
       return;
     }
 
@@ -286,9 +296,9 @@ document
       if (response.ok) {
       Swal.fire({
         icon: 'success',
-        title: 'Success!',
-        text: data.message || 'Account Successfully Fully Completed',
-        confirmButtonText: 'OK',
+        title: __NSD.successTitle || 'Success!',
+        text: data.message || __NSD.accountCompleted || 'Account Successfully Fully Completed',
+        confirmButtonText: __NSD.ok || 'OK',
       }).then((result) => {
         if (result.isConfirmed) {
           window.location.reload();
@@ -297,16 +307,16 @@ document
       } else {
       Swal.fire({
         icon: 'error',
-        title: 'Oops...',
-        text: data.error || 'An error occurred. Please try again.',
+        title: __NSD.errorTitle || 'Oops...',
+        text: data.error || __NSD.genericError || 'An error occurred. Please try again.',
       });
       }
     } catch (err) {
       console.error('An error occurred:', err);
       Swal.fire({
       icon: 'error',
-      title: 'Oops...',
-      text: 'An error occurred. Please try again.',
+      title: __NSD.errorTitle || 'Oops...',
+      text: __NSD.genericError || 'An error occurred. Please try again.',
       });
     }
   });

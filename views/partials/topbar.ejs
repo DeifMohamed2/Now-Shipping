@@ -23,8 +23,8 @@
           </a>
         </div>
 
-        <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger material-shadow-none" id="topnav-hamburger-icon">
-          <span class="hamburger-icon">
+        <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger material-shadow-none" id="topnav-hamburger-icon" aria-label="<%= (typeof translation !== 'undefined' && translation.business && translation.business.shell && translation.business.shell.toggleNav) ? translation.business.shell.toggleNav : 'Toggle navigation menu' %>" aria-expanded="false" aria-controls="navbar-nav">
+          <span class="hamburger-icon" aria-hidden="true">
             <span></span>
             <span></span>
             <span></span>
@@ -44,7 +44,7 @@
             <form class="p-3">
               <div class="form-group m-0">
                 <div class="input-group">
-                  <input type="text" class="form-control" placeholder="Search ..." aria-label="Recipient's username">
+                  <input type="text" class="form-control" placeholder="<%= (typeof translation !== 'undefined' && translation.business && translation.business.shell && translation.business.shell.searchPlaceholder) ? translation.business.shell.searchPlaceholder : 'Search…' %>" aria-label="<%= (typeof translation !== 'undefined' && translation.common && translation.common.search) ? translation.common.search : 'Search' %>">
                   <button class="btn btn-primary" type="submit"><i class="mdi mdi-magnify"></i></button>
                 </div>
               </div>
@@ -54,9 +54,10 @@
 
         <div class="dropdown ms-1 topbar-head-dropdown header-item">
           <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary material-shadow-none rounded-circle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <% if(lang=="en" ) { %>
+            <% var __hl = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : ((typeof lang !== 'undefined' && lang) ? lang : 'en'); %>
+            <% if(__hl=="en" ) { %>
             <img src="/assets/images/flags/us.svg" alt="Header Language" id="header-lang-img" class="rounded" height="20">
-            <% } else if(lang=="ar" ) { %>
+            <% } else if(__hl=="ar" ) { %>
             <img src="/assets/images/flags/ae.svg" alt="Header Language" id="header-lang-img" class="rounded" height="20">
             <% } else { %>
             <img src="/assets/images/flags/us.svg" alt="Header Language" id="header-lang-img" class="rounded" height="20">
@@ -65,15 +66,15 @@
           <div class="dropdown-menu dropdown-menu-end">
 
             <!-- item-->
-            <a href="?clang=en" class="dropdown-item notify-item language py-2" data-lang="en" title="English">
+            <a href="?lang=en" class="dropdown-item notify-item language py-2" data-lang="en" title="<%= (typeof translation !== 'undefined' && translation.business && translation.business.shell) ? translation.business.shell.languageEnglish : 'English' %>">
               <img src="/assets/images/flags/us.svg" alt="user-image" class="me-2 rounded" height="18">
-              <span class="align-middle">English</span>
+              <span class="align-middle"><%= (typeof translation !== 'undefined' && translation.business && translation.business.shell) ? translation.business.shell.languageEnglish : 'English' %></span>
             </a>
 
             <!-- item-->
-            <a href="?clang=ar" class="dropdown-item notify-item language py-2" data-lang="ar" title="Arabic">
+            <a href="?lang=ar" class="dropdown-item notify-item language py-2" data-lang="ar" title="<%= (typeof translation !== 'undefined' && translation.business && translation.business.shell) ? translation.business.shell.languageArabic : 'العربية' %>">
               <img src="/assets/images/flags/ae.svg" alt="user-image" class="me-2 rounded" height="18">
-              <span class="align-middle">عربي</span>
+              <span class="align-middle"><%= (typeof translation !== 'undefined' && translation.business && translation.business.shell) ? translation.business.shell.languageArabic : 'العربية' %></span>
             </a>
 
           </div>
@@ -152,7 +153,7 @@
 
                   <div class="text-reset notification-item d-block dropdown-item position-relative">
                     <div class="d-flex">
-                      <img src="/assets/images/users/avatar-2.jpg" class="me-3 rounded-circle avatar-xs flex-shrink-0" alt="user-pic">
+                      <img src="/assets/rImages/logo.png" class="me-3 rounded-circle avatar-xs flex-shrink-0" alt="user-pic">
                       <div class="flex-grow-1">
                         <a href="#!" class="stretched-link">
                           <h6 class="mt-0 mb-1 fs-13 fw-semibold">Angela Bernier</h6>
@@ -201,7 +202,7 @@
 
                   <div class="text-reset notification-item d-block dropdown-item position-relative">
                     <div class="d-flex">
-                      <img src="/assets/images/users/avatar-8.jpg" class="me-3 rounded-circle avatar-xs flex-shrink-0" alt="user-pic">
+                      <img src="/assets/rImages/logo.png" class="me-3 rounded-circle avatar-xs flex-shrink-0" alt="user-pic">
                       <div class="flex-grow-1">
                         <a href="#!" class="stretched-link">
                           <h6 class="mt-0 mb-1 fs-13 fw-semibold">Maureen Gibson</h6>
@@ -234,7 +235,7 @@
                 <div data-simplebar style="max-height: 300px;" class="pe-2">
                   <div class="text-reset notification-item d-block dropdown-item">
                     <div class="d-flex">
-                      <img src="/assets/images/users/avatar-3.jpg" class="me-3 rounded-circle avatar-xs" alt="user-pic">
+                      <img src="/assets/rImages/logo.png" class="me-3 rounded-circle avatar-xs" alt="user-pic">
                       <div class="flex-grow-1">
                         <a href="#!" class="stretched-link">
                           <h6 class="mt-0 mb-1 fs-13 fw-semibold">James Lemire</h6>
@@ -257,7 +258,7 @@
 
                   <div class="text-reset notification-item d-block dropdown-item">
                     <div class="d-flex">
-                      <img src="/assets/images/users/avatar-2.jpg" class="me-3 rounded-circle avatar-xs" alt="user-pic">
+                      <img src="/assets/rImages/logo.png" class="me-3 rounded-circle avatar-xs" alt="user-pic">
                       <div class="flex-grow-1">
                         <a href="#!" class="stretched-link">
                           <h6 class="mt-0 mb-1 fs-13 fw-semibold">Angela Bernier</h6>
@@ -281,7 +282,7 @@
 
                   <div class="text-reset notification-item d-block dropdown-item">
                     <div class="d-flex">
-                      <img src="/assets/images/users/avatar-6.jpg" class="me-3 rounded-circle avatar-xs" alt="user-pic">
+                      <img src="/assets/rImages/logo.png" class="me-3 rounded-circle avatar-xs" alt="user-pic">
                       <div class="flex-grow-1">
                         <a href="#!" class="stretched-link">
                           <h6 class="mt-0 mb-1 fs-13 fw-semibold">Kenneth Brown</h6>
@@ -305,7 +306,7 @@
 
                   <div class="text-reset notification-item d-block dropdown-item">
                     <div class="d-flex">
-                      <img src="/assets/images/users/avatar-8.jpg" class="me-3 rounded-circle avatar-xs" alt="user-pic">
+                      <img src="/assets/rImages/logo.png" class="me-3 rounded-circle avatar-xs" alt="user-pic">
                       <div class="flex-grow-1">
                         <a href="#!" class="stretched-link">
                           <h6 class="mt-0 mb-1 fs-13 fw-semibold">Maureen Gibson</h6>
@@ -347,38 +348,60 @@
           <button type="button" class="btn material-shadow-none topbar-user-btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="d-flex align-items-center">
               <% 
+                var profileFallback = '/assets/rImages/logo.png';
                 // Determine user info based on context (admin or business)
-                let userName = '';
-                let userRole = '';
-                let userPhoto = '/assets/images/users/avatar-1.jpg';
-                
+                var userName = '';
+                var userRole = '';
+                var userPhoto = profileFallback;
+                var __BS = (typeof translation !== 'undefined' && translation.business && translation.business.shell) ? translation.business.shell : {};
                 if (typeof adminData !== 'undefined' && adminData) {
-                  // Admin context
                   userName = adminData.name || 'Admin';
-                  userRole = 'Administrator';
-                  userPhoto = adminData.profileImage || '/assets/images/users/avatar-1.jpg';
+                  userRole = __BS.roleAdmin || 'Administrator';
+                  userPhoto = (adminData.profileImage && String(adminData.profileImage).trim()) ? String(adminData.profileImage).trim() : profileFallback;
                 } else if (typeof userData !== 'undefined' && userData) {
-                  // Business user context
-                  userName = userData.brandInfo?.brandName || userData.name || 'User';
-                  userRole = userData.role === 'business' ? 'Business Account' : userData.role || 'User';
-                  userPhoto = userData.profileImage || '/assets/images/users/avatar-1.jpg';
+                  userName = userData.brandInfo?.brandName || userData.name || __BS.userFallback || 'User';
+                  userRole = userData.role === 'business' ? (__BS.roleBusiness || 'Business') + ' ' + (__BS.roleAccount || 'Account') : userData.role || __BS.userFallback || 'User';
+                  userPhoto = (userData.profileImage && String(userData.profileImage).trim()) ? String(userData.profileImage).trim() : profileFallback;
+                } else if (typeof courierData !== 'undefined' && courierData) {
+                  userName = courierData.name || __BS.roleCourier || 'Courier';
+                  userRole = __BS.roleCourier || 'Courier';
+                  userPhoto = (courierData.profileImage && String(courierData.profileImage).trim()) ? String(courierData.profileImage).trim() : profileFallback;
+                } else if (typeof courier !== 'undefined' && courier) {
+                  userName = courier.name || __BS.roleCourier || 'Courier';
+                  userRole = __BS.roleCourier || 'Courier';
+                  userPhoto = (courier.profileImage && String(courier.profileImage).trim()) ? String(courier.profileImage).trim() : profileFallback;
                 } else if (typeof user !== 'undefined' && user) {
-                  // Alternative user object
-                  userName = user.brandInfo?.brandName || user.name || 'User';
-                  userRole = user.role === 'business' ? 'Business Account' : user.role || 'User';
-                  userPhoto = user.profileImage || '/assets/images/users/avatar-1.jpg';
+                  userName = user.brandInfo?.brandName || user.name || __BS.userFallback || 'User';
+                  userRole = user.role === 'business' ? (__BS.roleBusiness || 'Business') + ' ' + (__BS.roleAccount || 'Account') : user.role || __BS.userFallback || 'User';
+                  userPhoto = (user.profileImage && String(user.profileImage).trim()) ? String(user.profileImage).trim() : profileFallback;
                 } else {
-                  userName = 'Guest';
-                  userRole = 'Guest User';
+                  userName = __BS.guestUser || 'Guest';
+                  userRole = __BS.roleGuest || 'Guest';
+                }
+                var profileIsFallback = userPhoto === profileFallback;
+                var topbarPhIcon = 'ri-user-smile-line';
+                if (typeof adminData !== 'undefined' && adminData) {
+                  topbarPhIcon = 'ri-shield-user-line';
+                } else if ((typeof courierData !== 'undefined' && courierData) || (typeof courier !== 'undefined' && courier)) {
+                  topbarPhIcon = 'ri-truck-line';
+                } else if ((typeof userData !== 'undefined' && userData && userData.role === 'business') || (typeof user !== 'undefined' && user && user.role === 'business')) {
+                  topbarPhIcon = 'ri-store-2-line';
+                } else if ((typeof userData !== 'undefined' && userData) || (typeof user !== 'undefined' && user)) {
+                  topbarPhIcon = 'ri-user-line';
                 }
               %>
-              <div class="topbar-user-avatar-wrapper">
-                <img class="rounded-circle header-profile-user" src="<%= userPhoto %>" alt="<%= userName %>" onerror="this.src='/assets/images/users/avatar-1.jpg'">
-                <span class="topbar-user-status"></span>
+              <div class="topbar-user-avatar-wrapper<%= profileIsFallback ? ' topbar-user-avatar-wrapper--placeholder' : '' %>">
+                <% if (!profileIsFallback) { %>
+                <img class="rounded-circle header-profile-user" src="<%= userPhoto %>" alt="<%= userName %>" width="36" height="36" decoding="async" onerror="this.onerror=null;this.style.display='none';var w=this.closest('.topbar-user-avatar-wrapper');if(w){w.classList.add('topbar-user-avatar-wrapper--placeholder');var p=this.nextElementSibling;if(p){p.classList.remove('d-none');p.classList.add('d-inline-flex');p.setAttribute('aria-hidden','true');}}">
+                <span class="topbar-user-avatar-placeholder rounded-circle d-none align-items-center justify-content-center" aria-hidden="true"><i class="<%= topbarPhIcon %>"></i></span>
+                <span class="topbar-user-status" aria-hidden="true"></span>
+                <% } else { %>
+                <span class="topbar-user-avatar-placeholder rounded-circle d-inline-flex align-items-center justify-content-center" aria-hidden="true"><i class="<%= topbarPhIcon %>"></i></span>
+                <% } %>
               </div>
-              <span class="text-start ms-xl-2">
-                <span class="d-none d-xl-inline-block ms-1 fw-semibold user-name-text"><%= userName %></span>
-                <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text text-capitalize"><%= userRole %></span>
+              <span class="text-start ms-xl-2 topbar-user-meta">
+                <span class="d-none d-xl-inline-block fw-semibold user-name-text"><%= userName %></span>
+                <span class="d-none d-xl-block fs-12 text-muted user-name-sub-text text-capitalize"><%= userRole %></span>
               </span>
               <i class="ri-arrow-down-s-line ms-2 d-none d-xl-inline-block dropdown-arrow"></i>
             </span>
@@ -387,42 +410,59 @@
             <!-- item-->
             <div class="dropdown-header topbar-dropdown-header">
               <div class="d-flex align-items-center">
-                <img class="rounded-circle me-2" src="<%= userPhoto %>" alt="<%= userName %>" onerror="this.src='/assets/images/users/avatar-1.jpg'" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #F39720;">
-                <div>
-                  <h6 class="mb-0 fw-semibold">Welcome <%= userName %>!</h6>
-                  <small class="text-muted"><%= userRole %></small>
+                <% if (!profileIsFallback) { %>
+                <div class="topbar-user-avatar-wrapper topbar-dropdown-avatar flex-shrink-0 me-2">
+                  <img class="rounded-circle header-profile-user" src="<%= userPhoto %>" alt="" width="40" height="40" decoding="async" onerror="this.onerror=null;this.style.display='none';var w=this.closest('.topbar-user-avatar-wrapper');if(w){w.classList.add('topbar-user-avatar-wrapper--placeholder');var p=this.nextElementSibling;if(p){p.classList.remove('d-none');p.classList.add('d-inline-flex');}}">
+                  <span class="topbar-user-avatar-placeholder rounded-circle d-none align-items-center justify-content-center" style="width:40px;height:40px" aria-hidden="true"><i class="<%= topbarPhIcon %>"></i></span>
+                </div>
+                <% } else { %>
+                <span class="topbar-user-avatar-placeholder rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 me-2" style="width:40px;height:40px" aria-hidden="true"><i class="<%= topbarPhIcon %>"></i></span>
+                <% } %>
+                <div class="min-w-0">
+                  <h6 class="mb-0 fw-semibold text-truncate"><%= __BS.welcomeUser ? __BS.welcomeUser.replace('{name}', userName) : ('Welcome ' + userName + '!') %></h6>
+                  <small class="text-muted text-truncate d-block"><%= userRole %></small>
                 </div>
               </div>
             </div>
             <div class="dropdown-divider"></div>
             <% if (typeof userData !== 'undefined' && userData && userData.role === 'business') { %>
             <a class="dropdown-item topbar-dropdown-item" href="/business/settings">
-              <i class="ri-user-line fs-16 align-middle me-2" style="color: #F39720;"></i>
-              <span class="align-middle">Profile Settings</span>
+              <i class="ri-user-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+              <span class="align-middle"><%= __BS.profileSettings || 'Profile Settings' %></span>
             </a>
             <a class="dropdown-item topbar-dropdown-item" href="/business/dashboard">
-              <i class="ri-dashboard-line fs-16 align-middle me-2" style="color: #F39720;"></i>
-              <span class="align-middle">Dashboard</span>
+              <i class="ri-dashboard-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+              <span class="align-middle"><%= __BS.dashboard || 'Dashboard' %></span>
             </a>
             <a class="dropdown-item topbar-dropdown-item" href="/business/orders">
-              <i class="ri-shopping-cart-line fs-16 align-middle me-2" style="color: #F39720;"></i>
-              <span class="align-middle">My Orders</span>
+              <i class="ri-shopping-cart-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+              <span class="align-middle"><%= __BS.myOrders || 'My Orders' %></span>
             </a>
             <a class="dropdown-item topbar-dropdown-item" href="/business/wallet/total-balance">
-              <i class="ri-wallet-line fs-16 align-middle me-2" style="color: #F39720;"></i>
-              <span class="align-middle">My Wallet</span>
+              <i class="ri-wallet-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+              <span class="align-middle"><%= __BS.myWallet || 'My Wallet' %></span>
             </a>
             <div class="dropdown-divider"></div>
             <% } else if (typeof adminData !== 'undefined' && adminData) { %>
             <a class="dropdown-item topbar-dropdown-item" href="/admin/dashboard">
-              <i class="ri-dashboard-line fs-16 align-middle me-2" style="color: #F39720;"></i>
-              <span class="align-middle">Dashboard</span>
+              <i class="ri-dashboard-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+              <span class="align-middle"><%= __BS.dashboard || 'Dashboard' %></span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <% } else if ((typeof courierData !== 'undefined' && courierData) || (typeof courier !== 'undefined' && courier)) { %>
+            <a class="dropdown-item topbar-dropdown-item" href="/courier/dashboard">
+              <i class="ri-dashboard-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+              <span class="align-middle"><%= __BS.dashboard || 'Dashboard' %></span>
+            </a>
+            <a class="dropdown-item topbar-dropdown-item" href="/courier/orders">
+              <i class="ri-shopping-cart-line fs-16 align-middle me-2" style="color: #E4A24A;"></i>
+              <span class="align-middle"><%= __BS.myOrders || 'Orders' %></span>
             </a>
             <div class="dropdown-divider"></div>
             <% } %>
-            <a class="dropdown-item topbar-dropdown-item text-danger" href="/business/logout">
+            <a class="dropdown-item topbar-dropdown-item text-danger" href="<% if ((typeof courierData !== 'undefined' && courierData) || (typeof courier !== 'undefined' && courier)) { %>/courier/logout<% } else if (typeof adminData !== 'undefined' && adminData) { %>/admin/logout<% } else { %>/business/logout<% } %>">
               <i class="ri-logout-box-r-line fs-16 align-middle me-2"></i>
-              <span class="align-middle fw-semibold" data-key="t-logout">Logout</span>
+              <span class="align-middle fw-semibold" data-key="t-logout"><%= __BS.logOut || 'Logout' %></span>
             </a>
           </div>
         </div>
@@ -432,98 +472,125 @@
 </header>
 
 <style>
-  /* Enhanced Topbar User Section */
+  /* Topbar user pill — compact, neutral surface; icon when no photo */
   .topbar-user-btn {
-    padding: 6px 12px;
-    border-radius: 50px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid transparent;
+    padding: 0.25rem 0.6rem 0.25rem 0.35rem;
+    border-radius: 999px;
+    border: 1px solid #e9ecef;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    gap: 0;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .topbar-user-btn:hover {
-    background-color: rgba(243, 151, 32, 0.08);
-    border-color: rgba(243, 151, 32, 0.2);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(243, 151, 32, 0.15);
+    background: #fafbfc;
+    border-color: #dee2e6;
+    box-shadow: 0 2px 6px rgba(16, 24, 40, 0.06);
   }
 
   .topbar-user-btn[aria-expanded="true"] {
-    background-color: rgba(243, 151, 32, 0.12);
-    border-color: #F39720;
-    box-shadow: 0 2px 12px rgba(243, 151, 32, 0.25);
+    background: #fffdf8;
+    border-color: rgba(228, 162, 74, 0.45);
+    box-shadow: 0 0 0 1px rgba(228, 162, 74, 0.12), 0 2px 8px rgba(228, 162, 74, 0.12);
   }
 
-  /* User Avatar Wrapper */
+  .topbar-user-btn > span.d-flex.align-items-center {
+    gap: 0.5rem;
+  }
+
+  .topbar-user-meta {
+    line-height: 1.2;
+    min-width: 0;
+  }
+
+  .topbar-user-meta .user-name-text {
+    display: block;
+    max-width: 11rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .topbar-user-avatar-wrapper {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    flex-shrink: 0;
+    vertical-align: middle;
   }
 
-  .header-profile-user {
-    width: 40px;
-    height: 40px;
+  .topbar-user .header-profile-user {
+    width: 36px;
+    height: 36px;
     object-fit: cover;
-    border: 3px solid #F39720;
-    box-shadow: 0 2px 8px rgba(243, 151, 32, 0.2);
-    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    box-shadow: none;
+    display: block;
+    transition: border-color 0.2s ease;
   }
 
-  .topbar-user-btn:hover .header-profile-user {
-    border-color: #FDB614;
-    box-shadow: 0 3px 12px rgba(243, 151, 32, 0.3);
-    transform: scale(1.05);
+  .topbar-user-btn:hover .topbar-user .header-profile-user {
+    border-color: #ced4da;
   }
 
-  /* Online Status Indicator */
+  .topbar-user-avatar-placeholder {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(180deg, #f8f9fa 0%, #eef1f4 100%);
+    border: 1px solid #e9ecef;
+    color: #6c757d;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .topbar-user-avatar-wrapper--placeholder .topbar-user-status {
+    display: none;
+  }
+
   .topbar-user-status {
     position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 12px;
-    height: 12px;
+    bottom: 1px;
+    right: 1px;
+    width: 10px;
+    height: 10px;
     background-color: #10b981;
     border: 2px solid #ffffff;
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    animation: pulse-status 2s infinite;
+    box-shadow: 0 0 0 1px rgba(16, 24, 40, 0.06);
   }
 
-  @keyframes pulse-status {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.1);
-    }
-  }
-
-  /* User Name Styling */
   .user-name-text {
     color: #212529;
-    font-size: 15px;
-    transition: color 0.3s ease;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    transition: color 0.2s ease;
   }
 
   .user-name-sub-text {
-    color: #6c757d;
-    font-size: 12px;
+    color: #868e96;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 0.1rem;
   }
 
   .topbar-user-btn:hover .user-name-text {
-    color: #F39720;
+    color: #1a1d21;
   }
 
-  /* Dropdown Arrow */
   .dropdown-arrow {
-    color: #6c757d;
-    transition: transform 0.3s ease, color 0.3s ease;
+    color: #868e96;
+    font-size: 1.1rem;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+
+  .topbar-user-btn:hover .dropdown-arrow {
+    color: #495057;
   }
 
   .topbar-user-btn[aria-expanded="true"] .dropdown-arrow {
     transform: rotate(180deg);
-    color: #F39720;
+    color: #c98e3f;
   }
 
   /* Enhanced Dropdown Menu */
@@ -535,13 +602,13 @@
     min-width: 240px;
     margin-top: 8px;
     background: #ffffff;
-    border: 1px solid rgba(243, 151, 32, 0.1);
+    border: 1px solid rgba(228, 162, 74, 0.1);
   }
 
   .topbar-dropdown-header {
     padding: 12px 16px;
-    background: linear-gradient(135deg, rgba(243, 151, 32, 0.05) 0%, rgba(253, 182, 20, 0.05) 100%);
-    border-bottom: 1px solid rgba(243, 151, 32, 0.1);
+    background: linear-gradient(135deg, rgba(228, 162, 74, 0.07) 0%, rgba(228, 162, 74, 0.02) 100%);
+    border-bottom: 1px solid rgba(228, 162, 74, 0.1);
     margin-bottom: 0;
   }
 
@@ -570,9 +637,9 @@
   }
 
   .topbar-dropdown-item:hover {
-    background-color: rgba(243, 151, 32, 0.08);
-    color: #F39720;
-    border-left-color: #F39720;
+    background-color: rgba(228, 162, 74, 0.08);
+    color: #E4A24A;
+    border-left-color: #E4A24A;
     transform: translateX(4px);
     padding-left: 20px;
   }
@@ -586,7 +653,7 @@
   }
 
   .topbar-dropdown-item.text-danger {
-    border-top: 1px solid rgba(243, 151, 32, 0.1);
+    border-top: 1px solid rgba(228, 162, 74, 0.1);
     margin-top: 4px;
     padding-top: 12px;
   }
@@ -600,27 +667,70 @@
   /* Dropdown Divider */
   .topbar-dropdown-menu .dropdown-divider {
     margin: 6px 0;
-    border-color: rgba(243, 151, 32, 0.1);
+    border-color: rgba(228, 162, 74, 0.1);
   }
 
-  /* Responsive adjustments */
+  .topbar-dropdown-avatar .header-profile-user {
+    width: 40px;
+    height: 40px;
+  }
+
+  .topbar-dropdown-header .topbar-user-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+
   @media (max-width: 1199px) {
-    .user-name-text,
-    .user-name-sub-text,
+    .topbar-user-meta,
     .dropdown-arrow {
       display: none !important;
     }
 
     .topbar-user-btn {
-      padding: 6px;
+      padding: 0.2rem;
     }
   }
 
-  /* Smooth transitions */
   .topbar-user-btn,
-  .header-profile-user,
+  .topbar-user .header-profile-user,
   .dropdown-arrow,
   .topbar-dropdown-item {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  /* ── RTL overrides ────────────────────────────────────────── */
+  html[dir='rtl'] .topbar-dropdown-item {
+    border-left: none;
+    border-right: 3px solid transparent;
+    text-align: right;
+  }
+
+  html[dir='rtl'] .topbar-dropdown-item:hover {
+    transform: translateX(-4px);
+    padding-left: 16px;
+    padding-right: 20px;
+    border-right-color: #E4A24A;
+    border-left-color: transparent;
+  }
+
+  html[dir='rtl'] .topbar-dropdown-item.text-danger:hover {
+    border-right-color: #dc3545;
+    border-left-color: transparent;
+  }
+
+  html[dir='rtl'] .topbar-user-status {
+    right: auto;
+    left: 1px;
+  }
+
+  html[dir='rtl'] .topbar-dropdown-item i {
+    margin-right: 0 !important;
+    margin-left: 0.75rem !important;
+  }
+
+  html[dir='rtl'] .topbar-dropdown-header {
+    text-align: right;
   }
 </style>

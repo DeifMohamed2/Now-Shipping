@@ -1,3 +1,8 @@
+var __NSCO =
+  typeof window !== 'undefined' && window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.createOrder
+    ? window.__NS_BUSINESS_I18N.createOrder
+    : {};
+
 document.querySelectorAll('input[name="orderType"]').forEach(function(element) {
     element.addEventListener('change', function() {
         // Hide all sections initially
@@ -47,7 +52,7 @@ function setupCounter(buttonId, inputId, increment = true) {
             } else {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Invalid Value',
+                    title: __NSCO.invalidValue || 'Invalid Value',
                 });
             }
         }
@@ -61,8 +66,8 @@ function setupNumberValidation(inputId) {
         if(value <= 0) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Invalid Value',
-                text: 'Number of items cannot be zero or negative.',
+                title: __NSCO.invalidValue || 'Invalid Value',
+                text: __NSCO.itemsCannotBeZero || 'Number of items cannot be zero or negative.',
             });
             this.value = 1;
         }
@@ -215,8 +220,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!fullName.value.trim() || !phoneNumber.value.trim() || !address.value.trim() || !government.value || !zone.value) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Missing Information',
-                text: 'Please fill out all required fields in the Customer Info tab.',
+                title: __NSCO.missingInfo || 'Missing Information',
+                text: __NSCO.missingCustomerInfo || 'Please fill out all required fields in the Customer Info tab.',
             });
             return false;
         }
@@ -229,8 +234,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!selectedOrderType) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Missing Information',
-                text: 'Please select an order type.',
+                title: __NSCO.missingInfo || 'Missing Information',
+                text: __NSCO.missingOrderType || 'Please select an order type.',
             });
             return false;
         }
@@ -242,8 +247,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!productDescription.value.trim() || !numberOfItems.value || parseInt(numberOfItems.value) <= 0) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Missing Information',
-                    text: 'Please fill out all required fields in the Deliver section with valid values.',
+                    title: __NSCO.missingInfo || 'Missing Information',
+                    text: __NSCO.missingDeliverInfo || 'Please fill out all required fields in the Deliver section with valid values.',
                 });
                 return false;
             }
@@ -257,8 +262,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 !newPD.value.trim() || !numberOfItemsNewPD.value || parseInt(numberOfItemsNewPD.value) <= 0) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Missing Information',
-                    text: 'Please fill out all required fields in the Exchange section with valid values.',
+                    title: __NSCO.missingInfo || 'Missing Information',
+                    text: __NSCO.missingExchangeInfo || 'Please fill out all required fields in the Exchange section with valid values.',
                 });
                 return false;
             }
@@ -279,8 +284,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!originalOrderNumber.value.trim() || !partialReturnItemCount.value || parseInt(partialReturnItemCount.value) <= 0 || !productDescription.value.trim() || !returnReason.value) {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Missing Information',
-                        text: 'Please fill out all required fields in the Return section with valid values.',
+                        title: __NSCO.missingInfo || 'Missing Information',
+                        text: __NSCO.missingReturnInfo || 'Please fill out all required fields in the Return section with valid values.',
                     });
                     return false;
                 }
@@ -294,23 +299,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     !originalOrderNumber.value.trim() || !returnReason.value) {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Missing Information',
-                        text: 'Please fill out all required fields in the Return section with valid values.',
+                        title: __NSCO.missingInfo || 'Missing Information',
+                        text: __NSCO.missingReturnInfo || 'Please fill out all required fields in the Return section with valid values.',
                     });
                     return false;
                 }
-            }
-        }
-        else if (selectedOrderType.id === 'paymentMethod04') {
-            // Cash Collection
-            const amountCashCollection = form.querySelector('input[name="amountCashCollection"]');
-            if (!amountCashCollection.value) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Missing Information',
-                    text: 'Please fill out all required fields in the Cash Collection section.',
-                });
-                return false;
             }
         }
         return true;
@@ -320,10 +313,10 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
         completeOrderBTN.disabled = true;
-        completeOrderBTN.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';  
+        completeOrderBTN.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ' + (__NSCO.processing || 'Processing…');
         if (!validateCustomerInfo() || !validateShippingInfo()) {
             completeOrderBTN.disabled = false;
-            completeOrderBTN.innerHTML = '<i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i>Complete Order';
+            completeOrderBTN.innerHTML = '<i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i>' + (__NSCO.completeOrder || 'Complete Order');
             return;
         }
         try {
@@ -365,7 +358,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
 
             if (response.ok) {
-                document.getElementById('orderNmber').textContent = data.order.orderNumber;
+                const orderNum = data.order.orderNumber;
+                const orderLink = document.getElementById('orderNmber');
+                orderLink.textContent = orderNum;
+                orderLink.href = '/business/order-details/' + encodeURIComponent(orderNum);
                 document.querySelector('[data-bs-target="#pills-finish"]').classList.remove('disabled')
                 document.querySelector('[data-bs-target="#pills-finish"]').click();
                 form.reset();
@@ -379,9 +375,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (response.status === 401) {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Session Expired',
-                        text: 'Your session has expired. Please log in again.',
-                        confirmButtonText: 'Go to Login'
+                        title: __NSCO.sessionExpired || 'Session Expired',
+                        text: __NSCO.sessionExpiredText || 'Your session has expired. Please log in again.',
+                        confirmButtonText: 'OK'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             window.location.href = '/login';
@@ -390,8 +386,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: data.error || 'An error occurred while creating the order.',
+                        title: __NSCO.errorTitle || 'Error',
+                        text: data.error || (__NSCO.createError || 'An error occurred while creating the order.'),
                     });
                 }
             }
@@ -399,12 +395,12 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('An error occurred:', error);
             Swal.fire({
                 icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while creating the order. Please try again.',
+                title: __NSCO.errorTitle || 'Error',
+                text: __NSCO.createErrorNetwork || 'An error occurred while creating the order. Please try again.',
             });
         } finally {
             completeOrderBTN.disabled = false;
-            completeOrderBTN.innerHTML = '<i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i>Complete Order';
+            completeOrderBTN.innerHTML = '<i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i>' + (__NSCO.completeOrder || 'Complete Order');
         }
     });
 

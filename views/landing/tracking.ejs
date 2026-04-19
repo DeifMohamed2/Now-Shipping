@@ -1,870 +1,636 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Your Order - NOW Shipping</title>
-    <link rel="stylesheet" href="/assets/rCSS/styles.css">
-    <link rel="stylesheet" href="/assets/rCSS/tracking.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Preloader -->
-    <div class="preloader">
-      <div class="loader">
-        <div class="loader-logo">
-          <img src="images/logo-icon.png" alt="NOW Shipping">
+<%- contentFor('HeaderCss') %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/rCSS/landing-pages.css">
+<style>
+  .track-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  /* ── Search hero (no results) ── */
+  .track-hero {
+    padding: 3rem 0 2.5rem;
+    text-align: center;
+    background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+    border-bottom: 1px solid rgba(26,26,46,0.06);
+  }
+  .track-hero h1 {
+    font-size: clamp(1.85rem, 4vw, 2.35rem);
+    color: var(--lp-navy);
+    margin: 0 0 0.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .track-hero p {
+    color: var(--lp-muted);
+    margin: 0 auto;
+    max-width: 520px;
+    font-size: 1.02rem;
+    line-height: 1.55;
+  }
+  .track-search {
+    max-width: 560px;
+    margin: 2rem auto 0;
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+  }
+  .track-search input {
+    flex: 1;
+    min-width: 220px;
+    padding: 0.95rem 1.25rem;
+    border-radius: 999px;
+    border: 2px solid rgba(26,26,46,0.1);
+    font-size: 1rem;
+    font-family: inherit;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(26,26,46,0.04);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .track-search input:focus {
+    outline: none;
+    border-color: var(--lp-primary);
+    box-shadow: 0 0 0 4px rgba(243,151,32,0.12);
+  }
+  .track-search .lp-btn { padding-left: 1.5rem; padding-right: 1.5rem; white-space: nowrap; }
+
+  .track-alert {
+    max-width: 560px;
+    margin: 1.25rem auto 0;
+    padding: 1rem 1.25rem;
+    border-radius: var(--lp-radius);
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    text-align: left;
+  }
+  .track-alert--err { background: #fee2e2; color: #991b1b; }
+
+  /* ── Compact bar when results are shown (no search form) ── */
+  .track-hero--results {
+    text-align: left;
+    padding: 1.35rem 0;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-bottom: none;
+    color: #fff;
+  }
+  .track-hero--results h1 {
+    color: #fff;
+    font-size: clamp(1.45rem, 1.2rem + 1.8vw, 2.1rem);
+    margin: 0 0 0.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .track-hero-results__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+  }
+  .track-hero-results__meta {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.55);
+    margin: 0 0 0.35rem;
+  }
+  .track-hero-results__sub {
+    margin: 0;
+    font-size: clamp(0.9rem, 0.85rem + 0.25vw, 1.02rem);
+    color: rgba(255,255,255,0.72);
+    max-width: min(72ch, 100%);
+    line-height: 1.45;
+  }
+  .track-hero--results .lp-btn--ghost {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .track-hero--results .lp-btn--ghost:hover {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.35);
+    color: #fff;
+  }
+
+  /* Full-width content band (breaks out of narrow lp-container feel) */
+  .track-page-wide {
+    width: 100%;
+    max-width: min(96vw, 1680px);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: clamp(1rem, 3.5vw, 3rem);
+    padding-right: clamp(1rem, 3.5vw, 3rem);
+    box-sizing: border-box;
+  }
+
+  /* ── Two-card dashboard ── */
+  .track-dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: clamp(1.25rem, 2.2vw, 2.25rem);
+    align-items: stretch;
+    margin: 0 auto;
+    padding: 2rem 0 3.75rem;
+  }
+  @media (max-width: 992px) {
+    .track-dashboard { grid-template-columns: 1fr; }
+  }
+
+  .track-panel {
+    background: #fff;
+    border-radius: 1.15rem;
+    box-shadow: 0 4px 28px rgba(26,26,46,0.08), 0 1px 0 rgba(26,26,46,0.04);
+    border: 1px solid rgba(26,26,46,0.07);
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+  }
+  .track-panel__bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--lp-primary), var(--lp-secondary));
+    flex-shrink: 0;
+  }
+  .track-panel__inner {
+    padding: 1.65rem 1.75rem 1.75rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  @media (min-width: 900px) {
+    .track-panel__inner {
+      padding: 1.9rem 2.15rem 2.1rem;
+    }
+  }
+  @media (min-width: 1200px) {
+    .track-panel__inner {
+      padding: 2.1rem 2.5rem 2.25rem;
+    }
+  }
+  .track-panel__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--lp-muted);
+    margin: 0 0 0.35rem;
+  }
+  .track-panel__title {
+    margin: 0 0 1.25rem;
+    font-size: clamp(1.1rem, 1.1rem + 0.35vw, 1.35rem);
+    font-weight: 800;
+    color: var(--lp-navy);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .track-panel__title i { color: var(--lp-primary); font-size: 1.05rem; }
+
+  .track-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.35rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(26,26,46,0.07);
+  }
+  .track-head__ref {
+    font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.15rem);
+    font-weight: 800;
+    color: var(--lp-navy);
+    letter-spacing: -0.02em;
+    margin: 0.2rem 0 0;
+    line-height: 1.1;
+  }
+  .track-head__biz {
+    margin: 0.35rem 0 0;
+    font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.05rem);
+    color: var(--lp-muted);
+  }
+
+  .track-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: capitalize;
+    background: rgba(243,151,32,0.12);
+    color: #b45309;
+    flex-shrink: 0;
+  }
+  .track-badge--return { background: rgba(59,130,246,0.12); color: #1d4ed8; }
+  .track-badge--done { background: rgba(16,185,129,0.14); color: #047857; }
+  .track-badge--bad { background: rgba(239,68,68,0.12); color: #b91c1c; }
+
+  .track-steps {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 0.25rem;
+    position: relative;
+    margin: 0 0 1.5rem;
+    padding: 0 0.25rem;
+  }
+  .track-steps::before {
+    content: '';
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 17px;
+    height: 3px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    z-index: 0;
+  }
+  .track-step {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .track-step__dot {
+    width: clamp(34px, 32px + 0.8vw, 42px);
+    height: clamp(34px, 32px + 0.8vw, 42px);
+    border-radius: 50%;
+    margin: 0 auto 0.45rem;
+    background: #e2e8f0;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #e2e8f0;
+  }
+  .track-step--active .track-step__dot {
+    background: var(--lp-primary);
+    color: #fff;
+    box-shadow: 0 0 0 2px var(--lp-primary);
+  }
+  .track-step--done .track-step__dot {
+    background: #10b981;
+    color: #fff;
+    box-shadow: 0 0 0 2px #10b981;
+  }
+  .track-step span {
+    font-size: clamp(0.62rem, 0.55rem + 0.25vw, 0.74rem);
+    color: var(--lp-muted);
+    font-weight: 600;
+    line-height: 1.2;
+    display: block;
+    padding: 0 0.1rem;
+  }
+
+  .track-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.15rem 1.5rem;
+  }
+  @media (min-width: 1100px) {
+    .track-details {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.25rem 1.75rem;
+    }
+  }
+  @media (max-width: 520px) {
+    .track-details { grid-template-columns: 1fr; }
+  }
+  .track-kv { font-size: clamp(0.9rem, 0.85rem + 0.2vw, 1rem); }
+  .track-kv dt {
+    color: var(--lp-muted);
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    font-size: clamp(0.68rem, 0.62rem + 0.15vw, 0.76rem);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .track-kv dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--lp-navy);
+    line-height: 1.4;
+    font-size: clamp(0.95rem, 0.9rem + 0.25vw, 1.08rem);
+  }
+
+  .track-details-note {
+    margin: 1.25rem 0 0;
+    padding: 1rem 1.1rem;
+    border-radius: 0.75rem;
+    background: #f8fafc;
+    border: 1px solid rgba(26,26,46,0.06);
+    font-size: 0.9rem;
+    color: var(--lp-muted);
+    line-height: 1.55;
+  }
+  .track-details-note strong { color: var(--lp-navy); font-weight: 700; }
+
+  .track-courier {
+    margin-top: 1.25rem;
+    padding: 1.15rem 1.2rem;
+    border-radius: 0.85rem;
+    background: linear-gradient(135deg, rgba(243,151,32,0.1), rgba(22,33,62,0.06));
+    border: 1px solid rgba(243,151,32,0.15);
+  }
+  .track-courier strong { color: var(--lp-navy); font-size: 0.92rem; }
+  .track-courier p { margin: 0.35rem 0 0; font-size: 0.95rem; color: var(--lp-navy); }
+  .track-courier a { color: var(--lp-primary); font-weight: 700; text-decoration: none; }
+  .track-courier a:hover { text-decoration: underline; }
+
+  .track-share {
+    margin-top: auto;
+    padding-top: 1.35rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: center;
+    border-top: 1px solid rgba(26,26,46,0.06);
+  }
+  .track-share > span {
+    font-size: 0.82rem;
+    color: var(--lp-muted);
+    font-weight: 600;
+    margin-right: 0.25rem;
+  }
+  .track-share button {
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.55rem 1.05rem;
+    border-radius: 999px;
+    border: 1px solid rgba(26,26,46,0.12);
+    background: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .track-share button:hover {
+    border-color: var(--lp-primary);
+    color: var(--lp-primary);
+    background: rgba(243,151,32,0.06);
+  }
+
+  .track-timeline-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    max-height: min(62vh, 640px);
+    margin: 0 -0.25rem;
+    padding-right: 0.35rem;
+  }
+  .track-timeline { margin: 0; padding: 0; list-style: none; }
+  .track-timeline li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(26,26,46,0.06);
+  }
+  .track-timeline li:last-child { border-bottom: none; }
+  .track-timeline__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(243,151,32,0.18), rgba(253,182,20,0.12));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--lp-primary);
+    flex-shrink: 0;
+  }
+  .track-timeline__meta {
+    font-size: 0.76rem;
+    color: var(--lp-muted);
+    margin-top: 0.3rem;
+  }
+  .track-timeline strong {
+    color: var(--lp-navy);
+    font-size: clamp(0.95rem, 0.88rem + 0.25vw, 1.08rem);
+    text-transform: capitalize;
+  }
+</style>
+
+<%- contentFor('body') %>
+<div class="lp-page track-wrap">
+  <%- include('../partials/navbar', { activePage: 'tracking' }) %>
+
+  <% 
+    const T = translation.pages && translation.pages.tracking ? translation.pages.tracking : {};
+    const stepLabels = [
+      (T.stepPlaced || 'Placed'),
+      (T.stepPickedUp || 'Picked up'),
+      (T.stepProcessing || 'Processing'),
+      (T.stepOut || 'Out for delivery'),
+      (T.stepDone || 'Delivered')
+    ];
+    function trackingStepIndex(status) {
+      var s = (status || '').toString();
+      if (['completed','returnCompleted'].indexOf(s) !== -1) return 6;
+      if (['headingToCustomer','headingToYou'].indexOf(s) !== -1) return 4;
+      if (['inProgress','waitingAction','rescheduled','inReturnStock'].indexOf(s) !== -1) return 3;
+      if (['pickedUp','inStock'].indexOf(s) !== -1) return 2;
+      if (['new','pendingPickup'].indexOf(s) !== -1) return 1;
+      return 2;
+    }
+    function isReturnFlow(status) {
+      var s = status || '';
+      return ['returnInitiated','returnAssigned','returnPickedUp','returnAtWarehouse','returnToBusiness','returnToWarehouse','returned','exchangePickup','returnLinked','autoReturnInitiated','inReturnStock'].indexOf(s) !== -1;
+    }
+    const od = typeof orderData !== 'undefined' ? orderData : null;
+    const terr = typeof trackingError !== 'undefined' ? trackingError : null;
+    const searched = typeof searchedNumber !== 'undefined' ? searchedNumber : '';
+  %>
+
+  <% if (!od) { %>
+  <section class="track-hero">
+    <div class="lp-container">
+      <h1><%= T.title || 'Track your shipment' %></h1>
+      <p><%= T.subtitle || 'Enter your order or flyer number for live status and history.' %></p>
+
+      <form class="track-search" method="get" action="/tracking" role="search" aria-label="Track order">
+        <input type="text" name="q" value="<%= searched || '' %>" placeholder="<%= T.trackingPlaceholder || 'Order or barcode number' %>" autocomplete="off" maxlength="64" />
+        <button type="submit" class="lp-btn lp-btn--primary"><i class="fas fa-search"></i> <%= T.track || 'Track' %></button>
+      </form>
+
+      <% if (terr === 'not_found' && searched) { %>
+        <div class="track-alert track-alert--err" role="alert">
+          <i class="fas fa-circle-exclamation"></i>
+          <span><%= T.notFound || 'No shipment found for this number. Check the code and try again.' %></span>
         </div>
-        <div class="loader-bar">
-          <div class="loader-progress"></div>
+      <% } else if (terr === 'server') { %>
+        <div class="track-alert track-alert--err" role="alert">
+          <i class="fas fa-server"></i>
+          <span><%= T.serverError || 'Something went wrong. Please try again shortly.' %></span>
         </div>
-        <p class="loader-text">Loading...</p>
-      </div>
+      <% } %>
     </div>
-
-    <!-- Header -->
-    <header class="header">
-      <!-- Top Bar -->
-      <div class="top-bar">
-        <div class="container">
-          <div class="top-bar-left">
-            <div class="top-bar-item">
-              <i class="fas fa-phone"></i>
-              <span>+1 (800) NOW-SHIP</span>
-            </div>
-            <div class="top-bar-item">
-              <i class="fas fa-envelope"></i>
-              <span>support@nowshipping.com</span>
-            </div>
-            <div class="top-bar-item">
-              <i class="fas fa-map-marker-alt"></i>
-              <span>123 Logistics Way, Shipping City, SC 12345</span>
-            </div>
-          </div>
-          <div class="top-bar-right">
-            <div class="social-links">
-              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-              <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-              <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-            </div>
-            <div class="language-selector">
-              <select id="language">
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-              </select>
-            </div>
-          </div>
-        </div>
+  </section>
+  <% } else { %>
+  <section class="track-hero track-hero--results" aria-label="<%= T.title || 'Tracking' %>">
+    <div class="track-page-wide track-hero-results__row">
+      <div>
+        <p class="track-hero-results__meta"><%= T.trackingNumber || 'Reference' %></p>
+        <h1><%= od.orderNumber %></h1>
+        <p class="track-hero-results__sub"><%= T.resultsSubtitle || 'Live status and delivery details for this shipment.' %></p>
       </div>
-
-      <!-- Main Navigation -->
-      <nav class="main-nav">
-        <div class="container">
-          <div class="nav-wrapper">
-            <div class="logo">
-              <a href="index.html">
-                <img src="images/logo.png" alt="NOW Shipping">
-              </a>
-            </div>
-            <div class="nav-toggle">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <ul class="nav-menu">
-              <li class="nav-item"><a href="index.html">Home</a></li>
-              <li class="nav-item dropdown">
-                <a href="index.html#services">Services <i class="fas fa-chevron-down"></i></a>
-                <ul class="dropdown-menu">
-                  <li><a href="index.html#express-delivery">Express Delivery</a></li>
-                  <li><a href="index.html#international-shipping">International Shipping</a></li>
-                  <li><a href="index.html#ecommerce-solutions">E-commerce Solutions</a></li>
-                  <li><a href="index.html#warehousing">Warehousing & Fulfillment</a></li>
-                  <li><a href="index.html#specialized-shipping">Specialized Shipping</a></li>
-                </ul>
-              </li>
-              <li class="nav-item"><a href="index.html#about">About Us</a></li>
-              <li class="nav-item"><a href="index.html#pricing">Pricing</a></li>
-              <li class="nav-item dropdown">
-                <a href="index.html#resources">Resources <i class="fas fa-chevron-down"></i></a>
-                <ul class="dropdown-menu">
-                  <li><a href="index.html#shipping-calculator">Shipping Calculator</a></li>
-                  <li><a href="index.html#shipping-guides">Shipping Guides</a></li>
-                  <li><a href="index.html#faq">FAQ</a></li>
-                  <li><a href="index.html#blog">Blog</a></li>
-                </ul>
-              </li>
-              <li class="nav-item"><a href="index.html#contact">Contact</a></li>
-            </ul>
-            <div class="nav-actions">
-              <a href="tracking.html" class="btn btn-track active">
-                <i class="fas fa-search"></i> Track Package
-              </a>
-              <a href="index.html#shipping-calculator" class="btn btn-primary" id="getQuoteBtn">
-                <i class="fas fa-calculator"></i> Get a Quote
-              </a>
-              <a href="#" class="btn btn-outline login-btn">
-                <i class="fas fa-user"></i> Login
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
-    </header>
-
-    <!-- Tracking Hero Section -->
-    <section class="tracking-hero">
-      <div class="container">
-        <div class="tracking-hero-content">
-          <h1>Track Your Shipment</h1>
-          <p>Enter your tracking number to get real-time updates on your package</p>
-          <div class="tracking-search-container">
-            <form class="tracking-search-form" id="trackingForm">
-              <div class="tracking-search-input">
-                <i class="fas fa-search"></i>
-                <input type="text" id="trackingNumber" placeholder="Enter tracking number, order ID, or reference number" required>
-                <button type="submit" class="btn btn-primary">Track Now</button>
-              </div>
-            </form>
-            <div class="tracking-options">
-              <span>Track by:</span>
-              <div class="tracking-option-buttons">
-                <button class="tracking-option-btn active" data-option="tracking">
-                  <i class="fas fa-barcode"></i>
-                  <span>Tracking Number</span>
-                </button>
-                <button class="tracking-option-btn" data-option="reference">
-                  <i class="fas fa-hashtag"></i>
-                  <span>Reference Number</span>
-                </button>
-                <button class="tracking-option-btn" data-option="order">
-                  <i class="fas fa-shopping-cart"></i>
-                  <span>Order Number</span>
-                </button>
-                <button class="tracking-option-btn" data-option="email">
-                  <i class="fas fa-envelope"></i>
-                  <span>Email/Phone</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tracking Results Section -->
-    <section class="tracking-results" id="trackingResults">
-      <div class="container">
-        <!-- Tracking Header -->
-        <div class="tracking-header">
-          <div class="tracking-status">
-            <div class="status-icon in-transit">
-              <i class="fas fa-truck"></i>
-            </div>
-            <div class="status-info">
-              <h2>In Transit</h2>
-              <p>Your package is on its way to the destination</p>
-            </div>
-          </div>
-          <div class="tracking-actions-top">
-            <button class="btn btn-outline btn-sm" id="notifyBtn">
-              <i class="fas fa-bell"></i> Get Updates
-            </button>
-            <button class="btn btn-outline btn-sm" id="shareBtn">
-              <i class="fas fa-share-alt"></i> Share
-            </button>
-            <button class="btn btn-outline btn-sm" id="printBtn">
-              <i class="fas fa-print"></i> Print
-            </button>
-          </div>
-        </div>
-
-        <!-- Tracking Progress -->
-        <div class="tracking-progress">
-          <div class="progress-steps">
-            <div class="progress-step completed">
-              <div class="step-icon">
-                <i class="fas fa-box"></i>
-              </div>
-              <div class="step-label">Order Confirmed</div>
-              <div class="step-date">Apr 10, 2023</div>
-            </div>
-            <div class="progress-step completed">
-              <div class="step-icon">
-                <i class="fas fa-warehouse"></i>
-              </div>
-              <div class="step-label">Package Received</div>
-              <div class="step-date">Apr 11, 2023</div>
-            </div>
-            <div class="progress-step completed">
-              <div class="step-icon">
-                <i class="fas fa-shipping-fast"></i>
-              </div>
-              <div class="step-label">In Transit</div>
-              <div class="step-date">Apr 12, 2023</div>
-            </div>
-            <div class="progress-step active">
-              <div class="step-icon">
-                <i class="fas fa-truck"></i>
-              </div>
-              <div class="step-label">Out for Delivery</div>
-              <div class="step-date">Apr 14, 2023</div>
-            </div>
-            <div class="progress-step">
-              <div class="step-icon">
-                <i class="fas fa-check-circle"></i>
-              </div>
-              <div class="step-label">Delivered</div>
-              <div class="step-date">Expected Apr 15</div>
-            </div>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-bar-fill" style="width: 75%"></div>
-          </div>
-        </div>
-
-        <!-- Tracking Details -->
-        <div class="tracking-details">
-          <div class="tracking-details-container">
-            <!-- Package Information -->
-            <div class="tracking-card">
-              <div class="tracking-card-header">
-                <h3><i class="fas fa-box"></i> Package Information</h3>
-              </div>
-              <div class="tracking-card-body">
-                <div class="details-grid">
-                  <div class="detail-item">
-                    <h4>Tracking Number</h4>
-                    <p id="displayTrackingNumber">NOW123456789</p>
-                    <button class="copy-btn" data-clipboard-text="NOW123456789" aria-label="Copy tracking number">
-                      <i class="fas fa-copy"></i>
-                    </button>
-                  </div>
-                  <div class="detail-item">
-                    <h4>Service Type</h4>
-                    <p id="serviceType">Express Delivery</p>
-                  </div>
-                  <div class="detail-item">
-                    <h4>Origin</h4>
-                    <p id="origin">New York, NY, USA</p>
-                  </div>
-                  <div class="detail-item">
-                    <h4>Destination</h4>
-                    <p id="destination">Los Angeles, CA, USA</p>
-                  </div>
-                  <div class="detail-item">
-                    <h4>Estimated Delivery</h4>
-                    <p id="estimatedDelivery">April 15, 2023 by 8:00 PM</p>
-                  </div>
-                  <div class="detail-item">
-                    <h4>Status</h4>
-                    <p id="status" class="status-in-transit">Out for Delivery</p>
-                  </div>
-                  <div class="detail-item">
-                    <h4>Package Weight</h4>
-                    <p id="packageWeight">2.5 kg (5.5 lbs)</p>
-                  </div>
-                  <div class="detail-item">
-                    <h4>Dimensions</h4>
-                    <p id="dimensions">30 × 20 × 15 cm</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Shipment Map -->
-            <div class="tracking-card">
-              <div class="tracking-card-header">
-                <h3><i class="fas fa-map-marked-alt"></i> Shipment Location</h3>
-              </div>
-              <div class="tracking-card-body">
-                <div class="tracking-map" id="map">
-                  <!-- Map will be loaded here -->
-                  <img src="images/tracking-map.jpg" alt="Package Location Map" class="tracking-map-image">
-                </div>
-                <div class="map-details">
-                  <div class="map-detail">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <div>
-                      <h4>Current Location</h4>
-                      <p>Los Angeles Distribution Center</p>
-                    </div>
-                  </div>
-                  <div class="map-detail">
-                    <i class="fas fa-route"></i>
-                    <div>
-                      <h4>Distance Traveled</h4>
-                      <p>2,450 miles (3,943 km)</p>
-                    </div>
-                  </div>
-                  <div class="map-detail">
-                    <i class="fas fa-clock"></i>
-                    <div>
-                      <h4>Estimated Time to Delivery</h4>
-                      <p>Approximately 3 hours</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Shipment Timeline -->
-          <div class="tracking-card">
-            <div class="tracking-card-header">
-              <h3><i class="fas fa-history"></i> Shipment History</h3>
-            </div>
-            <div class="tracking-card-body">
-              <div class="timeline">
-                <div class="timeline-item active">
-                  <div class="timeline-date">
-                    <div class="date">Apr 14, 2023</div>
-                    <div class="time">07:30 AM PDT</div>
-                  </div>
-                  <div class="timeline-content">
-                    <div class="timeline-icon">
-                      <i class="fas fa-truck"></i>
-                    </div>
-                    <div class="timeline-info">
-                      <h4>Out for Delivery</h4>
-                      <p>Your package is out for delivery to your address.</p>
-                      <div class="timeline-location">Los Angeles, CA, USA</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <div class="timeline-date">
-                    <div class="date">Apr 13, 2023</div>
-                    <div class="time">10:45 PM PDT</div>
-                  </div>
-                  <div class="timeline-content">
-                    <div class="timeline-icon">
-                      <i class="fas fa-building"></i>
-                    </div>
-                    <div class="timeline-info">
-                      <h4>Arrived at Destination Facility</h4>
-                      <p>Your package has arrived at the destination sorting facility.</p>
-                      <div class="timeline-location">Los Angeles, CA, USA</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <div class="timeline-date">
-                    <div class="date">Apr 12, 2023</div>
-                    <div class="time">08:45 AM CDT</div>
-                  </div>
-                  <div class="timeline-content">
-                    <div class="timeline-icon">
-                      <i class="fas fa-shipping-fast"></i>
-                    </div>
-                    <div class="timeline-info">
-                      <h4>In Transit</h4>
-                      <p>Your package is in transit to the destination.</p>
-                      <div class="timeline-location">En Route to Los Angeles, CA, USA</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <div class="timeline-date">
-                    <div class="date">Apr 11, 2023</div>
-                    <div class="time">10:30 AM EDT</div>
-                  </div>
-                  <div class="timeline-content">
-                    <div class="timeline-icon">
-                      <i class="fas fa-warehouse"></i>
-                    </div>
-                    <div class="timeline-info">
-                      <h4>Package Received</h4>
-                      <p>Your package has been received at our facility and is being processed for shipment.</p>
-                      <div class="timeline-location">New York, NY, USA</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <div class="timeline-date">
-                    <div class="date">Apr 10, 2023</div>
-                    <div class="time">09:15 AM EDT</div>
-                  </div>
-                  <div class="timeline-content">
-                    <div class="timeline-icon">
-                      <i class="fas fa-box"></i>
-                    </div>
-                    <div class="timeline-info">
-                      <h4>Order Confirmed</h4>
-                      <p>Your order has been confirmed and is being processed. Shipping label created.</p>
-                      <div class="timeline-location">New York, NY, USA</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Delivery Options -->
-        <div class="delivery-options">
-          <h3><i class="fas fa-cog"></i> Delivery Options</h3>
-          <div class="options-grid">
-            <div class="option-card">
-              <div class="option-icon">
-                <i class="fas fa-calendar-alt"></i>
-              </div>
-              <h4>Reschedule Delivery</h4>
-              <p>Choose a different delivery date that works better for you.</p>
-              <button class="btn btn-outline btn-sm">Reschedule</button>
-            </div>
-            <div class="option-card">
-              <div class="option-icon">
-                <i class="fas fa-map-marker-alt"></i>
-              </div>
-              <h4>Change Delivery Address</h4>
-              <p>Redirect your package to a different address.</p>
-              <button class="btn btn-outline btn-sm">Change Address</button>
-            </div>
-            <div class="option-card">
-              <div class="option-icon">
-                <i class="fas fa-store"></i>
-              </div>
-              <h4>Pickup from Location</h4>
-              <p>Pick up your package from a nearby service point.</p>
-              <button class="btn btn-outline btn-sm">Find Locations</button>
-            </div>
-            <div class="option-card">
-              <div class="option-icon">
-                <i class="fas fa-signature"></i>
-              </div>
-              <h4>Signature Options</h4>
-              <p>Change your signature requirements for delivery.</p>
-              <button class="btn btn-outline btn-sm">Update Options</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tracking Actions -->
-        <div class="tracking-actions">
-          <button class="btn btn-secondary"><i class="fas fa-print"></i> Print Details</button>
-          <button class="btn btn-secondary"><i class="fas fa-envelope"></i> Email Updates</button>
-          <button class="btn btn-secondary"><i class="fas fa-file-pdf"></i> Download PDF</button>
-          <button class="btn btn-primary"><i class="fas fa-headset"></i> Contact Support</button>
-        </div>
-
-        <!-- Related Shipments -->
-        <div class="related-shipments">
-          <h3><i class="fas fa-boxes"></i> Your Other Shipments</h3>
-          <div class="shipments-table">
-            <div class="shipment-table-header">
-              <div class="shipment-cell">Tracking Number</div>
-              <div class="shipment-cell">Origin</div>
-              <div class="shipment-cell">Destination</div>
-              <div class="shipment-cell">Status</div>
-              <div class="shipment-cell">Est. Delivery</div>
-              <div class="shipment-cell">Actions</div>
-            </div>
-            <div class="shipment-table-row">
-              <div class="shipment-cell">NOW987654321</div>
-              <div class="shipment-cell">Chicago, IL</div>
-              <div class="shipment-cell">Miami, FL</div>
-              <div class="shipment-cell"><span class="status-badge in-transit">In Transit</span></div>
-              <div class="shipment-cell">Apr 18, 2023</div>
-              <div class="shipment-cell">
-                <button class="btn btn-sm btn-outline">Track</button>
-              </div>
-            </div>
-            <div class="shipment-table-row">
-              <div class="shipment-cell">NOW567891234</div>
-              <div class="shipment-cell">Seattle, WA</div>
-              <div class="shipment-cell">Boston, MA</div>
-              <div class="shipment-cell"><span class="status-badge processing">Processing</span></div>
-              <div class="shipment-cell">Apr 20, 2023</div>
-              <div class="shipment-cell">
-                <button class="btn btn-sm btn-outline">Track</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Similar Tracking Section -->
-    <section class="similar-tracking">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-subtitle">Need Help?</span>
-          <h2 class="section-title">Need to Ship Something?</h2>
-          <p class="section-description">Get started with our easy shipping process</p>
-        </div>
-        <div class="similar-tracking-grid">
-          <div class="similar-tracking-card">
-            <div class="similar-tracking-icon">
-              <i class="fas fa-calculator"></i>
-            </div>
-            <h3>Get a Quote</h3>
-            <p>Calculate shipping costs instantly for your next shipment.</p>
-            <a href="index.html#shipping-calculator" class="btn btn-outline">Calculate Now</a>
-          </div>
-          <div class="similar-tracking-card">
-            <div class="similar-tracking-icon">
-              <i class="fas fa-box"></i>
-            </div>
-            <h3>Ship a Package</h3>
-            <p>Create a new shipment and schedule a pickup.</p>
-            <a href="#" class="btn btn-outline">Ship Now</a>
-          </div>
-          <div class="similar-tracking-card">
-            <div class="similar-tracking-icon">
-              <i class="fas fa-headset"></i>
-            </div>
-            <h3>Need Help?</h3>
-            <p>Our shipping experts are ready to assist you.</p>
-            <a href="index.html#contact" class="btn btn-outline">Contact Us</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-top">
-        <div class="container">
-          <div class="footer-widgets">
-            <div class="footer-widget">
-              <div class="footer-logo">
-                <img src="images/logo-white.png" alt="NOW Shipping">
-              </div>
-              <p class="footer-about">NOW Shipping provides fast, reliable shipping solutions for businesses and individuals worldwide. With our extensive network and cutting-edge technology, we ensure your packages arrive on time, every time.</p>
-              <div class="footer-social">
-                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-              </div>
-            </div>
-            <div class="footer-widget">
-              <h3 class="footer-widget-title">Quick Links</h3>
-              <ul class="footer-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="index.html#about">About Us</a></li>
-                <li><a href="index.html#services">Services</a></li>
-                <li><a href="index.html#pricing">Pricing</a></li>
-                <li><a href="index.html#contact">Contact Us</a></li>
-                <li><a href="tracking.html">Track Package</a></li>
-                <li><a href="index.html#shipping-calculator">Get a Quote</a></li>
-                <li><a href="index.html#faq">FAQ</a></li>
-              </ul>
-            </div>
-            <div class="footer-widget">
-              <h3 class="footer-widget-title">Our Services</h3>
-              <ul class="footer-links">
-                <li><a href="index.html#express-delivery">Express Delivery</a></li>
-                <li><a href="index.html#international-shipping">International Shipping</a></li>
-                <li><a href="index.html#ecommerce-solutions">E-commerce Solutions</a></li>
-                <li><a href="index.html#warehousing">Warehousing & Fulfillment</a></li>
-                <li><a href="index.html#specialized-shipping">Specialized Shipping</a></li>
-                <li><a href="index.html#package-protection">Package Protection</a></li>
-                <li><a href="#">Freight Services</a></li>
-                <li><a href="#">Customs Clearance</a></li>
-              </ul>
-            </div>
-            <div class="footer-widget">
-              <h3 class="footer-widget-title">Resources</h3>
-              <ul class="footer-links">
-                <li><a href="index.html#blog">Blog</a></li>
-                <li><a href="#">Shipping Guides</a></li>
-                <li><a href="#">Packaging Tips</a></li>
-                <li><a href="#">Customs Information</a></li>
-                <li><a href="#">Size & Weight Guidelines</a></li>
-                <li><a href="#">Prohibited Items</a></li>
-                <li><a href="index.html#shipping-calculator">Shipping Calculator</a></li>
-                <li><a href="#">API Documentation</a></li>
-              </ul>
-            </div>
-            <div class="footer-widget">
-              <h3 class="footer-widget-title">Newsletter</h3>
-              <p class="footer-newsletter-text">Subscribe to our newsletter to receive updates, shipping tips, and exclusive offers.</p>
-              <form class="footer-newsletter">
-                <div class="newsletter-form">
-                  <input type="email" placeholder="Your Email Address" required>
-                  <button type="submit" class="btn btn-primary">Subscribe</button>
-                </div>
-              </form>
-              <div class="footer-contact">
-                <h3 class="footer-widget-title">Contact Us</h3>
-                <ul class="footer-contact-info">
-                  <li><i class="fas fa-phone"></i> +1 (800) NOW-SHIP</li>
-                  <li><i class="fas fa-envelope"></i> support@nowshipping.com</li>
-                  <li><i class="fas fa-map-marker-alt"></i> 123 Logistics Way, Shipping City, SC 12345</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <div class="container">
-          <div class="footer-bottom-content">
-            <div class="footer-copyright">
-              <p>&copy; 2023 NOW Shipping. All Rights Reserved.</p>
-            </div>
-            <div class="footer-bottom-links">
-              <a href="#">Privacy Policy</a>
-              <a href="#">Terms of Service</a>
-              <a href="#">Shipping Policy</a>
-              <a href="#">Cookie Policy</a>
-              <a href="#">Sitemap</a>
-            </div>
-            <div class="footer-payment">
-              <span>We Accept:</span>
-              <div class="payment-icons">
-                <i class="fab fa-cc-visa"></i>
-                <i class="fab fa-cc-mastercard"></i>
-                <i class="fab fa-cc-amex"></i>
-                <i class="fab fa-cc-discover"></i>
-                <i class="fab fa-cc-paypal"></i>
-                <i class="fab fa-apple-pay"></i>
-                <i class="fab fa-google-pay"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
-
-    <!-- Back to Top Button -->
-    <a href="#" class="back-to-top" aria-label="Back to top">
-      <i class="fas fa-arrow-up"></i>
-    </a>
-
-    <!-- Login Modal -->
-    <div class="modal" id="loginModal">
-      <div class="modal-overlay"></div>
-      <div class="modal-container">
-        <div class="modal-header">
-          <h3>Account Access</h3>
-          <button class="modal-close" aria-label="Close modal">&times;</button>
-        </div>
-        <div class="modal-tabs">
-          <button class="modal-tab active" data-tab="login">Login</button>
-          <button class="modal-tab" data-tab="register">Register</button>
-        </div>
-        <div class="modal-content">
-          <div class="modal-panel active" id="login-panel">
-            <form class="login-form">
-              <div class="form-group">
-                <label for="login-email">Email Address</label>
-                <input type="email" id="login-email" required>
-              </div>
-              <div class="form-group">
-                <label for="login-password">Password</label>
-                <div class="password-input">
-                  <input type="password" id="login-password" required>
-                  <button type="button" class="password-toggle" aria-label="Toggle password visibility">
-                    <i class="fas fa-eye-slash"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="form-options">
-                <label class="checkbox">
-                  <input type="checkbox" name="remember">
-                  <span>Remember me</span>
-                </label>
-                <a href="#" class="forgot-password">Forgot Password?</a>
-              </div>
-              <button type="submit" class="btn btn-primary btn-block">Login</button>
-            </form>
-            <div class="social-login">
-              <p>Or login with</p>
-              <div class="social-login-buttons">
-                <button class="social-btn google">
-                  <i class="fab fa-google"></i>
-                  <span>Google</span>
-                </button>
-                <button class="social-btn facebook">
-                  <i class="fab fa-facebook-f"></i>
-                  <span>Facebook</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="modal-panel" id="register-panel">
-            <form class="register-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="register-fname">First Name</label>
-                  <input type="text" id="register-fname" required>
-                </div>
-                <div class="form-group">
-                  <label for="register-lname">Last Name</label>
-                  <input type="text" id="register-lname" required>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="register-email">Email Address</label>
-                <input type="email" id="register-email" required>
-              </div>
-              <div class="form-group">
-                <label for="register-phone">Phone Number</label>
-                <input type="tel" id="register-phone" required>
-              </div>
-              <div class="form-group">
-                <label for="register-password">Password</label>
-                <div class="password-input">
-                  <input type="password" id="register-password" required>
-                  <button type="button" class="password-toggle" aria-label="Toggle password visibility">
-                    <i class="fas fa-eye-slash"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="register-confirm">Confirm Password</label>
-                <div class="password-input">
-                  <input type="password" id="register-confirm" required>
-                  <button type="button" class="password-toggle" aria-label="Toggle password visibility">
-                    <i class="fas fa-eye-slash"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="checkbox">
-                  <input type="checkbox" name="terms" required>
-                  <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
-                </label>
-              </div>
-              <button type="submit" class="btn btn-primary btn-block">Create Account</button>
-            </form>
-          </div>
-        </div>
-      </div>
+      <a href="/tracking" class="lp-btn lp-btn--ghost"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> <%= T.trackAnother || 'Track another shipment' %></a>
     </div>
+  </section>
+  <% } %>
 
-    <!-- Notification Modal -->
-    <div class="modal" id="notificationModal">
-      <div class="modal-overlay"></div>
-      <div class="modal-container">
-        <div class="modal-header">
-          <h3>Get Delivery Updates</h3>
-          <button class="modal-close" aria-label="Close modal">&times;</button>
-        </div>
-        <div class="modal-content">
-          <form class="notification-form">
-            <div class="form-group">
-              <label for="notification-method">How would you like to receive updates?</label>
-              <select id="notification-method">
-                <option value="email">Email</option>
-                <option value="sms">SMS Text Message</option>
-                <option value="both">Both Email and SMS</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="notification-email">Email Address</label>
-              <input type="email" id="notification-email" placeholder="Enter your email address">
-            </div>
-            <div class="form-group">
-              <label for="notification-phone">Phone Number</label>
-              <input type="tel" id="notification-phone" placeholder="Enter your phone number">
-            </div>
-            <div class="form-group">
-              <label>Notification Preferences</label>
-              <div class="checkbox-group">
-                <label class="checkbox">
-                  <input type="checkbox" name="status-updates" checked>
-                  <span>Status Updates</span>
-                </label>
-                <label class="checkbox">
-                  <input type="checkbox" name="delivery-confirmation" checked>
-                  <span>Delivery Confirmation</span>
-                </label>
-                <label class="checkbox">
-                  <input type="checkbox" name="delivery-exceptions">
-                  <span>Delivery Exceptions</span>
-                </label>
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Set Up Notifications</button>
-          </form>
-        </div>
-      </div>
-    </div>
+  <% if (od) {
+    const idx = trackingStepIndex(od.orderStatus);
+    const returnFlow = isReturnFlow(od.orderStatus);
+    const shareUrl = typeof trackingShareUrl !== 'undefined' && trackingShareUrl ? trackingShareUrl : ('/t/' + encodeURIComponent(od.orderNumber));
+  %>
+  <div class="track-dashboard track-page-wide">
+    <!-- Left: overview -->
+    <article class="track-panel">
+      <div class="track-panel__bar" aria-hidden="true"></div>
+      <div class="track-panel__inner">
+        <h2 class="track-panel__title" style="margin-bottom:1.1rem;"><i class="fas fa-box-open" aria-hidden="true"></i> <%= T.cardOverview || 'Shipment overview' %></h2>
 
-    <!-- Share Modal -->
-    <div class="modal" id="shareModal">
-      <div class="modal-overlay"></div>
-      <div class="modal-container">
-        <div class="modal-header">
-          <h3>Share Tracking Information</h3>
-          <button class="modal-close" aria-label="Close modal">&times;</button>
-        </div>
-        <div class="modal-content">
-          <div class="share-options">
-            <div class="share-link">
-              <label for="tracking-link">Tracking Link</label>
-              <div class="share-link-input">
-                <input type="text" id="tracking-link" value="https://nowshipping.com/track/NOW123456789" readonly>
-                <button class="copy-btn" data-clipboard-target="#tracking-link" aria-label="Copy link">
-                  <i class="fas fa-copy"></i>
-                </button>
-              </div>
-            </div>
-            <div class="share-social">
-              <h4>Share via Social Media</h4>
-              <div class="social-share-buttons">
-                <a href="#" class="social-share-btn facebook" aria-label="Share on Facebook">
-                  <i class="fab fa-facebook-f"></i>
-                  <span>Facebook</span>
-                </a>
-                <a href="#" class="social-share-btn twitter" aria-label="Share on Twitter">
-                  <i class="fab fa-twitter"></i>
-                  <span>Twitter</span>
-                </a>
-                <a href="#" class="social-share-btn whatsapp" aria-label="Share on WhatsApp">
-                  <i class="fab fa-whatsapp"></i>
-                  <span>WhatsApp</span>
-                </a>
-                <a href="#" class="social-share-btn email" aria-label="Share via Email">
-                  <i class="fas fa-envelope"></i>
-                  <span>Email</span>
-                </a>
-              </div>
-            </div>
-            <div class="share-email">
-              <h4>Share via Email</h4>
-              <form class="share-email-form">
-                <div class="form-group">
-                  <label for="share-email">Recipient's Email</label>
-                  <input type="email" id="share-email" placeholder="Enter email address" required>
-                </div>
-                <div class="form-group">
-                  <label for="share-message">Message (Optional)</label>
-                  <textarea id="share-message" rows="3" placeholder="Add a personal message"></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Send</button>
-              </form>
-            </div>
+        <div class="track-head">
+          <div>
+            <div style="font-size:0.72rem;color:var(--lp-muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;"><%= T.status || 'Status' %></div>
+            <p class="track-head__ref"><%= od.orderNumber %></p>
+            <% if (od.businessName) { %><p class="track-head__biz"><%= od.businessName %></p><% } %>
+          </div>
+          <div>
+            <% if (returnFlow && !['completed','returnCompleted'].includes(od.orderStatus)) { %>
+              <span class="track-badge track-badge--return"><i class="fas fa-rotate-left"></i> <%= T.returnFlow || 'Return / special flow' %></span>
+            <% } else if (['completed','returnCompleted'].includes(od.orderStatus)) { %>
+              <span class="track-badge track-badge--done"><i class="fas fa-circle-check"></i> <%= T.completed || 'Completed' %></span>
+            <% } else if (['canceled','rejected','terminated','deliveryFailed'].includes(od.orderStatus)) { %>
+              <span class="track-badge track-badge--bad"><i class="fas fa-circle-xmark"></i> <%= od.orderStatus %></span>
+            <% } else { %>
+              <span class="track-badge"><i class="fas fa-truck-fast"></i> <%= od.orderStatus %></span>
+            <% } %>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Cookie Consent -->
-    <div class="cookie-consent">
-      <div class="cookie-content">
-        <div class="cookie-text">
-          <p>We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies. <a href="#">Learn more</a></p>
+        <% if (!returnFlow || ['completed','returnCompleted','headingToCustomer','pickedUp','new','pendingPickup','inStock','inProgress'].includes(od.orderStatus)) { %>
+        <div class="track-steps" aria-hidden="true">
+          <% for (var ti = 0; ti < 5; ti++) {
+            var stepNum = ti + 1;
+            var allDone = idx === 6;
+            var done = allDone || stepNum < idx;
+            var active = !allDone && stepNum === idx;
+            var cls = done ? 'track-step track-step--done' : active ? 'track-step track-step--active' : 'track-step';
+          %>
+          <div class="<%= cls %>">
+            <div class="track-step__dot"><% if (done) { %><i class="fas fa-check"></i><% } else { %><%= stepNum %><% } %></div>
+            <span><%= stepLabels[ti] %></span>
+          </div>
+          <% } %>
         </div>
-        <div class="cookie-buttons">
-          <button class="btn btn-sm btn-outline cookie-settings">Cookie Settings</button>
-          <button class="btn btn-sm btn-primary accept-cookies">Accept All</button>
+        <% } %>
+
+        <dl class="track-details">
+          <div class="track-kv"><dt><%= T.trackingNumber || 'Reference' %></dt><dd><%= od.orderNumber %></dd></div>
+          <% if (od.smartFlyerBarcode) { %><div class="track-kv"><dt><%= T.barcode || 'Barcode' %></dt><dd><%= od.smartFlyerBarcode %></dd></div><% } %>
+          <div class="track-kv"><dt><%= T.orderType || 'Type' %></dt><dd><%= od.orderShipping.orderType %></dd></div>
+          <div class="track-kv"><dt><%= T.codAmount || 'COD / amount' %></dt><dd><%= od.orderShipping.amountType || '—' %> · <%= od.orderShipping.amount != null ? od.orderShipping.amount : '—' %></dd></div>
+          <div class="track-kv"><dt><%= T.estimatedDelivery || 'Items' %></dt><dd><%= od.orderShipping.numberOfItems != null ? od.orderShipping.numberOfItems : '—' %> · <%= od.orderShipping.isExpressShipping ? 'Express' : 'Standard' %></dd></div>
+          <div class="track-kv"><dt><%= T.location || 'Area' %></dt><dd><%= [od.orderCustomer.zone, od.orderCustomer.government].filter(Boolean).join(' · ') || '—' %></dd></div>
+        </dl>
+
+        <% if (od.orderShipping.productDescription) { %>
+          <p class="track-details-note"><strong><%= T.shipmentDetails || 'Shipment details' %>:</strong> <%= od.orderShipping.productDescription %></p>
+        <% } %>
+
+        <% if (od.deliveryMan) { %>
+        <div class="track-courier">
+          <strong><i class="fas fa-motorcycle" aria-hidden="true"></i> <%= T.courier || 'Your courier' %></strong>
+          <p><%= od.deliveryMan.name %></p>
+          <% if (od.deliveryMan.phoneNumber) { %>
+            <p><a href="tel:<%= od.deliveryMan.phoneNumber %>"><%= od.deliveryMan.phoneNumber %></a></p>
+          <% } %>
+        </div>
+        <% } %>
+
+        <div class="track-share">
+          <span><%= T.share || 'Share link' %>:</span>
+          <button type="button" id="copyTrackLink" data-url="<%= shareUrl %>"><i class="fas fa-link"></i> Copy</button>
+          <a class="lp-btn lp-btn--ghost" style="font-size:0.85rem;padding:0.55rem 1rem;" href="https://wa.me/?text=<%= encodeURIComponent((T.waPrefix || 'Track my order:') + ' ' + shareUrl) %>" target="_blank" rel="noopener"><i class="fab fa-whatsapp" style="color:#25D366;"></i> WhatsApp</a>
         </div>
       </div>
-    </div>
+    </article>
 
-    <script ></script>
-    <script ></script>
-</body>
-</html>
+    <!-- Right: timeline -->
+    <article class="track-panel">
+      <div class="track-panel__bar" aria-hidden="true"></div>
+      <div class="track-panel__inner" style="flex:1;display:flex;flex-direction:column;">
+        <h2 class="track-panel__title" style="margin-bottom:1rem;"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> <%= T.history || 'Status history' %></h2>
+
+        <div class="track-timeline-wrap">
+          <% if (od.orderStatusHistory && od.orderStatusHistory.length) { %>
+          <ul class="track-timeline">
+            <% od.orderStatusHistory.forEach(function (h) { %>
+            <li>
+              <div class="track-timeline__icon"><i class="fas fa-circle" style="font-size:0.42rem;"></i></div>
+              <div>
+                <strong><%= h.status %></strong>
+                <% if (h.notes) { %><div style="font-size:0.88rem;color:var(--lp-muted);margin-top:0.25rem;line-height:1.45;"><%= h.notes %></div><% } %>
+                <div class="track-timeline__meta"><%= h.date ? new Date(h.date).toLocaleString() : '' %><% if (h.category) { %> · <%= h.category %><% } %></div>
+              </div>
+            </li>
+            <% }); %>
+          </ul>
+          <% } else { %>
+            <p style="margin:0;color:var(--lp-muted);font-size:0.92rem;"><%= T.noHistory || 'No detailed history yet.' %></p>
+          <% } %>
+        </div>
+      </div>
+    </article>
+  </div>
+  <% } %>
+
+  <%- include('../partials/landing-footer') %>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script>
+(function(){
+  var btn = document.getElementById('copyTrackLink');
+  if (!btn) return;
+  btn.addEventListener('click', function(){
+    var u = btn.getAttribute('data-url');
+    if (!u) return;
+    var full = u.indexOf('http') === 0 ? u : (window.location.origin + u);
+    function done() {
+      btn.innerHTML = '<i class="fas fa-check"></i> Copied';
+      setTimeout(function(){ btn.innerHTML = '<i class="fas fa-link"></i> Copy'; }, 2000);
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(full).then(done).catch(function(){ tryFallback(); });
+    } else tryFallback();
+    function tryFallback() {
+      var ta = document.createElement('textarea');
+      ta.value = full;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+  });
+})();
+</script>

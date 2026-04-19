@@ -56,18 +56,19 @@ This endpoint allows a courier to complete an order delivery. It handles differe
 - **Final Status**: `returnCompleted`
 - **OTP Required**: ❌ No
 
-### Exchange Orders
-#### Step 1: Exchange Pickup
+### Exchange Orders (two phases)
+#### Phase 1 — At customer (deliver replacement + collect original)
 - **Valid Starting Status**: `headingToCustomer`
-- **Intermediate Status**: `exchangePickup`
+- **Next Status**: `inReturnStock` (original item back in return stock; courier is unassigned until admin assigns return leg)
 - **OTP Required**: ✅ Yes
 - **Optional**: `exchangePhotos` (photos of original item)
+- **Customer**: WhatsApp notice; **Business**: short email (not the final “delivered” template)
 
-#### Step 2: Exchange Delivery
-- **Valid Starting Status**: `exchangePickup`
-- **Final Status**: `completed`
-- **OTP Required**: ✅ Yes
-- **Optional**: `exchangePhotos` (photos of replacement item)
+#### Phase 2 — Return original item to business
+- **Assigned by admin** from Stock Returns → status `returnToBusiness` with a courier.
+- **Complete via** `POST .../complete` (same as order details) **or** the Returns flow `completeReturnToBusiness` if applicable.
+- **Final Status**: `completed` (full exchange done)
+- **OTP Required**: ❌ No
 
 ### Cash Collection Orders
 - **Valid Starting Status**: `headingToCustomer`
@@ -140,11 +141,13 @@ Body:
 }
 ```
 
-**Note**: After this call, order status becomes `exchangePickup`. Call the endpoint again to complete the exchange delivery.
+**Note**: After this call, order status becomes `inReturnStock` and the courier is cleared. Admin assigns a courier from Stock Returns; that courier completes at the business (no OTP).
 
 ---
 
-### Example 3: Exchange Order - Step 2 (Deliver Replacement Item)
+### Example 3: Exchange Order — Phase 2 (return original to business)
+When the order is `returnToBusiness` and assigned to you:
+
 ```json
 POST /api/v1/courier/orders/ORD-12346/complete
 Headers:
@@ -153,13 +156,7 @@ Headers:
   Accept: application/json
 
 Body:
-{
-  "otp": "654321",
-  "exchangePhotos": [
-    "https://cloudinary.com/replacement1.jpg",
-    "https://cloudinary.com/replacement2.jpg"
-  ]
-}
+{}
 ```
 
 **Success Response (200)**
@@ -168,6 +165,8 @@ Body:
   "message": "Order completed successfully"
 }
 ```
+
+(Order status becomes `completed`; business receives final delivery email + push + customer SMS.)
 
 ---
 
@@ -277,11 +276,10 @@ Body: {}
 - OTP is verified using bcrypt comparison
 - After successful verification, `deliveryOtp.verifiedAt` is set
 
-### Return Flow Detection
-An order is considered a return flow if:
-- `orderShipping.orderType === 'Return'`, OR
-- `orderStatus === 'returnInProgress'`, OR
-- `orderStatus === 'headingToYou'`
+### Return flow (no OTP) / Exchange return leg
+OTP is skipped when:
+- `orderStatus === 'headingToYou'`, OR
+- `orderShipping.orderType === 'Exchange'` and `orderStatus === 'returnToBusiness'`
 
 ### Order Stages Updated
 Different order types update different stages:
@@ -296,26 +294,20 @@ Different order types update different stages:
 **Return to Business:**
 - `delivered.isCompleted = true`
 
-**Exchange Pickup:**
-- `exchangePickup.isCompleted = true`
-- `outForDelivery.isCompleted = true`
+**Exchange — phase 1 (at customer):**
+- `exchangePickup.isCompleted = true`, `outForDelivery.isCompleted = true`, `delivered.isCompleted = true`
+- `orderStatus` → `inReturnStock`, `deliveryMan` cleared
 
-**Exchange Delivery:**
-- `exchangeDelivery.isCompleted = true`
+**Exchange — phase 2 (at business):**
+- `returnCompleted` stage updated; `orderStatus` → `completed`
 
 **Cash Collection:**
 - `collectionComplete.isCompleted = true`
 
 ### Notifications Sent
-Upon successful completion:
-1. **SMS to Customer** (for completed orders)
-   - Message: "NowShipping - {Brand}: Your order {orderNumber} has been delivered by {courierName}. Thank you!"
-
-2. **Email to Business**
-   - Professional order delivery notification with order details
-
-3. **Push Notification to Business**
-   - Firebase push notification about order completion
+- **Exchange phase 1** (`inReturnStock`): customer WhatsApp; business short email (not the final delivery template).
+- **Final `completed`**: SMS to customer; business delivery email + Firebase `completed`.
+- **`returnCompleted`** (non-Exchange return-to-business via this handler): Firebase `returnCompleted` only (no duplicate “delivered” email).
 
 ### Courier History
 Each completion action adds an entry to `order.courierHistory` with:

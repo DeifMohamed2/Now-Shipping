@@ -8,24 +8,32 @@ const { calculatePickupFee } = require('../utils/fees');
 const { emailService } = require('../utils/email');
 const firebase = require('../config/firebase');
 const { sendSms } = require('../utils/sms');
+const bcrypt = require('bcrypt');
 
-const getDashboardPage = (req, res) => {
-  res.render('courier/dashboard', {
-    title: 'Dashboard',
-    page_title: 'Dashboard',
-    folder: 'Pages',
-  });
+/** Courier browser UI removed — use mobile app + `/api/v1/courier` (Bearer JWT). */
+const respondCourierWebDeprecated = (req, res) => {
+  const msg =
+    'Courier web portal is discontinued. Use the Now Shipping courier mobile app. API base: /api/v1/courier (Bearer token).';
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    return res.status(410).json({
+      success: false,
+      code: 'COURIER_WEB_DEPRECATED',
+      message: msg,
+    });
+  }
+  return res.status(410).type('html').send(
+    `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Mobile app required</title></head><body style="font-family:system-ui,sans-serif;max-width:32rem;margin:2.5rem auto;padding:0 1rem;line-height:1.5"><h1 style="font-size:1.2rem">Courier access is mobile-only</h1><p>${msg}</p></body></html>`
+  );
+};
+
+const normalizeCourierLanguage = (language) => {
+  const normalized = String(language || '')
+    .trim()
+    .toLowerCase();
+  return normalized === 'ar' || normalized === 'en' ? normalized : null;
 };
 
 //=============================================== Orders =============================================== //
-const get_ordersPage = (req, res) => {
-  res.render('courier/orders', {
-    title: 'Orders',
-    page_title: 'Orders',
-    folder: 'Pages',
-  });
-};
-
 const get_orders = async (req, res) => {
   // Handle both API (JWT) and web (session) authentication
   const courierId = req.courierId || req.userId;
@@ -36,14 +44,35 @@ const get_orders = async (req, res) => {
   
   const { statusCategory, orderType } = req.query;
   try {
-    // Build query with courier ID
+    const terminalOrderStatuses = [
+      'completed',
+      'canceled',
+      'returned',
+      'terminated',
+      'deliveryFailed',
+      'returnCompleted',
+    ];
+
+    // Build query with courier ID.
+    // Regular orders endpoint must not surface return-flow orders/statuses.
     const query = {
       deliveryMan: courierId,
-      // Exclude return orders for the regular orders page
-      $or: [
-        { 'orderShipping.orderType': { $ne: 'Return' } },
-        { 'orderShipping.orderType': 'Return', orderStatus: 'headingToYou' },
-      ],
+      'orderShipping.orderType': { $ne: 'Return' },
+      orderStatus: {
+        $nin: [
+          'returnInitiated',
+          'returnAssigned',
+          'returnPickedUp',
+          'returnToWarehouse',
+          'returnAtWarehouse',
+          'returnInspection',
+          'returnProcessing',
+          'returnToBusiness',
+          'returnCompleted',
+          'returnLinked',
+          ...terminalOrderStatuses,
+        ],
+      },
     };
     
     // Add status category filter if provided
@@ -52,7 +81,7 @@ const get_orders = async (req, res) => {
     }
     
     // Add order type filter if provided
-    if (orderType && statusHelper.ORDER_TYPES[orderType]) {
+    if (orderType && statusHelper.ORDER_TYPES[orderType] && orderType !== 'Return') {
       query['orderShipping.orderType'] = orderType;
     }
     
@@ -79,9 +108,6 @@ const get_orders = async (req, res) => {
           replacementProduct: order.orderShipping.productDescriptionReplacement,
           replacementCount: order.orderShipping.numberOfItemsReplacement
         };
-      } else if (order.orderShipping.orderType === 'Cash Collection') {
-        orderObj.isCashCollection = true;
-        orderObj.collectionAmount = order.orderShipping.amount;
       }
       
       return orderObj;
@@ -105,6 +131,15 @@ const get_returns = async (req, res) => {
   const { status, page = 1, limit = 10 } = req.query;
 
   try {
+    const hiddenReturnStatuses = [
+      'returnCompleted',
+      'completed',
+      'returned',
+      'canceled',
+      'terminated',
+      'deliveryFailed',
+    ];
+
     const query = {
       deliveryMan: courierId,
       'orderShipping.orderType': 'Return',
@@ -112,6 +147,18 @@ const get_returns = async (req, res) => {
 
     // Add status filter if provided
     if (status && status !== 'all') {
+      if (hiddenReturnStatuses.includes(status)) {
+        return res.status(200).json({
+          orders: [],
+          pagination: {
+            currentPage: parseInt(page),
+            totalPages: 0,
+            totalCount: 0,
+            hasNext: false,
+            hasPrev: false,
+          },
+        });
+      }
       query.orderStatus = status;
     } else {
       // Default to active return statuses
@@ -124,6 +171,11 @@ const get_returns = async (req, res) => {
           'returnToBusiness',
         ],
       };
+    }
+
+    // Never return terminal statuses in courier returns list (even for status=all).
+    if (status === 'all') {
+      query.orderStatus = { $nin: hiddenReturnStatuses };
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -215,15 +267,6 @@ const getNextReturnAction = (status) => {
   return actionMap[status] || 'Unknown';
 };
 
-// New function to render the returns page
-const get_returnsPage = async (req, res) => {
-  res.render('courier/returns', {
-    title: 'Returns',
-    page_title: 'Manage Returns',
-    folder: 'Pages',
-  });
-};
-
 // Get detailed return order information for courier
 const getReturnOrderDetails = async (req, res) => {
   const { orderNumber } = req.params;
@@ -234,8 +277,7 @@ const getReturnOrderDetails = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
   }
 
   try {
@@ -255,8 +297,7 @@ const getReturnOrderDetails = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Return order not found' });
       }
-      req.flash('error', 'Return order not found');
-      return res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
     }
 
     // Calculate progress percentage
@@ -295,28 +336,27 @@ const getReturnOrderDetails = async (req, res) => {
       currentStage: getCurrentReturnStage(order.orderStatus),
       nextAction: getNextReturnAction(order.orderStatus),
       feeBreakdown: order.feeBreakdown,
+      // OTP metadata for mobile app — never expose otpHash
+      returnOtpInfo: order.orderStatus === 'returnAssigned' ? {
+        otpRequired: !!(order.returnOtp?.otpHash && order.returnOtp?.issuedAt),
+        otpIssuedAt: order.returnOtp?.issuedAt || null,
+        otpExpiresAt: order.returnOtp?.expiresAt || null,
+        otpVerified: !!(order.returnOtp?.verifiedAt),
+        isLegacy: !(order.returnOtp?.otpHash),
+      } : null,
     };
 
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(200).json(responseData);
     }
-    
-    // Render page for web requests
-    res.render('courier/return-details', {
-      title: 'Return Order Details',
-      page_title: 'Return Details',
-      folder: 'Pages',
-      ...responseData,
-      courierData: req.courierData
-    });
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.error('Error fetching return order details:', error);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: 'Internal server error' });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -329,8 +369,7 @@ const get_orderDetails= async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/orders');
+    return respondCourierWebDeprecated(req, res);
   }
   try {
     const order = await Order.findOne({
@@ -344,8 +383,7 @@ const get_orderDetails= async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Order not found' });
       }
-      req.flash('error', 'Order not found');
-      return res.redirect('/courier/orders');
+    return respondCourierWebDeprecated(req, res);
     }
     
     // Get selected pickup address if order has selectedPickupAddressId
@@ -372,22 +410,12 @@ const get_orderDetails= async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(200).json({ order: enhancedOrder, selectedPickupAddress: selectedPickupAddress });
     }
-    
-    // Render page for web requests
-    res.render('courier/order-details', {
-      title: 'Order Details',
-      page_title: 'Order Details',
-      folder: 'Pages',
-      order: enhancedOrder,
-      selectedPickupAddress: selectedPickupAddress,
-      courierData: req.courierData
-    });
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: 'Internal server error' });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/orders');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -531,8 +559,7 @@ const updateOrderStatus = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/orders');
+    return respondCourierWebDeprecated(req, res);
   }
   try {
     const order = await Order.findOne({
@@ -550,8 +577,7 @@ const updateOrderStatus = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Order not found' });
       }
-      req.flash('error', 'Order not found');
-      return res.redirect('/courier/orders');
+    return respondCourierWebDeprecated(req, res);
     }
     // Check if order status allows actions
     if (
@@ -577,8 +603,7 @@ const updateOrderStatus = async (req, res) => {
           message: `Order status '${order.orderStatus}' does not allow status updates`,
         });
       }
-      req.flash('error', `Order status '${order.orderStatus}' does not allow status updates`);
-      return res.redirect(`/courier/order-details/${orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
     if (status === 'Unavailable' && reason) {
       order.Attemps += 1;
@@ -646,15 +671,13 @@ const updateOrderStatus = async (req, res) => {
     }
     
     // For web requests, redirect back to order details
-    req.flash('success', 'Order status updated successfully');
-    res.redirect(`/courier/order-details/${orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.log(error.message);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: error.message });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/orders');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -670,11 +693,10 @@ const completeOrder = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/orders');
+    return respondCourierWebDeprecated(req, res);
   }
   
-  const { collectionReceipt, exchangePhotos, otp } = req.body || {}; // Parameters for Exchange, Cash Collection, and OTP
+  const { exchangePhotos, otp } = req.body || {}; // Parameters for Exchange and OTP
   
   try {
     const order = await Order.findOne({
@@ -685,8 +707,7 @@ const completeOrder = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Order not found' });
       }
-      req.flash('error', 'Order not found');
-      return res.redirect('/courier/orders');
+    return respondCourierWebDeprecated(req, res);
     }
 
     // Check if order can be completed based on status
@@ -705,7 +726,6 @@ const completeOrder = async (req, res) => {
         'returnAssigned',
         'returnPickedUp',
         'returnAtWarehouse',
-        'returnToBusiness'
       ].includes(order.orderStatus)
     ) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
@@ -713,8 +733,20 @@ const completeOrder = async (req, res) => {
           message: `Order status '${order.orderStatus}' does not allow completion`,
         });
       }
-      req.flash('error', `Order status '${order.orderStatus}' does not allow completion`);
-      return res.redirect(`/courier/order-details/${orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
+    }
+
+    if (
+      order.orderStatus === 'returnToBusiness' &&
+      order.orderShipping.orderType !== 'Exchange'
+    ) {
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
+          message:
+            'Use the Returns page “Complete Return” action for this return delivery.',
+        });
+      }
+    return respondCourierWebDeprecated(req, res);
     }
 
     // For regular deliveries
@@ -723,26 +755,24 @@ const completeOrder = async (req, res) => {
         'inStock',
         'headingToCustomer',
         'headingToYou',
-        'inReturnStock',
+        'returnToBusiness',
         'rescheduled',
         'waitingAction',
-        'exchangePickup',
-        'exchangeDelivery',
-        'collectionComplete'
-      ].includes(order.orderStatus) &&
-      order.orderStatus !== 'returnInProgress'
+      ].includes(order.orderStatus)
     ) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({
           message: `Order status ${order.orderStatus} is not valid for completion`,
         });
       }
-      req.flash('error', `Order status ${order.orderStatus} is not valid for completion`);
-      return res.redirect(`/courier/order-details/${orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
-    // OTP Validation for orders heading to customer (not return flows)
-    const isReturnFlow = order.orderStatus === 'returnInProgress' || order.orderStatus === 'headingToYou';
+    // OTP Validation for orders heading to customer (not return / exchange-return flows)
+    const isReturnFlow =
+      order.orderStatus === 'headingToYou' ||
+      (order.orderShipping.orderType === 'Exchange' &&
+        order.orderStatus === 'returnToBusiness');
     if (!isReturnFlow && order.orderStatus === 'headingToCustomer') {
       // Check if OTP exists and is valid
       if (!order.deliveryOtp || !order.deliveryOtp.otpHash || !order.deliveryOtp.expiresAt) {
@@ -754,7 +784,6 @@ const completeOrder = async (req, res) => {
       if (!otp) {
         return res.status(400).json({ message: 'OTP is required to complete this order' });
       }
-      const bcrypt = require('bcrypt');
       const ok = await bcrypt.compare(String(otp), order.deliveryOtp.otpHash);
       if (!ok) {
         order.deliveryOtp.attempts = (order.deliveryOtp.attempts || 0) + 1;
@@ -767,24 +796,7 @@ const completeOrder = async (req, res) => {
     // Handle different completion types based on order type and status
     const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
 
-    if (order.orderStatus === 'returnInProgress') {
-      // This is a return being picked up from customer
-      order.orderStatus = 'inReturnStock';
-      // Update inProgress stage for return completion
-      if (!order.orderStages.inProgress.isCompleted) {
-        order.orderStages.inProgress.isCompleted = true;
-        order.orderStages.inProgress.completedAt = new Date();
-        order.orderStages.inProgress.notes = `Return completed by courier ${courierName} and received in return stock`;
-      }
-
-      // Add to courier history
-      order.courierHistory.push({
-        courier: courierId,
-        assignedAt: new Date(),
-        action: 'delivered_to_warehouse',
-        notes: `Courier ${courierName} delivered return from customer to warehouse`,
-      });
-    } else if (order.orderStatus === 'headingToYou') {
+    if (order.orderStatus === 'headingToYou') {
       // This is returning an order to the business
       order.orderStatus = 'returnCompleted';
       order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
@@ -810,102 +822,70 @@ const completeOrder = async (req, res) => {
         notes: `Courier ${courierName} delivered return to business`,
       });
     } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'headingToCustomer') {
-      // For Exchange orders, first we mark the exchange pickup stage
-      order.orderStatus = 'exchangePickup';
-      
-      // Update exchange pickup stage
+      // Phase 1: replacement delivered + original collected at customer → return stock
+      order.orderStatus = 'inReturnStock';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
+
       if (order.orderStages.exchangePickup) {
         order.orderStages.exchangePickup.isCompleted = true;
         order.orderStages.exchangePickup.completedAt = new Date();
-        order.orderStages.exchangePickup.notes = `Original item picked up by courier ${courierName}`;
+        order.orderStages.exchangePickup.notes = `Replacement delivered and original item collected by courier ${courierName}`;
         order.orderStages.exchangePickup.pickedUpBy = courierId;
         order.orderStages.exchangePickup.pickupLocation = order.orderCustomer.address;
         if (exchangePhotos && Array.isArray(exchangePhotos)) {
           order.orderStages.exchangePickup.originalItemPhotos = exchangePhotos;
         }
       }
-      
-      // Update outForDelivery stage to mark that courier has reached customer
+
       if (!order.orderStages.outForDelivery.isCompleted) {
         order.orderStages.outForDelivery.isCompleted = true;
         order.orderStages.outForDelivery.completedAt = new Date();
-        order.orderStages.outForDelivery.notes = `Courier ${courierName} reached customer for exchange`;
+        order.orderStages.outForDelivery.notes = `Courier ${courierName} completed exchange at customer`;
       }
-      
-      // Add to courier history
+
+      if (!order.orderStages.delivered.isCompleted) {
+        order.orderStages.delivered.isCompleted = true;
+        order.orderStages.delivered.completedAt = new Date();
+        order.orderStages.delivered.notes = `Replacement delivered to customer by courier ${courierName} (exchange)`;
+      }
+
       order.courierHistory.push({
         courier: courierId,
         assignedAt: new Date(),
         action: 'exchange_pickup',
-        notes: `Courier ${courierName} picked up original item for exchange`
+        notes: `Courier ${courierName} delivered replacement and collected original item; order in return stock`,
       });
-      
-    } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'exchangePickup') {
-      // For Exchange orders, next we mark the exchange delivery stage
-      order.orderStatus = 'exchangeDelivery';
-      
-      // Update exchange delivery stage
-      if (order.orderStages.exchangeDelivery) {
-        order.orderStages.exchangeDelivery.isCompleted = true;
-        order.orderStages.exchangeDelivery.completedAt = new Date();
-        order.orderStages.exchangeDelivery.notes = `Replacement item delivered by courier ${courierName}`;
-        order.orderStages.exchangeDelivery.deliveredBy = courierId;
-        order.orderStages.exchangeDelivery.deliveryLocation = order.orderCustomer.address;
-        if (exchangePhotos && Array.isArray(exchangePhotos)) {
-          order.orderStages.exchangeDelivery.replacementItemPhotos = exchangePhotos;
-        }
-      }
-      
-      // Add to courier history
-      order.courierHistory.push({
-        courier: courierId,
-        assignedAt: new Date(),
-        action: 'exchange_delivery',
-        notes: `Courier ${courierName} delivered replacement item`
-      });
-      
-      // Increment attempts but ensure it doesn't exceed 2
+
+      // Phase 1 courier is done; admin assigns a (possibly different) courier for return-to-business
+      order.deliveryMan = null;
+    } else if (order.orderShipping.orderType === 'Exchange' && order.orderStatus === 'returnToBusiness') {
+      // Phase 2: original item returned to business — full exchange order complete
+      order.orderStatus = 'completed';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+      order.scheduledRetryAt = null;
+      order.completedDate = new Date();
+
       if (order.Attemps < 2) {
         order.Attemps += 1;
       }
-      
-      // Now mark the order as completed
-      order.orderStatus = 'completed';
-      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
-      order.completedDate = new Date();
-      
-    } else if (order.orderShipping.orderType === 'Cash Collection' && order.orderStatus === 'headingToCustomer') {
-      // For Cash Collection orders, mark the collection complete stage
-      order.orderStatus = 'collectionComplete';
-      
-      // Update collection complete stage
-      if (order.orderStages.collectionComplete) {
-        order.orderStages.collectionComplete.isCompleted = true;
-        order.orderStages.collectionComplete.completedAt = new Date();
-        order.orderStages.collectionComplete.notes = `Cash collected by courier ${courierName}`;
-        order.orderStages.collectionComplete.collectedBy = courierId;
-        order.orderStages.collectionComplete.collectionAmount = order.orderShipping.amount;
-        order.orderStages.collectionComplete.collectionReceipt = collectionReceipt || null;
+
+      if (!order.orderStages.returnCompleted || !order.orderStages.returnCompleted.isCompleted) {
+        order.orderStages.returnCompleted = {
+          isCompleted: true,
+          completedAt: new Date(),
+          notes: `Exchange return leg completed at business by courier ${courierName}`,
+          completedBy: courierId,
+          deliveryLocation: order.business?.address || null,
+          businessSignature: null,
+        };
       }
-      
-      // Add to courier history
+
       order.courierHistory.push({
         courier: courierId,
         assignedAt: new Date(),
-        action: 'cash_collected',
-        notes: `Courier ${courierName} collected cash amount ${order.orderShipping.amount}`
+        action: 'delivered_to_business',
+        notes: `Courier ${courierName} returned original item to business (exchange complete)`,
       });
-      
-      // Increment attempts but ensure it doesn't exceed 2
-      if (order.Attemps < 2) {
-        order.Attemps += 1;
-      }
-      
-      // Now mark the order as completed
-      order.orderStatus = 'completed';
-      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
-      order.completedDate = new Date();
-      
     } else {
       // Regular delivery completion
       order.orderStatus = 'completed';
@@ -954,60 +934,126 @@ const completeOrder = async (req, res) => {
 
     await order.save();
 
-    // Send SMS to customer on successful completion
+    const business = await User.findById(order.business).select('email brandInfo name');
+    const businessBrandName =
+      business?.brandInfo?.brandName || business?.name || 'NowShipping';
+
+    // Exchange phase 1: customer WhatsApp + business heads-up (no duplicate "delivered" spam)
+    if (
+      order.orderShipping?.orderType === 'Exchange' &&
+      order.orderStatus === 'inReturnStock'
+    ) {
+      try {
+        const { sendExchangePickupNotification } = require('../utils/whatsapp');
+        sendExchangePickupNotification(order)
+          .catch((e) =>
+            console.error(`WhatsApp exchange pickup error for ${order.orderNumber}:`, e.message)
+          );
+      } catch (e) {
+        console.error(`Exchange pickup notification load error:`, e.message);
+      }
+      try {
+        if (business?.email) {
+          await emailService.sendEmail({
+            email: business.email,
+            subject: `Exchange: item collected at customer — ${order.orderNumber}`,
+            html: `<p>Order <strong>${order.orderNumber}</strong> (Exchange): the courier delivered the replacement and collected the original item at the customer.</p><p>The original item is in <strong>return stock</strong>. Assign a courier from Stock Returns to return it to your business.</p>`,
+          });
+          console.log(
+            `📧 Exchange phase-1 email sent to business ${business._id} for order ${order.orderNumber}`
+          );
+        }
+      } catch (emailError) {
+        console.error(
+          `❌ Failed to send exchange phase-1 email for order ${order.orderNumber}:`,
+          emailError
+        );
+      }
+    }
+
+    // SMS to customer only when order is fully completed
     if (order.orderStatus === 'completed') {
       try {
         const phone = order.orderCustomer?.phoneNumber;
         if (phone) {
           await sendSms({
             recipient: phone,
-            message: `NowShipping - ${businessBrandName}: Your order ${order.orderNumber} has been delivered by ${courierName}. Thank you!`
+            message: `NowShipping - ${businessBrandName}: Your order ${order.orderNumber} has been delivered by ${courierName}. Thank you!`,
           });
         }
       } catch (e) {
         console.error(`SMS completion error for ${order.orderNumber}:`, e.details || e.message);
       }
     }
-    
-    // Send professional order delivery notification to business
-    try {
-      const business = await User.findById(order.business).select('email brandInfo name');
-      if (business && business.email) {
-        const orderData = {
-          orderNumber: order.orderNumber,
-          orderId: order._id,
-          customerName: order.orderCustomer?.fullName || 'N/A',
-          orderType: order.orderShipping?.orderType || 'Standard',
-          amount: order.orderShipping?.amount || 0,
-          deliveryDate: order.completedDate,
-          courierName: courierName,
-          status: order.orderStatus
-        };
 
-        await emailService.sendOrderDeliveryNotification(orderData, business.email);
-        console.log(`📧 Order delivery notification sent to business ${business._id} for order ${order.orderNumber}`);
-      }
-    } catch (emailError) {
-      console.error(`❌ Failed to send order delivery email for order ${order.orderNumber}:`, emailError);
-      // Don't fail the order completion if email fails
-    }
+    // Business "order delivered" email + push only on full completion (fixes Exchange multi-tap spam)
+    if (order.orderStatus === 'completed') {
+      try {
+        if (business && business.email) {
+          const orderData = {
+            orderNumber: order.orderNumber,
+            orderId: order._id,
+            customerName: order.orderCustomer?.fullName || 'N/A',
+            orderType: order.orderShipping?.orderType || 'Standard',
+            amount: order.orderShipping?.amount || 0,
+            deliveryDate: order.completedDate,
+            courierName: courierName,
+            status: order.orderStatus,
+          };
 
-    // Send push notification to business about order completion
-    try {
-      await firebase.sendOrderStatusNotification(
-        order.business,
-        order.orderNumber,
-        'completed',
-        {
-          courierName: courierName,
-          completedAt: order.completedDate,
-          orderType: order.orderShipping?.orderType || 'Standard'
+          await emailService.sendOrderDeliveryNotification(orderData, business.email);
+          console.log(
+            `📧 Order delivery notification sent to business ${business._id} for order ${order.orderNumber}`
+          );
         }
-      );
-      console.log(`📱 Push notification sent to business ${order.business} about order ${order.orderNumber} completion`);
-    } catch (notificationError) {
-      console.error(`❌ Failed to send push notification for order ${order.orderNumber}:`, notificationError);
-      // Don't fail the order completion if notification fails
+      } catch (emailError) {
+        console.error(
+          `❌ Failed to send order delivery email for order ${order.orderNumber}:`,
+          emailError
+        );
+      }
+
+      try {
+        await firebase.sendOrderStatusNotification(
+          order.business,
+          order.orderNumber,
+          'completed',
+          {
+            courierName: courierName,
+            completedAt: order.completedDate,
+            orderType: order.orderShipping?.orderType || 'Standard',
+          }
+        );
+        console.log(
+          `📱 Push notification sent to business ${order.business} about order ${order.orderNumber} completion`
+        );
+      } catch (notificationError) {
+        console.error(
+          `❌ Failed to send push notification for order ${order.orderNumber}:`,
+          notificationError
+        );
+      }
+    } else if (order.orderStatus === 'returnCompleted') {
+      try {
+        await firebase.sendOrderStatusNotification(
+          order.business,
+          order.orderNumber,
+          'returnCompleted',
+          {
+            courierName: courierName,
+            completedAt: order.completedDate,
+            orderType: order.orderShipping?.orderType || 'Standard',
+          }
+        );
+        console.log(
+          `📱 Push notification sent to business ${order.business} about return completion for order ${order.orderNumber}`
+        );
+      } catch (notificationError) {
+        console.error(
+          `❌ Failed to send push notification for return completion ${order.orderNumber}:`,
+          notificationError
+        );
+      }
     }
     
     // Check if request expects JSON response (API call)
@@ -1016,15 +1062,13 @@ const completeOrder = async (req, res) => {
     }
     
     // For web requests, redirect back to order details
-    req.flash('success', 'Order completed successfully');
-    res.redirect(`/courier/order-details/${orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.log(error.message);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: error.message });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/orders');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -1402,8 +1446,7 @@ const pickupReturn = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
   }
   
   const {
@@ -1413,6 +1456,7 @@ const pickupReturn = async (req, res) => {
     customerSignature,
     returnCondition,
     returnValue,
+    otp,
   } = req.body || {};
 
   try {
@@ -1461,8 +1505,7 @@ const pickupReturn = async (req, res) => {
           message: 'Return order not found or not assigned to you.' 
         });
       }
-      req.flash('error', 'Return order not found.');
-      return res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (order.orderStatus !== 'returnAssigned') {
@@ -1471,9 +1514,34 @@ const pickupReturn = async (req, res) => {
           message: `Order status ${order.orderStatus} is not valid for return pickup Must be returnAssigned`,
         });
       }
-      req.flash('error', `Order status ${order.orderStatus} is not valid for return pickup`);
-      return res.redirect(`/courier/return-orders/${order.orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
+
+    // ── Return pickup OTP verification ─────────────────────────────────────────
+    // If a returnOtp has been issued (new flow), require courier to enter it.
+    // Legacy orders that never had a returnOtp (null hash + null issuedAt) are
+    // allowed through once; admin should use the resend-return-otp endpoint for them.
+    const hasReturnOtp = order.returnOtp?.otpHash && order.returnOtp?.issuedAt;
+    if (hasReturnOtp) {
+      if (!order.returnOtp.expiresAt || new Date(order.returnOtp.expiresAt).getTime() < Date.now()) {
+        return res.status(400).json({ message: 'Return OTP has expired. Ask the admin to resend it.' });
+      }
+      if (!otp) {
+        return res.status(400).json({ message: 'Return OTP is required to confirm pickup from customer.' });
+      }
+      const otpMatch = await bcrypt.compare(String(otp), order.returnOtp.otpHash);
+      if (!otpMatch) {
+        order.returnOtp.attempts = (order.returnOtp.attempts || 0) + 1;
+        await order.save();
+        return res.status(400).json({ message: 'Invalid OTP. Please ask the customer to check their SMS and try again.' });
+      }
+      // Mark OTP as verified
+      order.returnOtp.verifiedAt = new Date();
+    } else {
+      // Legacy path — log for audit but do not block
+      console.warn(`⚠️ Legacy return pickup (no returnOtp issued) for order ${order.orderNumber} by courier ${courierId}`);
+    }
+    // ───────────────────────────────────────────────────────────────────────────
 
     order.orderStatus = 'returnPickedUp';
 
@@ -1563,6 +1631,97 @@ const pickupReturn = async (req, res) => {
 
     await order.save();
 
+    // Reload for API + mobile: full row so the app can switch to "Deliver to warehouse" without a second GET
+    const populatedReturn = await Order.findById(order._id)
+      .populate('deliveryMan', 'name phone email')
+      .populate('business', 'brandInfo.brandName email phone address')
+      .populate(
+        'orderShipping.linkedDeliverOrder',
+        'orderNumber orderStatus orderCustomer'
+      )
+      .exec();
+
+    const returnStagesForProgress = [
+      'returnInitiated',
+      'returnAssigned',
+      'returnPickedUp',
+      'returnToWarehouse',
+      'returnAtWarehouse',
+      'returnInspection',
+      'returnProcessing',
+      'returnToBusiness',
+      'returnCompleted',
+    ];
+    const completedReturnStages = populatedReturn
+      ? returnStagesForProgress.filter(
+          (stage) => populatedReturn.orderStages[stage]?.isCompleted
+        ).length
+      : 0;
+    const progressAfterPickup = populatedReturn
+      ? Math.round(
+          (completedReturnStages / returnStagesForProgress.length) * 100
+        )
+      : 0;
+
+    let orderForClient = null;
+    if (populatedReturn) {
+      orderForClient = populatedReturn.toObject();
+      if (orderForClient.returnOtp && orderForClient.returnOtp.otpHash) {
+        delete orderForClient.returnOtp.otpHash;
+      }
+      orderForClient.progressPercentage = progressAfterPickup;
+      orderForClient.currentStage = getCurrentReturnStage(
+        populatedReturn.orderStatus
+      );
+      orderForClient.nextAction = getNextReturnAction(
+        populatedReturn.orderStatus
+      );
+      orderForClient.isPartialReturn =
+        populatedReturn.orderShipping.isPartialReturn;
+      orderForClient.partialReturnInfo = populatedReturn.orderShipping
+        .isPartialReturn
+        ? {
+            originalItemCount:
+              populatedReturn.orderShipping.originalOrderItemCount,
+            partialReturnItemCount:
+              populatedReturn.orderShipping.partialReturnItemCount,
+          }
+        : null;
+    }
+
+    // Courier push: advance UI to warehouse leg without requiring pull-to-refresh
+    try {
+      await firebase.sendCourierAssignmentNotification(
+        courierId,
+        order.orderNumber,
+        'return_deliver_warehouse',
+        {
+          orderStatus: 'returnPickedUp',
+          nextAction: 'Deliver to warehouse',
+        }
+      );
+    } catch (courierPushErr) {
+      console.warn(
+        `⚠️ Courier push after return pickup skipped for ${order.orderNumber}:`,
+        courierPushErr.message
+      );
+    }
+
+    try {
+      const io = req.app.get('io');
+      if (io && courierId) {
+        io.to(`courier:${String(courierId)}`).emit('return-order-updated', {
+          orderNumber: order.orderNumber,
+          orderStatus: 'returnPickedUp',
+          nextAction: 'Deliver to warehouse',
+          currentStage: getCurrentReturnStage('returnPickedUp'),
+          progressPercentage: progressAfterPickup,
+        });
+      }
+    } catch (socketErr) {
+      // optional socket
+    }
+
     // Send push notification to business about return pickup
     try {
       await firebase.sendOrderStatusNotification(
@@ -1587,13 +1746,16 @@ const pickupReturn = async (req, res) => {
         success: true,
         message: 'Return picked up successfully',
         orderNumber: order.orderNumber,
+        orderStatus: 'returnPickedUp',
+        currentStage: getCurrentReturnStage('returnPickedUp'),
         nextAction: 'Deliver to warehouse',
+        progressPercentage: progressAfterPickup,
+        order: orderForClient,
       });
     }
     
     // For web requests, redirect back to return details (use return order number, not original)
-    req.flash('success', 'Return picked up successfully');
-    res.redirect(`/courier/return-orders/${order.orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.error('Error in pickupReturn:', error);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
@@ -1602,8 +1764,7 @@ const pickupReturn = async (req, res) => {
         message: error.message || 'Internal Server Error' 
       });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -1617,8 +1778,7 @@ const deliverReturnToWarehouse = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
   }
   
   const { notes, warehouseLocation, conditionNotes, deliveryPhotos } = req.body || {};
@@ -1635,8 +1795,7 @@ const deliverReturnToWarehouse = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Order not found' });
       }
-      req.flash('error', 'Order not found');
-      return res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (order.orderStatus !== 'returnPickedUp') {
@@ -1645,8 +1804,7 @@ const deliverReturnToWarehouse = async (req, res) => {
           message: `Order status ${order.orderStatus} is not valid for warehouse delivery`,
         });
       }
-      req.flash('error', `Order status ${order.orderStatus} is not valid for warehouse delivery`);
-      return res.redirect(`/courier/return-orders/${orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     order.orderStatus = 'returnAtWarehouse';
@@ -1693,15 +1851,13 @@ const deliverReturnToWarehouse = async (req, res) => {
     }
     
     // For web requests, redirect back to return details
-    req.flash('success', 'Return delivered to warehouse successfully');
-    res.redirect(`/courier/return-orders/${orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.log(error.message);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: error.message });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -1715,8 +1871,7 @@ const completeReturnToBusiness = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
   }
   
   const { notes, deliveryLocation, businessSignature, deliveryPhotos } =
@@ -1734,8 +1889,7 @@ const completeReturnToBusiness = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Order not found' });
       }
-      req.flash('error', 'Order not found');
-      return res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (order.orderStatus !== 'returnToBusiness') {
@@ -1744,62 +1898,151 @@ const completeReturnToBusiness = async (req, res) => {
           message: `Order status ${order.orderStatus} is not valid for business delivery`,
         });
       }
-      req.flash('error', `Order status ${order.orderStatus} is not valid for business delivery`);
-      return res.redirect(`/courier/return-orders/${orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
-    order.orderStatus = 'returnCompleted';
-    order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
-    order.completedDate = new Date();
-    
-    // Increment attempts but ensure it doesn't exceed 2
-    if (order.Attemps < 2) {
-      order.Attemps += 1;
+    const courierName =
+      (req.courierData && req.courierData.name) ||
+      (order.deliveryMan && order.deliveryMan.name) ||
+      'Courier';
+
+    const isExchange = order.orderShipping.orderType === 'Exchange';
+
+    if (isExchange) {
+      order.orderStatus = 'completed';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+      order.scheduledRetryAt = null;
+      order.completedDate = new Date();
+      if (order.Attemps < 2) {
+        order.Attemps += 1;
+      }
+      order.orderStages.returnCompleted = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: `Exchange return leg completed at business by courier ${courierName}${
+          notes ? ': ' + notes : ''
+        }`,
+        completedBy: courierId,
+        deliveryLocation: deliveryLocation || order.business?.address,
+        businessSignature: businessSignature || null,
+      };
+      order.courierHistory.push({
+        courier: courierId,
+        assignedAt: new Date(),
+        action: 'delivered_to_business',
+        notes: `Courier ${courierName} returned original item to business (exchange complete)${
+          notes ? ': ' + notes : ''
+        }`,
+      });
+    } else {
+      order.orderStatus = 'returnCompleted';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+      order.completedDate = new Date();
+
+      if (order.Attemps < 2) {
+        order.Attemps += 1;
+      }
+
+      order.orderStages.returnCompleted = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: `Return completed and delivered to business by courier ${courierName}${
+          notes ? ': ' + notes : ''
+        }`,
+        completedBy: courierId,
+        deliveryLocation: deliveryLocation || order.business.address,
+        businessSignature: businessSignature || null,
+      };
+
+      order.courierHistory.push({
+        courier: courierId,
+        assignedAt: new Date(),
+        action: 'delivered_to_business',
+        notes: `Courier ${courierName} completed return delivery to business${
+          notes ? ': ' + notes : ''
+        }`,
+      });
     }
-
-    // Determine courier name safely for API requests where req.courierData might be undefined
-    const courierName = (req.courierData && req.courierData.name) || (order.deliveryMan && order.deliveryMan.name) || 'Courier';
-
-    // Update returnCompleted stage with comprehensive details
-    order.orderStages.returnCompleted = {
-      isCompleted: true,
-      completedAt: new Date(),
-      notes: `Return completed and delivered to business by courier ${
-        courierName
-      }${notes ? ': ' + notes : ''}`,
-      completedBy: courierId,
-      deliveryLocation: deliveryLocation || order.business.address,
-      businessSignature: businessSignature || null,
-    };
-
-    // Add to courier history
-    order.courierHistory.push({
-      courier: courierId,
-      assignedAt: new Date(),
-      action: 'delivered_to_business',
-      notes: `Courier ${
-        courierName
-      } completed return delivery to business${notes ? ': ' + notes : ''}`,
-    });
 
     await order.save();
 
-    // Send push notification to business about return completion
-    try {
-      await firebase.sendOrderStatusNotification(
-        order.business,
-        order.orderNumber,
-        'returnCompleted',
-        {
-          courierName: courierName,
-          completedAt: order.completedDate,
-          returnReason: order.orderShipping?.returnReason || 'Customer return'
+    const business = await User.findById(order.business).select('email brandInfo name');
+    const businessBrandName =
+      business?.brandInfo?.brandName || business?.name || 'NowShipping';
+
+    if (isExchange && order.orderStatus === 'completed') {
+      try {
+        const phone = order.orderCustomer?.phoneNumber;
+        if (phone) {
+          await sendSms({
+            recipient: phone,
+            message: `NowShipping - ${businessBrandName}: Your order ${order.orderNumber} has been delivered by ${courierName}. Thank you!`,
+          });
         }
-      );
-      console.log(`📱 Push notification sent to business ${order.business} about return completion for order ${order.orderNumber}`);
-    } catch (notificationError) {
-      console.error(`❌ Failed to send push notification for return completion ${order.orderNumber}:`, notificationError);
-      // Don't fail the return completion if notification fails
+      } catch (e) {
+        console.error(`SMS completion error for ${order.orderNumber}:`, e.details || e.message);
+      }
+      try {
+        if (business?.email) {
+          const orderData = {
+            orderNumber: order.orderNumber,
+            orderId: order._id,
+            customerName: order.orderCustomer?.fullName || 'N/A',
+            orderType: order.orderShipping?.orderType || 'Standard',
+            amount: order.orderShipping?.amount || 0,
+            deliveryDate: order.completedDate,
+            courierName: courierName,
+            status: order.orderStatus,
+          };
+          await emailService.sendOrderDeliveryNotification(orderData, business.email);
+        }
+      } catch (emailError) {
+        console.error(
+          `❌ Failed to send order delivery email for order ${order.orderNumber}:`,
+          emailError
+        );
+      }
+      try {
+        await firebase.sendOrderStatusNotification(
+          order.business,
+          order.orderNumber,
+          'completed',
+          {
+            courierName: courierName,
+            completedAt: order.completedDate,
+            orderType: order.orderShipping?.orderType || 'Standard',
+          }
+        );
+        console.log(
+          `📱 Push notification sent to business ${order.business} about order ${order.orderNumber} completion`
+        );
+      } catch (notificationError) {
+        console.error(
+          `❌ Failed to send push notification for order ${order.orderNumber}:`,
+          notificationError
+        );
+      }
+    } else if (!isExchange) {
+      try {
+        await firebase.sendOrderStatusNotification(
+          order.business,
+          order.orderNumber,
+          'returnCompleted',
+          {
+            courierName: courierName,
+            completedAt: order.completedDate,
+            returnReason: order.orderShipping?.returnReason || 'Customer return',
+          }
+        );
+        console.log(
+          `📱 Push notification sent to business ${order.business} about return completion for order ${order.orderNumber}`
+        );
+      } catch (notificationError) {
+        console.error(
+          `❌ Failed to send push notification for return completion ${order.orderNumber}:`,
+          notificationError
+        );
+      }
     }
 
     // If this return order is linked to a deliver order, mark the deliver order as returned
@@ -1842,27 +2085,17 @@ const completeReturnToBusiness = async (req, res) => {
     }
     
     // For web requests, redirect back to return details
-    req.flash('success', 'Return completed successfully');
-    res.redirect(`/courier/return-orders/${orderNumber}`);
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.log(error.message);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: error.message });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/returns');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
 //=============================================== PickUps =============================================== //
-
-const get_pickupsPage = (req, res) => {
-  res.render('courier/pickups', {
-    title: 'Pickups',
-    page_title: 'Pickups',
-    folder: 'Pages',
-  });
-};
 
 const get_pickups = async (req, res) => {
   // Handle both API (JWT) and web (session) authentication
@@ -1893,8 +2126,7 @@ const get_pickupDetails = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
   }
   try {
     const pickup = await Pickup.findOne({
@@ -1909,8 +2141,7 @@ const get_pickupDetails = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Pickup not found' });
       }
-      req.flash('error', 'Pickup not found');
-      return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
     }
     
     // Get selected pickup address if pickup has pickupAddressId
@@ -1925,23 +2156,13 @@ const get_pickupDetails = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(200).json({ pickup: pickup, selectedPickupAddress: selectedPickupAddress });
     }
-    
-    // Render page for web requests
-    res.render('courier/pickup-details', {
-      title: 'Pickup Details',
-      page_title: 'Pickup Details',
-      folder: 'Pages',
-      pickup: pickup,
-      selectedPickupAddress: selectedPickupAddress,
-      courierData: req.courierData
-    });
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.log(error.message);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: 'Internal server error' });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
   }
 }; 
 
@@ -1954,8 +2175,7 @@ const get_picked_up_orders = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
   }
   try {
     const pickup = await Pickup.findOne({
@@ -1973,8 +2193,7 @@ const get_picked_up_orders = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Pickup not found' });
       }
-      req.flash('error', 'Pickup not found');
-      return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
     }
     
     // Get selected pickup address if pickup has pickupAddressId
@@ -1989,23 +2208,12 @@ const get_picked_up_orders = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(200).json({ orders: pickup.ordersPickedUp, selectedPickupAddress: selectedPickupAddress });
     }
-    
-    // For web requests, render the pickup details page with orders
-    res.render('courier/pickup-details', {
-      title: 'Pickup Details',
-      page_title: 'Pickup Details',
-      folder: 'Pages',
-      pickup: pickup,
-      orders: pickup.ordersPickedUp,
-      selectedPickupAddress: selectedPickupAddress,
-      courierData: req.courierData
-    });
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: error.message });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -2018,8 +2226,7 @@ const getAndSet_order_To_Pickup = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
   }
   try {
     console.log(orderNumber, pickupNumber);
@@ -2036,16 +2243,14 @@ const getAndSet_order_To_Pickup = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Pickup not found' });
       }
-      req.flash('error', 'Pickup not found');
-      return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (pickup.ordersPickedUp.length === pickup.numberOfOrders) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Maximum number of orders reached for this pickup' });
       }
-      req.flash('error', 'Maximum number of orders reached for this pickup');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (
@@ -2058,16 +2263,14 @@ const getAndSet_order_To_Pickup = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'You cannot add a pickup order at this moment.' });
       }
-      req.flash('error', 'You cannot add a pickup order at this moment.');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (pickup.assignedDriver._id.toString() !== courierId) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(403).json({ message: 'You are not authorized to view this order' });
       }
-      req.flash('error', 'You are not authorized to view this order');
-      return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
     }
 
     // Search in both orderNumber and smartFlyerBarcode fields
@@ -2086,8 +2289,7 @@ const getAndSet_order_To_Pickup = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Order not found' });
       }
-      req.flash('error', 'Order not found');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (!pickup.ordersPickedUp.includes(order._id)) {
@@ -2116,22 +2318,19 @@ const getAndSet_order_To_Pickup = async (req, res) => {
     }
     
     // For web requests, redirect back to pickup details
-    req.flash('success', 'Order picked up successfully');
-    res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.log(error.message);
     if (error.name === 'ValidationError' && error.errors.ordersPickedUp) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Order is already picked up' });
       }
-      req.flash('error', 'Order is already picked up');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     } else {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(500).json({ message: error.message });
       }
-      req.flash('error', 'Internal Server Error');
-      res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
     }
   }
 };
@@ -2145,8 +2344,7 @@ const removePickedUpOrder = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
   }
   try {
     const pickup = await Pickup.findOne({
@@ -2160,8 +2358,7 @@ const removePickedUpOrder = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Pickup not found' });
       }
-      req.flash('error', 'Pickup not found');
-      return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
     }
     const order = await Order.findOne({
       orderNumber: orderNumber,
@@ -2183,23 +2380,20 @@ const removePickedUpOrder = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'You Cannot delete it at this moment' });
       }
-      req.flash('error', 'You Cannot delete it at this moment');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (!order) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Order not found' });
       }
-      req.flash('error', 'Order not found');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
     if (!pickup.ordersPickedUp.includes(order._id)) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Order is not picked up' });
       }
-      req.flash('error', 'Order is not picked up');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     const index = pickup.ordersPickedUp.indexOf(order._id);
@@ -2268,14 +2462,12 @@ const removePickedUpOrder = async (req, res) => {
     }
     
     // For web requests, redirect back to pickup details
-    req.flash('success', 'Order removed successfully');
-    res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: error.message });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -2289,8 +2481,7 @@ const completePickup = async (req, res) => {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(401).json({ message: 'Courier ID not found in request' });
     }
-    req.flash('error', 'Unauthorized');
-    return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
   }
   try {
     const pickup = await Pickup.findOne({
@@ -2308,56 +2499,49 @@ const completePickup = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ message: 'Pickup not found' });
       }
-      req.flash('error', 'Pickup not found');
-      return res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (pickup.picikupStatus === 'canceled') {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Pickup is canceled' });
       }
-      req.flash('error', 'Pickup is canceled');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (pickup.picikupStatus === 'rejected') {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Pickup is already rejected' });
       }
-      req.flash('error', 'Pickup is already rejected');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (pickup.picikupStatus === 'completed') {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Pickup is already completed' });
       }
-      req.flash('error', 'Pickup is already completed');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (pickup.picikupStatus === 'inStock') {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Pickup is in stock' });
       }
-      req.flash('error', 'Pickup is in stock');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (pickup.picikupStatus === 'pickedUp') {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Pickup is already Completed' });
       }
-      req.flash('error', 'Pickup is already Completed');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     if (pickup.ordersPickedUp.length === 0) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'No orders picked up' });
       }
-      req.flash('error', 'No orders picked up');
-      return res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     pickup.picikupStatus = 'pickedUp';
@@ -2425,14 +2609,12 @@ const completePickup = async (req, res) => {
     }
     
     // For web requests, redirect back to pickup details
-    req.flash('success', 'Pickup completed successfully');
-    res.redirect(`/courier/pickup-details/${pickupNumber}`);
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ message: error.message });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/pickups');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -2446,7 +2628,65 @@ const logOut = (req, res) => {
   }
   
   // For web requests, redirect to login page
-  res.redirect('/courier-login');
+  res.redirect('/mobileApp');
+};
+
+const getCourierLanguage = async (req, res) => {
+  try {
+    const courierId = req.courierId || req.userId;
+    if (!courierId) {
+      return res.status(401).json({ success: false, message: 'Courier ID not found in request' });
+    }
+
+    const courier = await Courier.findById(courierId).select('preferredLanguage');
+    if (!courier) {
+      return res.status(404).json({ success: false, message: 'Courier not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      language: normalizeCourierLanguage(courier.preferredLanguage) || 'en',
+    });
+  } catch (error) {
+    console.error('Error in getCourierLanguage:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get language preference' });
+  }
+};
+
+const updateCourierLanguage = async (req, res) => {
+  try {
+    const courierId = req.courierId || req.userId;
+    if (!courierId) {
+      return res.status(401).json({ success: false, message: 'Courier ID not found in request' });
+    }
+
+    const language = normalizeCourierLanguage(req.body?.language);
+    if (!language) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid language. Supported values are: en, ar.',
+      });
+    }
+
+    const courier = await Courier.findByIdAndUpdate(
+      courierId,
+      { preferredLanguage: language },
+      { new: true, runValidators: true }
+    ).select('preferredLanguage');
+
+    if (!courier) {
+      return res.status(404).json({ success: false, message: 'Courier not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Courier language updated successfully.',
+      language: normalizeCourierLanguage(courier.preferredLanguage) || 'en',
+    });
+  } catch (error) {
+    console.error('Error in updateCourierLanguage:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update language preference' });
+  }
 };
 
 // Scan fast shipping order and mark stages as completed
@@ -2584,68 +2824,6 @@ const scanFastShippingOrder = async (req, res) => {
 
 // ======================================== SHOP FUNCTIONS ======================================== //
 
-// Get courier shop orders page
-const getCourierShopOrdersPage = (req, res) => {
-  res.render('courier/shop-orders', {
-    title: 'Shop Orders',
-    page_title: 'Shop Deliveries',
-    folder: 'Shop',
-  });
-};
-
-// Get courier shop order details page
-const getCourierShopOrderDetailsPage = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const courierId = (req.courierData && req.courierData._id) || req.courierId || req.userId;
-    
-    if (!courierId) {
-      req.flash('error', 'Unauthorized');
-      return res.redirect('/courier/shop-orders');
-    }
-
-    const order = await ShopOrder.findOne({ _id: id, courier: courierId })
-      .populate('business', 'brandInfo phone email')
-      .populate('items.product')
-      .populate('trackingHistory.updatedBy', 'name');
-
-    if (!order) {
-      req.flash('error', 'Order not found');
-      return res.redirect('/courier/shop-orders');
-    }
-
-    // Enhance order with consistent data structure
-    const enhancedOrder = {
-      ...order.toObject(),
-      // Ensure all required fields are present
-      orderNumber: order.orderNumber || 'N/A',
-      status: order.status || 'pending',
-      createdAt: order.createdAt || new Date(),
-      contactInfo: order.contactInfo || {},
-      orderCustomer: order.orderCustomer || {},
-      items: order.items || [],
-      trackingHistory: order.trackingHistory || [],
-      subtotal: order.subtotal || 0,
-      discount: order.discount || 0,
-      tax: order.tax || 0,
-      deliveryFee: order.deliveryFee || 0,
-      totalAmount: order.totalAmount || 0
-    };
-
-    res.render('courier/shop-order-details', {
-      title: 'Shop Order Details',
-      page_title: 'Delivery Details',
-      folder: 'Shop',
-      order: enhancedOrder,
-      courierData: req.courierData
-    });
-  } catch (error) {
-    console.error('Error loading courier shop order details:', error);
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/shop-orders');
-  }
-};
-
 // Get courier shop orders
 const getCourierShopOrders = async (req, res) => {
   try {
@@ -2682,8 +2860,7 @@ const getCourierShopOrderDetails = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(401).json({ error: 'Unauthorized: courier ID missing' });
       }
-      req.flash('error', 'Unauthorized');
-      return res.redirect('/courier/shop-orders');
+    return respondCourierWebDeprecated(req, res);
     }
 
     const order = await ShopOrder.findOne({ _id: id, courier: courierId })
@@ -2694,30 +2871,20 @@ const getCourierShopOrderDetails = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ error: 'Order not found' });
       }
-      req.flash('error', 'Order not found');
-      return res.redirect('/courier/shop-orders');
+    return respondCourierWebDeprecated(req, res);
     }
 
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(200).json(order);
     }
-    
-    // For web requests, render the shop order details page
-    res.render('courier/shop-order-details', {
-      title: 'Shop Order Details',
-      page_title: 'Delivery Details',
-      folder: 'Shop',
-      order: order,
-      courierData: req.courierData
-    });
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.error('Error fetching order details:', error);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ error: 'Failed to fetch order details' });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/shop-orders');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
@@ -2731,8 +2898,7 @@ const updateCourierShopOrderStatus = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(401).json({ error: 'Unauthorized: courier ID missing' });
       }
-      req.flash('error', 'Unauthorized');
-      return res.redirect('/courier/shop-orders');
+    return respondCourierWebDeprecated(req, res);
     }
 
     const order = await ShopOrder.findOne({ _id: id, courier: courierId });
@@ -2741,8 +2907,7 @@ const updateCourierShopOrderStatus = async (req, res) => {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(404).json({ error: 'Order not found' });
       }
-      req.flash('error', 'Order not found');
-      return res.redirect('/courier/shop-orders');
+    return respondCourierWebDeprecated(req, res);
     }
 
     // Validate status transition with professional error handling
@@ -2757,8 +2922,7 @@ const updateCourierShopOrderStatus = async (req, res) => {
           error: `Invalid status transition from '${order.status}' to '${status}'. Valid transitions: ${validTransitions[order.status]?.join(', ') || 'none'}`,
         });
       }
-      req.flash('error', `Invalid status transition from '${order.status}' to '${status}'`);
-      return res.redirect(`/courier/shop-orders/${id}`);
+    return respondCourierWebDeprecated(req, res);
     }
 
     // Update order status with professional handling
@@ -2822,26 +2986,22 @@ const updateCourierShopOrderStatus = async (req, res) => {
     }
     
     // For web requests, redirect back to shop order details
-    req.flash('success', `Order status successfully updated from '${previousStatus}' to '${status}'`);
-    res.redirect(`/courier/shop-orders/${id}`);
+    return respondCourierWebDeprecated(req, res);
   } catch (error) {
     console.error('Error updating order status:', error);
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(500).json({ error: 'Failed to update order status' });
     }
-    req.flash('error', 'Internal Server Error');
-    res.redirect('/courier/shop-orders');
+    return respondCourierWebDeprecated(req, res);
   }
 };
 
 module.exports = {
-  getDashboardPage,
-  get_ordersPage,
+  respondCourierWebDeprecated,
   get_orders,
   get_orderDetails,
   completeOrder,
 
-  get_pickupsPage,
   get_pickups,
   get_pickupDetails,
   getAndSet_order_To_Pickup,
@@ -2850,19 +3010,17 @@ module.exports = {
   updateOrderStatus,
   completePickup,
   logOut,
+  getCourierLanguage,
+  updateCourierLanguage,
   pickupReturn,
   deliverReturnToWarehouse,
   completeReturnToBusiness,
   get_returns,
-  get_returnsPage,
   getReturnOrderDetails,
   getCurrentReturnStage,
   getNextReturnAction,
   scanFastShippingOrder,
 
-  // Shop functions
-  getCourierShopOrdersPage,
-  getCourierShopOrderDetailsPage,
   getCourierShopOrders,
   getCourierShopOrderDetails,
   updateCourierShopOrderStatus,

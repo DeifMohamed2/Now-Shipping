@@ -1,21 +1,18 @@
+const mongoose = require('mongoose');
 const Order = require('../models/order');
 const Courier = require('../models/courier');
 const Pickup = require('../models/pickup');
-const Release = require('../models/releases');
 const User = require('../models/user');
 const { businessRoleFilter } = require('../utils/businessRoleQuery');
-const Transaction = require('../models/transactions');
 const ShopProduct = require('../models/shopProduct');
 const ShopOrder = require('../models/shopOrder');
+const ledgerService = require('../utils/ledgerService');
+const { getBalance, getBalances } = ledgerService;
+const LedgerEntry = require('../models/ledgerEntry');
+const Payout = require('../models/payout');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const statusHelper = require('../utils/statusHelper');
-const FinancialReconciliation = require('../utils/financialReconciliation');
-const {
-  dailyOrderProcessing,
-  recoverFailedProcessing,
-  processSpecificOrders,
-} = require('../jobs/dailyOrderProcessing');
 const { emailService } = require('../utils/email');
 const firebase = require('../config/firebase');
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -24,6 +21,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { sendSms } = require('../utils/sms');
+const {
+  canAdminCancel,
+  canAdminChangeAddress,
+} = require('../utils/orderUiPolicy');
 const getDashboardPage = (req, res) => {
   res.render('admin/dashboard', {
     title: 'Dashboard',
@@ -64,7 +65,7 @@ const getAdminDashboardData = async (req, res) => {
       Order.countDocuments(statusQuery('headingToCustomer')),
       Order.countDocuments(statusQuery('new')),
       Order.countDocuments(statusQuery('headingToYou')),
-      Order.countDocuments({ orderStatus: { $in: ['waiting', 'awaitingAction', 'retryScheduled'] } }),
+      Order.countDocuments({ orderStatus: { $in: ['waitingAction', 'rescheduled'] } }),
       Order.find({}, 'orderNumber orderStatus orderBusiness businessId createdAt')
         .sort({ createdAt: -1 })
         .limit(7)
@@ -99,7 +100,7 @@ const getAdminDashboardData = async (req, res) => {
         { $sort: { '_id.y': -1, '_id.m': -1 } },
         { $limit: 9 }
       ]),
-      // Amount type breakdown (COD/CD/CC/NA)
+      // Amount type breakdown (COD/CD/NA)
       Order.aggregate([
         { $group: { _id: '$orderShipping.amountType', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
@@ -198,6 +199,38 @@ const get_ordersPage = (req, res) => {
   });
 };
 
+const get_ordersFilterBusinesses = async (req, res) => {
+  try {
+    const raw = (req.query.q || '').trim();
+    const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const mongoQuery = { ...businessRoleFilter(), isCompleted: true };
+    if (raw) {
+      const searchRegex = new RegExp(escapeRegex(raw), 'i');
+      mongoQuery.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex },
+        { 'brandInfo.brandName': searchRegex },
+        { 'brandInfo.industry': searchRegex },
+      ];
+    }
+    const users = await User.find(mongoQuery)
+      .select('_id name email brandInfo.brandName')
+      .sort({ 'brandInfo.brandName': 1, name: 1 })
+      .limit(30)
+      .lean();
+
+    const businesses = users.map((u) => ({
+      id: u._id.toString(),
+      label: u.brandInfo?.brandName || u.name || u.email || 'Business',
+    }));
+    res.status(200).json({ businesses });
+  } catch (error) {
+    console.error('Error in orders filter businesses:', error);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
 const get_orders = async (req, res) => {
   try {
     const {
@@ -210,9 +243,14 @@ const get_orders = async (req, res) => {
       dateFrom,
       dateTo,
       search,
+      businessId,
     } = req.query;
 
     const query = {};
+
+    if (businessId && mongoose.Types.ObjectId.isValid(businessId)) {
+      query.business = new mongoose.Types.ObjectId(businessId);
+    }
 
     if (orderType && statusHelper.ORDER_TYPES[orderType]) {
       query['orderShipping.orderType'] = orderType;
@@ -245,13 +283,35 @@ const get_orders = async (req, res) => {
     }
 
     if (search && search.trim() !== '') {
-      const searchRegex = new RegExp(search.trim(), 'i');
-      query.$or = [
+      const trimmed = search.trim();
+      const searchRegex = new RegExp(
+        trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        'i'
+      );
+      const searchOr = [
         { orderNumber: searchRegex },
         { 'orderCustomer.fullName': searchRegex },
         { 'orderCustomer.phoneNumber': searchRegex },
         { 'orderShipping.productDescription': searchRegex },
       ];
+      const businessUsers = await User.find({
+        ...businessRoleFilter(),
+        isCompleted: true,
+        $or: [
+          { name: searchRegex },
+          { email: searchRegex },
+          { phoneNumber: searchRegex },
+          { 'brandInfo.brandName': searchRegex },
+          { 'brandInfo.industry': searchRegex },
+        ],
+      })
+        .select('_id')
+        .lean();
+      const bizIds = businessUsers.map((u) => u._id);
+      if (bizIds.length) {
+        searchOr.push({ business: { $in: bizIds } });
+      }
+      query.$or = searchOr;
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -295,9 +355,6 @@ const get_orders = async (req, res) => {
           replacementProduct: order.orderShipping.productDescriptionReplacement,
           replacementCount: order.orderShipping.numberOfItemsReplacement,
         };
-      } else if (order.orderShipping && order.orderShipping.orderType === 'Cash Collection') {
-        orderObj.isCashCollection = true;
-        orderObj.collectionAmount = order.orderShipping.amount;
       }
       return orderObj;
     });
@@ -348,7 +405,9 @@ const get_orderDetailsPage = async (req, res) => {
       page_title: 'Order Details',
       folder: 'Orders',
       order: order,
-      selectedPickupAddress: selectedPickupAddress
+      selectedPickupAddress: selectedPickupAddress,
+      canCancelOrder: canAdminCancel(order),
+      canChangeAddress: canAdminChangeAddress(order),
     });
   } catch (error) {
     console.log(error);
@@ -587,6 +646,60 @@ const createCourier = async (req, res) => {
   }
 };
 
+/** Bulk set couriers unavailable (by courierID strings). */
+const bulkDeactivateCouriers = async (req, res) => {
+  const { courierIDs } = req.body;
+  if (!courierIDs || !Array.isArray(courierIDs) || courierIDs.length === 0) {
+    return res.status(400).json({ error: 'courierIDs array is required' });
+  }
+  try {
+    const result = await Courier.updateMany(
+      { courierID: { $in: courierIDs } },
+      { $set: { isAvailable: false } }
+    );
+    return res.status(200).json({
+      message: 'Couriers updated',
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error('bulkDeactivateCouriers:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/** Delete couriers that have no current assignments (assigned* arrays empty). */
+const bulkDeleteCouriers = async (req, res) => {
+  const { courierIDs } = req.body;
+  if (!courierIDs || !Array.isArray(courierIDs) || courierIDs.length === 0) {
+    return res.status(400).json({ error: 'courierIDs array is required' });
+  }
+  const deleted = [];
+  const skipped = [];
+  try {
+    for (const courierID of courierIDs) {
+      const c = await Courier.findOne({ courierID: String(courierID) });
+      if (!c) {
+        skipped.push({ courierID, reason: 'not_found' });
+        continue;
+      }
+      const hasAssigned =
+        (c.assignedOrders && c.assignedOrders.length > 0) ||
+        (c.assignedPickups && c.assignedPickups.length > 0) ||
+        (c.assignedShopOrders && c.assignedShopOrders.length > 0);
+      if (hasAssigned) {
+        skipped.push({ courierID, reason: 'has_active_assignments' });
+        continue;
+      }
+      await Courier.findOneAndDelete({ courierID: String(courierID) });
+      deleted.push(courierID);
+    }
+    return res.status(200).json({ deleted, skipped });
+  } catch (error) {
+    console.error('bulkDeleteCouriers:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Update courier zones
 const updateCourierZones = async (req, res) => {
   const { courierId, zones, notes } = req.body;
@@ -650,7 +763,7 @@ const get_couriersFollowUp = async (req, res) => {
               isMoneyRecivedFromCourier: false,
               orderStatus: { $in: ['completed', 'headingToCustomer'] },
               'orderShipping.orderType': { $ne: 'Return' },
-              'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] }, // Cash on Delivery, Cash Difference, Cash Collection
+              'orderShipping.amountType': { $in: ['COD', 'CD'] }, // Cash on Delivery, Cash Difference
             },
           },
           {
@@ -786,7 +899,7 @@ const get_courierDetailsPage = async (req, res) => {
           orderStatus: { $in: ['completed', 'headingToCustomer'] },
           'orderShipping.orderType': { $ne: 'Return' },
 
-          'orderShipping.amountType': { $in: ['COD', 'CD', 'CC'] },
+          'orderShipping.amountType': { $in: ['COD', 'CD'] },
         },
       },
       {
@@ -1539,16 +1652,13 @@ const assignCourierToStock = async (req, res) => {
     // Validate all orders before making any changes
     for (const order of orders) {
       if (order.orderStatus !== 'inProgress') {
-        // Allow assignment for orders in stock, picked up, Exchange orders, or fast shipping orders
+        // Same rules for all order types (including Exchange): must be in warehouse pipeline
         const validStatuses = ['inStock', 'pickedUp'];
 
-        // For Exchange orders or fast shipping orders, allow assignment regardless of status
-        const isExchangeOrder = order.orderShipping.orderType === 'Exchange';
         const isFastShipping =
           order.orderShipping && order.orderShipping.isExpressShipping;
 
         if (
-          !isExchangeOrder &&
           !isFastShipping &&
           !validStatuses.includes(order.orderStatus)
         ) {
@@ -1569,124 +1679,42 @@ const assignCourierToStock = async (req, res) => {
     }
 
     // Update all orders after validation passes
+    // Exchange uses the same path as Deliver/Return: pickup → stock → assign courier here → inProgress → customer.
     const updatePromises = orders.map((order) => {
       order.deliveryMan = courierId;
 
-      // Handle Exchange orders differently based on their current status
-      if (order.orderShipping.orderType === 'Exchange') {
-        // For new Exchange orders, set status to pickedUp to start the flow
-        if (order.orderStatus === 'new') {
-          order.orderStatus = 'pickedUp';
-          order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
+      const isFastShipping =
+        order.orderShipping && order.orderShipping.isExpressShipping;
 
-          // Update packed stage for pickup
-          if (!order.orderStages.packed.isCompleted) {
-            order.orderStages.packed.isCompleted = true;
-            order.orderStages.packed.completedAt = new Date();
-            order.orderStages.packed.notes = `Order assigned to courier ${courier.name} for pickup from business`;
-          }
+      order.orderStatus = 'inProgress';
+      order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
 
-          // Add to courier history with specific Exchange pickup note
-          order.courierHistory.push({
-            courier: courierId,
-            assignedAt: new Date(),
-            action: 'assigned',
-            notes: `Courier ${courier.name} assigned to pick up replacement item for Exchange order (${order.orderShipping.productDescriptionReplacement})`,
-          });
+      if (isFastShipping) {
+        if (!order.orderStages.inProgress.isCompleted) {
+          order.orderStages.inProgress.isCompleted = true;
+          order.orderStages.inProgress.completedAt = new Date();
+          order.orderStages.inProgress.notes = `Fast shipping order assigned to courier ${courier.name} - ready for pickup from business`;
         }
-        // For Exchange orders in pickedUp status, move to inStock
-        else if (order.orderStatus === 'pickedUp') {
-          order.orderStatus = 'inStock';
-          order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
 
-          // Update shipping stage
-          if (!order.orderStages.shipping.isCompleted) {
-            order.orderStages.shipping.isCompleted = true;
-            order.orderStages.shipping.completedAt = new Date();
-            order.orderStages.shipping.notes = `Replacement item received in stock for Exchange order`;
-          }
-
-          // Add to courier history
-          order.courierHistory.push({
-            courier: courierId,
-            assignedAt: new Date(),
-            action: 'delivered_to_warehouse',
-            notes: `Courier ${courier.name} delivered replacement item to warehouse`,
-          });
-        }
-        // For Exchange orders in inStock, assign for delivery
-        else if (order.orderStatus === 'inStock') {
-          order.orderStatus = 'inProgress';
-          order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
-
-          // Update inProgress stage
-          if (!order.orderStages.inProgress.isCompleted) {
-            order.orderStages.inProgress.isCompleted = true;
-            order.orderStages.inProgress.completedAt = new Date();
-            order.orderStages.inProgress.notes = `Order assigned to courier ${courier.name} for delivery to customer`;
-          }
-
-          // Add to courier history
-          order.courierHistory.push({
-            courier: courierId,
-            assignedAt: new Date(),
-            action: 'assigned',
-            notes: `Courier ${courier.name} assigned to deliver Exchange order to customer (${order.orderShipping.productDescription} → ${order.orderShipping.productDescriptionReplacement})`,
-          });
-        }
+        order.courierHistory.push({
+          courier: courierId,
+          assignedAt: new Date(),
+          action: 'assigned',
+          notes: `Fast shipping order assigned to courier ${courier.name} - proceed to business for pickup`,
+        });
       } else {
-        // Handle fast shipping vs standard flow for non-Exchange orders
-        const isFastShipping =
-          order.orderShipping && order.orderShipping.isExpressShipping;
-
-        order.orderStatus = 'inProgress';
-        order.statusCategory = statusHelper.STATUS_CATEGORIES.PROCESSING;
-
-        if (isFastShipping) {
-          // For fast shipping orders, only mark inProgress stage as completed
-          if (!order.orderStages.inProgress.isCompleted) {
-            order.orderStages.inProgress.isCompleted = true;
-            order.orderStages.inProgress.completedAt = new Date();
-            order.orderStages.inProgress.notes = `Fast shipping order assigned to courier ${courier.name} - ready for pickup from business`;
-          }
-
-          // Add to courier history with fast shipping note
-          order.courierHistory.push({
-            courier: courierId,
-            assignedAt: new Date(),
-            action: 'assigned',
-            notes: `Fast shipping order assigned to courier ${courier.name} - proceed to business for pickup`,
-          });
-        } else {
-          // For regular orders, update shipping stage
-          if (!order.orderStages.shipping.isCompleted) {
-            order.orderStages.shipping.isCompleted = true;
-            order.orderStages.shipping.completedAt = new Date();
-            order.orderStages.shipping.notes = `Order assigned to courier ${courier.name}`;
-          }
-
-          // Add to courier history
-          order.courierHistory.push({
-            courier: courierId,
-            assignedAt: new Date(),
-            action: 'assigned',
-            notes: `Courier ${courier.name} assigned to deliver ${order.orderShipping.orderType} order`,
-          });
+        if (!order.orderStages.shipping.isCompleted) {
+          order.orderStages.shipping.isCompleted = true;
+          order.orderStages.shipping.completedAt = new Date();
+          order.orderStages.shipping.notes = `Order assigned to courier ${courier.name}`;
         }
 
-        // For Cash Collection orders, add special note
-        if (order.orderShipping.orderType === 'Cash Collection') {
-          order.courierHistory[
-            order.courierHistory.length - 1
-          ].notes += ` (Amount to collect: ${order.orderShipping.amount} EGP)`;
-        }
-      }
-
-      // For Cash Collection orders, add amount in note
-      if (order.orderShipping.orderType === 'Cash Collection') {
-        order.courierHistory[
-          order.courierHistory.length - 1
-        ].notes += ` (Amount to collect: ${order.orderShipping.amount})`;
+        order.courierHistory.push({
+          courier: courierId,
+          assignedAt: new Date(),
+          action: 'assigned',
+          notes: `Courier ${courier.name} assigned to deliver ${order.orderShipping.orderType} order`,
+        });
       }
 
       return order.save();
@@ -2066,6 +2094,30 @@ const assignCourierToReturn = async (req, res) => {
       order.deliveryMan = courierId;
       order.orderStatus = 'returnAssigned';
 
+      // Generate return pickup OTP and SMS it to the customer
+      const returnOtpPlain = String(Math.floor(100000 + Math.random() * 900000));
+      const returnOtpNow = new Date();
+      order.returnOtp = {
+        otpHash:    bcrypt.hashSync(returnOtpPlain, 10),
+        expiresAt:  new Date(Date.now() + 24 * 60 * 60 * 1000),
+        issuedAt:   returnOtpNow,
+        verifiedAt: null,
+        attempts:   0,
+      };
+
+      // SMS the OTP to the customer (reference original order number so they recognise it)
+      const returnOtpOriginalRef = order.orderShipping?.originalOrderNumber || order.orderNumber;
+      const returnOtpPhone = order.orderCustomer?.phoneNumber;
+      const returnOtpBrand = order.business?.brandInfo?.brandName || order.business?.name || 'NowShipping';
+      if (returnOtpPhone) {
+        sendSms({
+          recipient: returnOtpPhone,
+          message: `NowShipping - ${returnOtpBrand}: Return pickup OTP for order ${returnOtpOriginalRef} is ${returnOtpPlain}. Share this code ONLY with the courier at pickup. Valid for 24 hours.`,
+        }).catch((e) => console.error(`SMS return OTP error for ${order.orderNumber}:`, e.details || e.message));
+      } else {
+        console.warn(`⚠️ No phone number for return order ${order.orderNumber} — SMS OTP skipped`);
+      }
+
       // Update return stages
       order.orderStages.returnAssigned.isCompleted = true;
       order.orderStages.returnAssigned.completedAt = new Date();
@@ -2076,7 +2128,7 @@ const assignCourierToReturn = async (req, res) => {
         courier: courierId,
         assignedAt: new Date(),
         action: 'assigned',
-        notes: `Courier ${courier.name} assigned to pick up return order from customer`,
+        notes: `Courier ${courier.name} assigned to pick up return order from customer${returnOtpPhone ? ' (OTP SMS sent to customer)' : ' (no phone — OTP SMS skipped)'}`,
       });
 
       // If this return order is linked to a deliver order, update the deliver order status too
@@ -2120,6 +2172,24 @@ const assignCourierToReturn = async (req, res) => {
       // Don't fail the assignment if notification fails
     }
 
+    // Send push notification to each business that a courier has been assigned and OTP sent
+    for (const order of orders) {
+      try {
+        await firebase.sendOrderStatusNotification(
+          order.business,
+          order.orderNumber,
+          'returnAssigned',
+          {
+            courierName: courier.name,
+            otpSentToCustomer: true,
+            otpIssuedAt: order.returnOtp?.issuedAt,
+          }
+        );
+      } catch (bizNotifErr) {
+        console.error(`❌ Failed to send returnAssigned push to business for order ${order.orderNumber}:`, bizNotifErr);
+      }
+    }
+
     res.status(200).json({
       message: 'Courier assigned to return orders successfully',
       assignedOrders: orders.length,
@@ -2128,6 +2198,55 @@ const assignCourierToReturn = async (req, res) => {
   } catch (error) {
     console.error('Error in assignCourierToReturn:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
+// Resend the return pickup OTP to the customer (admin action — for expired/lost OTPs)
+const resendReturnOtp = async (req, res) => {
+  const { orderNumber } = req.params;
+  try {
+    const order = await Order.findOne({
+      $or: [{ orderNumber }, { smartFlyerBarcode: orderNumber }],
+      'orderShipping.orderType': 'Return',
+      orderStatus: 'returnAssigned',
+    }).populate('business', 'brandInfo name');
+
+    if (!order) {
+      return res.status(404).json({ error: 'Return order not found or not in returnAssigned status.' });
+    }
+
+    const otpPlain = String(Math.floor(100000 + Math.random() * 900000));
+    const now = new Date();
+    order.returnOtp = {
+      otpHash:    bcrypt.hashSync(otpPlain, 10),
+      expiresAt:  new Date(Date.now() + 24 * 60 * 60 * 1000),
+      issuedAt:   now,
+      verifiedAt: null,
+      attempts:   0,
+    };
+
+    const originalRef = order.orderShipping?.originalOrderNumber || order.orderNumber;
+    const phone = order.orderCustomer?.phoneNumber;
+    const brand = order.business?.brandInfo?.brandName || order.business?.name || 'NowShipping';
+
+    if (phone) {
+      sendSms({
+        recipient: phone,
+        message: `NowShipping - ${brand}: Your return pickup OTP for order ${originalRef} is ${otpPlain}. Share this code ONLY with the courier at pickup. Valid for 24 hours.`,
+      }).catch((e) => console.error(`SMS resend return OTP error for ${order.orderNumber}:`, e.details || e.message));
+    }
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: phone ? 'Return OTP regenerated and SMS sent to customer.' : 'Return OTP regenerated. No phone number on file — SMS not sent.',
+      otpIssuedAt: now,
+      otpExpiresAt: order.returnOtp.expiresAt,
+    });
+  } catch (error) {
+    console.error('Error in resendReturnOtp:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
   }
 };
 
@@ -2614,267 +2733,316 @@ const return_courier_received = async (req, res) => {
   }
 };
 
-// ======================================== Wallet Overview ======================================== //
+// ======================================== Payouts (replaces Release Amounts + Financial Processing) ======================================== //
 
-const get_releaseAmountsPage = (req, res) => {
-  res.render('admin/release-amounts', {
-    title: 'Release Amounts',
-    page_title: 'Release Amounts',
-    folder: 'Pages',
+const get_payoutsPage = (req, res) => {
+  res.render('admin/payouts', {
+    title: 'Payouts',
+    page_title: 'Payouts Management',
+    folder: 'Financial Management',
   });
 };
 
-const get_releasesAllData = async (req, res) => {
-  const { filter } = req.query;
+
+/** Admin search for single-business payout: name, email, brand, or 8-digit account code */
+const search_businessesForPayout = async (req, res) => {
   try {
-    // Fetch all releases
-    let query = {};
-
-    if (filter === 'pending') {
-      query.releaseStatus = 'pending';
-    } else if (filter === 'scheduled') {
-      query.releaseStatus = 'scheduled';
-    } else if (filter === 'released') {
-      query.releaseStatus = 'released';
-    } else if (filter === 'all') {
-      query = {};
+    const q = (req.query.q || '').trim();
+    if (q.length < 2) {
+      return res.json({ success: true, businesses: [] });
     }
-    // Fetch all releases with the specified status and full business details
-    const releases = await Release.find(query)
-      .populate(
-        'business',
-        'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress'
-      )
-      .populate('transactionReferences');
-    console.log('Releases found:', releases.length);
 
-    // Get all releases for accurate statistics (not filtered)
-    const allReleases = await Release.find({}).populate(
-      'business',
-      'brandInfo name email phone'
-    );
+    const { ensureBusinessAccountCode } = require('../utils/businessAccountCode');
+    const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const safe = escapeRegex(q);
+    const regex = new RegExp(safe, 'i');
+    const isEightDigits = /^\d{8}$/.test(q);
 
-    // Calculate Total Funds Available (from all pending and scheduled releases)
-    const totalFundsAvailable = allReleases.reduce((sum, release) => {
-      if (
-        release.releaseStatus === 'pending' ||
-        release.releaseStatus === 'scheduled'
-      ) {
-        return sum + release.amount;
+    const orClauses = [
+      { name: regex },
+      { email: regex },
+      { 'brandInfo.brandName': regex },
+    ];
+    if (isEightDigits) {
+      orClauses.unshift({ businessAccountCode: q });
+    }
+
+    const users = await User.find({ ...businessRoleFilter(), $or: orClauses })
+      .select('_id name email phoneNumber brandInfo businessAccountCode profileImage')
+      .limit(25)
+      .lean();
+
+    const businesses = [];
+    for (const u of users) {
+      let code = u.businessAccountCode;
+      if (!code) {
+        code = await ensureBusinessAccountCode(u._id);
       }
-      return sum;
-    }, 0);
+      businesses.push({
+        _id: u._id,
+        name: u.name,
+        email: u.email,
+        phoneNumber: u.phoneNumber || '',
+        brandName: u.brandInfo?.brandName || '',
+        businessAccountCode: code,
+        profileImage: u.profileImage || null,
+      });
+    }
 
-    // Calculate Next Release Date (always the next Wednesday)
-    const today = new Date();
-    const nextWednesday = new Date(today);
-    nextWednesday.setDate(
-      today.getDate() + ((3 - today.getDay() + 7) % 7 || 7)
-    );
-
-    // Calculate Total Payments Released
-    const totalPaymentsReleased = allReleases
-      .filter((release) => release.releaseStatus === 'released')
-      .reduce((sum, release) => sum + release.amount, 0);
-
-    // Calculate Payments Pending
-    const paymentsPending = allReleases
-      .filter((release) => release.releaseStatus === 'pending')
-      .reduce((sum, release) => sum + release.amount, 0);
-
-    // Calculate Scheduled Releases
-    const scheduledReleases = allReleases
-      .filter((release) => release.releaseStatus === 'scheduled')
-      .reduce((sum, release) => sum + release.amount, 0);
-
-    // Calculate the number of releases for each category
-    const totalPaymentsReleasedCount = allReleases.filter(
-      (release) => release.releaseStatus === 'released'
-    ).length;
-    const paymentsPendingCount = allReleases.filter(
-      (release) => release.releaseStatus === 'pending'
-    ).length;
-    const scheduledReleasesCount = allReleases.filter(
-      (release) => release.releaseStatus === 'scheduled'
-    ).length;
-
-    // Send response
-    res.status(200).json({
-      totalFundsAvailable,
-      nextReleaseDate: nextWednesday.toISOString(),
-      totalPaymentsReleased,
-      paymentsPending,
-      scheduledReleases,
-      totalPaymentsReleasedCount,
-      paymentsPendingCount,
-      scheduledReleasesCount,
-      releases,
-    });
-  } catch (error) {
-    console.error('Error in get_releasesAllData:', error);
-    res.status(500).json({ error: 'Internal server error. Please try again.' });
+    res.json({ success: true, businesses });
+  } catch (err) {
+    console.error('search_businessesForPayout error:', err);
+    res.status(500).json({ success: false, error: 'Search failed' });
   }
 };
 
-const rescheduleRelease = async (req, res) => {
-  const { releaseId, newDate, reason, notes } = req.body;
+const get_payouts = async (req, res) => {
   try {
-    const release = await Release.findById(releaseId);
-    if (!release) {
-      return res.status(404).json({ error: 'Release not found' });
-    }
-    release.scheduledReleaseDate = newDate;
-    release.reason = reason || '';
-    release.releaseNotes = notes || '';
-    release.releaseStatus = 'scheduled';
-    await release.save();
-    res.status(200).json({ message: 'Release rescheduled successfully' });
-  } catch (error) {
-    console.error('Error in rescheduleRelease:', error);
-    res.status(500).json({ error: 'Internal server error. Please try again.' });
+    const { status, businessId, page = 1, limit = 50 } = req.query;
+    const query = {};
+    if (status && status !== 'all') query.status = status;
+    if (businessId) query.business = businessId;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const [payouts, total] = await Promise.all([
+      Payout.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate('business', 'name email phoneNumber brandInfo paymentMethod businessAccountCode')
+        .lean(),
+      Payout.countDocuments(query),
+    ]);
+
+    // Attach current balance for each business in this page
+    const businessIds = [...new Set(payouts.map(p => p.business._id))];
+    const balanceMap = await ledgerService.getBalances(businessIds);
+
+    const data = payouts.map(p => ({
+      ...p,
+      currentBalance: balanceMap.get(p.business._id.toString()) || 0,
+    }));
+
+    res.json({ success: true, payouts: data, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+  } catch (err) {
+    console.error('get_payouts error:', err);
+    res.status(500).json({ success: false, error: 'Failed to load payouts' });
   }
 };
 
-const releaseFunds = async (req, res) => {
-  const { releaseId, notes } = req.body;
+const markPayoutPaid = async (req, res) => {
   try {
-    const release = await Release.findById(releaseId)
-      .populate('business')
-      .populate('transactionReferences');
+    const { id } = req.params;
+    const { note } = req.body;
 
-    if (!release) {
-      return res.status(404).json({ error: 'Release not found' });
-    }
+    const payout = await Payout.findById(id).populate('business', 'name');
+    if (!payout) return res.status(404).json({ success: false, error: 'Payout not found' });
+    if (payout.status === 'paid') return res.status(400).json({ success: false, error: 'Payout already marked as paid' });
 
-    if (release.releaseStatus === 'released') {
-      return res.status(400).json({ error: 'Release already released' });
-    }
+    payout.status = 'paid';
+    payout.paidDate = new Date();
+    if (note) payout.adminNote = note;
+    await payout.save();
 
-    release.releaseStatus = 'released';
-    release.scheduledReleaseDate = null;
-    release.reason = null;
-    release.releaseNotes = notes || '';
-    await release.save();
+    console.log(`Payout ${payout._id} marked as paid for ${payout.business.name}`);
+    res.json({ success: true, payout });
+  } catch (err) {
+    console.error('markPayoutPaid error:', err);
+    res.status(500).json({ success: false, error: 'Failed to mark payout as paid' });
+  }
+};
 
-    // Mark all transactions included in this release as settled
-    if (
-      release.transactionReferences &&
-      release.transactionReferences.length > 0
-    ) {
-      const transactionIds = release.transactionReferences.map(
-        (transaction) => transaction._id
-      );
-      console.log(
-        `Attempting to mark ${transactionIds.length} transactions as settled:`,
-        transactionIds
-      );
+// GET /admin/api/payouts/:id — full detail + all ledger entries for that payout
+const get_payoutDetail = async (req, res) => {
+  try {
+    const payout = await Payout.findById(req.params.id)
+      .populate('business', 'name email brandInfo paymentMethod businessAccountCode profileImage')
+      .lean();
+    if (!payout) return res.status(404).json({ success: false, error: 'Payout not found' });
 
-      // First, let's check the current status of these transactions
-      const currentTransactions = await Transaction.find({
-        _id: { $in: transactionIds },
-      });
-      console.log(
-        'Current transaction statuses:',
-        currentTransactions.map((t) => ({
-          id: t._id,
-          transactionId: t.transactionId,
-          type: t.transactionType,
-          settlementStatus: t.settlementStatus,
-          settled: t.settled,
-        }))
-      );
+    const entries = await LedgerEntry.find({ payoutId: payout._id })
+      .sort({ createdAt: 1 })
+      .lean();
 
-      // Update each transaction individually to trigger pre-save hooks
-      const updatePromises = currentTransactions.map(async (transaction) => {
-        transaction.settlementStatus = 'settled';
-        // The pre-save hook will automatically set settled = true
-        return transaction.save();
-      });
+    res.json({ success: true, payout, entries });
+  } catch (err) {
+    console.error('get_payoutDetail error:', err);
+    res.status(500).json({ success: false, error: 'Failed to load payout detail' });
+  }
+};
 
-      await Promise.all(updatePromises);
-      console.log(
-        `Marked ${currentTransactions.length} transactions as settled for release ${release.releaseId}`
-      );
+// GET /admin/api/payouts/:id/export — download Excel of payout entries
+const export_payoutExcel = async (req, res) => {
+  try {
+    const ExcelJS = require('exceljs');
+    const payout = await Payout.findById(req.params.id)
+      .populate('business', 'name email brandInfo businessAccountCode')
+      .lean();
+    if (!payout) return res.status(404).json({ success: false, error: 'Payout not found' });
 
-      // Verify the update worked
-      const updatedTransactions = await Transaction.find({
-        _id: { $in: transactionIds },
-      });
-      console.log(
-        'Updated transaction statuses:',
-        updatedTransactions.map((t) => ({
-          id: t._id,
-          transactionId: t.transactionId,
-          type: t.transactionType,
-          settlementStatus: t.settlementStatus,
-          settled: t.settled,
-        }))
-      );
-    }
+    const entries = await LedgerEntry.find({ payoutId: payout._id })
+      .sort({ createdAt: 1 })
+      .lean();
 
-    // Create a withdrawal transaction record
-    const transaction = new Transaction({
-      transactionId: Math.floor(100000 + Math.random() * 900000).toString(),
-      transactionType: 'withdrawal',
-      transactionAmount: -release.amount,
-      settlementStatus: 'settled', // This withdrawal transaction is settled immediately
-      transactionNotes: `Funds released${notes ? ` - ${notes}` : ''}`,
-      ordersDetails: {
-        releaseId: release.releaseId,
-        releaseType: release.releaseType,
-        releaseAmount: release.amount,
-        releaseDate: new Date(),
-        businessName:
-          release.business.name ||
-          release.business.brandInfo?.brandName ||
-          'Unknown Business',
-        notes: notes || '',
-        transactionCount: release.transactionReferences.length,
-      },
-      business: release.business._id,
+    const biz = payout.business || {};
+    const bizName = biz.brandInfo?.brandName || biz.name || 'Business';
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Now Shipping Admin';
+    const ws = wb.addWorksheet('Payout Entries');
+
+    // Header info rows
+    ws.addRow(['Payout ID', String(payout._id)]);
+    ws.addRow(['Business', bizName]);
+    if (biz.businessAccountCode) ws.addRow(['Account Code', biz.businessAccountCode]);
+    ws.addRow(['Status', payout.status]);
+    ws.addRow(['Amount', payout.amount]);
+    ws.addRow(['Scheduled Date', payout.scheduledDate ? new Date(payout.scheduledDate).toLocaleDateString('en-GB') : '—']);
+    ws.addRow(['Paid Date', payout.paidDate ? new Date(payout.paidDate).toLocaleDateString('en-GB') : '—']);
+    ws.addRow([]);
+
+    // Table header
+    const headerRow = ws.addRow(['Date', 'Type', 'Description', 'Order #', 'Pickup #', 'Amount (EGP)']);
+    headerRow.font = { bold: true };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF39720' } };
+
+    const typeLabels = {
+      cod_collected: 'COD Collected',
+      delivery_fee: 'Delivery Fee',
+      return_fee: 'Return Fee',
+      pickup_fee: 'Pickup Fee',
+      payout: 'Payout',
+      adjustment: 'Adjustment',
+    };
+
+    entries.forEach(e => {
+      const row = ws.addRow([
+        e.createdAt ? new Date(e.createdAt).toLocaleDateString('en-GB') : '',
+        typeLabels[e.type] || e.type || '',
+        e.description || '',
+        e.orderNumber || '',
+        e.pickupNumber || '',
+        e.amount,
+      ]);
+      // Color amounts
+      const amountCell = row.getCell(6);
+      amountCell.font = { color: { argb: e.amount >= 0 ? 'FF059669' : 'FFDC2626' }, bold: true };
     });
 
-    await transaction.save();
+    // Summary row
+    const total = entries.reduce((s, e) => s + (e.amount || 0), 0);
+    const sumRow = ws.addRow(['', '', '', '', 'NET TOTAL', total]);
+    sumRow.font = { bold: true };
+    sumRow.getCell(6).font = { bold: true, color: { argb: total >= 0 ? 'FF059669' : 'FFDC2626' } };
 
-    // Send professional money release email to business
-    try {
-      const releaseData = {
-        releaseId: release.releaseId,
-        amount: release.amount,
-        releaseDate: new Date(),
-        paymentMethod: business.paymentMethod?.paymentChoice || 'Bank Transfer',
-        transactionCount: release.transactionReferences.length,
-        businessName:
-          business.brandInfo?.brandName || business.name || 'Business',
-      };
+    // Column widths
+    ws.columns = [
+      { width: 14 }, { width: 18 }, { width: 40 }, { width: 14 }, { width: 14 }, { width: 16 },
+    ];
 
-      await emailService.sendMoneyReleaseNotification(
-        releaseData,
-        business.email
-      );
-      console.log(`📧 Money release email sent to business ${business._id}`);
-    } catch (emailError) {
-      console.error(
-        `❌ Failed to send money release email to business ${business._id}:`,
-        emailError
-      );
-      // Don't fail the release process if email fails
-    }
+    const safeName = bizName.replace(/[^a-z0-9]/gi, '_').slice(0, 30);
+    const filename = `payout_${safeName}_${String(payout._id).slice(-6)}.xlsx`;
 
-    console.log(
-      `Funds released successfully for business ${release.business._id}. Amount: ${release.amount} EGP`
-    );
-
-    res.status(200).json({ message: 'Funds released successfully' });
-  } catch (error) {
-    console.error('Error in releaseFunds:', error);
-    res.status(500).json({ error: 'Internal server error. Please try again.' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('export_payoutExcel error:', err);
+    res.status(500).json({ success: false, error: 'Failed to export payout' });
   }
 };
 
-// ======================================== End Wallet Overview ======================================== //
+const addAdjustment = async (req, res) => {
+  try {
+    const { businessId, amount, note } = req.body;
+    if (!businessId || amount === undefined || !note) {
+      return res.status(400).json({ success: false, error: 'businessId, amount and note are required' });
+    }
+    const entry = await ledgerService.createAdjustment(businessId, parseFloat(amount), note);
+    res.json({ success: true, entry });
+  } catch (err) {
+    console.error('addAdjustment error:', err);
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+const get_businessLedgerPage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id)
+      .select('name email brandInfo businessAccountCode profileImage')
+      .lean();
+    if (!user) return res.status(404).render('404', { message: 'Business not found' });
+    const displayName = user.brandInfo?.brandName || user.name || 'Business';
+    res.render('admin/business-ledger', {
+      businessId: id,
+      businessName: displayName,
+      businessEmail: user.email || '',
+      businessAccountCode: user.businessAccountCode || '',
+      profileImage: user.profileImage || '',
+      page_title: `${displayName} — Ledger`,
+      folder: 'Financial Management',
+      breadcrumb: 'Business Ledger',
+    });
+  } catch (err) {
+    console.error('get_businessLedgerPage error:', err);
+    res.status(500).send('Server error');
+  }
+};
+
+const get_businessLedger = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, settled, startDate, endDate, search, page = 1, limit = 50 } = req.query;
+    const settledBool = settled === 'true' ? true : settled === 'false' ? false : undefined;
+
+    const oid = new mongoose.Types.ObjectId(id);
+    const result = await ledgerService.getEntries(
+      oid,
+      { type, settled: settledBool, startDate, endDate, search },
+      parseInt(page),
+      parseInt(limit)
+    );
+    const balance = await ledgerService.getBalance(oid);
+    res.json({ success: true, ...result, balance });
+  } catch (err) {
+    console.error('get_businessLedger error:', err);
+    res.status(500).json({ success: false, error: 'Failed to load ledger' });
+  }
+};
+
+// Manual trigger for payout processing (admin only)
+const runPayoutProcessing = async (req, res) => {
+  try {
+    const { runPayoutProcessing: run } = require('../jobs/payoutProcessing');
+    const businessId = req.body?.businessId || null;
+    const result = await run({ businessId });
+    if (result?.skipped) {
+      return res.json({
+        success: false,
+        skipped: true,
+        reason: result.reason,
+        message: result.message || 'Processing is already in progress — please wait.',
+      });
+    }
+    res.json({
+      success: true,
+      message: result?.message || 'Payout processing completed.',
+      businessesProcessed: result?.businessesProcessed ?? 0,
+      businessesSkipped: result?.businessesSkipped ?? 0,
+      errors: result?.errors ?? [],
+    });
+  } catch (err) {
+    console.error('runPayoutProcessing error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 
 // ======================================== Businesses ======================================== //
+
+/** Matches User.role values stored in DB (see businessRoleQuery). */
+const isBusinessRole = (role) => role === 'business' || role === 'Business';
 
 const get_businessesPage = (req, res) => {
   res.render('admin/businesses', {
@@ -2938,6 +3106,8 @@ const get_businesses = async (req, res) => {
       .limit(parseInt(limit))
       .lean();
 
+    const balanceMap = await getBalances(businesses.map((b) => b._id));
+
     // Get statistics for each business
     const businessesWithStats = await Promise.all(
       businesses.map(async (business) => {
@@ -2946,7 +3116,7 @@ const get_businesses = async (req, res) => {
           completedOrders,
           totalPickups,
           totalShopOrders,
-          totalTransactions,
+          totalLedgerEntries,
         ] = await Promise.all([
           Order.countDocuments({ business: business._id }),
           Order.countDocuments({
@@ -2955,7 +3125,7 @@ const get_businesses = async (req, res) => {
           }),
           Pickup.countDocuments({ business: business._id }),
           ShopOrder.countDocuments({ business: business._id }),
-          Transaction.countDocuments({ business: business._id }),
+          LedgerEntry.countDocuments({ business: business._id }),
         ]);
 
         const successRate =
@@ -2963,14 +3133,17 @@ const get_businesses = async (req, res) => {
             ? ((completedOrders / totalOrders) * 100).toFixed(1)
             : 0;
 
+        const balance = balanceMap.get(business._id.toString()) || 0;
+
         return {
           ...business,
+          balance,
           stats: {
             totalOrders,
             completedOrders,
             totalPickups,
             totalShopOrders,
-            totalTransactions,
+            totalLedgerEntries,
             successRate,
           },
         };
@@ -3005,7 +3178,7 @@ const get_businessDetailsPage = async (req, res) => {
       )
       .lean();
 
-    if (!business || business.role !== 'business') {
+    if (!business || !isBusinessRole(business.role)) {
       return res.status(404).render('auth/auth-404', {
         title: '404',
         page_title: 'Business Not Found',
@@ -3035,109 +3208,144 @@ const get_businessDetails = async (req, res) => {
       )
       .lean();
 
-    if (!business || business.role !== 'business') {
+    if (!business || !isBusinessRole(business.role)) {
       return res.status(404).json({ error: 'Business not found' });
     }
 
     // Get comprehensive statistics
-    const [orders, pickups, shopOrders, transactions, releases] =
-      await Promise.all([
-        Order.find({ business: business._id })
-          .sort({ createdAt: -1 })
-          .limit(10)
-          .populate('deliveryMan', 'courierName phoneNumber')
-          .lean(),
-        Pickup.find({ business: business._id })
-          .sort({ createdAt: -1 })
-          .limit(10)
-          .populate('assignedDriver', 'courierName phoneNumber')
-          .lean(),
-        ShopOrder.find({ business: business._id })
-          .sort({ createdAt: -1 })
-          .limit(10)
-          .populate('courier', 'courierName phoneNumber')
-          .lean(),
-        Transaction.find({ business: business._id })
-          .sort({ createdAt: -1 })
-          .limit(20)
-          .lean(),
-        Release.find({ business: business._id }).sort({ createdAt: -1 }).lean(),
-      ]);
+    const [
+      orders,
+      pickups,
+      shopOrders,
+      recentLedgerEntries,
+      recentPayouts,
+      unsettledBalance,
+      revenueAgg,
+    ] = await Promise.all([
+      Order.find({ business: business._id })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate('deliveryMan', 'courierName phoneNumber')
+        .lean(),
+      Pickup.find({ business: business._id })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate('assignedDriver', 'courierName phoneNumber')
+        .lean(),
+      ShopOrder.find({ business: business._id })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate('courier', 'courierName phoneNumber')
+        .lean(),
+      LedgerEntry.find({ business: business._id })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .lean(),
+      Payout.find({ business: business._id })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean(),
+      getBalance(business._id),
+      LedgerEntry.aggregate([
+        { $match: { business: business._id } },
+        {
+          $group: {
+            _id: null,
+            income: {
+              $sum: {
+                $cond: [{ $gt: ['$amount', 0] }, '$amount', 0],
+              },
+            },
+            expenses: {
+              $sum: {
+                $cond: [{ $lt: ['$amount', 0] }, { $multiply: ['$amount', -1] }, 0],
+              },
+            },
+          },
+        },
+      ]),
+    ]);
+
+    const bid = business._id;
+    const [
+      pendingPayoutCount,
+      totalLedgerCount,
+      totalPayoutCount,
+      orderTotal,
+      orderSuccessful,
+      orderProcessing,
+      orderUnsuccessful,
+      orderNew,
+      pickupTotal,
+      pickupCompleted,
+      pickupPending,
+      shopTotal,
+      shopDelivered,
+      shopPending,
+    ] = await Promise.all([
+      Payout.countDocuments({ business: bid, status: { $in: ['scheduled', 'processing'] } }),
+      LedgerEntry.countDocuments({ business: bid }),
+      Payout.countDocuments({ business: bid }),
+      Order.countDocuments({ business: bid }),
+      Order.countDocuments({ business: bid, statusCategory: 'SUCCESSFUL' }),
+      Order.countDocuments({ business: bid, statusCategory: 'PROCESSING' }),
+      Order.countDocuments({ business: bid, statusCategory: 'UNSUCCESSFUL' }),
+      Order.countDocuments({ business: bid, statusCategory: 'NEW' }),
+      Pickup.countDocuments({ business: bid }),
+      Pickup.countDocuments({ business: bid, picikupStatus: 'completed' }),
+      Pickup.countDocuments({
+        business: bid,
+        picikupStatus: { $in: ['new', 'pendingPickup', 'driverAssigned'] },
+      }),
+      ShopOrder.countDocuments({ business: bid }),
+      ShopOrder.countDocuments({ business: bid, status: 'delivered' }),
+      ShopOrder.countDocuments({
+        business: bid,
+        status: { $in: ['pending', 'confirmed', 'assigned'] },
+      }),
+    ]);
 
     // Calculate statistics
     const stats = {
       orders: {
-        total: await Order.countDocuments({ business: business._id }),
-        successful: await Order.countDocuments({
-          business: business._id,
-          statusCategory: 'SUCCESSFUL',
-        }),
-        processing: await Order.countDocuments({
-          business: business._id,
-          statusCategory: 'PROCESSING',
-        }),
-        unsuccessful: await Order.countDocuments({
-          business: business._id,
-          statusCategory: 'UNSUCCESSFUL',
-        }),
-        new: await Order.countDocuments({
-          business: business._id,
-          statusCategory: 'NEW',
-        }),
+        total: orderTotal,
+        successful: orderSuccessful,
+        processing: orderProcessing,
+        unsuccessful: orderUnsuccessful,
+        new: orderNew,
       },
       pickups: {
-        total: await Pickup.countDocuments({ business: business._id }),
-        completed: await Pickup.countDocuments({
-          business: business._id,
-          picikupStatus: 'completed',
-        }),
-        pending: await Pickup.countDocuments({
-          business: business._id,
-          picikupStatus: { $in: ['new', 'pendingPickup', 'driverAssigned'] },
-        }),
+        total: pickupTotal,
+        completed: pickupCompleted,
+        pending: pickupPending,
       },
       shopOrders: {
-        total: await ShopOrder.countDocuments({ business: business._id }),
-        delivered: await ShopOrder.countDocuments({
-          business: business._id,
-          status: 'delivered',
-        }),
-        pending: await ShopOrder.countDocuments({
-          business: business._id,
-          status: { $in: ['pending', 'confirmed', 'assigned'] },
-        }),
+        total: shopTotal,
+        delivered: shopDelivered,
+        pending: shopPending,
       },
       financial: {
-        currentBalance: business.balance || 0,
-        totalTransactions: transactions.length,
-        totalReleases: releases.length,
-        pendingReleases: releases.filter((r) => r.releaseStatus === 'pending')
-          .length,
+        currentBalance: unsettledBalance,
+        totalLedgerEntries: totalLedgerCount,
+        totalPayouts: totalPayoutCount,
+        pendingReleases: pendingPayoutCount,
       },
     };
 
-    // Calculate revenue breakdown
-    const revenueBreakdown = transactions.reduce(
-      (acc, trans) => {
-        if (trans.transactionAmount > 0) {
-          acc.income += trans.transactionAmount;
-        } else {
-          acc.expenses += Math.abs(trans.transactionAmount);
-        }
-        return acc;
-      },
-      { income: 0, expenses: 0 }
-    );
+    const revenueBreakdown =
+      revenueAgg.length > 0
+        ? { income: revenueAgg[0].income || 0, expenses: revenueAgg[0].expenses || 0 }
+        : { income: 0, expenses: 0 };
 
     res.status(200).json({
-      business,
+      business: { ...business, balance: unsettledBalance },
       stats,
       revenueBreakdown,
       recentOrders: orders,
       recentPickups: pickups,
       recentShopOrders: shopOrders,
-      recentTransactions: transactions,
-      releases,
+      recentLedgerEntries,
+      recentPayouts,
     });
   } catch (error) {
     console.error('Error fetching business details:', error);
@@ -3452,556 +3660,6 @@ const getCourierLocation = async (req, res) => {
   }
 };
 
-// Excel Export Function for Releases
-const exportReleasesToExcel = async (req, res) => {
-  try {
-    // Fetch all releases with full business details
-    const releases = await Release.find({})
-      .populate(
-        'business',
-        'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress'
-      )
-      .sort({ createdAt: -1 });
-
-    // Create a new workbook
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Business Payments Report');
-
-    // Define columns with professional headers
-    worksheet.columns = [
-      { header: 'Release ID', key: 'releaseId', width: 15 },
-      { header: 'Business Name', key: 'businessName', width: 25 },
-      { header: 'Business Owner', key: 'businessOwner', width: 25 },
-      { header: 'Business Type', key: 'businessType', width: 15 },
-      { header: 'Industry', key: 'industry', width: 20 },
-      { header: 'Email', key: 'email', width: 30 },
-      { header: 'Phone Number', key: 'phoneNumber', width: 20 },
-      { header: 'Payment Method', key: 'paymentMethod', width: 20 },
-      { header: 'Payment Details', key: 'paymentDetails', width: 35 },
-      { header: 'Amount (EGP)', key: 'amount', width: 15 },
-      { header: 'Release Status', key: 'status', width: 15 },
-      { header: 'Scheduled Date', key: 'scheduledDate', width: 20 },
-      { header: 'Created Date', key: 'createdDate', width: 20 },
-      { header: 'Release Notes', key: 'notes', width: 30 },
-    ];
-
-    // Style the header row
-    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } };
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: '405189' },
-    };
-    worksheet.getRow(1).alignment = {
-      horizontal: 'center',
-      vertical: 'middle',
-    };
-
-    // Add data rows
-    releases.forEach((release, index) => {
-      const business = release.business;
-      const paymentMethod = business.paymentMethod;
-
-      let paymentMethodText = 'Not Set';
-      let paymentDetails = 'N/A';
-
-      if (paymentMethod && paymentMethod.paymentChoice) {
-        switch (paymentMethod.paymentChoice) {
-          case 'instaPay':
-            paymentMethodText = 'InstaPay';
-            paymentDetails = paymentMethod.details?.IPAorPhoneNumber || 'N/A';
-            break;
-          case 'mobileWallet':
-            paymentMethodText = 'Mobile Wallet';
-            paymentDetails = paymentMethod.details?.mobileWalletNumber || 'N/A';
-            break;
-          case 'bankTransfer':
-            paymentMethodText = 'Bank Transfer';
-            paymentDetails = `Bank: ${
-              paymentMethod.details?.bankName || 'N/A'
-            }, IBAN: ${paymentMethod.details?.IBAN || 'N/A'}, Account: ${
-              paymentMethod.details?.accountName || 'N/A'
-            }`;
-            break;
-        }
-      }
-
-      const row = worksheet.addRow({
-        releaseId: release.releaseId,
-        businessName: business.brandInfo?.brandName || business.name || 'N/A',
-        businessOwner: business.name || 'N/A',
-        businessType: business.brandType?.brandChoice || 'N/A',
-        industry: business.brandInfo?.industry || 'N/A',
-        email: business.email || 'N/A',
-        phoneNumber: business.phoneNumber || 'N/A',
-        paymentMethod: paymentMethodText,
-        paymentDetails: paymentDetails,
-        amount: release.amount,
-        status: release.releaseStatus,
-        scheduledDate: release.scheduledReleaseDate
-          ? new Date(release.scheduledReleaseDate).toLocaleDateString()
-          : 'Pending',
-        createdDate: new Date(release.createdAt).toLocaleDateString(),
-        notes: release.releaseNotes || '',
-      });
-
-      // Alternate row colors for better readability
-      if (index % 2 === 0) {
-        row.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'F8F9FA' },
-        };
-      }
-
-      // Format amount column
-      row.getCell('amount').numFmt = '#,##0.00';
-      row.getCell('amount').alignment = { horizontal: 'right' };
-
-      // Make business owner name bold
-      row.getCell('businessOwner').font = { bold: true };
-    });
-
-    // Add summary section
-    const summaryRow = releases.length + 3;
-    worksheet.getCell(`A${summaryRow}`).value = 'SUMMARY';
-    worksheet.getCell(`A${summaryRow}`).font = { bold: true, size: 14 };
-    worksheet.getCell(`A${summaryRow}`).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'E3F2FD' },
-    };
-
-    // Calculate totals
-    const totalAmount = releases.reduce(
-      (sum, release) => sum + release.amount,
-      0
-    );
-    const pendingAmount = releases
-      .filter((r) => r.releaseStatus === 'pending')
-      .reduce((sum, release) => sum + release.amount, 0);
-    const scheduledAmount = releases
-      .filter((r) => r.releaseStatus === 'scheduled')
-      .reduce((sum, release) => sum + release.amount, 0);
-    const releasedAmount = releases
-      .filter((r) => r.releaseStatus === 'released')
-      .reduce((sum, release) => sum + release.amount, 0);
-
-    worksheet.getCell(`A${summaryRow + 1}`).value = 'Total Releases:';
-    worksheet.getCell(`B${summaryRow + 1}`).value = releases.length;
-    worksheet.getCell(`A${summaryRow + 2}`).value = 'Total Amount:';
-    worksheet.getCell(`B${summaryRow + 2}`).value = totalAmount;
-    worksheet.getCell(`B${summaryRow + 2}`).numFmt = '#,##0.00';
-    worksheet.getCell(`A${summaryRow + 3}`).value = 'Pending Amount:';
-    worksheet.getCell(`B${summaryRow + 3}`).value = pendingAmount;
-    worksheet.getCell(`B${summaryRow + 3}`).numFmt = '#,##0.00';
-    worksheet.getCell(`A${summaryRow + 4}`).value = 'Scheduled Amount:';
-    worksheet.getCell(`B${summaryRow + 4}`).value = scheduledAmount;
-    worksheet.getCell(`B${summaryRow + 4}`).numFmt = '#,##0.00';
-    worksheet.getCell(`A${summaryRow + 5}`).value = 'Released Amount:';
-    worksheet.getCell(`B${summaryRow + 5}`).value = releasedAmount;
-    worksheet.getCell(`B${summaryRow + 5}`).numFmt = '#,##0.00';
-
-    // Style summary section
-    for (let i = summaryRow + 1; i <= summaryRow + 5; i++) {
-      worksheet.getRow(i).font = { bold: true };
-    }
-
-    // Set response headers
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    );
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="Business_Payments_Export_${
-        new Date().toISOString().split('T')[0]
-      }.xlsx"`
-    );
-
-    // Write the workbook to response
-    await workbook.xlsx.write(res);
-    res.end();
-  } catch (error) {
-    console.error('Error exporting to Excel:', error);
-    res.status(500).json({ error: 'Failed to export data to Excel' });
-  }
-};
-
-// PDF Export Function for Releases
-const exportReleasesToPDF = async (req, res) => {
-  try {
-    // Fetch all releases with full business details
-    const releases = await Release.find({})
-      .populate(
-        'business',
-        'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress'
-      )
-      .sort({ createdAt: -1 });
-
-    // For now, return a simple JSON response
-    // In a real implementation, you would use a PDF library like puppeteer or pdfkit
-    res.json({
-      message:
-        'PDF export functionality will be implemented with a PDF library',
-      data: releases.map((release) => ({
-        releaseId: release.releaseId,
-        businessName:
-          release.business.brandInfo?.brandName || release.business.name,
-        amount: release.amount,
-        status: release.releaseStatus,
-        paymentMethod:
-          release.business.paymentMethod?.paymentChoice || 'Not Set',
-      })),
-    });
-  } catch (error) {
-    console.error('Error exporting to PDF:', error);
-    res.status(500).json({ error: 'Failed to export data to PDF' });
-  }
-};
-
-// Get single release details
-const getReleaseDetails = async (req, res) => {
-  try {
-    const { releaseId } = req.params;
-
-    const release = await Release.findById(releaseId)
-      .populate({
-        path: 'business',
-        select:
-          'brandInfo name email phoneNumber paymentMethod brandType pickUpAdress',
-        options: { strictPopulate: false },
-      })
-      .populate('transactionReferences');
-
-    if (!release) {
-      return res.status(404).json({ error: 'Release not found' });
-    }
-
-    console.log('Release found:', {
-      id: release._id,
-      releaseId: release.releaseId,
-      business: release.business ? 'populated' : 'not populated',
-      businessId: release.business?._id || 'no business ID',
-    });
-
-    res.json({
-      success: true,
-      data: release,
-    });
-  } catch (error) {
-    console.error('Error fetching release details:', error);
-    res.status(500).json({ error: 'Failed to fetch release details' });
-  }
-};
-
-// ======================================== Financial Processing Management ======================================== //
-
-// Get financial processing management page
-const get_financialProcessingPage = (req, res) => {
-  res.render('admin/financial-processing', {
-    title: 'Financial Processing',
-    page_title: 'Financial Processing Management',
-    folder: 'Financial Management',
-  });
-};
-
-// Run daily processing manually
-const runDailyProcessing = async (req, res) => {
-  try {
-    console.log('Manual daily processing triggered by admin');
-    await dailyOrderProcessing();
-    res.json({
-      success: true,
-      message: 'Daily processing completed successfully',
-    });
-  } catch (error) {
-    console.error('Error in manual daily processing:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to run daily processing',
-      details: error.message,
-    });
-  }
-};
-
-// Get processing statistics
-const getProcessingStatistics = async (req, res) => {
-  try {
-    const { days = 30 } = req.query;
-    const stats = await FinancialReconciliation.getProcessingStatistics(
-      parseInt(days)
-    );
-    res.json({
-      success: true,
-      data: stats,
-    });
-  } catch (error) {
-    console.error('Error getting processing statistics:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get processing statistics',
-    });
-  }
-};
-
-// Generate reconciliation report
-const generateReconciliationReport = async (req, res) => {
-  try {
-    const { startDate, endDate } = req.query;
-
-    if (!startDate || !endDate) {
-      return res.status(400).json({
-        success: false,
-        error: 'Start date and end date are required',
-      });
-    }
-
-    const report = await FinancialReconciliation.generateReconciliationReport(
-      new Date(startDate),
-      new Date(endDate)
-    );
-
-    res.json({
-      success: true,
-      data: report,
-    });
-  } catch (error) {
-    console.error('Error generating reconciliation report:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate reconciliation report',
-    });
-  }
-};
-
-// Reset orphaned processing flags
-const resetOrphanedProcessingFlags = async (req, res) => {
-  try {
-    const { batchId } = req.query;
-    const result = await FinancialReconciliation.resetOrphanedProcessingFlags(
-      batchId
-    );
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    console.error('Error resetting orphaned processing flags:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to reset orphaned processing flags',
-    });
-  }
-};
-
-// Validate business balances
-const validateBusinessBalances = async (req, res) => {
-  try {
-    const result = await FinancialReconciliation.validateBusinessBalances();
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    console.error('Error validating business balances:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to validate business balances',
-    });
-  }
-};
-
-// Fix balance discrepancies
-const fixBalanceDiscrepancies = async (req, res) => {
-  try {
-    const { validationResults } = req.body;
-
-    if (!validationResults || !Array.isArray(validationResults)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation results array is required',
-      });
-    }
-
-    const result = await FinancialReconciliation.fixBalanceDiscrepancies(
-      validationResults
-    );
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    console.error('Error fixing balance discrepancies:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fix balance discrepancies',
-    });
-  }
-};
-
-// Process specific orders manually
-const processSpecificOrdersAdmin = async (req, res) => {
-  try {
-    const { orderIds, batchId } = req.body;
-
-    if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Order IDs array is required',
-      });
-    }
-
-    await processSpecificOrders(orderIds, batchId);
-    res.json({
-      success: true,
-      message: `Successfully processed ${orderIds.length} orders`,
-    });
-  } catch (error) {
-    console.error('Error processing specific orders:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to process specific orders',
-    });
-  }
-};
-
-// Recover failed processing
-const recoverFailedProcessingAdmin = async (req, res) => {
-  try {
-    const { batchId } = req.query;
-    await recoverFailedProcessing(batchId);
-    res.json({
-      success: true,
-      message: 'Recovery process completed successfully',
-    });
-  } catch (error) {
-    console.error('Error in recovery process:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to recover failed processing',
-    });
-  }
-};
-
-// Get Transaction Details for Admin
-const getTransactionDetails = async (req, res) => {
-  try {
-    const { transactionId } = req.params;
-
-    const transaction = await Transaction.findById(transactionId)
-      .populate(
-        'business',
-        'name email phoneNumber brandInfo brandType pickUpAdress balance paymentMethod'
-      )
-      .lean();
-
-    if (!transaction) {
-      return res.status(404).json({
-        success: false,
-        error: 'Transaction not found',
-      });
-    }
-
-    res.json({
-      success: true,
-      transaction,
-    });
-  } catch (error) {
-    console.error('Error fetching transaction details:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch transaction details',
-    });
-  }
-};
-
-// Get Detailed Transaction Information for Admin
-const getDetailedTransactionInfo = async (req, res) => {
-  try {
-    const { transactionId } = req.params;
-
-    // Get transaction with all related data
-    const transaction = await Transaction.findById(transactionId)
-      .populate(
-        'business',
-        'name email phoneNumber brandInfo brandType pickUpAdress balance paymentMethod'
-      )
-      .lean();
-
-    if (!transaction) {
-      return res.status(404).json({
-        success: false,
-        error: 'Transaction not found',
-      });
-    }
-
-    // Get related orders
-    let orders = [];
-    if (transaction.orderReferences && transaction.orderReferences.length > 0) {
-      const orderIds = transaction.orderReferences
-        .map((ref) => ref.orderId)
-        .filter((id) => id);
-      if (orderIds.length > 0) {
-        orders = await Order.find({ _id: { $in: orderIds } })
-          .populate('business', 'name brandInfo')
-          .populate('deliveryMan', 'name phoneNumber')
-          .lean();
-      }
-    }
-
-    // Get related pickups
-    let pickups = [];
-    if (
-      transaction.pickupReferences &&
-      transaction.pickupReferences.length > 0
-    ) {
-      const pickupIds = transaction.pickupReferences
-        .map((ref) => ref.pickupId)
-        .filter((id) => id);
-      if (pickupIds.length > 0) {
-        const Pickup = require('../models/pickup');
-        pickups = await Pickup.find({ _id: { $in: pickupIds } })
-          .populate('courierAssigned', 'name phoneNumber')
-          .lean();
-      }
-    }
-
-    // Get related shop orders
-    let shopOrders = [];
-    if (
-      transaction.shopOrderReferences &&
-      transaction.shopOrderReferences.length > 0
-    ) {
-      const shopOrderIds = transaction.shopOrderReferences
-        .map((ref) => ref.shopOrderId)
-        .filter((id) => id);
-      if (shopOrderIds.length > 0) {
-        shopOrders = await ShopOrder.find({ _id: { $in: shopOrderIds } })
-          .populate('business', 'name brandInfo')
-          .populate('assignedCourier', 'name phoneNumber')
-          .lean();
-      }
-    }
-
-    res.json({
-      success: true,
-      data: {
-        transaction,
-        orders,
-        pickups,
-        shopOrders,
-        business: transaction.business,
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching detailed transaction information:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch detailed transaction information',
-    });
-  }
-};
 
 // ======================================== SHOP PRODUCT MANAGEMENT ======================================== //
 
@@ -4882,12 +4540,15 @@ module.exports = {
   // Orders
   get_ordersPage,
   get_orders,
+  get_ordersFilterBusinesses,
   get_orderDetailsPage,
 
   get_couriersPage,
   get_couriers,
   createCourier,
   updateCourierZones,
+  bulkDeactivateCouriers,
+  bulkDeleteCouriers,
 
   get_couriersFollowUp,
   get_courierDetailsPage,
@@ -4914,6 +4575,7 @@ module.exports = {
   getReturnedOrders,
   add_return_to_stock,
   assignCourierToReturn,
+  resendReturnOtp,
   assignCourierToReturnToBusiness,
   convertFailedDeliveryToReturn,
   getAllReturnOrders,
@@ -4922,12 +4584,17 @@ module.exports = {
   updateReturnProcessing,
   return_courier_received,
 
-  // Wallet Overview
-  get_releaseAmountsPage,
-  get_releasesAllData,
-  getReleaseDetails,
-  rescheduleRelease,
-  releaseFunds,
+  // Payouts
+  get_payoutsPage,
+  search_businessesForPayout,
+  get_payouts,
+  get_payoutDetail,
+  export_payoutExcel,
+  markPayoutPaid,
+  addAdjustment,
+  get_businessLedgerPage,
+  get_businessLedger,
+  runPayoutProcessing,
 
   // Businesses
   get_businessesPage,
@@ -4950,24 +4617,6 @@ module.exports = {
   adminCancelOrder,
   changeReturnCourier,
   assignCourierToReturnToBusiness,
-  exportReleasesToExcel,
-  exportReleasesToPDF,
-
-  // Financial Processing Management
-  get_financialProcessingPage,
-  runDailyProcessing,
-  getProcessingStatistics,
-  generateReconciliationReport,
-  resetOrphanedProcessingFlags,
-  validateBusinessBalances,
-  fixBalanceDiscrepancies,
-  processSpecificOrdersAdmin,
-  recoverFailedProcessingAdmin,
-
-  // Transaction Details Management
-  getTransactionDetails,
-  getDetailedTransactionInfo,
-
   // Shop Product Management
   getShopProductsPage,
   getProducts,

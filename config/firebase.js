@@ -69,6 +69,239 @@ function sanitizeFCMData(data) {
   );
 }
 
+const COURIER_LANGUAGE_FALLBACK = 'en';
+const BUSINESS_LANGUAGE_FALLBACK = 'en';
+
+const COURIER_NOTIFICATION_TEMPLATES = {
+  en: {
+    courier_assignment_assigned: {
+      title: 'New Order Assignment',
+      body: ({ orderNumber }) =>
+        `You have been assigned to order ${orderNumber}. Please check your orders.`,
+    },
+    courier_assignment_pickup: {
+      title: 'Pickup Required',
+      body: ({ orderNumber }) =>
+        `Please pickup order ${orderNumber} from the business.`,
+    },
+    courier_assignment_delivery: {
+      title: 'Delivery Required',
+      body: ({ orderNumber }) =>
+        `Please deliver order ${orderNumber} to the customer.`,
+    },
+    courier_assignment_return_pickup: {
+      title: 'Return Pickup Required',
+      body: ({ orderNumber }) =>
+        `Please pickup the return for order ${orderNumber} from the customer.`,
+    },
+    courier_assignment_return_delivery: {
+      title: 'Return Delivery Required',
+      body: ({ orderNumber }) =>
+        `Please deliver the return for order ${orderNumber} back to the business.`,
+    },
+    courier_assignment_return_deliver_warehouse: {
+      title: 'Deliver return to warehouse',
+      body: ({ orderNumber }) =>
+        `Return ${orderNumber} was picked up from the customer. Take it to the warehouse - no need to refresh the list.`,
+    },
+    pickup_assignment_new: {
+      title: 'New Pickup Assignment',
+      body: ({ pickupNumber }) =>
+        `You have been assigned to pickup ${pickupNumber}. Please check your pickups.`,
+    },
+    shop_order_assignment_new: {
+      title: 'New Shop Order Assignment',
+      body: ({ orderNumber }) =>
+        `You have been assigned to shop order ${orderNumber}. Please check your shop orders.`,
+    },
+  },
+  ar: {
+    courier_assignment_assigned: {
+      title: 'تكليف طلب جديد',
+      body: ({ orderNumber }) =>
+        `تم تكليفك بالطلب رقم ${orderNumber}. الرجاء مراجعة قائمة الطلبات.`,
+    },
+    courier_assignment_pickup: {
+      title: 'مطلوب استلام طلب',
+      body: ({ orderNumber }) =>
+        `يرجى استلام الطلب رقم ${orderNumber} من التاجر.`,
+    },
+    courier_assignment_delivery: {
+      title: 'مطلوب توصيل طلب',
+      body: ({ orderNumber }) =>
+        `يرجى توصيل الطلب رقم ${orderNumber} إلى العميل.`,
+    },
+    courier_assignment_return_pickup: {
+      title: 'مطلوب استلام مرتجع',
+      body: ({ orderNumber }) =>
+        `يرجى استلام المرتجع للطلب رقم ${orderNumber} من العميل.`,
+    },
+    courier_assignment_return_delivery: {
+      title: 'مطلوب تسليم مرتجع',
+      body: ({ orderNumber }) =>
+        `يرجى تسليم المرتجع للطلب رقم ${orderNumber} إلى التاجر.`,
+    },
+    courier_assignment_return_deliver_warehouse: {
+      title: 'سلم المرتجع إلى المخزن',
+      body: ({ orderNumber }) =>
+        `تم استلام المرتجع للطلب ${orderNumber} من العميل. توجه إلى المخزن الآن - لا حاجة لتحديث القائمة.`,
+    },
+    pickup_assignment_new: {
+      title: 'تكليف استلام جديد',
+      body: ({ pickupNumber }) =>
+        `تم تكليفك بعملية الاستلام رقم ${pickupNumber}. الرجاء مراجعة عمليات الاستلام.`,
+    },
+    shop_order_assignment_new: {
+      title: 'تكليف طلب متجر جديد',
+      body: ({ orderNumber }) =>
+        `تم تكليفك بطلب المتجر رقم ${orderNumber}. الرجاء مراجعة طلبات المتجر.`,
+    },
+  },
+};
+
+function normalizeCourierLanguage(language) {
+  const normalized = String(language || '')
+    .trim()
+    .toLowerCase();
+  return normalized === 'ar' || normalized === 'en'
+    ? normalized
+    : COURIER_LANGUAGE_FALLBACK;
+}
+
+async function resolveCourierLanguage(courierId) {
+  try {
+    const Courier = require('../models/courier');
+    const courier = await Courier.findById(courierId).select('preferredLanguage');
+    return normalizeCourierLanguage(courier?.preferredLanguage);
+  } catch (error) {
+    return COURIER_LANGUAGE_FALLBACK;
+  }
+}
+
+async function buildCourierLocalizedMessage(courierId, templateKey, variables = {}, fallbackMessage = null) {
+  const language = await resolveCourierLanguage(courierId);
+  const langPack = COURIER_NOTIFICATION_TEMPLATES[language] || COURIER_NOTIFICATION_TEMPLATES[COURIER_LANGUAGE_FALLBACK];
+  const fallbackPack = COURIER_NOTIFICATION_TEMPLATES[COURIER_LANGUAGE_FALLBACK];
+  const template = langPack?.[templateKey] || fallbackPack?.[templateKey];
+
+  if (!template) {
+    return fallbackMessage || {
+      title: 'Notification',
+      body: 'You have a new notification.',
+    };
+  }
+
+  return {
+    title: template.title,
+    body: typeof template.body === 'function' ? template.body(variables) : template.body,
+  };
+}
+
+const BUSINESS_NOTIFICATION_TEMPLATES = {
+  en: {
+    order_status_assigned: { title: 'Order Assigned', body: ({ orderNumber }) => `Your order ${orderNumber} has been assigned to a courier.` },
+    order_status_inProgress: { title: 'Order In Progress', body: ({ orderNumber }) => `Your order ${orderNumber} is being processed.` },
+    order_status_headingToCustomer: { title: 'Order Heading to Customer', body: ({ orderNumber }) => `Your order ${orderNumber} is on the way to the customer.` },
+    order_status_completed: { title: 'Order Completed', body: ({ orderNumber }) => `Your order ${orderNumber} has been successfully delivered and completed.` },
+    order_status_canceled: { title: 'Order Canceled', body: ({ orderNumber }) => `Your order ${orderNumber} has been canceled.` },
+    order_status_rejected: { title: 'Order Rejected', body: ({ orderNumber }) => `Your order ${orderNumber} has been rejected.` },
+    order_status_returned: { title: 'Order Returned', body: ({ orderNumber }) => `Your order ${orderNumber} has been returned to you.` },
+    order_status_pickedUp: { title: 'Order Picked Up', body: ({ orderNumber }) => `Your order ${orderNumber} has been picked up by our courier.` },
+    order_status_outForDelivery: { title: 'Order Out for Delivery', body: ({ orderNumber }) => `Your order ${orderNumber} is now out for delivery to the customer.` },
+    order_status_delivered: { title: 'Order Delivered', body: ({ orderNumber }) => `Your order ${orderNumber} has been delivered to the customer.` },
+    order_status_returnAssigned: { title: 'Return Assigned', body: ({ orderNumber }) => `A return has been assigned for order ${orderNumber}.` },
+    order_status_returnPickedUp: { title: 'Return Picked Up', body: ({ orderNumber }) => `The return for order ${orderNumber} has been picked up from the customer.` },
+    order_status_returnCompleted: { title: 'Return Completed', body: ({ orderNumber }) => `The return for order ${orderNumber} has been completed and delivered back to you.` },
+
+    pickup_status_new: { title: 'New Pickup Request', body: ({ pickupNumber }) => `Your pickup request ${pickupNumber} has been created and is pending assignment.` },
+    pickup_status_driverAssigned: { title: 'Pickup Driver Assigned', body: ({ pickupNumber }) => `A driver has been assigned to your pickup ${pickupNumber}. They will contact you soon.` },
+    pickup_status_pickedUp: { title: 'Pickup Completed', body: ({ pickupNumber }) => `Your pickup ${pickupNumber} has been successfully completed by our courier.` },
+    pickup_status_inStock: { title: 'Pickup in Warehouse', body: ({ pickupNumber }) => `Your pickup ${pickupNumber} has been delivered to our warehouse and is being processed.` },
+    pickup_status_completed: { title: 'Pickup Processed', body: ({ pickupNumber }) => `Your pickup ${pickupNumber} has been fully processed and completed.` },
+    pickup_status_canceled: { title: 'Pickup Canceled', body: ({ pickupNumber }) => `Your pickup ${pickupNumber} has been canceled.` },
+    pickup_status_rejected: { title: 'Pickup Rejected', body: ({ pickupNumber }) => `Your pickup ${pickupNumber} has been rejected by the assigned driver.` },
+
+    shop_order_status_pending: { title: 'Shop Order Pending', body: ({ orderNumber }) => `Your shop order ${orderNumber} has been placed and is pending confirmation.` },
+    shop_order_status_confirmed: { title: 'Shop Order Confirmed', body: ({ orderNumber }) => `Your shop order ${orderNumber} has been confirmed and is being prepared.` },
+    shop_order_status_assigned: { title: 'Shop Order Assigned', body: ({ orderNumber }) => `Your shop order ${orderNumber} has been assigned to a courier for delivery.` },
+    shop_order_status_in_transit: { title: 'Shop Order in Transit', body: ({ orderNumber }) => `Your shop order ${orderNumber} is on the way to you.` },
+    shop_order_status_delivered: { title: 'Shop Order Delivered', body: ({ orderNumber }) => `Your shop order ${orderNumber} has been successfully delivered.` },
+    shop_order_status_cancelled: { title: 'Shop Order Cancelled', body: ({ orderNumber }) => `Your shop order ${orderNumber} has been cancelled.` },
+    shop_order_status_returned: { title: 'Shop Order Returned', body: ({ orderNumber }) => `Your shop order ${orderNumber} has been returned.` },
+
+    financial_daily_processing: { title: 'Daily Processing Complete', body: () => 'Your daily order processing has been completed. Check your balance for updates.' },
+    financial_release_processing: { title: 'Funds Released', body: ({ amount }) => `Your funds have been released and processed. Amount: ${amount || 'N/A'}` },
+    financial_balance_update: { title: 'Balance Updated', body: ({ amount }) => `Your account balance has been updated. New balance: ${amount || 'N/A'}` },
+  },
+  ar: {
+    order_status_assigned: { title: 'تم تعيين الطلب', body: ({ orderNumber }) => `تم تعيين مندوب للطلب رقم ${orderNumber}.` },
+    order_status_inProgress: { title: 'الطلب قيد التنفيذ', body: ({ orderNumber }) => `الطلب رقم ${orderNumber} قيد المعالجة.` },
+    order_status_headingToCustomer: { title: 'الطلب في الطريق للعميل', body: ({ orderNumber }) => `الطلب رقم ${orderNumber} في الطريق إلى العميل.` },
+    order_status_completed: { title: 'اكتمل الطلب', body: ({ orderNumber }) => `تم تسليم الطلب رقم ${orderNumber} بنجاح واكتماله.` },
+    order_status_canceled: { title: 'تم إلغاء الطلب', body: ({ orderNumber }) => `تم إلغاء الطلب رقم ${orderNumber}.` },
+    order_status_rejected: { title: 'تم رفض الطلب', body: ({ orderNumber }) => `تم رفض الطلب رقم ${orderNumber}.` },
+    order_status_returned: { title: 'تم إرجاع الطلب', body: ({ orderNumber }) => `تم إرجاع الطلب رقم ${orderNumber} إليك.` },
+    order_status_pickedUp: { title: 'تم استلام الطلب', body: ({ orderNumber }) => `تم استلام الطلب رقم ${orderNumber} بواسطة المندوب.` },
+    order_status_outForDelivery: { title: 'الطلب خرج للتسليم', body: ({ orderNumber }) => `الطلب رقم ${orderNumber} خرج للتسليم إلى العميل.` },
+    order_status_delivered: { title: 'تم تسليم الطلب', body: ({ orderNumber }) => `تم تسليم الطلب رقم ${orderNumber} إلى العميل.` },
+    order_status_returnAssigned: { title: 'تم تعيين المرتجع', body: ({ orderNumber }) => `تم تعيين عملية مرتجع للطلب رقم ${orderNumber}.` },
+    order_status_returnPickedUp: { title: 'تم استلام المرتجع', body: ({ orderNumber }) => `تم استلام مرتجع الطلب رقم ${orderNumber} من العميل.` },
+    order_status_returnCompleted: { title: 'اكتمل المرتجع', body: ({ orderNumber }) => `اكتملت عملية مرتجع الطلب رقم ${orderNumber} وتم تسليمه للتاجر.` },
+
+    pickup_status_new: { title: 'طلب استلام جديد', body: ({ pickupNumber }) => `تم إنشاء طلب الاستلام رقم ${pickupNumber} وبانتظار التعيين.` },
+    pickup_status_driverAssigned: { title: 'تم تعيين مندوب للاستلام', body: ({ pickupNumber }) => `تم تعيين مندوب لطلب الاستلام رقم ${pickupNumber}.` },
+    pickup_status_pickedUp: { title: 'تم الاستلام', body: ({ pickupNumber }) => `تم إتمام استلام الطلب رقم ${pickupNumber} بنجاح.` },
+    pickup_status_inStock: { title: 'الاستلام في المخزن', body: ({ pickupNumber }) => `تم تسليم طلب الاستلام رقم ${pickupNumber} إلى المخزن وهو قيد المعالجة.` },
+    pickup_status_completed: { title: 'اكتمل طلب الاستلام', body: ({ pickupNumber }) => `تمت معالجة طلب الاستلام رقم ${pickupNumber} بالكامل.` },
+    pickup_status_canceled: { title: 'تم إلغاء طلب الاستلام', body: ({ pickupNumber }) => `تم إلغاء طلب الاستلام رقم ${pickupNumber}.` },
+    pickup_status_rejected: { title: 'تم رفض طلب الاستلام', body: ({ pickupNumber }) => `تم رفض طلب الاستلام رقم ${pickupNumber} من المندوب.` },
+
+    shop_order_status_pending: { title: 'طلب المتجر قيد الانتظار', body: ({ orderNumber }) => `تم إنشاء طلب المتجر رقم ${orderNumber} وهو بانتظار التأكيد.` },
+    shop_order_status_confirmed: { title: 'تم تأكيد طلب المتجر', body: ({ orderNumber }) => `تم تأكيد طلب المتجر رقم ${orderNumber} وهو قيد التجهيز.` },
+    shop_order_status_assigned: { title: 'تم تعيين طلب المتجر', body: ({ orderNumber }) => `تم تعيين مندوب لتوصيل طلب المتجر رقم ${orderNumber}.` },
+    shop_order_status_in_transit: { title: 'طلب المتجر في الطريق', body: ({ orderNumber }) => `طلب المتجر رقم ${orderNumber} في الطريق إليك.` },
+    shop_order_status_delivered: { title: 'تم تسليم طلب المتجر', body: ({ orderNumber }) => `تم تسليم طلب المتجر رقم ${orderNumber} بنجاح.` },
+    shop_order_status_cancelled: { title: 'تم إلغاء طلب المتجر', body: ({ orderNumber }) => `تم إلغاء طلب المتجر رقم ${orderNumber}.` },
+    shop_order_status_returned: { title: 'تم إرجاع طلب المتجر', body: ({ orderNumber }) => `تم إرجاع طلب المتجر رقم ${orderNumber}.` },
+
+    financial_daily_processing: { title: 'اكتملت المعالجة اليومية', body: () => 'تمت المعالجة اليومية لطلباتك. يرجى مراجعة رصيدك.' },
+    financial_release_processing: { title: 'تم تحويل المستحقات', body: ({ amount }) => `تم تحويل مستحقاتك ومعالجتها. المبلغ: ${amount || 'N/A'}` },
+    financial_balance_update: { title: 'تم تحديث الرصيد', body: ({ amount }) => `تم تحديث رصيد حسابك. الرصيد الجديد: ${amount || 'N/A'}` },
+  },
+};
+
+function normalizeBusinessLanguage(language) {
+  const normalized = String(language || '').trim().toLowerCase();
+  return normalized === 'ar' || normalized === 'en' ? normalized : BUSINESS_LANGUAGE_FALLBACK;
+}
+
+async function resolveBusinessLanguage(businessId) {
+  try {
+    const User = require('../models/user');
+    const bizId = typeof businessId === 'object' && businessId !== null ? (businessId._id || businessId) : businessId;
+    const business = await User.findById(bizId).select('preferredLanguage');
+    return normalizeBusinessLanguage(business?.preferredLanguage);
+  } catch (error) {
+    return BUSINESS_LANGUAGE_FALLBACK;
+  }
+}
+
+async function buildBusinessLocalizedMessage(businessId, templateKey, variables = {}, fallbackMessage = null) {
+  const language = await resolveBusinessLanguage(businessId);
+  const langPack = BUSINESS_NOTIFICATION_TEMPLATES[language] || BUSINESS_NOTIFICATION_TEMPLATES[BUSINESS_LANGUAGE_FALLBACK];
+  const fallbackPack = BUSINESS_NOTIFICATION_TEMPLATES[BUSINESS_LANGUAGE_FALLBACK];
+  const template = langPack?.[templateKey] || fallbackPack?.[templateKey];
+
+  if (!template) {
+    return fallbackMessage || { title: 'Notification', body: 'You have a new notification.' };
+  }
+
+  return {
+    title: template.title,
+    body: typeof template.body === 'function' ? template.body(variables) : template.body,
+  };
+}
+
 /**
  * Send a notification to a specific device using FCM token
  * @param {string} token - The FCM token of the device
@@ -326,65 +559,19 @@ async function sendOrderStatusNotification(businessId, orderNumber, status, addi
   try {
     const Notification = require('../models/notification');
     
-    const statusMessages = {
-      'assigned': {
-        title: 'Order Assigned',
-        body: `Your order ${orderNumber} has been assigned to a courier.`
-      },
-      'inProgress': {
-        title: 'Order In Progress',
-        body: `Your order ${orderNumber} is being processed.`
-      },
-      'headingToCustomer': {
-        title: 'Order Heading to Customer',
-        body: `Your order ${orderNumber} is on the way to the customer.`
-      },
-      'completed': {
-        title: 'Order Completed',
-        body: `Your order ${orderNumber} has been successfully delivered and completed.`
-      },
-      'canceled': {
-        title: 'Order Canceled',
-        body: `Your order ${orderNumber} has been canceled.`
-      },
-      'rejected': {
-        title: 'Order Rejected',
-        body: `Your order ${orderNumber} has been rejected.`
-      },
-      'returned': {
-        title: 'Order Returned',
-        body: `Your order ${orderNumber} has been returned to you.`
-      },
-      'pickedUp': {
-        title: 'Order Picked Up',
-        body: `Your order ${orderNumber} has been picked up by our courier.`
-      },
-      'outForDelivery': {
-        title: 'Order Out for Delivery',
-        body: `Your order ${orderNumber} is now out for delivery to the customer.`
-      },
-      'delivered': {
-        title: 'Order Delivered',
-        body: `Your order ${orderNumber} has been delivered to the customer.`
-      },
-      'returnAssigned': {
-        title: 'Return Assigned',
-        body: `A return has been assigned for order ${orderNumber}.`
-      },
-      'returnPickedUp': {
-        title: 'Return Picked Up',
-        body: `The return for order ${orderNumber} has been picked up from the customer.`
-      },
-      'returnCompleted': {
-        title: 'Return Completed',
-        body: `The return for order ${orderNumber} has been completed and delivered back to you.`
-      }
-    };
-    
-    const message = statusMessages[status];
-    if (!message) {
+    const templateKey = `order_status_${status}`;
+    const hasTemplate =
+      !!BUSINESS_NOTIFICATION_TEMPLATES.en[templateKey] ||
+      !!BUSINESS_NOTIFICATION_TEMPLATES.ar[templateKey];
+    if (!hasTemplate) {
       throw new Error(`Unknown order status: ${status}`);
     }
+    const message = await buildBusinessLocalizedMessage(
+      businessId,
+      templateKey,
+      { orderNumber, ...additionalData },
+      null
+    );
     
     const data = sanitizeFCMData({
       type: 'order_status',
@@ -437,33 +624,19 @@ async function sendCourierAssignmentNotification(courierId, orderNumber, action,
   try {
     const Notification = require('../models/notification');
     
-    const actionMessages = {
-      'assigned': {
-        title: 'New Order Assignment',
-        body: `You have been assigned to order ${orderNumber}. Please check your orders.`
-      },
-      'pickup': {
-        title: 'Pickup Required',
-        body: `Please pickup order ${orderNumber} from the business.`
-      },
-      'delivery': {
-        title: 'Delivery Required',
-        body: `Please deliver order ${orderNumber} to the customer.`
-      },
-      'return_pickup': {
-        title: 'Return Pickup Required',
-        body: `Please pickup the return for order ${orderNumber} from the customer.`
-      },
-      'return_delivery': {
-        title: 'Return Delivery Required',
-        body: `Please deliver the return for order ${orderNumber} back to the business.`
-      }
-    };
-    
-    const message = actionMessages[action];
-    if (!message) {
+    const templateKey = `courier_assignment_${action}`;
+    const hasTemplate =
+      !!COURIER_NOTIFICATION_TEMPLATES.en[templateKey] ||
+      !!COURIER_NOTIFICATION_TEMPLATES.ar[templateKey];
+    if (!hasTemplate) {
       throw new Error(`Unknown action: ${action}`);
     }
+    const message = await buildCourierLocalizedMessage(
+      courierId,
+      templateKey,
+      { orderNumber },
+      null
+    );
     
     const data = sanitizeFCMData({
       type: 'courier_assignment',
@@ -534,25 +707,19 @@ async function sendFinancialProcessingNotification(businessId, type, details = {
   try {
     const Notification = require('../models/notification');
     
-    const typeMessages = {
-      'daily_processing': {
-        title: 'Daily Processing Complete',
-        body: `Your daily order processing has been completed. Check your balance for updates.`
-      },
-      'release_processing': {
-        title: 'Funds Released',
-        body: `Your funds have been released and processed. Amount: ${details.amount || 'N/A'}`
-      },
-      'balance_update': {
-        title: 'Balance Updated',
-        body: `Your account balance has been updated. New balance: ${details.balance || 'N/A'}`
-      }
-    };
-    
-    const message = typeMessages[type];
-    if (!message) {
+    const templateKey = `financial_${type}`;
+    const hasTemplate =
+      !!BUSINESS_NOTIFICATION_TEMPLATES.en[templateKey] ||
+      !!BUSINESS_NOTIFICATION_TEMPLATES.ar[templateKey];
+    if (!hasTemplate) {
       throw new Error(`Unknown processing type: ${type}`);
     }
+    const message = await buildBusinessLocalizedMessage(
+      businessId,
+      templateKey,
+      { amount: details.amount || details.balance, ...details },
+      null
+    );
     
     const data = sanitizeFCMData({
       type: 'financial_processing',
@@ -656,41 +823,19 @@ async function sendPickupStatusNotification(businessId, pickupNumber, status, ad
   try {
     const Notification = require('../models/notification');
     
-    const statusMessages = {
-      'new': {
-        title: 'New Pickup Request',
-        body: `Your pickup request ${pickupNumber} has been created and is pending assignment.`
-      },
-      'driverAssigned': {
-        title: 'Pickup Driver Assigned',
-        body: `A driver has been assigned to your pickup ${pickupNumber}. They will contact you soon.`
-      },
-      'pickedUp': {
-        title: 'Pickup Completed',
-        body: `Your pickup ${pickupNumber} has been successfully completed by our courier.`
-      },
-      'inStock': {
-        title: 'Pickup in Warehouse',
-        body: `Your pickup ${pickupNumber} has been delivered to our warehouse and is being processed.`
-      },
-      'completed': {
-        title: 'Pickup Processed',
-        body: `Your pickup ${pickupNumber} has been fully processed and completed.`
-      },
-      'canceled': {
-        title: 'Pickup Canceled',
-        body: `Your pickup ${pickupNumber} has been canceled.`
-      },
-      'rejected': {
-        title: 'Pickup Rejected',
-        body: `Your pickup ${pickupNumber} has been rejected by the assigned driver.`
-      }
-    };
-    
-    const message = statusMessages[status];
-    if (!message) {
+    const templateKey = `pickup_status_${status}`;
+    const hasTemplate =
+      !!BUSINESS_NOTIFICATION_TEMPLATES.en[templateKey] ||
+      !!BUSINESS_NOTIFICATION_TEMPLATES.ar[templateKey];
+    if (!hasTemplate) {
       throw new Error(`Unknown pickup status: ${status}`);
     }
+    const message = await buildBusinessLocalizedMessage(
+      businessId,
+      templateKey,
+      { pickupNumber, ...additionalData },
+      null
+    );
     
     const data = sanitizeFCMData({
       type: 'pickup_status',
@@ -751,41 +896,19 @@ async function sendShopOrderStatusNotification(businessId, orderNumber, status, 
   try {
     const Notification = require('../models/notification');
     
-    const statusMessages = {
-      'pending': {
-        title: 'Shop Order Pending',
-        body: `Your shop order ${orderNumber} has been placed and is pending confirmation.`
-      },
-      'confirmed': {
-        title: 'Shop Order Confirmed',
-        body: `Your shop order ${orderNumber} has been confirmed and is being prepared.`
-      },
-      'assigned': {
-        title: 'Shop Order Assigned',
-        body: `Your shop order ${orderNumber} has been assigned to a courier for delivery.`
-      },
-      'in_transit': {
-        title: 'Shop Order in Transit',
-        body: `Your shop order ${orderNumber} is on the way to you.`
-      },
-      'delivered': {
-        title: 'Shop Order Delivered',
-        body: `Your shop order ${orderNumber} has been successfully delivered.`
-      },
-      'cancelled': {
-        title: 'Shop Order Cancelled',
-        body: `Your shop order ${orderNumber} has been cancelled.`
-      },
-      'returned': {
-        title: 'Shop Order Returned',
-        body: `Your shop order ${orderNumber} has been returned.`
-      }
-    };
-    
-    const message = statusMessages[status];
-    if (!message) {
+    const templateKey = `shop_order_status_${status}`;
+    const hasTemplate =
+      !!BUSINESS_NOTIFICATION_TEMPLATES.en[templateKey] ||
+      !!BUSINESS_NOTIFICATION_TEMPLATES.ar[templateKey];
+    if (!hasTemplate) {
       throw new Error(`Unknown shop order status: ${status}`);
     }
+    const message = await buildBusinessLocalizedMessage(
+      businessId,
+      templateKey,
+      { orderNumber, ...additionalData },
+      null
+    );
     
     const data = sanitizeFCMData({
       type: 'shop_order_status',
@@ -845,10 +968,15 @@ async function sendPickupAssignmentNotification(courierId, pickupNumber, additio
   try {
     const Notification = require('../models/notification');
     
-    const message = {
-      title: 'New Pickup Assignment',
-      body: `You have been assigned to pickup ${pickupNumber}. Please check your pickups.`
-    };
+    const message = await buildCourierLocalizedMessage(
+      courierId,
+      'pickup_assignment_new',
+      { pickupNumber },
+      {
+        title: 'New Pickup Assignment',
+        body: `You have been assigned to pickup ${pickupNumber}. Please check your pickups.`,
+      }
+    );
     
     const data = sanitizeFCMData({
       type: 'pickup_assignment',
@@ -906,10 +1034,15 @@ async function sendShopOrderAssignmentNotification(courierId, orderNumber, addit
   try {
     const Notification = require('../models/notification');
     
-    const message = {
-      title: 'New Shop Order Assignment',
-      body: `You have been assigned to shop order ${orderNumber}. Please check your shop orders.`
-    };
+    const message = await buildCourierLocalizedMessage(
+      courierId,
+      'shop_order_assignment_new',
+      { orderNumber },
+      {
+        title: 'New Shop Order Assignment',
+        body: `You have been assigned to shop order ${orderNumber}. Please check your shop orders.`,
+      }
+    );
     
     const data = sanitizeFCMData({
       type: 'shop_order_assignment',

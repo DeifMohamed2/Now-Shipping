@@ -15,10 +15,10 @@ const governmentCategories = {
 };
 
 const orderBaseFees = {
-  'Cairo': { Deliver: 100, Return: 100, Exchange: 100, 'Cash Collection': 100 },
-  'Alexandria': { Deliver: 100, Return: 100, Exchange: 100, 'Cash Collection': 100 },
-  'Delta-Canal': { Deliver: 100, Return: 100, Exchange: 100, 'Cash Collection': 100 },
-  'Upper-RedSea': { Deliver: 100, Return: 100, Exchange: 100, 'Cash Collection': 100 },
+  'Cairo': { Deliver: 100, Return: 100, Exchange: 100 },
+  'Alexandria': { Deliver: 100, Return: 100, Exchange: 100 },
+  'Delta-Canal': { Deliver: 100, Return: 100, Exchange: 100 },
+  'Upper-RedSea': { Deliver: 100, Return: 100, Exchange: 100 },
 };
 
 const pickupBaseFees = {

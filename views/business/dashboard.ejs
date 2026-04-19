@@ -682,13 +682,14 @@
 
 
 <%- contentFor('body') %>
+<% var Dp = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.dashboard) ? translation.business.pages.dashboard : {}; %>
 <!-- Verifications -->
 <div class="row">
   <% if (!user.isCompleted) { %>
   <div class="col-xl-12">
     <div class="card card_verification">
       <div class="card-header">
-        <h4 class="card-title mb-0">Account activation steps</h4>
+        <h4 class="card-title mb-0"><%= Dp.onboardingTitle || 'Account activation steps' %></h4>
       </div>
       <!-- end card header -->
       <div class="card-body form-steps">
@@ -700,37 +701,37 @@
                   <span class="step-title me-2">
                     <i class="ri-<%= user.isVerified ? 'check' : 'close' %>-circle-fill step-icon me-2 <%= user.isVerified ? 'text-primary-custom' : '' %>"></i> Step 1
                   </span>
-                  Email Verification
+                  <%= Dp.stepEmail || 'Email Verification' %>
                 </button>
                 <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-brand-info" type="button" role="tab" aria-controls="v-pills-brand-info" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 2
                   </span>
-                  Brand Info
+                  <%= Dp.stepBrand || 'Brand Info' %>
                 </button>
                 <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-pickUp-tab" data-bs-toggle="pill" data-bs-target="#v-pills-location" type="button" role="tab" aria-controls="v-pills-location" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 3
                   </span>
-                  PickUp Address
+                  <%= Dp.stepAddress || 'Pickup Address' %>
                 </button>
                 <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-payment-tab" data-bs-toggle="pill" data-bs-target="#v-payment-method" type="button" role="tab" aria-controls="v-payment-method" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 4
                   </span>
-                  Payment Method
+                  <%= Dp.stepPayment || 'Payment Method' %>
                 </button>
                 <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-type-tab" data-bs-toggle="pill" data-bs-target="#v-brand-type" type="button" role="tab" aria-controls="v-brand-type" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 5
                   </span>
-                  Brand Type
+                  <%= Dp.stepBrandType || 'Brand Type' %>
                 </button>
                 <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-finish-tab" data-bs-toggle="pill" data-bs-target="#v-pills-finish" type="button" role="tab" aria-controls="v-pills-finish" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
                   <span class="step-title me-2">
                     <i class="ri-close-circle-fill step-icon me-2"></i> Step 6
                   </span>
-                  Finish
+                  <%= Dp.stepFinish || 'Finish' %>
                 </button>
               </div>
               <!-- end nav -->
@@ -750,12 +751,12 @@
                       <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#F39720,secondary:#333333" style="width:120px;height:120px"></lord-icon>
                     </div>
                     <button type="button" class="btn btn-primary-custom nexttab" data-nexttab="v-pills-brand-info-tab">
-                      Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                      <%= Dp.btnNext || 'Continue' %> <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                     </button>
                     <% } else { %>
                     <div class="mb-3">
-                      <h4 class="fw-bold">Email Verification</h4>
-                      <p class="text-muted">Click the button below to verify your email via Gmail</p>
+                      <h4 class="fw-bold"><%= Dp.stepEmail || 'Email Verification' %></h4>
+                      <p class="text-muted"><%= Dp.emailVerificationLabel || 'Click the button below to verify your email via Gmail' %></p>
                     </div>
                     <button type="button" class="btn btn-dark-custom btn-lg d-flex align-items-center mx-auto shadow-sm" id="sendVerificationEmail">
                       <i class="ri-mail-fill fs-5 me-2"></i> Send Verification Email
@@ -765,8 +766,8 @@
                   <!-- Step 2: Brand Info -->
                   <div class="tab-pane fade p-4" id="v-pills-brand-info" role="tabpanel" aria-labelledby="v-pills-brand-info-tab">
                     <div class="mb-4">
-                      <h4 class="fw-bold">Brand Profile</h4>
-                      <p class="text-muted">Add your business details</p>
+                      <h4 class="fw-bold"><%= Dp.stepBrand || 'Brand Info' %></h4>
+                      <p class="text-muted"><%= Dp.brandInfoLabel || 'Add your brand name and logo.' %></p>
                     </div>
                     <div class="mb-3">
                       <label for="brandName" class="form-label fw-semibold">Brand Name</label>
@@ -804,6 +805,7 @@
                     <div class="mt-4">
                       <h5 class="fw-bold">Where do you sell your products?</h5>
                       <p class="text-muted">Select all the sales channels you use.</p>
+                      <p class="text-muted small mb-0"><span class="text-danger">*</span> At least one channel is required. Enter a full <strong>https://</strong> profile or store URL for every channel you select. You cannot continue until this is complete.</p>
                     </div>
                     <div class="row g-3">
                       <div class="col-md-6">
@@ -887,10 +889,10 @@
                     </div>
                     <div class="d-flex align-items-start gap-3 mt-4">
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-bill-info-tab">
-                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Email Verification
+                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> <%= Dp.stepEmail || 'Email Verification' %>
                       </button>
                       <button type="button" class="btn btn-primary-custom ms-auto nexttab" data-nexttab="v-pills-pickUp-tab">
-                        Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                        <%= Dp.btnNext || 'Continue' %> <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                       </button>
                     </div>
                   </div>
@@ -899,8 +901,8 @@
                   <div class="tab-pane fade" id="v-pills-location" role="tabpanel" aria-labelledby="v-pills-pickUp-tab">
                     <div class="mb-4 d-flex justify-content-between align-items-center">
                       <div>
-                        <h4 class="fw-bold">Pickup Addresses</h4>
-                        <p class="text-muted">Add one or more pickup locations for your packages</p>
+                        <h4 class="fw-bold"><%= Dp.stepAddress || 'Pickup Address' %></h4>
+                        <p class="text-muted"><%= Dp.addressLabel || 'Add one or more pickup locations for your packages' %></p>
                       </div>
                       <button type="button" class="btn btn-primary-custom" id="addPickupAddressBtn">
                         <i class="ri-add-line me-1"></i> Add Address
@@ -996,10 +998,10 @@
 
                     <div class="d-flex align-items-start gap-3 mt-4">
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-brand-info-tab">
-                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Brand Info
+                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> <%= Dp.stepBrand || 'Brand Info' %>
                       </button>
                       <button type="button" class="btn btn-primary-custom ms-auto nexttab" data-nexttab="v-pills-payment-tab">
-                        Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                        <%= Dp.btnNext || 'Continue' %> <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                       </button>
                     </div>
                   </div>
@@ -1008,8 +1010,8 @@
                   <!-- Step 4: Payment Method -->
                   <div class="tab-pane fade p-4" id="v-payment-method" role="tabpanel" aria-labelledby="v-pills-payment-tab">
                     <div class="mb-4">
-                      <h4 class="fw-bold">Select Payment Method</h4>
-                      <p class="text-muted">Choose your preferred payment option for checkout.</p>
+                      <h4 class="fw-bold"><%= Dp.stepPayment || 'Payment Method' %></h4>
+                      <p class="text-muted"><%= Dp.paymentLabel || 'Choose your preferred payment option.' %></p>
                     </div>
                     <div class="row g-3">
                       <!-- InstaPay -->
@@ -1102,10 +1104,10 @@
                     </div>
                     <div class="d-flex align-items-start gap-3 mt-4">
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-pickUp-tab">
-                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Location
+                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> <%= Dp.stepAddress || 'Pickup Address' %>
                       </button>
                       <button type="button" class="btn btn-primary-custom ms-auto nexttab" data-nexttab="v-pills-brand-type-tab">
-                        Continue <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                        <%= Dp.btnNext || 'Continue' %> <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                       </button>
                     </div>
                   </div>
@@ -1113,8 +1115,8 @@
                   <!-- Step 5: Brand Type -->
                   <div class="tab-pane fade p-4" id="v-brand-type" role="tabpanel" aria-labelledby="v-pills-brand-type-tab">
                     <div class="mb-4">
-                      <h4 class="fw-bold">Brand Type</h4>
-                      <p class="text-muted">Select the type of your brand.</p>
+                      <h4 class="fw-bold"><%= Dp.stepBrandType || 'Brand Type' %></h4>
+                      <p class="text-muted"><%= Dp.brandTypeLabel || 'Select the type of your brand.' %></p>
                     </div>
                     <div class="row g-3">
                       <!-- Personal -->
@@ -1176,7 +1178,7 @@
                     </div>
                     <div class="d-flex align-items-start gap-3 mt-4">
                       <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-payment-tab">
-                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> Back to Payment Method
+                        <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> <%= Dp.stepPayment || 'Payment Method' %>
                       </button>
                       <span class="photo-count ms-auto me-3" id="photoCount" style="display: none;">
                         <i class="ri-image-line"></i> <span>0</span> files
@@ -1196,7 +1198,7 @@
                       <h5>Your Account Setup is Completed!</h5>
                       <p class="text-muted">You will receive a confirmation email with details of your account setup.</p>
                       <div class="mt-4">
-                        <a href="/business/dashboard" class="btn btn-continue">Go to Dashboard</a>
+                        <a href="/business/dashboard" class="btn btn-continue"><%= Dp.goToDashboard || 'Go to Dashboard' %></a>
                       </div>
                     </div>
                   </div>
@@ -1221,18 +1223,18 @@
           <div class="flex-grow-1">
             <% 
               const hour = new Date().getHours();
-              let greeting = 'Good Evening';
-              if (hour < 12) greeting = 'Good Morning';
-              else if (hour < 18) greeting = 'Good Afternoon';
+              let greeting = Dp.greetingEvening || 'Good Evening';
+              if (hour < 12) greeting = Dp.greetingMorning || 'Good Morning';
+              else if (hour < 18) greeting = Dp.greetingAfternoon || 'Good Afternoon';
               
               const businessName = user.brandInfo?.brandName || user.name || 'there';
             %>
-            <h4 class="fs-16 mb-1 fw-semibold"><%= greeting %>, <%= businessName %>! 👋</h4>
-            <p class="text-muted mb-0">Here's your business overview for today.</p>
+            <h4 class="fs-16 mb-1 fw-semibold"><%= greeting %>, <%= businessName %>!</h4>
+            <p class="text-muted mb-0"><%= Dp.todayOverview || "Here's your business overview for today." %></p>
           </div>
           <div class="mt-3 mt-lg-0">
             <a href="/business/create-order" class="btn btn-primary-custom">
-              <i class="ri-add-circle-line align-middle me-1"></i> Create New Order
+              <i class="ri-add-circle-line align-middle me-1"></i> <%= Dp.createNewOrder || 'Create New Order' %>
             </a>
           </div>
         </div>
@@ -1243,9 +1245,9 @@
       <div class="col-12">
         <div class="card dashboard-card">
           <div class="card-header d-flex align-items-center">
-            <h4 class="card-title mb-0">Today's Overview</h4>
+            <h4 class="card-title mb-0"><%= Dp.todayOverview || "Today's Overview" %></h4>
             <div class="ms-auto">
-              <span class="text-muted small" id="lastUpdated">Loading...</span>
+              <span class="text-muted small" id="lastUpdated"><%= Dp.loading || 'Loading…' %></span>
             </div>
           </div>
           <div class="card-body">
@@ -1253,9 +1255,9 @@
               <!-- Stats will be loaded via JavaScript for better performance -->
               <div class="col-12 text-center py-4">
                 <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading...</span>
+                  <span class="visually-hidden"><%= Dp.loading || 'Loading…' %></span>
                 </div>
-                <p class="mt-2 text-muted">Loading dashboard data...</p>
+                <p class="mt-2 text-muted"><%= Dp.loadingDashboard || 'Loading dashboard data…' %></p>
               </div>
             </div>
           </div>
@@ -1269,23 +1271,23 @@
       <div class="col-xl-6">
         <div class="card dashboard-card">
           <div class="card-header">
-            <h4 class="card-title mb-0">Recent Orders</h4>
+            <h4 class="card-title mb-0"><%= Dp.recentOrders || 'Recent Orders' %></h4>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-borderless mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Status</th>
+                    <th><%= Dp.colOrderId || 'Order ID' %></th>
+                    <th><%= Dp.colCustomer || 'Customer' %></th>
+                    <th><%= Dp.colStatus || 'Status' %></th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (dashboardData?.recentData?.recentOrders?.length > 0) { %>
                   <% dashboardData.recentData.recentOrders.forEach(order => { %>
                   <tr>
-                    <td>#<%= order.orderNumber %></td>
+                    <td class="ltr-embed">#<%= order.orderNumber %></td>
                     <td><%= order.orderCustomer?.fullName || 'N/A' %></td>
                     <td>
                       <% let statusClass = ''; 
@@ -1303,7 +1305,7 @@
                   <% }) %>
                   <% } else { %>
                   <tr>
-                    <td colspan="3" class="text-center py-3">No recent orders</td>
+                    <td colspan="3" class="text-center py-3"><%= Dp.noRecentOrders || 'No recent orders' %></td>
                   </tr>
                   <% } %>
                 </tbody>
@@ -1312,7 +1314,7 @@
           </div>
           <div class="card-footer bg-transparent border-top-0">
             <div class="text-center">
-              <a href="/business/orders" class="text-dark-custom">View All Orders <i class="ri-arrow-right-line align-middle"></i></a>
+              <a href="/business/orders" class="text-dark-custom"><%= Dp.viewAllOrders || 'View All Orders' %> <i class="ri-arrow-right-line align-middle"></i></a>
             </div>
           </div>
         </div>
@@ -1322,25 +1324,25 @@
       <div class="col-xl-6">
         <div class="card dashboard-card">
           <div class="card-header">
-            <h4 class="card-title mb-0">Recent Pickups</h4>
+            <h4 class="card-title mb-0"><%= Dp.recentPickups || 'Recent Pickups' %></h4>
           </div>
           <div class="card-body">
             <div class="table-responsive">
               <table class="table table-borderless mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th>Pickup ID</th>
-                    <th>Date</th>
-                    <th>Items</th>
-                    <th>Status</th>
+                    <th><%= Dp.colPickupId || 'Pickup ID' %></th>
+                    <th><%= Dp.colDate || 'Date' %></th>
+                    <th><%= Dp.colItems || 'Items' %></th>
+                    <th><%= Dp.colStatus || 'Status' %></th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (dashboardData?.recentData?.recentPickups?.length > 0) { %>
                   <% dashboardData.recentData.recentPickups.forEach(pickup => { %>
                   <tr>
-                    <td>#<%= pickup.pickupNumber %></td>
-                    <td><%= new Date(pickup.pickupDate).toLocaleDateString() %></td>
+                    <td class="ltr-embed">#<%= pickup.pickupNumber %></td>
+                    <td><%= new Date(pickup.pickupDate).toLocaleDateString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US') %></td>
                     <td><%= pickup.numberOfOrders %></td>
                     <td>
                       <% let statusClass = ''; 
@@ -1357,7 +1359,7 @@
                   <% }) %>
                   <% } else { %>
                   <tr>
-                    <td colspan="4" class="text-center py-3">No recent pickups</td>
+                    <td colspan="4" class="text-center py-3"><%= Dp.noRecentPickups || 'No recent pickups' %></td>
                   </tr>
                   <% } %>
                 </tbody>
@@ -1366,7 +1368,7 @@
           </div>
           <div class="card-footer bg-transparent border-top-0">
             <div class="text-center">
-              <a href="/business/pickup" class="text-dark-custom">View All Pickups <i class="ri-arrow-right-line align-middle"></i></a>
+              <a href="/business/pickup" class="text-dark-custom"><%= Dp.viewAllPickups || 'View All Pickups' %> <i class="ri-arrow-right-line align-middle"></i></a>
             </div>
           </div>
         </div>
@@ -1379,7 +1381,7 @@
       <div class="col-xl-8">
         <div class="card dashboard-card">
           <div class="card-header">
-            <h4 class="card-title mb-0">Revenue & Orders Analytics</h4>
+            <h4 class="card-title mb-0"><%= Dp.revenueAnalytics || 'Revenue & Orders Analytics' %></h4>
           </div>
           <div class="card-body">
             <div id="revenue-chart" style="height: 350px;"></div>
@@ -1391,7 +1393,7 @@
       <div class="col-xl-4">
         <div class="card dashboard-card">
           <div class="card-header">
-            <h4 class="card-title mb-0">Performance Metrics</h4>
+            <h4 class="card-title mb-0"><%= Dp.performanceMetrics || 'Performance Metrics' %></h4>
           </div>
           <div class="card-body">
             <div class="row">
@@ -1405,8 +1407,8 @@
                     </div>
                   </div>
                   <div class="flex-grow-1">
-                    <h5 class="fs-15 mb-1">Avg Delivery Time</h5>
-                    <p class="text-muted mb-0" id="avgDeliveryTime">Loading...</p>
+                    <h5 class="fs-15 mb-1"><%= Dp.metricAvgDelivery || 'Avg Delivery Time' %></h5>
+                    <p class="text-muted mb-0" id="avgDeliveryTime"><%= Dp.loading || 'Loading…' %></p>
                   </div>
                 </div>
               </div>
@@ -1420,8 +1422,8 @@
                     </div>
                   </div>
                   <div class="flex-grow-1">
-                    <h5 class="fs-15 mb-1">Completion Rate</h5>
-                    <p class="text-muted mb-0" id="completionRate">Loading...</p>
+                    <h5 class="fs-15 mb-1"><%= Dp.metricCompletion || 'Completion Rate' %></h5>
+                    <p class="text-muted mb-0" id="completionRate"><%= Dp.loading || 'Loading…' %></p>
                   </div>
                 </div>
               </div>
@@ -1435,8 +1437,8 @@
                     </div>
                   </div>
                   <div class="flex-grow-1">
-                    <h5 class="fs-15 mb-1">Return Rate</h5>
-                    <p class="text-muted mb-0" id="returnRate">Loading...</p>
+                    <h5 class="fs-15 mb-1"><%= Dp.metricReturn || 'Return Rate' %></h5>
+                    <p class="text-muted mb-0" id="returnRate"><%= Dp.loading || 'Loading…' %></p>
                   </div>
                 </div>
               </div>
@@ -1450,8 +1452,8 @@
                     </div>
                   </div>
                   <div class="flex-grow-1">
-                    <h5 class="fs-15 mb-1">Success Rate</h5>
-                    <p class="text-muted mb-0" id="successRate">Loading...</p>
+                    <h5 class="fs-15 mb-1"><%= Dp.metricSuccess || 'Success Rate' %></h5>
+                    <p class="text-muted mb-0" id="successRate"><%= Dp.loading || 'Loading…' %></p>
                   </div>
                 </div>
               </div>
@@ -1480,10 +1482,23 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script src="/assets/js/pages/form-file-upload.init.js"></script>
-  <script src="/assets/rJS/business/main.js"></script>
   <script src="/assets/js/area-selection-modal.js"></script>
+  <script src="/assets/rJS/business/dashboard.js"></script>
 
   <script>
+    // i18n labels for dashboard JS
+    var __NSD_LABELS = {
+      inProgress: "<%= Dp.statInProgress || 'In Progress Orders' %>",
+      headingToCustomer: "<%= Dp.statHeadingToCustomer || 'Heading to Customer' %>",
+      completed: "<%= Dp.statCompleted || 'Completed Orders' %>",
+      awaitingAction: "<%= Dp.statAwaitingAction || 'Awaiting Action' %>",
+      headingToYou: "<%= Dp.statHeadingToYou || 'Heading to You' %>",
+      returned: "<%= Dp.statReturned || 'Returned' %>",
+      totalOrders: "<%= Dp.statTotalOrders || 'Total Orders' %>",
+      revenue: "<%= Dp.statRevenue || 'Total Revenue' %>",
+      loading: "<%= Dp.loading || 'Loading…' %>",
+      lastUpdated: "<%= Dp.lastUpdated || 'Last updated at ' %>"
+    };
     // Optimized Dashboard Loading
     document.addEventListener('DOMContentLoaded', function() {
       // Load dashboard data asynchronously
@@ -1521,12 +1536,12 @@
 
       statsContainer.innerHTML = `
     <!-- In Progress Orders -->
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
       <div class="card border shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex align-items-center mb-2">
-            <h6 class="text-muted mb-0">In Progress Orders</h6>
-            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders currently being processed"></i>
+            <h6 class="text-muted mb-0">${__NSD_LABELS.inProgress}</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="${__NSD_LABELS.inProgress}"></i>
           </div>
           <h2 class="mb-0 text-dark-custom">${orderStats.inProgressCount || 0}</h2>
         </div>
@@ -1534,12 +1549,12 @@
     </div>
 
     <!-- Heading to Customer -->
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
       <div class="card border shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex align-items-center mb-2">
-            <h6 class="text-muted mb-0">Heading to Customer</h6>
-            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders on the way to customers"></i>
+            <h6 class="text-muted mb-0">${__NSD_LABELS.headingToCustomer}</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="${__NSD_LABELS.headingToCustomer}"></i>
           </div>
           <h2 class="mb-0 text-dark-custom">${orderStats.headingToCustomerCount || 0}</h2>
         </div>
@@ -1547,12 +1562,12 @@
     </div>
 
     <!-- Completed Orders -->
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
       <div class="card border shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex align-items-center mb-2">
-            <h6 class="text-muted mb-0">Completed Orders</h6>
-            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Successfully delivered orders"></i>
+            <h6 class="text-muted mb-0">${__NSD_LABELS.completed}</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="${__NSD_LABELS.completed}"></i>
           </div>
           <div class="d-flex align-items-baseline">
             <h2 class="mb-0 text-success">${orderStats.completedCount || 0}</h2>
@@ -1564,12 +1579,12 @@
     </div>
 
     <!-- Awaiting Action -->
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
       <div class="card border shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex align-items-center mb-2">
-            <h6 class="text-muted mb-0">Awaiting Action</h6>
-            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Orders requiring your attention"></i>
+            <h6 class="text-muted mb-0">${__NSD_LABELS.awaitingAction}</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="${__NSD_LABELS.awaitingAction}"></i>
           </div>
           <h2 class="mb-0 text-primary-custom">${orderStats.awaitingActionCount || 0}</h2>
         </div>
@@ -1577,12 +1592,12 @@
     </div>
 
     <!-- Heading to you -->
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
       <div class="card border shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex align-items-center mb-2">
-            <h6 class="text-muted mb-0">Heading to you</h6>
-            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="Returns being sent back to you"></i>
+            <h6 class="text-muted mb-0">${__NSD_LABELS.headingToYou}</h6>
+            <i class="ri-information-line ms-2 text-muted" data-bs-toggle="tooltip" title="${__NSD_LABELS.headingToYou}"></i>
           </div>
           <h2 class="mb-0 text-dark-custom">${orderStats.headingToYouCount || 0}</h2>
         </div>
@@ -1590,7 +1605,7 @@
     </div>
 
     <!-- New Orders -->
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
       <div class="card border shadow-sm h-100">
         <div class="card-body">
           <div class="d-flex align-items-center mb-2">
@@ -1626,7 +1641,7 @@
       <div class="col-12 text-center py-4">
         <i class="ri-error-warning-line text-danger fs-1"></i>
         <p class="mt-2 text-muted">Failed to load dashboard data</p>
-        <button class="btn btn-outline-primary btn-sm" onclick="loadDashboardData()">Retry</button>
+        <button class="btn btn-outline-primary btn-sm" onclick="loadDashboardData()"><%= Dp.retry || 'Retry' %></button>
       </div>
     `;
       }
@@ -1779,6 +1794,55 @@
         });
       }
 
+      const CHANNEL_LINK_IDS = {
+        instagram: 'instagram-link',
+        tiktok: 'tiktok-link',
+        woocommerce: 'woocommerce-link',
+        customWebsite: 'website-link',
+        facebookShop: 'facebook-shop-link',
+        facebookMessenger: 'messenger-link',
+        shopify: 'shopify-link',
+      };
+
+      function getChannelLinkInputId(channel) {
+        return CHANNEL_LINK_IDS[channel] || `${channel}-link`;
+      }
+
+      function isValidHttpUrl(value) {
+        if (!value || typeof value !== 'string') return false;
+        try {
+          const u = new URL(value.trim());
+          return u.protocol === 'http:' || u.protocol === 'https:';
+        } catch {
+          return false;
+        }
+      }
+
+      function validateBrandInfoSocialLinks(currentTabPane) {
+        currentTabPane.querySelectorAll('.row.g-3 .card.p-3').forEach((c) => {
+          c.classList.remove('border', 'border-warning');
+        });
+        const checked = currentTabPane.querySelectorAll('input[name="sellingPoints[]"]:checked');
+        if (checked.length === 0) {
+          currentTabPane.querySelectorAll('.row.g-3 .card.p-3').forEach((c) => {
+            c.classList.add('border', 'border-warning');
+          });
+          return false;
+        }
+        let ok = true;
+        checked.forEach((cb) => {
+          const linkId = getChannelLinkInputId(cb.value);
+          const input = document.getElementById(linkId);
+          if (!input || !input.value.trim() || !isValidHttpUrl(input.value)) {
+            ok = false;
+            if (input) input.classList.add('is-invalid');
+          } else if (input) {
+            input.classList.remove('is-invalid');
+          }
+        });
+        return ok;
+      }
+
       // Validate only the visible required fields in the current tab
       function validateCurrentStep(currentTabPane) {
         let isValid = true;
@@ -1826,6 +1890,12 @@
           }
         });
 
+        if (currentTabPane.id === 'v-pills-brand-info') {
+          if (!validateBrandInfoSocialLinks(currentTabPane)) {
+            isValid = false;
+          }
+        }
+
         return isValid;
       }
 
@@ -1857,9 +1927,13 @@
             if (currentTabId !== 'v-pills-bill-info' || !document.querySelector('.fw-bold')?.textContent?.includes('Email Verified')) {
               // Validate current step
               if (!validateCurrentStep(currentTabPane)) {
+                const brandMsg =
+                  currentTabPane.id === 'v-pills-brand-info'
+                    ? 'Select at least one sales channel and enter a valid https:// link for each channel you select.'
+                    : 'Please complete all required fields before continuing.';
                 Swal.fire({
                   title: 'Validation Error',
-                  text: 'Please complete all required fields before continuing.',
+                  text: brandMsg,
                   icon: 'error',
                   confirmButtonText: 'OK'
                 });
@@ -1886,6 +1960,25 @@
             }
           });
         });
+
+        const verifyNav = formSteps.querySelector('.nav-pills');
+        if (verifyNav) {
+          verifyNav.querySelectorAll('button[data-bs-toggle="pill"]').forEach((tabBtn) => {
+            tabBtn.addEventListener('hide.bs.tab', (e) => {
+              const activePane = formSteps.querySelector('.tab-pane.active');
+              if (!activePane || activePane.id !== 'v-pills-brand-info') return;
+              if (!validateCurrentStep(activePane)) {
+                e.preventDefault();
+                Swal.fire({
+                  title: 'Validation Error',
+                  text: 'Select at least one sales channel and enter a valid https:// link for each channel you select.',
+                  icon: 'error',
+                  confirmButtonText: 'OK'
+                });
+              }
+            });
+          });
+        }
 
         // Handle previous tab navigation
         formSteps.querySelectorAll('.previestab').forEach((prevBtn) => {
@@ -2013,11 +2106,21 @@
                 linkInput.classList.remove('active');
                 // Clear the input when unchecked
                 const input = linkInput.querySelector('input');
-                if (input) input.value = '';
+                if (input) {
+                  input.value = '';
+                  input.classList.remove('is-invalid');
+                }
               }
             }
           });
         });
+
+        const brandInfoPane = document.getElementById('v-pills-brand-info');
+        if (brandInfoPane) {
+          brandInfoPane.querySelectorAll('input[type="url"]').forEach((inp) => {
+            inp.addEventListener('input', () => inp.classList.remove('is-invalid'));
+          });
+        }
 
         // Industry Selection - Show/Hide Other Industry Input
         const industrySelect = document.getElementById('industry');
@@ -2180,6 +2283,17 @@
             return;
           }
 
+          const brandPaneEl = document.getElementById('v-pills-brand-info');
+          if (brandPaneEl && !validateBrandInfoSocialLinks(brandPaneEl)) {
+            Swal.fire({
+              title: 'Validation Error',
+              text: 'Add at least one sales channel and a valid https:// link for each selected channel (Brand Info step).',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+            return;
+          }
+
           // Show loading state
           Swal.fire({
             title: 'Processing',
@@ -2207,10 +2321,10 @@
               const channel = checkbox.value;
               sellingPoints.push(channel);
 
-              // Get the associated link if available
-              const linkInput = document.getElementById(`${channel}-link`);
+              const linkId = getChannelLinkInputId(channel);
+              const linkInput = document.getElementById(linkId);
               if (linkInput && linkInput.value) {
-                socialLinks[channel] = linkInput.value;
+                socialLinks[channel] = linkInput.value.trim();
               }
             });
 

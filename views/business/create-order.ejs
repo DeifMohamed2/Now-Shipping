@@ -80,39 +80,329 @@
     background-color: #e9ecef;
   }
 
-  /* Navigation Pills */
-  .nav-pills .nav-link {
-    border-radius: 12px;
-    padding: 1rem 1.5rem;
-    font-weight: 500;
-    color: var(--text-medium);
-    transition: all 0.3s ease;
+  /* ── Create order wizard: circle-only triggers (no nav-link / nav-item), caption via <label for> ── */
+  .co-wizard {
+    --co-w-fill: 0;
+    margin: -0.75rem -1.25rem 1rem;
+    padding: 0.2rem 0.5rem 0.28rem;
+    background: #fff;
+    border: 1px solid #e8ecf2;
+    border-top: none;
+    border-radius: 0 0 14px 14px;
   }
 
-  .nav-pills .nav-link.active {
-    background-color: var(--primary-color);
-    color: white;
+  .co-wizard__list.nav.custom-nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0;
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: nowrap;
   }
 
-  .nav-pills .nav-link:hover:not(.active) {
-    background-color: var(--primary-light);
-    color: var(--primary-color);
+  .co-wizard__item {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    z-index: 1;
+    list-style: none;
   }
 
-  .nav-pills .nav-link i {
-    /* background-color: rgba(243, 151, 32, 0.15) !important; */
-    color: var(--primary-color) !important;
+  .co-wizard__stepcell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.26rem;
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
   }
-  .step-arrow-nav .nav .nav-link.active::before {
-      background-color: none !important;
+
+  .co-wizard__list::before {
+    content: '';
+    position: absolute;
+    left: 1.35rem;
+    right: 1.35rem;
+    top: calc(0.06rem + 1.25rem);
+    height: 2px;
+    background: #d5dee8;
+    border-radius: 999px;
+    z-index: 0;
+    pointer-events: none;
   }
-  .step-arrow-nav .nav .nav-link::before{
-        content: none !important;
-        position: none !important;
-        border: none !important;
-        right: none !important;
-        top: none !important;
-        transform: none !important;
+
+  .co-wizard__list::after {
+    content: '';
+    position: absolute;
+    left: 1.35rem;
+    right: 1.35rem;
+    top: calc(0.06rem + 1.25rem);
+    height: 2px;
+    background: var(--primary-color);
+    border-radius: 999px;
+    z-index: 0;
+    pointer-events: none;
+    transform: scaleX(var(--co-w-fill, 0));
+    transform-origin: left center;
+    transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+
+  html[dir='rtl'] .co-wizard__list::after {
+    transform-origin: right center;
+  }
+
+  /* Circle-only button — zero padding, no Bootstrap nav-link box */
+  .co-wizard__hit.co-wizard__tab {
+    appearance: none;
+    -webkit-appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit;
+    font: inherit;
+    line-height: 0;
+    cursor: pointer;
+    box-sizing: border-box;
+    width: auto;
+    height: auto;
+  }
+
+  .co-wizard__hit.co-wizard__tab:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 4px;
+  }
+
+  .co-wizard__node {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    border: 2px solid #9bb0c4;
+    background: #eef2f6;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .co-wizard__ico {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: inherit;
+  }
+
+  .co-wizard__ico::before {
+    display: block;
+    line-height: 1;
+  }
+
+  .co-wizard__text {
+    display: block;
+    font-size: clamp(0.72rem, 1.2vw, 0.86rem);
+    font-weight: 600;
+    color: #64748b;
+    padding: 0 0.1rem;
+    max-width: 6.75rem;
+    word-wrap: break-word;
+    line-height: 1.25;
+    text-align: center;
+    text-wrap: balance;
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+  }
+
+  .co-wizard__text--static {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .co-wizard__stepcell:hover .co-wizard__text:not(.co-wizard__text--static) {
+    color: #0f172a;
+  }
+
+  .co-wizard__hit.co-wizard__tab:not(.active):not(.done):not(.disabled) .co-wizard__node {
+    border-color: #9bb0c4;
+    background: #eef2f6;
+    color: #5c7a95;
+  }
+
+  .co-wizard__hit.co-wizard__tab:not(.active):not(.done):not(.disabled) + .co-wizard__text {
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  .co-wizard__hit.co-wizard__tab.done:not(.active) .co-wizard__node {
+    border-color: #059669;
+    background: linear-gradient(165deg, #34d399 0%, #059669 100%);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(5, 150, 105, 0.35);
+  }
+
+  .co-wizard__hit.co-wizard__tab.done:not(.active) .co-wizard__ico,
+  .co-wizard__hit.co-wizard__tab.done:not(.active) .co-wizard__ico::before {
+    color: #fff !important;
+  }
+
+  .co-wizard__hit.co-wizard__tab.done:not(.active) + .co-wizard__text:not(.co-wizard__text--static) {
+    color: #047857;
+    font-weight: 700;
+  }
+
+  .co-wizard__hit.co-wizard__tab.active .co-wizard__node {
+    border-color: #c2410c;
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.22), 0 4px 14px rgba(243, 151, 32, 0.45);
+    transform: scale(1.04);
+  }
+
+  .co-wizard__hit.co-wizard__tab.active .co-wizard__ico,
+  .co-wizard__hit.co-wizard__tab.active .co-wizard__ico::before {
+    color: #fff !important;
+  }
+
+  .co-wizard__hit.co-wizard__tab.active + .co-wizard__text {
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  .co-wizard__hit.co-wizard__tab.disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .co-wizard__hit.co-wizard__tab.disabled .co-wizard__node {
+    border-style: dashed;
+    border-color: #9bb0c4;
+    background: #e8edf2;
+    color: #6b8299;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .co-wizard__hit.co-wizard__tab.disabled ~ .co-wizard__text {
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  @media (min-width: 768px) {
+    .co-wizard__hit.co-wizard__tab:hover,
+    .co-wizard__hit.co-wizard__tab:focus,
+    .co-wizard__hit.co-wizard__tab:active {
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    .checkout-tab .co-wizard .co-wizard__hit.co-wizard__tab:hover,
+    .checkout-tab .co-wizard .co-wizard__hit.co-wizard__tab:focus,
+    .checkout-tab .co-wizard .co-wizard__hit.co-wizard__tab:active {
+      background-color: transparent !important;
+      background-image: none !important;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .co-wizard {
+      margin: -0.5rem -0.75rem 0.85rem;
+      padding: 0.35rem 0.55rem 0.4rem;
+    }
+
+    .co-wizard__list::before,
+    .co-wizard__list::after {
+      display: none;
+    }
+
+    .co-wizard__list.nav.custom-nav {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.45rem;
+    }
+
+    .co-wizard__item {
+      flex: none;
+      width: 100%;
+    }
+
+    .co-wizard__stepcell {
+      flex-direction: row !important;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      gap: 0;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+
+    .co-wizard__stepcell:hover {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+    }
+
+    .co-wizard__item:has(.co-wizard__hit.disabled) .co-wizard__stepcell:hover {
+      border-color: #e2e8f0;
+      background: #fff;
+    }
+
+    .co-wizard__stepcell:has(.co-wizard__hit.active) {
+      border-color: var(--primary-color) !important;
+      background: linear-gradient(90deg, #fffbf5 0%, #fff 100%) !important;
+      box-shadow: 0 0 0 2px rgba(243, 151, 32, 0.12);
+    }
+
+    .co-wizard__node {
+      margin: 0 0.75rem 0 0;
+      width: 2.65rem;
+      height: 2.65rem;
+    }
+
+    .co-wizard__ico {
+      font-size: 1.18rem;
+    }
+
+    .co-wizard__text {
+      flex: 1;
+      text-align: start;
+      font-size: 0.88rem;
+      padding: 0;
+      max-width: none;
+    }
+
+    html[dir='rtl'] .co-wizard__stepcell {
+      flex-direction: row-reverse !important;
+    }
+
+    html[dir='rtl'] .co-wizard__text {
+      text-align: right;
+    }
+
+    html[dir='rtl'] .co-wizard__node {
+      margin: 0 0 0 0.75rem;
+    }
   }
 
   /* Buttons */
@@ -198,11 +488,8 @@
     margin-bottom: 1.5rem;
   }
 
-  /* Fee Display */
+  /* Fee Display — base (refined in .fee-summary-card below) */
   .fee-display {
-    background-color: var(--primary-light);
-    border-radius: 12px;
-    padding: 1.5rem;
     text-align: center;
     position: relative;
   }
@@ -297,11 +584,6 @@
     color: var(--text-medium);
   }
 
-  /* Loading styles for fee display */
-  .fee-display {
-    position: relative;
-  }
-
   .loading-spinner {
     display: none;
     position: absolute;
@@ -319,51 +601,181 @@
     opacity: 0.3;
   }
 
-  /* Additional styles specific to create-order page if needed */
-  
-  /* Enhanced Express Shipping and Payment Options */
-  .enhanced-option-card {
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1rem;
-    transition: all 0.3s ease;
+  /* ── Option Toggle Cards ─────────────────────────────────────────────── */
+  .option-cards-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* the <label> IS the card — input is hidden */
+  .option-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    border-radius: 10px;
+    border: 1.5px solid #e8e8e8;
+    background: #ffffff;
     cursor: pointer;
-    background-color: #ffffff;
+    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+    -webkit-user-select: none;
+    user-select: none;
+    box-sizing: border-box;
+    max-width: 26rem;
+    width: 100%;
   }
-  
-  .enhanced-option-card:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(243, 151, 32, 0.15);
-    transform: translateY(-2px);
-  }
-  
-  .enhanced-option-card.active {
-    border-color: var(--primary-color);
-    background-color: var(--primary-light);
-    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.1);
-  }
-  
-  .enhanced-option-card input[type="checkbox"] {
+
+  /* hidden real checkbox */
+  .option-card input[type="checkbox"] {
     display: none;
   }
-  
-  .enhanced-option-card .option-icon {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
+
+  /* custom checkbox ring */
+  .option-card-check {
+    flex-shrink: 0;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 4px;
+    border: 2px solid #d0d0d0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.18s, background 0.18s;
+    order: 0;
   }
-  
-  .enhanced-option-card .option-title {
+
+  .option-card-check svg {
+    width: 0.65rem;
+    height: 0.65rem;
+    stroke: #fff;
+    stroke-width: 2.5;
+    fill: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  /* icon slot */
+  .option-card-icon {
+    flex-shrink: 0;
+    order: 1;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 8px;
+    background: #f4f6f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #888;
+    transition: background 0.18s, color 0.18s;
+  }
+
+  /* text block */
+  .option-card-text {
+    flex: 1;
+    min-width: 0;
+    order: 2;
+  }
+
+  .option-card-text strong {
+    display: block;
+    font-size: 0.93rem;
     font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 0.25rem;
-    font-size: 0.95rem;
+    color: #1e293b;
+    line-height: 1.3;
   }
-  
-  .enhanced-option-card .option-description {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    margin-bottom: 0;
+
+  .option-card-text span {
+    display: block;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin-top: 0.2rem;
+    line-height: 1.3;
+  }
+
+  /* ── Hover ── */
+  .option-card:hover {
+    border-color: rgba(243, 151, 32, 0.45);
+    background: #fffaf4;
+    box-shadow: 0 2px 8px rgba(243, 151, 32, 0.08);
+  }
+
+  /* ── Checked state ── */
+  .option-card.is-checked {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, #fffbf4 0%, #fff5e6 100%);
+    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.1);
+  }
+
+  .option-card.is-checked .option-card-check {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+  }
+
+  .option-card.is-checked .option-card-check svg {
+    opacity: 1;
+  }
+
+  .option-card.is-checked .option-card-icon {
+    background: rgba(243, 151, 32, 0.12);
+    color: var(--primary-color);
+  }
+
+  .option-card.is-checked .option-card-text strong {
+    color: #92500a;
+  }
+
+  /* ── RTL: reverse order so check is on the right ── */
+  html[dir='rtl'] .option-card {
+    flex-direction: row-reverse;
+  }
+
+  html[dir='rtl'] .option-card-text {
+    text-align: right;
+  }
+
+  /* section label above cards */
+  .option-section-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin-bottom: 0.6rem;
+  }
+
+  /* Express: after 9 PM Cairo = next-day (not same-day) — high-visibility notice */
+  .express-after-nine-notice {
+    margin-top: 0.65rem;
+    margin-bottom: 0.25rem;
+    padding: 0.85rem 1rem 0.85rem 1rem;
+    border-radius: 8px;
+    border: 2px solid rgba(200, 120, 0, 0.55);
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.35) 0%, rgba(255, 248, 220, 0.95) 55%, #fff 100%);
+    box-shadow: 0 2px 8px rgba(180, 100, 0, 0.12);
+    color: #4a3200;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .express-after-nine-notice strong {
+    color: #2d1f00;
+  }
+
+  .express-after-nine-notice .express-after-nine-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #7a4a00;
+    background: rgba(255, 152, 0, 0.35);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.35rem;
   }
   
   .amount-input-section {
@@ -393,180 +805,316 @@
     margin-right: 0.25rem;
   }
   
+  .fee-summary-card {
+    border-radius: 14px;
+    overflow: hidden;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  .fee-summary-card .fee-summary-header {
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border-bottom: 1px solid #eef2f7;
+    padding: 1rem 1.35rem;
+  }
+
+  .fee-summary-card .fee-summary-header h6 {
+    color: #0f172a;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .fee-summary-card .fee-header-icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(243, 151, 32, 0.18) 0%, rgba(243, 151, 32, 0.06) 100%);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .fee-summary-card .fee-display {
+    position: relative;
+    min-height: 148px;
+    padding: 1.75rem 1.5rem 1.5rem;
+    background: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 45%, #ffffff 100%);
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  .fee-summary-card .fee-display .fee-amount {
+    font-size: clamp(2.25rem, 6vw, 3.25rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #1e3a5f;
+  }
+
+  .fee-summary-card .fee-display .fee-currency {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #64748b;
+    vertical-align: 0.15em;
+  }
+
+  .fee-summary-card .fee-display .fee-total-caption {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: #94a3b8;
+  }
+
   /* Fee Breakdown Styles */
   .fee-breakdown {
     margin-top: 1rem;
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-radius: 8px;
+    padding: 1.1rem 1.35rem 1.15rem 1.5rem;
+    background: #fafbfc;
+    border: 1px solid #e8ecf0;
+    border-radius: 12px;
+    border-left: 4px solid rgba(243, 151, 32, 0.65);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
   }
-  
+
   .fee-breakdown-header {
-    font-weight: 600;
-    color: var(--text-dark);
+    font-weight: 700;
+    color: #334155;
     margin-bottom: 0.75rem;
-    font-size: 0.95rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e8ecf0;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
-  
+
   .fee-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #e9ecef;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #eef1f5;
   }
-  
-  .fee-row:last-child {
+
+  .fee-row:last-of-type {
     border-bottom: none;
   }
-  
+
   .fee-row-label {
-    color: var(--text-medium);
-    font-size: 0.9rem;
+    color: #475569;
+    font-size: 0.92rem;
+    text-align: left;
+    padding-right: 0.5rem;
   }
-  
+
   .fee-row-amount {
-    font-weight: 500;
-    color: var(--text-dark);
-    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.92rem;
+    white-space: nowrap;
   }
-  
+
   .fee-row-total {
-    font-weight: 700;
+    font-weight: 800;
     color: var(--primary-color);
-    font-size: 1rem;
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 2px solid var(--primary-color);
+    font-size: 1.02rem;
+    margin-top: 0.25rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid rgba(243, 151, 32, 0.35);
   }
-  
+
+  .fee-breakdown-toggle {
+    padding: 0.35rem 0.25rem 0 0.35rem;
+    margin-top: 0.5rem;
+  }
+
+  .fee-breakdown-toggle .form-check-input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.2rem;
+    cursor: pointer;
+    border-color: #cbd5e1;
+  }
+
+  .fee-breakdown-toggle .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  .fee-breakdown-toggle .form-check-label {
+    cursor: pointer;
+    color: #64748b;
+    font-size: 0.9rem;
+    padding-left: 0.35rem;
+    user-select: none;
+  }
+
   .fee-breakdown-hidden {
     display: none;
+  }
+
+  @media (max-width: 575.98px) {
+    .checkout-tab .card-body {
+      padding: 1rem;
+    }
+
+    .nav-pills .nav-link {
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  /* ── RTL overrides ─────────────────────────────────────────────────── */
+  html[dir='rtl'] body {
+    font-family: 'Cairo', 'Poppins', sans-serif;
+  }
+
+  /* Flip left-border accent to right */
+  html[dir='rtl'] .amount-input-section {
+    border-left: none;
+    border-right: 3px solid var(--primary-color);
+  }
+
+  html[dir='rtl'] .fee-breakdown {
+    border-left: none;
+    border-right: 4px solid rgba(243, 151, 32, 0.65);
+  }
+
+  /* nav-link icon spacing */
+  html[dir='rtl'] .nav-pills .nav-link i {
+    margin-right: 0;
+    margin-left: 0.5rem;
+  }
+
+  /* Input group: flip border radii */
+  html[dir='rtl'] .input-group .btn:first-child {
+    border-radius: 0 10px 10px 0;
+  }
+  html[dir='rtl'] .input-group .btn:last-child {
+    border-radius: 10px 0 0 10px;
+  }
+  html[dir='rtl'] .input-group .form-control:not(:first-child):not(:last-child) {
+    border-radius: 0;
+  }
+
+  /* Select custom arrow: flip to left */
+  html[dir='rtl'] .select-container select {
+    padding-right: 1rem;
+    padding-left: 2.5rem;
+  }
+
+  html[dir='rtl'] .zone-select-arrow {
+    right: auto;
+    left: 10px;
+  }
+
+  /* Fee breakdown label alignment */
+  html[dir='rtl'] .fee-row-label {
+    text-align: right;
+    padding-right: 0;
+    padding-left: 0.5rem;
+  }
+
+  /* Card-radio icon margin */
+  html[dir='rtl'] .form-check.card-radio .form-check-label span.fs-16 {
+    margin-right: 0;
+    margin-left: 0.5rem;
+  }
+
+  /* Pickup address section: flip border from start to end */
+  html[dir='rtl'] #pickupAddressSelection {
+    border-right: 2px solid rgba(243, 151, 32, 0.35) !important;
+    border-left: none !important;
+    padding-right: 0.75rem;
+    padding-left: 0;
+    margin-right: 0.5rem;
+    margin-left: 0;
+  }
+
+  /* fee-breakdown toggle label padding */
+  html[dir='rtl'] .fee-breakdown-toggle .form-check-label {
+    padding-left: 0;
+    padding-right: 0.5rem;
+  }
+
+  /* Back/next button icon spacing */
+  html[dir='rtl'] .btn-label i.label-icon {
+    margin-left: 0;
+    margin-right: 0.5rem;
+  }
+
+  /* area selection button arrow */
+  html[dir='rtl'] #selectAreaBtn {
+    text-align: right;
+  }
+
+  /* info badge icon margin */
+  html[dir='rtl'] .info-badge i {
+    margin-right: 0;
+    margin-left: 0.25rem;
   }
 </style>
 
 <%- contentFor('body') %>
-<div class="row justify-content-center">
-  <div class="col-xl-11">
+<% var Co = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.createOrder) ? translation.business.pages.createOrder : {}; %>
+<div class="row justify-content-center g-0 g-sm-3">
+  <div class="col-12 col-xl-11">
     <div class="card">
       <div class="card-body checkout-tab">
         <form id="createOrderForm">
-          <!-- Step Navigation -->
-          <div class="step-arrow-nav mt-n3 mx-n3 mb-4">
-            <ul class="nav nav-pills nav-justified custom-nav" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button class="nav-link nav-create fs-15 p-3 active" id="pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#pills-bill-info" type="button" role="tab" aria-controls="pills-bill-info" aria-selected="true">
-                  <i class="ri-user-2-line fs-16 p-2 rounded-circle align-middle me-2"></i> Customer Details
-                </button>
+          <!-- Step navigation: circle-only buttons + <label for> captions (.custom-nav for checkout init.js) -->
+          <div class="co-wizard mt-n3 mx-n3 mb-3">
+            <ul class="nav co-wizard__list custom-nav" role="tablist">
+              <li class="co-wizard__item" role="presentation">
+                <div class="co-wizard__stepcell">
+                  <button class="co-wizard__hit co-wizard__tab nav-create active" id="pills-bill-address-tab" data-bs-toggle="pill" data-bs-target="#pills-bill-address" type="button" role="tab" aria-controls="pills-bill-address" aria-selected="true">
+                    <span class="co-wizard__node" aria-hidden="true"><i class="ri-truck-line co-wizard__ico"></i></span>
+                  </button>
+                  <label class="co-wizard__text" for="pills-bill-address-tab"><%= Co.stepShipping || 'Shipping Details' %></label>
+                </div>
               </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link nav-create fs-15 p-3" id="pills-bill-address-tab" data-bs-toggle="pill" data-bs-target="#pills-bill-address" type="button" role="tab" aria-controls="pills-bill-address" aria-selected="false">
-                  <i class="ri-truck-line fs-16 p-2 rounded-circle align-middle me-2"></i> Shipping Details
-                </button>
+              <li class="co-wizard__item" role="presentation">
+                <div class="co-wizard__stepcell">
+                  <button class="co-wizard__hit co-wizard__tab nav-create" id="pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#pills-bill-info" type="button" role="tab" aria-controls="pills-bill-info" aria-selected="false">
+                    <span class="co-wizard__node" aria-hidden="true"><i class="ri-user-2-line co-wizard__ico"></i></span>
+                  </button>
+                  <label class="co-wizard__text" for="pills-bill-info-tab"><%= Co.stepCustomer || 'Customer Details' %></label>
+                </div>
               </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link nav-create fs-15 p-3" id="pills-payment-tab" data-bs-toggle="pill" data-bs-target="#pills-payment" type="button" role="tab" aria-controls="pills-payment" aria-selected="false">
-                  <i class="ri-bank-card-line fs-16 p-2 rounded-circle align-middle me-2"></i> Additional Options
-                </button>
+              <li class="co-wizard__item" role="presentation">
+                <div class="co-wizard__stepcell">
+                  <button class="co-wizard__hit co-wizard__tab nav-create" id="pills-payment-tab" data-bs-toggle="pill" data-bs-target="#pills-payment" type="button" role="tab" aria-controls="pills-payment" aria-selected="false">
+                    <span class="co-wizard__node" aria-hidden="true"><i class="ri-bank-card-line co-wizard__ico"></i></span>
+                  </button>
+                  <label class="co-wizard__text" for="pills-payment-tab"><%= Co.stepAdditional || 'Additional Options' %></label>
+                </div>
               </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link nav-create fs-15 p-3 disabled" id="pills-finish-tab" data-bs-toggle="pill" data-bs-target="#pills-finish" type="button" role="tab" aria-controls="pills-finish" aria-selected="false" tabindex="-1"></button>
-                  <i class="ri-checkbox-circle-line fs-16 p-2 rounded-circle align-middle me-2"></i> Complete
-                </button>
+              <li class="co-wizard__item" role="presentation">
+                <div class="co-wizard__stepcell">
+                  <button class="co-wizard__hit co-wizard__tab nav-create disabled" id="pills-finish-tab" data-bs-toggle="pill" data-bs-target="#pills-finish" type="button" role="tab" aria-controls="pills-finish" aria-selected="false" tabindex="-1">
+                    <span class="co-wizard__node" aria-hidden="true"><i class="ri-checkbox-circle-line co-wizard__ico"></i></span>
+                  </button>
+                  <span class="co-wizard__text co-wizard__text--static"><%= Co.stepComplete || 'Complete' %></span>
+                </div>
               </li>
             </ul>
           </div>
 
           <!-- Tab Content -->
           <div class="tab-content">
-            <!-- Customer Info Tab -->
-            <div class="tab-pane fade show active" id="pills-bill-info" role="tabpanel" aria-labelledby="pills-bill-info-tab">
-              <div class="mb-4">
-                <h5 class="section-title">Customer Information</h5>
-                <p class="section-subtitle">Enter the customer's contact details</p>
-              </div>
-
-              <!-- Customer Info Form -->
-              <div>
-                <div class="row g-4">
-                  <div class="col-sm-6">
-                    <div class="mb-3">
-                      <label for="billinginfo-firstName" class="form-label">Full Name</label>
-                      <input type="text" class="form-control" name="fullName" id="billinginfo-firstName" placeholder="Enter customer's full name">
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="mb-3">
-                      <label for="billinginfo-phoneNumber" class="form-label">Phone Number</label>
-                      <input type="tel" class="form-control" name="phoneNumber" id="billinginfo-phoneNumber" placeholder="Enter phone number">
-                    </div>
-                  </div>
-                </div>
-                <div class="row g-4">
-                  <div class="col-sm-6">
-                    <div class="mb-3">
-                      <label for="billinginfo-otherPhoneNumber" class="form-label">Other Phone Number (Optional)</label>
-                      <input type="tel" class="form-control" name="otherPhoneNumber" id="billinginfo-otherPhoneNumber" placeholder="Enter alternative phone number">
-                    </div>
-                  </div>
-                </div>
-                <div class="row g-3">
-                  <div class="col-md-12">
-                    <h5 class="section-title mb-3">Location Details</h5>
-                  </div>
-
-                  <div class="mb-3 col-md-12">
-                    <label for="governorate-area" class="form-label">Governorate and Area</label>
-                    <button type="button" class="btn btn-outline-secondary w-100 text-start" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
-                      <span id="selectedAreaDisplay">Select Area</span>
-                      <i class="ri-arrow-down-s-line"></i>
-                    </button>
-                    <input type="hidden" name="government" id="government-value">
-                    <input type="hidden" name="zone" id="zone-value">
-                  </div>
-                </div>
-
-                <div class="row g-3">
-                  <div class="col-md-12">
-                    <label for="address" class="form-label">Address</label>
-                    <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter full address"></textarea>
-                  </div>
-                </div>
-
-                <div class="row g-3 mt-2">
-                  <div class="col-md-12">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="deliverToWorkAddress" id="deliverToWorkAddress-checkbox">
-                      <label class="form-check-label" for="deliverToWorkAddress-checkbox">
-                        <i class="ri-building-line me-2"></i>Deliver to work address
-                      </label>
-                    </div>
-                    <div class="alert alert-info mt-2" style="display: none;" id="work-address-alert">
-                      <i class="ri-time-line me-2"></i>
-                      <strong>Note:</strong> Work address deliveries will be scheduled during business working hours (8:00 AM - 3:00 PM)
-                    </div>
-                  </div>
-                </div>
-
-                <div class="d-flex align-items-start gap-3 mt-4">
-                  <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-bill-address-tab">
-                    <i class="ri-truck-line label-icon align-middle fs-16 ms-2"></i>Continue to Shipping
-                  </button>
-                </div>
-              </div>
-            </div>
-
             <!-- Shipping Info Tab -->
-            <div class="tab-pane fade" id="pills-bill-address" role="tabpanel" aria-labelledby="pills-bill-address-tab">
+            <div class="tab-pane fade show active" id="pills-bill-address" role="tabpanel" aria-labelledby="pills-bill-address-tab">
               <div class="mb-4">
-                <h5 class="section-title">Shipping Information</h5>
-                <p class="section-subtitle">Select delivery type and provide shipping details</p>
+                <h5 class="section-title"><%= Co.shippingInfoTitle || 'Shipping Information' %></h5>
+                <p class="section-subtitle"><%= Co.shippingInfoSubtitle || 'Select delivery type and provide shipping details' %></p>
               </div>
 
               <!-- Order Type Section -->
               <div class="card mb-4 hover-effect">
                 <div class="card-header">
-                  <h6 class="mb-0">Order Type</h6>
+                  <h6 class="mb-0"><%= Co.orderTypeLabel || 'Order Type' %></h6>
                 </div>
                 <div class="card-body">
                   <div class="row g-3">
@@ -575,7 +1123,7 @@
                         <input id="paymentMethod01" name="orderType" type="radio" class="form-check-input" value="Deliver">
                         <label class="form-check-label" for="paymentMethod01">
                           <span class="fs-16 me-2"><i class="ri-truck-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap">Deliver</span>
+                          <span class="fs-14 text-wrap"><%= Co.typeDelivery || 'Delivery' %></span>
                         </label>
                       </div>
                     </div>
@@ -584,7 +1132,7 @@
                         <input id="paymentMethod02" name="orderType" type="radio" class="form-check-input" value="Exchange">
                         <label class="form-check-label" for="paymentMethod02">
                           <span class="fs-16 me-2"><i class="ri-exchange-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap">Exchange</span>
+                          <span class="fs-14 text-wrap"><%= Co.typeExchange || 'Exchange' %></span>
                         </label>
                       </div>
                     </div>
@@ -593,16 +1141,7 @@
                         <input id="paymentMethod03" name="orderType" type="radio" class="form-check-input" value="Return">
                         <label class="form-check-label" for="paymentMethod03">
                           <span class="fs-16 me-2"><i class="ri-arrow-go-back-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap">Return</span>
-                        </label>
-                      </div>
-                    </div>
-                    <div class="col-lg-3 col-sm-6">
-                      <div class="form-check card-radio" style="display: none;">
-                        <input id="paymentMethod04" name="orderType" type="radio" class="form-check-input" value="Cash Collection">
-                        <label class="form-check-label" for="paymentMethod04">
-                          <span class="fs-16 me-2"><i class="ri-money-dollar-circle-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap">Cash Collection</span>
+                          <span class="fs-14 text-wrap"><%= Co.typeReturn || 'Return' %></span>
                         </label>
                       </div>
                     </div>
@@ -613,15 +1152,15 @@
               <!-- Deliver Section -->
               <div id="deliver-section" class="card mb-4 hover-effect" style="display: none;">
                 <div class="card-header">
-                  <h6 class="mb-0">Delivery Details</h6>
+                  <h6 class="mb-0"><%= Co.deliveryDetailsLabel || 'Delivery Details' %></h6>
                 </div>
                 <div class="card-body">
                   <div class="mb-4">
-                    <label for="delivery-description" class="form-label">Product Description</label>
-                    <textarea class="form-control" name="productDescription" id="delivery-description" placeholder="Describe the products being delivered" rows="3"></textarea>
+                    <label for="delivery-description" class="form-label"><%= Co.productDescLabel || 'Product Description' %></label>
+                    <textarea class="form-control" name="productDescription" id="delivery-description" placeholder="<%= Co.productDescPlaceholder || 'Describe the products being delivered' %>" rows="3"></textarea>
                   </div>
                   <div class="mb-4 col-md-4">
-                    <label for="shipping-count" class="form-label">Number of Items</label>
+                    <label for="shipping-count" class="form-label"><%= Co.itemsCount || 'Number of Items' %></label>
                     <div class="input-group">
                       <button type="button" class="btn" id="decrement-shipping">-</button>
                       <input type="number" name="numberOfItems" class="form-control text-center" id="shipping-count" value="1" min="1">
@@ -629,55 +1168,73 @@
                     </div>
                   </div>
                   
-                  <!-- Enhanced Options Section - Side by Side -->
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label mb-2">Shipping Speed</label>
-                      <div class="enhanced-option-card" id="express-card">
-                        <input type="checkbox" name="isExpressShipping" id="express-shipping-checkbox">
-                        <div class="text-center">
-                          <div class="option-icon"><i class="ri-flashlight-line"></i></div>
-                          <div class="option-title">Express Shipping</div>
-                          <div class="option-description">Same day delivery service</div>
-                        </div>
-                      </div>
-                      <!-- Pickup Address Selection for Express Shipping -->
-                      <div id="pickupAddressSelection" class="mt-3" style="display: none;">
-                        <label class="form-label mb-2">Select Pickup Address <span class="text-danger">*</span></label>
-                        <select class="form-select" id="selectedPickupAddressId" name="selectedPickupAddressId">
-                          <option value="">Select pickup address...</option>
-                          <% if (userData && userData.pickUpAddresses && userData.pickUpAddresses.length > 0) { %>
-                            <% userData.pickUpAddresses.forEach(address => { %>
-                              <option value="<%= address.addressId %>" <%= address.isDefault ? 'selected' : '' %>>
-                                <%= address.addressName || 'Address' %> 
-                                <% if (address.isDefault) { %> (Default) <% } %>
-                                - <%= address.zone %>, <%= address.city %>
-                              </option>
-                            <% }); %>
-                          <% } else if (userData && userData.pickUpAdress) { %>
-                            <option value="default" selected>
-                              Main Address - <%= userData.pickUpAdress.zone || '' %>, <%= userData.pickUpAdress.city || '' %>
+                  <!-- Shipping speed option card -->
+                  <div class="mb-4">
+                    <p class="option-section-label"><%= Co.shippingSpeedLabel || 'Shipping Speed' %></p>
+                    <div class="option-cards-group">
+                      <label class="option-card" id="express-card" for="express-shipping-checkbox">
+                        <input type="checkbox" name="isExpressShipping" id="express-shipping-checkbox" value="on">
+                        <span class="option-card-check">
+                          <svg viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1"/></svg>
+                        </span>
+                        <span class="option-card-icon"><i class="ri-flashlight-line"></i></span>
+                        <span class="option-card-text">
+                          <strong><%= Co.expressShippingLabel || 'Express Shipping' %></strong>
+                          <span id="express-shipping-subtitle"
+                                data-default="<%= Co.expressShippingSub || 'Same day delivery service' %>"
+                                data-after9="<%= Co.expressNextDaySub || 'Next day delivery — orders after 9:00 PM (Cairo) are not same-day' %>">
+                            <%= Co.expressShippingSub || 'Same day delivery service' %>
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+
+                    <div id="express-after-nine-notice" class="express-after-nine-notice d-none mt-2" role="status" aria-live="polite">
+                      <div class="express-after-nine-badge"><%= Co.expressAfterNineBadge || 'After 9:00 PM (Cairo)' %></div>
+                      <strong><%= Co.expressAfterNineText || 'Next-day delivery' %></strong> — <%= Co.expressAfterNineText || 'Express orders placed now are' %> <strong><%= Co.expressAfterNineNot || 'not' %></strong> <%= Co.expressAfterNineSched || 'same-day; they are scheduled for' %> <strong><%= Co.expressAfterNineDay || 'delivery the next calendar day' %></strong>.
+                    </div>
+
+                    <div id="pickupAddressSelection" class="mt-3" style="display: none;">
+                      <label class="form-label mb-2"><%= Co.selectPickupLabel || 'Select Pickup Address' %> <span class="text-danger">*</span></label>
+                      <select class="form-select" id="selectedPickupAddressId" name="selectedPickupAddressId">
+                        <option value=""><%= Co.selectPickupPlaceholder || 'Select pickup address...' %></option>
+                        <% if (userData && userData.pickUpAddresses && userData.pickUpAddresses.length > 0) { %>
+                          <% userData.pickUpAddresses.forEach(address => { %>
+                            <option value="<%= address.addressId %>" <%= address.isDefault ? 'selected' : '' %>>
+                              <%= address.addressName || 'Address' %>
+                              <% if (address.isDefault) { %> (<%= Co.addressDefault || 'Default' %>) <% } %>
+                              - <%= address.zone %>, <%= address.city %>
                             </option>
-                          <% } %>
-                        </select>
-                        <div class="mt-2">
-                          <a href="/business/settings#address" class="btn btn-sm btn-outline-primary" target="_blank">
-                            <i class="ri-add-line me-1"></i> Add New Address
-                          </a>
-                        </div>
+                          <% }); %>
+                        <% } else if (userData && userData.pickUpAdress) { %>
+                          <option value="default" selected>
+                            Main Address - <%= userData.pickUpAdress.zone || '' %>, <%= userData.pickUpAdress.city || '' %>
+                          </option>
+                        <% } %>
+                      </select>
+                      <div class="mt-2">
+                        <a href="/business/settings#address" class="btn btn-sm btn-outline-primary" target="_blank">
+                          <i class="ri-add-line me-1"></i> <%= Co.addNewAddress || 'Add New Address' %>
+                        </a>
                       </div>
                     </div>
-                    
-                    <div class="col-md-6 mb-3" id="cash-on-delivery-section" style="display: none;">
-                      <label class="form-label mb-2">Payment Collection</label>
-                      <div class="enhanced-option-card" id="cod-card">
-                        <input type="checkbox" name="COD" id="cash-on-delivery-checkbox">
-                        <div class="text-center">
-                          <div class="option-icon"><i class="ri-money-dollar-circle-line"></i></div>
-                          <div class="option-title">Cash on Delivery (COD)</div>
-                          <div class="option-description">Collect payment upon delivery</div>
-                        </div>
-                      </div>
+                  </div>
+
+                  <!-- Payment collection option card -->
+                  <div class="mb-3" id="cash-on-delivery-section" style="display: none;">
+                    <p class="option-section-label"><%= Co.paymentCollectionLabel || 'Payment Collection' %></p>
+                    <div class="option-cards-group">
+                      <label class="option-card" id="cod-card" for="cash-on-delivery-checkbox">
+                        <input type="checkbox" name="COD" id="cash-on-delivery-checkbox" value="on">
+                        <span class="option-card-check">
+                          <svg viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1"/></svg>
+                        </span>
+                        <span class="option-card-icon"><i class="ri-money-dollar-circle-line"></i></span>
+                        <span class="option-card-text">
+                          <strong><%= Co.codLabel || 'Cash on Delivery (COD)' %></strong>
+                          <span><%= Co.codSub || 'Collect payment upon delivery' %></span>
+                        </span>
+                      </label>
                     </div>
                   </div>
                   
@@ -685,12 +1242,12 @@
                   <div class="amount-input-section" id="cash-on-delivery-amount" style="display: none;">
                     <div class="info-badge info">
                       <i class="ri-information-line"></i>
-                      This is the actual full amount that will be collected from the customer
+                      <%= Co.amountCollectInfo || 'This is the actual full amount that will be collected from the customer' %>
                     </div>
-                    <label for="cash-on-delivery-input" class="form-label">Amount to Collect</label>
+                    <label for="cash-on-delivery-input" class="form-label"><%= Co.amountCollectLabel || 'Amount to Collect' %></label>
                     <div class="input-group">
                       <span class="input-group-text">EGP</span>
-                      <input type="number" name="amountCOD" class="form-control" id="cash-on-delivery-input" placeholder="Enter amount">
+                      <input type="number" name="amountCOD" class="form-control" id="cash-on-delivery-input" placeholder="<%= Co.amountPlaceholder || 'Enter amount' %>">
                     </div>
                   </div>
                 </div>
@@ -699,15 +1256,15 @@
               <!-- Exchange Section -->
               <div id="exchange-section" class="card mb-4 hover-effect" style="display: none;">
                 <div class="card-header">
-                  <h6 class="mb-0">Exchange Details</h6>
+                  <h6 class="mb-0"><%= Co.exchangeDetailsLabel || 'Exchange Details' %></h6>
                 </div>
                 <div class="card-body">
                   <div class="mb-4">
-                    <label for="exchange-current-product" class="form-label">Current Product Description</label>
-                    <textarea class="form-control" name="currentPD" id="exchange-current-product" placeholder="Describe the products being returned" rows="3"></textarea>
+                    <label for="exchange-current-product" class="form-label"><%= Co.currentProductLabel || 'Current Product Description' %></label>
+                    <textarea class="form-control" name="currentPD" id="exchange-current-product" placeholder="<%= Co.currentProductPlaceholder || 'Describe the products being returned' %>" rows="3"></textarea>
                   </div>
                   <div class="mb-4 col-md-4">
-                    <label for="exchange-current-count" class="form-label">Number of Current Items</label>
+                    <label for="exchange-current-count" class="form-label"><%= Co.currentItemsLabel || 'Number of Current Items' %></label>
                     <div class="input-group">
                       <button type="button" class="btn" id="decrement-current">-</button>
                       <input type="number" name="numberOfItemsCurrentPD" class="form-control text-center" id="exchange-current-count" value="1" min="1">
@@ -715,29 +1272,31 @@
                     </div>
                   </div>
                   <div class="mb-4">
-                    <label for="exchange-new-product" class="form-label">New Product Description</label>
-                    <textarea class="form-control" name="newPD" id="exchange-new-product" placeholder="Describe the replacement products" rows="3"></textarea>
+                    <label for="exchange-new-product" class="form-label"><%= Co.newProductLabel || 'New Product Description' %></label>
+                    <textarea class="form-control" name="newPD" id="exchange-new-product" placeholder="<%= Co.newProductPlaceholder || 'Describe the replacement products' %>" rows="3"></textarea>
                   </div>
                   <div class="mb-4 col-md-4">
-                    <label for="exchange-new-count" class="form-label">Number of New Items</label>
+                    <label for="exchange-new-count" class="form-label"><%= Co.newItemsLabel || 'Number of New Items' %></label>
                     <div class="input-group">
                       <button type="button" class="btn" id="decrement-new">-</button>
                       <input type="number" name="numberOfItemsNewPD" class="form-control text-center" id="exchange-new-count" value="1" min="1">
                       <button type="button" class="btn" id="increment-new">+</button>
                     </div>
                   </div>
-                  <!-- Enhanced Options Section -->
-                  <div class="row">
-                    <div class="col-md-12 mb-3" id="cash-difference-section" style="display: none;">
-                      <label class="form-label mb-2">Payment Collection</label>
-                      <div class="enhanced-option-card" id="cd-card">
-                        <input type="checkbox" name="CashDifference" id="cash-difference-checkbox">
-                        <div class="text-center">
-                          <div class="option-icon"><i class="ri-money-dollar-circle-line"></i></div>
-                          <div class="option-title">Cash Difference (CD)</div>
-                          <div class="option-description">Collect additional payment</div>
-                        </div>
-                      </div>
+                  <div class="mb-3" id="cash-difference-section" style="display: none;">
+                    <p class="option-section-label"><%= Co.paymentCollectionLabel || 'Payment Collection' %></p>
+                    <div class="option-cards-group">
+                      <label class="option-card" id="cash-diff-card" for="cash-difference-checkbox">
+                        <input type="checkbox" name="CashDifference" id="cash-difference-checkbox" value="on">
+                        <span class="option-card-check">
+                          <svg viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1"/></svg>
+                        </span>
+                        <span class="option-card-icon"><i class="ri-exchange-dollar-line"></i></span>
+                        <span class="option-card-text">
+                          <strong><%= Co.cashDiffLabel || 'Cash Difference (CD)' %></strong>
+                          <span><%= Co.cashDiffSub || 'Collect additional payment' %></span>
+                        </span>
+                      </label>
                     </div>
                   </div>
                   
@@ -745,12 +1304,12 @@
                   <div class="amount-input-section" id="cash-difference-amount" style="display: none;">
                     <div class="info-badge info">
                       <i class="ri-information-line"></i>
-                      This is the actual full amount that will be collected from the customer
+                      <%= Co.amountCollectInfo || 'This is the actual full amount that will be collected from the customer' %>
                     </div>
-                    <label for="cash-difference-input" class="form-label">Difference Amount</label>
+                    <label for="cash-difference-input" class="form-label"><%= Co.cashDiffAmountLabel || 'Difference Amount' %></label>
                     <div class="input-group">
                       <span class="input-group-text">EGP</span>
-                      <input type="number" name="amountCashDifference" class="form-control" id="cash-difference-input" placeholder="Enter difference amount">
+                      <input type="number" name="amountCashDifference" class="form-control" id="cash-difference-input" placeholder="<%= Co.cashDiffAmountPlaceholder || 'Enter difference amount' %>">
                     </div>
                   </div>
                 </div>
@@ -759,22 +1318,22 @@
               <!-- Return Section -->
               <div id="return-section" class="card mb-4 hover-effect" style="display: none;">
                 <div class="card-header">
-                  <h6 class="mb-0">Return Details</h6>
+                  <h6 class="mb-0"><%= Co.returnDetailsLabel || 'Return Details' %></h6>
                 </div>
                 <div class="card-body">
                   <div class="alert alert-info mb-4">
                     <i class="ri-information-line me-2"></i>
-                    <strong>Return Process:</strong> Create a return order for an existing delivered order. The original order will be automatically linked when the return is picked up.
+                    <strong><%= Co.returnInfoAlert || 'Return Process:' %></strong> <%= Co.returnInfoText || 'Create a return order for an existing delivered order. The original order will be automatically linked when the return is picked up.' %>
                   </div>
                   
                   <div class="mb-4">
-                    <label for="original-order-number" class="form-label">Original Order Number *</label>
-                    <input type="text" class="form-control" name="originalOrderNumber" id="original-order-number" placeholder="Enter the order number of the delivered order to return" required>
+                    <label for="original-order-number" class="form-label"><%= Co.originalOrderLabel || 'Original Order Number' %> *</label>
+                    <input type="text" class="form-control" name="originalOrderNumber" id="original-order-number" placeholder="<%= Co.originalOrderPlaceholder || 'Enter the order number of the delivered order to return' %>" required>
                     <div class="form-text">
-                      Enter the order number of the completed order that needs to be returned.
+                      <%= Co.originalOrderHelp || 'Enter the order number of the completed order that needs to be returned.' %>
                     </div>
                     <div id="original-order-preview" class="alert alert-success mt-2" style="display: none;">
-                      <h6>Original Order Found:</h6>
+                      <h6 id="original-order-found-title"><%= Co.originalOrderFound || 'Original Order Found:' %></h6>
                       <div id="original-order-details"></div>
                     </div>
                   </div>
@@ -782,25 +1341,25 @@
                   <!-- Partial Return Section -->
                   <div id="partial-return-section" class="card mb-4" style="display: none;">
                     <div class="card-header">
-                      <h6 class="mb-0">Return Type Selection</h6>
+                      <h6 class="mb-0"><%= Co.returnTypeLabel || 'Return Type Selection' %></h6>
                     </div>
                     <div class="card-body">
                       <div class="alert alert-info mb-3">
                         <i class="ri-information-line me-2"></i>
-                        <strong>Multiple Items Detected:</strong> This order contains multiple items. Choose whether to return all items or just specific ones.
+                        <strong><%= Co.multipleItemsAlert || 'Multiple Items Detected:' %></strong> <%= Co.multipleItemsText || 'This order contains multiple items. Choose whether to return all items or just specific ones.' %>
                       </div>
                       
                       <div class="mb-3">
                         <div class="form-check">
                           <input class="form-check-input" type="radio" name="returnType" id="full-return" value="full" checked>
                           <label class="form-check-label" for="full-return">
-                            <strong>Full Return</strong> - Return all items from the original order
+                            <strong><%= Co.fullReturnLabel || 'Full Return' %></strong> - <%= Co.fullReturnSub || 'Return all items from the original order' %>
                           </label>
                         </div>
                         <div class="form-check">
                           <input class="form-check-input" type="radio" name="returnType" id="partial-return" value="partial">
                           <label class="form-check-label" for="partial-return">
-                            <strong>Partial Return</strong> - Return only specific items
+                            <strong><%= Co.partialReturnLabel || 'Partial Return' %></strong> - <%= Co.partialReturnSub || 'Return only specific items' %>
                           </label>
                         </div>
                       </div>
@@ -809,16 +1368,16 @@
                       <div id="partial-return-details" style="display: none;">
                         <div class="row g-3">
                           <div class="col-md-6">
-                            <label for="partial-return-count" class="form-label">Number of Items to Return</label>
+                            <label for="partial-return-count" class="form-label"><%= Co.partialItemsLabel || 'Number of Items to Return' %></label>
                             <div class="input-group">
                               <button type="button" class="btn" id="decrement-partial">-</button>
                               <input type="number" name="partialReturnItemCount" class="form-control text-center" id="partial-return-count" value="1" min="1">
                               <button type="button" class="btn" id="increment-partial">+</button>
                             </div>
-                            <div class="form-text">Maximum: <span id="max-items"></span> items</div>
+                            <div class="form-text"><%= Co.partialMaxLabel || 'Maximum:' %> <span id="max-items"></span> <%= Co.partialItemsUnit || 'items' %></div>
                           </div>
                           <div class="col-md-6">
-                            <label for="remaining-count" class="form-label">Items Remaining with Customer</label>
+                            <label for="remaining-count" class="form-label"><%= Co.remainingLabel || 'Items Remaining with Customer' %></label>
                             <div class="form-control text-center" id="remaining-count" style="background-color: #f8f9fa;">0</div>
                           </div>
                         </div>
@@ -829,11 +1388,11 @@
                   <!-- Standard Return Fields (hidden for partial returns) -->
                   <div id="standard-return-fields">
                     <div class="mb-4">
-                      <label for="return-description" class="form-label">Product Description</label>
-                      <textarea class="form-control" name="productDescription" id="return-description" placeholder="Describe the products being returned" rows="3"></textarea>
+                      <label for="return-description" class="form-label"><%= Co.returnDescLabel || 'Product Description' %></label>
+                      <textarea class="form-control" name="productDescription" id="return-description" placeholder="<%= Co.returnDescPlaceholder || 'Describe the products being returned' %>" rows="3"></textarea>
                     </div>
                     <div class="mb-4 col-md-4" id="standard-return-number-of-items">
-                      <label for="return-count" class="form-label">Number of Items</label>
+                      <label for="return-count" class="form-label"><%= Co.itemsCount || 'Number of Items' %></label>
                       <div class="input-group">
                         <button type="button" class="btn" id="decrement-return">-</button>
                         <input type="number" name="numberOfItems" class="form-control text-center" id="return-count" value="1" min="1">
@@ -841,75 +1400,119 @@
                       </div>
                     </div>
                     <div class="mb-4">
-                      <label for="return-reason" class="form-label">Return Reason *</label>
+                      <label for="return-reason" class="form-label"><%= Co.returnReasonLabel || 'Return Reason' %> *</label>
                       <select class="form-select" name="returnReason" id="return-reason" required>
-                        <option value="">Select a reason</option>
-                        <option value="Customer requested return">Customer requested return</option>
-                        <option value="Damaged product">Damaged product</option>
-                        <option value="Wrong product">Wrong product</option>
-                        <option value="Quality issues">Quality issues</option>
-                        <option value="Size/Color mismatch">Size/Color mismatch</option>
-                        <option value="Other">Other</option>
+                        <option value=""><%= Co.returnReasonPlaceholder || 'Select a reason' %></option>
+                        <option value="Customer requested return"><%= Co.returnReasonCustomer || 'Customer requested return' %></option>
+                        <option value="Damaged product"><%= Co.returnReasonDamaged || 'Damaged product' %></option>
+                        <option value="Wrong product"><%= Co.returnReasonWrong || 'Wrong product' %></option>
+                        <option value="Quality issues"><%= Co.returnReasonQuality || 'Quality issues' %></option>
+                        <option value="Size/Color mismatch"><%= Co.returnReasonSize || 'Size/Color mismatch' %></option>
+                        <option value="Other"><%= Co.returnReasonOther || 'Other' %></option>
                       </select>
                     </div>
                     <div class="mb-4">
-                      <label for="return-notes" class="form-label">Return Notes</label>
-                      <textarea class="form-control" name="returnNotes" id="return-notes" placeholder="Provide any additional details about the return..." rows="3"></textarea>
+                      <label for="return-notes" class="form-label"><%= Co.returnNotesLabel || 'Return Notes' %></label>
+                      <textarea class="form-control" name="returnNotes" id="return-notes" placeholder="<%= Co.returnNotesPlaceholder || 'Provide any additional details about the return...' %>" rows="3"></textarea>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Cash Collection Section is hidden by request -->
-              <% /*
-              <div id="cash-collection-section" class="card mb-4 hover-effect" style="display: none;">
-                <div class="card-header">
-                  <h6 class="mb-0">Cash Collection Details</h6>
-                </div>
-                <div class="card-body">
-                  <div class="amount-input-section mb-3">
-                    <div class="info-badge info">
-                      <i class="ri-information-line"></i>
-                      This is the actual full amount that will be collected from the customer
-                    </div>
-                    <label for="cash-collection-input" class="form-label">Amount to Collect</label>
-                    <div class="input-group">
-                      <span class="input-group-text">EGP</span>
-                      <input type="number" name="amountCashCollection" class="form-control" id="cash-collection-input" placeholder="Enter amount to collect">
-                    </div>
-                  </div>
-                  <!-- Enhanced Express Shipping Option -->
-                  <div class="mb-3">
-                    <label class="form-label mb-2">Shipping Speed</label>
-                    <div class="enhanced-option-card" id="express-card-collection">
-                      <input type="checkbox" name="isExpressShipping" id="express-shipping-collection-checkbox">
-                      <div class="text-center">
-                        <div class="option-icon"><i class="ri-flashlight-line"></i></div>
-                        <div class="option-title">Express Collection</div>
-                        <div class="option-description">Same day collection service</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              */ %>
 
               <!-- Navigation Buttons -->
-              <div class="d-flex align-items-start gap-3 mt-4">
-                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-info-tab">
-                  <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back to Customer Details
-                </button>
-                <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-payment-tab">
-                  <i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>Continue to Additional Options
+              <div class="d-flex align-items-start gap-3 mt-4 flex-wrap">
+                <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-bill-info-tab">
+                  <i class="ri-user-line label-icon align-middle fs-16 ms-2"></i><%= Co.continueToCustomer || 'Continue to Customer Details' %>
                 </button>
               </div>
             </div>
 
-            <!-- Extra Details Tab -->
+            <!-- Customer Info Tab -->
+            <div class="tab-pane fade" id="pills-bill-info" role="tabpanel" aria-labelledby="pills-bill-info-tab">
+              <div class="mb-4">
+                <h5 class="section-title"><%= Co.customerInfoTitle || 'Customer Information' %></h5>
+                <p class="section-subtitle"><%= Co.customerInfoSubtitle || "Enter the customer's contact details" %></p>
+              </div>
+
+              <!-- Customer Info Form -->
+              <div>
+                <div class="row g-4">
+                  <div class="col-sm-6">
+                    <div class="mb-3">
+                      <label for="billinginfo-firstName" class="form-label"><%= Co.fullName || 'Full Name' %></label>
+                      <input type="text" class="form-control" name="fullName" id="billinginfo-firstName" placeholder="<%= Co.fullName || 'Full Name' %>">
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="mb-3">
+                      <label for="billinginfo-phoneNumber" class="form-label"><%= Co.phone || 'Phone Number' %></label>
+                      <input type="tel" class="form-control" name="phoneNumber" id="billinginfo-phoneNumber" placeholder="<%= Co.phone || 'Phone Number' %>">
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-4">
+                  <div class="col-sm-6">
+                    <div class="mb-3">
+                      <label for="billinginfo-otherPhoneNumber" class="form-label"><%= Co.altPhone || 'Other Phone Number (Optional)' %></label>
+                      <input type="tel" class="form-control" name="otherPhoneNumber" id="billinginfo-otherPhoneNumber" placeholder="<%= Co.altPhone || 'Alternative phone' %>">
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-md-12">
+                    <h5 class="section-title mb-3"><%= Co.locationDetailsLabel || 'Location Details' %></h5>
+                  </div>
+
+                  <div class="mb-3 col-md-12">
+                    <label for="governorate-area" class="form-label"><%= Co.governorateAreaLabel || 'Governorate and Area' %></label>
+                    <button type="button" class="btn btn-outline-secondary w-100 text-start" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
+                      <span id="selectedAreaDisplay"><%= Co.selectAreaPlaceholder || 'Select Area' %></span>
+                      <i class="ri-arrow-down-s-line"></i>
+                    </button>
+                    <input type="hidden" name="government" id="government-value">
+                    <input type="hidden" name="zone" id="zone-value">
+                  </div>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-12">
+                    <label for="address" class="form-label"><%= Co.address || 'Address' %></label>
+                    <textarea class="form-control" id="address" name="address" rows="3" placeholder="<%= Co.address || 'Enter full address' %>"></textarea>
+                  </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                  <div class="col-md-12">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="deliverToWorkAddress" id="deliverToWorkAddress-checkbox">
+                      <label class="form-check-label" for="deliverToWorkAddress-checkbox">
+                        <i class="ri-building-line me-2"></i><%= Co.deliverToWork || 'Deliver to work address' %>
+                      </label>
+                    </div>
+                    <div class="alert alert-info mt-2" style="display: none;" id="work-address-alert">
+                      <i class="ri-time-line me-2"></i>
+                      <strong><%= Co.workAddressNote || 'Note:' %></strong> <%= Co.workAddressText || 'Work address deliveries will be scheduled during business working hours (8:00 AM - 3:00 PM)' %>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-start gap-3 mt-4 flex-wrap">
+                  <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-address-tab">
+                    <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i><%= Co.backToShipping || 'Back to Shipping' %>
+                  </button>
+                  <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-payment-tab">
+                    <i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i><%= Co.continueToAdditional || 'Continue to Additional Options' %>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+                        <!-- Extra Details Tab -->
             <div class="tab-pane fade" id="pills-payment" role="tabpanel" aria-labelledby="pills-payment-tab">
               <div class="mb-4">
-                <h5 class="section-title">Additional Options</h5>
-                <p class="section-subtitle">Specify any special requirements for this order</p>
+                <h5 class="section-title"><%= Co.additionalTitle || 'Additional Options' %></h5>
+                <p class="section-subtitle"><%= Co.additionalSubtitle || 'Specify any special requirements for this order' %></p>
               </div>
 
               <div class="card mb-4 hover-effect">
@@ -920,90 +1523,106 @@
                         <input class="form-check-input" name="previewPermission" type="checkbox" id="order-preview-checkbox">
                         <label class="form-check-label" for="order-preview-checkbox">
                           <span class="fs-16 me-2"><i class="ri-eye-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap">Customer can open package </span>
+                          <span class="fs-14 text-wrap"><%= Co.canOpenPackage || 'Customer can open package' %></span>
                         </label>
                       </div>
                     </div>
                     <div class="col-lg-4 col-md-6">
                       <div class="mb-3">
-                        <label for="referral-number" class="form-label">Referral Number (Optional)</label>
-                        <input type="text" name="referralNumber" class="form-control" id="referral-number" placeholder="Enter referral code if available">
+                        <label for="referral-number" class="form-label"><%= Co.referralLabel || 'Referral Number (Optional)' %></label>
+                        <input type="text" name="referralNumber" class="form-control" id="referral-number" placeholder="<%= Co.referralPlaceholder || 'Enter referral code if available' %>">
                       </div>
                     </div>
                   </div>
 
                   <div class="mb-4">
-                    <label for="delivery-notes" class="form-label">Special Instructions</label>
-                    <textarea class="form-control" name="Notes" id="delivery-notes" placeholder="Add any special delivery instructions or notes" rows="3"></textarea>
+                    <label for="delivery-notes" class="form-label"><%= Co.specialInstructions || 'Special Instructions' %></label>
+                    <textarea class="form-control" name="Notes" id="delivery-notes" placeholder="<%= Co.specialInstructionsPlaceholder || 'Add any special delivery instructions or notes' %>" rows="3"></textarea>
                   </div>
                 </div>
               </div>
 
               <!-- Fees Calculation Section -->
-              <div class="card mb-4 hover-effect">
-                <div class="card-header">
-                  <h6 class="mb-0">Delivery Fee Summary</h6>
+              <div class="card mb-4 fee-summary-card">
+                <div class="card-header fee-summary-header">
+                  <div class="d-flex align-items-start gap-3">
+                    <div class="fee-header-icon-wrap" aria-hidden="true">
+                      <i class="ri-money-dollar-circle-line fs-4"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-0"><%= Co.feeSummaryTitle || 'Delivery Fee Summary' %></h6>
+                      <small class="text-muted d-block mt-1"><%= Co.feeSummarySubtitle || 'Updates when you select area and shipping options' %></small>
+                    </div>
+                  </div>
                 </div>
-                <div class="card-body">
-                  <div class="fee-display" id="feeDisplayContainer">
-                    <span class="fee-amount" id="totalFee">0</span>
-                    <span class="fee-currency"> EGP</span>
-                    <p class="fee-label mt-2">Total Delivery Fee</p>
+                <div class="card-body p-4">
+                  <div class="fee-display text-center" id="feeDisplayContainer">
+                    <div class="mb-3">
+                      <span class="fee-amount" id="totalFee">0</span>
+                      <span class="fee-currency ms-1">EGP</span>
+                    </div>
+                    <p class="fee-total-caption mb-0 text-uppercase"><%= Co.feeTotalCaption || 'Total delivery fee' %></p>
                     <div class="loading-spinner">
                       <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                       </div>
                     </div>
                   </div>
-                  
-                  <!-- Fee Breakdown -->
+
                   <div class="fee-breakdown fee-breakdown-hidden" id="feeBreakdown">
-                    <div class="fee-breakdown-header">Fee Breakdown:</div>
+                    <div class="fee-breakdown-header"><%= Co.feeBreakdownHeader || 'Fee breakdown' %></div>
                     <div class="fee-row">
-                      <span class="fee-row-label">Base Delivery Fee</span>
+                      <span class="fee-row-label"><%= Co.feeBase || 'Base delivery fee' %></span>
                       <span class="fee-row-amount" id="baseFee">0 EGP</span>
                     </div>
                     <div class="fee-row" id="expressRow" style="display: none;">
                       <span class="fee-row-label">
                         <i class="ri-flashlight-line text-primary me-1"></i>
-                        Express Shipping (×2)
+                        <%= Co.feeExpress || 'Express shipping (×2)' %>
                       </span>
                       <span class="fee-row-amount text-primary" id="expressFee">+0 EGP</span>
                     </div>
                     <div class="fee-row fee-row-total">
-                      <span>Total Fee</span>
+                      <span><%= Co.feeTotal || 'Total' %></span>
                       <span id="breakdownTotal">0 EGP</span>
                     </div>
                   </div>
-                  
-                  <div class="text-center mt-3">
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="toggleBreakdown">
-                      <i class="ri-list-check me-1"></i>
-                      <span id="breakdownToggleText">Show Breakdown</span>
-                    </button>
+
+                  <div class="form-check fee-breakdown-toggle">
+                    <input class="form-check-input" type="checkbox" id="feeBreakdownToggle" autocomplete="off">
+                    <label class="form-check-label" id="feeBreakdownToggleLabel" for="feeBreakdownToggle"><%= Co.showBreakdown || 'Show fee breakdown' %></label>
                   </div>
                 </div>
               </div>
 
-              <div class="d-flex align-items-start gap-3 mt-4">
-                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-address-tab">
-                  <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back to Shipping
+              <div class="d-flex align-items-start gap-3 mt-4 flex-wrap">
+                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-info-tab">
+                  <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i><%= Co.backToCustomer || 'Back to Customer Details' %>
                 </button>
                 <button type="submit" id="completeOrderBTN" class="btn btn-primary btn-label right ms-auto">
-                  <i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i>Complete Order
+                  <i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i><%= Co.completeOrder || 'Complete Order' %>
                 </button>
               </div>
             </div>
 
             <!-- Finish Tab -->
             <div class="tab-pane fade" id="pills-finish" role="tabpanel" aria-labelledby="pills-finish-tab">
-              <div class="text-center py-5">
+              <div class="text-center py-5 px-2">
                 <div class="mb-4">
                   <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#F39720,secondary:#F39720" style="width:120px;height:120px"></lord-icon>
                 </div>
-                <h5 class="completion-title">Thank you! Your Order is Complete</h5>
-                <p class="completion-message">A confirmation email with order details has been sent to the customer.</p>
-                <h3 class="order-id">Order ID: <a href="apps-ecommerce-order-details" class="text-decoration-underline" id="orderNmber"></a></h3>
+                <h5 class="completion-title"><%= Co.finishTitle || 'Thank you! Your Order is Complete' %></h5>
+                <p class="completion-message mb-4"><%= Co.finishMessage || 'A confirmation email with order details has been sent to the customer.' %></p>
+                <h3 class="order-id mb-4"><%= Co.orderId || 'Order ID:' %> <a href="#" class="text-decoration-underline" id="orderNmber"></a></h3>
+                <p class="text-muted small mb-3"><%= Co.finishNext || 'What would you like to do next?' %></p>
+                <div class="d-flex flex-wrap justify-content-center gap-3 mt-2">
+                  <a href="/business/pickups" class="btn btn-outline-primary btn-lg px-4" id="finishGoPickupsBtn">
+                    <i class="ri-truck-line me-2 align-middle"></i><%= Co.goToPickups || 'Go to pickups' %>
+                  </a>
+                  <a href="/business/create-order" class="btn btn-primary btn-lg px-4" id="finishCreateAnotherBtn">
+                    <i class="ri-add-circle-line me-2 align-middle"></i><%= Co.createAnother || 'Create another order' %>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -1218,13 +1837,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (returnReasonSelect) returnReasonSelect.setAttribute('required', 'required');
   }
 
-  function activateCashCollection() {
-    if (cashCollectionSection) {
-      cashCollectionSection.style.display = 'block';
-      setSectionDisabled(cashCollectionSection, false);
-    }
-  }
-
   orderTypeRadios.forEach(radio => {
     radio.addEventListener('change', function() {
       hideAllSections();
@@ -1235,8 +1847,6 @@ document.addEventListener('DOMContentLoaded', function() {
         activateExchange();
       } else if (this.value === 'Return') {
         activateReturn();
-      } else if (this.value === 'Cash Collection') {
-        activateCashCollection();
       }
     });
   });
@@ -1248,7 +1858,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (initiallyChecked.value === 'Deliver') activateDeliver();
     else if (initiallyChecked.value === 'Exchange') activateExchange();
     else if (initiallyChecked.value === 'Return') activateReturn();
-    else if (initiallyChecked.value === 'Cash Collection') activateCashCollection();
   }
 
   // Handle return order number validation
@@ -1310,13 +1919,15 @@ document.addEventListener('DOMContentLoaded', function() {
             partialReturnSection.style.display = 'none';
           }
         } else {
-          originalOrderDetails.innerHTML = '<div class="text-danger">Order not found or not eligible for return.</div>';
+          const __Co = (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.createOrder) || {};
+          originalOrderDetails.innerHTML = '<div class="text-danger">' + (__Co.orderNotFound || 'Order not found or not eligible for return.') + '</div>';
           originalOrderPreview.className = 'alert alert-warning mt-2';
           originalOrderPreview.style.display = 'block';
         }
       } catch (error) {
         console.error('Error validating original order:', error);
-        originalOrderDetails.innerHTML = '<div class="text-danger">Error validating order. Please try again.</div>';
+        const __Co = (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.createOrder) || {};
+        originalOrderDetails.innerHTML = '<div class="text-danger">' + (__Co.orderValidateError || 'Error validating order. Please try again.') + '</div>';
         originalOrderPreview.className = 'alert alert-warning mt-2';
         originalOrderPreview.style.display = 'block';
       }
@@ -1421,20 +2032,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Fee Breakdown Toggle and Update Functionality
   function setupFeeBreakdown() {
-    const toggleBtn = document.getElementById('toggleBreakdown');
+    const toggle = document.getElementById('feeBreakdownToggle');
     const breakdown = document.getElementById('feeBreakdown');
-    const toggleText = document.getElementById('breakdownToggleText');
-    
-    if (toggleBtn && breakdown) {
-      toggleBtn.addEventListener('click', function() {
-        if (breakdown.classList.contains('fee-breakdown-hidden')) {
-          breakdown.classList.remove('fee-breakdown-hidden');
-          toggleText.textContent = 'Hide Breakdown';
-        } else {
-          breakdown.classList.add('fee-breakdown-hidden');
-          toggleText.textContent = 'Show Breakdown';
+    const label = document.getElementById('feeBreakdownToggleLabel');
+    const __Co = (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.createOrder) || {};
+
+    if (toggle && breakdown) {
+      function syncBreakdownVisibility() {
+        const show = toggle.checked;
+        breakdown.classList.toggle('fee-breakdown-hidden', !show);
+        if (label) {
+          label.textContent = show ? (__Co.hideBreakdown || 'Hide fee breakdown') : (__Co.showBreakdown || 'Show fee breakdown');
         }
-      });
+      }
+      toggle.addEventListener('change', syncBreakdownVisibility);
+      syncBreakdownVisibility();
     }
   }
   
@@ -1465,71 +2077,90 @@ document.addEventListener('DOMContentLoaded', function() {
     breakdownTotalEl.textContent = total.toFixed(0) + ' EGP';
   }
 
-  // Enhanced card interaction for new professional boxes
-  function setupEnhancedCards() {
-    // Express Shipping cards (only for Deliver orders)
-    const expressCards = ['express-card'];
-    expressCards.forEach(cardId => {
-      const card = document.getElementById(cardId);
-      if (card) {
-        const checkbox = card.querySelector('input[type="checkbox"]');
-        card.addEventListener('click', function(e) {
-          // Only toggle if clicking on the card itself, not on nested elements
-          if (e.target === card || !e.target.closest('input, select, textarea, button')) {
-            checkbox.checked = !checkbox.checked;
-            updateCardActiveState(card, checkbox.checked);
-            // Trigger change event for other listeners
-            checkbox.dispatchEvent(new Event('change'));
-          }
-        });
-        // Initialize active state
-        updateCardActiveState(card, checkbox.checked);
-        
-        // Show/hide pickup address selection for express shipping
-        checkbox.addEventListener('change', function() {
-          const pickupAddressSelection = document.getElementById('pickupAddressSelection');
-          if (pickupAddressSelection) {
-            pickupAddressSelection.style.display = this.checked ? 'block' : 'none';
-            if (this.checked && pickupAddressSelection.querySelector('select').value === '') {
-              // Select default address if available
-              const defaultOption = pickupAddressSelection.querySelector('select option[selected]');
-              if (defaultOption) {
-                pickupAddressSelection.querySelector('select').value = defaultOption.value;
-              }
-            }
-          }
-        });
+  /** Express same-day cutoff: from 9:00 PM Cairo time, service is next-day (shown prominently). */
+  function getHourInTimeZone(date, timeZone) {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone,
+      hour: 'numeric',
+      hour12: false
+    }).formatToParts(date);
+    const h = parts.find((p) => p.type === 'hour');
+    return h ? parseInt(h.value, 10) : 0;
+  }
+
+  function updateExpressShippingTimeNotice() {
+    const notice = document.getElementById('express-after-nine-notice');
+    const subtitle = document.getElementById('express-shipping-subtitle');
+    if (!notice || !subtitle) return;
+
+    const hourCairo = getHourInTimeZone(new Date(), 'Africa/Cairo');
+    const afterNine = hourCairo >= 21;
+
+    notice.classList.toggle('d-none', !afterNine);
+    subtitle.textContent = afterNine
+      ? (subtitle.dataset.after9 || 'Next day delivery — orders after 9:00 PM (Cairo) are not same-day')
+      : (subtitle.dataset.default || 'Same day delivery service');
+  }
+
+  /* Wizard progress 0–1 on .co-wizard (--co-w-fill); RTL handled in CSS */
+  function setupCoWizardProgress() {
+    const wizard = document.querySelector('.co-wizard');
+    const form = document.getElementById('createOrderForm');
+    if (!wizard || !form) return;
+    const tabs = Array.from(wizard.querySelectorAll('.co-wizard__tab[data-bs-toggle="pill"]'));
+    function syncProgress() {
+      const idx = tabs.findIndex(function (t) { return t.classList.contains('active'); });
+      const i = idx >= 0 ? idx : 0;
+      const last = tabs.length - 1;
+      var fill = last <= 0 ? 0 : i / last;
+      wizard.style.setProperty('--co-w-fill', String(fill));
+    }
+    tabs.forEach(function (t) {
+      t.addEventListener('shown.bs.tab', syncProgress);
+    });
+    form.addEventListener('click', function (e) {
+      if (e.target.closest('.nexttab, .previestab')) {
+        setTimeout(syncProgress, 0);
       }
     });
+    syncProgress();
+  }
 
-    // Payment option cards
-    const codCard = document.getElementById('cod-card');
-    if (codCard) {
-      const checkbox = codCard.querySelector('input[type="checkbox"]');
-      codCard.addEventListener('click', function(e) {
-        if (e.target === codCard || !e.target.closest('input, select, textarea, button')) {
-          checkbox.checked = !checkbox.checked;
-          updateCardActiveState(codCard, checkbox.checked);
-          checkbox.dispatchEvent(new Event('change'));
+  /* ── Option Cards: sync is-checked class + drive side-effects ── */
+  function syncOptionCard(card) {
+    const input = card.querySelector('input[type="checkbox"]');
+    if (!input) return;
+    card.classList.toggle('is-checked', input.checked);
+  }
+
+  function setupOptionCards() {
+    document.querySelectorAll('.option-card').forEach((card) => {
+      const input = card.querySelector('input[type="checkbox"]');
+      if (!input) return;
+      input.addEventListener('change', () => syncOptionCard(card));
+      syncOptionCard(card); // initial state
+    });
+  }
+
+  function setupShippingOptionRows() {
+    // Express card side-effect: show/hide pickup address
+    const expressCb = document.getElementById('express-shipping-checkbox');
+    if (expressCb) {
+      expressCb.addEventListener('change', function() {
+        const pickupAddressSelection = document.getElementById('pickupAddressSelection');
+        if (pickupAddressSelection) {
+          pickupAddressSelection.style.display = this.checked ? 'block' : 'none';
+          if (this.checked) {
+            const sel = pickupAddressSelection.querySelector('select');
+            if (sel && !sel.value) {
+              const defaultOption = sel.querySelector('option[selected]');
+              if (defaultOption) sel.value = defaultOption.value;
+            }
+          }
         }
       });
-      updateCardActiveState(codCard, checkbox.checked);
     }
 
-    const cdCard = document.getElementById('cd-card');
-    if (cdCard) {
-      const checkbox = cdCard.querySelector('input[type="checkbox"]');
-      cdCard.addEventListener('click', function(e) {
-        if (e.target === cdCard || !e.target.closest('input, select, textarea, button')) {
-          checkbox.checked = !checkbox.checked;
-          updateCardActiveState(cdCard, checkbox.checked);
-          checkbox.dispatchEvent(new Event('change'));
-        }
-      });
-      updateCardActiveState(cdCard, checkbox.checked);
-    }
-
-    // Work address alert toggle
     const workAddressCheckbox = document.getElementById('deliverToWorkAddress-checkbox');
     const workAddressAlert = document.getElementById('work-address-alert');
     if (workAddressCheckbox && workAddressAlert) {
@@ -1539,17 +2170,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  function updateCardActiveState(card, isActive) {
-    if (isActive) {
-      card.classList.add('active');
-    } else {
-      card.classList.remove('active');
-    }
-  }
+  setupCoWizardProgress();
+  setupOptionCards();
+  setupShippingOptionRows();
+  updateExpressShippingTimeNotice();
+  setInterval(updateExpressShippingTimeNotice, 60 * 1000);
 
-  // Initialize enhanced cards
-  setupEnhancedCards();
-  
   // Initialize fee breakdown
   setupFeeBreakdown();
   
@@ -1558,6 +2184,32 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+  window.__NS_BUSINESS_I18N = window.__NS_BUSINESS_I18N || {};
+  window.__NS_BUSINESS_I18N.createOrder = {
+    processing: "<%= Co.jsProcessing || 'Processing…' %>",
+    completeOrder: "<%= Co.completeOrder || 'Complete Order' %>",
+    invalidValue: "<%= Co.jsInvalidValue || 'Invalid Value' %>",
+    itemsCannotBeZero: "<%= Co.jsItemsCannotBeZero || 'Number of items cannot be zero or negative.' %>",
+    missingInfo: "<%= Co.jsMissingInfo || 'Missing Information' %>",
+    missingCustomerInfo: "<%= Co.jsMissingCustomerInfo || 'Please fill out all required fields in the Customer Info tab.' %>",
+    missingOrderType: "<%= Co.jsMissingOrderType || 'Please select an order type.' %>",
+    missingDeliverInfo: "<%= Co.jsMissingDeliverInfo || 'Please fill out all required fields in the Deliver section with valid values.' %>",
+    missingExchangeInfo: "<%= Co.jsMissingExchangeInfo || 'Please fill out all required fields in the Exchange section with valid values.' %>",
+    missingReturnInfo: "<%= Co.jsMissingReturnInfo || 'Please fill out all required fields in the Return section with valid values.' %>",
+    sessionExpired: "<%= Co.jsSessionExpired || 'Session Expired' %>",
+    sessionExpiredText: "<%= Co.jsSessionExpiredText || 'Your session has expired. Please log in again.' %>",
+    errorTitle: "<%= Co.jsErrorTitle || 'Error' %>",
+    createError: "<%= Co.jsCreateError || 'An error occurred while creating the order.' %>",
+    createErrorNetwork: "<%= Co.jsCreateErrorNetwork || 'An error occurred while creating the order. Please try again.' %>",
+    showBreakdown: "<%= Co.showBreakdown || 'Show fee breakdown' %>",
+    hideBreakdown: "<%= Co.hideBreakdown || 'Hide fee breakdown' %>",
+    orderNotFound: "<%= Co.orderNotFound || 'Order not found or not eligible for return.' %>",
+    orderValidateError: "<%= Co.orderValidateError || 'Error validating order. Please try again.' %>",
+    orderFoundTitle: "<%= Co.orderFoundTitle || 'Original Order Found:' %>",
+    locale: "<%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US' %>"
+  };
+</script>
 <script src="/assets/rJS/business/create-order.js"></script>
 
 <!-- init js -->

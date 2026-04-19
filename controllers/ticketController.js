@@ -11,7 +11,6 @@ exports.createTicket = async (req, res) => {
     const {
       subject,
       ticketType,
-      priority,
       description,
       relatedOrderNumber,
       tags,
@@ -67,7 +66,7 @@ exports.createTicket = async (req, res) => {
       ticketNumber,
       subject,
       ticketType,
-      priority: priority || 'medium',
+      priority: 'medium',
       description,
       business: businessId,
       relatedOrder: relatedOrder ? relatedOrder._id : null,
@@ -126,7 +125,6 @@ exports.getTickets = async (req, res) => {
     const {
       status,
       ticketType,
-      priority,
       search,
       page = 1,
       limit = 20,
@@ -152,10 +150,6 @@ exports.getTickets = async (req, res) => {
 
     if (ticketType) {
       query.ticketType = ticketType;
-    }
-
-    if (priority) {
-      query.priority = priority;
     }
 
     // Search
@@ -251,8 +245,7 @@ exports.getTicketById = async (req, res) => {
 exports.updateTicket = async (req, res) => {
   try {
     const { id: ticketId } = req.params;
-    const { subject, priority, status, tags, assignedTo, internalNote } =
-      req.body;
+    const { subject, status, tags, assignedTo, internalNote } = req.body;
 
     const userType = req.userType;
     const userId = req.userId;
@@ -283,13 +276,6 @@ exports.updateTicket = async (req, res) => {
     // Update fields
     if (subject && userType !== 'business') {
       ticket.subject = subject;
-    }
-
-    if (priority && userType !== 'business') {
-      if (ticket.priority !== priority) {
-        changes.push(`Priority changed from ${ticket.priority} to ${priority}`);
-      }
-      ticket.priority = priority;
     }
 
     if (status && userType !== 'business') {
@@ -349,22 +335,23 @@ exports.updateTicket = async (req, res) => {
     // Create system messages for changes
     if (changes.length > 0) {
       for (const change of changes) {
+        const lower = change.toLowerCase();
+        let systemMessageType = 'status_changed';
+        if (lower.includes('assign')) {
+          systemMessageType = 'ticket_assigned';
+        } else if (lower.includes('to resolved')) {
+          systemMessageType = 'ticket_resolved';
+        } else if (lower.includes('to closed')) {
+          systemMessageType = 'ticket_closed';
+        }
+
         const systemMessage = new TicketMessage({
           ticket: ticket._id,
           senderType: 'system',
           senderName: 'System',
           messageType: 'system',
           content: change,
-          systemMessageType:
-            status === 'resolved'
-              ? 'ticket_resolved'
-              : status === 'closed'
-              ? 'ticket_closed'
-              : assignedTo
-              ? 'ticket_assigned'
-              : priority
-              ? 'priority_changed'
-              : 'status_changed',
+          systemMessageType,
         });
         await systemMessage.save();
       }

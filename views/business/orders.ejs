@@ -5,251 +5,163 @@
 <link href="/assets/css/status-styles.css" rel="stylesheet" type="text/css" />
 <link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 <%- contentFor('body') %>
+<% var Op = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.orders) ? translation.business.pages.orders : {}; %>
 
 <style>
-  /* Professional Dropdown Styles */
+  /* ─── Orders Table Dropdown ───────────────────────────────────────── */
   .orders-table-dropdown {
     position: relative;
     display: inline-block;
     z-index: 1;
   }
+  .orders-table-dropdown.show { z-index: 1200; }
 
-  .orders-table-dropdown.show {
-    z-index: 1060 !important;
-    position: relative;
-  }
-
+  /* Menu — hidden by default; JS applies position:fixed + coords when open */
   .orders-table-dropdown .dropdown-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    left: auto;
-    z-index: 1060 !important;
-    min-width: 220px;
-    padding: 0.5rem 0;
-    margin: 0.25rem 0 0 0;
-    font-size: 0.875rem;
-    color: #212529;
-    text-align: left;
-    list-style: none;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 0.5rem;
-    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
     display: none;
+    position: fixed;   /* overridden by JS; fixed avoids scroll-container clipping */
+    z-index: 9999;
+    min-width: 240px;
+    padding: 0.4rem 0;
+    margin: 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 0.6rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,.13), 0 2px 8px rgba(0,0,0,.07);
+    animation: ddFadeIn .15s ease;
+    pointer-events: auto;
   }
 
-  .orders-table-dropdown.show .dropdown-menu {
-    display: block !important;
-    z-index: 1060 !important;
-    position: absolute !important;
+  @keyframes ddFadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
+  .orders-table-dropdown.show .dropdown-menu { display: block; }
+
+  /* ── Items ── */
   .orders-table-dropdown .dropdown-item {
     display: flex;
     align-items: center;
+    gap: 0.65rem;
     width: 100%;
-    padding: 0.65rem 1.25rem;
-    clear: both;
-    font-weight: 400;
+    padding: 0.65rem 1.2rem;
     font-size: 0.875rem;
-    color: #495057;
-    text-align: inherit;
+    font-weight: 400;
+    line-height: 1.3;
+    color: #3d4a5c;
     text-decoration: none;
     white-space: nowrap;
-    background-color: transparent;
+    background: transparent;
     border: 0;
-    transition: all 0.15s ease-in-out;
     cursor: pointer;
+    user-select: none;
+    transition: background .13s ease, color .13s ease;
   }
-
   .orders-table-dropdown .dropdown-item:hover,
   .orders-table-dropdown .dropdown-item:focus {
-    color: #212529;
-    background-color: #f8f9fa;
+    background: #f4f6fb;
+    color: #1a2332;
+    outline: none;
   }
-
   .orders-table-dropdown .dropdown-item i {
-    width: 20px;
-    margin-right: 0.75rem;
+    flex-shrink: 0;
+    width: 1.1rem;
+    font-size: 1rem;
     text-align: center;
-    font-size: 0.95rem;
+  }
+  /* RTL: reverse icon/label order so icon is on the right */
+  html[dir='rtl'] .orders-table-dropdown .dropdown-item {
+    flex-direction: row-reverse;
+    text-align: right;
   }
 
+  /* Subtle divider between items */
+  .orders-table-dropdown .dropdown-menu li + li {
+    border-top: 1px solid rgba(0,0,0,.045);
+  }
+
+  /* ── Toggle button ── */
   .orders-table-dropdown .dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: transparent;
     border: none;
-    padding: 0.375rem 0.75rem;
-    border-radius: 0.375rem;
-    transition: background-color 0.15s ease-in-out;
+    padding: 0.3rem 0.55rem;
+    border-radius: 0.4rem;
     cursor: pointer;
-    color: #6c757d;
-    font-size: 1.2rem;
-    position: relative;
-    z-index: 1;
+    color: #8a94a6;
+    font-size: 1.15rem;
+    transition: background .15s, color .15s;
+  }
+  .orders-table-dropdown .dropdown-toggle:hover { background: rgba(0,0,0,.06); color: #3d4a5c; }
+  .orders-table-dropdown .dropdown-toggle:focus-visible { outline: 2px solid #0d6efd; outline-offset: 2px; }
+
+  /* ─── Layout helpers ──────────────────────────────────────────────── */
+  .main-content .page-content > .container-fluid { min-width: 0; max-width: 100%; }
+  .orders-page-col { min-width: 0; max-width: 100%; }
+
+  .main-content .page-content > .container-fluid > .row.orders-page-row {
+    min-width: 0; max-width: none;
+    --orders-bleed-x: var(--app-inline-pad, 0.25rem);
+    margin-left:  calc(-1 * var(--orders-bleed-x) - 0.5 * var(--bs-gutter-x, 0.5rem));
+    margin-right: calc(-1 * var(--orders-bleed-x) - 0.5 * var(--bs-gutter-x, 0.5rem));
+    width: calc(100% + 2 * var(--orders-bleed-x) + var(--bs-gutter-x, 0.5rem));
   }
 
-  .orders-table-dropdown .dropdown-toggle:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+  #orderList { min-width: 0; max-width: 100%; }
+
+  #orderList .orders-table-wrap {
+    width: 100%; max-width: 100%; min-width: 0;
+    overflow-x: auto; overflow-y: visible;
+    position: relative; z-index: 0;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .orders-table-dropdown .dropdown-toggle:focus {
-    outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  #orderList .orders-table-wrap #orderTable {
+    width: 100%; max-width: 100%;
+    margin-bottom: 0; table-layout: auto;
   }
 
-  /* Table container adjustments */
-  .table-responsive {
-    overflow-x: auto;
-    overflow-y: visible;
-    position: relative;
+  #orderList .orders-table-wrap #orderTable > :is(thead,tbody) > tr > :is(th,td) {
+    padding-left: 1.25rem !important; padding-right: 1.25rem !important;
   }
+  #orderList .orders-table-wrap #orderTable > :is(thead,tbody) > tr > :is(th,td):first-child { padding-left: 1.5rem !important; }
+  #orderList .orders-table-wrap #orderTable > :is(thead,tbody) > tr > :is(th,td):last-child  { padding-right: 1.5rem !important; }
 
-  /* Ensure dropdowns are visible */
-  .card-body,
-  .card {
-    overflow: visible !important;
-    position: relative;
-  }
-  
-  /* Ensure card-body doesn't clip dropdowns */
-  .card-body.pt-0 {
-    overflow: visible !important;
-  }
-  
-  /* Ensure the div containing nav-tabs doesn't interfere */
-  .card-body > div {
-    position: relative;
-    overflow: visible;
-  }
+  #orderList.card,
+  #orderList .card-body,
+  #orderList .card-body.pt-0 { overflow: visible; }
 
-  /* Ensure table doesn't clip dropdowns */
-  .table {
-    position: relative;
-    z-index: 1;
-  }
+  #orderList .orders-tabs-inner:first-of-type { position: relative; z-index: 1090; isolation: isolate; }
 
-  /* Ensure dropdown appears above table and other elements */
-  .orders-table-dropdown.show .dropdown-menu {
-    display: block !important;
-    z-index: 1060 !important;
-    position: absolute !important;
-  }
-  
-  /* Ensure nav-tabs don't create stacking context issues */
-  .nav-tabs {
-    position: relative;
-    z-index: 1;
-  }
-  
-  .nav-tabs-custom {
-    z-index: 1;
-  }
-  
-  /* Ensure card-header doesn't interfere with dropdowns */
-  .card-header {
-    position: relative;
-    z-index: 1;
-  }
-  
-  /* Ensure the status category dropdown doesn't interfere */
-  #statusCategoryDropdown,
-  .dropdown-menu[aria-labelledby="statusCategoryDropdown"] {
-    z-index: 1000;
-  }
-  
-  /* Force dropdown menu to appear above all other elements */
-  .orders-table-dropdown.show .dropdown-menu {
-    z-index: 1060 !important;
-    position: absolute !important;
-    pointer-events: auto !important; /* Ensure clicks work */
-  }
-  
-  /* Ensure dropdown items are clickable */
-  .orders-table-dropdown .dropdown-item {
-    pointer-events: auto !important;
-    cursor: pointer !important;
-    user-select: none; /* Prevent text selection on click */
-  }
-  
-  /* Ensure dropdown toggle is clickable */
-  .orders-table-dropdown .dropdown-toggle {
-    pointer-events: auto !important;
-    cursor: pointer !important;
-  }
-  
-  /* Ensure dropdown menu list items are clickable */
-  .orders-table-dropdown .dropdown-menu li {
-    pointer-events: auto !important;
-  }
-  
-  /* Ensure nav-tabs container doesn't block dropdowns */
-  .nav-tabs-custom.nav-success {
-    position: relative;
-    z-index: 1;
-  }
-  
-  /* Override any potential z-index from Bootstrap or other libraries */
-  #orderTable .orders-table-dropdown.show .dropdown-menu {
-    z-index: 1060 !important;
-  }
-  
-  /* Ensure table cell with dropdown doesn't block interactions */
-  #orderTable tbody td:last-child {
-    position: relative;
-  }
-  
-  #orderTable tbody td:last-child .orders-table-dropdown.show {
-    z-index: 1060 !important;
-  }
-  
-  /* Ensure table rows with dropdowns are in proper stacking context */
-  #orderTable tbody tr {
-    position: relative;
-  }
-  
-  /* Ensure table cells with dropdowns have proper positioning */
-  #orderTable tbody td:last-child {
-    position: relative;
-    z-index: auto;
-  }
-  
-  #orderTable tbody td:last-child .orders-table-dropdown.show {
-    z-index: 99999 !important;
-  }
-  
-  /* Make sure the table container itself doesn't create issues */
-  .table-responsive.table-card {
-    position: relative;
-    overflow: visible !important;
-  }
-  
-  /* Ensure table doesn't clip dropdowns */
-  #orderTable {
-    position: relative;
-  }
-  
-  #orderTable thead {
-    position: relative;
-    z-index: 1;
-  }
+  .nav-tabs, .nav-tabs-custom { overflow: visible !important; position: relative; z-index: 1; }
+  .card-header { overflow: visible !important; position: relative; z-index: 1; }
 
-  /* Special positioning for last row dropdowns */
-  .orders-table-dropdown.dropdown-up .dropdown-menu {
-    top: auto !important;
-    bottom: 100% !important;
-    margin-bottom: 5px;
-    z-index: 1060 !important;
+  #orderList .orders-tabs-inner {
+    padding-left:  var(--bs-card-cap-padding-x, 1.25rem);
+    padding-right: var(--bs-card-cap-padding-x, 1.25rem);
   }
+  #orderList ul.nav-tabs-custom .nav-link { padding-left: 1.125rem; padding-right: 1.125rem; }
 
-  /* Mobile responsive adjustments */
+  /* ── Status-category dropdown ── */
+  #orderList .status-category-dropdown-wrapper { position: relative; z-index: 2; }
+  #orderList .status-category-dropdown-wrapper.show,
+  #orderList .status-category-dropdown-wrapper:has(.dropdown-menu.show) { z-index: 1100; }
+  #orderList .status-category-menu {
+    z-index: 1110 !important; min-width: 12rem; padding: 0.4rem 0;
+    background: #fff !important;
+    border: 1px solid rgba(15,23,42,.08) !important;
+    box-shadow: 0 12px 40px rgba(15,23,42,.14) !important;
+  }
+  #orderList .status-category-menu .dropdown-item { padding: 0.45rem 1rem; }
+  html[dir='rtl'] #orderList .status-category-menu .dropdown-item { text-align: right; }
+
+  /* ── Mobile ── */
   @media (max-width: 768px) {
-    .orders-table-dropdown .dropdown-menu {
-      right: 0;
-      left: auto;
-      min-width: 180px;
-    }
+    .orders-table-dropdown .dropdown-menu { min-width: 200px; }
   }
 
   /* Smart Sticker Modal Professional Styles */
@@ -670,18 +582,19 @@
   }
 
 </style>
-<div class="row">
-  <div class="col-lg-12">
+<div class="row orders-page-row">
+  <div class="col-lg-12 orders-page-col">
     <div class="card" id="orderList">
       <div class="card-header border-0">
         <div class="row align-items-center gy-3">
           <div class="col-sm">
-            <h5 class="card-title mb-0">Orders</h5>
+            <h5 class="card-title mb-0"><%= Op.listHeading || 'Orders' %></h5>
           </div>
           <div class="col-sm-auto">
             <div class="d-flex gap-1 flex-wrap">
-              <button type="button" class="btn btn-success add-btn" onClick='window.location.href="/business/create-order"'><i class="ri-add-line align-bottom me-1"></i> Create Order</button>
-              <button type="button" class="btn btn-info" onclick="exportOrdersToExcel()"><i class="ri-file-download-line align-bottom me-1"></i> Export</button>
+              <button type="button" class="btn btn-success add-btn" onClick='window.location.href="/business/create-order"'><i class="ri-add-line align-bottom me-1"></i> <%= Op.createOrderBtn || 'Create Order' %></button>
+              <button type="button" class="btn btn-soft-info" data-bs-toggle="modal" data-bs-target="#bulkImportModal"><i class="ri-upload-2-line align-bottom me-1"></i> <%= Op.import || 'Import' %></button>
+              <button type="button" class="btn btn-info" onclick="exportOrdersToExcel()"><i class="ri-file-download-line align-bottom me-1"></i> <%= Op.export || 'Export' %></button>
               <button class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()"><i class="ri-delete-bin-2-line"></i></button>
             </div>
           </div>
@@ -693,16 +606,16 @@
           <div class="col-sm">
             <h6 class="mb-0">
               <i class="ri-checkbox-multiple-line me-1"></i>
-              <span id="selectedCount">0</span> order(s) selected
+              <span id="selectedCountLabel"><%= Op.selectedCount ? Op.selectedCount.replace('{count}', '0') : '0 order(s) selected' %></span>
             </h6>
           </div>
           <div class="col-sm-auto">
             <div class="d-flex gap-2 flex-wrap">
               <button type="button" class="btn btn-primary btn-sm" onclick="bulkPrintPolicy()">
-                <i class="ri-printer-fill me-1"></i> Print Policies
+                <i class="ri-printer-fill me-1"></i> <%= Op.printPolicies || 'Print Policies' %>
               </button>
               <button type="button" class="btn btn-light btn-sm" onclick="clearSelection()">
-                <i class="ri-close-line me-1"></i> Clear Selection
+                <i class="ri-close-line me-1"></i> <%= Op.clearSelection || 'Clear Selection' %>
               </button>
             </div>
           </div>
@@ -713,37 +626,37 @@
           <div class="row g-3">
             <div class="col-xxl-5 col-sm-6">
               <div class="search-box">
-                <input type="text" class="form-control search" placeholder="Search for order ID, customer, order status or something...">
+                <input type="text" class="form-control search" placeholder="<%= Op.searchPlaceholder || 'Search order ID, customer, status…' %>">
                 <i class="ri-search-line search-icon"></i>
               </div>
             </div>
             <!--end col-->
             <div class="col-xxl-2 col-sm-6">
               <div>
-                <input type="text" class="form-control" data-provider="flatpickr" data-date-format="d M, Y" data-range-date="true" id="demo-datepicker" placeholder="Select date">
+                <input type="text" class="form-control" data-provider="flatpickr" data-date-format="d M, Y" data-range-date="true" id="demo-datepicker" placeholder="<%= Op.selectDatePlaceholder || 'Select date range' %>">
               </div>
             </div>
             <!--end col-->
             <div class="col-xxl-2 col-sm-4">
               <div>
                 <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="idStatus">
-                  <option value="">Status</option>
-                  <option value="all" selected>All</option>
-                  <option value="waitingAction">Waiting Action</option>
-                  <option value="rescheduled">Rescheduled</option>
-                  <option value="new">New</option>
-                  <option value="pickedUp">Picked Up</option>
-                  <option value="inStock">In Stock</option>
-                  <option value="inProgress">In Progress</option>
-                  <option value="headingToCustomer">Heading To Customer</option>
-                  <option value="headingToYou">Heading To You</option>
-                  <option value="completed">Completed</option>
-                  <option value="canceled">Canceled</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="returned">Returned</option>
-                  <option value="returnLinked">Return Linked</option>
-                  <option value="returnToWarehouse">Return to Warehouse</option>
-                  <option value="terminated">Terminated</option>
+                  <option value=""><%= Op.filterStatus || 'Status' %></option>
+                  <option value="all" selected><%= Op.filterAll || 'All' %></option>
+                  <option value="waitingAction"><%= Op.statusWaitingAction || 'Waiting Action' %></option>
+                  <option value="rescheduled"><%= Op.statusRescheduled || 'Rescheduled' %></option>
+                  <option value="new"><%= Op.statusNew || 'New' %></option>
+                  <option value="pickedUp"><%= Op.statusPickedUp || 'Picked Up' %></option>
+                  <option value="inStock"><%= Op.statusInStock || 'In Stock' %></option>
+                  <option value="inProgress"><%= Op.statusInProgress || 'In Progress' %></option>
+                  <option value="headingToCustomer"><%= Op.statusHeadingToCustomer || 'Heading To Customer' %></option>
+                  <option value="headingToYou"><%= Op.statusHeadingToYou || 'Heading To You' %></option>
+                  <option value="completed"><%= Op.statusCompleted || 'Completed' %></option>
+                  <option value="canceled"><%= Op.statusCancelled || 'Canceled' %></option>
+                  <option value="rejected"><%= Op.statusRejected || 'Rejected' %></option>
+                  <option value="returned"><%= Op.statusReturned || 'Returned' %></option>
+                  <option value="returnLinked"><%= Op.statusReturnLinked || 'Return Linked' %></option>
+                  <option value="returnToWarehouse"><%= Op.statusReturnToWarehouse || 'Return to Warehouse' %></option>
+                  <option value="terminated"><%= Op.statusTerminated || 'Terminated' %></option>
                 </select>
               </div>
             </div>
@@ -751,12 +664,12 @@
             <div class="col-xxl-2 col-sm-4">
               <div>
                 <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="idPayment">
-                  <option value="">Select Payment</option>
-                  <option value="all" selected>All</option>
-                  <option value="Mastercard">Mastercard</option>
-                  <option value="Paypal">Paypal</option>
-                  <option value="Visa">Visa</option>
-                  <option value="COD">COD</option>
+                  <option value=""><%= Op.filterPayment || 'Select Payment' %></option>
+                  <option value="all" selected><%= Op.filterAll || 'All' %></option>
+                  <option value="Mastercard"><%= Op.paymentMastercard || 'Mastercard' %></option>
+                  <option value="Paypal"><%= Op.paymentPaypal || 'PayPal' %></option>
+                  <option value="Visa"><%= Op.paymentVisa || 'Visa' %></option>
+                  <option value="COD"><%= Op.paymentCOD || 'Cash on delivery (COD)' %></option>
                 </select>
               </div>
             </div>
@@ -764,7 +677,7 @@
             <div class="col-xxl-1 col-sm-4">
               <div>
                 <button type="button" class="btn btn-primary w-100" onclick="SearchData();"> <i class="ri-equalizer-fill me-1 align-bottom"></i>
-                  Filters
+                  <%= Op.filterFilters || 'Filters' %>
                 </button>
               </div>
             </div>
@@ -773,45 +686,40 @@
           <!--end row-->
         </form>
       </div>
-      <div class="card-body pt-0">
-        <div>
+      <div class="card-body pt-0 px-0 pb-3">
+        <div class="orders-tabs-inner">
           <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
             <li class="nav-item">
               <button class="btn btn-link nav-link active All py-3" data-bs-toggle="tab" id="All" role="tab" aria-selected="true" onClick="filterOrders('All')">
-                <i class="ri-store-2-fill me-1 align-bottom"></i> All Orders
+                <i class="ri-store-2-fill me-1 align-bottom"></i> <%= Op.tabAll || 'All Orders' %>
               </button>
             </li>
             <li class="nav-item">
               <button class="btn btn-link nav-link py-3 Delivered" data-bs-toggle="tab" id="Delivered" role="tab" aria-selected="false" onClick="filterOrders('Deliver')">
-                <i class="ri-checkbox-circle-line me-1 align-bottom"></i> Delivered
+                <i class="ri-checkbox-circle-line me-1 align-bottom"></i> <%= Op.tabDelivered || 'Delivered' %>
               </button>
             </li>
             <li class="nav-item">
               <button class="btn btn-link nav-link py-3 Returns" data-bs-toggle="tab" id="Returns" role="tab" aria-selected="false" onClick="filterOrders('Return')">
-                <i class="ri-arrow-left-right-fill me-1 align-bottom"></i> Returns
+                <i class="ri-arrow-left-right-fill me-1 align-bottom"></i> <%= Op.tabReturns || 'Returns' %>
               </button>
             </li>
             <li class="nav-item">
-              <button class="btn btn-link nav-link py-3 CashCollection" data-bs-toggle="tab" id="CashCollection" role="tab" aria-selected="false" onClick="filterOrders('Exchange')">
-                <i class="ri-exchange-line me-1 align-bottom"></i> Exchange
-              </button>
-            </li>
-
-            <li class="nav-item">
-              <button class="btn btn-link nav-link py-3 CashCollection" data-bs-toggle="tab" id="CashCollection" role="tab" aria-selected="false" onClick="filterOrders('CashCollection')">
-                <i class="ri-money-dollar-circle-line me-1 align-bottom"></i> Cash Collection
+              <button class="btn btn-link nav-link py-3" data-bs-toggle="tab" id="Exchange" role="tab" aria-selected="false" onClick="filterOrders('Exchange')">
+                <i class="ri-exchange-line me-1 align-bottom"></i> <%= Op.tabExchange || 'Exchange' %>
               </button>
             </li>
             <li class="nav-item">
               <button class="btn btn-link nav-link py-3 Returned" data-bs-toggle="tab" id="Returned" role="tab" aria-selected="false" onClick="filterReturnedOrders()">
-                <i class="ri-arrow-left-circle-line me-1 align-bottom"></i> Returned Orders
+                <i class="ri-arrow-left-circle-line me-1 align-bottom"></i> <%= Op.tabReturned || 'Returned Orders' %>
               </button>
             </li>
 
           </ul>
+        </div>
 
-          <div class="table-responsive table-card mb-1">
-            <table class="table table-nowrap align-middle" id="orderTable">
+          <div class="table-responsive orders-table-wrap mb-1">
+            <table class="table table-nowrap align-middle w-100" id="orderTable">
               <thead class="text-muted table-light">
                 <tr class="text-uppercase">
                   <th scope="col" style="width: 25px;">
@@ -819,15 +727,15 @@
                       <input class="form-check-input" type="checkbox" id="checkAll" value="option">
                     </div>
                   </th>
-                  <th  data-sort="id">Order ID</th>
-                  <th  data-sort="customer_name">Customer</th>
-                  <th  data-sort="order-type">Order Type</th>
-                  <th  data-sort="order-Location">Order Location</th>
-                  <th  data-sort="amount">Amount</th>
-                  <th  data-sort="status">Delivery Status</th>
-                  <th  data-sort="status">Delivery Tries</th>
-                  <th  data-sort="date">Order Date</th>
-                  <th data-sort="city">Action</th>
+                  <th  data-sort="id"><%= Op.colOrderId || 'Order ID' %></th>
+                  <th  data-sort="customer_name"><%= Op.colCustomer || 'Customer' %></th>
+                  <th  data-sort="order-type"><%= Op.colOrderType || 'Order Type' %></th>
+                  <th  data-sort="order-Location"><%= Op.colLocation || 'Order Location' %></th>
+                  <th  data-sort="amount"><%= Op.colAmount || 'Amount' %></th>
+                  <th  data-sort="status"><%= Op.colStatus || 'Delivery Status' %></th>
+                  <th  data-sort="status"><%= Op.colTries || 'Delivery Tries' %></th>
+                  <th  data-sort="date"><%= Op.colDate || 'Order Date' %></th>
+                  <th data-sort="city"><%= Op.colAction || 'Action' %></th>
                 </tr>
               </thead>
            <tbody class="list form-check-all" id="ordersTable">
@@ -839,19 +747,18 @@
             <div class="noresult" id="NoResult" style="display: none">
               <div class="text-center">
                 <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                <h5 class="mt-2">Sorry! No Result Found</h5>
+                <h5 class="mt-2"><%= Op.noResult || 'Sorry! No Result Found' %></h5>
               </div>
             </div>
           </div>
-        </div>
-        <div class="d-flex justify-content-end">
+        <div class="d-flex justify-content-end orders-tabs-inner">
           <div class="pagination-wrap hstack gap-2">
             <a class="page-item pagination-prev disabled" href="javascript:void(0);">
-              Previous
+              <%= Op.paginationPrev || 'Previous' %>
             </a>
             <ul class="pagination listjs-pagination mb-0"></ul>
             <a class="page-item pagination-next" href="javascript:void(0);">
-              Next
+              <%= Op.paginationNext || 'Next' %>
             </a>
           </div>
         </div>
@@ -861,7 +768,7 @@
 
       <!-- Print Policy Modal -->
     <div class="modal fade" id="printPolicyModal" tabindex="-1" aria-labelledby="printPolicyModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content border-0 shadow-lg">
           <div class="modal-header bg-gradient-primary text-white border-0">
             <div class="d-flex align-items-center">
@@ -869,11 +776,11 @@
                 <i class="ri-printer-fill print-icon"></i>
               </div>
               <div>
-                <h4 class="modal-title mb-0 fw-semibold" id="printPolicyModalLabel">Print Delivery Policy</h4>
-                <small class="text-white-50">Select paper size and format</small>
+                <h4 class="modal-title mb-0 fw-semibold" id="printPolicyModalLabel"><%= Op.printModalTitle || 'Print Delivery Policy' %></h4>
+                <small class="text-white-50"><%= Op.printModalSubtitle || 'Select paper size and format' %></small>
               </div>
             </div>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<%= Op.modalCloseAria || 'Close' %>"></button>
           </div>
           <div class="modal-body p-4">
             <div class="print-info-section mb-4">
@@ -881,8 +788,8 @@
                 <div class="d-flex align-items-center">
                   <i class="ri-information-line text-info me-2"></i>
                   <div>
-                    <h6 class="alert-heading mb-1">Print Delivery Policy</h6>
-                    <p class="mb-0 small">Select the appropriate paper size for printing the delivery policy document.</p>
+                    <h6 class="alert-heading mb-1"><%= Op.printModalInfoTitle || 'Print Delivery Policy' %></h6>
+                    <p class="mb-0 small"><%= Op.printModalInfoText || 'Select the appropriate paper size for printing the delivery policy document.' %></p>
                   </div>
                 </div>
               </div>
@@ -893,7 +800,7 @@
               
               <div class="paper-selection-section">
                 <h6 class="fw-semibold text-dark mb-3">
-                  <i class="ri-file-copy-line text-primary me-2"></i>Select Paper Size
+                  <i class="ri-file-copy-line text-primary me-2"></i><%= Op.printModalPaperHeading || 'Select Paper Size' %>
                 </h6>
                 
                 <div class="row g-3 justify-content-center">
@@ -937,10 +844,10 @@
           <div class="modal-footer bg-light border-0 p-4">
             <div class="d-flex justify-content-between w-100">
               <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
-                <i class="ri-close-line me-1"></i>Cancel
+                <i class="ri-close-line me-1"></i><%= Op.printCancel || 'Cancel' %>
               </button>
               <button type="button" class="btn btn-primary" onclick="printPolicy()" id="printBtn" disabled>
-                <i class="ri-printer-fill me-1"></i>Print Policy
+                <i class="ri-printer-fill me-1"></i><%= Op.printConfirm || 'Print Policy' %>
               </button>
             </div>
           </div>
@@ -950,7 +857,7 @@
 
     <!-- Smart Sticker Scan Modal -->
     <div class="modal fade" id="smartStickerModal" tabindex="-1" aria-labelledby="smartStickerModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
         <div class="modal-content border-0 shadow-lg">
           <div class="modal-header bg-gradient-primary text-white border-0">
             <div class="d-flex align-items-center">
@@ -958,11 +865,11 @@
                 <i class="ri-smartphone-line scan-icon"></i>
               </div>
               <div>
-                <h4 class="modal-title mb-0 fw-semibold" id="smartStickerModalLabel">Smart Sticker Scan</h4>
-                <small class="text-white-50">Mobile Application Feature</small>
+                <h4 class="modal-title mb-0 fw-semibold" id="smartStickerModalLabel"><%= Op.smartStickerTitle || 'Smart Sticker Scan' %></h4>
+                <small class="text-white-50"><%= Op.smartStickerSubtitle || 'Mobile application feature' %></small>
               </div>
             </div>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<%= Op.modalCloseAria || 'Close' %>"></button>
           </div>
           <div class="modal-body p-4">
             <div class="row g-4">
@@ -974,8 +881,8 @@
                         <i class="ri-qr-scan-line"></i>
                       </div>
                     </div>
-                    <h5 class="text-dark fw-semibold mb-2">Mobile App Feature</h5>
-                    <p class="text-muted mb-0">Smart Sticker Scan is available in our mobile application for iOS and Android devices.</p>
+                    <h5 class="text-dark fw-semibold mb-2"><%= Op.smartStickerBodyTitle || 'Mobile App Feature' %></h5>
+                    <p class="text-muted mb-0"><%= Op.smartStickerBodyText || 'Smart Sticker Scan is available in our mobile application for iOS and Android devices.' %></p>
                   </div>
                   
                   <div class="features-section">
@@ -1120,6 +1027,41 @@
 </div>
 <!--end row-->
 
+<div class="modal fade" id="bulkImportModal" tabindex="-1" aria-labelledby="bulkImportModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bulkImportModalLabel">Import deliver orders (Excel)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-2">This import is for <strong>normal delivery orders only</strong> (standard shipping, not express). Download the template, read the <strong>Instructions</strong> sheet, fill <strong>Orders</strong>, and delete the sample row. Use <strong>Validate</strong> first; nothing is created until you click <strong>Import orders</strong>. For returns, exchanges, or express shipping, create the order from the website.</p>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <a href="/business/orders-import-template" class="btn btn-outline-primary btn-sm" download><i class="ri-download-2-line me-1"></i> Download template</a>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="bulkImportFile">Excel file (.xlsx)</label>
+          <input type="file" class="form-control" id="bulkImportFile" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+        </div>
+        <div id="bulkImportAlert" class="alert py-2 d-none" role="alert"></div>
+        <div id="bulkImportErrorWrap" class="d-none">
+          <h6 class="text-danger mb-2"><%= Op.bulkImportFixRows || 'Fix these rows and validate again' %></h6>
+          <div class="table-responsive border rounded" style="max-height: 260px;">
+            <table class="table table-sm table-striped mb-0" id="bulkImportErrorTable">
+              <thead class="table-light"><tr><th style="width:72px"><%= Op.bulkImportColRow || 'Row' %></th><th><%= Op.bulkImportColErrors || 'Errors' %></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
+          <button type="button" class="btn btn-primary" id="bulkImportValidateBtn" onclick="validateBulkOrderImport()"><i class="ri-checkbox-circle-line me-1"></i> <%= Op.validateSpreadsheet || 'Validate' %></button>
+          <button type="button" class="btn btn-success" id="bulkImportCommitBtn" onclick="commitBulkOrderImport()" disabled><i class="ri-upload-cloud-2-line me-1"></i> <%= Op.importOrders || 'Import orders' %></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <%- contentFor('FooterJs') %>
 
 
@@ -1137,9 +1079,126 @@
 <!-- Status helper -->
 <script src="/assets/js/status-helper.js"></script>
 
+<script>
+  window.__NS_BUSINESS_I18N = window.__NS_BUSINESS_I18N || {};
+  window.__NS_BUSINESS_I18N.orders = Object.assign({}, window.__NS_BUSINESS_I18N.orders || {}, {
+    cancelConfirm: "<%= Op.cancelConfirm || 'Are you sure?' %>",
+    cancelConfirmText: "<%= Op.cancelConfirmText || 'You won&#39;t be able to revert this!' %>",
+    cancelDone: "<%= Op.cancelDone || 'Done' %>",
+    cancelSuccess: "<%= Op.cancelSuccess || 'Your order has been updated.' %>",
+    cannotCancel: "<%= Op.cannotCancel || 'Cannot cancel' %>",
+    cannotCancelText: "<%= Op.cannotCancelText || 'This order cannot be cancelled from its current status.' %>",
+    cancelError: "<%= Op.cancelError || 'There was an error cancelling the order. Please try again later.' %>",
+    exportPreparing: "<%= Op.exportPreparing || 'Preparing export...' %>",
+    exportPreparingHtml: "<%= Op.exportPreparingHtml || 'Please wait while we prepare your orders export.' %>",
+    exportStarted: "<%= Op.exportStarted || 'Export Started!' %>",
+    exportDownloaded: "<%= Op.exportDownloaded || 'Your orders export has been downloaded.' %>",
+    chooseFile: "<%= Op.chooseFile || 'Choose a file' %>",
+    chooseFileText: "<%= Op.chooseFileText || 'Select an .xlsx file first.' %>",
+    validating: "<%= Op.validating || 'Validating…' %>",
+    sessionExpired: "<%= Op.sessionExpired || 'Session expired' %>",
+    sessionExpiredText: "<%= Op.sessionExpiredText || 'Please sign in again to continue.' %>",
+    accountSetupRequired: "<%= Op.accountSetupRequired || 'Account setup required' %>",
+    accountSetupRequiredText: "<%= Op.accountSetupRequiredText || 'Complete your account to use this feature.' %>",
+    validationFailed: "<%= Op.validationFailed || 'Validation request failed.' %>",
+    validationFailedTitle: "<%= Op.validationFailedTitle || 'Validation failed' %>",
+    validateFirst: "<%= Op.validateFirst || 'Validate first' %>",
+    validateFirstText: "<%= Op.validateFirstText || 'Run Validate successfully on the same file before importing.' %>",
+    importing: "<%= Op.importing || 'Importing…' %>",
+    importFailed: "<%= Op.importFailed || 'Import failed' %>",
+    importFailedText: "<%= Op.importFailedText || 'No orders were saved.' %>",
+    importSuccess: "<%= Op.importSuccess || 'Delivery orders imported' %>",
+    networkError: "<%= Op.networkError || 'Network error' %>",
+    errorTitle: "<%= Op.errorTitle || 'Error!' %>",
+    rowsHaveErrors: "<%= Op.rowsHaveErrors || '{count} row(s) have errors. Fix the spreadsheet and validate again.' %>",
+    printError: "<%= Op.printError || 'An error occurred while printing the policy. Please try again.' %>",
+    selectPaperSize: "<%= Op.selectPaperSizeMsg || 'Please select a paper size.' %>",
+    statusNew: "<%= Op.statusNew || 'New' %>",
+    statusPickedUp: "<%= Op.statusPickedUp || 'Picked Up' %>",
+    statusInStock: "<%= Op.statusInStock || 'In Stock' %>",
+    statusInProgress: "<%= Op.statusInProgress || 'In Progress' %>",
+    statusHeadingToCustomer: "<%= Op.statusHeadingToCustomer || 'Heading To Customer' %>",
+    statusHeadingToYou: "<%= Op.statusHeadingToYou || 'Heading To You' %>",
+    statusCompleted: "<%= Op.statusCompleted || 'Completed' %>",
+    statusCancelled: "<%= Op.statusCancelled || 'Cancelled' %>",
+    statusRejected: "<%= Op.statusRejected || 'Rejected' %>",
+    statusReturned: "<%= Op.statusReturned || 'Returned' %>",
+    statusWaitingAction: "<%= Op.statusWaitingAction || 'Waiting Action' %>",
+    statusRescheduled: "<%= Op.statusRescheduled || 'Rescheduled' %>",
+    statusReturnLinked: "<%= Op.statusReturnLinked || 'Return Linked' %>",
+    statusReturnToWarehouse: "<%= Op.statusReturnToWarehouse || 'Return to Warehouse' %>",
+    statusTerminated: "<%= Op.statusTerminated || 'Terminated' %>",
+    statusPendingPickup: "<%= Op.statusPendingPickup || 'Pending Pickup' %>",
+    statusInReturnStock: "<%= Op.statusInReturnStock || 'In Return Stock' %>",
+    statusReturnInitiated: "<%= Op.statusReturnInitiated || 'Return Initiated' %>",
+    statusReturnAssigned: "<%= Op.statusReturnAssigned || 'Return Assigned' %>",
+    statusReturnPickedUp: "<%= Op.statusReturnPickedUp || 'Return Picked Up' %>",
+    statusReturnAtWarehouse: "<%= Op.statusReturnAtWarehouse || 'At Warehouse' %>",
+    statusReturnToBusiness: "<%= Op.statusReturnToBusiness || 'Return to Business' %>",
+    statusExchangePickup: "<%= Op.statusExchangePickup || 'Exchange Pickup' %>",
+    statusReturnCompleted: "<%= Op.statusReturnCompleted || 'Return Completed' %>",
+    statusDeliveryFailed: "<%= Op.statusDeliveryFailed || 'Delivery Failed' %>",
+    statusAutoReturnInitiated: "<%= Op.statusAutoReturnInitiated || 'Auto-Return Initiated' %>",
+    statusDelivered: "<%= Op.statusDelivered || 'Delivered' %>",
+    typeDeliver: "<%= Op.typeDeliver || 'Deliver' %>",
+    typeReturn: "<%= Op.typeReturn || 'Return' %>",
+    typeExchange: "<%= Op.typeExchange || 'Exchange' %>",
+    badgeFast: "<%= Op.badgeFast || 'Fast' %>",
+    amountCOD: "<%= Op.amountCOD || 'Cash on Delivery' %>",
+    amountCD: "<%= Op.amountCD || 'Cash Difference' %>",
+    amountNA: "<%= Op.amountNA || 'No Payment' %>",
+    amountNAShort: "<%= Op.amountNAShort || 'N/A' %>",
+    currencyEGP: "<%= Op.currencyEGP || 'EGP' %>",
+    actionPrintPolicy: "<%= Op.actionPrintPolicy || 'Print Delivery Policy' %>",
+    actionSmartSticker: "<%= Op.actionSmartSticker || 'Smart Sticker Scan' %>",
+    actionEditOrder: "<%= Op.actionEditOrder || 'Edit Order' %>",
+    actionCancelOrder: "<%= Op.actionCancelOrder || 'Cancel order' %>",
+    actionTrackOrder: "<%= Op.actionTrackOrder || 'Track Order' %>",
+    loadingTable: "<%= Op.loadingTable || 'Loading…' %>",
+    triesOf: "<%= Op.triesOf || '{n}/2' %>",
+    selectedCountTemplate: <%- JSON.stringify(Op.selectedCount || '{count} order(s) selected') %>,
+    printPolicies: "<%= Op.printPolicies || 'Print Policies' %>",
+    printCancel: "<%= Op.printCancel || 'Cancel' %>",
+    statusCategoryLabel: "<%= Op.statusCategoryLabel || 'Status Category' %>",
+    catAll: "<%= Op.catAll || 'All' %>",
+    catNew: "<%= Op.catNew || 'New' %>",
+    catProcessing: "<%= Op.catProcessing || 'Processing' %>",
+    catPaused: "<%= Op.catPaused || 'Paused' %>",
+    catSuccessful: "<%= Op.catSuccessful || 'Successful' %>",
+    catUnsuccessful: "<%= Op.catUnsuccessful || 'Unsuccessful' %>",
+    locale: "<%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US' %>",
+    swalPaperSizeRequiredTitle: "<%= Op.swalPaperSizeRequiredTitle || 'Paper Size Required' %>",
+    swalPaperSizeRequiredText: "<%= Op.swalPaperSizeRequiredText || 'Please select a paper size before printing.' %>",
+    swalPreparingDocTitle: "<%= Op.swalPreparingDocTitle || 'Preparing document…' %>",
+    swalPreparingDocText: "<%= Op.swalPreparingDocText || 'Please wait while we prepare your document.' %>",
+    swalPrintPolicySuccessTitle: "<%= Op.swalPrintPolicySuccessTitle || 'Success!' %>",
+    swalPrintPolicySuccessText: "<%= Op.swalPrintPolicySuccessText || 'Delivery policy has been prepared for printing.' %>",
+    swalOopsTitle: "<%= Op.swalOopsTitle || 'Oops…' %>",
+    swalDocumentFailed: "<%= Op.swalDocumentFailed || 'Failed to generate document' %>",
+    swalDocumentErrorText: "<%= Op.swalDocumentErrorText || 'Something went wrong while preparing the document.' %>",
+    swalNoOrdersSelectedTitle: "<%= Op.swalNoOrdersSelectedTitle || 'No Orders Selected' %>",
+    swalNoOrdersSelectedText: "<%= Op.swalNoOrdersSelectedText || 'Please select at least one order to print policies.' %>",
+    swalBulkSelectPaperTitle: "<%= Op.swalBulkSelectPaperTitle || 'Select Paper Size' %>",
+    swalBulkSelectPaperIntro: <%- JSON.stringify(Op.swalBulkSelectPaperIntro || 'Select paper size for <strong>{count}</strong> delivery policies:') %>,
+    swalBulkProcessingTitle: "<%= Op.swalBulkProcessingTitle || 'Processing…' %>",
+    swalBulkProgress: <%- JSON.stringify(Op.swalBulkProgress || 'Printing policies: <strong>{current}</strong> / {total}') %>,
+    swalBulkCompleteTitle: "<%= Op.swalBulkCompleteTitle || 'Bulk Print Complete' %>",
+    swalBulkSuccessLine: <%- JSON.stringify(Op.swalBulkSuccessLine || '<strong>{count}</strong> policies printed successfully') %>,
+    swalBulkFailedLine: <%- JSON.stringify(Op.swalBulkFailedLine || '<strong>{count}</strong> failed') %>,
+    swalDownloadAppTitle: "<%= Op.swalDownloadAppTitle || 'Download Mobile App' %>",
+    swalDownloadAppText: "<%= Op.swalDownloadAppText || 'Scan this QR code with your mobile device to download the app' %>",
+    swalQrCodeAlt: "<%= Op.swalQrCodeAlt || 'QR Code for App Download' %>",
+    swalClose: "<%= Op.swalClose || 'Close' %>"
+  });
+</script>
+
 <script src="/assets/rJS/business/orders.js"></script>
 
 <script>
+  function __nsOrdersPage() {
+    return (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.orders) || {};
+  }
+
   // Function to select paper size
   function selectPaperSize(size) {
     // Remove selected class from all options
@@ -1173,11 +1232,12 @@
     const orderId = document.getElementById('orderId').value;
     const paperSize = document.getElementById('paperSize').value;
 
+    const O = __nsOrdersPage();
     if (!paperSize) {
       Swal.fire({
         icon: 'warning',
-        title: 'Paper Size Required',
-        text: 'Please select a paper size before printing.',
+        title: O.swalPaperSizeRequiredTitle || 'Paper Size Required',
+        text: O.swalPaperSizeRequiredText || 'Please select a paper size before printing.',
         confirmButtonColor: '#0d6efd'
       });
       return;
@@ -1185,8 +1245,8 @@
 
     // Show loading indicator
     Swal.fire({
-      title: 'Preparing document...',
-      html: 'Please wait while we prepare your document.',
+      title: O.swalPreparingDocTitle || 'Preparing document…',
+      html: O.swalPreparingDocText || 'Please wait while we prepare your document.',
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -1199,13 +1259,14 @@
       })
       .then(async response => {
         if (!response.ok) {
-          // Try to parse error message from JSON response
+          let msg = O.swalDocumentFailed || 'Failed to generate document';
           try {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to generate document');
-          } catch (e) {
-            throw new Error('Failed to generate document');
+            if (errorData && errorData.error) msg = errorData.error;
+          } catch (_) {
+            /* non-JSON body */
           }
+          throw new Error(msg);
         }
         return response.blob();
       })
@@ -1234,8 +1295,8 @@
         // Show success message
         Swal.fire({
           icon: 'success',
-          title: 'Success!',
-          text: 'Delivery policy has been prepared for printing.',
+          title: O.swalPrintPolicySuccessTitle || 'Success!',
+          text: O.swalPrintPolicySuccessText || 'Delivery policy has been prepared for printing.',
           confirmButtonColor: '#0d6efd'
         });
       })
@@ -1251,8 +1312,8 @@
         
         Swal.fire({
           icon: 'error',
-          title: 'Oops...',
-          text: error.message || 'Something went wrong while preparing the document.',
+          title: O.swalOopsTitle || 'Oops…',
+          text: error.message || O.swalDocumentErrorText || 'Something went wrong while preparing the document.',
           confirmButtonColor: '#0d6efd'
         });
       });
@@ -1280,14 +1341,15 @@
 
   // Show QR Code Function
   function showQRCode() {
+    const O = __nsOrdersPage();
     Swal.fire({
-      title: 'Download Mobile App',
-      text: 'Scan this QR code with your mobile device to download the app',
+      title: O.swalDownloadAppTitle || 'Download Mobile App',
+      text: O.swalDownloadAppText || 'Scan this QR code with your mobile device to download the app',
       imageUrl: '/assets/images/qr-code-app-download.png', // Replace with your actual QR code image
       imageWidth: 200,
       imageHeight: 200,
-      imageAlt: 'QR Code for App Download',
-      confirmButtonText: 'Close',
+      imageAlt: O.swalQrCodeAlt || 'QR Code for App Download',
+      confirmButtonText: O.swalClose || 'Close',
       confirmButtonColor: '#0d6efd'
     });
   }
@@ -1332,13 +1394,16 @@
 
   function updateBulkActionsToolbar() {
     const toolbar = document.getElementById('bulkActionsToolbar');
-    const countSpan = document.getElementById('selectedCount');
-    
+    const countLabel = document.getElementById('selectedCountLabel');
+    const O = __nsOrdersPage();
+    const tpl = O.selectedCountTemplate || '{count} order(s) selected';
+
     if (selectedOrders.size > 0) {
-      toolbar.style.display = 'block';
-      countSpan.textContent = selectedOrders.size;
+      if (toolbar) toolbar.style.display = 'block';
+      if (countLabel) countLabel.textContent = tpl.replace(/\{count\}/g, String(selectedOrders.size));
     } else {
-      toolbar.style.display = 'none';
+      if (toolbar) toolbar.style.display = 'none';
+      if (countLabel) countLabel.textContent = tpl.replace(/\{count\}/g, '0');
     }
   }
 
@@ -1352,22 +1417,24 @@
   }
 
   function bulkPrintPolicy() {
+    const O = __nsOrdersPage();
     if (selectedOrders.size === 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'No Orders Selected',
-        text: 'Please select at least one order to print policies.',
+        title: O.swalNoOrdersSelectedTitle || 'No Orders Selected',
+        text: O.swalNoOrdersSelectedText || 'Please select at least one order to print policies.',
         confirmButtonColor: '#0d6efd'
       });
       return;
     }
 
     // Show paper size selection modal for bulk print
+    const bulkIntro = (O.swalBulkSelectPaperIntro || 'Select paper size for <strong>{count}</strong> delivery policies:').replace(/\{count\}/g, String(selectedOrders.size));
     Swal.fire({
-      title: 'Select Paper Size',
+      title: O.swalBulkSelectPaperTitle || 'Select Paper Size',
       html: `
         <div class="text-start">
-          <p class="mb-3">Select paper size for <strong>${selectedOrders.size}</strong> delivery policies:</p>
+          <p class="mb-3">${bulkIntro}</p>
           <div class="d-flex gap-3 justify-content-center">
             <div class="form-check">
               <input class="form-check-input" type="radio" name="bulkPaperSize" id="bulkA4" value="A4" checked>
@@ -1387,8 +1454,8 @@
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: 'Print Policies',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: O.printPolicies || 'Print Policies',
+      cancelButtonText: O.printCancel || 'Cancel',
       confirmButtonColor: '#0d6efd',
       preConfirm: () => {
         const selectedSize = document.querySelector('input[name="bulkPaperSize"]:checked');
@@ -1405,10 +1472,15 @@
     let successCount = 0;
     let failCount = 0;
     const totalOrders = orderNumbers.length;
+    const O = __nsOrdersPage();
+    const progressLine = (cur) =>
+      (O.swalBulkProgress || 'Printing policies: <strong>{current}</strong> / {total}')
+        .replace(/\{current\}/g, String(cur))
+        .replace(/\{total\}/g, String(totalOrders));
 
     Swal.fire({
-      title: 'Processing...',
-      html: `Printing policies: <strong>0</strong> / ${totalOrders}`,
+      title: O.swalBulkProcessingTitle || 'Processing…',
+      html: progressLine(0),
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -1439,7 +1511,7 @@
 
         // Update progress
         Swal.update({
-          html: `Printing policies: <strong>${i + 1}</strong> / ${totalOrders}`
+          html: progressLine(i + 1)
         });
 
         // Small delay between downloads to prevent browser blocking
@@ -1454,13 +1526,15 @@
     clearSelection();
 
     // Show result
+    const okLine = (O.swalBulkSuccessLine || '<strong>{count}</strong> policies printed successfully').replace(/\{count\}/g, String(successCount));
+    const failLine =
+      failCount > 0
+        ? `<p class="text-danger">${(O.swalBulkFailedLine || '<strong>{count}</strong> failed').replace(/\{count\}/g, String(failCount))}</p>`
+        : '';
     Swal.fire({
       icon: successCount > 0 ? 'success' : 'error',
-      title: 'Bulk Print Complete',
-      html: `
-        <p><strong>${successCount}</strong> policies printed successfully</p>
-        ${failCount > 0 ? `<p class="text-danger"><strong>${failCount}</strong> failed</p>` : ''}
-      `,
+      title: O.swalBulkCompleteTitle || 'Bulk Print Complete',
+      html: `<p>${okLine}</p>${failLine}`,
       confirmButtonColor: '#0d6efd'
     });
   }
@@ -1469,28 +1543,42 @@
 
 <script>
   (function initDatePicker(){
-    function init() {
+    function bindPicker() {
       var el = document.getElementById('demo-datepicker');
-      if (!el) return;
-      try {
-        flatpickr(el, {
-          mode: 'range',
-          dateFormat: 'd M, Y',
-          allowInput: true
-        });
-        // Open on focus for better UX
-        el.addEventListener('focus', function(){ if (el._flatpickr) { el._flatpickr.open(); } });
-      } catch (e) {
-        console.error('Flatpickr init error:', e);
+      if (!el || el._flatpickr) return;
+      var O = (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.orders) || {};
+      var useAr = O.locale === 'ar-EG';
+      function doInit() {
+        try {
+          var opts = { mode: 'range', dateFormat: 'd M, Y', allowInput: true };
+          if (useAr && window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.ar) {
+            opts.locale = 'ar';
+          }
+          flatpickr(el, opts);
+          el.addEventListener('focus', function(){ if (el._flatpickr) { el._flatpickr.open(); } });
+        } catch (e) {
+          console.error('Flatpickr init error:', e);
+        }
+      }
+      if (useAr && window.flatpickr && !(window.flatpickr.l10ns && window.flatpickr.l10ns.ar)) {
+        var la = document.createElement('script');
+        la.src = '/assets/libs/flatpickr/l10n/ar.js';
+        la.onload = doInit;
+        document.head.appendChild(la);
+      } else {
+        doInit();
       }
     }
-    if (typeof window.flatpickr === 'undefined') {
-      var s = document.createElement('script');
-      s.src = '/assets/libs/flatpickr/flatpickr.min.js';
-      s.onload = init;
-      document.head.appendChild(s);
-    } else {
-      init();
+    function ensureFlatpickrThen(cb) {
+      if (typeof window.flatpickr === 'undefined') {
+        var s = document.createElement('script');
+        s.src = '/assets/libs/flatpickr/flatpickr.min.js';
+        s.onload = cb;
+        document.head.appendChild(s);
+      } else {
+        cb();
+      }
     }
+    ensureFlatpickrThen(bindPicker);
   })();
 </script>

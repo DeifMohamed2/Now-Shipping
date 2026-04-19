@@ -1,0 +1,359 @@
+<%- contentFor('HeaderCss') %>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<style>
+  /* Avoid Bootstrap .badge default --bs-badge-color: #fff wiping our text */
+  .py-badge-scheduled, .py-badge-processing, .py-badge-paid, .py-badge-failed {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0.35em 0.75em; font-size: 0.72rem; font-weight: 600;
+    line-height: 1.2; border-radius: 50rem; white-space: nowrap;
+  }
+  .py-badge-scheduled  { background: #fde68a; color: #78350f; border: 1px solid rgba(120,53,15,.2); }
+  .py-badge-processing { background: #dbeafe; color: #1e3a5f; border: 1px solid rgba(30,58,95,.15); }
+  .py-badge-paid       { background: #d1fae5; color: #065f46; border: 1px solid rgba(6,95,70,.2); }
+  .py-badge-failed     { background: #fee2e2; color: #7f1d1d; border: 1px solid rgba(127,29,29,.2); }
+
+  .py-stat-card { border-top: 3px solid transparent; }
+  .py-stat-card.c-gold  { border-top-color: #E4A24A; }
+  .py-stat-card.c-green { border-top-color: #10b981; }
+  .py-stat-card.c-blue  { border-top-color: #3b82f6; }
+
+  .py-stat-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; flex-shrink: 0;
+  }
+  .py-stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+  .py-stat-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #868e96; }
+
+  #payoutsWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #payoutsWrap table { min-width: 920px; margin-bottom: 0; width: 100%; }
+  #payoutsWrap::-webkit-scrollbar { height: 5px; }
+  #payoutsWrap::-webkit-scrollbar-track { background: #f1f3f5; border-radius: 3px; }
+  #payoutsWrap::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 3px; }
+
+  @keyframes py-spin { to { transform: rotate(360deg); } }
+  .py-spin { animation: py-spin .9s linear infinite; display: inline-block; }
+
+  /* Business search (single payout modal) */
+  .py-search-wrap { position: relative; }
+  .py-search-results {
+    position: absolute; left: 0; right: 0; top: 100%; z-index: 1060;
+    max-height: 240px; overflow-y: auto;
+    background: #fff; border: 1px solid #e9ecef; border-radius: 10px;
+    box-shadow: 0 0.5rem 1.25rem rgba(33, 37, 41, 0.12); margin-top: 4px;
+  }
+  .py-search-item {
+    padding: .7rem .9rem; cursor: pointer; border-bottom: 1px solid #f1f3f5;
+    transition: background .12s ease;
+  }
+  .py-search-item:hover, .py-search-item.is-active { background: #f8f9fa; }
+  .py-search-item:last-child { border-bottom: none; }
+  .py-code-badge {
+    display: inline-block; font-family: ui-monospace, monospace;
+    font-size: .75rem; font-weight: 700; letter-spacing: .06em;
+    padding: .15rem .45rem; border-radius: 6px; background: #e7f1ff; color: #0d47a1;
+  }
+  .py-selected-card { border-radius: 10px; border: 1px solid #cfe2ff; background: #f8fbff; }
+
+  /* Payout Detail Modal */
+  .pd-hero {
+    background: linear-gradient(135deg, #f39720 0%, #c97d12 100%);
+    border-radius: 0.5rem; padding: 1.1rem 1.25rem; color: #fff; margin-bottom: 1.25rem;
+  }
+  .pd-stat { text-align: center; padding: 0.75rem 0.5rem; border-radius: 0.4rem; background: #f8f9fa; }
+  .pd-stat-value { font-size: 1.2rem; font-weight: 800; line-height: 1.1; }
+  .pd-stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: #878a99; font-weight: 600; margin-top: 2px; }
+  .pd-code { font-family: monospace; font-size: 0.78rem; background: rgba(255,255,255,0.22); border-radius: 5px; padding: 1px 7px; }
+  .pd-type-pill {
+    display: inline-flex; align-items: center; font-size: 0.71rem; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+  }
+  .pd-type-cod_collected { background: #d1fae5; color: #065f46; }
+  .pd-type-delivery_fee  { background: #fee2e2; color: #991b1b; }
+  .pd-type-return_fee    { background: #fef3c7; color: #92400e; }
+  .pd-type-pickup_fee    { background: #e0e7ff; color: #3730a3; }
+  .pd-type-payout        { background: #f3e8ff; color: #6b21a8; }
+  .pd-type-adjustment    { background: #dbeafe; color: #1e3a5f; }
+  .pd-type-default       { background: #f1f5f9; color: #475569; }
+  .pd-amount-pos { color: #059669; font-weight: 700; }
+  .pd-amount-neg { color: #dc2626; font-weight: 700; }
+  .pd-entries-table thead th {
+    font-size: 0.71rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: #878a99; white-space: nowrap; padding: 0.5rem 0.65rem; background: #f8f9fa; border-bottom: 2px solid #e9ecef;
+  }
+  .pd-entries-table tbody td { font-size: 0.82rem; padding: 0.5rem 0.65rem; vertical-align: middle; }
+  .pd-entries-table tbody tr:hover { background: rgba(243,151,32,0.04); }
+  .pd-pm-block { background: #f8f9fa; border-radius: 0.4rem; padding: 0.65rem 0.85rem; font-size: 0.8125rem; }
+  .pd-net-row td { font-weight: 700; border-top: 2px solid #dee2e6; background: #f8f9fa; }
+
+  /* Payout table — action buttons (icons + text, always readable) */
+  .py-actions {
+    display: flex; flex-wrap: wrap; gap: 0.35rem;
+    justify-content: center; align-items: center;
+  }
+  .py-actions .btn {
+    min-height: 2rem; padding: 0.25rem 0.55rem;
+    font-size: 0.75rem; font-weight: 600;
+    border-radius: 0.35rem; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 0.25rem;
+  }
+  .py-actions .btn i { font-size: 1rem; line-height: 1; flex-shrink: 0; }
+  .py-actions .btn-outline-dark { color: #212529; border-color: #ced4da; }
+  .py-actions .btn-outline-dark:hover { background: #212529; border-color: #212529; color: #fff; }
+  .py-actions .btn-outline-primary { color: #0d6efd; border-color: #0d6efd; }
+  .py-actions .btn-outline-primary:hover { background: #0d6efd; color: #fff; }
+</style>
+
+<%- contentFor('body') %>
+
+<!-- ── Page header ──────────────────────────────────────── -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0">Payouts Management</h4>
+    <p class="text-muted mb-0">Review and confirm weekly payout transfers to businesses</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <button class="btn btn-soft-secondary btn-sm" onclick="loadPayouts()">
+      <i class="ri-refresh-line me-1"></i>Refresh
+    </button>
+    <button class="btn btn-primary btn-sm" onclick="openAdjustmentModal()">
+      <i class="ri-add-line me-1"></i>Manual Adjustment
+    </button>
+    <button class="btn btn-soft-info btn-sm" onclick="openSingleBusinessPayoutModal()">
+      <i class="ri-user-received-line me-1"></i>Payout Single Business
+    </button>
+    <button class="btn btn-warning btn-sm" onclick="triggerPayoutProcessing()">
+      <i class="ri-settings-3-line me-1"></i>Run All Now
+    </button>
+  </div>
+</div>
+
+<!-- ── Stat cards ────────────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-sm-4">
+    <div class="card py-stat-card c-gold mb-0 h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <div class="py-stat-icon bg-warning-subtle text-warning"><i class="ri-time-line"></i></div>
+          <span class="py-stat-label">Scheduled (this week)</span>
+        </div>
+        <div class="py-stat-value" id="statScheduledAmount">—</div>
+        <small class="text-muted"><span id="statScheduledCount">—</span> businesses</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-4">
+    <div class="card py-stat-card c-green mb-0 h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <div class="py-stat-icon bg-success-subtle text-success"><i class="ri-checkbox-circle-line"></i></div>
+          <span class="py-stat-label">Paid (this month)</span>
+        </div>
+        <div class="py-stat-value" id="statPaidAmount">—</div>
+        <small class="text-muted"><span id="statPaidCount">—</span> payouts</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-4">
+    <div class="card py-stat-card c-blue mb-0 h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <div class="py-stat-icon bg-primary-subtle text-primary"><i class="ri-building-line"></i></div>
+          <span class="py-stat-label">Active Businesses</span>
+        </div>
+        <div class="py-stat-value" id="statBusinessCount">—</div>
+        <small class="text-muted">with a positive balance</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Payouts table ─────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header border-0">
+    <div class="row align-items-center gy-2">
+      <div class="col">
+        <h5 class="card-title mb-0">Payout Requests</h5>
+      </div>
+      <div class="col-auto d-flex gap-2">
+        <select class="form-select form-select-sm" id="statusFilter" style="width:auto;">
+          <option value="all">All Status</option>
+          <option value="scheduled" selected>Scheduled</option>
+          <option value="processing">Processing</option>
+          <option value="paid">Paid</option>
+          <option value="failed">Failed</option>
+        </select>
+        <div class="search-box">
+          <input type="text" class="form-control form-control-sm search" id="searchInput" placeholder="Search business…">
+          <i class="ri-search-line search-icon"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body pt-0">
+    <div id="payoutsWrap">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Business</th>
+            <th>Payment Method</th>
+            <th class="text-end">Amount</th>
+            <th class="text-center">Status</th>
+            <th>Scheduled</th>
+            <th>Paid On</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="payoutsTbody">
+          <tr><td colspan="7" class="text-center py-4 text-muted"><span class="py-spin"><i class="ri-loader-4-line"></i></span> Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex align-items-center justify-content-between mt-3 flex-wrap gap-2">
+      <small class="text-muted" id="payoutsInfo">—</small>
+      <nav><ul class="pagination pagination-sm mb-0" id="payoutsPagination"></ul></nav>
+    </div>
+  </div>
+</div>
+
+<!-- ── Mark Paid Modal ───────────────────────────────────── -->
+<div class="modal fade" id="markPaidModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Mark this payout as <strong>Paid</strong>?</p>
+        <div class="mb-3">
+          <label class="form-label">Business</label>
+          <input type="text" class="form-control" id="mpBusinessName" readonly>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Amount</label>
+          <input type="text" class="form-control" id="mpAmount" readonly>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Note <small class="text-muted">(optional)</small></label>
+          <input type="text" class="form-control" id="mpNote" placeholder="e.g. transfer ref #12345">
+        </div>
+        <input type="hidden" id="mpPayoutId">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-success" id="confirmMarkPaid">
+          <i class="ri-checkbox-circle-line me-1"></i>Mark as Paid
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Manual Adjustment Modal ──────────────────────────── -->
+<div class="modal fade" id="adjustmentModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Manual Adjustment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Business ID</label>
+          <input type="text" class="form-control" id="adjBusinessId" placeholder="MongoDB ObjectId">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Amount (EGP)</label>
+          <input type="number" class="form-control" id="adjAmount" placeholder="+500 or -100" step="0.01">
+          <div class="form-text">Positive = credit (give money). Negative = debit (charge).</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Reason <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="adjNote" placeholder="Required — e.g. Compensation for delayed order" maxlength="200">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="confirmAdjustment">
+          <i class="ri-save-line me-1"></i>Save Adjustment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Single-Business Payout Modal ──────────────────────── -->
+<div class="modal fade" id="singlePayoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="ri-user-received-line me-2 text-info"></i>Payout Single Business</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">Search by <strong>brand name</strong>, contact name, email, or the business <strong>8-digit account code</strong> (also shown on their wallet page).</p>
+        <div class="mb-3 py-search-wrap">
+          <label class="form-label fw-semibold">Find business <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="spSearch" placeholder="Start typing name, email, brand, or 8-digit code…" autocomplete="off">
+          <input type="hidden" id="spSelectedBusinessId" value="">
+          <div id="spSearchResults" class="py-search-results d-none" role="listbox"></div>
+          <div class="form-text">Minimum 2 characters. Select one result below.</div>
+        </div>
+        <div class="py-selected-card p-3 mb-3 d-none" id="spSelectedCard">
+          <div class="d-flex align-items-start gap-3">
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-semibold text-truncate" id="spSelBrand">—</div>
+              <div class="text-muted small text-truncate" id="spSelNameEmail">—</div>
+            </div>
+            <div><span class="py-code-badge" id="spSelCode">—</span></div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Admin Note <small class="text-muted">(optional)</small></label>
+          <input type="text" class="form-control" id="spNote" placeholder="e.g. Early release requested by business">
+        </div>
+        <div class="alert alert-info py-2 px-3 mb-0 small">
+          <i class="ri-shield-check-line me-1"></i>
+          If this business already received a payout this week, it will be safely skipped to prevent duplicates.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-info text-white" id="confirmSinglePayout">
+          <i class="ri-send-plane-line me-1"></i>Run Payout
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Payout Detail Modal ────────────────────────────────── -->
+<div class="modal fade" id="payoutDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="ri-receipt-line me-2 text-warning"></i>Payout Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2" id="pdModalBody">
+        <div class="text-center py-5 text-muted"><i class="ri-loader-4-line me-1"></i> Loading…</div>
+      </div>
+      <div class="modal-footer border-0 pt-0 gap-2">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        <a class="btn btn-soft-success btn-sm" id="pdExportBtn" href="#" target="_blank">
+          <i class="ri-file-excel-2-line me-1"></i>Download Excel
+        </a>
+        <button class="btn btn-success btn-sm d-none" id="pdMarkPaidBtn">
+          <i class="ri-checkbox-circle-line me-1"></i>Mark as Paid
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script src="/assets/rJS/admin/payouts.js"></script>

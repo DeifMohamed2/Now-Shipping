@@ -532,7 +532,7 @@ const initializeSocket = (server) => {
           courierID: updatedCourier.courierID,
           vehicleType: updatedCourier.vehicleType,
           phoneNumber: updatedCourier.phoneNumber,
-          email: updatedCourier.user?.email || updatedCourier.email,
+          email: updatedCourier.email,
           photoUrl: photoUrl,
         });
 
@@ -562,7 +562,7 @@ const initializeSocket = (server) => {
           socket.userId,
           { isAvailable },
           { new: true }
-        ).populate('user', 'email');
+        );
 
         if (!updatedCourier) {
           console.log(`Courier ${socket.userId} not found in database`);
@@ -577,7 +577,7 @@ const initializeSocket = (server) => {
           courierID: updatedCourier.courierID,
           vehicleType: updatedCourier.vehicleType,
           phoneNumber: updatedCourier.phoneNumber,
-          email: updatedCourier.user?.email || updatedCourier.email,
+          email: updatedCourier.email,
           currentLocation: updatedCourier.currentLocation,
         });
       } catch (error) {
@@ -608,7 +608,7 @@ const initializeSocket = (server) => {
 // Helper function to send courier status to admin
 async function sendCourierStatusToAdmin(courierId) {
   try {
-    const courier = await Courier.findById(courierId).populate('user', 'email');
+    const courier = await Courier.findById(courierId);
 
     if (!courier) {
       console.log(`Courier ${courierId} not found in database`);
@@ -628,7 +628,7 @@ async function sendCourierStatusToAdmin(courierId) {
       courierID: courier.courierID,
       vehicleType: courier.vehicleType,
       phoneNumber: courier.phoneNumber,
-      email: courier.user?.email || courier.email,
+      email: courier.email,
       currentLocation: courier.currentLocation,
       photoUrl: photoUrl,
     });

@@ -1,3 +1,46 @@
+const __NSO =
+  typeof window !== 'undefined' && window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.orders
+    ? window.__NS_BUSINESS_I18N.orders
+    : {};
+
+/** Maps API `orderStatus` values to keys on `__NSO` (from i18n). */
+const ORDER_STATUS_I18N_MAP = {
+  new: 'statusNew',
+  pendingPickup: 'statusPendingPickup',
+  pickedUp: 'statusPickedUp',
+  inStock: 'statusInStock',
+  inReturnStock: 'statusInReturnStock',
+  inProgress: 'statusInProgress',
+  headingToCustomer: 'statusHeadingToCustomer',
+  returnToWarehouse: 'statusReturnToWarehouse',
+  headingToYou: 'statusHeadingToYou',
+  rescheduled: 'statusRescheduled',
+  returnInitiated: 'statusReturnInitiated',
+  returnAssigned: 'statusReturnAssigned',
+  returnPickedUp: 'statusReturnPickedUp',
+  returnAtWarehouse: 'statusReturnAtWarehouse',
+  returnToBusiness: 'statusReturnToBusiness',
+  exchangePickup: 'statusExchangePickup',
+  waitingAction: 'statusWaitingAction',
+  rejected: 'statusRejected',
+  completed: 'statusCompleted',
+  returnCompleted: 'statusReturnCompleted',
+  canceled: 'statusCancelled',
+  returned: 'statusReturned',
+  terminated: 'statusTerminated',
+  deliveryFailed: 'statusDeliveryFailed',
+  autoReturnInitiated: 'statusAutoReturnInitiated',
+  returnLinked: 'statusReturnLinked',
+};
+
+function getLocalizedOrderStatusLabel(status) {
+  if (!status) return '';
+  const i18nKey = ORDER_STATUS_I18N_MAP[status];
+  if (i18nKey && __NSO[i18nKey]) return __NSO[i18nKey];
+  if (window.StatusHelper) return StatusHelper.getOrderStatusLabel(status);
+  return String(status);
+}
+
 // Utility Functions
 function selectPaperSize(size) {
   document.getElementById('paperSize').value = size;
@@ -23,6 +66,20 @@ let currentStatusCategory = 'all';
 const ORDERS_PER_PAGE = 20;
 let currentPage = 1;
 let lastPaginationData = { currentPage: 1, totalPages: 1, totalCount: 0 };
+
+/** Must match order-details.ejs: hide cancel when order cannot be cancelled from UI */
+const NON_CANCELLABLE_ORDER_STATUSES = [
+  'completed',
+  'returnCompleted',
+  'canceled',
+  'returned',
+  'terminated',
+  'headingToCustomer',
+  'exchangePickup',
+  'inReturnStock',
+  'returnToBusiness',
+  'deliveryFailed',
+];
 
 // Helper: parse 'd M, Y' (e.g., '30 Oct, 2025') to ISO 'YYYY-MM-DD'
 function parseFlatpickrDateToISO(dateStr) {
@@ -155,36 +212,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Add status category filter dropdown
 function addStatusCategoryFilter() {
-  const orderTypeFilter = document.querySelector('.nav-tabs');
+  const orderTypeFilter = document.querySelector('#orderList ul.nav-tabs.nav-tabs-custom');
   if (orderTypeFilter) {
-    const categoryFilterContainer = document.createElement('div');
-    categoryFilterContainer.className = 'ms-auto d-flex align-items-center';
-    categoryFilterContainer.innerHTML = `
-      <div class="dropdown">
-        <button class="btn btn-soft-primary dropdown-toggle" type="button" id="statusCategoryDropdown" data-bs-toggle="dropdown">
-          <i class="ri-filter-2-line me-1"></i> Status Category
+    const li = document.createElement('li');
+    li.className = 'nav-item ms-auto d-flex align-items-center ps-2';
+    const i18n = __NSO;
+    const isRtl = document.documentElement.getAttribute('dir') === 'rtl';
+    const btnAlign = isRtl ? 'd-inline-flex align-items-center gap-1 flex-row-reverse' : 'd-inline-flex align-items-center gap-1';
+    const menuAlign = isRtl ? 'dropdown-menu-start' : 'dropdown-menu-end';
+    li.innerHTML = `
+      <div class="dropdown status-category-dropdown-wrapper">
+        <button class="btn btn-soft-primary dropdown-toggle ${btnAlign}" type="button" id="statusCategoryDropdown"
+          data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-bs-auto-close="outside">
+          <i class="ri-filter-2-line"></i><span>${i18n.statusCategoryLabel || 'Status Category'}</span>
         </button>
-        <ul class="dropdown-menu" aria-labelledby="statusCategoryDropdown">
-          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('all')">All</a></li>
-          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('NEW')">
-            <span class="status-indicator new"></span> New
+        <ul class="dropdown-menu ${menuAlign} status-category-menu" aria-labelledby="statusCategoryDropdown">
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('all');return false;">${i18n.catAll || 'All'}</a></li>
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('NEW');return false;">
+            <span class="status-indicator new"></span> ${i18n.catNew || 'New'}
           </a></li>
-          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('PROCESSING')">
-            <span class="status-indicator processing"></span> Processing
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('PROCESSING');return false;">
+            <span class="status-indicator processing"></span> ${i18n.catProcessing || 'Processing'}
           </a></li>
-          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('PAUSED')">
-            <span class="status-indicator paused"></span> Paused
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('PAUSED');return false;">
+            <span class="status-indicator paused"></span> ${i18n.catPaused || 'Paused'}
           </a></li>
-          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('SUCCESSFUL')">
-            <span class="status-indicator successful"></span> Successful
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('SUCCESSFUL');return false;">
+            <span class="status-indicator successful"></span> ${i18n.catSuccessful || 'Successful'}
           </a></li>
-          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('UNSUCCESSFUL')">
-            <span class="status-indicator unsuccessful"></span> Unsuccessful
+          <li><a class="dropdown-item" href="#" onclick="filterByStatusCategory('UNSUCCESSFUL');return false;">
+            <span class="status-indicator unsuccessful"></span> ${i18n.catUnsuccessful || 'Unsuccessful'}
           </a></li>
         </ul>
       </div>
     `;
-    orderTypeFilter.appendChild(categoryFilterContainer);
+    orderTypeFilter.appendChild(li);
+    const btn = document.getElementById('statusCategoryDropdown');
+    if (btn && typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+      try {
+        bootstrap.Dropdown.getOrCreateInstance(btn, {
+          popperConfig: {
+            strategy: 'fixed',
+            modifiers: [
+              {
+                name: 'preventOverflow',
+                options: {
+                  boundary: document.querySelector('#layout-wrapper') || document.body,
+                },
+              },
+            ],
+          },
+        });
+      } catch (e) {
+        console.warn('Status category dropdown Popper config:', e);
+      }
+      btn.addEventListener('shown.bs.dropdown', () => {
+        const menu = btn.nextElementSibling;
+        if (menu && menu.classList && menu.classList.contains('dropdown-menu')) {
+          menu.style.zIndex = '1110';
+        }
+      });
+    }
   }
 }
 
@@ -201,9 +289,24 @@ if (checkAll) {
 // Filter by status category
 function filterByStatusCategory(category) {
   currentStatusCategory = category;
-  currentPage = 1; // Reset to first page when filtering
-  document.getElementById('statusCategoryDropdown').innerHTML = 
-    `<i class="ri-filter-2-line me-1"></i> ${category === 'all' ? 'All' : category}`;
+  currentPage = 1;
+  const btn = document.getElementById('statusCategoryDropdown');
+  if (btn) {
+    const i18n = __NSO;
+    const labelMap = {
+      all: i18n.catAll || 'All',
+      NEW: i18n.catNew || 'New',
+      PROCESSING: i18n.catProcessing || 'Processing',
+      PAUSED: i18n.catPaused || 'Paused',
+      SUCCESSFUL: i18n.catSuccessful || 'Successful',
+      UNSUCCESSFUL: i18n.catUnsuccessful || 'Unsuccessful',
+    };
+    const label = labelMap[category] || category;
+    const isRtl = document.documentElement.getAttribute('dir') === 'rtl';
+    const btnAlign = isRtl ? 'd-inline-flex align-items-center gap-1 flex-row-reverse' : 'd-inline-flex align-items-center gap-1';
+    btn.className = `btn btn-soft-primary dropdown-toggle ${btnAlign}`;
+    btn.innerHTML = `<i class="ri-filter-2-line"></i><span>${label}</span>`;
+  }
   fetchOrders(currentOrderType, category, 1);
 }
 
@@ -267,11 +370,12 @@ async function fetchOrders(orderType = "all", statusCategory = "all", page = 1) 
 }
 
 function showLoadingSpinner() {
+  const loading = __NSO.loadingTable || 'Loading…';
   tableBody.innerHTML = `
     <tr>
       <td colspan="10" class="text-center">
         <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
+          <span class="visually-hidden">${loading}</span>
         </div>
       </td>
     </tr>
@@ -335,7 +439,7 @@ function populateOrdersTable(orders) {
       <td class="customer_name">${order.orderCustomer.fullName}</td>
       <td class="product_name" style="font-size:15px !important;" >
         ${getOrderTypeWithIcon(order.orderShipping.orderType)}
-        ${order.isFastShipping ? '<span class="badge bg-warning text-dark ms-1"><i class="ri-flashlight-line me-1"></i>Fast</span>' : ''}
+        ${order.isFastShipping ? `<span class="badge bg-warning text-dark ms-1"><i class="ri-flashlight-line me-1"></i>${__NSO.badgeFast || 'Fast'}</span>` : ''}
       </td>
       <td class="location">
         <div>${order.orderCustomer.government}</div>
@@ -343,17 +447,17 @@ function populateOrdersTable(orders) {
       </td>
       <td class="amount">
         <div>${getFormattedAmount(order)}</div>
-        <div class="text-muted">${getAmountTypeLabel(order.orderShipping.amountType)}</div>
+        <div class="text-muted">${getAmountTypeLabel(order.orderShipping.amountType, order.orderShipping.orderType)}</div>
       </td>
       <td class="status">
         <span class="status-badge ${order.categoryClass || getStatusCategoryClass(order.statusCategory)}">
-          ${order.statusLabel || getStatusLabel(order.orderStatus)}
+          ${getLocalizedOrderStatusLabel(order.orderStatus)}
         </span>
       </td>
       <td class="tries">
-        <div>${order.Attemps || 0}/2</div>
+        <div>${(__NSO.triesOf || '{n}/2').replace('{n}', String(order.Attemps || 0))}</div>
       </td>
-      <td class="date">${new Date(order.orderDate).toLocaleDateString('en-US', {
+      <td class="date">${new Date(order.orderDate).toLocaleDateString(__NSO.locale || 'en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -367,28 +471,29 @@ function populateOrdersTable(orders) {
           <ul class="dropdown-menu">
             <li>
               <button class="dropdown-item" onclick="handlePrintPolicy('${order.orderNumber}')">
-                <i class="ri-printer-fill text-primary"></i>Print Delivery Policy
+                <i class="ri-printer-fill text-primary"></i>${__NSO.actionPrintPolicy || 'Print Delivery Policy'}
               </button>
             </li>
             <li>
               <button class="dropdown-item" onclick="handleSmartStickerScan('${order.orderNumber}')">
-                <i class="ri-barcode-fill text-success"></i>Smart Sticker Scan
+                <i class="ri-barcode-fill text-success"></i>${__NSO.actionSmartSticker || 'Smart Sticker Scan'}
               </button>
             </li>
             <li>
               <a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
-                <i class="ri-edit-2-fill text-warning"></i>Edit Order
+                <i class="ri-edit-2-fill text-warning"></i>${__NSO.actionEditOrder || 'Edit Order'}
               </a>
             </li>
-            ${!['completed', 'returned', 'returnCompleted', 'canceled', 'terminated'].includes(order.orderStatus) ? 
-              `<li>
+            ${!NON_CANCELLABLE_ORDER_STATUSES.includes(order.orderStatus)
+              ? `<li>
                 <button class="dropdown-item" onclick="handleCancelOrder('${order._id}', '${order.orderNumber}')">
-                  <i class="ri-delete-bin-6-fill text-danger"></i>Cancel Order
+                  <i class="ri-delete-bin-6-fill text-danger"></i>${__NSO.actionCancelOrder || 'Cancel order'}
                 </button>
-              </li>` : ''}
+              </li>`
+              : ''}
             <li>
               <a class="dropdown-item" href="/business/order-details/${order.orderNumber}">
-                <i class="ri-truck-line text-info"></i>Track Order
+                <i class="ri-truck-line text-info"></i>${__NSO.actionTrackOrder || 'Track Order'}
               </a>
             </li>
           </ul>
@@ -428,69 +533,52 @@ function getStatusCategoryClass(category) {
   return classMap[category] || 'status-default';
 }
 
-// Get status label (fallback if StatusHelper not available)
+// Get status label — prefer panel locale over StatusHelper English
 function getStatusLabel(status) {
-  if (window.StatusHelper) {
-    return StatusHelper.getOrderStatusLabel(status);
-  }
-  
-  // Fallback to legacy function
-  return getStatusDetails(status).statusText;
+  return getLocalizedOrderStatusLabel(status);
 }
 
 // Get order type with icon
 function getOrderTypeWithIcon(orderType) {
-  switch(orderType) {
+  switch (orderType) {
     case 'Deliver':
-      return '<i class="ri-truck-line me-1"></i> Deliver';
+      return `<i class="ri-truck-line me-1"></i> ${__NSO.typeDeliver || 'Deliver'}`;
     case 'Return':
-      return '<i class="ri-arrow-go-back-line me-1"></i> Return';
+      return `<i class="ri-arrow-go-back-line me-1"></i> ${__NSO.typeReturn || 'Return'}`;
     case 'Exchange':
-      return '<i class="ri-exchange-line me-1"></i> Exchange';
-    case 'Cash Collection':
-      return '<i class="ri-money-dollar-box-line me-1"></i> Cash Collection';
+      return `<i class="ri-exchange-line me-1"></i> ${__NSO.typeExchange || 'Exchange'}`;
     default:
-      return orderType;
+      return orderType || '';
   }
 }
 
 // Format amount based on order type
 function getFormattedAmount(order) {
-  if (!order.orderShipping.amount) return '0 EGP';
-  
+  const cur = __NSO.currencyEGP || 'EGP';
+  if (!order.orderShipping.amount) return `0 ${cur}`;
+
   const amount = order.orderShipping.amount;
   const amountType = order.orderShipping.amountType;
   const orderType = order.orderShipping.orderType;
-  
-  if (orderType === 'Cash Collection') {
-    return `<span class="text-success fw-medium">${amount} EGP</span>`;
-  } else if (orderType === 'Exchange') {
+
+  if (orderType === 'Exchange') {
     if (amountType === 'CD') {
-      return `<span class="text-warning">${amount} EGP</span>`;
-    } else {
-      return `<span>${amount} EGP</span>`;
+      return `<span class="text-warning">${amount} ${cur}</span>`;
     }
-  } else if (amountType === 'COD') {
-    return `<span class="text-primary">${amount} EGP</span>`;
-  } else {
-    return `${amount} EGP`;
+    return `<span>${amount} ${cur}</span>`;
   }
+  if (amountType === 'COD') {
+    return `<span class="text-primary">${amount} ${cur}</span>`;
+  }
+  return `${amount} ${cur}`;
 }
 
 // Get readable amount type label
-function getAmountTypeLabel(amountType) {
-  switch(amountType) {
-    case 'COD':
-      return 'Cash on Delivery';
-    case 'CD':
-      return 'Cash Difference';
-    case 'CC':
-      return 'Cash Collection';
-    case 'NA':
-      return 'No Payment';
-    default:
-      return amountType;
-  }
+function getAmountTypeLabel(amountType, orderType) {
+  if (amountType === 'CD') return __NSO.amountCD || 'Cash Difference';
+  if (amountType === 'NA') return __NSO.amountNA || 'No Payment';
+  if (amountType === 'COD') return __NSO.amountCOD || 'Cash on Delivery';
+  return amountType || __NSO.amountNAShort || 'N/A';
 }
 
 // Legacy status details function (for backward compatibility)
@@ -561,9 +649,15 @@ function getStatusDetails(status) {
   } else if (status === 'returnCompleted') {
     badgeClass = 'bg-success-subtle text-success';
     statusText = 'Return Completed';
+  } else if (status === 'exchangePickup') {
+    badgeClass = 'bg-primary-subtle text-primary';
+    statusText = 'Exchange Pickup (legacy)';
+  } else if (status === 'deliveryFailed') {
+    badgeClass = 'bg-danger-subtle text-danger';
+    statusText = 'Delivery Failed';
   } else {
     badgeClass = 'bg-secondary-subtle text-secondary';
-    statusText = 'Unknown';
+    statusText = status || 'Unknown';
   }
 
   return { badgeClass, statusText };
@@ -574,7 +668,7 @@ async function printPolicy() {
   const orderId = document.getElementById('orderId').value;
   const paperSize = document.getElementById('paperSize').value;
   if (!paperSize) {
-    alert('Please select a paper size.');
+    alert(__NSO.selectPaperSize || 'Please select a paper size.');
     return;
   }
   try {
@@ -593,8 +687,8 @@ async function printPolicy() {
     console.error('An error occurred:', err);
     Swal.fire({
       icon: 'error',
-      title: 'Error',
-      text: 'An error occurred while printing the policy. Please try again.',
+      title: __NSO.errorTitle || 'Error',
+      text: __NSO.printError || 'An error occurred while printing the policy. Please try again.',
     });
   }
   // Close the modal
@@ -709,49 +803,86 @@ function initializeDropdownSystem() {
 function openDropdown(dropdown) {
   dropdown.classList.add('show');
   const toggle = dropdown.querySelector('[data-dropdown-toggle]');
-  if (toggle) {
-    toggle.setAttribute('aria-expanded', 'true');
-  }
+  if (toggle) toggle.setAttribute('aria-expanded', 'true');
   adjustDropdownPosition(dropdown);
 }
 
 function closeDropdown(dropdown) {
   dropdown.classList.remove('show');
   const toggle = dropdown.querySelector('[data-dropdown-toggle]');
-  if (toggle) {
-    toggle.setAttribute('aria-expanded', 'false');
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  // Reset any fixed-positioning we applied
+  const menu = dropdown.querySelector('.dropdown-menu');
+  if (menu) {
+    menu.style.cssText = '';
+    dropdown.classList.remove('dropdown-up', 'dropdown-fixed');
   }
 }
 
 function adjustDropdownPosition(dropdown) {
   const menu = dropdown.querySelector('.dropdown-menu');
   if (!menu) return;
-  
-  const rect = dropdown.getBoundingClientRect();
-  const viewportHeight = window.innerHeight;
-  const menuHeight = menu.offsetHeight || 200; // fallback height
-  
-  // Calculate available space below the dropdown button
-  const spaceBelow = viewportHeight - rect.bottom;
-  const spaceAbove = rect.top;
-  
-  // If there's not enough space below and more space above, position dropdown above
-  if (spaceBelow < menuHeight && spaceAbove > menuHeight) {
-    dropdown.classList.add('dropdown-up');
+
+  const isRtl = document.documentElement.getAttribute('dir') === 'rtl';
+
+  // Make menu temporarily visible but hidden so we can measure it
+  menu.style.visibility = 'hidden';
+  menu.style.display = 'block';
+  const menuW = menu.offsetWidth  || 240;
+  const menuH = menu.offsetHeight || 220;
+  menu.style.display = '';
+  menu.style.visibility = '';
+
+  const toggleEl = dropdown.querySelector('[data-dropdown-toggle]');
+  const anchorRect = (toggleEl || dropdown).getBoundingClientRect();
+
+  const vpW = window.innerWidth;
+  const vpH = window.innerHeight;
+
+  // ── Decide vertical direction ──
+  const spaceBelow = vpH - anchorRect.bottom;
+  const spaceAbove = anchorRect.top;
+  const openUp = spaceBelow < menuH + 8 && spaceAbove > spaceBelow;
+
+  // ── Compute fixed coordinates ──
+  let top, left;
+
+  if (openUp) {
+    top = anchorRect.top - menuH - 4;
   } else {
-    dropdown.classList.remove('dropdown-up');
+    top = anchorRect.bottom + 4;
   }
-  
-  // Ensure dropdown stays within viewport bounds
-  const tableContainer = dropdown.closest('.table-responsive');
-  if (tableContainer) {
-    const tableRect = tableContainer.getBoundingClientRect();
-    
-    // If dropdown would go outside table container, adjust position
-    if (rect.bottom + menuHeight > tableRect.bottom) {
-      dropdown.classList.add('dropdown-up');
+
+  if (isRtl) {
+    // Anchor on the left edge of toggle, opening rightward
+    left = anchorRect.left;
+    // If it overflows the right edge, shift left
+    if (left + menuW > vpW - 4) {
+      left = vpW - menuW - 4;
+    }
+    // Never go negative
+    if (left < 4) left = 4;
+  } else {
+    // Anchor on the right edge of toggle, opening leftward
+    left = anchorRect.right - menuW;
+    // If it overflows the left edge, shift right
+    if (left < 4) {
+      left = anchorRect.left;
+    }
+    // Never overflow right
+    if (left + menuW > vpW - 4) {
+      left = vpW - menuW - 4;
     }
   }
+
+  // ── Apply as fixed so nothing clips it ──
+  menu.style.position = 'fixed';
+  menu.style.top      = top  + 'px';
+  menu.style.left     = left + 'px';
+  menu.style.right    = 'auto';
+  menu.style.bottom   = 'auto';
+  // Remove CSS class-based up/down since we're using fixed coords
+  dropdown.classList.remove('dropdown-up');
 }
 
 // Dropdown Action Handlers
@@ -776,37 +907,52 @@ function handleCancelOrder(orderId, orderNumber) {
 async function cancelOrder(orderId) {
   console.log('Cancelling order:', orderId);
   Swal.fire({
-    title: 'Are you sure?',
-    text: "You won't be able to revert this!",
+    title: __NSO.cancelConfirm || 'Are you sure?',
+    text: __NSO.cancelConfirmText || "You won't be able to revert this!",
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, cancel it!',
+    confirmButtonText: __NSO.cancelConfirmBtn || 'Yes, cancel it!',
   }).then(async (result) => {
     if (result.isConfirmed) {
-      const response = await fetch(`/business/orders/delete-order/${orderId}`, {
-        method: 'DELETE',
+      const response = await fetch(`/business/orders/cancel-order/${orderId}`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = {};
+      }
       if (response.ok) {
         Swal.fire({
-          title: 'Cancelled!',
-          text: 'Your order has been cancelled.',
+          title: __NSO.cancelDone || 'Done',
+          text: data.message || (__NSO.cancelSuccess || 'Your order has been updated.'),
           icon: 'success',
           confirmButtonText: 'OK',
         }).then(() => {
           window.location.href = '/business/orders';
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: __NSO.cannotCancel || 'Cannot cancel',
+          text:
+            data.error ||
+            (__NSO.cannotCancelText || 'This order cannot be cancelled from its current status.'),
+          confirmButtonText: 'OK',
         });
       }
     }
   }).catch((error) => {
     console.error('Error:', error);
     Swal.fire({
-      title: 'Error!',
-      text: 'There was an error cancelling the order. Please try again later.',
+      title: __NSO.errorTitle || 'Error!',
+      text: __NSO.cancelError || 'There was an error cancelling the order. Please try again later.',
       icon: 'error',
       confirmButtonText: 'OK',
     });
@@ -919,8 +1065,8 @@ function updatePaginationBar() {
 function exportOrdersToExcel() {
   // Show loading indicator
   Swal.fire({
-    title: 'Preparing export...',
-    html: 'Please wait while we prepare your orders export.',
+    title: __NSO.exportPreparing || 'Preparing export...',
+    html: __NSO.exportPreparingHtml || 'Please wait while we prepare your orders export.',
     allowOutsideClick: false,
     didOpen: () => {
       Swal.showLoading();
@@ -941,10 +1087,262 @@ function exportOrdersToExcel() {
     Swal.close();
     Swal.fire({
       icon: 'success',
-      title: 'Export Started!',
-      text: 'Your orders export has been downloaded.',
+      title: __NSO.exportStarted || 'Export Started!',
+      text: __NSO.exportDownloaded || 'Your orders export has been downloaded.',
       confirmButtonColor: '#0d6efd',
       timer: 2000
     });
   }, 500);
+}
+
+// --- Bulk Excel import ---
+let bulkImportValidated = false;
+
+function resetBulkImportModalState() {
+  bulkImportValidated = false;
+  const fileInput = document.getElementById('bulkImportFile');
+  if (fileInput) fileInput.value = '';
+  const commitBtn = document.getElementById('bulkImportCommitBtn');
+  if (commitBtn) commitBtn.disabled = true;
+  const errWrap = document.getElementById('bulkImportErrorWrap');
+  if (errWrap) errWrap.classList.add('d-none');
+  const tbody = document.querySelector('#bulkImportErrorTable tbody');
+  if (tbody) tbody.innerHTML = '';
+  const alertEl = document.getElementById('bulkImportAlert');
+  if (alertEl) {
+    alertEl.classList.add('d-none');
+    alertEl.textContent = '';
+  }
+}
+
+document.getElementById('bulkImportModal')?.addEventListener('hidden.bs.modal', resetBulkImportModalState);
+document.getElementById('bulkImportFile')?.addEventListener('change', () => {
+  bulkImportValidated = false;
+  const commitBtn = document.getElementById('bulkImportCommitBtn');
+  if (commitBtn) commitBtn.disabled = true;
+});
+
+async function validateBulkOrderImport() {
+  const input = document.getElementById('bulkImportFile');
+  const file = input && input.files && input.files[0];
+  if (!file) {
+    Swal.fire({
+      icon: 'warning',
+      title: __NSO.chooseFile || 'Choose a file',
+      text: __NSO.chooseFileText || 'Select an .xlsx file first.',
+    });
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  Swal.fire({
+    title: __NSO.validating || 'Validating…',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+
+  try {
+    const res = await fetch('/business/orders-import-validate', {
+      method: 'POST',
+      body: fd,
+      credentials: 'include',
+    });
+    const data = await res.json().catch(() => ({}));
+    Swal.close();
+
+    if (res.status === 401) {
+      Swal.fire({
+        icon: 'warning',
+        title: __NSO.sessionExpired || 'Session expired',
+        text: __NSO.sessionExpiredText || 'Please sign in again to continue.',
+      }).then(() => {
+        window.location.href = '/login';
+      });
+      return;
+    }
+    if (res.status === 403) {
+      Swal.fire({
+        icon: 'info',
+        title: __NSO.accountSetupRequired || 'Account setup required',
+        text: data.message || data.error || (__NSO.accountSetupRequiredText || 'Complete your account to use this feature.'),
+      });
+      return;
+    }
+
+    const alertEl = document.getElementById('bulkImportAlert');
+    if (!res.ok) {
+      if (alertEl) {
+        alertEl.className = 'alert alert-danger py-2';
+        alertEl.textContent = data.error || __NSO.validationFailed || 'Validation request failed.';
+        alertEl.classList.remove('d-none');
+      }
+      Swal.fire({
+        icon: 'error',
+        title: __NSO.validationFailedTitle || 'Validation failed',
+        text: data.error || res.statusText || 'Try again.',
+      });
+      return;
+    }
+
+    if (data.ok) {
+      bulkImportValidated = true;
+      const commitBtn = document.getElementById('bulkImportCommitBtn');
+      if (commitBtn) commitBtn.disabled = false;
+      const errWrap = document.getElementById('bulkImportErrorWrap');
+      if (errWrap) errWrap.classList.add('d-none');
+      if (alertEl) {
+        alertEl.className = 'alert alert-success py-2';
+        let msg = `All ${data.validCount} row(s) passed validation for delivery orders. You can import now.`;
+        if (data.ignoredHeaders && data.ignoredHeaders.length) {
+          msg += ` Unrecognized columns were ignored: ${data.ignoredHeaders.join(', ')}.`;
+        }
+        alertEl.textContent = msg;
+        alertEl.classList.remove('d-none');
+      }
+    } else {
+      bulkImportValidated = false;
+      const commitBtn = document.getElementById('bulkImportCommitBtn');
+      if (commitBtn) commitBtn.disabled = true;
+      if (alertEl) {
+        alertEl.className = 'alert alert-warning py-2';
+        alertEl.textContent = (__NSO.rowsHaveErrors || '{count} row(s) have errors. Fix the spreadsheet and validate again.').replace(
+          '{count}',
+          String(data.invalidCount)
+        );
+        alertEl.classList.remove('d-none');
+      }
+      const tbody = document.querySelector('#bulkImportErrorTable tbody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        (data.rows || [])
+          .filter((r) => r.errors && r.errors.length)
+          .forEach((r) => {
+            const tr = document.createElement('tr');
+            const tdRow = document.createElement('td');
+            tdRow.textContent = String(r.row);
+            const tdErr = document.createElement('td');
+            (r.errors || []).forEach((err) => {
+              const div = document.createElement('div');
+              div.className = 'small';
+              div.textContent = err;
+              tdErr.appendChild(div);
+            });
+            tr.appendChild(tdRow);
+            tr.appendChild(tdErr);
+            tbody.appendChild(tr);
+          });
+      }
+      const errWrap = document.getElementById('bulkImportErrorWrap');
+      if (errWrap) errWrap.classList.remove('d-none');
+    }
+  } catch (e) {
+    Swal.close();
+    Swal.fire({ icon: 'error', title: __NSO.networkError || 'Network error', text: e.message || 'Try again.' });
+  }
+}
+
+async function commitBulkOrderImport() {
+  const input = document.getElementById('bulkImportFile');
+  const file = input && input.files && input.files[0];
+  if (!file || !bulkImportValidated) {
+    Swal.fire({
+      icon: 'warning',
+      title: __NSO.validateFirst || 'Validate first',
+      text: __NSO.validateFirstText || 'Run Validate successfully on the same file before importing.',
+    });
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  Swal.fire({
+    title: __NSO.importing || 'Importing…',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+
+  try {
+    const res = await fetch('/business/orders-import-commit', {
+      method: 'POST',
+      body: fd,
+      credentials: 'include',
+    });
+    const data = await res.json().catch(() => ({}));
+    Swal.close();
+
+    if (res.status === 401) {
+      Swal.fire({
+        icon: 'warning',
+        title: __NSO.sessionExpired || 'Session expired',
+        text: __NSO.sessionExpiredText || 'Please sign in again to continue.',
+      }).then(() => {
+        window.location.href = '/login';
+      });
+      return;
+    }
+    if (res.status === 403) {
+      Swal.fire({
+        icon: 'info',
+        title: __NSO.accountSetupRequired || 'Account setup required',
+        text: data.message || data.error || (__NSO.accountSetupRequiredText || 'Complete your account to use this feature.'),
+      });
+      return;
+    }
+
+    if (!res.ok) {
+      const tbody = document.querySelector('#bulkImportErrorTable tbody');
+      if (tbody && data.rows && data.rows.length) {
+        tbody.innerHTML = '';
+        data.rows.forEach((r) => {
+          const tr = document.createElement('tr');
+          const tdRow = document.createElement('td');
+          tdRow.textContent = String(r.row);
+          const tdErr = document.createElement('td');
+          (r.errors || []).forEach((err) => {
+            const div = document.createElement('div');
+            div.className = 'small';
+            div.textContent = err;
+            tdErr.appendChild(div);
+          });
+          tr.appendChild(tdRow);
+          tr.appendChild(tdErr);
+          tbody.appendChild(tr);
+        });
+        document.getElementById('bulkImportErrorWrap')?.classList.remove('d-none');
+      }
+      Swal.fire({
+        icon: 'error',
+        title: __NSO.importFailed || 'Import failed',
+        text: data.error || (__NSO.importFailedText || 'No orders were saved.'),
+      });
+      return;
+    }
+
+    const modalEl = document.getElementById('bulkImportModal');
+    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+      const inst = window.bootstrap.Modal.getInstance(modalEl);
+      if (inst) inst.hide();
+    }
+
+    Swal.fire({
+      icon: 'success',
+      title: __NSO.importSuccess || 'Delivery orders imported',
+      text: data.message || `Created ${data.createdCount} delivery order(s).`,
+      confirmButtonColor: '#0d6efd',
+    });
+
+    if (typeof SearchData === 'function') {
+      SearchData();
+    }
+  } catch (e) {
+    Swal.close();
+    Swal.fire({ icon: 'error', title: __NSO.networkError || 'Network error', text: e.message || 'Try again.' });
+  }
 }

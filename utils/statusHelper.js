@@ -20,8 +20,16 @@ const STATUS_CATEGORIES = {
 const STATUS_FLOWS = {
   Deliver: ['new', 'pickedUp', 'inStock', 'inProgress', 'headingToCustomer', 'completed'],
   Return: ['new', 'returnInitiated', 'returnAssigned', 'returnPickedUp', 'returnAtWarehouse', 'returnInspection', 'returnProcessing', 'returnToBusiness', 'returnCompleted'],
-  Exchange: ['new', 'pickedUp', 'inStock', 'inProgress', 'headingToCustomer', 'exchangePickup', 'exchangeDelivery', 'completed'],
-  'Cash Collection': ['new', 'pickedUp', 'inStock', 'inProgress', 'headingToCustomer', 'collectionComplete', 'completed']
+  Exchange: [
+    'new',
+    'pickedUp',
+    'inStock',
+    'inProgress',
+    'headingToCustomer',
+    'inReturnStock',
+    'returnToBusiness',
+    'completed',
+  ],
 };
 
 /**
@@ -47,13 +55,9 @@ const ORDER_STATUSES = {
   returnAtWarehouse: { category: STATUS_CATEGORIES.PROCESSING, label: 'Return at Warehouse', description: 'Return is at warehouse' },
   returnToBusiness: { category: STATUS_CATEGORIES.PROCESSING, label: 'Return to Business', description: 'Return is on the way to business' },
   
-  // Exchange-specific statuses
+  // Exchange-specific (legacy status; stage exchangePickup still used on orderStages)
   exchangePickup: { category: STATUS_CATEGORIES.PROCESSING, label: 'Exchange Pickup', description: 'Original item picked up for exchange' },
-  exchangeDelivery: { category: STATUS_CATEGORIES.PROCESSING, label: 'Exchange Delivery', description: 'Replacement item being delivered' },
-  
-  // Cash Collection-specific statuses
-  collectionComplete: { category: STATUS_CATEGORIES.PROCESSING, label: 'Collection Complete', description: 'Cash has been collected successfully' },
-  
+
   // PAUSED category
   waitingAction: { category: STATUS_CATEGORIES.PAUSED, label: 'Awaiting Action', description: 'Order is waiting for business action' },
   rejected: { category: STATUS_CATEGORIES.PAUSED, label: 'Rejected', description: 'Order has been rejected by courier' },
@@ -102,7 +106,6 @@ const ORDER_TYPES = {
   Deliver: { label: 'Deliver', description: 'Standard delivery order' },
   Return: { label: 'Return', description: 'Return order' },
   Exchange: { label: 'Exchange', description: 'Exchange order with replacement items' },
-  'Cash Collection': { label: 'Cash Collection', description: 'Cash collection without product delivery' },
   'Sign & Return': { label: 'Sign & Return', description: 'Sign and return order' }
 };
 
@@ -229,7 +232,7 @@ function isValidStatusTransition(currentStatus, newStatus) {
     'inStock': ['inProgress', 'inReturnStock', 'canceled'],
     'inReturnStock': ['returnToBusiness', 'canceled'],
     'inProgress': ['headingToCustomer', 'canceled'],
-    'headingToCustomer': ['completed', 'waitingAction', 'rejected', 'returnToWarehouse', 'collectionComplete', 'exchangePickup'], // For Exchange orders, should go to exchangePickup
+    'headingToCustomer': ['completed', 'waitingAction', 'rejected', 'returnToWarehouse', 'inReturnStock'],
     'returnToWarehouse': ['inReturnStock', 'canceled'],
     'headingToYou': ['returnCompleted', 'waitingAction'],
     'rescheduled': ['headingToCustomer', 'canceled'],
@@ -239,7 +242,7 @@ function isValidStatusTransition(currentStatus, newStatus) {
     'returnAssigned': ['returnPickedUp', 'canceled'],
     'returnPickedUp': ['returnAtWarehouse', 'canceled'],
     'returnAtWarehouse': ['returnToBusiness', 'canceled'],
-    'returnToBusiness': ['returnCompleted', 'canceled'],
+    'returnToBusiness': ['returnCompleted', 'completed', 'canceled'],
     'returnCompleted': [],
     'canceled': [],
     'rejected': ['returnToWarehouse', 'waitingAction'],
@@ -248,11 +251,8 @@ function isValidStatusTransition(currentStatus, newStatus) {
     'deliveryFailed': ['returnToWarehouse', 'waitingAction'],
     'autoReturnInitiated': ['returnAssigned'],
     'returnLinked': ['returnPickedUp'],
-    // Exchange-specific transitions - more restrictive to ensure proper flow
-    'exchangePickup': ['exchangeDelivery'], // After picking up original item, must proceed to delivery completion
-    'exchangeDelivery': ['completed'], // After exchange delivery, only completion is allowed
-    // Cash Collection-specific transitions
-    'collectionComplete': ['completed', 'waitingAction', 'rejected']
+    // Legacy Exchange intermediate status (old data)
+    'exchangePickup': ['inReturnStock', 'completed', 'canceled'],
   };
   
   // Check if transition is allowed
@@ -273,7 +273,7 @@ function getNextPossibleStatuses(currentStatus) {
     'inStock': ['inProgress', 'inReturnStock', 'canceled'],
     'inReturnStock': ['returnToBusiness', 'canceled'],
     'inProgress': ['headingToCustomer', 'canceled'],
-    'headingToCustomer': ['completed', 'waitingAction', 'rejected', 'returnToWarehouse', 'collectionComplete', 'exchangePickup'], // For Exchange orders, should go to exchangePickup
+    'headingToCustomer': ['completed', 'waitingAction', 'rejected', 'returnToWarehouse', 'inReturnStock'],
     'returnToWarehouse': ['inReturnStock', 'canceled'],
     'headingToYou': ['returnCompleted', 'waitingAction'],
     'rescheduled': ['headingToCustomer', 'canceled'],
@@ -283,7 +283,7 @@ function getNextPossibleStatuses(currentStatus) {
     'returnAssigned': ['returnPickedUp', 'canceled'],
     'returnPickedUp': ['returnAtWarehouse', 'canceled'],
     'returnAtWarehouse': ['returnToBusiness', 'canceled'],
-    'returnToBusiness': ['returnCompleted', 'canceled'],
+    'returnToBusiness': ['returnCompleted', 'completed', 'canceled'],
     'returnCompleted': [],
     'canceled': [],
     'rejected': ['returnToWarehouse', 'waitingAction'],
@@ -292,11 +292,7 @@ function getNextPossibleStatuses(currentStatus) {
     'deliveryFailed': ['returnToWarehouse', 'waitingAction'],
     'autoReturnInitiated': ['returnAssigned'],
     'returnLinked': ['returnPickedUp'],
-    // Exchange-specific transitions - more restrictive to ensure proper flow
-    'exchangePickup': ['exchangeDelivery'], // After picking up original item, must proceed to delivery completion
-    'exchangeDelivery': ['completed'], // After exchange delivery, only completion is allowed
-    // Cash Collection-specific transitions
-    'collectionComplete': ['completed', 'waitingAction', 'rejected']
+    'exchangePickup': ['inReturnStock', 'completed', 'canceled'],
   };
   
   return allowedTransitions[currentStatus] || [];

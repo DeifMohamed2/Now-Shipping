@@ -1,0 +1,74 @@
+/**
+ * Main content padding (after Velzon app.min.css).
+ * Vertical: clearance for fixed 70px topbar + bottom breathing room.
+ * Horizontal: none on .page-content — width comes from inner .container-fluid only
+ * (tight --bs-gutter-x) so main column uses nearly full width on all portals.
+ */
+html:is([data-layout='vertical'], [data-layout='twocolumn']) .page-content {
+  padding-top: calc(70px + var(--vz-grid-gutter-width) * 0.65);
+  padding-bottom: 3.75rem;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+html:is([data-layout='vertical'], [data-layout='twocolumn']) .page-content > .container-fluid {
+  --bs-gutter-x: 0.5rem;
+  /* One symmetric value so left/right gutters match (safe-area uses max of both sides) */
+  --app-inline-pad: max(
+    calc(var(--bs-gutter-x) * 0.5),
+    env(safe-area-inset-left, 0px),
+    env(safe-area-inset-right, 0px)
+  );
+  max-width: 100%;
+  padding-left: var(--app-inline-pad);
+  padding-right: var(--app-inline-pad);
+}
+
+/*
+ * Velzon .page-title-box uses margin-left/right: calc(-1 * --vz-grid-gutter-width) to “full bleed”
+ * the gray bar. That only matched the old container padding; with a smaller gutter it skews
+ * (title vs card / breadcrumbs look off-center). Drop horizontal bleed; padding stays even.
+ */
+html:is([data-layout='vertical'], [data-layout='twocolumn']) .page-content .page-title-box {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+html:is([data-layout='vertical'], [data-layout='twocolumn']) {
+  scrollbar-gutter: stable;
+}
+
+/* Brand logo used when no profile photo is uploaded (replaces stock Velzon avatars) */
+img.profile-img--fallback {
+  object-fit: contain !important;
+  background: #f1f3f5;
+  padding: 0.15rem;
+  box-sizing: border-box;
+}
+
+/*
+ * Scrollable Bootstrap modals: .modal-dialog-scrollable relies on .modal-body being a flex
+ * participant under .modal-content (max-height + overflow hidden). A <form> (or any wrapper)
+ * between .modal-content and .modal-body breaks that chain — the body grows with content and
+ * never scrolls. Restore a flex column on the wrapper so the body can shrink and scroll.
+ */
+.modal-dialog-scrollable .modal-content > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.modal-dialog-scrollable .modal-content > form > .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-dialog-scrollable .modal-content > hr {
+  flex-shrink: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}

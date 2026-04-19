@@ -1,0 +1,273 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<style>
+  /* ── Balance hero ─────────────────────────────── */
+  .wl-hero {
+    background: linear-gradient(135deg, #1a2c4e 0%, #2a3950 100%);
+    border-radius: 16px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .wl-hero::before {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.04);
+    pointer-events: none;
+  }
+  .wl-hero::after {
+    content: '';
+    position: absolute;
+    right: 60px; bottom: -80px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(228,162,74,.08);
+    pointer-events: none;
+  }
+  .wl-balance-amount {
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .wl-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 50px;
+    padding: .4rem .875rem;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: rgba(255,255,255,.9);
+  }
+  .wl-meta-pill i { color: #E4A24A; font-size: 1rem; }
+
+  /* ── Type icon bubble ─────────────────────────── */
+  .wl-type-icon {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem; flex-shrink: 0;
+  }
+  .wl-type-icon.credit  { background: rgba(16,185,129,.12); color: #10b981; }
+  .wl-type-icon.debit   { background: rgba(239,68,68,.10);  color: #ef4444; }
+  .wl-type-icon.payout  { background: rgba(59,130,246,.10); color: #3b82f6; }
+
+  .wl-amount-credit { color: #10b981; font-weight: 600; }
+  .wl-amount-debit  { color: #ef4444; font-weight: 600; }
+
+  /* Status pills: do NOT use Bootstrap .badge — it forces --bs-badge-color: #fff (invisible on yellow) */
+  .wl-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35em 0.75em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: 50rem;
+    white-space: nowrap;
+  }
+  .wl-status-pill-settled {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid rgba(6, 95, 70, 0.2);
+  }
+  .wl-status-pill-inpayout {
+    background: #dbeafe;
+    color: #1e3a5f;
+    border: 1px solid rgba(30, 58, 95, 0.15);
+  }
+  .wl-status-pill-unsettled {
+    background: #fde68a;
+    color: #78350f;
+    border: 1px solid rgba(120, 53, 15, 0.25);
+  }
+
+  /* ── Filter bar ───────────────────────────────── */
+  .wl-filter-bar {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: .75rem 1rem;
+  }
+
+  /* ── Table scroll ─────────────────────────────── */
+  #ledgerTable-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #ledgerTable-wrap table { min-width: 640px; margin-bottom: 0; width: 100%; }
+  #ledgerTable-wrap::-webkit-scrollbar { height: 5px; }
+  #ledgerTable-wrap::-webkit-scrollbar-track { background: #f1f3f5; border-radius: 3px; }
+  #ledgerTable-wrap::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 3px; }
+
+  @keyframes wl-spin { to { transform: rotate(360deg); } }
+  .wl-spin { animation: wl-spin .9s linear infinite; display: inline-block; }
+
+  /* ── Stat cards ───────────────────────────────── */
+  .wl-stat-card { border-top: 3px solid transparent; }
+  .wl-stat-card.c-gold   { border-top-color: #E4A24A; }
+  .wl-stat-card.c-red    { border-top-color: #ef4444; }
+  .wl-stat-card.c-blue   { border-top-color: #3b82f6; }
+  .wl-stat-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; flex-shrink: 0;
+  }
+  .wl-stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+  .wl-stat-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #868e96; }
+</style>
+
+<%- contentFor('body') %>
+<% var Wp = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.wallet) ? translation.business.pages.wallet : {}; %>
+<% var _numLoc = (typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-EG' : 'en-EG'; %>
+
+<!-- ── Balance hero ─────────────────────────────────────── -->
+<div class="wl-hero p-4 mb-4">
+  <div class="row align-items-center gy-3">
+    <div class="col-12 col-md-auto">
+      <p class="mb-1 opacity-75 fs-13"><%= Wp.availableBalance || 'Available Balance' %></p>
+      <div class="wl-balance-amount mb-2" id="heroBalance">
+        <span class="ltr-embed"><%= balance.toLocaleString(_numLoc) %></span> <span class="fs-5 fw-normal opacity-75">EGP</span>
+      </div>
+      <% if (businessAccountCode) { %>
+      <p class="mb-0 opacity-90 fs-12"><i class="ri-shield-keyhole-line me-1"></i><%= Wp.accountCodeLabel || 'Account' %> <span class="font-monospace fw-semibold letter-spacing-1 ltr-embed"><%= businessAccountCode %></span></p>
+      <% } %>
+    </div>
+    <div class="col-12 col-md d-flex flex-wrap gap-2 ms-md-4">
+      <div class="wl-meta-pill">
+        <i class="ri-calendar-check-line"></i>
+        <span><%= Wp.nextPayout || 'Next payout:' %> <strong><%= nextPayoutDate %></strong></span>
+      </div>
+      <div class="wl-meta-pill">
+        <i class="ri-repeat-line"></i>
+        <span><%= Wp.everyWednesday || 'Every' %> <strong><%= Wp.wednesday || 'Wednesday' %></strong></span>
+      </div>
+    </div>
+    <div class="col-12 col-md-auto ms-md-auto">
+      <a href="/business/wallet/export" class="btn btn-sm" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;">
+        <i class="ri-download-2-line me-1"></i><%= Wp.export || 'Export' %>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── Summary stat cards ────────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-sm-4">
+    <div class="card wl-stat-card c-gold mb-0 h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <div class="wl-stat-icon bg-warning-subtle text-warning"><i class="ri-money-dollar-circle-line"></i></div>
+          <span class="wl-stat-label"><%= Wp.totalEarned || 'Total Earned' %></span>
+        </div>
+        <div class="wl-stat-value text-success mb-0" id="statTotalCod">—</div>
+        <small class="text-muted"><%= Wp.codCollectedHint || 'COD collected' %></small>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-4">
+    <div class="card wl-stat-card c-red mb-0 h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <div class="wl-stat-icon bg-danger-subtle text-danger"><i class="ri-percent-line"></i></div>
+          <span class="wl-stat-label"><%= Wp.totalFees || 'Total Fees' %></span>
+        </div>
+        <div class="wl-stat-value text-danger mb-0" id="statTotalFees">—</div>
+        <small class="text-muted"><%= Wp.feesHint || 'Delivery & service fees' %></small>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-4">
+    <div class="card wl-stat-card c-blue mb-0 h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <div class="wl-stat-icon bg-primary-subtle text-primary"><i class="ri-bank-line"></i></div>
+          <span class="wl-stat-label"><%= Wp.totalPaidOut || 'Total Paid Out' %></span>
+        </div>
+        <div class="wl-stat-value text-primary mb-0" id="statTotalPaid">—</div>
+        <small class="text-muted"><%= Wp.paidOutHint || 'Transferred to your account' %></small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Ledger table ──────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header border-0">
+    <div class="row align-items-center gy-2">
+      <div class="col">
+        <h5 class="card-title mb-0"><%= Wp.transactionHistory || 'Transaction History' %></h5>
+        <p class="text-muted mb-0 fs-13"><%= Wp.transactionHistorySub || 'Every financial event on your account' %></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="card-body border-top border-dashed py-3">
+    <div class="wl-filter-bar d-flex flex-wrap align-items-center gap-2">
+
+      <!-- Period -->
+      <div class="btn-group btn-group-sm" id="periodGroup">
+        <button class="btn btn-outline-secondary" data-period="today"><%= Wp.periodToday || 'Today' %></button>
+        <button class="btn btn-outline-secondary active" data-period="month"><%= Wp.periodMonth || 'This Month' %></button>
+        <button class="btn btn-outline-secondary" data-period="year"><%= Wp.periodYear || 'This Year' %></button>
+        <button class="btn btn-outline-secondary" data-period="all"><%= Wp.periodAll || 'All Time' %></button>
+      </div>
+
+      <!-- Type filter -->
+      <select class="form-select form-select-sm" id="typeFilter" style="width:auto;">
+        <option value="all"><%= Wp.filterAllTypes || 'All Types' %></option>
+        <option value="cod_collected"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.cod_collected) || 'COD Collected' %></option>
+        <option value="delivery_fee"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.delivery_fee) || 'Delivery Fee' %></option>
+        <option value="pickup_fee"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.pickup_fee) || 'Pickup Fee' %></option>
+        <option value="adjustment"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.adjustment) || 'Adjustment' %></option>
+        <option value="payout"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.payout) || 'Payout' %></option>
+      </select>
+
+      <!-- Status -->
+      <select class="form-select form-select-sm" id="settledFilter" style="width:auto;">
+        <option value="all"><%= Wp.filterAllStatus || 'All Status' %></option>
+        <option value="false"><%= Wp.filterPending || 'Pending' %></option>
+        <option value="true"><%= Wp.filterInPayoutPaid || 'In Payout / Paid' %></option>
+      </select>
+
+      <!-- Search -->
+      <div class="search-box ms-auto" style="min-width:200px;">
+        <input type="text" class="form-control form-control-sm search" id="searchInput" placeholder="<%= Wp.searchPlaceholder || 'Search order, description…' %>">
+        <i class="ri-search-line search-icon"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card-body pt-0">
+    <div id="ledgerTable-wrap">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th><%= Wp.colDate || 'Date' %></th>
+            <th><%= Wp.colDescription || 'Description' %></th>
+            <th><%= Wp.colType || 'Type' %></th>
+            <th class="text-end"><%= Wp.colAmount || 'Amount' %></th>
+            <th class="text-center"><%= Wp.colStatus || 'Status' %></th>
+          </tr>
+        </thead>
+        <tbody id="ledgerTbody">
+          <tr><td colspan="5" class="text-center py-4 text-muted"><span class="wl-spin"><i class="ri-loader-4-line"></i></span> <%= Wp.loadingTable || 'Loading…' %></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex align-items-center justify-content-between mt-3 flex-wrap gap-2">
+      <small class="text-muted" id="ledgerInfo">—</small>
+      <nav><ul class="pagination pagination-sm mb-0" id="ledgerPagination"></ul></nav>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/rJS/business/wallet.js"></script>

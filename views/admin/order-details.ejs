@@ -2,6 +2,10 @@
 <%- contentFor('body') %>
 
 <% if (order) { %>
+<%
+  const canCancelOrderResolved = typeof canCancelOrder !== 'undefined' ? !!canCancelOrder : false;
+  const canChangeAddressResolved = typeof canChangeAddress !== 'undefined' ? !!canChangeAddress : false;
+%>
 
 <div class="row">
   <div class="col-xl-9">
@@ -10,8 +14,17 @@
         <div class="d-sm-flex align-items-center">
           <h5 class="card-title flex-grow-1 mb-0">Order Status - <span style="color: #007bff;"><strong><%= order.orderNumber %></strong></span></h5>
           <div class="flex-shrink-0 mt-2 mt-sm-0">
+            <% if (canChangeAddressResolved) { %>
             <a href="/business/edit-order/<%= order.orderNumber %>" class="btn btn-soft-info material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-map-pin-line align-middle me-1"></i> Change Address</a>
+            <% } %>
+            <% if (canCancelOrderResolved) { %>
             <button class="btn btn-soft-danger material-shadow-none btn-sm mt-2 mt-sm-0" onclick="cancelOrder('<%= order._id %>')"><i class="mdi mdi-archive-remove-outline align-middle me-1"></i> Cancel Order</button>
+            <% } %>
+            <% if (order.orderStatus === 'returnAssigned' && order.orderShipping && order.orderShipping.orderType === 'Return') { %>
+            <button class="btn btn-soft-warning material-shadow-none btn-sm mt-2 mt-sm-0" onclick="resendReturnOtp('<%= order.orderNumber %>')">
+              <i class="ri-message-2-line align-middle me-1"></i> Resend Return OTP
+            </button>
+            <% } %>
           </div>
         </div>
       </div>
@@ -35,8 +48,6 @@
               <strong>Status:</strong> 
               <% if (order.orderStatus === 'inReturnStock') { %>
                 <span class="badge bg-info">In Return Stock</span>
-              <% } else if (order.orderStatus === 'returnInProgress') { %>
-                <span class="badge bg-warning">Return In Progress</span>
               <% } else if (order.orderStatus === 'returnCompleted') { %>
                 <span class="badge bg-success">Return Completed</span>
               <% } else { %>
@@ -404,13 +415,13 @@
         <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
             <div class="avatar-xs">
-              <div class="avatar-title <%= order.orderStatus === 'inStock' || order.orderStatus === 'inProgress' || order.orderStatus === 'headingToCustomer' || order.orderStatus === 'exchangePickup' || order.orderStatus === 'exchangeDelivery' || order.orderStatus === 'completed' ? 'bg-success' : 'bg-light text-muted' %> rounded-circle material-shadow">
+              <div class="avatar-title <%= order.orderStatus === 'inStock' || order.orderStatus === 'inProgress' || order.orderStatus === 'headingToCustomer' || order.orderStatus === 'inReturnStock' || order.orderStatus === 'returnToBusiness' || order.orderStatus === 'completed' ? 'bg-success' : 'bg-light text-muted' %> rounded-circle material-shadow">
                 <i class="ri-archive-line"></i>
               </div>
             </div>
           </div>
           <div class="flex-grow-1 ms-3">
-            <h6 class="fs-14 mb-0">Warehouse Processing <%= order.orderStatus === 'inStock' || order.orderStatus === 'inProgress' || order.orderStatus === 'headingToCustomer' || order.orderStatus === 'exchangePickup' || order.orderStatus === 'exchangeDelivery' || order.orderStatus === 'completed' ? '- Completed' : '' %></h6>
+            <h6 class="fs-14 mb-0">Warehouse Processing <%= order.orderStatus === 'inStock' || order.orderStatus === 'inProgress' || order.orderStatus === 'headingToCustomer' || order.orderStatus === 'inReturnStock' || order.orderStatus === 'returnToBusiness' || order.orderStatus === 'completed' ? '- Completed' : '' %></h6>
             <% if (order.orderStages.shipping && order.orderStages.shipping.completedAt) { %>
             <p class="text-muted mb-0 small"><%= new Date(order.orderStages.shipping.completedAt).toLocaleString() %></p>
             <% } %>
@@ -421,13 +432,13 @@
         <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
             <div class="avatar-xs">
-              <div class="avatar-title <%= order.orderStatus === 'headingToCustomer' || order.orderStatus === 'exchangePickup' || order.orderStatus === 'exchangeDelivery' || order.orderStatus === 'completed' ? 'bg-success' : 'bg-light text-muted' %> rounded-circle material-shadow">
+              <div class="avatar-title <%= order.orderStatus === 'headingToCustomer' || order.orderStatus === 'inReturnStock' || order.orderStatus === 'returnToBusiness' || order.orderStatus === 'completed' ? 'bg-success' : 'bg-light text-muted' %> rounded-circle material-shadow">
                 <i class="ri-truck-line"></i>
               </div>
             </div>
           </div>
           <div class="flex-grow-1 ms-3">
-            <h6 class="fs-14 mb-0">Delivery to Customer <%= order.orderStatus === 'headingToCustomer' || order.orderStatus === 'exchangePickup' || order.orderStatus === 'exchangeDelivery' || order.orderStatus === 'completed' ? '- Completed' : '' %></h6>
+            <h6 class="fs-14 mb-0">Delivery to Customer <%= order.orderStages.delivered && order.orderStages.delivered.isCompleted ? '- Completed' : '' %></h6>
             <% if (order.orderStages.outForDelivery && order.orderStages.outForDelivery.completedAt) { %>
             <p class="text-muted mb-0 small"><%= new Date(order.orderStages.outForDelivery.completedAt).toLocaleString() %></p>
             <% } %>
@@ -444,26 +455,39 @@
             </div>
           </div>
           <div class="flex-grow-1 ms-3">
-            <h6 class="fs-14 mb-0">Original Item Pickup <%= order.orderStages.exchangePickup && order.orderStages.exchangePickup.isCompleted ? '- Completed' : '' %></h6>
+            <h6 class="fs-14 mb-0">Exchange at customer <%= order.orderStages.exchangePickup && order.orderStages.exchangePickup.isCompleted ? '- Completed' : '' %></h6>
             <% if (order.orderStages.exchangePickup && order.orderStages.exchangePickup.completedAt) { %>
             <p class="text-muted mb-0 small"><%= new Date(order.orderStages.exchangePickup.completedAt).toLocaleString() %></p>
             <% } %>
           </div>
         </div>
         
-        <!-- Replacement Item Delivery -->
-        <div class="d-flex align-items-center">
+        <!-- Original item: return stock -->
+        <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
             <div class="avatar-xs">
-              <div class="avatar-title <%= order.orderStages.exchangeDelivery && order.orderStages.exchangeDelivery.isCompleted ? 'bg-success' : 'bg-light text-muted' %> rounded-circle material-shadow">
-                <i class="ri-arrow-right-line"></i>
+              <div class="avatar-title <%= ['inReturnStock','returnToBusiness','completed'].includes(order.orderStatus) ? 'bg-success' : 'bg-light text-muted' %> rounded-circle material-shadow">
+                <i class="ri-archive-line"></i>
               </div>
             </div>
           </div>
           <div class="flex-grow-1 ms-3">
-            <h6 class="fs-14 mb-0">Replacement Item Delivery <%= order.orderStages.exchangeDelivery && order.orderStages.exchangeDelivery.isCompleted ? '- Completed' : '' %></h6>
-            <% if (order.orderStages.exchangeDelivery && order.orderStages.exchangeDelivery.completedAt) { %>
-            <p class="text-muted mb-0 small"><%= new Date(order.orderStages.exchangeDelivery.completedAt).toLocaleString() %></p>
+            <h6 class="fs-14 mb-0">Original item in return stock <%= ['inReturnStock','returnToBusiness','completed'].includes(order.orderStatus) ? '- Done' : '' %></h6>
+          </div>
+        </div>
+        <!-- Original item: returned to business -->
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0">
+            <div class="avatar-xs">
+              <div class="avatar-title <%= order.orderStatus === 'completed' && order.orderStages.returnCompleted && order.orderStages.returnCompleted.isCompleted ? 'bg-success' : 'bg-light text-muted' %> rounded-circle material-shadow">
+                <i class="ri-store-2-line"></i>
+              </div>
+            </div>
+          </div>
+          <div class="flex-grow-1 ms-3">
+            <h6 class="fs-14 mb-0">Original item returned to business <%= order.orderStatus === 'completed' && order.orderStages.returnCompleted && order.orderStages.returnCompleted.isCompleted ? '- Completed' : '' %></h6>
+            <% if (order.orderStages.returnCompleted && order.orderStages.returnCompleted.completedAt) { %>
+            <p class="text-muted mb-0 small"><%= new Date(order.orderStages.returnCompleted.completedAt).toLocaleString() %></p>
             <% } %>
           </div>
         </div>
@@ -482,12 +506,10 @@
       <div class="row g-3">
         <div class="col-md-6">
           <p class="text-muted small mb-1 fw-medium">
-            <% if (order.orderShipping.amountType === 'COD') { %>
-            Cash on Delivery Amount:
-            <% } else if (order.orderShipping.amountType === 'CD') { %>
+            <% if (order.orderShipping.amountType === 'CD') { %>
             Cash Difference Amount:
-            <% } else if (order.orderShipping.amountType === 'CC') { %>
-            Cash Collection Amount:
+            <% } else if (order.orderShipping.amountType === 'COD') { %>
+            Cash on Delivery Amount:
             <% } %>
           </p>
         </div>
@@ -510,8 +532,8 @@
     </h5>
   </div>
   <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-bordered mb-0">
+    <div class="admin-table-scroll admin-table-scroll--compact">
+      <table class="table table-bordered mb-0 admin-data-table">
         <thead class="table-light">
           <tr>
             <th scope="col" style="width:20%">Date</th>
@@ -787,4 +809,30 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script src="/assets/rJS/business/order-details.js"></script>
+<script>
+async function resendReturnOtp(orderNumber) {
+  const confirm = await Swal.fire({
+    title: 'Resend Return OTP?',
+    html: `<p class="text-muted">A new 6-digit OTP will be generated and sent via SMS to the customer for order <strong>#${orderNumber}</strong>. The previous OTP will be invalidated.</p>`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Send OTP',
+    confirmButtonColor: '#F39720',
+  });
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const res = await fetch(`/admin/orders/${orderNumber}/resend-return-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to resend OTP');
+    Swal.fire({ icon: 'success', title: 'OTP Sent!', text: data.message, confirmButtonColor: '#F39720' })
+      .then(() => window.location.reload());
+  } catch (err) {
+    Swal.fire({ icon: 'error', title: 'Error', text: err.message });
+  }
+}
+</script>
 <!-- App js -->

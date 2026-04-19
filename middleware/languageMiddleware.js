@@ -29,65 +29,65 @@ const loadTranslations = () => {
 
 const translations = loadTranslations();
 
-const languageMiddleware = (req, res, next) => {
-  // Get language from query parameter, cookie, or default to 'en'
-  const lang = req.query.lang || req.cookies.language || 'en';
-  
-  // Validate language
-  const supportedLanguages = ['en', 'ar'];
-  const currentLang = supportedLanguages.includes(lang) ? lang : 'en';
-  
-  // Set language in request object
-  req.language = currentLang;
-  
-  // Set direction based on language
-  req.direction = currentLang === 'ar' ? 'rtl' : 'ltr';
-  
-  // Get translations for current language
-  req.translations = translations[currentLang] || translations['en'];
-  
-  // Set cookie for language persistence
-  if (req.query.lang && supportedLanguages.includes(req.query.lang)) {
-    res.cookie('language', req.query.lang, {
-      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
-      httpOnly: false, // Allow client-side access
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    });
+const SUPPORTED_LANGUAGES = ['en', 'ar'];
+
+const cookieOpts = {
+  maxAge: 365 * 24 * 60 * 60 * 1000,
+  httpOnly: false,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+};
+
+/** `lang` or legacy `clang` query (first valid wins). */
+function langFromQuery(req) {
+  for (const key of ['lang', 'clang']) {
+    const raw = req.query[key];
+    if (!raw || typeof raw !== 'string') continue;
+    const v = raw.toLowerCase();
+    if (SUPPORTED_LANGUAGES.includes(v)) return v;
   }
-  
-  // Make translations available to views
+  return null;
+}
+
+const languageMiddleware = (req, res, next) => {
+  const fromQuery = langFromQuery(req);
+  const cookieLang = req.cookies && req.cookies.language;
+  const legacyUlang = req.cookies && req.cookies.ulang;
+  const raw = fromQuery || cookieLang || legacyUlang || 'en';
+  const currentLang = SUPPORTED_LANGUAGES.includes(raw) ? raw : 'en';
+
+  req.language = currentLang;
+  req.direction = currentLang === 'ar' ? 'rtl' : 'ltr';
+  req.translations = translations[currentLang] || translations['en'];
+
   res.locals.translation = req.translations;
   res.locals.currentLang = currentLang;
+  res.locals.lang = currentLang;
   res.locals.direction = req.direction;
   res.locals.isRTL = req.direction === 'rtl';
-  
+
   next();
 };
 
-// Middleware to handle language switching
+// Middleware to handle language switching (?lang= or ?clang= → cookie + clean URL)
 const handleLanguageSwitch = (req, res, next) => {
-  if (req.query.lang) {
-    const supportedLanguages = ['en', 'ar'];
-    const lang = supportedLanguages.includes(req.query.lang) ? req.query.lang : 'en';
-    
-    // Set cookie
-    res.cookie('language', lang, {
-      maxAge: 365 * 24 * 60 * 60 * 1000,
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    });
-    
-    // Remove lang parameter from URL to avoid duplication
-    const url = new URL(req.originalUrl, `${req.protocol}://${req.get('host')}`);
-    url.searchParams.delete('lang');
-    
-    // Redirect to clean URL
-    return res.redirect(url.pathname + url.search);
+  if (!req.query.lang && !req.query.clang) {
+    return next();
   }
-  
-  next();
+
+  const fromQuery = langFromQuery(req);
+  const lang = fromQuery || 'en';
+
+  res.cookie('language', lang, cookieOpts);
+  if (req.session) {
+    req.session.ulang = lang;
+  }
+
+  const url = new URL(req.originalUrl, `${req.protocol}://${req.get('host')}`);
+  url.searchParams.delete('lang');
+  url.searchParams.delete('clang');
+
+  return res.redirect(url.pathname + url.search);
 };
 
 // Helper function to get translation

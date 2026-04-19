@@ -354,24 +354,34 @@
      }
    </style>
 
+<% var Pp = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.pickupDetails) ? translation.business.pages.pickupDetails : {}; %>
 <div class="container-fluid py-4">
   <div class="row">
     <div class="col-md-12 mb-4">
-      <div class="d-flex align-items-center justify-content-between">
-        <h4 class="section-title mb-0">Pickup Details</h4>
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h4 class="section-title mb-0"><%= Pp.title || 'Pickup Details' %></h4>
+        <% const pickupCancellable = ['new', 'pendingPickup', 'driverAssigned'].includes(pickup.picikupStatus); %>
+        <% if (pickupCancellable) { %>
         <button type="button" class="btn btn-danger" onclick="cancelPickup('<%= pickup._id %>')">
-          <i class="ri-delete-bin-6-line me-1"></i> Cancel Pickup
+          <i class="ri-delete-bin-6-line me-1"></i> <%= Pp.cancelPickup || 'Cancel Pickup' %>
         </button>
+        <% } else if (pickup.picikupStatus !== 'canceled') { %>
+        <span class="badge bg-secondary-subtle text-dark border px-3 py-2">
+          <i class="ri-information-line me-1"></i> Cancellation unavailable — pickup already in progress or completed
+        </span>
+        <% } else { %>
+        <span class="badge bg-light text-muted border px-3 py-2">This pickup was cancelled</span>
+        <% } %>
       </div>
     </div>
 
     <!-- Pickup Details Card -->
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
       <div class="card">
         <div class="card-header text-white">
           <div class="d-sm-flex align-items-center">
             <h5 class="card-title flex-grow-1 mb-0">
-              <i class="ri-truck-line me-2"></i>Pickup Details
+              <i class="ri-truck-line me-2"></i><%= Pp.sectionInfo || 'Pickup Details' %>
             </h5>
           </div>
         </div>
@@ -381,7 +391,7 @@
                 <tbody>
                 <tr>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted">Pickup Number</h6>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupId || 'Pickup Number' %></h6>
                   <p class="mb-0"><%= pickup.pickupNumber %></p>
                   </td>
                   <td>
@@ -395,13 +405,13 @@
                   <p class="mb-0"><%= pickup.numberOfOrders %></p>
                   </td>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted">Pickup Status</h6>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.status || 'Pickup Status' %></h6>
                   <p class="mb-0" id="pickupStatus"></p>
                   </td>
                 </tr>
                 <tr>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted">Pickup Date</h6>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupDate || 'Pickup Date' %></h6>
                   <p class="mb-0"><%= new Date(pickup.pickupDate).toLocaleDateString() %></p>
                   </td>
                   <td>
@@ -425,7 +435,7 @@
                 <% if (selectedPickupAddress) { %>
                 <tr>
                   <td colspan="2">
-                    <h6 class="fs-14 mb-1 text-muted">Pickup Address</h6>
+                    <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupAddress || 'Pickup Address' %></h6>
                     <div class="p-2 bg-light rounded">
                       <h6 class="mb-1 fw-semibold"><%= selectedPickupAddress.addressName || 'Pickup Address' %></h6>
                       <p class="mb-1 text-muted small"><%= selectedPickupAddress.adressDetails || '' %></p>
@@ -451,7 +461,7 @@
     </div>
 
     <!-- Driver Details Card -->
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
       <div class="card">
         <div class="card-header text-white">
           <div class="d-sm-flex align-items-center">
@@ -487,7 +497,7 @@
                 </tr>
              <tr>
                <td>
-                 <h6 class="fs-14 mb-1 text-muted">Rate Driver</h6>
+                 <h6 class="fs-14 mb-1 text-muted"><%= Pp.ratingTitle || 'Rate Driver' %></h6>
                  <div id="driver-rater" dir="ltr"></div>
                  <input type="hidden" id="driverRating" name="driverRating" value="<%= pickup.driverRating %>">
                  <% if (!pickup.pickupStages[4]) { %>
@@ -496,7 +506,7 @@
                  <% } %>
                </td>
                <td>
-                 <h6 class="fs-14 mb-1 text-muted">Rate Service</h6>
+                 <h6 class="fs-14 mb-1 text-muted"><%= Pp.ratingTitle || 'Rate Service' %></h6>
                  <div id="service-rater" dir="ltr"></div>
                  <input type="hidden" id="pickupRating" name="pickupRating" value="<%= pickup.pickupRating %>">
                  <% if (!pickup.pickupStages[4]) { %>
@@ -509,7 +519,7 @@
             <tr>
               <td colspan="2" class="text-center">
                 <button type="button" class="btn btn-primary" id="submitRating" onclick="submitRating()">
-                  Submit Rating
+                  <%= Pp.submitRating || 'Submit Rating' %>
                 </button>
               </td>
             </tr>
@@ -527,7 +537,7 @@
       <div class="card">
         <div class="card-header text-white">
           <h5 class="card-title mb-0"></h5>
-            <i class="ri-time-line me-2"></i>Pickup Status
+            <i class="ri-time-line me-2"></i><%= Pp.status || 'Pickup Status' %>
           </h5>
         </div>
         <div class="card-body py-3">
@@ -585,11 +595,11 @@
               <thead>
                 <tr>
             
-                  <th>#Order ID</th>
-                  <th>Order Type</th>
-                  <th>Status</th>
-                  <th>location</th>
-                  <th>Total Amount</th>
+                  <th><%= Pp.colOrderId || '#Order ID' %></th>
+                  <th><%= Pp.colOrderType || 'Order Type' %></th>
+                  <th><%= Pp.colStatus || 'Status' %></th>
+                  <th><%= Pp.colLocation || 'Location' %></th>
+                  <th><%= Pp.colAmount || 'Total Amount' %></th>
            
                 </tr>
               </thead>
@@ -921,34 +931,48 @@ document.addEventListener("DOMContentLoaded", () => fetchOrders());
 
 async function cancelPickup(pickupId) {
   Swal.fire({
-    title: 'Are you sure?',
-    text: "You won't be able to revert this!",
+    title: 'Cancel this pickup?',
+    text: 'The pickup will be marked as cancelled. This cannot be undone.',
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, cancel it!',
+    confirmButtonText: 'Yes, cancel pickup',
   })
   .then(async (result) => {
     if (result.isConfirmed) {
       const response = await fetch(
-        `/business/delete-pickup/${pickupId}`,
+        `/business/pickup/cancel-pickup/${pickupId}`,
         {
-          method: 'DELETE',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
         }
       );
 
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = {};
+      }
+
       if (response.ok) {
         Swal.fire({
-          title: 'Cancelled!',
-          text: 'Your pickup has been cancelled.',
+          title: 'Cancelled',
+          text: data.message || 'Your pickup has been cancelled.',
           icon: 'success',
           confirmButtonText: 'OK',
         }).then(() => {
           window.location.href = '/business/pickups';
+        });
+      } else {
+        Swal.fire({
+          title: 'Cannot cancel pickup',
+          text: data.error || 'Unable to cancel this pickup. Please try again or contact support.',
+          icon: 'error',
+          confirmButtonText: 'OK',
         });
       }
     }
@@ -956,7 +980,7 @@ async function cancelPickup(pickupId) {
   .catch((error) => {
     console.error('Error:', error);
     Swal.fire({
-      title: 'Error!',
+      title: 'Error',
       text: 'There was an error cancelling the pickup. Please try again later.',
       icon: 'error',
       confirmButtonText: 'OK',

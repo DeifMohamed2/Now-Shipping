@@ -123,6 +123,11 @@ const courierSchema = new Schema(
     fcmToken: {
       type: String,
       default: null
+    },
+    preferredLanguage: {
+      type: String,
+      enum: ['en', 'ar'],
+      default: 'en',
     }
   },
   { timestamps: true }

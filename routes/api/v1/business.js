@@ -7,6 +7,7 @@ const jwtSecret = process.env.JWT_SECRET;
 
 const businessController = require('../../../controllers/businessController.js');
 const notificationController = require('../../../controllers/notificationController.js');
+const { uploadMultipleFiles } = require('../../../utils/fileUpload');
 
 
 async function authenticateUser(req, res, next) {
@@ -54,7 +55,54 @@ router.get('/user-data', async (req, res) => {
 
 router.get('/dashboard', businessController.getDashboardData);
 
-router.post('/complete-confirmation-form', businessController.completionConfirm);
+function normalizePhotosInput(rawPhotos) {
+    if (Array.isArray(rawPhotos)) {
+        return rawPhotos.filter(Boolean).map(String);
+    }
+    if (typeof rawPhotos === 'string') {
+        const trimmed = rawPhotos.trim();
+        if (!trimmed) return [];
+        try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+                return parsed.filter(Boolean).map(String);
+            }
+            return [trimmed];
+        } catch {
+            return [trimmed];
+        }
+    }
+    return [];
+}
+
+async function uploadCompletionPhotos(req, res, next) {
+    try {
+        const existingPhotos = normalizePhotosInput(req.body.photosOfBrandType);
+        if (!req.files || !req.files.photosOfBrandType) {
+            req.body.photosOfBrandType = existingPhotos;
+            return next();
+        }
+
+        const incomingFiles = Array.isArray(req.files.photosOfBrandType)
+            ? req.files.photosOfBrandType
+            : [req.files.photosOfBrandType];
+
+        const uploadedPhotos = await uploadMultipleFiles(incomingFiles, 'brand-documents');
+        const uploadedUrls = uploadedPhotos
+            .map((photo) => photo?.url)
+            .filter(Boolean);
+
+        req.body.photosOfBrandType = [...existingPhotos, ...uploadedUrls];
+        return next();
+    } catch (error) {
+        console.error('Error uploading completion confirmation photos:', error);
+        return res.status(500).json({
+            error: 'Failed to upload photos. Please try again.',
+        });
+    }
+}
+
+router.post('/complete-confirmation-form', uploadCompletionPhotos, businessController.completionConfirm);
 
 router.get('/request-verification-email', businessController.requestVerification);
 
@@ -154,33 +202,20 @@ router.post('/pickups/calculate-fee', businessController.calculatePickupFee);
 // Recover order courier assignment
 router.post('/orders/:orderId/recover-courier', businessController.recoverOrderCourier);
 
-// ==================== TRANSACTION APIs ==================== //
+// ==================== WALLET APIs ==================== //
 
-// Get all transactions by date
-router.get('/transactions', businessController.get_allTransactionsByDate);
+// Get ledger entries (replaces old transactions + cash-cycles endpoints)
+router.get('/wallet/entries', businessController.get_walletEntries);
 
-// Get single transaction details
-router.get('/transactions/:transactionId', businessController.getTransactionDetails);
-
-// Recalculate user balance
-router.post('/wallet/recalculate-balance', businessController.recalculateBalanceAPI);
-
-// Export transactions to Excel
-router.get('/wallet/export-transactions', businessController.exportTransactionsToExcel);
-
-
-// ==================== CASH CYCLE APIs ==================== //
-
-// Get total cash cycle by date
-router.get('/cash-cycles', businessController.get_totalCashCycleByDate);
-
-// Export cash cycles to Excel
-router.get('/wallet/export-cash-cycles', businessController.exportCashCyclesToExcel);
+// Export wallet to Excel
+router.get('/wallet/export', businessController.exportWalletToExcel);
 
 // ==================== NOTIFICATION APIs ==================== //
 
 // Update FCM token for push notifications
 router.post('/update-fcm-token', notificationController.updateBusinessFcmToken);
+router.get('/language', businessController.getBusinessLanguage);
+router.put('/language', businessController.updateBusinessLanguage);
 
 // Get business notifications
 router.get('/notifications', notificationController.getBusinessNotifications);

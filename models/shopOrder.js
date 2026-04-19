@@ -293,58 +293,29 @@ shopOrderSchema.pre('save', function (next) {
   next();
 });
 
-// Add post-save hook to create transaction when shop order is delivered
+// Create a ledger entry when a shop order is delivered and paid
 shopOrderSchema.post('save', async function(doc) {
   if (doc.status === 'delivered' && doc.paymentStatus === 'paid') {
     try {
-      console.log('Shop order delivered, checking for existing transaction for order:', doc.orderNumber);
-      
-      const Transaction = require('./transactions');
-      
-      // Check if transaction already exists for this shop order
-      const existingTransaction = await Transaction.findOne({
-        'shopOrderReferences.shopOrderId': doc._id,
-        transactionType: 'shopOrderDelivery'
-      });
-      
-      if (existingTransaction) {
-        console.log(`Transaction already exists for shop order ${doc.orderNumber}`);
-        return;
-      }
-      
-      console.log('Creating new transaction for shop order:', doc.orderNumber);
-      
-      // Create shop order delivery transaction
-      const shopOrderTransaction = new Transaction({
-        transactionId: `${Math.floor(100000 + Math.random() * 900000)}`,
-        transactionType: 'shopOrderDelivery',
-        transactionAmount: doc.totalAmount, // Shop order amount is added to business balance
-        transactionNotes: `Shop order delivery for order ${doc.orderNumber}`,
-        ordersDetails: {
-          orderNumber: doc.orderNumber,
-          totalAmount: doc.totalAmount,
-          deliveryFee: doc.deliveryFee,
-          subtotal: doc.subtotal,
-          tax: doc.tax,
-          discount: doc.discount,
-          deliveredDate: new Date(),
-          itemsCount: doc.items.length,
-          businessName: doc.businessName
-        },
-        shopOrderReferences: [{
-          shopOrderId: doc._id,
-          orderNumber: doc.orderNumber,
-          totalAmount: doc.totalAmount,
-          deliveredDate: new Date()
-        }],
+      const LedgerEntry = require('./ledgerEntry');
+      // Use orderNumber as idempotency key via the orderNumber field on LedgerEntry
+      const existing = await LedgerEntry.findOne({
         business: doc.business,
+        type: 'adjustment',
+        orderNumber: doc.orderNumber,
       });
+      if (existing) return;
 
-      await shopOrderTransaction.save();
-      console.log(`Shop order transaction created successfully for order ${doc.orderNumber}`);
-      
-    } catch (error) {
-      console.error('Error creating shop order transaction in post-save hook:', error);
+      await LedgerEntry.create({
+        business: doc.business,
+        type: 'adjustment',
+        amount: doc.totalAmount,
+        description: `Shop order delivery #${doc.orderNumber}`,
+        orderNumber: doc.orderNumber,
+        createdBy: 'system',
+      });
+    } catch (err) {
+      console.error('Error creating shop order ledger entry:', err);
     }
   }
 });

@@ -1,0 +1,239 @@
+/* Shared admin data tables — sticky header, scroll region, striping, filters */
+
+.admin-data-filters .form-label,
+.admin-orders-filters .form-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.admin-table-scroll,
+.admin-orders-table-wrap {
+  position: relative;
+  max-height: 70vh;
+  overflow: auto;
+  min-height: 300px;
+  border-radius: 0.375rem;
+  border: 1px solid var(--vz-border-color, rgba(0, 0, 0, 0.08));
+}
+
+.admin-table-scroll--compact {
+  max-height: 320px;
+  min-height: 0;
+}
+
+.admin-table-scroll--auto {
+  max-height: none;
+  min-height: 0;
+}
+
+.admin-table-scroll.admin-table-scroll--auto {
+  max-height: none;
+  min-height: 0;
+}
+
+.admin-table-scroll .table,
+.admin-orders-table-wrap .table {
+  margin-bottom: 0;
+}
+
+#orderTable thead th,
+table.admin-data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--vz-table-head-bg, #f3f6f9);
+  box-shadow: 0 1px 0 var(--vz-border-color, rgba(0, 0, 0, 0.08));
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+#orderTable.table-striped>tbody>tr:nth-of-type(odd)>*,
+table.admin-data-table.table-striped>tbody>tr:nth-of-type(odd)>* {
+  --bs-table-accent-bg: transparent;
+}
+
+#orderTable.table-striped>tbody>tr:nth-of-type(even)>*,
+table.admin-data-table.table-striped>tbody>tr:nth-of-type(even)>* {
+  --bs-table-accent-bg: rgba(240, 242, 247, 0.45);
+}
+
+#orderTable .admin-order-row--new {
+  box-shadow: inset 4px 0 0 0 #f7b84b;
+}
+
+#orderTable .admin-order-row--risk {
+  box-shadow: inset 4px 0 0 0 #f06548;
+}
+
+#orderTable .admin-order-row--return {
+  box-shadow: inset 4px 0 0 0 #299cdb;
+}
+
+#orderTable .cell-compact,
+table.admin-data-table .cell-compact {
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+#orderTable .cell-muted,
+table.admin-data-table .cell-muted {
+  font-size: 0.75rem;
+  color: var(--vz-secondary-color, #878a99);
+}
+
+#orderTable .badge,
+table.admin-data-table .badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Contain wide tables horizontally; dropdowns use fixed/Popper and still escape clipping */
+#orderList.card,
+.admin-data-card.card {
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+#orderList.card .card-body,
+.admin-data-card.card .card-body {
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+#orderTable,
+table.admin-data-table {
+  position: relative;
+}
+
+#orderTable tbody tr,
+table.admin-data-table tbody tr {
+  position: relative;
+}
+
+#orderTable tbody td:last-child,
+table.admin-data-table tbody td:last-child {
+  position: relative;
+  vertical-align: middle;
+}
+
+.orders-table-dropdown {
+  position: relative;
+  display: inline-block;
+  z-index: 1;
+}
+
+.orders-table-dropdown.show {
+  z-index: 1060 !important;
+}
+
+.orders-table-dropdown .dropdown-menu {
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: auto;
+  z-index: 1060 !important;
+  min-width: 13.5rem;
+  max-width: min(18rem, 85vw);
+  padding: 0.35rem 0;
+  margin: 0.2rem 0 0 0;
+  font-size: 0.8125rem;
+  color: #212529;
+  text-align: left;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.12);
+  display: none;
+}
+
+.orders-table-dropdown.show .dropdown-menu {
+  display: block !important;
+}
+
+.orders-table-dropdown.dropdown-up .dropdown-menu {
+  top: auto !important;
+  bottom: 100% !important;
+  margin-top: 0 !important;
+  margin-bottom: 0.35rem !important;
+}
+
+.orders-table-dropdown .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.45rem 0.9rem;
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: #495057;
+  text-align: inherit;
+  text-decoration: none;
+  white-space: normal;
+  background-color: transparent;
+  border: 0;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.orders-table-dropdown .dropdown-item:hover,
+.orders-table-dropdown .dropdown-item:focus {
+  color: #212529;
+  background-color: #f3f6f9;
+}
+
+.orders-table-dropdown .dropdown-item i {
+  flex-shrink: 0;
+  width: 1.15rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.orders-table-dropdown .dropdown-item span {
+  flex: 1;
+  min-width: 0;
+}
+
+.orders-table-dropdown .dropdown-toggle {
+  background: transparent;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.35rem;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+  color: #6c757d;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.orders-table-dropdown .dropdown-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #405189;
+}
+
+.orders-table-dropdown .dropdown-toggle:focus-visible {
+  outline: 2px solid rgba(10, 179, 156, 0.35);
+  outline-offset: 2px;
+}
+
+.orders-table-dropdown.show .dropdown-toggle {
+  background-color: rgba(10, 179, 156, 0.12);
+  color: #0ab39c;
+}
+
+#orderTable tbody td:last-child .orders-table-dropdown.show {
+  z-index: 1060 !important;
+}
+
+.nav-tabs-custom .nav-link.orderType {
+  border: none;
+}
+
+.nav-tabs-custom .nav-link.orderType.active {
+  font-weight: 600;
+}

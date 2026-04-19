@@ -13,21 +13,6 @@
     z-index: 1050 !important;
   }
 
-  /* Ensure the table doesn't constrain the dropdown */
-  #orderTable {
-    overflow: visible !important;
-  }
-
-  /* Make sure parent containers don't clip the dropdown */
-
-  .card-body,
-  .card {
-    overflow: visible !important;
-  }
-   .table-responsive{
-    overflow: scroll;
-  }
-
   .btn-close {
     filter: brightness(0) invert(1);
   }
@@ -134,7 +119,7 @@
 </style>
 <div class="row">
   <div class="col-lg-12">
-    <div class="card" id="orderList">
+    <div class="card admin-data-card" id="orderList">
       <div class="card-header border-0">
         <div class="row align-items-center gy-3">
           <div class="col-sm">
@@ -200,6 +185,14 @@
         </form>
       </div>
       <div class="card-body pt-0">
+        <div id="pickup-bulk-toolbar" class="d-none flex-wrap gap-2 mb-3 justify-content-end align-items-center" aria-live="polite">
+          <button type="button" class="btn btn-soft-warning btn-sm" id="bulk-cancel-pickups" title="Cancel selected">
+            <i class="ri-close-circle-line"></i> Cancel selected
+          </button>
+          <button type="button" class="btn btn-soft-danger btn-sm" id="bulk-delete-pickups" title="Delete selected">
+            <i class="ri-delete-bin-2-line"></i> Delete selected
+          </button>
+        </div>
         <div>
           <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
             <li class="nav-item">
@@ -214,8 +207,8 @@
             </li>
           </ul>
 
-          <div class="table-responsive table-card mb-1">
-            <table class="table table-nowrap align-middle" id="orderTable">
+          <div class="admin-table-scroll mb-1">
+            <table class="table table-nowrap table-striped align-middle admin-data-table" id="orderTable">
               <thead class="text-muted table-light">
                 <tr class="text-uppercase">
                   <th scope="col" style="width: 25px;">
@@ -367,7 +360,90 @@
   function filterPickups(status) { fetchPickups(status); }
   function SearchData(){ fetchPickups(document.querySelector('.nav-tabs .nav-link.active')?.textContent?.includes('Past') ? 'Completed' : 'Upcoming'); }
 
-  document.addEventListener("DOMContentLoaded", () => fetchPickups());
+  function updatePickupBulkToolbar() {
+    const n = document.querySelectorAll('#TBody input[name="checkAll[]"]:checked').length;
+    const bar = document.getElementById('pickup-bulk-toolbar');
+    if (bar) {
+      bar.classList.toggle('d-none', n === 0);
+      bar.classList.toggle('d-flex', n > 0);
+    }
+  }
+
+  function pickActivePickupType() {
+    const active = document.querySelector('.nav-tabs .nav-link.active');
+    return active && active.textContent.includes('Past') ? 'Completed' : 'Upcoming';
+  }
+
+  function initPickupSelectionAndBulk() {
+    const table = document.getElementById('orderTable');
+    const checkAll = document.getElementById('checkAll');
+    if (table && checkAll) {
+      if (
+        window.AdminTableDropdowns &&
+        typeof window.AdminTableDropdowns.bindTableSelection === 'function'
+      ) {
+        window.AdminTableDropdowns.bindTableSelection(
+          table,
+          checkAll,
+          updatePickupBulkToolbar
+        );
+      } else {
+        console.error(
+          '[pickups] AdminTableDropdowns.bindTableSelection missing. Load admin-table-dropdowns.js in admin layout.'
+        );
+      }
+    }
+    document.getElementById('bulk-cancel-pickups')?.addEventListener('click', bulkCancelPickups);
+    document.getElementById('bulk-delete-pickups')?.addEventListener('click', bulkDeletePickups);
+  }
+
+  async function bulkCancelPickups() {
+    const boxes = document.querySelectorAll('#TBody input[name="checkAll[]"]:checked');
+    const ids = [...boxes].map((b) => b.getAttribute('data-pickup-mongo-id')).filter(Boolean);
+    if (!ids.length) return;
+    const r = await Swal.fire({
+      title: 'Cancel selected pickups?',
+      text: `${ids.length} pickup(s) will be marked as canceled.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, cancel',
+    });
+    if (!r.isConfirmed) return;
+    let ok = 0;
+    for (const id of ids) {
+      const res = await fetch(`/admin/cancel-pickup/${id}`, { method: 'PUT' });
+      if (res.ok) ok++;
+    }
+    Swal.fire({ icon: ok ? 'success' : 'warning', title: ok ? 'Done' : 'Partial', text: `${ok} of ${ids.length} canceled.` });
+    fetchPickups(pickActivePickupType());
+  }
+
+  async function bulkDeletePickups() {
+    const boxes = document.querySelectorAll('#TBody input[name="checkAll[]"]:checked');
+    const ids = [...boxes].map((b) => b.getAttribute('data-pickup-mongo-id')).filter(Boolean);
+    if (!ids.length) return;
+    const r = await Swal.fire({
+      title: 'Delete selected pickups?',
+      text: `${ids.length} pickup(s) will be permanently deleted.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      confirmButtonColor: '#d33',
+    });
+    if (!r.isConfirmed) return;
+    let ok = 0;
+    for (const id of ids) {
+      const res = await fetch(`/admin/delete-pickup/${id}`, { method: 'DELETE' });
+      if (res.ok) ok++;
+    }
+    Swal.fire({ icon: ok ? 'success' : 'warning', title: ok ? 'Done' : 'Partial', text: `${ok} of ${ids.length} deleted.` });
+    fetchPickups(pickActivePickupType());
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initPickupSelectionAndBulk();
+    fetchPickups();
+  });
 
   // document.addEventListener('DOMContentLoaded', function() {
 
@@ -646,7 +722,7 @@
             row.innerHTML = `
               <th scope="row">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="checkAll[]" value="${pickup.pickupNumber}">
+                  <input class="form-check-input" type="checkbox" name="checkAll[]" value="${pickup.pickupNumber}" data-pickup-mongo-id="${pickup._id}">
                 </div>
               </th>
               <td class="id"><a href="/admin/pickup-details/${pickup.pickupNumber}" class="fw-medium link-primary">${pickup.pickupNumber}</a></td>
@@ -664,13 +740,13 @@
               <td class="status"><span class="badge text-uppercase fs-6 ${details.badgeClass}">${details.statusText}</span></td>
               <td class="delivery_man">${driverName}</td>
               <td>
-                <div class="dropdown dropdown-fix">
-                  <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ri-more-fill align-middle"></i>
+                <div class="orders-table-dropdown">
+                  <button type="button" class="dropdown-toggle" data-dropdown-toggle aria-expanded="false" aria-label="Pickup actions">
+                    <i class="ri-more-fill"></i>
                   </button>
                   <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/admin/pickup-details/${pickup.pickupNumber}"><i class="ri-eye-fill align-bottom me-2 text-primary"></i> <span class="fs-6">View Details</span></a></li>
-                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="assignDeliveryMan('${pickup._id}', '${(businessZone || businessCity).replace(/'/g, "\\'")}')"><i class="ri-user-add-line align-bottom me-2 text-success"></i> <span class="fs-6">Assign Delivery Man</span></a></li>
+                    <li><a class="dropdown-item" href="/admin/pickup-details/${pickup.pickupNumber}"><i class="ri-eye-fill text-primary"></i><span>View Details</span></a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="assignDeliveryMan('${pickup._id}', '${(businessZone || businessCity).replace(/'/g, "\\'")}')"><i class="ri-user-add-line text-success"></i><span>Assign Delivery Man</span></a></li>
                   </ul>
                 </div>
               </td>
@@ -682,6 +758,7 @@
 
         // Handle empty state
         NoResult.style.display = groups.length ? 'none' : 'block';
+        updatePickupBulkToolbar();
       } catch (e) {
         console.error('Error rendering pickups table:', e);
       }

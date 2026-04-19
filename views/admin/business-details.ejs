@@ -1,1127 +1,1232 @@
 <%- contentFor('HeaderCss') %>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
-<link href="/assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
-<link rel="stylesheet" href="/assets/rCSS/admin.css">
 <style>
-  .profile-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    padding: 2rem;
-    color: #fff;
-    margin-bottom: 2rem;
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.35);
+  .bd-page {
+    --bd-brand: #f39720;
+    --bd-brand-dark: #c97d12;
+    --bd-brand-soft: rgba(243, 151, 32, 0.18);
   }
-
-  .profile-avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 20px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    background-color: rgba(255, 255, 255, 0.2);
+  .bd-hero {
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #f39720 0%, #e8891a 45%, #c97d12 100%);
+    color: #fff;
+    padding: 1.75rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(243, 151, 32, 0.28);
+  }
+  .bd-hero-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 16px;
+    border: 3px solid rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.2);
+    font-size: 2.25rem;
+    font-weight: 700;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .bd-hero-avatar .bd-hero-letter {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
-    font-weight: 700;
-    overflow: hidden;
+    z-index: 1;
+    color: #fff;
   }
-
-  .profile-avatar img {
+  .bd-hero-avatar .bd-hero-img {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 12px;
   }
-
-  .profile-info h3 {
-    margin-bottom: 0.5rem;
+  .bd-kpi-card {
+    border: 1px solid var(--vz-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 0.5rem;
+    padding: 1rem 1.1rem;
+    height: 100%;
+    background: #fff;
+    transition: box-shadow 0.2s ease;
+  }
+  .bd-kpi-card:hover {
+    box-shadow: 0 0.35rem 1rem rgba(243, 151, 32, 0.12);
+  }
+  .bd-kpi-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #878a99;
+    font-weight: 600;
+  }
+  .bd-kpi-value {
+    font-size: 1.35rem;
     font-weight: 700;
+    line-height: 1.2;
   }
-
-  .profile-meta {
+  .bd-donut-wrap {
     display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
-    margin-top: 1rem;
+    flex-direction: column;
+    gap: 0.35rem;
   }
-
-  .profile-meta-item {
+  .bd-donut {
+    --p: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: conic-gradient(#f39720 calc(var(--p) * 1%), #e9ecef 0);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .bd-donut-hole {
+    position: absolute;
+    inset: 9px;
+    border-radius: 50%;
+    background: #fff;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-  }
-
-  .profile-meta-item i {
-    font-size: 1.25rem;
-    opacity: 0.9;
-  }
-
-  .info-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-    margin-bottom: 1.5rem;
-    height: 100%;
-  }
-
-  .info-card-title {
-    font-size: 1.125rem;
+    justify-content: center;
+    font-size: 0.65rem;
     font-weight: 700;
-    margin-bottom: 1.25rem;
+    color: #212529;
+  }
+  .bd-nav-pills {
+    background: #f3f6f9;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    flex-wrap: wrap;
+    gap: 0.15rem;
+  }
+  .bd-nav-pills .nav-link {
+    border-radius: 0.35rem;
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    padding: 0.55rem 0.85rem;
+    white-space: nowrap;
+  }
+  .bd-nav-pills .nav-link.active {
+    background: var(--bd-brand);
+    color: #fff;
+  }
+  .bd-info-card {
+    border: 1px solid var(--vz-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    height: 100%;
+    background: #fff;
+  }
+  .bd-info-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
     color: #212529;
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
-
-  .info-card-title i {
-    font-size: 1.5rem;
-    color: #405189;
+  .bd-info-title i {
+    color: var(--bd-brand-dark);
   }
-
-  .info-row {
+  .bd-row {
     display: flex;
     justify-content: space-between;
-    padding: 0.75rem 0;
+    gap: 0.75rem;
+    padding: 0.55rem 0;
     border-bottom: 1px solid #f0f0f0;
-  }
-
-  .info-row:last-child {
-    border-bottom: none;
-  }
-
-  .info-label {
-    color: #6c757d;
-    font-weight: 500;
     font-size: 0.875rem;
   }
-
-  .info-value {
-    color: #212529;
+  .bd-row:last-child {
+    border-bottom: none;
+  }
+  .bd-row-label {
+    color: #878a99;
+    flex-shrink: 0;
+  }
+  .bd-row-value {
     font-weight: 600;
     text-align: right;
+    word-break: break-word;
   }
-
-  .stat-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-    margin-bottom: 1.5rem;
-    transition: all 0.3s ease;
+  .bd-stack-bar {
+    display: flex;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
   }
-
-  .stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  }
-
-  .stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
+  .bd-stack-seg {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.75rem;
-    margin-bottom: 1rem;
+    min-width: 0;
   }
-
-  .stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-  }
-
-  .stat-label {
-    color: #6c757d;
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .stat-change {
-    font-size: 0.8125rem;
-    font-weight: 600;
-  }
-
-  .stat-change.positive {
-    color: #0ab39c;
-  }
-
-  .stat-change.negative {
-    color: #f06548;
-  }
-
-  .document-preview {
-    position: relative;
-    border-radius: 8px;
+  .bd-rev-bar {
+    height: 12px;
+    border-radius: 6px;
     overflow: hidden;
-    margin-bottom: 1rem;
-    border: 2px solid #e9ecef;
+    display: flex;
+    margin-top: 0.5rem;
+  }
+  .bd-doc-thumb {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: border-color 0.2s;
   }
-
-  .document-preview:hover {
-    border-color: #405189;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  .bd-doc-thumb:hover {
+    border-color: var(--bd-brand);
   }
-
-  .document-preview img {
+  .bd-page .bd-info-card .btn-soft-primary {
+    color: var(--bd-brand-dark) !important;
+    background: var(--bd-brand-soft) !important;
+    border-color: rgba(243, 151, 32, 0.4) !important;
+  }
+  .bd-page #kpiTotalOrders.text-primary {
+    color: var(--bd-brand-dark) !important;
+  }
+  .bd-doc-thumb img {
     width: 100%;
-    height: 200px;
+    height: 160px;
     object-fit: cover;
   }
-
-  .document-label {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-    color: #fff;
-    padding: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
+  .admin-table-scroll {
+    max-height: 60vh;
   }
-
-  .payment-method-card {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
+  .bd-social-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.65rem;
   }
-
-  .payment-method-type {
-    font-weight: 700;
-    color: #405189;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    text-transform: capitalize;
+  .bd-social-link {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid rgba(243, 151, 32, 0.35);
+    border-radius: 0.5rem;
+    background: rgba(243, 151, 32, 0.06);
+    text-decoration: none;
+    color: #212529;
+    transition: background 0.15s ease, border-color 0.15s ease;
   }
-
-  .payment-details {
-    font-size: 0.875rem;
-    color: #6c757d;
-  }
-
-  .timeline {
-    position: relative;
-    padding-left: 2rem;
-  }
-
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 0.5rem;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: #e9ecef;
-  }
-
-  .timeline-item {
-    position: relative;
-    padding-bottom: 1.5rem;
-  }
-
-  .timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -1.5rem;
-    top: 0.25rem;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #405189;
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 2px #405189;
-  }
-
-  .timeline-item:last-child {
-    padding-bottom: 0;
-  }
-
-  .timeline-date {
-    font-size: 0.75rem;
-    color: #6c757d;
-    margin-bottom: 0.25rem;
-  }
-
-  .timeline-content {
-    font-size: 0.875rem;
+  .bd-social-link:hover {
+    background: rgba(243, 151, 32, 0.14);
+    border-color: rgba(243, 151, 32, 0.55);
     color: #212529;
   }
-
-  .badge-lg {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    border-radius: 50px;
+  .bd-social-link i:first-child {
+    font-size: 1.35rem;
+    color: var(--bd-brand-dark);
+    flex-shrink: 0;
   }
-
-  .table-modern {
-    font-size: 0.875rem;
+  .bd-social-link span {
+    min-width: 0;
+    font-size: 0.8125rem;
   }
-
-  .table-modern thead {
-    background-color: #f8f9fa;
+  .bd-social-link .bd-social-label {
+    font-weight: 700;
+    display: block;
+    color: var(--bd-brand-dark);
   }
-
-  .table-modern th {
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-    color: #6c757d;
-    border-bottom: 2px solid #e9ecef;
-    padding: 1rem 0.75rem;
+  .bd-social-link .bd-social-host {
+    display: block;
+    color: #878a99;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
-
-  .table-modern td {
-    padding: 1rem 0.75rem;
-    vertical-align: middle;
+  .bd-pickup-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
   }
-
-  .table-modern tbody tr {
-    transition: background-color 0.2s ease;
+  .bd-pickup-card {
+    border: 1px solid var(--vz-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 0.5rem;
+    padding: 1rem 1.1rem;
+    background: #fafbfc;
   }
-
-  .table-modern tbody tr:hover {
-    background-color: #f8f9fa;
+  .bd-pickup-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid #e9ecef;
   }
-
-  .nav-pills-custom {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 0.25rem;
+  .bd-pickup-card-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #212529;
   }
-
-  .nav-pills-custom .nav-link {
-    border-radius: 6px;
-    color: #6c757d;
-    font-weight: 600;
-    font-size: 0.875rem;
-    padding: 0.75rem 1.5rem;
+  .bd-map-wrap iframe {
+    display: block;
   }
-
-  .nav-pills-custom .nav-link.active {
-    background-color: #405189;
-    color: #fff;
-  }
-
-  @media (max-width: 767.98px) {
-    .profile-header {
-      text-align: center;
-    }
-
-    .profile-meta {
-      justify-content: center;
-    }
+  .bd-map-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
   }
 </style>
 
 <%- contentFor('body') %>
-<!-- Back Button -->
+<div class="bd-page">
 <div class="row mb-3">
-  <div class="col-12">
+  <div class="col-12 d-flex flex-wrap gap-2 align-items-center justify-content-between">
     <a href="/admin/businesses" class="btn btn-soft-secondary">
-      <i class="ri-arrow-left-line me-1"></i> Back to Businesses
+      <i class="ri-arrow-left-line me-1"></i> Back to businesses
     </a>
+    <div class="d-flex flex-wrap gap-2" id="bdQuickActions">
+      <a class="btn btn-soft-info" id="waBusinessBtn" href="#" target="_blank" rel="noopener" style="display: none">
+        <i class="ri-whatsapp-line me-1"></i> WhatsApp
+      </a>
+    </div>
   </div>
 </div>
 
-<!-- Profile Header -->
-<div class="profile-header" id="profileHeader">
-  <div class="d-flex align-items-center gap-4 flex-wrap">
-    <div class="profile-avatar" id="profileAvatar">
-      <!-- Avatar will be loaded here -->
-    </div>
-    <div class="profile-info flex-grow-1">
-      <h3 id="businessName">Loading...</h3>
-      <p class="mb-0 opacity-90" id="businessIndustry">Industry</p>
-      <div class="profile-meta">
-        <div class="profile-meta-item">
-          <i class="ri-mail-line"></i>
-          <span id="businessEmail"></span>
-        </div>
-        <div class="profile-meta-item">
-          <i class="ri-phone-line"></i>
-          <span id="businessPhone"></span>
-        </div>
-        <div class="profile-meta-item">
-          <i class="ri-calendar-line"></i>
-          <span>Joined <span id="businessJoined"></span></span>
-        </div>
-        <div class="profile-meta-item">
-          <span class="badge badge-lg" id="verificationBadge"></span>
-        </div>
+<div class="bd-hero" id="bdHero">
+  <div class="d-flex flex-wrap align-items-start gap-3">
+    <div class="bd-hero-avatar" id="profileAvatar"><span class="text-white">…</span></div>
+    <div class="flex-grow-1 min-w-0">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <h4 class="text-white mb-0 fw-bold text-truncate" id="businessName">Loading…</h4>
+        <span class="badge bg-warning text-dark" id="verificationBadge" style="display: none"></span>
+      </div>
+      <p class="mb-2 opacity-90 small" id="businessIndustry">—</p>
+      <div class="d-flex flex-wrap gap-3 small">
+        <span><i class="ri-mail-line me-1"></i><span id="businessEmail">—</span></span>
+        <span><i class="ri-phone-line me-1"></i><span id="businessPhone">—</span></span>
+        <span><i class="ri-calendar-line me-1"></i>Joined <span id="businessJoined">—</span></span>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Statistics Overview -->
-<div class="row mb-4">
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="stat-card">
-      <div class="stat-icon bg-soft-primary text-primary">
-        <i class="ri-shopping-bag-line"></i>
-      </div>
-      <div class="stat-value text-primary" id="totalOrders">0</div>
-      <div class="stat-label">Total Orders</div>
-      <div class="stat-change positive">
-        <i class="ri-arrow-up-line"></i>
-        <span id="successfulOrders">0</span> Successful
+<div class="row g-3 mb-3" id="bdKpiRow">
+  <div class="col-6 col-xl-2 col-md-4">
+    <div class="bd-kpi-card">
+      <div class="bd-kpi-label">Total orders</div>
+      <div class="bd-kpi-value text-primary" id="kpiTotalOrders">0</div>
+      <div class="text-muted small"><span id="kpiSuccessfulOrders">0</span> successful</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2 col-md-4">
+    <div class="bd-kpi-card">
+      <div class="bd-kpi-label">Success rate</div>
+      <div class="bd-donut-wrap mt-1">
+        <div class="bd-donut" id="kpiDonut" style="--p: 0">
+          <div class="bd-donut-hole" id="kpiDonutLabel">0%</div>
+        </div>
+        <div class="small text-muted">Successful ÷ total orders</div>
       </div>
     </div>
   </div>
-
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="stat-card">
-      <div class="stat-icon bg-soft-success text-success">
-        <i class="ri-truck-line"></i>
-      </div>
-      <div class="stat-value text-success" id="totalPickups">0</div>
-      <div class="stat-label">Total Pickups</div>
-      <div class="stat-change positive">
-        <i class="ri-arrow-up-line"></i>
-        <span id="completedPickups">0</span> Completed
-      </div>
+  <div class="col-6 col-xl-2 col-md-4">
+    <div class="bd-kpi-card">
+      <div class="bd-kpi-label">Pickups</div>
+      <div class="bd-kpi-value text-success" id="kpiTotalPickups">0</div>
+      <div class="text-muted small"><span id="kpiCompletedPickups">0</span> completed</div>
     </div>
   </div>
-
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="stat-card">
-      <div class="stat-icon bg-soft-info text-info">
-        <i class="ri-store-2-line"></i>
-      </div>
-      <div class="stat-value text-info" id="totalShopOrders">0</div>
-      <div class="stat-label">Shop Orders</div>
-      <div class="stat-change positive">
-        <i class="ri-arrow-up-line"></i>
-        <span id="deliveredShopOrders">0</span> Delivered
-      </div>
+  <div class="col-6 col-xl-2 col-md-4">
+    <div class="bd-kpi-card">
+      <div class="bd-kpi-label">Shop orders</div>
+      <div class="bd-kpi-value text-info" id="kpiTotalShop">0</div>
+      <div class="text-muted small"><span id="kpiDeliveredShop">0</span> delivered</div>
     </div>
   </div>
-
-  <div class="col-lg-3 col-md-6 mb-3">
-    <div class="stat-card">
-      <div class="stat-icon bg-soft-warning text-warning">
-        <i class="ri-wallet-line"></i>
-      </div>
-      <div class="stat-value text-warning" id="currentBalance">EGP 0</div>
-      <div class="stat-label">Current Balance</div>
-      <div class="stat-change">
-        <i class="ri-exchange-dollar-line"></i>
-        <span id="totalTransactions">0</span> Transactions
-      </div>
+  <div class="col-6 col-xl-2 col-md-4">
+    <div class="bd-kpi-card">
+      <div class="bd-kpi-label">Balance</div>
+      <div class="bd-kpi-value" id="kpiBalance">EGP 0</div>
+      <div class="text-muted small">Current wallet</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-2 col-md-4">
+    <div class="bd-kpi-card">
+      <div class="bd-kpi-label">Pending payouts</div>
+      <div class="bd-kpi-value text-warning" id="kpiPendingReleases">0</div>
+      <div class="text-muted small">Awaiting payout</div>
     </div>
   </div>
 </div>
 
-<!-- Tabs Navigation -->
-<div class="row mb-4">
-  <div class="col-12">
-    <ul class="nav nav-pills nav-pills-custom" id="businessTabs" role="tablist">
+<div class="card admin-data-card mb-3">
+  <div class="card-body pt-3 pb-2">
+    <ul class="nav nav-pills bd-nav-pills mb-0" id="bdTabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="overview-tab" data-bs-toggle="pill" data-bs-target="#overview" type="button" role="tab">
-          <i class="ri-dashboard-line me-1"></i> Overview
-        </button>
+        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#bdTabOverview" type="button">Overview</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="documents-tab" data-bs-toggle="pill" data-bs-target="#documents" type="button" role="tab">
-          <i class="ri-file-list-line me-1"></i> Documents
-        </button>
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabAnalytics" type="button">Analytics</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="orders-tab" data-bs-toggle="pill" data-bs-target="#orders" type="button" role="tab">
-          <i class="ri-shopping-cart-line me-1"></i> Orders
-        </button>
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabOrders" type="button">Orders</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="financial-tab" data-bs-toggle="pill" data-bs-target="#financial" type="button" role="tab">
-          <i class="ri-money-dollar-circle-line me-1"></i> Financial
-        </button>
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabPickups" type="button">Pickups</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabShop" type="button">Shop orders</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabFinancial" type="button">Financial</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabDocs" type="button">Documents</button>
       </li>
     </ul>
   </div>
 </div>
 
-<!-- Tab Content -->
-<div class="tab-content" id="businessTabsContent">
-  <!-- Overview Tab -->
-  <div class="tab-pane fade show active" id="overview" role="tabpanel">
-    <div class="row">
-      <!-- Brand Information -->
-      <div class="col-lg-6 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-building-line"></i>
-            Brand Information
-          </h6>
-          <div class="info-row">
-            <span class="info-label">Brand Name</span>
-            <span class="info-value" id="brandName">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Industry</span>
-            <span class="info-value" id="industryName">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Monthly Orders</span>
-            <span class="info-value" id="monthlyOrders">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Selling Points</span>
-            <span class="info-value" id="sellingPoints">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Social Links</span>
-            <span class="info-value" id="socialLinks">-</span>
-          </div>
+<div class="tab-content pb-4" id="bdTabContent">
+  <div class="tab-pane fade show active" id="bdTabOverview" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="bd-info-card">
+          <div class="bd-info-title"><i class="ri-building-line"></i> Brand</div>
+          <div class="bd-row"><span class="bd-row-label">Brand name</span><span class="bd-row-value" id="brandName">—</span></div>
+          <div class="bd-row"><span class="bd-row-label">Industry</span><span class="bd-row-value" id="industryName">—</span></div>
+          <div class="bd-row"><span class="bd-row-label">Monthly orders (declared)</span><span class="bd-row-value" id="monthlyOrders">—</span></div>
+          <div class="bd-row"><span class="bd-row-label">Selling points</span><span class="bd-row-value" id="sellingPoints">—</span></div>
         </div>
       </div>
-
-      <!-- Pickup Address -->
-      <div class="col-lg-6 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-map-pin-line"></i>
-            Pickup Address
-          </h6>
-          <div class="info-row">
-            <span class="info-label">Country</span>
-            <span class="info-value" id="addressCountry">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">City</span>
-            <span class="info-value" id="addressCity">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Zone</span>
-            <span class="info-value" id="addressZone">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Address Details</span>
-            <span class="info-value" id="addressDetails">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Landmark</span>
-            <span class="info-value" id="addressLandmark">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Pickup Phone</span>
-            <span class="info-value" id="pickupPhone">-</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Other Pickup Phone</span>
-            <span class="info-value" id="otherPickupPhone">-</span>
-          </div>
+      <div class="col-lg-6">
+        <div class="bd-info-card h-100">
+          <div class="bd-info-title"><i class="ri-links-line"></i> Sales channels &amp; social</div>
+          <p class="text-muted small mb-2">Same channels as in business settings (URLs only).</p>
+          <div id="socialLinksMount"></div>
         </div>
       </div>
-
-      <!-- Payment Method -->
-      <div class="col-lg-6 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-bank-card-line"></i>
-            Payment Method
-          </h6>
-          <div id="paymentMethodContent">
-            <!-- Payment method will be loaded here -->
-          </div>
+      <div class="col-12">
+        <div class="bd-info-card">
+          <div class="bd-info-title"><i class="ri-map-pin-line"></i> Pickup addresses</div>
+          <p class="text-muted small mb-2">All saved pickup locations. Map shows when coordinates are stored.</p>
+          <div id="pickupAddressesMount"></div>
         </div>
       </div>
-
-      <!-- Brand Type -->
-      <div class="col-lg-6 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-building-2-line"></i>
-            Brand Type
-          </h6>
-          <div id="brandTypeContent">
-            <!-- Brand type will be loaded here -->
-          </div>
+      <div class="col-lg-6">
+        <div class="bd-info-card">
+          <div class="bd-info-title"><i class="ri-bank-card-line"></i> Payment method</div>
+          <div id="paymentMethodContent"><p class="text-muted mb-0 small">—</p></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="bd-info-card">
+          <div class="bd-info-title"><i class="ri-shield-user-line"></i> Brand type</div>
+          <div id="brandTypeContent"><p class="text-muted mb-0 small">—</p></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Documents Tab -->
-  <div class="tab-pane fade" id="documents" role="tabpanel">
-    <div class="row">
-      <div class="col-12 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-file-list-3-line"></i>
-            Uploaded Documents
-          </h6>
-          <div id="documentsContent" class="row">
-            <!-- Documents will be loaded here -->
-          </div>
+  <div class="tab-pane fade" id="bdTabAnalytics" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-lg-7">
+        <div class="bd-info-card">
+          <div class="bd-info-title"><i class="ri-pie-chart-line"></i> Orders by status category</div>
+          <p class="text-muted small mb-2">Share of all orders for this business.</p>
+          <div class="bd-stack-bar mb-2" id="analyticsOrderBar"></div>
+          <div class="row g-2 small text-muted" id="analyticsOrderLegend"></div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="bd-info-card mb-3">
+          <div class="bd-info-title"><i class="ri-truck-line"></i> Pickups</div>
+          <div class="bd-row"><span class="bd-row-label">Total</span><span class="bd-row-value" id="anPickTotal">0</span></div>
+          <div class="bd-row"><span class="bd-row-label">Completed</span><span class="bd-row-value text-success" id="anPickDone">0</span></div>
+          <div class="bd-row"><span class="bd-row-label">Pending / active</span><span class="bd-row-value text-warning" id="anPickPending">0</span></div>
+        </div>
+        <div class="bd-info-card">
+          <div class="bd-info-title"><i class="ri-exchange-dollar-line"></i> All-time transactions (summary)</div>
+          <div class="bd-row"><span class="bd-row-label">Income</span><span class="bd-row-value text-success" id="anRevIncome">EGP 0</span></div>
+          <div class="bd-row"><span class="bd-row-label">Expenses</span><span class="bd-row-value text-danger" id="anRevExpense">EGP 0</span></div>
+          <div class="bd-rev-bar" id="anRevBar"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Orders Tab -->
-  <div class="tab-pane fade" id="orders" role="tabpanel">
-    <div class="row">
-      <div class="col-12 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-shopping-bag-line"></i>
-            Recent Orders
-          </h6>
-          <div class="table-responsive">
-            <table class="table table-modern" id="ordersTable">
-              <thead>
-                <tr>
-                  <th>Order #</th>
-                  <th>Customer</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="ordersTableBody">
-                <!-- Orders will be loaded here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-truck-line"></i>
-            Recent Pickups
-          </h6>
-          <div class="table-responsive">
-            <table class="table table-modern" id="pickupsTable">
-              <thead>
-                <tr>
-                  <th>Pickup #</th>
-                  <th>Orders Count</th>
-                  <th>Fees</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="pickupsTableBody">
-                <!-- Pickups will be loaded here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-store-2-line"></i>
-            Recent Shop Orders
-          </h6>
-          <div class="table-responsive">
-            <table class="table table-modern" id="shopOrdersTable">
-              <thead>
-                <tr>
-                  <th>Order #</th>
-                  <th>Customer</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="shopOrdersTableBody">
-                <!-- Shop orders will be loaded here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
+  <div class="tab-pane fade" id="bdTabOrders" role="tabpanel">
+    <div class="bd-info-card">
+      <div class="bd-info-title"><i class="ri-shopping-bag-line"></i> Recent shipping orders</div>
+      <div class="admin-table-scroll admin-table-scroll--compact">
+        <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table">
+          <thead class="text-muted">
+            <tr>
+              <th>Order #</th>
+              <th>Customer</th>
+              <th>Location</th>
+              <th>Amount</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th style="width: 56px"></th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
       </div>
     </div>
   </div>
 
-  <!-- Financial Tab -->
-  <div class="tab-pane fade" id="financial" role="tabpanel">
-    <div class="row">
-      <!-- Balance Summary -->
-      <div class="col-lg-4 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-wallet-3-line"></i>
-            Balance Summary
-          </h6>
-          <div class="text-center py-3">
-            <h2 class="mb-2" id="financialBalance">EGP 0</h2>
-            <p class="text-muted mb-3">Current Balance</p>
-            <div class="row">
-              <div class="col-6">
-                <div class="text-success">
-                  <i class="ri-arrow-up-line"></i>
-                  <h5 id="totalIncome">EGP 0</h5>
-                  <p class="text-muted mb-0 small">Income</p>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="text-danger">
-                  <i class="ri-arrow-down-line"></i>
-                  <h5 id="totalExpenses">EGP 0</h5>
-                  <p class="text-muted mb-0 small">Expenses</p>
-                </div>
-              </div>
+  <div class="tab-pane fade" id="bdTabPickups" role="tabpanel">
+    <div class="bd-info-card">
+      <div class="bd-info-title"><i class="ri-truck-line"></i> Recent pickups</div>
+      <div class="admin-table-scroll admin-table-scroll--compact">
+        <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table">
+          <thead class="text-muted">
+            <tr>
+              <th>Pickup #</th>
+              <th>Orders</th>
+              <th>Fees</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th style="width: 56px"></th>
+            </tr>
+          </thead>
+          <tbody id="pickupsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-pane fade" id="bdTabShop" role="tabpanel">
+    <div class="bd-info-card">
+      <div class="bd-info-title"><i class="ri-store-2-line"></i> Recent shop orders</div>
+      <div class="admin-table-scroll admin-table-scroll--compact">
+        <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table">
+          <thead class="text-muted">
+            <tr>
+              <th>Order #</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th style="width: 56px"></th>
+            </tr>
+          </thead>
+          <tbody id="shopOrdersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-pane fade" id="bdTabFinancial" role="tabpanel">
+    <div class="d-flex justify-content-end mb-2">
+      <a class="btn btn-soft-warning btn-sm" href="/admin/business/<%= businessId %>/ledger" target="_blank">
+        <i class="ri-external-link-line me-1"></i>View Full Ledger
+      </a>
+    </div>
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="bd-info-card text-center py-3">
+          <div class="bd-info-title justify-content-center"><i class="ri-wallet-3-line"></i> Balance</div>
+          <h3 class="mb-1" id="financialBalance">EGP 0</h3>
+          <p class="text-muted small mb-3">Current balance</p>
+          <div class="row text-center small">
+            <div class="col-6">
+              <div class="text-success fw-semibold" id="totalIncome">EGP 0</div>
+              <div class="text-muted">Income (ledger, lifetime)</div>
+            </div>
+            <div class="col-6">
+              <div class="text-danger fw-semibold" id="totalExpenses">EGP 0</div>
+              <div class="text-muted">Expenses (ledger, lifetime)</div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Recent Transactions -->
-      <div class="col-lg-8 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-exchange-dollar-line"></i>
-            Recent Transactions
-          </h6>
-          <div class="table-responsive">
-            <table class="table table-modern">
-              <thead>
+      <div class="col-lg-8">
+        <div class="bd-info-card">
+          <div class="bd-info-title"><i class="ri-list-check-2"></i> Recent ledger entries (latest 20)</div>
+          <div class="admin-table-scroll admin-table-scroll--compact">
+            <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table">
+              <thead class="text-muted">
                 <tr>
-                  <th>ID</th>
+                  <th>Entry</th>
                   <th>Type</th>
                   <th>Amount</th>
                   <th>Date</th>
-                  <th>Notes</th>
+                  <th>Description</th>
                 </tr>
               </thead>
-              <tbody id="transactionsTableBody">
-                <!-- Transactions will be loaded here -->
-              </tbody>
+              <tbody id="transactionsTableBody"></tbody>
             </table>
           </div>
         </div>
       </div>
-
-      <!-- Releases -->
-      <div class="col-12 mb-4">
-        <div class="info-card">
-          <h6 class="info-card-title">
-            <i class="ri-money-dollar-circle-line"></i>
-            Release History
-          </h6>
-          <div class="table-responsive">
-            <table class="table table-modern">
-              <thead>
+      <div class="col-12">
+        <div class="bd-info-card">
+          <div class="bd-info-title"><i class="ri-money-dollar-circle-line"></i> Payouts (latest 50)</div>
+          <div class="admin-table-scroll admin-table-scroll--compact">
+            <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table">
+              <thead class="text-muted">
                 <tr>
-                  <th>Release ID</th>
-                  <th>Type</th>
+                  <th>Payout ID</th>
+                  <th>Kind</th>
                   <th>Amount</th>
                   <th>Status</th>
-                  <th>Date</th>
-                  <th>Scheduled Date</th>
+                  <th>Created</th>
+                  <th>Scheduled</th>
                 </tr>
               </thead>
-              <tbody id="releasesTableBody">
-                <!-- Releases will be loaded here -->
-              </tbody>
+              <tbody id="releasesTableBody"></tbody>
             </table>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <div class="tab-pane fade" id="bdTabDocs" role="tabpanel">
+    <div class="bd-info-card">
+      <div class="bd-info-title"><i class="ri-file-list-3-line"></i> Uploaded documents</div>
+      <div class="row g-3" id="documentsContent"></div>
+    </div>
+  </div>
+</div>
 </div>
 
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
-<script src="/assets/libs/swiper/swiper-bundle.min.js"></script>
-
 <script>
   const businessId = '<%= businessId %>';
-  let businessData = null;
 
-  // Initialize
-  document.addEventListener("DOMContentLoaded", function() {
-    loadBusinessDetails();
-  });
-
-  // Load business details
-  async function loadBusinessDetails() {
-    try {
-      const response = await fetch(`/admin/get-business-details/${businessId}`);
-      const data = await response.json();
-
-      if (data.business) {
-        businessData = data;
-        renderBusinessProfile(data.business);
-        renderStatistics(data.stats);
-        renderOverview(data.business);
-        renderDocuments(data.business);
-        renderOrders(data.recentOrders);
-        renderPickups(data.recentPickups);
-        renderShopOrders(data.recentShopOrders);
-        renderFinancial(data);
-      }
-    } catch (error) {
-      console.error('Error loading business details:', error);
-      showError('Failed to load business details');
-    }
-  }
-
-  // Render business profile
-  function renderBusinessProfile(business) {
-    // Avatar
-    const avatar = document.getElementById('profileAvatar');
-    if (business.profileImage) {
-      avatar.innerHTML = `<img src="${business.profileImage}" alt="${business.name}">`;
-    } else {
-      avatar.textContent = (business.brandInfo?.brandName || business.name).charAt(0).toUpperCase();
-    }
-
-    // Basic info
-    document.getElementById('businessName').textContent = business.brandInfo?.brandName || business.name;
-    document.getElementById('businessIndustry').textContent = business.brandInfo?.industry || 'Industry not specified';
-    document.getElementById('businessEmail').textContent = business.email;
-    document.getElementById('businessPhone').textContent = business.phoneNumber;
-    document.getElementById('businessJoined').textContent = formatDate(business.createdAt);
-
-    // Verification badge
-    const badge = document.getElementById('verificationBadge');
-    if (business.isVerified) {
-      badge.className = 'badge badge-lg bg-success';
-      badge.innerHTML = '<i class="ri-check-line me-1"></i> Verified';
-    } else {
-      badge.className = 'badge badge-lg bg-warning';
-      badge.innerHTML = '<i class="ri-time-line me-1"></i> Pending Verification';
-    }
-  }
-
-  // Render statistics
-  function renderStatistics(stats) {
-    document.getElementById('totalOrders').textContent = stats.orders.total;
-    document.getElementById('successfulOrders').textContent = stats.orders.successful;
-    document.getElementById('totalPickups').textContent = stats.pickups.total;
-    document.getElementById('completedPickups').textContent = stats.pickups.completed;
-    document.getElementById('totalShopOrders').textContent = stats.shopOrders.total;
-    document.getElementById('deliveredShopOrders').textContent = stats.shopOrders.delivered;
-    document.getElementById('currentBalance').textContent = formatCurrency(stats.financial.currentBalance);
-    document.getElementById('totalTransactions').textContent = stats.financial.totalTransactions;
-  }
-
-  // Render overview
-  function renderOverview(business) {
-    // Brand Information
-    document.getElementById('brandName').textContent = business.brandInfo?.brandName || '-';
-    document.getElementById('industryName').textContent = business.brandInfo?.industry || '-';
-    document.getElementById('monthlyOrders').textContent = business.brandInfo?.monthlyOrders || '-';
-    document.getElementById('sellingPoints').textContent = business.brandInfo?.sellingPoints?.join(', ') || '-';
-
-    // Social Links
-    if (business.brandInfo?.socialLinks) {
-      const links = Object.entries(business.brandInfo.socialLinks)
-        .filter(([key, value]) => value)
-        .map(([key, value]) => `<a href="${value}" target="_blank" class="text-primary">${key}</a>`)
-        .join(', ');
-      document.getElementById('socialLinks').innerHTML = links || '-';
-    } else {
-      document.getElementById('socialLinks').textContent = '-';
-    }
-
-    // Pickup Address - use default from pickUpAddresses if available, otherwise fallback to old structure
-    let address = null;
-    if (business.pickUpAddresses && business.pickUpAddresses.length > 0) {
-      address = business.pickUpAddresses.find(addr => addr.isDefault) || business.pickUpAddresses[0];
-    }
-    if (!address && business.pickUpAdress) {
-      address = business.pickUpAdress;
-    }
-    address = address || {};
-    document.getElementById('addressCountry').textContent = address.country || '-';
-    document.getElementById('addressCity').textContent = address.city || '-';
-    document.getElementById('addressZone').textContent = address.zone || '-';
-    document.getElementById('addressDetails').textContent = address.adressDetails || '-';
-    document.getElementById('addressLandmark').textContent = address.nearbyLandmark || '-';
-    document.getElementById('pickupPhone').textContent = address.pickupPhone || '-';
-    // Display other pickup phone if exists (add to DOM if needed)
-    const otherPhoneElement = document.getElementById('otherPickupPhone');
-    if (otherPhoneElement) {
-      otherPhoneElement.textContent = address.otherPickupPhone || '-';
-    }
-
-    // Payment Method
-    const paymentContainer = document.getElementById('paymentMethodContent');
-    if (business.paymentMethod?.paymentChoice) {
-      const method = business.paymentMethod.paymentChoice;
-      const details = business.paymentMethod.details;
-      let detailsHTML = '';
-
-      if (method === 'instaPay') {
-        detailsHTML = `<p class="payment-details">IPA/Phone: ${details.IPAorPhoneNumber}</p>`;
-      } else if (method === 'mobileWallet') {
-        detailsHTML = `<p class="payment-details">Wallet Number: ${details.mobileWalletNumber}</p>`;
-      } else if (method === 'bankTransfer') {
-        detailsHTML = `
-          <p class="payment-details mb-1">Bank: ${details.bankName}</p>
-          <p class="payment-details mb-1">IBAN: ${details.IBAN}</p>
-          <p class="payment-details">Account Name: ${details.accountName}</p>
-        `;
-      }
-
-      paymentContainer.innerHTML = `
-        <div class="payment-method-card">
-          <div class="payment-method-type">${method}</div>
-          ${detailsHTML}
-        </div>
-      `;
-    } else {
-      paymentContainer.innerHTML = '<p class="text-muted">No payment method configured</p>';
-    }
-
-    // Brand Type
-    const brandTypeContainer = document.getElementById('brandTypeContent');
-    if (business.brandType?.brandChoice) {
-      const type = business.brandType.brandChoice;
-      const details = business.brandType.brandDetails;
-      let detailsHTML = '';
-
-      if (type === 'personal') {
-        detailsHTML = `<p class="payment-details">National ID: ${details.nationalId}</p>`;
-      } else if (type === 'company') {
-        detailsHTML = `<p class="payment-details">Tax Number: ${details.taxNumber}</p>`;
-      }
-
-      brandTypeContainer.innerHTML = `
-        <div class="payment-method-card">
-          <div class="payment-method-type">${type}</div>
-          ${detailsHTML}
-        </div>
-      `;
-    } else {
-      brandTypeContainer.innerHTML = '<p class="text-muted">No brand type configured</p>';
-    }
-  }
-
-  // Render documents
-  function renderDocuments(business) {
-    const container = document.getElementById('documentsContent');
-    const photos = business.brandType?.brandDetails?.photos || [];
-
-    if (photos.length === 0) {
-      container.innerHTML = '<div class="col-12"><p class="text-muted">No documents uploaded</p></div>';
-      return;
-    }
-
-    container.innerHTML = photos.map((photo, index) => `
-      <div class="col-lg-4 col-md-6">
-        <div class="document-preview" onclick="viewDocument('${photo}')">
-          <img src="${photo}" alt="Document ${index + 1}">
-          <div class="document-label">
-            ${business.brandType.brandChoice === 'personal' ? 'National ID' : 'Tax Document'} ${index + 1}
-          </div>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // Render orders
-  function renderOrders(orders) {
-    const tbody = document.getElementById('ordersTableBody');
-
-    if (orders.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No orders found</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = orders.map(order => `
-      <tr>
-        <td><strong>${order.orderNumber}</strong></td>
-        <td>${order.orderCustomer?.fullName || '-'}</td>
-        <td>${formatCurrency(order.orderShipping?.codAmount || 0)}</td>
-        <td>${getStatusBadge(order.orderStatus)}</td>
-        <td>${formatDate(order.orderDate)}</td>
-        <td>
-          <a href="/admin/order-details/${order.orderNumber}" class="btn btn-sm btn-soft-primary">
-            <i class="ri-eye-line"></i>
-          </a>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  // Render pickups
-  function renderPickups(pickups) {
-    const tbody = document.getElementById('pickupsTableBody');
-
-    if (pickups.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No pickups found</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = pickups.map(pickup => `
-      <tr>
-        <td><strong>${pickup.pickupNumber}</strong></td>
-        <td>${pickup.numberOfOrders}</td>
-        <td>${formatCurrency(pickup.pickupFees)}</td>
-        <td>${getPickupStatusBadge(pickup.picikupStatus)}</td>
-        <td>${formatDate(pickup.pickupDate)}</td>
-        <td>
-          <a href="/admin/pickup-details/${pickup.pickupNumber}" class="btn btn-sm btn-soft-primary">
-            <i class="ri-eye-line"></i>
-          </a>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  // Render shop orders
-  function renderShopOrders(shopOrders) {
-    const tbody = document.getElementById('shopOrdersTableBody');
-
-    if (shopOrders.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No shop orders found</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = shopOrders.map(order => `
-      <tr>
-        <td><strong>${order.orderNumber}</strong></td>
-        <td>${order.orderCustomer?.fullName || '-'}</td>
-        <td>${formatCurrency(order.totalAmount)}</td>
-        <td>${getShopOrderStatusBadge(order.status)}</td>
-        <td>${formatDate(order.createdAt)}</td>
-        <td>
-          <a href="/admin/shop-order-details/${order.orderNumber}" class="btn btn-sm btn-soft-primary">
-            <i class="ri-eye-line"></i>
-          </a>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  // Render financial
-  function renderFinancial(data) {
-    // Balance summary
-    document.getElementById('financialBalance').textContent = formatCurrency(data.business.balance || 0);
-    document.getElementById('totalIncome').textContent = formatCurrency(data.revenueBreakdown.income);
-    document.getElementById('totalExpenses').textContent = formatCurrency(data.revenueBreakdown.expenses);
-
-    // Transactions
-    const transactionsBody = document.getElementById('transactionsTableBody');
-    if (data.recentTransactions.length === 0) {
-      transactionsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No transactions found</td></tr>';
-    } else {
-      transactionsBody.innerHTML = data.recentTransactions.map(trans => `
-        <tr>
-          <td><strong>${trans.transactionId}</strong></td>
-          <td>${trans.transactionType}</td>
-          <td class="${trans.transactionAmount >= 0 ? 'text-success' : 'text-danger'}">
-            ${formatCurrency(trans.transactionAmount)}
-          </td>
-          <td>${formatDate(trans.createdAt)}</td>
-          <td>${trans.transactionNotes || '-'}</td>
-        </tr>
-      `).join('');
-    }
-
-    // Releases
-    const releasesBody = document.getElementById('releasesTableBody');
-    if (data.releases.length === 0) {
-      releasesBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No releases found</td></tr>';
-    } else {
-      releasesBody.innerHTML = data.releases.map(release => `
-        <tr>
-          <td><strong>${release.releaseId}</strong></td>
-          <td>${release.releaseType}</td>
-          <td>${formatCurrency(release.amount)}</td>
-          <td>${getReleaseStatusBadge(release.releaseStatus)}</td>
-          <td>${formatDate(release.createdAt)}</td>
-          <td>${release.scheduledReleaseDate ? formatDate(release.scheduledReleaseDate) : '-'}</td>
-        </tr>
-      `).join('');
-    }
-  }
-
-  // Helper functions
   function formatCurrency(amount) {
     return new Intl.NumberFormat('en-EG', {
       style: 'currency',
       currency: 'EGP',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
   }
 
   function formatDate(date) {
-    if (!date) return '-';
+    if (!date) return '—';
     return new Date(date).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
     });
   }
 
-  function getStatusBadge(status) {
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function escapeAttr(s) {
+    return escapeHtml(s).replace(/'/g, '&#39;');
+  }
+
+  function orderAmount(order) {
+    const v = order.orderShipping?.amount ?? order.orderShipping?.codAmount;
+    return typeof v === 'number' ? v : 0;
+  }
+
+  function orderLocation(order) {
+    const c = order.orderCustomer;
+    if (!c) return '—';
+    const parts = [c.government, c.zone].filter(Boolean);
+    return parts.length ? parts.join(' · ') : c.address || '—';
+  }
+
+  function getOrderStatusBadge(order) {
+    const st = order.orderStatus || order.statusCategory || '—';
     const statusColors = {
-      'delivered': 'success',
-      'outForDelivery': 'info',
-      'inProgress': 'warning',
-      'canceled': 'danger',
-      'returned': 'secondary'
+      delivered: 'success',
+      completed: 'success',
+      outForDelivery: 'info',
+      inProgress: 'warning',
+      canceled: 'danger',
+      cancelled: 'danger',
+      returned: 'secondary',
     };
-    const color = statusColors[status] || 'primary';
-    return `<span class="badge bg-soft-${color} text-${color}">${status}</span>`;
+    const color = statusColors[st] || 'primary';
+    return `<span class="badge bg-soft-${color} text-${color}">${escapeHtml(st)}</span>`;
   }
 
   function getPickupStatusBadge(status) {
     const statusColors = {
-      'completed': 'success',
-      'pickedUp': 'info',
-      'pendingPickup': 'warning',
-      'new': 'primary',
-      'canceled': 'danger'
+      completed: 'success',
+      pickedUp: 'info',
+      pendingPickup: 'warning',
+      new: 'primary',
+      canceled: 'danger',
     };
     const color = statusColors[status] || 'secondary';
-    return `<span class="badge bg-soft-${color} text-${color}">${status}</span>`;
+    return `<span class="badge bg-soft-${color} text-${color}">${escapeHtml(status || '—')}</span>`;
   }
 
   function getShopOrderStatusBadge(status) {
     const statusColors = {
-      'delivered': 'success',
-      'in_transit': 'info',
-      'confirmed': 'warning',
-      'pending': 'primary',
-      'cancelled': 'danger'
+      delivered: 'success',
+      in_transit: 'info',
+      confirmed: 'warning',
+      pending: 'primary',
+      cancelled: 'danger',
     };
     const color = statusColors[status] || 'secondary';
-    return `<span class="badge bg-soft-${color} text-${color}">${status}</span>`;
+    return `<span class="badge bg-soft-${color} text-${color}">${escapeHtml(status || '—')}</span>`;
   }
 
-  function getReleaseStatusBadge(status) {
+  function getPayoutStatusBadge(status) {
     const statusColors = {
-      'released': 'success',
-      'scheduled': 'info',
-      'pending': 'warning',
-      'failed': 'danger'
+      paid: 'success',
+      scheduled: 'info',
+      processing: 'warning',
+      failed: 'danger',
     };
     const color = statusColors[status] || 'secondary';
-    return `<span class="badge bg-soft-${color} text-${color}">${status}</span>`;
+    return `<span class="badge bg-soft-${color} text-${color}">${escapeHtml(status || '—')}</span>`;
   }
 
-  function viewDocument(url) {
-    window.open(url, '_blank');
+  function renderBusinessProfile(business) {
+    const avatar = document.getElementById('profileAvatar');
+    const display = business.brandInfo?.brandName || business.name || '—';
+    const letter = escapeHtml(display.charAt(0).toUpperCase());
+    const url = business.profileImage && String(business.profileImage).trim();
+    if (!url) {
+      avatar.innerHTML = `<span class="bd-hero-letter">${letter}</span>`;
+    } else {
+      avatar.innerHTML = `<span class="bd-hero-letter">${letter}</span><img class="bd-hero-img" src="${escapeHtml(
+        url
+      )}" alt="" loading="lazy" onerror="this.style.display='none'">`;
+    }
+    document.getElementById('businessName').textContent = display;
+    document.getElementById('businessIndustry').textContent =
+      business.brandInfo?.industry || 'Industry not specified';
+    document.getElementById('businessEmail').textContent = business.email || '—';
+    document.getElementById('businessPhone').textContent = business.phoneNumber || '—';
+    document.getElementById('businessJoined').textContent = formatDate(business.createdAt);
+
+    const badge = document.getElementById('verificationBadge');
+    if (business.isVerified) {
+      badge.style.display = 'inline-block';
+      badge.className = 'badge bg-success';
+      badge.textContent = 'Verified';
+    } else {
+      badge.style.display = 'inline-block';
+      badge.className = 'badge bg-warning text-dark';
+      badge.textContent = 'Pending verification';
+    }
+
+    const raw = (business.phoneNumber || '').replace(/\D/g, '');
+    const wa = document.getElementById('waBusinessBtn');
+    if (raw.length >= 8) {
+      wa.href = `https://wa.me/${raw.startsWith('0') ? '20' + raw.slice(1) : raw}`;
+      wa.style.display = 'inline-flex';
+    }
   }
 
-  function showError(message) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: message,
-      confirmButtonColor: '#405189'
+  function renderStatistics(stats) {
+    const total = stats.orders.total || 0;
+    const ok = stats.orders.successful || 0;
+    const rate = total > 0 ? (ok / total) * 100 : 0;
+
+    document.getElementById('kpiTotalOrders').textContent = total;
+    document.getElementById('kpiSuccessfulOrders').textContent = ok;
+    document.getElementById('kpiTotalPickups').textContent = stats.pickups.total;
+    document.getElementById('kpiCompletedPickups').textContent = stats.pickups.completed;
+    document.getElementById('kpiTotalShop').textContent = stats.shopOrders.total;
+    document.getElementById('kpiDeliveredShop').textContent = stats.shopOrders.delivered;
+
+    const bal = stats.financial.currentBalance || 0;
+    const balEl = document.getElementById('kpiBalance');
+    balEl.textContent = formatCurrency(bal);
+    balEl.className = 'bd-kpi-value ' + (bal >= 0 ? 'text-success' : 'text-danger');
+
+    document.getElementById('kpiPendingReleases').textContent =
+      stats.financial.pendingReleases ?? 0;
+
+    const donut = document.getElementById('kpiDonut');
+    donut.style.setProperty('--p', Math.min(100, Math.max(0, rate)).toFixed(2));
+    document.getElementById('kpiDonutLabel').textContent = `${rate.toFixed(1)}%`;
+  }
+
+  /** Matches keys from views/business/settings.ejs */
+  const SOCIAL_CHANNEL_DEFS = [
+    { key: 'instagram', label: 'Instagram', icon: 'ri-instagram-line' },
+    { key: 'tiktok', label: 'TikTok', icon: 'ri-tiktok-line' },
+    { key: 'woocommerce', label: 'WooCommerce', icon: 'ri-store-2-line' },
+    { key: 'customWebsite', label: 'Website', icon: 'ri-global-line' },
+    { key: 'facebookShop', label: 'Facebook Shop', icon: 'ri-facebook-circle-line' },
+    { key: 'facebookMessenger', label: 'Facebook / Messenger', icon: 'ri-messenger-line' },
+    { key: 'shopify', label: 'Shopify', icon: 'ri-shopping-cart-line' },
+  ];
+
+  function socialLinkHost(url) {
+    try {
+      const u = new URL(String(url).trim());
+      return u.hostname.replace(/^www\./, '');
+    } catch {
+      return String(url).slice(0, 48);
+    }
+  }
+
+  function renderSocialChannels(business) {
+    const mount = document.getElementById('socialLinksMount');
+    if (!mount) return;
+    const sl = business.brandInfo?.socialLinks;
+    if (!sl || typeof sl !== 'object') {
+      mount.innerHTML = '<p class="text-muted small mb-0">No channels linked.</p>';
+      return;
+    }
+    const used = new Set();
+    const items = [];
+    for (const def of SOCIAL_CHANNEL_DEFS) {
+      const raw = sl[def.key];
+      if (!raw || !String(raw).trim()) continue;
+      used.add(def.key);
+      items.push({ ...def, href: String(raw).trim() });
+    }
+    for (const key of Object.keys(sl)) {
+      if (used.has(key)) continue;
+      const raw = sl[key];
+      if (!raw || !String(raw).trim()) continue;
+      const label = key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, (s) => s.toUpperCase())
+        .trim();
+      items.push({ key, label, icon: 'ri-link', href: String(raw).trim() });
+    }
+    if (!items.length) {
+      mount.innerHTML = '<p class="text-muted small mb-0">No channels linked.</p>';
+      return;
+    }
+    mount.innerHTML = `<div class="bd-social-grid">${items
+      .map(
+        (it) => `
+      <a class="bd-social-link" href="${escapeAttr(it.href)}" target="_blank" rel="noopener noreferrer">
+        <i class="${escapeHtml(it.icon)}"></i>
+        <span>
+          <span class="bd-social-label">${escapeHtml(it.label)}</span>
+          <span class="bd-social-host">${escapeHtml(socialLinkHost(it.href))}</span>
+        </span>
+        <i class="ri-external-link-line ms-auto text-muted flex-shrink-0"></i>
+      </a>`
+      )
+      .join('')}</div>`;
+  }
+
+  function buildAddressSearchQuery(addr) {
+    return [
+      addr.adressDetails || addr.addressDetails,
+      addr.zone,
+      addr.city || addr.government,
+      addr.country,
+    ]
+      .filter((p) => p && String(p).trim())
+      .join(', ');
+  }
+
+  function getCoordLatLng(addr) {
+    const c = addr.coordinates;
+    if (!c) return { lat: null, lng: null };
+    const lat = c.lat ?? c.latitude;
+    const lng = c.lng ?? c.longitude;
+    if (lat == null || lng == null) return { lat: null, lng: null };
+    const la = Number(lat);
+    const ln = Number(lng);
+    if (Number.isNaN(la) || Number.isNaN(ln)) return { lat: null, lng: null };
+    return { lat: la, lng: ln };
+  }
+
+  function renderAddressRows(addr) {
+    const cell = (val) => (val != null && String(val).trim() ? String(val) : '—');
+    const row = (label, val) =>
+      `<div class="bd-row"><span class="bd-row-label">${escapeHtml(label)}</span><span class="bd-row-value">${escapeHtml(
+        cell(val)
+      )}</span></div>`;
+    return `
+      ${row('Country', addr.country)}
+      ${row('City / governorate', addr.city || addr.government)}
+      ${row('Zone', addr.zone)}
+      ${row('Address details', addr.adressDetails || addr.addressDetails)}
+      ${row('Landmark', addr.nearbyLandmark)}
+      ${row('Pickup phone', addr.pickupPhone)}
+      ${row('Other phone', addr.otherPickupPhone)}
+    `;
+  }
+
+  function renderPickupAddresses(business) {
+    const mount = document.getElementById('pickupAddressesMount');
+    if (!mount) return;
+    let list = [];
+    if (business.pickUpAddresses && business.pickUpAddresses.length) {
+      list = [...business.pickUpAddresses].sort((a, b) => {
+        if (a.isDefault && !b.isDefault) return -1;
+        if (!a.isDefault && b.isDefault) return 1;
+        return 0;
+      });
+    } else if (business.pickUpAdress && typeof business.pickUpAdress === 'object') {
+      const legacy = business.pickUpAdress;
+      const hasAny = ['country', 'city', 'zone', 'adressDetails', 'addressDetails', 'pickupPhone', 'nearbyLandmark'].some(
+        (k) => legacy[k]
+      );
+      if (hasAny) {
+        list = [{ ...legacy, addressName: 'Main address', isDefault: true, addressId: 'legacy' }];
+      }
+    }
+
+    if (!list.length) {
+      mount.innerHTML = '<p class="text-muted small mb-0">No pickup addresses on file.</p>';
+      return;
+    }
+
+    mount.innerHTML = `<div class="bd-pickup-stack">${list
+      .map((addr, idx) => {
+        const title = addr.addressName || `Address ${idx + 1}`;
+        const defaultBadge = addr.isDefault
+          ? '<span class="badge" style="background:rgba(243,151,32,0.22);color:#7a4a0c">Default pickup</span>'
+          : '';
+        const idLine =
+          addr.addressId && addr.addressId !== 'legacy'
+            ? `<div class="text-muted small font-monospace mt-1">${escapeHtml(addr.addressId)}</div>`
+            : '';
+        const { lat, lng } = getCoordLatLng(addr);
+        let mapBlock = '';
+        if (lat != null && lng != null) {
+          const d = 0.012;
+          const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
+          const osmLarge = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
+          mapBlock = `
+        <div class="bd-map-wrap rounded overflow-hidden border mt-2">
+          <iframe title="Map: ${escapeAttr(title)}" width="100%" height="240" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(`${lat},${lng}`)}"></iframe>
+        </div>
+        <div class="bd-map-actions">
+          <a class="btn btn-sm btn-outline-secondary" href="${escapeAttr(osmLarge)}" target="_blank" rel="noopener">Larger map (OpenStreetMap)</a>
+        </div>`;
+        } else {
+          const q = buildAddressSearchQuery(addr);
+          const gMaps = q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : '';
+          const osmSearch = q ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}` : '';
+          mapBlock = `
+        <div class="bd-map-fallback rounded border mt-2 p-3 bg-white text-center">
+          <p class="small text-muted mb-2">No coordinates on file — search by address.</p>
+          <div class="bd-map-actions justify-content-center">
+            ${gMaps ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeAttr(gMaps)}" target="_blank" rel="noopener"><i class="ri-map-pin-line me-1"></i>Google Maps</a>` : ''}
+            ${osmSearch ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeAttr(osmSearch)}" target="_blank" rel="noopener"><i class="ri-map-2-line me-1"></i>OpenStreetMap</a>` : ''}
+          </div>
+        </div>`;
+        }
+
+        const mapLinkHtml =
+          addr.pickUpPointInMaps && String(addr.pickUpPointInMaps).trim()
+            ? `<div class="mt-2 small"><a href="${escapeAttr(String(addr.pickUpPointInMaps).trim())}" target="_blank" rel="noopener" class="link-secondary"><i class="ri-links-line me-1"></i>Map link from business</a></div>`
+            : '';
+
+        return `
+      <div class="bd-pickup-card">
+        <div class="bd-pickup-card-header">
+          <div>
+            <div class="bd-pickup-card-title">${escapeHtml(title)}</div>
+            ${idLine}
+          </div>
+          <div>${defaultBadge}</div>
+        </div>
+        ${renderAddressRows(addr)}
+        ${mapBlock}
+        ${mapLinkHtml}
+      </div>`;
+      })
+      .join('')}</div>`;
+  }
+
+  function renderAnalytics(stats, revenueBreakdown) {
+    const o = stats.orders;
+    const parts = [
+      { key: 'new', label: 'New', val: o.new || 0, color: '#ffb45c' },
+      { key: 'processing', label: 'Processing', val: o.processing || 0, color: '#f7b84b' },
+      { key: 'successful', label: 'Successful', val: o.successful || 0, color: '#e8891a' },
+      { key: 'unsuccessful', label: 'Unsuccessful', val: o.unsuccessful || 0, color: '#f06548' },
+    ];
+    const sum = parts.reduce((a, p) => a + p.val, 0) || 1;
+    const bar = document.getElementById('analyticsOrderBar');
+    bar.innerHTML = parts
+      .map((p) => {
+        const w = ((p.val / sum) * 100).toFixed(2);
+        return `<div class="bd-stack-seg" style="width:${w}%;background:${p.color}" title="${escapeHtml(
+          p.label
+        )}: ${p.val}">${p.val > 0 && w > 8 ? p.val : ''}</div>`;
+      })
+      .join('');
+
+    document.getElementById('analyticsOrderLegend').innerHTML = parts
+      .map(
+        (p) => `<div class="col-6 col-md-3"><span class="d-inline-block rounded-circle me-1" style="width:8px;height:8px;background:${p.color}"></span>${escapeHtml(
+          p.label
+        )}: <strong>${p.val}</strong></div>`
+      )
+      .join('');
+
+    document.getElementById('anPickTotal').textContent = stats.pickups.total;
+    document.getElementById('anPickDone').textContent = stats.pickups.completed;
+    document.getElementById('anPickPending').textContent = stats.pickups.pending;
+
+    const inc = revenueBreakdown.income || 0;
+    const exp = revenueBreakdown.expenses || 0;
+    document.getElementById('anRevIncome').textContent = formatCurrency(inc);
+    document.getElementById('anRevExpense').textContent = formatCurrency(exp);
+    const t = inc + exp || 1;
+    const iw = ((inc / t) * 100).toFixed(1);
+    const ew = ((exp / t) * 100).toFixed(1);
+    document.getElementById(
+      'anRevBar'
+    ).innerHTML = `<div style="width:${iw}%;background:#f39720"></div><div style="width:${ew}%;background:#f06548"></div>`;
+  }
+
+  function renderOverview(business) {
+    document.getElementById('brandName').textContent = business.brandInfo?.brandName || '—';
+    document.getElementById('industryName').textContent = business.brandInfo?.industry || '—';
+    document.getElementById('monthlyOrders').textContent =
+      business.brandInfo?.monthlyOrders != null ? String(business.brandInfo.monthlyOrders) : '—';
+    const sp = business.brandInfo?.sellingPoints;
+    document.getElementById('sellingPoints').textContent =
+      Array.isArray(sp) && sp.length ? sp.join(', ') : '—';
+
+    renderSocialChannels(business);
+    renderPickupAddresses(business);
+
+    const paymentContainer = document.getElementById('paymentMethodContent');
+    if (business.paymentMethod?.paymentChoice) {
+      const method = business.paymentMethod.paymentChoice;
+      const details = business.paymentMethod.details || {};
+      let detailsHTML = '';
+      if (method === 'instaPay') {
+        detailsHTML = `<p class="mb-0 small text-muted">IPA / phone: ${escapeHtml(details.IPAorPhoneNumber || '—')}</p>`;
+      } else if (method === 'mobileWallet') {
+        detailsHTML = `<p class="mb-0 small text-muted">Wallet: ${escapeHtml(details.mobileWalletNumber || '—')}</p>`;
+      } else if (method === 'bankTransfer') {
+        const iban = details.IBAN || details.iban;
+        const acct = details.accountNumber || details.accountNo;
+        const bankLines = [
+          `Bank: ${escapeHtml(details.bankName || '—')}`,
+          iban ? `IBAN: ${escapeHtml(iban)}` : null,
+          acct ? `Account no.: ${escapeHtml(acct)}` : null,
+          `Account name: ${escapeHtml(details.accountName || '—')}`,
+        ]
+          .filter(Boolean)
+          .join('<br>');
+        detailsHTML = `<p class="mb-0 small text-muted">${bankLines}</p>`;
+      }
+      paymentContainer.innerHTML = `<div class="p-2 rounded bg-light"><div class="fw-semibold text-capitalize">${escapeHtml(
+        method
+      )}</div>${detailsHTML}</div>`;
+    } else {
+      paymentContainer.innerHTML = '<p class="text-muted mb-0 small">No payment method configured</p>';
+    }
+
+    const brandTypeContainer = document.getElementById('brandTypeContent');
+    if (business.brandType?.brandChoice) {
+      const type = business.brandType.brandChoice;
+      const details = business.brandType.brandDetails || {};
+      let detailsHTML = '';
+      if (type === 'personal') {
+        detailsHTML = `<p class="mb-0 small text-muted">National ID: ${escapeHtml(details.nationalId || '—')}</p>`;
+      } else if (type === 'company') {
+        detailsHTML = `<p class="mb-0 small text-muted">Tax number: ${escapeHtml(details.taxNumber || '—')}</p>`;
+      }
+      brandTypeContainer.innerHTML = `<div class="p-2 rounded bg-light"><div class="fw-semibold text-capitalize">${escapeHtml(
+        type
+      )}</div>${detailsHTML}</div>`;
+    } else {
+      brandTypeContainer.innerHTML = '<p class="text-muted mb-0 small">No brand type configured</p>';
+    }
+  }
+
+  function renderDocuments(business) {
+    const container = document.getElementById('documentsContent');
+    const photos = business.brandType?.brandDetails?.photos || [];
+    if (!photos.length) {
+      container.innerHTML = '<div class="col-12"><p class="text-muted mb-0">No documents uploaded</p></div>';
+      return;
+    }
+    const label = business.brandType?.brandChoice === 'personal' ? 'National ID' : 'Tax document';
+    container.innerHTML = photos
+      .map((photo, index) => {
+        const safe = JSON.stringify(photo);
+        return `
+      <div class="col-md-4 col-sm-6">
+        <div class="bd-doc-thumb" role="button" tabindex="0" data-doc-url=${safe}>
+          <img src="${escapeHtml(photo)}" alt="">
+          <div class="small p-2 bg-light">${escapeHtml(label)} ${index + 1}</div>
+        </div>
+      </div>`;
+      })
+      .join('');
+    container.querySelectorAll('.bd-doc-thumb[data-doc-url]').forEach((el) => {
+      const open = () => {
+        try {
+          const u = JSON.parse(el.getAttribute('data-doc-url'));
+          if (u) window.open(u, '_blank');
+        } catch (_) {}
+      };
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') open();
+      });
     });
   }
+
+  function renderOrders(orders) {
+    const tbody = document.getElementById('ordersTableBody');
+    if (!orders.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No orders</td></tr>';
+      return;
+    }
+    tbody.innerHTML = orders
+      .map(
+        (order) => `
+      <tr>
+        <td class="fw-semibold">${escapeHtml(order.orderNumber)}</td>
+        <td>${escapeHtml(order.orderCustomer?.fullName || '—')}</td>
+        <td class="small">${escapeHtml(orderLocation(order))}</td>
+        <td>${formatCurrency(orderAmount(order))}</td>
+        <td><span class="badge bg-soft-secondary text-secondary">${escapeHtml(
+          order.orderShipping?.orderType || '—'
+        )}</span></td>
+        <td>${getOrderStatusBadge(order)}</td>
+        <td class="small">${formatDate(order.orderDate || order.createdAt)}</td>
+        <td>
+          <a href="/admin/order-details/${escapeHtml(order.orderNumber)}" class="btn btn-sm btn-soft-primary" onclick="event.stopPropagation()">
+            <i class="ri-eye-line"></i>
+          </a>
+        </td>
+      </tr>`
+      )
+      .join('');
+  }
+
+  function renderPickups(pickups) {
+    const tbody = document.getElementById('pickupsTableBody');
+    if (!pickups.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No pickups</td></tr>';
+      return;
+    }
+    tbody.innerHTML = pickups
+      .map(
+        (pickup) => `
+      <tr>
+        <td class="fw-semibold">${escapeHtml(pickup.pickupNumber)}</td>
+        <td>${pickup.numberOfOrders ?? '—'}</td>
+        <td>${formatCurrency(pickup.pickupFees)}</td>
+        <td>${getPickupStatusBadge(pickup.picikupStatus)}</td>
+        <td class="small">${formatDate(pickup.pickupDate || pickup.createdAt)}</td>
+        <td>
+          <a href="/admin/pickup-details/${escapeHtml(pickup.pickupNumber)}" class="btn btn-sm btn-soft-primary"><i class="ri-eye-line"></i></a>
+        </td>
+      </tr>`
+      )
+      .join('');
+  }
+
+  function renderShopOrders(shopOrders) {
+    const tbody = document.getElementById('shopOrdersTableBody');
+    if (!shopOrders.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No shop orders</td></tr>';
+      return;
+    }
+    tbody.innerHTML = shopOrders
+      .map(
+        (order) => `
+      <tr>
+        <td class="fw-semibold">${escapeHtml(order.orderNumber)}</td>
+        <td>${escapeHtml(order.orderCustomer?.fullName || '—')}</td>
+        <td>${formatCurrency(order.totalAmount)}</td>
+        <td>${getShopOrderStatusBadge(order.status)}</td>
+        <td class="small">${formatDate(order.createdAt)}</td>
+        <td>
+          <a href="/admin/shop-order-details/${escapeHtml(order.orderNumber)}" class="btn btn-sm btn-soft-primary"><i class="ri-eye-line"></i></a>
+        </td>
+      </tr>`
+      )
+      .join('');
+  }
+
+  function renderFinancial(data) {
+    document.getElementById('financialBalance').textContent = formatCurrency(data.business.balance || 0);
+    document.getElementById('totalIncome').textContent = formatCurrency(data.revenueBreakdown.income || 0);
+    document.getElementById('totalExpenses').textContent = formatCurrency(data.revenueBreakdown.expenses || 0);
+
+    const transactionsBody = document.getElementById('transactionsTableBody');
+    const entries = data.recentLedgerEntries || [];
+    if (!entries.length) {
+      transactionsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No ledger entries</td></tr>';
+    } else {
+      transactionsBody.innerHTML = entries
+        .map(
+          (ent) => `
+        <tr>
+          <td class="fw-semibold text-muted small">${escapeHtml(String(ent._id || '').slice(-8))}</td>
+          <td>${escapeHtml(ent.type || '—')}</td>
+          <td class="${(ent.amount || 0) >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(ent.amount)}</td>
+          <td class="small">${formatDate(ent.createdAt)}</td>
+          <td class="small">${escapeHtml(ent.description || '—')}</td>
+        </tr>`
+        )
+        .join('');
+    }
+
+    const releasesBody = document.getElementById('releasesTableBody');
+    const payouts = data.recentPayouts || [];
+    if (!payouts.length) {
+      releasesBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No payouts</td></tr>';
+    } else {
+      releasesBody.innerHTML = payouts
+        .map(
+          (p) => `
+        <tr>
+          <td class="fw-semibold text-muted small">${escapeHtml(String(p._id || '').slice(-8))}</td>
+          <td>Payout</td>
+          <td>${formatCurrency(p.amount)}</td>
+          <td>${getPayoutStatusBadge(p.status)}</td>
+          <td class="small">${formatDate(p.createdAt)}</td>
+          <td class="small">${p.scheduledDate ? formatDate(p.scheduledDate) : '—'}</td>
+        </tr>`
+        )
+        .join('');
+    }
+  }
+
+  async function loadBusinessDetails() {
+    try {
+      const response = await fetch(`/admin/get-business-details/${businessId}`);
+      const data = await response.json();
+      if (!data.business) {
+        Swal.fire({ icon: 'error', title: 'Not found', text: data.error || 'Business not found', confirmButtonColor: '#F39720' });
+        return;
+      }
+      renderBusinessProfile(data.business);
+      renderStatistics(data.stats);
+      renderOverview(data.business);
+      renderDocuments(data.business);
+      renderOrders(data.recentOrders || []);
+      renderPickups(data.recentPickups || []);
+      renderShopOrders(data.recentShopOrders || []);
+      renderFinancial(data);
+      renderAnalytics(data.stats, data.revenueBreakdown || { income: 0, expenses: 0 });
+    } catch (e) {
+      console.error(e);
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load business details', confirmButtonColor: '#F39720' });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadBusinessDetails);
 </script>

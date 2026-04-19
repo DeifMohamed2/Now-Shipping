@@ -45,6 +45,10 @@ router.post('/assign-delivery-man', adminController.assignCourierToStock);
 
 router.get('/orders', adminController.get_ordersPage);
 router.get('/get-orders', adminController.get_orders);
+router.get(
+  '/orders-filter-businesses',
+  adminController.get_ordersFilterBusinesses
+);
 router.get('/order-details/:orderNumber', adminController.get_orderDetailsPage);
 
 // couriers
@@ -56,6 +60,9 @@ router.get('/get-couriers', adminController.get_couriers);
 router.post('/couriers/create-courier', adminController.createCourier);
 
 router.put('/couriers/update-zones', adminController.updateCourierZones);
+
+router.post('/couriers/bulk-deactivate', adminController.bulkDeactivateCouriers);
+router.post('/couriers/bulk-delete', adminController.bulkDeleteCouriers);
 
 // couriers-follow-up
 
@@ -126,6 +133,9 @@ router.post('/add-return-to-stock', adminController.add_return_to_stock);
 
 router.post('/return-assign-courier', adminController.assignCourierToReturn);
 
+// Resend return pickup OTP to customer (if expired or not received)
+router.post('/orders/:orderNumber/resend-return-otp', adminController.resendReturnOtp);
+
 router.post(
   '/return-courier-received',
   adminController.return_courier_received
@@ -158,23 +168,29 @@ router.put(
 
 // router.get('/get-stock-managment', adminController.get_stockManagment);
 
-// wallet overview
+// Payouts
+router.get('/payouts', adminController.get_payoutsPage);
+router.get('/api/businesses/search', adminController.search_businessesForPayout);
+router.get('/api/payouts', adminController.get_payouts);
+router.get('/api/payouts/:id', adminController.get_payoutDetail);
+router.get('/api/payouts/:id/export', adminController.export_payoutExcel);
+router.post('/api/payouts/:id/paid', adminController.markPayoutPaid);
+router.post('/api/adjustments', adminController.addAdjustment);
+router.get('/business/:id/ledger', adminController.get_businessLedgerPage);
+router.get('/api/business/:id/ledger', adminController.get_businessLedger);
+router.post('/api/run-payout-processing', adminController.runPayoutProcessing);
 
-router.get('/release-amounts', adminController.get_releaseAmountsPage);
-
-router.get('/get-release-all-data', adminController.get_releasesAllData);
-
-router.post('/reschedule-release', adminController.rescheduleRelease);
-
-router.post('/release-funds', adminController.releaseFunds);
-
-// Export routes
-router.get('/export-releases-excel', adminController.exportReleasesToExcel);
-router.get('/export-releases-pdf', adminController.exportReleasesToPDF);
-router.get(
-  '/get-release-details/:releaseId',
-  adminController.getReleaseDetails
-);
+// ── TEMP: One-time data migration (remove after running once) ──
+router.post('/api/migrate-to-ledger', async (req, res) => {
+  try {
+    const { migrateToLedger } = require('../utils/migrateToLedger');
+    const dryRun = req.query.dryRun === 'true';
+    const summary = await migrateToLedger({ dryRun });
+    res.json({ success: true, summary });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // businesses
 
@@ -254,53 +270,6 @@ router.post(
   notificationController.cleanupInvalidTokens
 );
 router.post('/notifications/test-token', notificationController.testUserToken);
-
-// Financial Processing Management routes
-router.get(
-  '/financial-processing',
-  adminController.get_financialProcessingPage
-);
-
-// Financial Processing API routes
-router.post('/api/run-daily-processing', adminController.runDailyProcessing);
-router.get(
-  '/api/processing-statistics',
-  adminController.getProcessingStatistics
-);
-router.get(
-  '/api/reconciliation-report',
-  adminController.generateReconciliationReport
-);
-router.get(
-  '/api/reset-orphaned-flags',
-  adminController.resetOrphanedProcessingFlags
-);
-router.get(
-  '/api/validate-business-balances',
-  adminController.validateBusinessBalances
-);
-router.post(
-  '/api/fix-balance-discrepancies',
-  adminController.fixBalanceDiscrepancies
-);
-router.post(
-  '/api/process-specific-orders',
-  adminController.processSpecificOrdersAdmin
-);
-router.get(
-  '/api/recover-failed-processing',
-  adminController.recoverFailedProcessingAdmin
-);
-
-// Transaction Details API routes
-router.get(
-  '/get-transaction-details/:transactionId',
-  adminController.getTransactionDetails
-);
-router.get(
-  '/get-detailed-transaction-info/:transactionId',
-  adminController.getDetailedTransactionInfo
-);
 
 // Admin Shop API routes (must come before page routes to avoid conflicts)
 router.get('/api/shop/products', adminController.getProducts);

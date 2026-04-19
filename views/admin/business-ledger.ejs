@@ -1,0 +1,422 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<style>
+  .bl-page { --bl-brand: #f39720; --bl-brand-dark: #c97d12; --bl-brand-soft: rgba(243,151,32,0.12); }
+
+  .bl-hero {
+    background: linear-gradient(135deg, #f39720 0%, #c97d12 100%);
+    border-radius: 0.5rem;
+    padding: 1.25rem 1.5rem;
+    color: #fff;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 0.4rem 1.2rem rgba(243,151,32,0.25);
+  }
+  .bl-hero-avatar {
+    width: 52px; height: 52px; border-radius: 12px;
+    background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.45);
+    font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    color: #fff; flex-shrink: 0; overflow: hidden; position: relative;
+  }
+  .bl-hero-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+  .bl-code { font-family: monospace; font-size: 0.8rem; background: rgba(255,255,255,0.2); border-radius: 6px; padding: 2px 8px; letter-spacing: 0.08em; }
+
+  .bl-balance-card {
+    border: 2px solid var(--bl-brand);
+    border-radius: 0.5rem; padding: 1rem 1.25rem;
+    background: #fff; text-align: center;
+  }
+  .bl-balance-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #878a99; font-weight: 600; }
+  .bl-balance-value { font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
+
+  .bl-filter-bar {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    align-items: center; padding: 0.85rem 1rem;
+    background: #f8f9fa; border-radius: 0.5rem; border: 1px solid #e9ecef;
+    margin-bottom: 1rem;
+  }
+  .bl-filter-bar select, .bl-filter-bar input[type="text"],
+  .bl-filter-bar input[type="date"] {
+    font-size: 0.8125rem; border-radius: 0.35rem; border: 1px solid #ced4da;
+    padding: 0.35rem 0.65rem; background: #fff; color: #212529;
+    min-width: 120px;
+  }
+  .bl-filter-bar select:focus, .bl-filter-bar input:focus {
+    outline: none; border-color: var(--bl-brand); box-shadow: 0 0 0 2px rgba(243,151,32,0.15);
+  }
+  .bl-filter-sep { width: 1px; height: 28px; background: #dee2e6; flex-shrink: 0; }
+  .bl-search-wrap { flex: 1; min-width: 180px; position: relative; }
+  .bl-search-wrap i { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: #878a99; pointer-events: none; }
+  .bl-search-wrap input { padding-left: 28px; width: 100%; }
+
+  .bl-type-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.72rem; font-weight: 600; padding: 2px 8px;
+    border-radius: 20px; white-space: nowrap;
+  }
+  .bl-type-cod_collected  { background: #d1fae5; color: #065f46; }
+  .bl-type-delivery_fee   { background: #fee2e2; color: #991b1b; }
+  .bl-type-return_fee     { background: #fef3c7; color: #92400e; }
+  .bl-type-pickup_fee     { background: #e0e7ff; color: #3730a3; }
+  .bl-type-payout         { background: #f3e8ff; color: #6b21a8; }
+  .bl-type-adjustment     { background: #dbeafe; color: #1e3a5f; }
+  .bl-type-default        { background: #f1f5f9; color: #475569; }
+
+  .bl-status-pill {
+    display: inline-block; font-size: 0.71rem; font-weight: 600;
+    padding: 2px 10px; border-radius: 20px; white-space: nowrap;
+  }
+  .bl-status-paid     { background: #d1fae5; color: #065f46; }
+  .bl-status-inpayout { background: #dbeafe; color: #1e3a5f; }
+  .bl-status-pending  { background: #fde68a; color: #78350f; }
+
+  .bl-table thead th {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: #878a99; white-space: nowrap;
+    padding: 0.6rem 0.75rem; border-bottom: 2px solid #e9ecef; background: #f8f9fa;
+  }
+  .bl-table tbody td { font-size: 0.8375rem; padding: 0.6rem 0.75rem; vertical-align: middle; }
+  .bl-table tbody tr:hover { background: rgba(243,151,32,0.04); }
+  .bl-amount-pos { color: #059669; font-weight: 700; }
+  .bl-amount-neg { color: #dc2626; font-weight: 700; }
+
+  .bl-pagination { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+  .bl-pagination .page-btn {
+    min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; border: 1px solid #dee2e6; background: #fff; font-size: 0.8rem;
+    cursor: pointer; color: #495057; transition: all 0.15s;
+  }
+  .bl-pagination .page-btn:hover { border-color: var(--bl-brand); color: var(--bl-brand); }
+  .bl-pagination .page-btn.active { background: var(--bl-brand); border-color: var(--bl-brand); color: #fff; font-weight: 700; }
+  .bl-pagination .page-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+
+  .bl-empty { padding: 3rem 1rem; text-align: center; color: #878a99; }
+  .bl-empty i { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+  .bl-loading { text-align: center; padding: 2.5rem 1rem; color: #878a99; }
+</style>
+
+<%- contentFor('body') %>
+<div class="bl-page">
+
+  <!-- Back + actions row -->
+  <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+    <a href="/admin/business-details/<%= businessId %>" class="btn btn-soft-secondary">
+      <i class="ri-arrow-left-line me-1"></i> Back to Business
+    </a>
+    <button class="btn btn-soft-warning" id="blAddAdjBtn">
+      <i class="ri-add-circle-line me-1"></i> Manual Adjustment
+    </button>
+  </div>
+
+  <!-- Hero -->
+  <div class="bl-hero">
+    <div class="d-flex align-items-center gap-3">
+      <div class="bl-hero-avatar" id="blAvatar">
+        <%= businessName.charAt(0).toUpperCase() %>
+        <% if (profileImage) { %>
+        <img src="<%= profileImage %>" alt="" onerror="this.style.display='none'">
+        <% } %>
+      </div>
+      <div class="flex-grow-1 min-w-0">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-0">
+          <h5 class="text-white fw-bold mb-0 text-truncate"><%= businessName %></h5>
+          <% if (businessAccountCode) { %>
+          <span class="bl-code"><i class="ri-shield-keyhole-line me-1 opacity-75"></i><%= businessAccountCode %></span>
+          <% } %>
+        </div>
+        <div class="opacity-75 small mt-1"><%= businessEmail %></div>
+      </div>
+      <div class="flex-shrink-0 text-end">
+        <div class="opacity-75 small mb-1">Current balance</div>
+        <div class="fw-bold fs-4" id="blBalanceHero">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary row -->
+  <div class="row g-3 mb-3">
+    <div class="col-sm-4">
+      <div class="bl-balance-card">
+        <div class="bl-balance-label">Available balance</div>
+        <div class="bl-balance-value" id="blBalMain">—</div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="bl-balance-card" style="border-color:#059669">
+        <div class="bl-balance-label">Total income</div>
+        <div class="bl-balance-value text-success" id="blTotalIncome">—</div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="bl-balance-card" style="border-color:#dc2626">
+        <div class="bl-balance-label">Total expenses</div>
+        <div class="bl-balance-value text-danger" id="blTotalExpenses">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ledger card -->
+  <div class="card admin-data-card">
+    <div class="card-header d-flex align-items-center justify-content-between py-2 px-3 gap-2">
+      <span class="fw-semibold fs-14">Ledger Entries</span>
+      <span class="text-muted small" id="blEntriesCount"></span>
+    </div>
+    <div class="card-body p-3">
+
+      <!-- Filter bar -->
+      <div class="bl-filter-bar">
+        <select id="blTypeFilter">
+          <option value="">All Types</option>
+          <option value="cod_collected">COD Collected</option>
+          <option value="delivery_fee">Delivery Fee</option>
+          <option value="return_fee">Return Fee</option>
+          <option value="pickup_fee">Pickup Fee</option>
+          <option value="payout">Payout</option>
+          <option value="adjustment">Adjustment</option>
+        </select>
+        <select id="blStatusFilter">
+          <option value="">All Status</option>
+          <option value="false">Pending</option>
+          <option value="true">In Payout / Paid</option>
+        </select>
+        <div class="bl-filter-sep d-none d-sm-block"></div>
+        <input type="date" id="blFromDate" placeholder="From date">
+        <input type="date" id="blToDate" placeholder="To date">
+        <div class="bl-filter-sep d-none d-sm-block"></div>
+        <div class="bl-search-wrap">
+          <i class="ri-search-line"></i>
+          <input type="text" id="blSearch" placeholder="Search order #, description…">
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" id="blResetBtn">
+          <i class="ri-refresh-line me-1"></i>Reset
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table table-nowrap align-middle mb-0 bl-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Description</th>
+              <th>Reference</th>
+              <th class="text-end">Amount</th>
+              <th class="text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="blTableBody">
+            <tr><td colspan="6" class="bl-loading"><i class="ri-loader-4-line me-1"></i>Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3" id="blPaginationWrap">
+        <div class="text-muted small" id="blPaginationInfo"></div>
+        <div class="bl-pagination" id="blPagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Manual Adjustment Modal -->
+<div class="modal fade" id="blAdjModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="ri-add-circle-line me-2 text-warning"></i>Manual Adjustment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Amount <span class="text-danger">*</span></label>
+          <input type="number" class="form-control" id="blAdjAmount" placeholder="e.g. 200 or -150" step="0.01">
+          <div class="form-text">Positive = credit, Negative = debit</div>
+        </div>
+        <div class="mb-0">
+          <label class="form-label fw-semibold">Note / reason <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="blAdjNote" placeholder="e.g. Bonus, correction, etc.">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-warning text-white" id="blAdjConfirm">
+          <i class="ri-check-line me-1"></i>Apply
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script>
+(function () {
+  const BID = '<%= businessId %>';
+  let state = { page: 1, limit: 50, type: '', settled: '', from: '', to: '', search: '' };
+  let totalEntries = 0;
+  let totalPages = 1;
+  let balance = 0;
+  let searchTimer = null;
+
+  function fmt(n) {
+    return new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n || 0);
+  }
+  function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function typePill(type) {
+    const labels = {
+      cod_collected: 'COD Collected',
+      delivery_fee: 'Delivery Fee',
+      return_fee: 'Return Fee',
+      pickup_fee: 'Pickup Fee',
+      payout: 'Payout',
+      adjustment: 'Adjustment',
+    };
+    const label = labels[type] || type || '—';
+    const cls = `bl-type-${type}` in document.styleSheets[0].cssRules ? `bl-type-${type}` : 'bl-type-default';
+    return `<span class="bl-type-pill bl-type-${esc(type)}">${esc(label)}</span>`;
+  }
+
+  function statusPill(entry) {
+    if (!entry.payoutId) return `<span class="bl-status-pill bl-status-pending">Pending</span>`;
+    const st = entry.payoutId?.status;
+    if (st === 'paid') return `<span class="bl-status-pill bl-status-paid">Paid</span>`;
+    return `<span class="bl-status-pill bl-status-inpayout">In Payout</span>`;
+  }
+
+  function refCell(entry) {
+    const parts = [];
+    if (entry.orderNumber) parts.push(`<span class="badge bg-soft-primary text-primary">${esc(entry.orderNumber)}</span>`);
+    if (entry.pickupNumber) parts.push(`<span class="badge bg-soft-info text-info">${esc(entry.pickupNumber)}</span>`);
+    return parts.length ? parts.join(' ') : '—';
+  }
+
+  async function load() {
+    const tbody = document.getElementById('blTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" class="bl-loading"><i class="ri-loader-4-line me-1"></i>Loading…</td></tr>';
+
+    const params = new URLSearchParams({ page: state.page, limit: state.limit });
+    if (state.type)    params.set('type', state.type);
+    if (state.settled !== '') params.set('settled', state.settled);
+    if (state.from)    params.set('startDate', state.from);
+    if (state.to)      params.set('endDate', state.to);
+    if (state.search)  params.set('search', state.search);
+
+    try {
+      const res = await fetch(`/admin/api/business/${BID}/ledger?${params}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed');
+
+      balance = data.balance || 0;
+      totalEntries = data.total || 0;
+      totalPages = data.pages || 1;
+
+      // Update balance displays
+      document.getElementById('blBalanceHero').textContent = fmt(balance);
+      document.getElementById('blBalMain').textContent = fmt(balance);
+      document.getElementById('blEntriesCount').textContent = `${totalEntries} entries`;
+      document.getElementById('blPaginationInfo').textContent =
+        `Showing ${((state.page - 1) * state.limit) + 1}–${Math.min(state.page * state.limit, totalEntries)} of ${totalEntries}`;
+
+      // Calculate income/expenses from visible entries
+      let inc = 0, exp = 0;
+      (data.entries || []).forEach(e => { if (e.amount > 0) inc += e.amount; else exp += e.amount; });
+      document.getElementById('blTotalIncome').textContent = fmt(inc);
+      document.getElementById('blTotalExpenses').textContent = fmt(Math.abs(exp));
+
+      if (!data.entries || !data.entries.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="bl-empty"><i class="ri-inbox-line"></i>No entries found</td></tr>`;
+        renderPagination();
+        return;
+      }
+
+      tbody.innerHTML = data.entries.map(e => `
+        <tr>
+          <td class="small text-muted">${fmtDate(e.createdAt)}</td>
+          <td>${typePill(e.type)}</td>
+          <td class="small">${esc(e.description || '—')}</td>
+          <td>${refCell(e)}</td>
+          <td class="text-end ${e.amount >= 0 ? 'bl-amount-pos' : 'bl-amount-neg'}">${e.amount >= 0 ? '+' : ''}${fmt(e.amount)}</td>
+          <td class="text-center">${statusPill(e)}</td>
+        </tr>`).join('');
+
+      renderPagination();
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" class="bl-empty"><i class="ri-error-warning-line"></i>Failed to load entries. ${esc(err.message)}</td></tr>`;
+    }
+  }
+
+  function renderPagination() {
+    const wrap = document.getElementById('blPagination');
+    if (totalPages <= 1) { wrap.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${state.page <= 1 ? 'disabled' : ''} data-p="${state.page - 1}"><i class="ri-arrow-left-s-line"></i></button>`;
+    const range = [];
+    for (let i = Math.max(1, state.page - 2); i <= Math.min(totalPages, state.page + 2); i++) range.push(i);
+    if (range[0] > 1) { html += `<button class="page-btn" data-p="1">1</button>`; if (range[0] > 2) html += `<span class="page-btn" style="pointer-events:none">…</span>`; }
+    range.forEach(p => { html += `<button class="page-btn ${p === state.page ? 'active' : ''}" data-p="${p}">${p}</button>`; });
+    if (range[range.length-1] < totalPages) { if (range[range.length-1] < totalPages - 1) html += `<span class="page-btn" style="pointer-events:none">…</span>`; html += `<button class="page-btn" data-p="${totalPages}">${totalPages}</button>`; }
+    html += `<button class="page-btn" ${state.page >= totalPages ? 'disabled' : ''} data-p="${state.page + 1}"><i class="ri-arrow-right-s-line"></i></button>`;
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('.page-btn[data-p]').forEach(btn => {
+      btn.addEventListener('click', () => { state.page = parseInt(btn.dataset.p); load(); });
+    });
+  }
+
+  // Wire filters
+  document.getElementById('blTypeFilter').addEventListener('change', e => { state.type = e.target.value; state.page = 1; load(); });
+  document.getElementById('blStatusFilter').addEventListener('change', e => { state.settled = e.target.value; state.page = 1; load(); });
+  document.getElementById('blFromDate').addEventListener('change', e => { state.from = e.target.value; state.page = 1; load(); });
+  document.getElementById('blToDate').addEventListener('change', e => { state.to = e.target.value; state.page = 1; load(); });
+  document.getElementById('blSearch').addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { state.search = e.target.value.trim(); state.page = 1; load(); }, 300);
+  });
+  document.getElementById('blResetBtn').addEventListener('click', () => {
+    state = { page: 1, limit: 50, type: '', settled: '', from: '', to: '', search: '' };
+    document.getElementById('blTypeFilter').value = '';
+    document.getElementById('blStatusFilter').value = '';
+    document.getElementById('blFromDate').value = '';
+    document.getElementById('blToDate').value = '';
+    document.getElementById('blSearch').value = '';
+    load();
+  });
+
+  // Manual adjustment
+  const adjModal = new bootstrap.Modal(document.getElementById('blAdjModal'));
+  document.getElementById('blAddAdjBtn').addEventListener('click', () => adjModal.show());
+  document.getElementById('blAdjConfirm').addEventListener('click', async () => {
+    const amount = parseFloat(document.getElementById('blAdjAmount').value);
+    const note = document.getElementById('blAdjNote').value.trim();
+    if (!amount || !note) return Swal.fire({ icon: 'warning', title: 'Required', text: 'Amount and note are required.', confirmButtonColor: '#f39720' });
+    try {
+      document.getElementById('blAdjConfirm').disabled = true;
+      const res = await fetch('/admin/api/adjustments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId: BID, amount, note }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed');
+      adjModal.hide();
+      document.getElementById('blAdjAmount').value = '';
+      document.getElementById('blAdjNote').value = '';
+      Swal.fire({ icon: 'success', title: 'Applied', text: 'Adjustment recorded.', confirmButtonColor: '#f39720', timer: 2000, showConfirmButton: false });
+      load();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#f39720' });
+    } finally {
+      document.getElementById('blAdjConfirm').disabled = false;
+    }
+  });
+
+  load();
+})();
+</script>

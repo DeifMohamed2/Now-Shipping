@@ -2,6 +2,7 @@
 
 <!-- RTL Support CSS -->
 <link rel="stylesheet" href="/assets/css/rtl-support.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -48,15 +49,15 @@
 
   /* Login Container Styles */
   .login-container {
-    min-height: 100vh;
+    flex: 1;
+    min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
     margin-left: 0;
-    padding: 90px 20px 20px;
-    /* Add top padding to account for navbar */
+    padding: 1.5rem 20px 2rem;
   }
 
   /* Background Animation Elements */
@@ -517,23 +518,6 @@
     }
   }
 
-  /* Responsive styles */
-  @media (max-width: 992px) {
-
-    .navbar-links,
-    .navbar-actions {
-      display: none;
-    }
-
-    .mobile-menu-btn {
-      display: block;
-    }
-
-    .mobile-menu.open {
-      display: block;
-    }
-  }
-
   /* Form validation styles */
   .is-invalid {
     border-color: #dc3545 !important;
@@ -611,8 +595,8 @@
 </style>
 
 <%- contentFor('body') %>
-<!-- Auth Navbar -->
-<%- include('../partials/auth-navbar') %>
+<!-- Marketing navbar (same as landing pages) -->
+<%- include('../partials/navbar', { activePage: '' }) %>
 
 <!-- Animated Background -->
 <div class="animated-background">

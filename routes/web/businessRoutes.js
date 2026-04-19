@@ -5,8 +5,33 @@ const User = require('../../models/user.js');
 
 const jwtSecret = process.env.JWT_SECRET;
 
+const multer = require('multer');
 const businessController = require('../../controllers/businessController.js');
 const assistantController = require('../../controllers/assistantController.js');
+
+const orderImportUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const name = file.originalname || '';
+    const nameOk = /\.xlsx$/i.test(name);
+    const mimeOk =
+      file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      file.mimetype === 'application/vnd.ms-excel' ||
+      (file.mimetype === 'application/octet-stream' && nameOk);
+    if (nameOk || mimeOk) cb(null, true);
+    else cb(new Error('Only Excel files (.xlsx) are allowed.'));
+  },
+});
+
+function orderImportUploadSingle(req, res, next) {
+  orderImportUpload.single('file')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message || 'Upload failed.' });
+    }
+    next();
+  });
+}
 
 async function authenticateUser(req, res, next) {
   const token = req.cookies.token;
@@ -15,6 +40,7 @@ async function authenticateUser(req, res, next) {
   const isApiRequest = 
     req.path.startsWith('/api/') ||
     req.path.includes('-data') ||  // Includes dashboard-data, order-data, etc.
+    req.path.includes('orders-import') ||
     req.headers['content-type'] === 'application/json' ||
     req.xhr ||
     (req.headers['accept'] && req.headers['accept'].includes('application/json'));
@@ -92,6 +118,12 @@ router.get('/orders', businessController.get_ordersPage);
 router.get('/get-orders', businessController.get_orders);
 
 router.get('/export-orders', businessController.exportOrdersToExcel);
+
+router.get('/orders-import-template', businessController.getOrdersImportTemplate);
+
+router.post('/orders-import-validate', orderImportUploadSingle, businessController.postOrdersImportValidate);
+
+router.post('/orders-import-commit', orderImportUploadSingle, businessController.postOrdersImportCommit);
 
 router.get('/create-order', businessController.get_createOrderPage);
 
@@ -190,49 +222,20 @@ router.post(
   businessController.markDeliverOrderAsReturned
 ); //
 
+router.put(
+  '/pickup/cancel-pickup/:pickupId',
+  businessController.cancelPickup
+);
+
 router.delete(
   '/pickup/delete-pickup/:pickupId',
   businessController.deletePickup
 );
 
-//wallet
-
-// total balance
-router.get('/wallet/total-balance', businessController.get_totalBalancePage);
-
-router.get(
-  '/wallet/get-all-transactions-by-date',
-  businessController.get_allTransactionsByDate
-);
-
-router.get(
-  '/wallet/get-transaction-details/:transactionId',
-  businessController.getTransactionDetails
-);
-
-// Balance recalculation API
-router.post(
-  '/wallet/recalculate-balance',
-  businessController.recalculateBalanceAPI
-);
-
-// Excel Export routes
-router.get(
-  '/wallet/export-transactions',
-  businessController.exportTransactionsToExcel
-);
-router.get(
-  '/wallet/export-cash-cycles',
-  businessController.exportCashCyclesToExcel
-);
-
-// cash cycle
-router.get('/wallet/cash-cycles', businessController.get_cashCyclesPage);
-
-router.get(
-  '/wallet/get-total-cashCycle-by-data',
-  businessController.get_totalCashCycleByDate
-);
+// Wallet
+router.get('/wallet', businessController.get_walletPage);
+router.get('/wallet/entries', businessController.get_walletEntries);
+router.get('/wallet/export', businessController.exportWalletToExcel);
 
 // Test route
 // router.get('/test-orders', businessController.testOrders);

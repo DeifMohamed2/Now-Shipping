@@ -11,7 +11,6 @@
   let typingTimeout;
   let isTyping = false;
   let attachedImage = null;
-  let currentPriorityFilter = 'all';
   let currentTypeFilter = 'all';
   
   // Local upload configuration
@@ -99,7 +98,6 @@
     try {
       const params = new URLSearchParams();
       if (currentFilter !== 'all') params.append('status', currentFilter);
-      if (currentPriorityFilter !== 'all') params.append('priority', currentPriorityFilter);
       if (currentTypeFilter !== 'all') params.append('ticketType', currentTypeFilter);
 
       const response = await fetch(`/api/v1/tickets?${params}`, {
@@ -116,7 +114,7 @@
     }
   }
 
-  // Apply all filters (search, priority, type)
+  // Apply all filters (search, type)
   function applyFilters() {
     const searchQuery = document.getElementById('searchTickets')?.value.toLowerCase() || '';
     
@@ -177,12 +175,7 @@
             businessName
           )}</small>
           <div class="d-flex justify-content-between align-items-center mt-2">
-            <div class="d-flex gap-1">
-              <span class="badge ${getPriorityBadgeClass(ticket.priority)} badge-sm">${
-          ticket.priority || 'medium'
-        }</span>
-              <span class="badge bg-secondary badge-sm">${formatTicketType(ticket.ticketType)}</span>
-            </div>
+            <span class="badge tickets-type-badge badge-sm">${formatTicketType(ticket.ticketType)}</span>
           </div>
           <div class="d-flex justify-content-between mt-2">
             <small class="text-muted"><i class="ri-time-line"></i> ${formatDate(
@@ -265,19 +258,17 @@
           'chatTitle'
         ).textContent = `#${ticket.ticketNumber} - ${ticket.subject}`;
         document.getElementById('chatInfo').innerHTML = `
-          Business: ${escapeHtml(businessName)} | 
-          Type: ${formatTicketType(ticket.ticketType)} | 
-          Priority: ${ticket.priority}
+          <span class="text-muted">${escapeHtml(businessName)}</span>
+          <span class="text-muted mx-1">·</span>
+          <span class="text-muted">${formatTicketType(ticket.ticketType)}</span>
           ${
             ticket.relatedOrderNumber
-              ? ` | Order: ${ticket.relatedOrderNumber}`
+              ? `<span class="text-muted mx-1">·</span><span class="text-muted">Order ${escapeHtml(String(ticket.relatedOrderNumber))}</span>`
               : ''
           }
         `;
 
-        // Set status and priority selects
         document.getElementById('statusSelect').value = ticket.status;
-        document.getElementById('prioritySelect').value = ticket.priority || 'medium';
       }
     } catch (error) {
       console.error('Error loading ticket details:', error);
@@ -593,16 +584,6 @@
     return classes[status] || 'bg-secondary';
   }
 
-  function getPriorityBadgeClass(priority) {
-    const classes = {
-      low: 'bg-info text-white',
-      medium: 'bg-warning text-dark',
-      high: 'bg-danger text-white',
-      urgent: 'bg-danger text-white',
-    };
-    return classes[priority] || 'bg-secondary text-white';
-  }
-
   function scrollToBottom() {
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -703,44 +684,11 @@
         }, 300);
       });
 
-    // Priority filter
-    document.getElementById('filterPriority')?.addEventListener('change', function () {
-      currentPriorityFilter = this.value;
-      loadTickets();
-    });
-
     // Type filter
     document.getElementById('filterType')?.addEventListener('change', function () {
       currentTypeFilter = this.value;
       loadTickets();
     });
-  }
-
-  // Update priority
-  async function updatePriority(newPriority) {
-    if (!currentTicketId) return;
-
-    try {
-      const response = await fetch(`/api/v1/tickets/${currentTicketId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ priority: newPriority }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showToast('Priority updated successfully', 'success');
-        loadTickets();
-        loadTicketDetails(currentTicketId);
-      } else {
-        showToast(data.message || 'Failed to update priority', 'error');
-      }
-    } catch (error) {
-      console.error('Error updating priority:', error);
-      showToast('Failed to update priority', 'error');
-    }
   }
 
   // Load admins for assignment
@@ -920,7 +868,6 @@
     try {
       const params = new URLSearchParams();
       if (currentFilter !== 'all') params.append('status', currentFilter);
-      if (currentPriorityFilter !== 'all') params.append('priority', currentPriorityFilter);
       if (currentTypeFilter !== 'all') params.append('ticketType', currentTypeFilter);
 
       const response = await fetch(`/api/v1/tickets?${params}&limit=1000`, {
@@ -931,11 +878,11 @@
       if (data.success) {
         // Convert to CSV
         const tickets = data.tickets;
-        let csv = 'Ticket Number,Subject,Type,Priority,Status,Business,Created At,Last Message\n';
+        let csv = 'Ticket Number,Subject,Type,Status,Business,Created At,Last Message\n';
         
         tickets.forEach(ticket => {
           const businessName = ticket.business?.businessInfo?.brandName || ticket.business?.name || 'Unknown';
-          csv += `"${ticket.ticketNumber}","${ticket.subject}","${ticket.ticketType}","${ticket.priority}","${ticket.status}","${businessName}","${new Date(ticket.createdAt).toLocaleString()}","${new Date(ticket.lastMessageAt || ticket.createdAt).toLocaleString()}"\n`;
+          csv += `"${ticket.ticketNumber}","${ticket.subject}","${ticket.ticketType}","${ticket.status}","${businessName}","${new Date(ticket.createdAt).toLocaleString()}","${new Date(ticket.lastMessageAt || ticket.createdAt).toLocaleString()}"\n`;
         });
 
         // Download
@@ -969,11 +916,6 @@
     initEventListeners();
     loadStatistics();
     loadTickets();
-
-    // Priority select handler
-    document.getElementById('prioritySelect')?.addEventListener('change', function() {
-      updatePriority(this.value);
-    });
 
     // Assign ticket button
     document.getElementById('assignTicketBtn')?.addEventListener('click', async function(e) {

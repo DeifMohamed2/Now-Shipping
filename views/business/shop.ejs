@@ -2,763 +2,137 @@
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="/assets/rCSS/business.css">
 <link rel="stylesheet" href="/assets/rCSS/shop.css">
-<style>
-  /* Enhanced Orange Color Scheme */
-  :root {
-    --primary-orange: #FF7A00;
-    --primary-orange-dark: #E66A00;
-    --primary-orange-light: #FF9A33;
-    --primary-orange-bg: #FFF4E6;
-    --secondary-orange: #FFB366;
-    --accent-orange: #FFD9B3;
-  }
-
-  .out-of-stock {
-    color: #dc3545;
-    font-weight: bold;
-    background: #f8d7da;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-  }
-
-  .low-stock {
-    color: #856404;
-    font-weight: bold;
-    background: #fff3cd;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-  }
-
-  .in-stock {
-    color: #155724;
-    background: #d4edda;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-
-  /* Enhanced Page Design */
-  .page-title {
-    color: var(--primary-orange);
-    font-weight: 700;
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .page-subtitle {
-    color: #6c757d;
-    font-size: 1rem;
-    margin-bottom: 0;
-  }
-
-  .products-column {
-    background: #fff;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    padding: 2rem;
-    margin-bottom: 2rem;
-  }
-
-  .products-header {
-    border-bottom: 2px solid var(--primary-orange-bg);
-    padding-bottom: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .search-container {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-  }
-
-  .search-container input,
-  .search-container select {
-    border: 2px solid #e9ecef;
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
-    transition: all 0.3s ease;
-  }
-
-  .search-container input:focus,
-  .search-container select:focus {
-    border-color: var(--primary-orange);
-    box-shadow: 0 0 0 0.2rem rgba(255, 122, 0, 0.25);
-  }
-
-  .category-tabs {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-top: 1rem;
-  }
-
-  .category-tab {
-    background: #f8f9fa;
-    color: #6c757d;
-    padding: 0.75rem 1.5rem;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    border: 2px solid transparent;
-  }
-
-  .category-tab:hover {
-    background: var(--primary-orange-bg);
-    color: var(--primary-orange);
-    transform: translateY(-2px);
-  }
-
-  .category-tab.active {
-    background: var(--primary-orange);
-    color: white;
-    border-color: var(--primary-orange);
-    box-shadow: 0 4px 15px rgba(255, 122, 0, 0.3);
-  }
-
-  .product-grid-header {
-    display: grid;
-    grid-template-columns: 60px 1fr auto auto auto;
-    gap: 1rem;
-    padding: 1rem;
-    background: var(--primary-orange-bg);
-    border-radius: 10px;
-    font-weight: 600;
-    color: var(--primary-orange);
-    margin-bottom: 1rem;
-  }
-
-  .product-card {
-    display: grid;
-    grid-template-columns: 60px 1fr auto auto auto;
-    gap: 1rem;
-    align-items: center;
-    padding: 1.5rem;
-    background: #fff;
-    border: 2px solid #f8f9fa;
-    border-radius: 15px;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .product-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-orange), var(--secondary-orange));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .product-card:hover {
-    border-color: var(--primary-orange);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(255, 122, 0, 0.15);
-  }
-
-  .product-card:hover::before {
-    opacity: 1;
-  }
-
-  .product-image {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 10px;
-    border: 2px solid #f8f9fa;
-  }
-
-  .product-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .product-title {
-    font-weight: 600;
-    color: #2c3e50;
-    margin: 0;
-    font-size: 1rem;
-  }
-
-  .product-size,
-  .product-pack {
-    font-size: 0.8rem;
-    color: #6c757d;
-    margin: 0;
-  }
-
-  .price-tag {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .price-amount {
-    font-weight: 700;
-    color: var(--primary-orange);
-    font-size: 1.1rem;
-  }
-
-  .price-unit {
-    font-size: 0.8rem;
-    color: #6c757d;
-    font-weight: 500;
-    text-transform: capitalize;
-  }
-
-  .original-price {
-    text-decoration: line-through;
-    color: #6c757d;
-    font-size: 0.9rem;
-    font-weight: 400;
-  }
-
-  .add-btn {
-    background: var(--primary-orange);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 25px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .add-btn:hover:not(:disabled) {
-    background: var(--primary-orange-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 122, 0, 0.3);
-  }
-
-  .add-btn:disabled {
-    background: #6c757d;
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-
-  .category-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary-orange), var(--secondary-orange));
-    color: white;
-    border-radius: 10px;
-    margin: 1.5rem 0 1rem 0;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .new-badge {
-    background: #28a745;
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.7rem;
-    font-weight: 600;
-  }
-
-  /* Cart Column Enhancements */
-  .cart-column {
-    background: linear-gradient(135deg, #fff, #f8f9fa);
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  }
-
-  .cart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 1.5rem;
-    border-bottom: 2px solid var(--primary-orange-bg);
-    margin-bottom: 2rem;
-  }
-
-  .cart-header h4 {
-    color: var(--primary-orange);
-    font-weight: 700;
-    margin: 0;
-  }
-
-  .cart-icon-container {
-    position: relative;
-    color: var(--primary-orange);
-  }
-
-  .cart-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #dc3545;
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
-  .empty-cart {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 2rem;
-    color: #6c757d;
-    text-align: center;
-  }
-
-  .empty-cart i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    color: var(--primary-orange);
-    opacity: 0.5;
-  }
-
-  .cart-item {
-    background: #fff;
-    border: 2px solid #f8f9fa;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-  }
-
-  .cart-item:hover {
-    border-color: var(--primary-orange);
-    box-shadow: 0 4px 15px rgba(255, 122, 0, 0.1);
-  }
-
-  .quantity-control {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .quantity-control button {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
-
-  .quantity-control .btn-danger {
-    border-color: #dc3545;
-    color: #dc3545;
-  }
-
-  .quantity-control .btn-danger:hover {
-    background: #dc3545;
-    color: white;
-  }
-
-  .quantity-control .btn-success {
-    border-color: #28a745;
-    color: #28a745;
-  }
-
-  .quantity-control .btn-success:hover {
-    background: #28a745;
-    color: white;
-  }
-
-  /* Cart Quantity Controls */
-  .quantity-btn-cart {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 1px solid;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    cursor: pointer;
-  }
-
-  .quantity-btn-cart:hover {
-    transform: scale(1.1);
-  }
-
-  .quantity-btn-cart.text-danger {
-    border-color: #dc3545;
-    color: #dc3545;
-  }
-
-  .quantity-btn-cart.text-danger:hover {
-    background: #dc3545;
-    color: white;
-  }
-
-  .quantity-btn-cart.text-success {
-    border-color: #28a745;
-    color: #28a745;
-  }
-
-  .quantity-btn-cart.text-success:hover {
-    background: #28a745;
-    color: white;
-  }
-
-  .quantity-input-cart {
-    border: 1px solid #ddd !important;
-    border-radius: 5px !important;
-    padding: 2px 4px !important;
-    text-align: center !important;
-    font-size: 0.9rem !important;
-    font-weight: 600 !important;
-  }
-
-  .quantity-input-cart:focus {
-    border-color: var(--primary-orange) !important;
-    box-shadow: 0 0 0 0.1rem rgba(255, 122, 0, 0.25) !important;
-    outline: none !important;
-  }
-
-  .total-section {
-    background: #fff;
-    border-radius: 15px;
-    padding: 2rem;
-    border: 2px solid var(--primary-orange-bg);
-  }
-
-  .checkout-btn {
-    background: linear-gradient(135deg, var(--primary-orange), var(--primary-orange-dark));
-    color: white;
-    border: none;
-    border-radius: 15px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .checkout-btn:hover {
-    background: linear-gradient(135deg, var(--primary-orange-dark), var(--primary-orange));
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 122, 0, 0.3);
-  }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .search-container {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .category-tabs {
-      justify-content: center;
-    }
-
-    .product-grid-header,
-    .product-card {
-      grid-template-columns: 1fr;
-      gap: 0.5rem;
-      text-align: center;
-    }
-
-    .product-card {
-      padding: 1rem;
-    }
-  }
-
-  /* Animation Enhancements */
-  .animate__animated {
-    animation-duration: 0.5s;
-  }
-
-  .product-card {
-    animation: fadeInUp 0.6s ease-out;
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* SweetAlert2 Customizations */
-  .swal2-toast-custom {
-    border-radius: 15px !important;
-    box-shadow: 0 8px 25px rgba(255, 122, 0, 0.2) !important;
-  }
-
-  .swal2-popup-custom {
-    border-radius: 20px !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
-  }
-
-  .swal2-confirm {
-    background: var(--primary-orange) !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-  }
-
-  .swal2-cancel {
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-  }
-
-  /* Enhanced Form Styling */
-  .swal2-input,
-  .swal2-textarea,
-  .swal2-select {
-    border: 2px solid #e9ecef !important;
-    border-radius: 10px !important;
-    padding: 0.75rem 1rem !important;
-    transition: all 0.3s ease !important;
-  }
-
-  .swal2-input:focus,
-  .swal2-textarea:focus,
-  .swal2-select:focus {
-    border-color: var(--primary-orange) !important;
-    box-shadow: 0 0 0 0.2rem rgba(255, 122, 0, 0.25) !important;
-  }
-
-  /* Loading States */
-  .loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-  }
-
-  .loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid var(--primary-orange-bg);
-    border-top: 4px solid var(--primary-orange);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  /* Enhanced Button States */
-  .add-btn:active {
-    transform: scale(0.95);
-  }
-
-  .checkout-btn:active {
-    transform: scale(0.98);
-  }
-
-  /* Improved Typography */
-  .product-title {
-    line-height: 1.3;
-  }
-
-  .cart-item h5 {
-    color: #2c3e50;
-    font-weight: 600;
-  }
-
-  .cart-item p {
-    color: #6c757d;
-    font-size: 0.9rem;
-  }
-
-  /* Enhanced Visual Hierarchy */
-  .total-section h5 {
-    color: var(--primary-orange);
-    font-weight: 700;
-  }
-
-  .total-section h4 {
-    color: var(--primary-orange);
-    font-weight: 800;
-  }
-</style>
 <%- contentFor('body') %>
+<% var Sp = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.shop) ? translation.business.pages.shop : {}; %>
 
-<div class="container-fluid">
-  <div class="row g-0">
-    <!-- Products Column -->
-    <div class="col-md-7 p-3">
-      <div class="products-column">
-        <div class="products-header">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <h4 class="page-title">Packaging Materials</h4>
-              <p class="page-subtitle">Select high-quality packaging materials for your orders</p>
-            </div>
-            <div class="search-container">
-              <input type="text" class="form-control" placeholder="Search products..." id="searchInput">
-              <select class="form-control" id="categoryFilter">
-                <option value="all">All Categories</option>
-                <option value="normal-flyers">Normal Flyers</option>
-                <option value="smart-flyers">Smart Flyers</option>
-                <option value="boxes">Boxes</option>
-                <option value="stickers">Stickers</option>
-                <option value="labels">Labels</option>
-                <option value="tapes">Tapes</option>
-              </select>
-            </div>
-          </div>
+<div class="shop-page">
+  <div class="shop-layout">
+    <section class="shop-catalog products-column" aria-labelledby="shop-heading">
+      <header class="shop-catalog__intro">
+        <h1 id="shop-heading"><%= Sp.catalogHeading || 'Packaging materials' %></h1>
+        <p><%= Sp.catalogIntro || 'Order supplies for fulfillment in one place. Prices and stock update from your catalog.' %></p>
+      </header>
 
-          <div class="category-tabs">
-            <div class="category-tab active" data-category="all">All Products</div>
-            <div class="category-tab" data-category="normal-flyers">Normal Flyers</div>
-            <div class="category-tab" data-category="smart-flyers">Smart Flyers</div>
-            <div class="category-tab" data-category="boxes">Boxes</div>
-            <div class="category-tab" data-category="stickers">Stickers</div>
-            <div class="category-tab" data-category="labels">Labels</div>
-            <div class="category-tab" data-category="tapes">Tapes</div>
-          </div>
+      <div class="shop-toolbar">
+        <div class="shop-field-grow">
+          <label class="visually-hidden" for="searchInput"><%= Sp.searchProductsLabel || 'Search products' %></label>
+          <input type="search" id="searchInput" class="shop-input" placeholder="<%= Sp.searchPlaceholder || 'Search by name…' %>" autocomplete="off">
         </div>
-
-        <div class="product-grid-header">
-          <span></span>
-          <span>Product</span>
-          <span>Price</span>
-          <span>Stock</span>
-          <span>Action</span>
+        <div class="shop-field-fixed">
+          <label class="visually-hidden" for="categoryFilter"><%= Sp.category || 'Category' %></label>
+          <select id="categoryFilter" class="shop-select" aria-label="<%= Sp.filterByCategory || 'Filter by category' %>">
+            <option value="all"><%= Sp.allCategories || 'All categories' %></option>
+            <option value="normal-flyers">Normal flyers</option>
+            <option value="smart-flyers">Smart flyers</option>
+            <option value="boxes"><%= Sp.catBoxes || 'Boxes' %></option>
+            <option value="stickers">Stickers</option>
+            <option value="labels"><%= Sp.catLabels || 'Labels' %></option>
+            <option value="tapes"><%= Sp.catTape || 'Tapes' %></option>
+          </select>
         </div>
+      </div>
 
-        <!-- Products will be rendered here from database -->
-        <% if (products && products.length > 0) { %>
-        <% 
-          let currentCategory = '';
-          products.forEach(product => { 
-            // Show category header if category changes
-            if (product.category !== currentCategory) {
-              currentCategory = product.category;
-          %>
-        <div class="category-header" data-category="<%= product.category %>">
-          <span><%= product.category.toUpperCase().replace(/-/g, ' ') %></span>
-          <% if (product.isNew) { %>
-          <span class="new-badge">NEW</span>
+      <div class="shop-pills category-tabs" role="tablist" aria-label="<%= Sp.categoryTabsAria || 'Product categories' %>">
+        <button type="button" class="category-tab active" data-category="all" role="tab" aria-selected="true"><%= Sp.tabAll || 'All' %></button>
+        <button type="button" class="category-tab" data-category="normal-flyers" role="tab" aria-selected="false">Normal flyers</button>
+        <button type="button" class="category-tab" data-category="smart-flyers" role="tab" aria-selected="false">Smart flyers</button>
+        <button type="button" class="category-tab" data-category="boxes" role="tab" aria-selected="false"><%= Sp.catBoxes || 'Boxes' %></button>
+        <button type="button" class="category-tab" data-category="stickers" role="tab" aria-selected="false">Stickers</button>
+        <button type="button" class="category-tab" data-category="labels" role="tab" aria-selected="false"><%= Sp.catLabels || 'Labels' %></button>
+        <button type="button" class="category-tab" data-category="tapes" role="tab" aria-selected="false"><%= Sp.catTape || 'Tapes' %></button>
+      </div>
+
+      <div class="product-grid-header" aria-hidden="true">
+        <span>—</span>
+        <span>Product</span>
+        <span>Price</span>
+        <span>Stock</span>
+        <span>Action</span>
+      </div>
+
+      <% if (products && products.length > 0) { %>
+      <% let currentCategory = ''; %>
+      <% products.forEach(product => { %>
+      <% if (product.category !== currentCategory) { currentCategory = product.category; %>
+      <div class="category-header" data-category="<%= product.category %>">
+        <span class="text-capitalize"><%= (product.category || '').replace(/-/g, ' ') %></span>
+        <% if (product.isNew) { %><span class="new-badge">New</span><% } %>
+      </div>
+      <% } %>
+
+      <div class="product-card" data-category="<%= product.category %>" data-product-id="<%= product._id %>" data-product-name="<%= product.name %>" data-price="<%= product.finalPrice %>" data-stock="<%= product.stock %>" data-unit="<%= product.unit %>">
+        <img src="<%= product.images && product.images.length > 0 ? product.images[0] : '/assets/images/product-placeholder.jpg' %>" alt="" class="product-image">
+        <div class="product-info">
+          <h2 class="product-title"><%= product.name %></h2>
+          <% if (product.size) { %><p class="product-size"><%= Sp.size || 'Size:' %> <%= product.size %></p><% } %>
+          <% if (product.packQuantity && product.packQuantity > 1) { %><p class="product-pack"><%= Sp.packOf || 'Pack of' %> <%= product.packQuantity %></p><% } %>
+        </div>
+        <div class="price-tag">
+          <% if (product.discount > 0) { %><span class="original-price">EGP <%= product.price.toFixed(2) %></span><% } %>
+          <div class="price-amount">EGP <%= product.finalPrice.toFixed(2) %></div>
+          <div class="price-unit">per <%= product.unit %></div>
+        </div>
+        <div class="product-stock-cell">
+          <% if (product.stock === 0) { %>
+          <span class="stock-pill stock-pill--out"><%= Sp.outOfStock || 'Out of stock' %></span>
+          <% } else if (product.stock <= 5) { %>
+          <span class="stock-pill stock-pill--low"><%= product.stock %> <%= product.unit %></span>
+          <% } else { %>
+          <span class="stock-pill stock-pill--ok"><%= product.stock %> <%= product.unit %></span>
           <% } %>
         </div>
-        <% } %>
-
-        <div class="product-card" data-category="<%= product.category %>" data-product-id="<%= product._id %>" data-product-name="<%= product.name %>" data-price="<%= product.finalPrice %>" data-stock="<%= product.stock %>" data-unit="<%= product.unit %>">
-          <img src="<%= product.images && product.images.length > 0 ? product.images[0] : '/assets/images/product-placeholder.jpg' %>" alt="<%= product.name %>" class="product-image">
-          <div class="product-info">
-            <h5 class="product-title"><%= product.name %></h5>
-            <% if (product.size) { %>
-            <div class="product-size">Size: <%= product.size %></div>
-            <% } %>
-            <% if (product.packQuantity && product.packQuantity > 1) { %>
-            <div class="product-pack">Pack of <%= product.packQuantity %></div>
-            <% } %>
-            <% if (product.stock === 0) { %>
-            <div class="out-of-stock">Out of stock</div>
-            <% } else if (product.stock <= 5) { %>
-            <div class="low-stock">Low stock: <%= product.stock %> <%= product.unit %></div>
-            <% } else { %>
-            <div class="in-stock">In stock: <%= product.stock %> <%= product.unit %></div>
-            <% } %>
-          </div>
-          <div class="price-tag">
-            <% if (product.discount > 0) { %>
-            <div class="original-price">EGP <%= product.price.toFixed(2) %></div>
-            <% } %>
-            <div class="price-amount">EGP <%= product.finalPrice.toFixed(2) %></div>
-            <div class="price-unit">per <%= product.unit %></div>
-          </div>
-          <div>
-            <button class="add-btn" data-product-id="<%= product._id %>" data-product-name="<%= product.name %>" data-price="<%= product.finalPrice %>" data-category="<%= product.category %>" data-pack="<%= product.packQuantity || 1 %>" <%= product.stock === 0 ? 'disabled' : '' %>>
-              <i class="bi bi-cart-plus"></i>
-              Add to Cart
-            </button>
-          </div>
+        <div>
+          <button type="button" class="add-btn" data-product-id="<%= product._id %>" data-product-name="<%= product.name %>" data-price="<%= product.finalPrice %>" data-category="<%= product.category %>" data-pack="<%= product.packQuantity || 1 %>" <%= product.stock === 0 ? 'disabled' : '' %>>
+            <i class="bi bi-cart-plus" aria-hidden="true"></i>
+            <%= Sp.addToCart || 'Add' %>
+          </button>
         </div>
-        <% }); %>
-        <% } else { %>
-        <div class="text-center py-5">
-          <i class="bi bi-box-seam fs-1 text-muted"></i>
-          <p class="mt-3 text-muted">No products available at the moment</p>
-        </div>
-        <% } %>
       </div>
-    </div>
+      <% }); %>
+      <% } else { %>
+      <div class="shop-empty">
+        <i class="bi bi-inbox" aria-hidden="true"></i>
+        <p>No products available right now.</p>
+      </div>
+      <% } %>
+    </section>
 
-    <!-- Cart Column -->
-    <div class="col-md-5 p-4 cart-column d-flex flex-column">
+    <aside class="cart-column" aria-label="Order summary">
       <div class="cart-header">
-        <h4 class="mb-0">Order Summary</h4>
+        <h2 class="mb-0"><%= Sp.cartSummary || 'Summary' %></h2>
         <div class="cart-icon-container">
-          <i class="bi bi-cart3 fs-4"></i>
-          <div class="cart-badge" id="cartCount">0</div>
+          <i class="bi bi-bag" aria-hidden="true"></i>
+          <span class="cart-badge" id="cartCount">0</span>
         </div>
       </div>
 
-      <div id="cartItems" class="flex-grow-1 overflow-auto mb-3">
+      <div id="cartItems" class="flex-grow-1 overflow-auto">
         <div class="empty-cart" id="emptyCart">
-          <i class="bi bi-box"></i>
-          <p>Your cart is empty</p>
-          <small>Add items to get started</small>
+          <i class="bi bi-bag" aria-hidden="true"></i>
+          <p>Cart is empty</p>
+          <small>Add lines from the list to build an order.</small>
         </div>
       </div>
 
       <div class="total-section">
-        <div class="d-flex justify-content-between mb-2">
-          <span>Subtotal:</span>
-          <span id="subtotalAmount">EGP 0.00</span>
-        </div>
-        <div class="d-flex justify-content-between mb-2">
-          <span>Delivery Fee:</span>
-          <span id="deliveryFee">EGP 0.00</span>
-        </div>
+        <div class="row-line"><span><%= Sp.cartSubtotal || 'Subtotal' %></span><span id="subtotalAmount">EGP 0.00</span></div>
+        <div class="row-line"><span><%= Sp.cartDelivery || 'Delivery' %></span><span id="deliveryFee">EGP 0.00</span></div>
         <hr>
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5>Total:</h5>
-          <h4 class="mb-0" id="totalAmount">EGP 0.00</h4>
+        <div class="total-row">
+          <h5><%= Sp.cartTotal || 'Total' %></h5>
+          <h4 id="totalAmount">EGP 0.00</h4>
         </div>
-        <button class="checkout-btn w-100 py-3" onclick="proceedToCheckout()">
-          <i class="bi bi-credit-card me-2"></i>
-          Proceed to Checkout (EGP <span id="displayTotal">0.00</span>)
+        <button type="button" class="checkout-btn" onclick="proceedToCheckout()">
+          <%= Sp.cartCheckout || 'Checkout' %> · EGP <span id="displayTotal">0.00</span>
         </button>
       </div>
-    </div>
+    </aside>
   </div>
 </div>
 
 <%- contentFor('FooterJs') %>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  // Government data for delivery fee calculation
   const governmentCategories = {
     'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
     'Alexandria': ['Alexandria', 'Beheira', 'Matrouh'],
@@ -786,7 +160,22 @@
         return deliveryFees[category] || 80;
       }
     }
-    return 80; // Default to Cairo fee
+    return 80;
+  }
+
+  function syncCategoryTabs(value) {
+    document.querySelectorAll('.category-tab').forEach((t) => {
+      const on = t.dataset.category === value;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  function escapeJsString(s) {
+    return String(s ?? '')
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'")
+      .replace(/\r?\n/g, ' ');
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -799,7 +188,6 @@
         this.updateUI();
       }
 
-      // Local Storage Methods
       saveToStorage() {
         const cartData = {
           items: Array.from(this.cart.entries()),
@@ -814,12 +202,10 @@
           const savedCart = localStorage.getItem('shopCart');
           if (savedCart) {
             const cartData = JSON.parse(savedCart);
-            // Check if cart is not too old (24 hours)
             if (Date.now() - cartData.timestamp < 24 * 60 * 60 * 1000) {
               this.cart = new Map(cartData.items);
               this.deliveryFee = cartData.deliveryFee || 0;
             } else {
-              // Clear old cart data
               localStorage.removeItem('shopCart');
             }
           }
@@ -834,8 +220,7 @@
       }
 
       initEventListeners() {
-        // Add to cart buttons
-        document.querySelectorAll('.add-btn').forEach(btn => {
+        document.querySelectorAll('.add-btn').forEach((btn) => {
           if (!btn.disabled) {
             btn.addEventListener('click', () => {
               const productId = btn.dataset.productId;
@@ -843,31 +228,28 @@
               const price = parseFloat(btn.dataset.price);
               const category = btn.dataset.category;
               const pack = btn.dataset.pack;
-              const stock = parseInt(btn.closest('.product-card').dataset.stock);
-              const unit = btn.closest('.product-card').dataset.unit || 'piece';
+              const row = btn.closest('.product-card');
+              const stock = parseInt(row.dataset.stock, 10);
+              const unit = row.dataset.unit || 'piece';
 
               if (!isNaN(price)) {
                 this.addItem(productId, product, price, category, pack, stock, unit, 1);
-                // Add animation effect
-                btn.classList.add('animate__animated', 'animate__pulse');
-                setTimeout(() => {
-                  btn.classList.remove('animate__animated', 'animate__pulse');
-                }, 500);
               }
             });
           }
         });
 
-        // Search and filter
         document.getElementById('searchInput').addEventListener('input', this.filterProducts.bind(this));
-        document.getElementById('categoryFilter').addEventListener('change', this.filterByCategory.bind(this));
+        document.getElementById('categoryFilter').addEventListener('change', (e) => {
+          syncCategoryTabs(e.target.value);
+          this.filterProducts();
+        });
 
-        // Category tabs
-        document.querySelectorAll('.category-tab').forEach(tab => {
+        document.querySelectorAll('.category-tab').forEach((tab) => {
           tab.addEventListener('click', () => {
-            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            this.filterByCategory(tab.dataset.category);
+            document.getElementById('categoryFilter').value = tab.dataset.category;
+            syncCategoryTabs(tab.dataset.category);
+            this.filterProducts();
           });
         });
       }
@@ -883,13 +265,12 @@
           unit: unit
         };
 
-        // Check stock
         if (item.qty + quantity > stock) {
           Swal.fire({
             icon: 'warning',
-            title: 'Stock Limit',
+            title: 'Stock limit',
             text: `Maximum available quantity is ${stock}. You already have ${item.qty} in cart.`,
-            confirmButtonColor: '#FF7A00'
+            confirmButtonColor: '#E4A24A'
           });
           return;
         }
@@ -899,18 +280,14 @@
         this.saveToStorage();
         this.updateUI();
 
-        // Show toast notification
         Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'success',
-          title: `${product} added to cart`,
+          title: `${product} added`,
           showConfirmButton: false,
           timer: 1500,
-          timerProgressBar: true,
-          customClass: {
-            popup: 'swal2-toast-custom'
-          }
+          timerProgressBar: true
         });
       }
 
@@ -943,9 +320,9 @@
           } else {
             Swal.fire({
               icon: 'warning',
-              title: 'Stock Limit',
+              title: 'Stock limit',
               text: `Maximum available quantity is ${item.stock}`,
-              confirmButtonColor: '#FF7A00'
+              confirmButtonColor: '#E4A24A'
             });
             return;
           }
@@ -955,9 +332,7 @@
       }
 
       calculateSubtotal() {
-        return Array.from(this.cart.values()).reduce((total, item) => {
-          return total + (item.qty * item.price);
-        }, 0);
+        return Array.from(this.cart.values()).reduce((total, item) => total + (item.qty * item.price), 0);
       }
 
       updateUI() {
@@ -965,15 +340,12 @@
         const emptyCart = document.getElementById('emptyCart');
         const cartCount = document.getElementById('cartCount');
 
-        // Clear current cart items
         cartItems.innerHTML = '';
         cartItems.appendChild(emptyCart);
 
-        // Update cart count
         const totalItems = Array.from(this.cart.values()).reduce((count, item) => count + item.qty, 0);
         cartCount.textContent = totalItems;
 
-        // Show/hide empty cart message
         if (this.cart.size === 0) {
           emptyCart.style.display = 'flex';
         } else {
@@ -982,35 +354,29 @@
           this.cart.forEach((item, productId) => {
             const cartItem = document.createElement('div');
             cartItem.className = 'cart-item mb-3 p-3';
+            const safeName = escapeJsString(item.name);
+            const safeUnit = escapeJsString(item.unit || 'piece');
+            const safeCat = escapeJsString(item.category || '');
             cartItem.innerHTML = `
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="flex-grow-1" style="min-width:140px;">
                   <h5 class="mb-1">${item.name}</h5>
-                  <p class="text-muted mb-1">EGP ${item.price.toFixed(2)} per ${item.unit || 'piece'}</p>
-                  <small class="text-muted">${item.pack > 1 ? `Pack of ${item.pack}` : ''}</small>
+                  <p class="text-muted mb-1 small">EGP ${item.price.toFixed(2)} / ${item.unit || 'piece'}</p>
+                  <small class="text-muted">${item.pack > 1 ? `Pack of ${item.pack}` : '&nbsp;'}</small>
                 </div>
-                <div class="d-flex align-items-center gap-3">
-                  <div class="quantity-control">
-                    <button class="btn btn-sm text-danger quantity-btn-cart" 
-                            onclick="cartManager.removeItem('${productId}')" title="Decrease quantity">
-                      −
-                    </button>
-                    <input type="number" class="quantity-input-cart" 
-                           value="${item.qty}" min="1" max="${item.stock}"
-                           onchange="cartManager.updateItemQuantity('${productId}', parseInt(this.value))"
-                           style="width: 50px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 2px;">
-                    <button class="btn btn-sm text-success quantity-btn-cart" 
-                            onclick="cartManager.addItem('${productId}', '${item.name}', ${item.price}, '${item.category}', '${item.pack}', ${item.stock}, '${item.unit}', 1)" title="Increase quantity">
-                      +
-                    </button>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <div class="quantity-control d-flex align-items-center">
+                    <button type="button" class="btn btn-sm text-danger quantity-btn-cart"
+                      onclick="cartManager.removeItem('${productId}')" title="Decrease">−</button>
+                    <input type="number" class="quantity-input-cart"
+                      value="${item.qty}" min="1" max="${item.stock}"
+                      onchange="cartManager.updateItemQuantity('${productId}', parseInt(this.value, 10))"
+                      style="width:52px;text-align:center;">
+                    <button type="button" class="btn btn-sm text-success quantity-btn-cart"
+                      onclick="cartManager.addItem('${productId}', '${safeName}', ${item.price}, '${safeCat}', '${item.pack}', ${item.stock}, '${safeUnit}', 1)" title="Increase">+</button>
                   </div>
-                  <div class="text-dark fw-bold">
-                    EGP ${(item.qty * item.price).toFixed(2)}
-                  </div>
-                  <button class="btn btn-sm text-danger ms-2" 
-                          onclick="cartManager.removeItemCompletely('${productId}')" title="Remove item">
-                    ×
-                  </button>
+                  <div class="text-dark fw-bold small">EGP ${(item.qty * item.price).toFixed(2)}</div>
+                  <button type="button" class="btn btn-sm text-danger" onclick="cartManager.removeItemCompletely('${productId}')" title="Remove">×</button>
                 </div>
               </div>
             `;
@@ -1031,55 +397,30 @@
         const searchInput = document.getElementById('searchInput').value.toLowerCase();
         const categoryFilter = document.getElementById('categoryFilter').value;
 
-        document.querySelectorAll('.product-card').forEach(card => {
-          const productName = card.querySelector('h5').textContent.toLowerCase();
+        document.querySelectorAll('.product-card').forEach((card) => {
+          const titleEl = card.querySelector('.product-title');
+          const productName = titleEl ? titleEl.textContent.toLowerCase() : '';
           const productCategory = card.dataset.category;
-
           const matchesSearch = productName.includes(searchInput);
           const matchesCategory = categoryFilter === 'all' || productCategory === categoryFilter;
-
-          if (matchesSearch && matchesCategory) {
-            card.style.display = 'grid';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-
-        this.updateCategoryHeaders();
-      }
-
-      filterByCategory(category) {
-        if (typeof category === 'object') {
-          category = document.getElementById('categoryFilter').value;
-        }
-
-        document.querySelectorAll('.product-card').forEach(card => {
-          if (category === 'all' || card.dataset.category === category) {
-            card.style.display = 'grid';
-          } else {
-            card.style.display = 'none';
-          }
+          card.classList.toggle('d-none', !(matchesSearch && matchesCategory));
         });
 
         this.updateCategoryHeaders();
       }
 
       updateCategoryHeaders() {
-        document.querySelectorAll('.category-header').forEach(header => {
-          const nextCategory = header.nextElementSibling;
+        document.querySelectorAll('.category-header').forEach((header) => {
           let hasVisibleProducts = false;
-
-          let current = nextCategory;
+          let current = header.nextElementSibling;
           while (current && !current.classList.contains('category-header')) {
-            if (current.classList.contains('product-card') &&
-              current.style.display !== 'none') {
+            if (current.classList.contains('product-card') && !current.classList.contains('d-none')) {
               hasVisibleProducts = true;
               break;
             }
             current = current.nextElementSibling;
           }
-
-          header.style.display = hasVisibleProducts ? 'flex' : 'none';
+          header.classList.toggle('d-none', !hasVisibleProducts);
         });
       }
     }
@@ -1091,37 +432,31 @@
     const subtotal = cartManager.calculateSubtotal();
     if (subtotal <= 0) {
       Swal.fire({
-        title: 'Empty Cart',
-        text: 'Please add items to your cart before proceeding to checkout',
+        title: 'Empty cart',
+        text: 'Add at least one product before checkout.',
         icon: 'info',
-        confirmButtonColor: '#FF7A00',
-        confirmButtonText: 'Continue Shopping',
-        customClass: {
-          popup: 'swal2-popup-custom'
-        }
+        confirmButtonColor: '#E4A24A',
+        confirmButtonText: 'OK'
       });
       return;
     }
 
-    // Show delivery information form
-    const {
-      value: formValues
-    } = await Swal.fire({
-      title: 'Delivery Information',
+    const { value: formValues } = await Swal.fire({
+      title: 'Delivery details',
       html: `
         <div class="text-start">
           <div class="mb-3">
-            <label class="form-label">Full Name <span class="text-danger">*</span></label>
-            <input type="text" id="fullName" class="swal2-input" placeholder="Enter full name" style="width: 100%;">
+            <label class="form-label">Full name <span class="text-danger">*</span></label>
+            <input type="text" id="fullName" class="swal2-input" placeholder="Full name" style="width: 100%;">
           </div>
           <div class="mb-3">
-            <label class="form-label">Phone Number <span class="text-danger">*</span></label>
-            <input type="tel" id="phoneNumber" class="swal2-input" placeholder="Enter phone number" style="width: 100%;">
+            <label class="form-label">Phone <span class="text-danger">*</span></label>
+            <input type="tel" id="phoneNumber" class="swal2-input" placeholder="Phone number" style="width: 100%;">
           </div>
           <div class="mb-3">
-            <label class="form-label">Government <span class="text-danger">*</span></label>
+            <label class="form-label">Governorate <span class="text-danger">*</span></label>
             <select id="government" class="swal2-input" style="width: 100%;" onchange="updateZoneOptions()">
-              <option value="">Select Government</option>
+              <option value="">Select</option>
               <option value="Cairo">Cairo</option>
               <option value="Giza">Giza</option>
               <option value="Alexandria">Alexandria</option>
@@ -1130,26 +465,26 @@
           <div class="mb-3">
             <label class="form-label">Zone <span class="text-danger">*</span></label>
             <select id="zone" class="swal2-input" style="width: 100%;">
-              <option value="">Select Zone</option>
+              <option value="">Select zone</option>
             </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Address <span class="text-danger">*</span></label>
-            <textarea id="address" class="swal2-textarea" placeholder="Enter full address" style="width: 100%;"></textarea>
+            <textarea id="address" class="swal2-textarea" placeholder="Street, building, floor" style="width: 100%;"></textarea>
           </div>
           <div class="mb-3">
-            <label class="form-label">Notes (Optional)</label>
-            <textarea id="notes" class="swal2-textarea" placeholder="Any special instructions" style="width: 100%;"></textarea>
+            <label class="form-label">Notes (optional)</label>
+            <textarea id="notes" class="swal2-textarea" placeholder="Delivery instructions" style="width: 100%;"></textarea>
           </div>
         </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
-      confirmButtonColor: '#FF7A00',
+      confirmButtonColor: '#E4A24A',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Continue',
-      cancelButtonText: 'Back to Cart',
-      width: '600px',
+      cancelButtonText: 'Back',
+      width: '560px',
       preConfirm: () => {
         const fullName = document.getElementById('fullName').value;
         const phoneNumber = document.getElementById('phoneNumber').value;
@@ -1159,76 +494,52 @@
         const notes = document.getElementById('notes').value;
 
         if (!fullName || !phoneNumber || !government || !zone || !address) {
-          Swal.showValidationMessage('Please fill all required fields');
+          Swal.showValidationMessage('Please complete all required fields');
           return false;
         }
 
-        return {
-          fullName,
-          phoneNumber,
-          government,
-          zone,
-          address,
-          notes
-        };
+        return { fullName, phoneNumber, government, zone, address, notes };
       }
     });
 
     if (!formValues) return;
 
-    // Calculate delivery fee based on government
     const deliveryFee = calculateDeliveryFee(formValues.government);
     cartManager.deliveryFee = deliveryFee;
     cartManager.updateUI();
 
     const total = subtotal + deliveryFee;
 
-    // Show order confirmation
     const result = await Swal.fire({
-      title: 'Confirm Order',
+      title: 'Confirm order',
       html: `
         <div class="text-start">
-          <h5>Order Summary</h5>
+          <div class="d-flex justify-content-between mb-2"><span>Subtotal</span><strong>EGP ${subtotal.toFixed(2)}</strong></div>
+          <div class="d-flex justify-content-between mb-2"><span>Delivery</span><strong>EGP ${deliveryFee.toFixed(2)}</strong></div>
           <hr>
-          <div class="d-flex justify-content-between mb-2">
-            <span>Subtotal:</span>
-            <strong>EGP ${subtotal.toFixed(2)}</strong>
-          </div>
-          <div class="d-flex justify-content-between mb-2">
-            <span>Delivery Fee:</span>
-            <strong>EGP ${deliveryFee.toFixed(2)}</strong>
-          </div>
-          <hr>
-          <div class="d-flex justify-content-between mb-3">
-            <h5>Total:</h5>
-            <h4 style="color: #FF7A00;">EGP ${total.toFixed(2)}</h4>
-          </div>
-          <h5 class="mt-3">Delivery To:</h5>
+          <div class="d-flex justify-content-between mb-3"><span class="fw-bold">Total</span><span class="fw-bold" style="color:#1a1d21;">EGP ${total.toFixed(2)}</span></div>
+          <p class="small text-muted mb-1">Deliver to</p>
           <p class="mb-1"><strong>${formValues.fullName}</strong></p>
           <p class="mb-1">${formValues.phoneNumber}</p>
           <p class="mb-1">${formValues.address}</p>
           <p class="mb-1">${formValues.zone}, ${formValues.government}</p>
-          ${formValues.notes ? `<p class="mt-2 text-muted"><em>Note: ${formValues.notes}</em></p>` : ''}
+          ${formValues.notes ? `<p class="mt-2 small text-muted"><em>${formValues.notes}</em></p>` : ''}
         </div>
       `,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#FF7A00',
+      confirmButtonColor: '#E4A24A',
       cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Place Order',
+      confirmButtonText: 'Place order',
       cancelButtonText: 'Cancel',
-      width: '600px'
+      width: '560px'
     });
 
     if (!result.isConfirmed) return;
 
-    // Prepare order data
     const items = [];
     cartManager.cart.forEach((item, productId) => {
-      items.push({
-        productId: productId,
-        quantity: item.qty
-      });
+      items.push({ productId: productId, quantity: item.qty });
     });
 
     const orderData = {
@@ -1241,13 +552,10 @@
       notes: formValues.notes
     };
 
-    // Submit order
     try {
       const response = await fetch('/business/api/shop/orders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       });
 
@@ -1255,26 +563,20 @@
 
       if (response.ok) {
         await Swal.fire({
-          title: 'Order Placed!',
-          html: `
-            <p>Your order has been successfully placed.</p>
-            <p><strong>Order Number:</strong> ${data.order.orderNumber}</p>
-            <p class="mt-3">You can track your order in the "Shop Orders" page.</p>
-          `,
+          title: 'Order placed',
+          html: `<p>Order number: <strong>${data.order.orderNumber}</strong></p><p class="small text-muted mb-0">Track it under Shop orders.</p>`,
           icon: 'success',
-          confirmButtonColor: '#FF7A00'
+          confirmButtonColor: '#E4A24A'
         });
 
-        // Clear cart and storage
         cartManager.cart.clear();
         cartManager.deliveryFee = 0;
         cartManager.clearStorage();
         cartManager.updateUI();
 
-        // Redirect to shop orders page
         setTimeout(() => {
           window.location.href = '/business/shop/orders';
-        }, 1500);
+        }, 1200);
       } else {
         throw new Error(data.error || 'Failed to place order');
       }
@@ -1282,14 +584,13 @@
       console.error('Error placing order:', error);
       Swal.fire({
         title: 'Error',
-        text: error.message || 'Failed to place order. Please try again.',
+        text: error.message || 'Could not place order. Try again.',
         icon: 'error',
-        confirmButtonColor: '#FF7A00'
+        confirmButtonColor: '#E4A24A'
       });
     }
   }
 
-  // Zone options data (same as create-order.ejs)
   const zoneOptions = {
     'Cairo': [
       { group: 'Cairo - Downtown & Central', zones: ['Downtown', 'Garden City', 'Zamalek', 'Dokki', 'Mohandessin', 'Agouza', 'Bulaq', 'Azbakeya', 'Abdeen', 'Attaba', 'Ramses', 'Qasr El Nil', 'Talaat Harb', 'Tahrir Square'] },
@@ -1308,42 +609,32 @@
     ]
   };
 
-  // Function to update zone options based on selected government
   function updateZoneOptions() {
     const governmentSelect = document.getElementById('government');
     const zoneSelect = document.getElementById('zone');
     const selectedGovernment = governmentSelect.value;
 
-    // Clear existing options
-    zoneSelect.innerHTML = '<option value="">Select Zone</option>';
+    zoneSelect.innerHTML = '<option value="">Select zone</option>';
 
     if (selectedGovernment && zoneOptions[selectedGovernment]) {
-      const governmentZones = zoneOptions[selectedGovernment];
-      
-      governmentZones.forEach(group => {
-        // Add optgroup
+      zoneOptions[selectedGovernment].forEach((group) => {
         const optgroup = document.createElement('optgroup');
         optgroup.label = group.group;
-        
-        // Add zone options
-        group.zones.forEach(zone => {
+        group.zones.forEach((zone) => {
           const option = document.createElement('option');
           option.value = zone;
           option.textContent = zone;
           optgroup.appendChild(option);
         });
-        
         zoneSelect.appendChild(optgroup);
       });
     }
   }
 
-  // Get user's pickup address data and pre-fill form
   function prefillDeliveryForm() {
     try {
       <% if (typeof userData !== 'undefined' && userData) { %>
       const userData = <%- JSON.stringify(userData) %>;
-      // Get default pickup address from pickUpAddresses if available, otherwise fallback to old structure
       let pickupAddress = null;
       if (userData.pickUpAddresses && userData.pickUpAddresses.length > 0) {
         pickupAddress = userData.pickUpAddresses.find(addr => addr.isDefault) || userData.pickUpAddresses[0];
@@ -1352,19 +643,13 @@
         pickupAddress = userData.pickUpAdress;
       }
       pickupAddress = pickupAddress || {};
-      
+
       if (pickupAddress.city) {
         const governmentSelect = document.getElementById('government');
         const zoneSelect = document.getElementById('zone');
-        
         if (governmentSelect && zoneSelect) {
-          // Set government
           governmentSelect.value = pickupAddress.city;
-          
-          // Update zone options and set zone
           updateZoneOptions();
-          
-          // Set zone after a short delay to ensure options are loaded
           setTimeout(() => {
             zoneSelect.value = pickupAddress.zone || '';
           }, 100);
@@ -1372,23 +657,18 @@
       }
       <% } %>
     } catch (error) {
-      console.log('No user data available for pre-filling form');
+      console.log('No user data for prefill');
     }
   }
 
-  // Call prefill function when the modal is shown
-  document.addEventListener('DOMContentLoaded', function() {
-    // Override the SweetAlert2 show event to prefill form
+  document.addEventListener('DOMContentLoaded', function () {
     const originalSwalFire = window.Swal.fire;
-    window.Swal.fire = function(options) {
-      if (options.title === 'Delivery Information') {
+    window.Swal.fire = function (options) {
+      if (options.title === 'Delivery details') {
         const result = originalSwalFire.call(this, options);
-        
-        // Prefill form after modal is shown
         setTimeout(() => {
           prefillDeliveryForm();
         }, 100);
-        
         return result;
       }
       return originalSwalFire.call(this, options);

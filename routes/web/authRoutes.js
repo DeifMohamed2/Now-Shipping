@@ -27,13 +27,17 @@ router.get('/', authController.index);
 
 router.get('/mobileApp', authController.mobileAppPage);
 
-router.get('/pricing', authController.pricingPage);
 
 router.get('/aboutus', authController.aboutusPage);
 
 router.get('/faq', authController.faqPage);
 
 router.get('/privacypolicy', authController.privacyPolicyPage);
+
+router.get('/tracking', authController.trackingPage);
+router.get('/t/:orderNumber', authController.trackingPage);
+
+router.get('/comingsoon', authController.comingSoonPage);
 
 // Authentication routes
 

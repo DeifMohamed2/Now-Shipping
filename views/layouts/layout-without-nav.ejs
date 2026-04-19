@@ -18,7 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
    <link rel="shortcut icon" href="/assets/rImages/mainlogospining.png">
-  <%- HeaderCss %>
+  <%- typeof HeaderCss !== 'undefined' ? HeaderCss : '' %>
 
   <%- include ('../partials/head-css.ejs') %>
 
@@ -29,7 +29,7 @@
   <%- body%>
 
   <%- include ('../partials/vendor-scripts') %>
-  <%- FooterJs %>
+  <%- typeof FooterJs !== 'undefined' ? FooterJs : '' %>
 
 </body>
 

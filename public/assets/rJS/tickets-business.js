@@ -4,6 +4,14 @@
 (function () {
   'use strict';
 
+  // i18n strings
+  const __NST =
+    typeof window !== 'undefined' &&
+    window.__NS_BUSINESS_I18N &&
+    window.__NS_BUSINESS_I18N.tickets
+      ? window.__NS_BUSINESS_I18N.tickets
+      : {};
+
   // State management
   let socket;
   let currentTicketId = null;
@@ -12,7 +20,6 @@
   let typingTimeout;
   let isTyping = false;
   let attachedImage = null;
-  let currentPriorityFilter = 'all';
   let currentTypeFilter = 'all';
   let currentTicketStatus = null;
   
@@ -89,7 +96,6 @@
       if (currentFilter !== 'all') {
         params.append('status', currentFilter);
       }
-      if (currentPriorityFilter !== 'all') params.append('priority', currentPriorityFilter);
       if (currentTypeFilter !== 'all') params.append('ticketType', currentTypeFilter);
 
       const response = await fetch(`/api/v1/tickets?${params}`, {
@@ -103,11 +109,11 @@
       }
     } catch (error) {
       console.error('Error loading tickets:', error);
-      showToast('Error loading tickets', 'error');
+      showToast(__NST.errorLoading || 'Error loading tickets', 'error');
     }
   }
 
-  // Apply all filters (search, priority, type)
+  // Apply all filters (search, type)
   function applyFilters() {
     const searchQuery = document.getElementById('searchTickets')?.value.toLowerCase() || '';
     
@@ -141,7 +147,7 @@
       ticketList.innerHTML = `
         <div class="text-center p-4">
           <i class="ri-inbox-line display-4 text-muted"></i>
-          <p class="text-muted mt-2">No tickets found</p>
+          <p class="text-muted mt-2">${__NST.noTicketsFound || 'No tickets found'}</p>
         </div>
       `;
       return;
@@ -163,7 +169,7 @@
             <div>
               <small class="text-muted">#${ticket.ticketNumber}</small>
               ${
-                hasUnread ? '<span class="badge bg-danger ms-2">New</span>' : ''
+                hasUnread ? `<span class="badge bg-danger ms-2">${__NST.newBadge || 'New'}</span>` : ''
               }
             </div>
             <span class="badge ${statusClass}">${ticket.status}</span>
@@ -173,12 +179,7 @@
             ticket.description
           ).substring(0, 80)}...</p>
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="d-flex gap-1">
-              <span class="badge ${getPriorityBadgeClass(ticket.priority)} badge-sm">${
-          ticket.priority || 'medium'
-        }</span>
-              <span class="badge bg-secondary badge-sm">${formatTicketType(ticket.ticketType)}</span>
-            </div>
+            <span class="badge tickets-type-badge badge-sm">${formatTicketType(ticket.ticketType)}</span>
           </div>
           <div class="d-flex justify-content-between align-items-center">
             <small class="text-muted">
@@ -270,10 +271,9 @@
           <span class="text-muted ms-2">${formatTicketType(
             ticket.ticketType
           )}</span>
-          <span class="text-muted ms-2">Priority: ${ticket.priority}</span>
           ${
             ticket.relatedOrderNumber
-              ? `<span class="text-muted ms-2">Order: ${ticket.relatedOrderNumber}</span>`
+              ? `<span class="text-muted ms-2">${__NST.orderLabel || 'Order'}: ${ticket.relatedOrderNumber}</span>`
               : ''
           }
         `;
@@ -420,7 +420,7 @@
   // Handle image attachment
   function handleImageAttachment(file) {
     if (!file || !file.type.startsWith('image/')) {
-      showToast('Please select a valid image file', 'error');
+      showToast(__NST.invalidImageFile || 'Please select a valid image file', 'error');
       return;
     }
 
@@ -470,7 +470,7 @@
 
     // Check if ticket is closed or resolved
     if (currentTicketStatus === 'closed' || currentTicketStatus === 'resolved') {
-      showToast('Cannot send messages to closed or resolved tickets', 'error');
+      showToast(__NST.cannotSendClosed || 'Cannot send messages to closed or resolved tickets', 'error');
       return;
     }
 
@@ -488,7 +488,7 @@
           clearAttachment();
         } catch (uploadError) {
           console.error('Upload failed:', uploadError);
-          showToast('Failed to upload image. Please try again.', 'error');
+          showToast(__NST.uploadFailed || 'Failed to upload image. Please try again.', 'error');
           sendBtn.disabled = false;
           sendBtn.innerHTML = originalBtnHtml;
           return;
@@ -516,11 +516,11 @@
         // Message will be added via socket event (new_ticket_message)
         // No need to append here as socket broadcasts to all users including sender
       } else {
-        showToast(data.message || 'Failed to send message', 'error');
+        showToast(data.message || __NST.errorSending || 'Failed to send message', 'error');
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      showToast('Failed to send message', 'error');
+      showToast(__NST.errorSending || 'Failed to send message', 'error');
     } finally {
       // Re-enable send button
       sendBtn.disabled = false;
@@ -536,7 +536,7 @@
       typingDiv = document.createElement('div');
       typingDiv.id = 'typingIndicator';
       typingDiv.className = 'text-muted small mb-2';
-      typingDiv.innerHTML = '<em>Support team is typing...</em>';
+      typingDiv.innerHTML = `<em>${__NST.supportTyping || 'Support team is typing...'}</em>`;
       document.getElementById('chatMessages').appendChild(typingDiv);
       scrollToBottom();
     } else if (!show && typingDiv) {
@@ -548,14 +548,13 @@
   async function createTicket() {
     const subject = document.getElementById('ticketSubject').value.trim();
     const ticketType = document.getElementById('ticketType').value;
-    const priority = document.getElementById('ticketPriority').value;
     const description = document
       .getElementById('ticketDescription')
       .value.trim();
     const relatedOrder = document.getElementById('relatedOrder').value.trim();
 
     if (!subject || !ticketType || !description) {
-      showToast('Please fill in all required fields', 'error');
+      showToast(__NST.fillRequired || 'Please fill in all required fields', 'error');
       return;
     }
 
@@ -567,7 +566,6 @@
         body: JSON.stringify({
           subject,
           ticketType,
-          priority,
           description,
           relatedOrderNumber: relatedOrder || null,
         }),
@@ -585,16 +583,16 @@
         // Reset form
         document.getElementById('createTicketForm').reset();
 
-        showToast('Ticket created successfully', 'success');
+        showToast(__NST.ticketCreated || 'Ticket created successfully', 'success');
 
         await loadTickets();
         openTicket(data.ticket._id);
       } else {
-        showToast(data.message || 'Failed to create ticket', 'error');
+        showToast(data.message || __NST.createFailed || 'Failed to create ticket', 'error');
       }
     } catch (error) {
       console.error('Error creating ticket:', error);
-      showToast('Failed to create ticket', 'error');
+      showToast(__NST.createFailed || 'Failed to create ticket', 'error');
     }
   }
 
@@ -609,17 +607,19 @@
     const d = new Date(date);
     const now = new Date();
     const diff = now - d;
+    const locale = __NST.locale || 'en-US';
 
-    if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+    if (diff < 60000) return __NST.justNow || 'Just now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}${__NST.minutesAgo || 'm ago'}`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}${__NST.hoursAgo || 'h ago'}`;
+    if (diff < 604800000) return `${Math.floor(diff / 86400000)}${__NST.daysAgo || 'd ago'}`;
 
-    return d.toLocaleDateString();
+    return d.toLocaleDateString(locale);
   }
 
   function formatTime(date) {
-    return new Date(date).toLocaleTimeString('en-US', {
+    const locale = __NST.locale || 'en-US';
+    return new Date(date).toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -644,16 +644,6 @@
     return classes[status] || 'bg-secondary';
   }
 
-  function getPriorityBadgeClass(priority) {
-    const classes = {
-      low: 'bg-info text-white',
-      medium: 'bg-warning text-dark',
-      high: 'bg-danger text-white',
-      urgent: 'bg-danger text-white',
-    };
-    return classes[priority] || 'bg-secondary text-white';
-  }
-
   function updateSendButtonState(status) {
     const sendBtn = document.getElementById('sendBtn');
     const messageInput = document.getElementById('messageInput');
@@ -663,12 +653,12 @@
       sendBtn.disabled = true;
       messageInput.disabled = true;
       attachBtn.disabled = true;
-      messageInput.placeholder = 'This ticket is ' + status + '. You cannot send messages.';
+      messageInput.placeholder = (__NST.ticketClosedPlaceholder || 'This ticket is {status}. You cannot send messages.').replace('{status}', status);
     } else {
       sendBtn.disabled = false;
       messageInput.disabled = false;
       attachBtn.disabled = false;
-      messageInput.placeholder = 'Type your message...';
+      messageInput.placeholder = __NST.sendPlaceholder || 'Type your message...';
     }
   }
 
@@ -773,12 +763,6 @@
         }, 300);
       });
 
-    // Priority filter
-    document.getElementById('filterPriority')?.addEventListener('change', function () {
-      currentPriorityFilter = this.value;
-      loadTickets();
-    });
-
     // Type filter
     document.getElementById('filterType')?.addEventListener('change', function () {
       currentTypeFilter = this.value;
@@ -810,11 +794,11 @@
   function highlightStars(rating) {
     const stars = document.querySelectorAll('#ratingStars .star');
     const texts = {
-      1: 'Poor',
-      2: 'Fair',
-      3: 'Good',
-      4: 'Very Good',
-      5: 'Excellent'
+      1: __NST.ratingPoor || 'Poor',
+      2: __NST.ratingFair || 'Fair',
+      3: __NST.ratingGood || 'Good',
+      4: __NST.ratingVeryGood || 'Very Good',
+      5: __NST.ratingExcellent || 'Excellent'
     };
 
     stars.forEach((star, index) => {
@@ -831,7 +815,7 @@
 
     const ratingText = document.getElementById('ratingText');
     if (ratingText) {
-      ratingText.textContent = rating > 0 ? texts[rating] : 'Click to rate';
+      ratingText.textContent = rating > 0 ? texts[rating] : (__NST.clickToRate || 'Click to rate');
     }
   }
 
@@ -841,7 +825,7 @@
 
   async function submitRating() {
     if (!currentTicketId || !currentRating) {
-      showToast('Please select a rating', 'error');
+      showToast(__NST.selectRating || 'Please select a rating', 'error');
       return;
     }
 
@@ -861,18 +845,18 @@
       const data = await response.json();
 
       if (data.success) {
-        showToast('Thank you for your feedback!', 'success');
+        showToast(__NST.thankYouFeedback || 'Thank you for your feedback!', 'success');
         const modal = bootstrap.Modal.getInstance(document.getElementById('rateTicketModal'));
         modal.hide();
         currentRating = 0;
         document.getElementById('ratingComment').value = '';
         highlightStars(0);
       } else {
-        showToast(data.message || 'Failed to submit rating', 'error');
+        showToast(data.message || __NST.ratingFailed || 'Failed to submit rating', 'error');
       }
     } catch (error) {
       console.error('Error submitting rating:', error);
-      showToast('Failed to submit rating', 'error');
+      showToast(__NST.ratingFailed || 'Failed to submit rating', 'error');
     }
   }
 

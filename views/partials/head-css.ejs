@@ -5,6 +5,11 @@
 <!-- Icons Css -->
 <link href="/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
 <!-- App Css-->
+<% if (typeof isRTL !== 'undefined' && isRTL) { %>
+<link href="/assets/css/app-rtl.min.css" rel="stylesheet" type="text/css" />
+<% } else { %>
 <link href="/assets/css/app.min.css" rel="stylesheet" type="text/css" />
+<% } %>
 <!-- custom Css-->
 <link href="/assets/css/custom.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/rCSS/page-content-shell.css" rel="stylesheet" type="text/css" />

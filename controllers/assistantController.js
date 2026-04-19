@@ -1,7 +1,7 @@
 const { AssistantConversation, AssistantPreferences } = require('../models/assistant');
 const Order = require('../models/order');
 const Pickup = require('../models/pickup');
-const Transaction = require('../models/transactions');
+const LedgerEntry = require('../models/ledgerEntry');
 const User = require('../models/user');
 const axios = require('axios');
 
@@ -39,7 +39,7 @@ const processMessageWithAI = async (userId, userMessage, userContext) => {
     Your job is to help business users manage their orders, pickups, and finances.
     
     Available features in the platform:
-    1. Orders: Create, track, and manage orders (types: Deliver, Return, Exchange, Cash Collection)
+    1. Orders: Create, track, and manage orders (types: Deliver, Return, Exchange)
     2. Pickups: Schedule pickups for orders
     3. Wallet: Check balance, view transactions, understand cash cycles
     4. Shop: Purchase shipping supplies
@@ -223,24 +223,24 @@ const processMessageBasic = async (userId, message) => {
   else if (lowerMessage.includes('payment') || lowerMessage.includes('balance') || 
            lowerMessage.includes('transaction') || lowerMessage.includes('money')) {
     if (lowerMessage.includes('balance') || lowerMessage.includes('total')) {
-      // Get transaction summary
-      const transactions = await Transaction.find({ business: userId });
-      const totalBalance = transactions.reduce((total, transaction) => {
-        return total + (transaction.transactionType === 'credit' ? transaction.amount : -transaction.amount);
-      }, 0);
+      const balanceResult = await LedgerEntry.aggregate([
+        { $match: { business: userId, payoutId: null } },
+        { $group: { _id: null, total: { $sum: '$amount' } } },
+      ]);
+      const totalBalance = balanceResult.length > 0 ? balanceResult[0].total : 0;
       
       return {
         text: `Your current balance is ${totalBalance.toFixed(2)} EGP.`,
         actions: [
-          { text: "View Balance Details", url: "/business/wallet/total-balance" }
+          { text: "View Wallet", url: "/business/wallet" }
         ],
-        suggestions: ["View recent transactions", "Check payment methods", "View cash cycles"]
+        suggestions: ["View wallet history", "Check payment methods"]
       };
     } else if (lowerMessage.includes('transaction') || lowerMessage.includes('history')) {
       return {
         text: "You can view your transaction history in the wallet section. Would you like to go there?",
         actions: [
-          { text: "View Transactions", url: "/business/wallet/total-balance" }
+          { text: "View Wallet", url: "/business/wallet" }
         ],
         suggestions: ["Check my balance", "View cash cycles", "Payment methods"]
       };
@@ -319,13 +319,11 @@ const getUserContext = async (userId) => {
       .select('orderNumber orderStatus orderShipping.orderType');
     
     // Get financial info
-    const transactions = await Transaction.find({ business: userId })
-      .sort({ createdAt: -1 })
-      .limit(5);
-    
-    const totalBalance = transactions.reduce((total, transaction) => {
-      return total + (transaction.transactionType === 'credit' ? transaction.amount : -transaction.amount);
-    }, 0);
+    const balanceResult = await LedgerEntry.aggregate([
+      { $match: { business: userId, payoutId: null } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]);
+    const totalBalance = balanceResult.length > 0 ? balanceResult[0].total : 0;
     
     return {
       user: {
@@ -360,9 +358,9 @@ const getUserContext = async (userId) => {
 const getAssistantPage = async (req, res) => {
   try {
     res.render('business/assistant', {
-      title: "Virtual Assistant",
-      page_title: 'Virtual Assistant',
-      folder: 'Pages',
+      title: req.translations.business.pages.assistant.title,
+      page_title: req.translations.business.pages.assistant.title,
+      folder: req.translations.business.breadcrumb.pages,
       user: req.userData
     });
   } catch (error) {

@@ -1,12 +1,18 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
+/**
+ * Business / admin user account (collection: `users`).
+ * Core identity, brand, pickups, verification, and payout-related fields.
+ */
 const UserSchema = new mongoose.Schema(
   {
+    /** Application role, e.g. `business`, `Business`, admin-facing variants */
     role: {
       type: String,
       required: true,
     },
+    /** Display / legal name */
     name: {
       type: String,
       required: true,
@@ -28,11 +34,17 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    /** Optional preferences for outbound notifications (reserved for future use). */
+    notificationPreferences: {
+      whatsapp: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+    },
     isNeedStorage: {
       type: Boolean,
       default: false,
       required: false,
     },
+    /** Public-facing brand metadata for businesses */
     brandInfo: {
       brandName: {
         type: String,
@@ -55,6 +67,7 @@ const UserSchema = new mongoose.Schema(
         required: false,
       },
     },
+    /** Primary pickup address (legacy field name `pickUpAdress` kept for backwards compatibility) */
     pickUpAdress: {
       pickUpPointInMaps: {
         type: String,
@@ -228,19 +241,6 @@ const UserSchema = new mongoose.Schema(
         },
       },
     },
-    balance: {
-      type: Number,
-      default: 0,
-    },
-    balanceHistory: {
-      type: [mongoose.Schema.Types.Mixed],
-      default: [],
-    },
-    balanceTransactions: {
-      type: [mongoose.Schema.Types.Mixed],
-      default: [],
-    },
-
     isCompleted: {
       type: Boolean,
       default: false,
@@ -264,12 +264,46 @@ const UserSchema = new mongoose.Schema(
     fcmToken: {
       type: String,
       default: null
-    }
+    },
+    preferredLanguage: {
+      type: String,
+      enum: ['en', 'ar'],
+      default: 'en',
+    },
+    /** Unique 8-digit code for admin/support (search payouts, identify account without MongoDB id). */
+    businessAccountCode: {
+      type: String,
+      default: null,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Assign unique 8-digit businessAccountCode on first save for business roles
+UserSchema.pre('save', async function assignBusinessCode() {
+  const role = (this.role || '').toString();
+  if (role !== 'business' && role !== 'Business') return;
+  if (this.businessAccountCode && /^\d{8}$/.test(this.businessAccountCode)) return;
+
+  const UserModel = this.constructor;
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const code = String(Math.floor(10000000 + Math.random() * 90000000));
+    const clash = await UserModel.exists({
+      businessAccountCode: code,
+      _id: { $ne: this._id },
+    });
+    if (!clash) {
+      this.businessAccountCode = code;
+      return;
+    }
+  }
+  throw new Error('Failed to assign unique businessAccountCode');
+});
 
 // Method to generate a verification token
 UserSchema.methods.generateVerificationToken = function () {

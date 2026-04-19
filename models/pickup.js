@@ -172,54 +172,26 @@ const pickupSchema = new Schema(
 // Add pre-save hook to update status category
 pickupSchema.pre('save', updateStatusCategory);
 
-// Add post-save hook to create transaction when pickup is completed
+// Create a pickup_fee ledger entry when a pickup is completed
 pickupSchema.post('save', async function(doc) {
-  if (doc.picikupStatus === 'completed') {
+  if (doc.picikupStatus === 'completed' && doc.pickupFees > 0) {
     try {
-      console.log('Pickup completed, checking for existing transaction for pickup:', doc.pickupNumber);
-      
-      const Transaction = require('./transactions');
-      
-      // Check if transaction already exists for this pickup
-      const existingTransaction = await Transaction.findOne({
-        'pickupReferences.pickupId': doc._id,
-        transactionType: 'pickupFees'
-      });
-      
-      if (existingTransaction) {
-        console.log(`Transaction already exists for pickup ${doc.pickupNumber}`);
-        return;
-      }
-      
-      console.log('Creating new transaction for pickup:', doc.pickupNumber);
-      
-      // Create pickup fee transaction
-      const pickupFeeTransaction = new Transaction({
-        transactionId: `${Math.floor(100000 + Math.random() * 900000)}`,
-        transactionType: 'pickupFees',
-        transactionAmount: -doc.pickupFees, // Pickup fees are deducted, so negative
-        transactionNotes: `Pickup fees for pickup ${doc.pickupNumber}`,
-        ordersDetails: {
-          pickupNumber: doc.pickupNumber,
-          numberOfOrders: doc.numberOfOrders,
-          pickupFees: doc.pickupFees,
-          completedDate: new Date(),
-          location: doc.pickupLocation || 'Not specified'
-        },
-        pickupReferences: [{
-          pickupId: doc._id,
-          pickupNumber: doc.pickupNumber,
-          pickupFees: doc.pickupFees,
-          completedDate: new Date()
-        }],
+      const LedgerEntry = require('./ledgerEntry');
+      await LedgerEntry.create({
         business: doc.business,
+        type: 'pickup_fee',
+        amount: -doc.pickupFees,
+        description: `Pickup fee for pickup #${doc.pickupNumber}`,
+        pickupId: doc._id,
+        pickupNumber: doc.pickupNumber,
+        createdBy: 'system',
       });
-
-      await pickupFeeTransaction.save();
-      console.log(`Pickup fee transaction created successfully for pickup ${doc.pickupNumber}`);
-      
-    } catch (error) {
-      console.error('Error creating pickup fee transaction in post-save hook:', error);
+    } catch (err) {
+      if (err.code === 11000) {
+        // Duplicate — entry already exists, ignore
+      } else {
+        console.error('Error creating pickup_fee ledger entry:', err);
+      }
     }
   }
 });

@@ -2,16 +2,17 @@
 <%- contentFor('FooterJs') %>
 
 <%- include("../partials/title-meta", {title: title}) %>
+<% var Ap = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.assistant) ? translation.business.pages.assistant : {}; %>
 
-<div class="row">
+<div class="row g-2">
     <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Virtual Assistant</h4>
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h4 class="mb-sm-0"><%= Ap.heading || 'Virtual Assistant' %></h4>
 
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="javascript: void(0);">Pages</a></li>
-                    <li class="breadcrumb-item active">Virtual Assistant</li>
+                    <li class="breadcrumb-item"><a href="javascript: void(0);"><%= (typeof translation !== 'undefined' && translation.business && translation.business.breadcrumb) ? translation.business.breadcrumb.pages : 'Pages' %></a></li>
+                    <li class="breadcrumb-item active"><%= Ap.title || 'Virtual Assistant' %></li>
                 </ol>
             </div>
         </div>
@@ -32,11 +33,11 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-8">
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title mb-0">AI Assistant</h4>
+                <h4 class="card-title mb-0"><%= Ap.cardAi || 'AI Assistant' %></h4>
             </div>
             <div class="card-body">
                 <div class="assistant-container">
@@ -67,10 +68,10 @@
         </div>
     </div>
     
-    <div class="col-lg-4">
+    <div class="col-12 col-lg-4 mt-3 mt-lg-0">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title mb-0">Assistant Settings</h4>
+                <h4 class="card-title mb-0"><%= Ap.cardSettings || 'Assistant Settings' %></h4>
             </div>
             <div class="card-body">
                 <form id="assistant-preferences-form">
@@ -113,7 +114,7 @@
         
         <div class="card mt-4">
             <div class="card-header">
-                <h4 class="card-title mb-0">Help & Information</h4>
+                <h4 class="card-title mb-0"><%= Ap.cardHelp || 'Help & Information' %></h4>
             </div>
             <div class="card-body">
                 <h5>What can the assistant help with?</h5>
@@ -135,7 +136,7 @@
 
         <div class="card mt-4">
             <div class="card-header">
-                <h4 class="card-title mb-0">AI Model Information</h4>
+                <h4 class="card-title mb-0"><%= Ap.cardModel || 'AI Model Information' %></h4>
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
@@ -211,6 +212,17 @@
         border-radius: 12px;
         overflow: hidden;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (max-width: 575.98px) {
+        .assistant-container {
+            height: min(70vh, 520px);
+            min-height: 280px;
+        }
+
+        .assistant-message {
+            max-width: 92%;
+        }
     }
     
     .assistant-messages {
