@@ -1,9 +1,23 @@
 <%- contentFor('HeaderCss') %>
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<% } %>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="/assets/rCSS/business.css">
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<style>
+  .shop-order-details-page .card, .shop-order-details-page .table { font-family: 'Tajawal', 'Cairo', sans-serif; }
+</style>
+<% } %>
 
 <%- contentFor('body') %>
 <% var Sod = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.shopOrderDetails) ? translation.business.pages.shopOrderDetails : {}; %>
+<% var sodLocale = Sod.locale || ((typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-EG' : 'en-US'); %>
+<% var sodCurrency = Sod.currency || 'EGP'; %>
+<% var sodDateOpts = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }; %>
+<div class="shop-order-details-page">
 
 <% if (order) { %>
 
@@ -38,7 +52,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-0 fw-semibold"><%= Sod.stageOrderPlaced || 'Order Placed' %> - <span class="fw-normal"><%= new Date(order.createdAt).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-0 fw-semibold"><%= Sod.stageOrderPlaced || 'Order Placed' %> - <span class="fw-normal"><%= new Date(order.createdAt).toLocaleString(sodLocale, sodDateOpts) %></span></h6>
                     </div>
                   </div>
                 </a>
@@ -288,9 +302,9 @@
                     </div>
                   </td>
                   <td><%= item.quantity %></td>
-                  <td>EGP <%= item.unitPrice.toFixed(2) %></td>
+                  <td><span class="ltr-embed"><%= sodCurrency %> <%= item.unitPrice.toFixed(2) %></span></td>
                   <td><%= item.discount > 0 ? item.discount + '%' : (Sod.noDiscount || 'No discount') %></td>
-                  <td>EGP <%= item.subtotal.toFixed(2) %></td>
+                  <td><span class="ltr-embed"><%= sodCurrency %> <%= item.subtotal.toFixed(2) %></span></td>
                 </tr>
                 <% }); %>
               <% } else { %>
@@ -302,27 +316,27 @@
             <tfoot>
               <tr>
                 <td colspan="4" class="text-end"><strong><%= Sod.subtotal || 'Subtotal:' %></strong></td>
-                <td><strong>EGP <%= order.subtotal.toFixed(2) %></strong></td>
+                <td><strong class="ltr-embed"><%= sodCurrency %> <%= order.subtotal.toFixed(2) %></strong></td>
               </tr>
               <% if (order.discount > 0) { %>
               <tr>
                 <td colspan="4" class="text-end"><%= Sod.discount || 'Discount:' %></td>
-                <td>- EGP <%= order.discount.toFixed(2) %></td>
+                <td><span class="ltr-embed">- <%= sodCurrency %> <%= order.discount.toFixed(2) %></span></td>
               </tr>
               <% } %>
               <% if (order.tax > 0) { %>
               <tr>
                 <td colspan="4" class="text-end"><%= Sod.tax || 'Tax:' %></td>
-                <td>EGP <%= order.tax.toFixed(2) %></td>
+                <td><span class="ltr-embed"><%= sodCurrency %> <%= order.tax.toFixed(2) %></span></td>
               </tr>
               <% } %>
               <tr>
                 <td colspan="4" class="text-end"><%= Sod.deliveryFee || 'Delivery Fee:' %></td>
-                <td>EGP <%= order.deliveryFee.toFixed(2) %></td>
+                <td><span class="ltr-embed"><%= sodCurrency %> <%= order.deliveryFee.toFixed(2) %></span></td>
               </tr>
               <tr class="table-active">
                 <td colspan="4" class="text-end"><strong><%= Sod.total || 'Total:' %></strong></td>
-                <td><strong>EGP <%= order.totalAmount.toFixed(2) %></strong></td>
+                <td><strong class="ltr-embed"><%= sodCurrency %> <%= order.totalAmount.toFixed(2) %></strong></td>
               </tr>
             </tfoot>
           </table>
@@ -339,7 +353,7 @@
     <div class="card">
       <div class="card-header">
         <h5 class="card-title mb-0">
-          <i class="ri-map-pin-line me-2"></i><%= Sod.sectionTimeline || 'Tracking History' %>
+          <i class="ri-map-pin-line me-2"></i><%= Sod.sectionTracking || Sod.sectionTimeline || 'Tracking History' %>
         </h5>
       </div>
       <div class="card-body">
@@ -353,7 +367,7 @@
                 <div class="timeline-header">
                   <h6 class="timeline-title mb-1"><%= track.description %></h6>
                   <span class="timeline-time">
-                    <i class="ri-time-line me-1"></i><%= new Date(track.timestamp).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US') %>
+                    <i class="ri-time-line me-1"></i><%= new Date(track.timestamp).toLocaleString(sodLocale, sodDateOpts) %>
                   </span>
                 </div>
                 <% if (track.location) { %>
@@ -416,6 +430,8 @@
 </div>
 
 <% } %>
+
+</div>
 
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
@@ -493,7 +509,7 @@
 <style>
   .timeline-container {
     position: relative;
-    padding-left: 40px;
+    padding-inline-start: 40px;
   }
 
   .timeline-item {
@@ -506,9 +522,13 @@
     transform: translateX(5px);
   }
 
+  html[dir="rtl"] .timeline-item:hover {
+    transform: translateX(-5px);
+  }
+
   .timeline-marker {
     position: absolute;
-    left: -40px;
+    inset-inline-start: -40px;
     top: 0;
     width: 20px;
     height: 20px;
@@ -538,7 +558,7 @@
   .timeline-item:before {
     content: '';
     position: absolute;
-    left: -31px;
+    inset-inline-start: -31px;
     top: 20px;
     width: 2px;
     height: calc(100% - 5px);
@@ -553,7 +573,7 @@
     background: #f8f9fa;
     border-radius: 8px;
     padding: 15px;
-    border-left: 4px solid #28a745;
+    border-inline-start: 4px solid #28a745;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
   }
@@ -586,14 +606,14 @@
     background: #e3f2fd;
     padding: 8px 12px;
     border-radius: 6px;
-    border-left: 3px solid #2196f3;
+    border-inline-start: 3px solid #2196f3;
   }
 
   .timeline-notes {
     background: #fff3cd;
     padding: 8px 12px;
     border-radius: 6px;
-    border-left: 3px solid #ffc107;
+    border-inline-start: 3px solid #ffc107;
   }
 
   @keyframes pulse {

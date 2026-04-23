@@ -1,0 +1,73 @@
+{
+  "info": {
+    "name": "Now Shipping - Business API waiting actions (v1)",
+    "description": "POST /api/v1/business/orders/:orderId/* — JWT Bearer auth. orderId = Mongo _id or order number. See api-v1-business-waiting-actions.md",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "orderNumber", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. POST retry-tomorrow",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/v1/business/orders/{{orderId}}/retry-tomorrow"
+      }
+    },
+    {
+      "name": "2. POST retry-scheduled",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"date\": \"2026-12-25T10:00:00.000Z\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/business/orders/{{orderId}}/retry-scheduled"
+      }
+    },
+    {
+      "name": "3. POST return-to-warehouse",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/v1/business/orders/{{orderId}}/return-to-warehouse"
+      }
+    },
+    {
+      "name": "4. POST cancel-from-waiting",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/v1/business/orders/{{orderId}}/cancel-from-waiting"
+      }
+    },
+    {
+      "name": "Helper GET order-details (waitingAction flags)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "url": "{{baseUrl}}/api/v1/business/order-details/{{orderNumber}}"
+      }
+    }
+  ]
+}

@@ -67,19 +67,7 @@ const ORDERS_PER_PAGE = 20;
 let currentPage = 1;
 let lastPaginationData = { currentPage: 1, totalPages: 1, totalCount: 0 };
 
-/** Must match order-details.ejs: hide cancel when order cannot be cancelled from UI */
-const NON_CANCELLABLE_ORDER_STATUSES = [
-  'completed',
-  'returnCompleted',
-  'canceled',
-  'returned',
-  'terminated',
-  'headingToCustomer',
-  'exchangePickup',
-  'inReturnStock',
-  'returnToBusiness',
-  'deliveryFailed',
-];
+/** Cancel / edit / delete visibility comes from GET /business/get-orders (`canCancel`, `canEditAddress`, `canDelete`). */
 
 // Helper: parse 'd M, Y' (e.g., '30 Oct, 2025') to ISO 'YYYY-MM-DD'
 function parseFlatpickrDateToISO(dateStr) {
@@ -479,15 +467,24 @@ function populateOrdersTable(orders) {
                 <i class="ri-barcode-fill text-success"></i>${__NSO.actionSmartSticker || 'Smart Sticker Scan'}
               </button>
             </li>
-            <li>
-              <a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
-                <i class="ri-edit-2-fill text-warning"></i>${__NSO.actionEditOrder || 'Edit Order'}
-              </a>
-            </li>
-            ${!NON_CANCELLABLE_ORDER_STATUSES.includes(order.orderStatus)
+            ${order.canEditAddress === true
+              ? `<li>
+                <a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
+                  <i class="ri-edit-2-fill text-warning"></i>${__NSO.actionEditOrder || 'Edit Order'}
+                </a>
+              </li>`
+              : ''}
+            ${order.canCancel === true
               ? `<li>
                 <button class="dropdown-item" onclick="handleCancelOrder('${order._id}', '${order.orderNumber}')">
                   <i class="ri-delete-bin-6-fill text-danger"></i>${__NSO.actionCancelOrder || 'Cancel order'}
+                </button>
+              </li>`
+              : ''}
+            ${order.canDelete === true
+              ? `<li>
+                <button class="dropdown-item" onclick="handleDeleteOrder('${order._id}', '${order.orderNumber}')">
+                  <i class="ri-delete-bin-2-fill text-danger"></i>${__NSO.actionDeleteOrder || 'Delete Order'}
                 </button>
               </li>`
               : ''}
@@ -612,7 +609,7 @@ function getStatusDetails(status) {
     statusText = 'Canceled';
   } else if (status === 'rejected') {
     badgeClass = 'bg-danger-subtle text-danger';
-    statusText = 'Rejected';
+    statusText = 'Customer refused';
   } else if (status === 'returned') {
     badgeClass = 'bg-warning text-dark';
     statusText = 'Returned';
@@ -900,6 +897,54 @@ function handleSmartStickerScan(orderNumber) {
 
 function handleCancelOrder(orderId, orderNumber) {
   cancelOrder(orderId);
+}
+
+async function handleDeleteOrder(orderId, orderNumber) {
+  const O = window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.orders ? window.__NS_BUSINESS_I18N.orders : {};
+  const result = await Swal.fire({
+    title: O.deleteConfirm || 'Delete order?',
+    text: O.deleteConfirmText || 'This will permanently remove the order. You cannot undo this.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: O.deleteConfirmYes || 'Yes, delete it',
+    cancelButtonText: O.deleteConfirmNo || 'Cancel',
+  });
+  if (!result.isConfirmed) return;
+
+  try {
+    const response = await fetch(`/business/orders/delete-order/${orderNumber}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok) {
+      await Swal.fire({
+        title: O.deleteDone || 'Deleted',
+        text: data.message || O.deleteSuccess || 'Order deleted successfully.',
+        icon: 'success',
+        confirmButtonText: O.ok || 'OK',
+      });
+      loadOrders();
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: O.cannotDelete || 'Cannot delete',
+        text: data.error || O.deleteError || 'This order cannot be deleted.',
+        confirmButtonText: O.ok || 'OK',
+      });
+    }
+  } catch (err) {
+    console.error('handleDeleteOrder error:', err);
+    Swal.fire({
+      icon: 'error',
+      title: O.errorTitle || 'Error',
+      text: O.deleteError || 'There was an error deleting the order. Please try again.',
+      confirmButtonText: O.ok || 'OK',
+    });
+  }
 }
 
 

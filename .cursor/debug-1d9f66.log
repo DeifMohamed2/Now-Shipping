@@ -1,0 +1,2 @@
+{"sessionId":"1d9f66","runId":"post-fix","hypothesisId":"H1","location":"businessController.js:getDashboardData","message":"avgDelivery delta policy","data":{"curAvgRaw":0.025963090277777778,"kpiAvgRounded":0,"prevAvgRaw":0.003402206790123457,"prevAvgRounded":0,"deltaLegacyRaw":663.1,"deltaEmitted":null},"timestamp":1776890468079}
+{"sessionId":"1d9f66","hypothesisId":"H1","location":"dashboard-analytics.js:renderKPI","message":"client kpi delivery snapshot","data":{"avgDeliveryDays":0,"deltaAvgDelivery":null},"timestamp":1776890468083}

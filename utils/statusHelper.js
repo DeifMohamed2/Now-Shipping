@@ -60,7 +60,7 @@ const ORDER_STATUSES = {
 
   // PAUSED category
   waitingAction: { category: STATUS_CATEGORIES.PAUSED, label: 'Awaiting Action', description: 'Order is waiting for business action' },
-  rejected: { category: STATUS_CATEGORIES.PAUSED, label: 'Rejected', description: 'Order has been rejected by courier' },
+  rejected: { category: STATUS_CATEGORIES.PAUSED, label: 'Customer refused', description: 'Customer refused delivery (recipient rejected the order at the door)' },
   
   // SUCCESSFUL category
   completed: { category: STATUS_CATEGORIES.SUCCESSFUL, label: 'Completed', description: 'Order has been successfully delivered' },
@@ -94,7 +94,7 @@ const PICKUP_STATUSES = {
   
   // UNSUCCESSFUL category
   canceled: { category: STATUS_CATEGORIES.UNSUCCESSFUL, label: 'Canceled', description: 'Pickup has been canceled' },
-  rejected: { category: STATUS_CATEGORIES.UNSUCCESSFUL, label: 'Rejected', description: 'Pickup has been rejected by driver' },
+  rejected: { category: STATUS_CATEGORIES.UNSUCCESSFUL, label: 'Declined by driver', description: 'Driver declined this pickup' },
   returned: { category: STATUS_CATEGORIES.UNSUCCESSFUL, label: 'Returned', description: 'Pickup has been returned to business' },
   terminated: { category: STATUS_CATEGORIES.UNSUCCESSFUL, label: 'Terminated', description: 'Pickup has been terminated' }
 };

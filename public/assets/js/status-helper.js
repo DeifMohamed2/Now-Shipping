@@ -41,7 +41,7 @@ const StatusHelper = {
 
     // PAUSED category
     'waitingAction': { category: 'PAUSED', label: 'Awaiting Action', description: 'Order is waiting for business action' },
-    'rejected': { category: 'PAUSED', label: 'Rejected', description: 'Order has been rejected by courier' },
+    'rejected': { category: 'PAUSED', label: 'Customer refused', description: 'Customer refused delivery (recipient rejected the order at the door)' },
     
     // SUCCESSFUL category
     'completed': { category: 'SUCCESSFUL', label: 'Completed', description: 'Order has been successfully delivered' },
@@ -75,7 +75,7 @@ const StatusHelper = {
     
     // UNSUCCESSFUL category
     'canceled': { category: 'UNSUCCESSFUL', label: 'Canceled', description: 'Pickup has been canceled' },
-    'rejected': { category: 'UNSUCCESSFUL', label: 'Rejected', description: 'Pickup has been rejected by driver' },
+    'rejected': { category: 'UNSUCCESSFUL', label: 'Declined by driver', description: 'Driver declined this pickup' },
     'returned': { category: 'UNSUCCESSFUL', label: 'Returned', description: 'Pickup has been returned to business' },
     'terminated': { category: 'UNSUCCESSFUL', label: 'Terminated', description: 'Pickup has been terminated' }
   },

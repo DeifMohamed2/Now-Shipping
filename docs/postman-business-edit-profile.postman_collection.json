@@ -1,0 +1,87 @@
+{
+  "info": {
+    "name": "Business API — Edit profile",
+    "description": "PUT/POST /api/v1/business/edit-profile — update business profile, including server-side profile photo upload to public/uploads/profiles (local storage). Auth: Bearer JWT.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "accessToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Edit profile (JSON only)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"My Store\",\n  \"phoneNumber\": \"+201234567890\",\n  \"email\": \"shop@example.com\",\n  \"brandName\": \"Brand Co\",\n  \"industry\": \"Retail\",\n  \"monthlyOrders\": \"100-500\",\n  \"sellingPoints\": [\"Fast delivery\", \"Quality\"],\n  \"socialLinks\": { \"instagram\": \"https://instagram.com/brand\" },\n  \"notificationPreferences\": { \"whatsapp\": true, \"sms\": false }\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/business/edit-profile",
+        "description": "Optional string fields. Email/phone must be unique across accounts. Response includes `user` (no password) and `profileImageUrl` (absolute URL for local paths)."
+      }
+    },
+    {
+      "name": "Edit profile (set profile image URL)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"profileImage\": \"https://cdn.example.com/avatar.png\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/business/edit-profile",
+        "description": "Persist an external image URL without uploading a file."
+      }
+    },
+    {
+      "name": "Edit profile (upload photo — multipart)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+          { "key": "Accept", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "name", "value": "My Store", "type": "text" },
+            { "key": "phoneNumber", "value": "+201234567890", "type": "text" },
+            { "key": "brandName", "value": "Brand Co", "type": "text" },
+            {
+              "key": "profileImage",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": "{{baseUrl}}/api/v1/business/edit-profile",
+        "description": "Use POST (or PUT) with form-data. Field name for the file must be `profileImage`. Images only; max 5 MB. Previous file under /uploads/profiles/ is deleted when a new file is saved. Same handler as PUT /edit-profile."
+      }
+    },
+    {
+      "name": "Edit profile (remove profile image)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"removeProfileImage\": true\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/business/edit-profile",
+        "description": "Clears profileImage. Deletes the previous local file in /uploads/profiles/ if applicable."
+      }
+    }
+  ]
+}

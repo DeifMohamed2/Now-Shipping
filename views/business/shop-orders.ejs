@@ -1,19 +1,28 @@
 <%- contentFor('HeaderCss') %>
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<% } %>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="/assets/rCSS/business.css">
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<style>
+  .shop-orders-page .card, .shop-orders-page .table { font-family: 'Tajawal', 'Cairo', sans-serif; }
+  html[dir="rtl"] .shop-orders-stat-label { text-transform: none; letter-spacing: normal; }
+</style>
+<% } %>
 
 <%- contentFor('body') %>
 <% var So = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.shopOrders) ? translation.business.pages.shopOrders : {}; %>
+<% var soLocale = So.locale || ((typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-EG' : 'en-US'); %>
+<% var soCurrency = So.currency || 'EGP'; %>
+<div class="shop-orders-page">
 <div class="row g-2">
-  <div class="col-12">
-    <div class="page-title-box d-sm-flex align-items-center justify-content-between flex-wrap gap-2">
-      <h4 class="mb-sm-0"><%= So.heading || 'Shop Orders' %></h4>
-      <div class="page-title-right">
-        <a href="/business/shop" class="btn btn-primary">
-          <i class="ri-shopping-bag-line align-middle me-1"></i> <%= So.continueShopping || 'Continue Shopping' %>
-        </a>
-      </div>
-    </div>
+  <div class="col-12 d-flex justify-content-end">
+    <a href="/business/shop" class="btn btn-primary">
+      <i class="ri-shopping-bag-line align-middle me-1"></i> <%= So.continueShopping || 'Continue Shopping' %>
+    </a>
   </div>
 </div>
 
@@ -24,7 +33,7 @@
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="flex-grow-1">
-            <p class="text-uppercase fw-medium text-muted mb-0"><%= So.activeOrders || 'Active Orders' %></p>
+            <p class="shop-orders-stat-label text-uppercase fw-medium text-muted mb-0"><%= So.activeOrders || 'Active Orders' %></p>
           </div>
           <div class="flex-shrink-0">
             <h5 class="text-primary mb-0" id="activeCount">0</h5>
@@ -38,7 +47,7 @@
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="flex-grow-1">
-            <p class="text-uppercase fw-medium text-muted mb-0"><%= So.inTransit || 'In Transit' %></p>
+            <p class="shop-orders-stat-label text-uppercase fw-medium text-muted mb-0"><%= So.inTransit || 'In Transit' %></p>
           </div>
           <div class="flex-shrink-0">
             <h5 class="text-info mb-0" id="inTransitCount">0</h5>
@@ -52,7 +61,7 @@
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="flex-grow-1">
-            <p class="text-uppercase fw-medium text-muted mb-0"><%= So.statDelivered || 'Delivered' %></p>
+            <p class="shop-orders-stat-label text-uppercase fw-medium text-muted mb-0"><%= So.statDelivered || 'Delivered' %></p>
           </div>
           <div class="flex-shrink-0">
             <h5 class="text-success mb-0" id="deliveredCount">0</h5>
@@ -66,10 +75,10 @@
       <div class="card-body">
         <div class="d-flex align-items-center">
           <div class="flex-grow-1">
-            <p class="text-uppercase fw-medium text-muted mb-0"><%= So.statTotalSpent || 'Total Spent' %></p>
+            <p class="shop-orders-stat-label text-uppercase fw-medium text-muted mb-0"><%= So.statTotalSpent || 'Total Spent' %></p>
           </div>
           <div class="flex-shrink-0">
-            <h5 class="text-warning mb-0" id="totalSpent">EGP 0</h5>
+            <h5 class="text-warning mb-0 ltr-embed" id="totalSpent"><%= soCurrency %> 0</h5>
           </div>
         </div>
       </div>
@@ -126,7 +135,7 @@
               <tr>
                 <td colspan="7" class="text-center">
                   <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                    <span class="visually-hidden"><%= So.visuallyHiddenLoading || 'Loading…' %></span>
                   </div>
                 </td>
               </tr>
@@ -153,12 +162,26 @@
   </div>
 </div>
 
+</div>
+
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 <script>
   var __NS_SO_I18N = {
     noOrdersFound: "<%= So.noOrders || 'No orders found' %>",
     loading: "<%= So.loading || 'Loading…' %>",
+    currency: "<%= soCurrency %>",
+    colOrderNum: "<%= So.colOrderNum || 'Order #' %>",
+    colDate: "<%= So.colDate || 'Date' %>",
+    colStatus: "<%= So.colStatus || 'Status' %>",
+    na: "<%= So.na || 'N/A' %>",
+    failedLoadOrders: "<%= So.failedLoadOrders || 'Failed to load orders' %>",
+    failedLoadDetails: "<%= So.failedLoadDetails || 'Failed to load order details' %>",
+    failedCancelOrder: "<%= So.failedCancelOrder || 'Failed to cancel order' %>",
+    titleQuickView: "<%= So.titleQuickView || 'Quick view' %>",
+    titleFullDetails: "<%= So.titleFullDetails || 'Full details' %>",
+    titleCancelOrder: "<%= So.titleCancelOrder || 'Cancel order' %>",
+    titleTrackOrder: "<%= So.titleTrackOrder || 'Track order' %>",
     statusPending: "<%= So.filterPending || 'Pending' %>",
     statusConfirmed: "<%= So.filterConfirmed || 'Confirmed' %>",
     statusProcessing: "<%= So.filterProcessing || 'Processing' %>",
@@ -200,7 +223,7 @@
     notesLabel: "<%= So.notesLabel || 'Notes:' %>",
     locationLabel: "<%= So.locationLabel || 'Location:' %>",
     unknownTime: "<%= So.unknownTime || 'Unknown time' %>",
-    locale: "<%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US' %>"
+    locale: "<%= soLocale %>"
   };
   let ordersData = [];
 
@@ -232,7 +255,7 @@
       updateStats(orders);
     } catch (error) {
       console.error('Error loading orders:', error);
-      showError('Failed to load orders: ' + error.message);
+      showError(__NS_SO_I18N.failedLoadOrders + ': ' + error.message);
     }
   }
 
@@ -256,15 +279,15 @@
         </td>
         <td>
           <div>
-            <div>${new Date(order.createdAt).toLocaleDateString()}</div>
-            <small class="text-muted">${new Date(order.createdAt).toLocaleTimeString()}</small>
+            <div>${new Date(order.createdAt).toLocaleDateString(__NS_SO_I18N.locale, { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+            <small class="text-muted">${new Date(order.createdAt).toLocaleTimeString(__NS_SO_I18N.locale, { hour: '2-digit', minute: '2-digit' })}</small>
           </div>
         </td>
         <td>
           <span class="badge badge-soft-info">${order.items.length} ${__NS_SO_I18N.colItems}</span>
         </td>
         <td>
-          <strong>EGP ${order.totalAmount.toFixed(2)}</strong>
+          <strong class="ltr-embed">${__NS_SO_I18N.currency} ${order.totalAmount.toFixed(2)}</strong>
         </td>
         <td>${statusBadge}</td>
         <td>
@@ -277,19 +300,19 @@
         </td>
         <td>
           <div class="hstack gap-1">
-            <button class="btn btn-sm btn-soft-primary" onclick="viewOrder('${order._id}')" title="Quick View">
+            <button class="btn btn-sm btn-soft-primary" onclick="viewOrder('${order._id}')" title="${__NS_SO_I18N.titleQuickView}">
               <i class="ri-eye-line"></i>
             </button>
-            <a href="/business/shop/orders/${order._id}" class="btn btn-sm btn-soft-info" title="Full Details">
+            <a href="/business/shop/orders/${order._id}" class="btn btn-sm btn-soft-info" title="${__NS_SO_I18N.titleFullDetails}">
               <i class="ri-external-link-line"></i>
             </a>
             ${['pending', 'confirmed'].includes(order.status) ? `
-              <button class="btn btn-sm btn-soft-danger" onclick="cancelOrder('${order._id}')" title="Cancel Order">
+              <button class="btn btn-sm btn-soft-danger" onclick="cancelOrder('${order._id}')" title="${__NS_SO_I18N.titleCancelOrder}">
                 <i class="ri-close-circle-line"></i>
               </button>
             ` : ''}
             ${order.status === 'in_transit' ? `
-              <button class="btn btn-sm btn-soft-success" onclick="trackOrder('${order._id}')" title="Track Order">
+              <button class="btn btn-sm btn-soft-success" onclick="trackOrder('${order._id}')" title="${__NS_SO_I18N.titleTrackOrder}">
                 <i class="ri-map-pin-line"></i>
               </button>
             ` : ''}
@@ -386,7 +409,7 @@
     document.getElementById('activeCount').textContent = stats.active;
     document.getElementById('inTransitCount').textContent = stats.inTransit;
     document.getElementById('deliveredCount').textContent = stats.delivered;
-    document.getElementById('totalSpent').textContent = `EGP ${stats.totalSpent.toFixed(2)}`;
+    document.getElementById('totalSpent').textContent = `${__NS_SO_I18N.currency} ${stats.totalSpent.toFixed(2)}`;
   }
 
   async function viewOrder(orderId) {
@@ -404,16 +427,16 @@
       <div class="row mb-4">
         <div class="col-md-6">
           <h6 class="text-muted mb-2">${__NS_SO_I18N.orderInfoTitle}</h6>
-          <p><strong>${__NS_SO_I18N.colOrderNum || 'Order #'}:</strong> ${order.orderNumber || 'N/A'}</p>
-          <p><strong>${__NS_SO_I18N.colStatus || 'Status'}:</strong> ${getStatusBadge(order.status)}</p>
-          <p><strong>${__NS_SO_I18N.colDate || 'Date'}:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleString(__NS_SO_I18N.locale) : 'N/A'}</p>
+          <p><strong>${__NS_SO_I18N.colOrderNum}:</strong> ${order.orderNumber || __NS_SO_I18N.na}</p>
+          <p><strong>${__NS_SO_I18N.colStatus}:</strong> ${getStatusBadge(order.status)}</p>
+          <p><strong>${__NS_SO_I18N.colDate}:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleString(__NS_SO_I18N.locale) : __NS_SO_I18N.na}</p>
         </div>
         <div class="col-md-6">
           <h6 class="text-muted mb-2">${__NS_SO_I18N.deliveryInfoTitle}</h6>
-          <p>${order.contactInfo?.name || order.orderCustomer?.fullName || 'N/A'}</p>
-          <p>${order.contactInfo?.phone || order.orderCustomer?.phoneNumber || 'N/A'}</p>
-          <p>${order.orderCustomer?.address || 'N/A'}</p>
-          ${order.courierName ? `<p><i class="ri-user-line me-1"></i>${order.courierName} - ${order.courierPhone || 'N/A'}</p>` : ''}
+          <p>${order.contactInfo?.name || order.orderCustomer?.fullName || __NS_SO_I18N.na}</p>
+          <p>${order.contactInfo?.phone || order.orderCustomer?.phoneNumber || __NS_SO_I18N.na}</p>
+          <p>${order.orderCustomer?.address || __NS_SO_I18N.na}</p>
+          ${order.courierName ? `<p><i class="ri-user-line me-1"></i>${order.courierName} - ${order.courierPhone || __NS_SO_I18N.na}</p>` : ''}
         </div>
       </div>
       
@@ -443,35 +466,35 @@
                   </div>
                 </td>
                 <td>${item.quantity || 0}</td>
-                <td>EGP ${(item.unitPrice || 0).toFixed(2)}</td>
-                <td>EGP ${(item.subtotal || 0).toFixed(2)}</td>
+                <td class="ltr-embed">${__NS_SO_I18N.currency} ${(item.unitPrice || 0).toFixed(2)}</td>
+                <td class="ltr-embed">${__NS_SO_I18N.currency} ${(item.subtotal || 0).toFixed(2)}</td>
               </tr>
             `).join('') : `<tr><td colspan="4" class="text-center">${__NS_SO_I18N.noItemsFound}</td></tr>`}
           </tbody>
           <tfoot>
             <tr>
               <td colspan="3" class="text-end"><strong>${__NS_SO_I18N.subtotalLabel}</strong></td>
-              <td><strong>EGP ${(order.subtotal || 0).toFixed(2)}</strong></td>
+              <td class="ltr-embed"><strong>${__NS_SO_I18N.currency} ${(order.subtotal || 0).toFixed(2)}</strong></td>
             </tr>
             ${(order.discount || 0) > 0 ? `
             <tr>
               <td colspan="3" class="text-end">${__NS_SO_I18N.discountLabel}</td>
-              <td>- EGP ${(order.discount || 0).toFixed(2)}</td>
+              <td class="ltr-embed">- ${__NS_SO_I18N.currency} ${(order.discount || 0).toFixed(2)}</td>
             </tr>
             ` : ''}
             ${(order.tax || 0) > 0 ? `
             <tr>
               <td colspan="3" class="text-end">${__NS_SO_I18N.taxLabel}</td>
-              <td>EGP ${(order.tax || 0).toFixed(2)}</td>
+              <td class="ltr-embed">${__NS_SO_I18N.currency} ${(order.tax || 0).toFixed(2)}</td>
             </tr>
             ` : ''}
             <tr>
               <td colspan="3" class="text-end">${__NS_SO_I18N.deliveryFeeLabel}</td>
-              <td>EGP ${(order.deliveryFee || 0).toFixed(2)}</td>
+              <td class="ltr-embed">${__NS_SO_I18N.currency} ${(order.deliveryFee || 0).toFixed(2)}</td>
             </tr>
             <tr class="table-active">
               <td colspan="3" class="text-end"><strong>${__NS_SO_I18N.totalLabel}</strong></td>
-              <td><strong>EGP ${(order.totalAmount || 0).toFixed(2)}</strong></td>
+              <td class="ltr-embed"><strong>${__NS_SO_I18N.currency} ${(order.totalAmount || 0).toFixed(2)}</strong></td>
             </tr>
           </tfoot>
         </table>
@@ -520,7 +543,7 @@
       new bootstrap.Modal(document.getElementById('orderModal')).show();
     } catch (error) {
       console.error('Error loading order details:', error);
-      showError('Failed to load order details');
+      showError(__NS_SO_I18N.failedLoadDetails);
     }
   }
 
@@ -565,7 +588,7 @@
         }
       } catch (error) {
         console.error('Error cancelling order:', error);
-        showError('Failed to cancel order');
+        showError(__NS_SO_I18N.failedCancelOrder);
       }
     }
   }
@@ -702,7 +725,7 @@
   /* Timeline styling */
   .timeline-container {
     position: relative;
-    padding-left: 40px;
+    padding-inline-start: 40px;
   }
 
   .timeline-item {
@@ -715,9 +738,13 @@
     transform: translateX(5px);
   }
 
+  html[dir="rtl"] .timeline-item:hover {
+    transform: translateX(-5px);
+  }
+
   .timeline-marker {
     position: absolute;
-    left: -40px;
+    inset-inline-start: -40px;
     top: 0;
     width: 20px;
     height: 20px;
@@ -747,7 +774,7 @@
   .timeline-item:before {
     content: '';
     position: absolute;
-    left: -31px;
+    inset-inline-start: -31px;
     top: 20px;
     width: 2px;
     height: calc(100% - 5px);
@@ -762,7 +789,7 @@
     background: #f8f9fa;
     border-radius: 8px;
     padding: 15px;
-    border-left: 4px solid #28a745;
+    border-inline-start: 4px solid #28a745;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
   }
@@ -795,14 +822,14 @@
     background: #e3f2fd;
     padding: 8px 12px;
     border-radius: 6px;
-    border-left: 3px solid #2196f3;
+    border-inline-start: 3px solid #2196f3;
   }
 
   .timeline-notes {
     background: #fff3cd;
     padding: 8px 12px;
     border-radius: 6px;
-    border-left: 3px solid #ffc107;
+    border-inline-start: 3px solid #ffc107;
   }
 
   @keyframes pulse {

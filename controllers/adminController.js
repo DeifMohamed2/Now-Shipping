@@ -25,6 +25,7 @@ const {
   canAdminCancel,
   canAdminChangeAddress,
 } = require('../utils/orderUiPolicy');
+const { applyBusinessLikeCancellation } = require('../utils/orderCancellationFlow');
 const getDashboardPage = (req, res) => {
   res.render('admin/dashboard', {
     title: 'Dashboard',
@@ -400,6 +401,29 @@ const get_orderDetailsPage = async (req, res) => {
       );
     }
 
+    const trackingDisplay =
+      order.smartFlyerBarcode || order.referralNumber || '';
+    const rawHist = Array.isArray(order.orderStatusHistory)
+      ? order.orderStatusHistory
+      : [];
+    const statusHistoryChronological = rawHist
+      .slice()
+      .sort(
+        (a, b) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+      )
+      .map((h) => {
+        const o = typeof h.toObject === 'function' ? h.toObject() : h;
+        return {
+          status: o.status,
+          date: o.date,
+          category: o.category,
+          notes: o.notes,
+          reason: o.reason,
+          label: statusHelper.getOrderStatusLabel(o.status),
+        };
+      });
+
     res.render('admin/order-details', {
       title: 'Order Details',
       page_title: 'Order Details',
@@ -408,6 +432,9 @@ const get_orderDetailsPage = async (req, res) => {
       selectedPickupAddress: selectedPickupAddress,
       canCancelOrder: canAdminCancel(order),
       canChangeAddress: canAdminChangeAddress(order),
+      trackingDisplay,
+      statusHistoryChronological,
+      orderStatusLabel: statusHelper.getOrderStatusLabel(order.orderStatus),
     });
   } catch (error) {
     console.log(error);
@@ -3413,16 +3440,11 @@ const adminReturnToWarehouseFromWaiting = async (req, res) => {
     if (order.orderStatus !== 'waitingAction')
       return res.status(400).json({ error: 'Order not in waitingAction' });
 
-    // Update order status to returnToWarehouse
+    // Update order status to returnToWarehouse (pre-save appends orderStatusHistory)
     order.orderStatus = 'returnToWarehouse';
     order.statusCategory = 'PROCESSING';
-
-    // Add to status history
-    order.orderStatusHistory.push({
-      status: 'returnToWarehouse',
-      date: new Date(),
-      category: 'PROCESSING',
-    });
+    order.$locals = order.$locals || {};
+    order.$locals.nextStatusHistoryNote = 'Moved to return pipeline from waiting action';
 
     await order.save();
     return res.status(200).json({ message: 'Order moved to return stock' });
@@ -3439,16 +3461,11 @@ const adminCancelFromWaiting = async (req, res) => {
     if (order.orderStatus !== 'waitingAction')
       return res.status(400).json({ error: 'Order not in waitingAction' });
 
-    // Update order status to canceled
+    // Update order status to canceled (pre-save appends orderStatusHistory)
     order.orderStatus = 'canceled';
     order.statusCategory = 'UNSUCCESSFUL';
-
-    // Add to status history
-    order.orderStatusHistory.push({
-      status: 'canceled',
-      date: new Date(),
-      category: 'UNSUCCESSFUL',
-    });
+    order.$locals = order.$locals || {};
+    order.$locals.nextStatusHistoryNote = 'Canceled from waiting action';
 
     await order.save();
     return res.status(200).json({ message: 'Order canceled' });
@@ -3466,25 +3483,51 @@ const adminCancelOrder = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Check if order is already canceled
     if (order.orderStatus === 'canceled') {
       return res.status(400).json({ error: 'Order is already canceled' });
     }
 
-    // Cancel the order regardless of current status
-    order.orderStatus = 'canceled';
-    order.statusCategory = 'UNSUCCESSFUL';
+    if (!canAdminCancel(order)) {
+      return res.status(400).json({
+        error: 'This order cannot be canceled from its current status.',
+        currentStatus: order.orderStatus,
+        statusLabel: statusHelper.getOrderStatusLabel(order.orderStatus),
+      });
+    }
 
-    // Add to status history
-    order.orderStatusHistory.push({
-      status: 'canceled',
-      date: new Date(),
-      category: 'UNSUCCESSFUL',
-    });
-
+    const cancelOutcome = applyBusinessLikeCancellation(order, { canceledBy: 'admin' });
+    if (cancelOutcome.result === 'already_in_return') {
+      return res.status(400).json({ error: cancelOutcome.message });
+    }
+    order.$locals = order.$locals || {};
+    order.$locals.nextStatusHistoryNote = cancelOutcome.message;
     await order.save();
 
-    return res.status(200).json({ message: 'Order canceled successfully' });
+    if (cancelOutcome.notifyCourier && order.deliveryMan) {
+      try {
+        const reason =
+          cancelOutcome.result === 'exchange_cancel'
+            ? 'Exchange order canceled by admin'
+            : 'Order canceled by admin before pickup';
+        await firebase.sendOrderStatusNotification(
+          order.deliveryMan,
+          order.orderNumber,
+          'canceled',
+          {
+            cancelledBy: 'Admin',
+            cancelledAt: new Date(),
+            reason,
+          }
+        );
+      } catch (notificationError) {
+        console.error(
+          `Failed to send cancellation notification to courier ${order.deliveryMan}:`,
+          notificationError
+        );
+      }
+    }
+
+    return res.status(200).json({ message: cancelOutcome.message });
   } catch (error) {
     console.error('Error in adminCancelOrder:', error);
     return res.status(500).json({ error: 'Failed to cancel order' });

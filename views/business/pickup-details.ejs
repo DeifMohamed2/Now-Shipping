@@ -1,5 +1,9 @@
 <%- contentFor('HeaderCss') %>
-
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<% } %>
  <!-- Remix Icon CSS -->
  <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
  <!-- Material Design Icons -->
@@ -180,21 +184,37 @@
      /* Compact Timeline */
      .compact-timeline {
        display: flex;
-       align-items: center;
+       align-items: flex-start;
        justify-content: space-between;
-       padding: 0.5rem 0;
+       padding: 0.5rem 0 0.25rem;
        position: relative;
+       --timeline-progress-pct: 0%;
      }
 
+     /* Track: full width neutral line */
      .compact-timeline::after {
        content: '';
        position: absolute;
-       top: 50%;
-       left: 0;
-       right: 0;
+       top: 1.25rem;
+       inset-inline: 0;
        height: 2px;
        background-color: #e9ecef;
        z-index: 0;
+     }
+
+     /* Progress: fills from inline-start (right in RTL, left in LTR) */
+     .compact-timeline::before {
+       content: '';
+       position: absolute;
+       top: 1.25rem;
+       inset-inline-start: 0;
+       width: var(--timeline-progress-pct);
+       max-width: 100%;
+       height: 2px;
+       background-color: var(--coral);
+       z-index: 1;
+       border-radius: 1px;
+       transition: width 0.35s ease;
      }
 
      .timeline-step {
@@ -231,7 +251,8 @@
        font-weight: 600;
        text-align: center;
        color: #6c757d;
-       max-width: 80px;
+       max-width: 5.5rem;
+       line-height: 1.3;
      }
 
      .timeline-text.active {
@@ -347,31 +368,102 @@
        content: '';
        position: absolute;
        bottom: 0;
-       left: 0;
+       inset-inline-start: 0;
        width: 3rem;
        height: 3px;
        background-color: var(--coral);
      }
+
+     [dir="rtl"] .rating-stars i {
+       margin-right: 0;
+       margin-inline-end: 0.25rem;
+     }
+
+     /* With html[dir=rtl], flex row already flows first step on the right — do not row-reverse. */
+
+     html[dir="rtl"] .pickup-timeline-section .compact-timeline {
+       font-family: 'Tajawal', 'Cairo', 'Segoe UI', sans-serif;
+     }
+
+     html[dir="rtl"] .pickup-timeline-section .timeline-text {
+       max-width: 7rem;
+       font-weight: 700;
+     }
+
+     html[dir="rtl"] .pickup-timeline-section .timeline-date {
+       max-width: 7rem;
+       margin-inline: auto;
+     }
+
+     html[dir="rtl"] .pickup-timeline-section .card-header h5.card-title {
+       display: flex;
+       align-items: center;
+       gap: 0.5rem;
+       flex-direction: row;
+       justify-content: flex-start;
+     }
+
+     [dir="rtl"] .pagination-wrap.hstack {
+       flex-direction: row-reverse;
+     }
+
+     [dir="rtl"] .table thead th {
+       text-transform: none;
+       letter-spacing: normal;
+     }
    </style>
 
-<% var Pp = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.pickupDetails) ? translation.business.pages.pickupDetails : {}; %>
+<% 
+  var PpPage = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.pickupDetails) ? translation.business.pages.pickupDetails : {};
+  var PpJs = (typeof translation !== 'undefined' && translation.business && translation.business.js && translation.business.js.pickupDetails) ? translation.business.js.pickupDetails : {};
+  var Pp = Object.assign({}, PpJs, PpPage);
+  var pdLocale = Pp.locale || ((typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-EG' : 'en-US');
+  var pdStages = [Pp.timelinePlaced, Pp.timelineDriverAssigned, Pp.timelineItemsPickedUp, Pp.timelineStorageStation, Pp.timelineCompleted];
+  var isPickupComplete = !!(pickup.pickupStages && pickup.pickupStages[4]);
+  var pdProgressPct = 0;
+  var pdStageCount = pdStages.length;
+  if (pdStageCount > 1 && pickup.pickupStages && pickup.pickupStages.length) {
+    var pdLastActive = -1;
+    for (var _si = 0; _si < pdStageCount; _si++) {
+      if (pickup.pickupStages[_si]) pdLastActive = _si;
+    }
+    if (pdLastActive > 0) {
+      pdProgressPct = Math.round((pdLastActive / (pdStageCount - 1)) * 10000) / 100;
+    }
+  }
+%>
+<script>
+  window.__NS_BUSINESS_I18N = window.__NS_BUSINESS_I18N || {};
+  window.__NS_BUSINESS_I18N.pickupDetails = <%- JSON.stringify(Pp) %>;
+  window.__NS_PICKUP_DETAILS__ = { isPickupComplete: <%= isPickupComplete ? 'true' : 'false' %>, locale: <%- JSON.stringify(pdLocale) %> };
+</script>
 <div class="container-fluid py-4">
   <div class="row">
     <div class="col-md-12 mb-4">
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <h4 class="section-title mb-0"><%= Pp.title || 'Pickup Details' %></h4>
-        <% const pickupCancellable = ['new', 'pendingPickup', 'driverAssigned'].includes(pickup.picikupStatus); %>
-        <% if (pickupCancellable) { %>
-        <button type="button" class="btn btn-danger" onclick="cancelPickup('<%= pickup._id %>')">
-          <i class="ri-delete-bin-6-line me-1"></i> <%= Pp.cancelPickup || 'Cancel Pickup' %>
-        </button>
-        <% } else if (pickup.picikupStatus !== 'canceled') { %>
-        <span class="badge bg-secondary-subtle text-dark border px-3 py-2">
-          <i class="ri-information-line me-1"></i> Cancellation unavailable — pickup already in progress or completed
-        </span>
-        <% } else { %>
-        <span class="badge bg-light text-muted border px-3 py-2">This pickup was cancelled</span>
-        <% } %>
+        <h4 class="section-title mb-0"><%= Pp.title %></h4>
+        <% const pickupEditable    = ['new', 'pendingPickup'].includes(pickup.picikupStatus); %>
+        <% const pickupCancellable = !pickupEditable && ['pendingPickup', 'driverAssigned'].includes(pickup.picikupStatus); %>
+        <div class="d-flex flex-wrap gap-2">
+          <% if (pickupEditable) { %>
+          <button type="button" class="btn btn-warning" onclick="openEditPickupDetails()">
+            <i class="ri-edit-2-line me-1"></i> <%= Pp.editPickup || 'Edit pickup' %>
+          </button>
+          <button type="button" class="btn btn-danger" onclick="deletePickupDetails('<%= pickup._id %>')">
+            <i class="ri-delete-bin-6-line me-1"></i> <%= Pp.deletePickup || 'Delete pickup' %>
+          </button>
+          <% } else if (pickupCancellable) { %>
+          <button type="button" class="btn btn-danger" onclick="cancelPickup('<%= pickup._id %>')">
+            <i class="ri-close-circle-line me-1"></i> <%= Pp.cancelPickup %>
+          </button>
+          <% } else if (pickup.picikupStatus !== 'canceled') { %>
+          <span class="badge bg-secondary-subtle text-dark border px-3 py-2">
+            <i class="ri-information-line me-1"></i> <%= Pp.cancelUnavailable %>
+          </span>
+          <% } else { %>
+          <span class="badge bg-light text-muted border px-3 py-2"><%= Pp.pickupCancelledBadge %></span>
+          <% } %>
+        </div>
       </div>
     </div>
 
@@ -381,7 +473,7 @@
         <div class="card-header text-white">
           <div class="d-sm-flex align-items-center">
             <h5 class="card-title flex-grow-1 mb-0">
-              <i class="ri-truck-line me-2"></i><%= Pp.sectionInfo || 'Pickup Details' %>
+              <i class="ri-truck-line me-2"></i><%= Pp.sectionInfo %>
             </h5>
           </div>
         </div>
@@ -391,45 +483,46 @@
                 <tbody>
                 <tr>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupId || 'Pickup Number' %></h6>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupId %></h6>
                   <p class="mb-0"><%= pickup.pickupNumber %></p>
                   </td>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted">Pickup Type</h6>
-                  <p class="mb-0">Normal</p>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupType %></h6>
+                  <p class="mb-0"><%= Pp.pickupTypeNormal %></p>
                   </td>
                 </tr>
                 <tr>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted">Number of Orders</h6>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.numberOfOrders %></h6>
                   <p class="mb-0"><%= pickup.numberOfOrders %></p>
                   </td>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.status || 'Pickup Status' %></h6>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupStatusLabel %></h6>
                   <p class="mb-0" id="pickupStatus"></p>
                   </td>
                 </tr>
                 <tr>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupDate || 'Pickup Date' %></h6>
-                  <p class="mb-0"><%= new Date(pickup.pickupDate).toLocaleDateString() %></p>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupDate %></h6>
+                  <p class="mb-0"><%= new Date(pickup.pickupDate).toLocaleDateString(pdLocale, { year: 'numeric', month: 'short', day: 'numeric' }) %></p>
                   </td>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted">Contact Info</h6>
-                  <p class="mb-0"><%= pickup.phoneNumber %></p>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.contactInfo %></h6>
+                  <p class="mb-0"><%= pickup.phoneNumber || Pp.notAvailable %></p>
                   </td>
                 </tr>
                 <tr>
                   <td>
-                  <h6 class="fs-14 mb-1 text-muted">Special Items</h6>
+                  <h6 class="fs-14 mb-1 text-muted"><%= Pp.specialItems %></h6>
                   <p class="mb-0">
-                      <span class="badge bg-info me-1"><%= pickup.isFragileItems ? 'Fragile' : '' %></span>
-                      <span class="badge bg-warning"><%= pickup.isLargeItems ? 'Large' : '' %></span>
+                      <% if (pickup.isFragileItems) { %><span class="badge bg-info me-1"><%= Pp.badgeFragile %></span><% } %>
+                      <% if (pickup.isLargeItems) { %><span class="badge bg-warning"><%= Pp.badgeLarge %></span><% } %>
+                      <% if (!pickup.isFragileItems && !pickup.isLargeItems) { %><span class="text-muted"><%= Pp.notAvailable %></span><% } %>
                     </p>
                   </td>
                   <td>
-                    <h6 class="fs-14 mb-1 text-muted">Pickup Notes</h6>
-                    <p class="mb-0"><%= pickup.pickupNotes %></p>
+                    <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupNotes %></h6>
+                    <p class="mb-0"><%= pickup.pickupNotes || Pp.notAvailable %></p>
                   </td>
                 </tr>
                 <% if (selectedPickupAddress) { %>
@@ -437,17 +530,17 @@
                   <td colspan="2">
                     <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickupAddress || 'Pickup Address' %></h6>
                     <div class="p-2 bg-light rounded">
-                      <h6 class="mb-1 fw-semibold"><%= selectedPickupAddress.addressName || 'Pickup Address' %></h6>
+                      <h6 class="mb-1 fw-semibold"><%= selectedPickupAddress.addressName || Pp.pickupAddress %></h6>
                       <p class="mb-1 text-muted small"><%= selectedPickupAddress.adressDetails || '' %></p>
                       <p class="mb-0 text-muted small"><%= selectedPickupAddress.zone || '' %>, <%= selectedPickupAddress.city || '' %>, <%= selectedPickupAddress.country || '' %></p>
                       <% if (selectedPickupAddress.nearbyLandmark) { %>
-                      <p class="mb-0 text-muted small mt-1"><i class="ri-map-pin-line me-1"></i>Nearby: <%= selectedPickupAddress.nearbyLandmark %></p>
+                      <p class="mb-0 text-muted small mt-1"><i class="ri-map-pin-line me-1"></i><%= Pp.nearbyLabel %>: <%= selectedPickupAddress.nearbyLandmark %></p>
                       <% } %>
                       <% if (selectedPickupAddress.pickupPhone) { %>
-                      <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line me-1"></i>Contact: <%= selectedPickupAddress.pickupPhone %></p>
+                      <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line me-1"></i><%= Pp.addressContactPhone %>: <%= selectedPickupAddress.pickupPhone %></p>
                       <% } %>
                       <% if (selectedPickupAddress.otherPickupPhone) { %>
-                      <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line me-1"></i>Alternative: <%= selectedPickupAddress.otherPickupPhone %></p>
+                      <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line me-1"></i><%= Pp.alternativePhone %>: <%= selectedPickupAddress.otherPickupPhone %></p>
                       <% } %>
                     </div>
                   </td>
@@ -466,7 +559,7 @@
         <div class="card-header text-white">
           <div class="d-sm-flex align-items-center">
             <h5 class="card-title flex-grow-1 mb-0">
-              <i class="ri-user-line me-2"></i>Driver Details
+              <i class="ri-user-line me-2"></i><%= Pp.sectionDriver %>
             </h5>
           </div>
         </div>
@@ -476,42 +569,40 @@
               <tbody>
                 <tr>
                   <td>
-                    <h6 class="fs-14 mb-1 text-muted">Driver Name</h6>
-                    <p class="mb-0"><%= pickup.assignedDriver ? pickup.assignedDriver.name : 'N/A' %></p>
+                    <h6 class="fs-14 mb-1 text-muted"><%= Pp.driverName %></h6>
+                    <p class="mb-0"><%= pickup.assignedDriver ? pickup.assignedDriver.name : Pp.notAvailable %></p>
                   </td>
                     <td>
-                    <h6 class="fs-14 mb-1 text-muted">Vehicle Details</h6>
-                    <p class="mb-0"><strong>Type:</strong> <%= pickup.assignedDriver ? pickup.assignedDriver.vehicleType : 'N/A' %></p>
-                    <p class="mb-0"><strong>Plate:</strong> <%= pickup.assignedDriver ? pickup.assignedDriver.vehiclePlateNumber : 'N/A' %></p>
+                    <h6 class="fs-14 mb-1 text-muted"><%= Pp.vehicleDetails %></h6>
+                    <p class="mb-0"><strong><%= Pp.vehicleType %>:</strong> <%= pickup.assignedDriver ? pickup.assignedDriver.vehicleType : Pp.notAvailable %></p>
+                    <p class="mb-0"><strong><%= Pp.vehiclePlate %>:</strong> <%= pickup.assignedDriver ? pickup.assignedDriver.vehiclePlateNumber : Pp.notAvailable %></p>
                     </td>
                 </tr>
                 <tr>
                   <td>
-                    <h6 class="fs-14 mb-1 text-muted">Picked Up Orders</h6>
+                    <h6 class="fs-14 mb-1 text-muted"><%= Pp.pickedUpOrdersCount %></h6>
                     <p class="mb-0"><%= pickup.ordersPickedUp.length %></p>
                   </td>
                   <td>
-                    <h6 class="fs-14 mb-1 text-muted">Contact Info</h6>
-                    <p class="mb-0"><%= pickup.assignedDriver ? pickup.assignedDriver.phoneNumber : 'N/A' %></p>
+                    <h6 class="fs-14 mb-1 text-muted"><%= Pp.contactInfo %></h6>
+                    <p class="mb-0"><%= pickup.assignedDriver ? pickup.assignedDriver.phoneNumber : Pp.notAvailable %></p>
                   </td>
                 </tr>
              <tr>
                <td>
-                 <h6 class="fs-14 mb-1 text-muted"><%= Pp.ratingTitle || 'Rate Driver' %></h6>
+                 <h6 class="fs-14 mb-1 text-muted"><%= Pp.ratingDriverTitle %></h6>
                  <div id="driver-rater" dir="ltr"></div>
                  <input type="hidden" id="driverRating" name="driverRating" value="<%= pickup.driverRating %>">
-                 <% if (!pickup.pickupStages[4]) { %>
-                 <!-- Not in the final stage -->
-                 <p class="text-muted fs-12">You can rate the driver after the pickup is completed.</p>
+                 <% if (!isPickupComplete) { %>
+                 <p class="text-muted fs-12"><%= Pp.ratingHintDriver %></p>
                  <% } %>
                </td>
                <td>
-                 <h6 class="fs-14 mb-1 text-muted"><%= Pp.ratingTitle || 'Rate Service' %></h6>
+                 <h6 class="fs-14 mb-1 text-muted"><%= Pp.ratingServiceTitle %></h6>
                  <div id="service-rater" dir="ltr"></div>
                  <input type="hidden" id="pickupRating" name="pickupRating" value="<%= pickup.pickupRating %>">
-                 <% if (!pickup.pickupStages[4]) { %>
-                 <!-- Not in the final stage -->
-                 <p class="text-muted fs-12">You can rate the service after the pickup is completed.</p>
+                 <% if (!isPickupComplete) { %>
+                 <p class="text-muted fs-12"><%= Pp.ratingHintService %></p>
                  <% } %>
                </td>
             
@@ -519,7 +610,7 @@
             <tr>
               <td colspan="2" class="text-center">
                 <button type="button" class="btn btn-primary" id="submitRating" onclick="submitRating()">
-                  <%= Pp.submitRating || 'Submit Rating' %>
+                  <%= Pp.submitRating %>
                 </button>
               </td>
             </tr>
@@ -532,24 +623,23 @@
     </div>
   </div>
   <!-- Compact Pickup Stages Timeline -->
-  <div class="row mt-4">
+  <div class="row mt-4 pickup-timeline-section">
     <div class="col-lg-12">
       <div class="card">
         <div class="card-header text-white">
-          <h5 class="card-title mb-0"></h5>
-            <i class="ri-time-line me-2"></i><%= Pp.status || 'Pickup Status' %>
+          <h5 class="card-title mb-0">
+            <i class="ri-time-line me-2" aria-hidden="true"></i><%= Pp.sectionTimeline %>
           </h5>
         </div>
         <div class="card-body py-3">
-          <div class="compact-timeline">
-            <% const stages = ['Pickup Created', 'Driver Assigned', 'Items PickedUp', 'Storage Station', 'Completed']; %>
-            <% stages.forEach((stage, index) => { %>
+          <div class="compact-timeline" style="--timeline-progress-pct: <%= pdProgressPct %>%">
+            <% pdStages.forEach(function(stage, index) { %>
               <div class="timeline-step">
                 <div class="timeline-icon <%= pickup.pickupStages[index] ? 'active' : '' %>">
                   <i class="<%= index === 0 ? 'ri-shopping-bag-line' : index === 1 ? 'ri-user-line' : index === 2 ? 'ri-truck-line' : index === 3 ? 'ri-map-pin-line' : 'ri-check-double-line' %>"></i>
                 </div>
                 <div class="timeline-text <%= pickup.pickupStages[index] ? 'active' : '' %>"><%= stage %></div>
-                <div class="timeline-date"><%= pickup.pickupStages[index] ? new Date(pickup.pickupStages[index].stageDate).toLocaleString() : 'Pending' %></div>
+                <div class="timeline-date"><%= pickup.pickupStages[index] ? new Date(pickup.pickupStages[index].stageDate).toLocaleString(pdLocale) : Pp.timelinePending %></div>
               </div>
             <% }); %>
           </div>
@@ -565,7 +655,7 @@
         <div class="card-header text-white">
           <div class="d-flex align-items-center">
             <h5 class="card-title mb-0 flex-grow-1">
-              <i class="ri-file-list-3-line me-2"></i>Orders Picked
+              <i class="ri-file-list-3-line me-2"></i><%= Pp.sectionOrdersPicked %>
             </h5>
           </div>
         </div>
@@ -577,13 +667,13 @@
                     <span class="input-group-text bg-light border-light">
                     <i class="ri-search-line text-muted"></i>
                     </span>
-                    <input type="number" class="form-control bg-light border" id="search-input" placeholder="Search By Order ID">
+                    <input type="number" class="form-control bg-light border" id="search-input" placeholder="<%= Pp.searchOrderPlaceholder %>">
                 </div>
               </div>
           
               <div class="col-xxl-2 col-sm-4">
                 <button type="button" class="btn btn-primary w-100" onclick="SearchData();">
-                    <i class="ri-search-line me-1 align-bottom"></i> Search
+                    <i class="ri-search-line me-1 align-bottom"></i> <%= Pp.searchButton %>
                 </button>
               </div>
             </div>
@@ -595,11 +685,11 @@
               <thead>
                 <tr>
             
-                  <th><%= Pp.colOrderId || '#Order ID' %></th>
-                  <th><%= Pp.colOrderType || 'Order Type' %></th>
-                  <th><%= Pp.colStatus || 'Status' %></th>
-                  <th><%= Pp.colLocation || 'Location' %></th>
-                  <th><%= Pp.colAmount || 'Total Amount' %></th>
+                  <th><%= Pp.colOrderId %></th>
+                  <th><%= Pp.colOrderType %></th>
+                  <th><%= Pp.colStatus %></th>
+                  <th><%= Pp.colLocation %></th>
+                  <th><%= Pp.colTotalAmount %></th>
            
                 </tr>
               </thead>
@@ -612,22 +702,22 @@
               <div class="avatar-md mx-auto mb-4">
                 <lord-icon src="https://cdn.lordicon.com/tdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
               </div>
-              <h5 class="mt-2">No Pickup Orders Found</h5>
-              <p class="text-muted mb-0">We couldn't find any pickup orders matching your search criteria.</p>
+              <h5 class="mt-2"><%= Pp.noOrdersTitle %></h5>
+              <p class="text-muted mb-0"><%= Pp.noOrdersSub %></p>
               </div>
             </div>
           </div>
           <div class="d-flex justify-content-end mt-3">
             <div class="pagination-wrap hstack gap-2">
               <a class="pagination-prev disabled" href="#">
-                <i class="ri-arrow-left-s-line me-1"></i> Previous
+                <i class="ri-arrow-left-s-line me-1"></i> <%= Pp.paginationPrev %>
               </a>
               <ul class="pagination listjs-pagination mb-0">
                 <li class="active"><a class="page" href="#">1</a></li>
                 <li><a class="page" href="#">2</a></li>
               </ul>
               <a class="pagination-next" href="#">
-                Next <i class="ri-arrow-right-s-line ms-1"></i>
+                <%= Pp.paginationNext %> <i class="ri-arrow-right-s-line ms-1"></i>
               </a>
             </div>
           </div>
@@ -645,136 +735,128 @@
 
 <!-- Custom JS -->
 <script>
-  // Simple function to handle search
+  function pdT() {
+    return (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.pickupDetails) || {};
+  }
+
   function SearchData() {
     const searchInput = document.getElementById('search-input').value;
     fetchOrders(searchInput);
   }
 
-  // Initialize rating stars
-document.addEventListener('DOMContentLoaded', function() {
-  const driverRating = parseInt(document.getElementById('driverRating').value, 10);
-  const pickupRating = parseInt(document.getElementById('pickupRating').value, 10);
-  const isDriverRated = driverRating > 0;
-  const isPickupRated = pickupRating > 0;
-  const isFinalStage = document.querySelector('.timeline-text.active').textContent === 'Completed';
-  // Initialize driver rating
-  console.log(isDriverRated , isPickupRated,isFinalStage);
-  const driverRater = raterJs({
-    starSize: 22,
-    rating: driverRating,
-    element: document.querySelector("#driver-rater"),
-    readOnly: isDriverRated || isFinalStage,
-    rateCallback: function(rate, done) {
-      if (!isDriverRated) {
-        this.setRating(rate);
-        document.getElementById('driverRating').value = rate;
-        console.log(rate);
-        done();
-      } else {
-        done();
+  document.addEventListener('DOMContentLoaded', function() {
+    const t = pdT();
+    const driverRating = parseInt(document.getElementById('driverRating').value, 10);
+    const pickupRating = parseInt(document.getElementById('pickupRating').value, 10);
+    const isDriverRated = driverRating > 0;
+    const isPickupRated = pickupRating > 0;
+    const isPickupComplete = !!(window.__NS_PICKUP_DETAILS__ && window.__NS_PICKUP_DETAILS__.isPickupComplete);
+    const driverRater = raterJs({
+      starSize: 22,
+      rating: driverRating,
+      element: document.querySelector("#driver-rater"),
+      readOnly: isDriverRated || !isPickupComplete,
+      rateCallback: function(rate, done) {
+        if (!isDriverRated && isPickupComplete) {
+          this.setRating(rate);
+          document.getElementById('driverRating').value = rate;
+          done();
+        } else {
+          done();
+        }
       }
-    }
+    });
+
+    const serviceRater = raterJs({
+      starSize: 22,
+      rating: pickupRating,
+      element: document.querySelector("#service-rater"),
+      readOnly: isPickupRated || !isPickupComplete,
+      rateCallback: function(rate, done) {
+        if (!isPickupRated && isPickupComplete) {
+          this.setRating(rate);
+          document.getElementById('pickupRating').value = rate;
+          done();
+        } else {
+          done();
+        }
+      }
+    });
   });
 
-  // Initialize service rating
-  const serviceRater = raterJs({
-    starSize: 22,
-    rating: pickupRating,
-    element: document.querySelector("#service-rater"),
-    readOnly: isPickupRated || isFinalStage,
-    rateCallback: function(rate, done) {
-      if (!isPickupRated) {
-        this.setRating(rate);
-        document.getElementById('pickupRating').value = rate;
-        console.log(rate);
-        done();
-      } else {
-        done();
-      }
-    }
-  });
-});
-
-// Submit rating
-
-async function submitRating() {
-  console.log('submitRating');
-  const driverRating = parseInt(document.getElementById('driverRating').value, 10);
-  const pickupRating = parseInt(document.getElementById('pickupRating').value, 10);
-  const pickupNumber = '<%= pickup.pickupNumber %>';
-  const isFinalStage = document.querySelector('.timeline-text.active').textContent === 'Completed';
-  if (!isFinalStage) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Oops...',
-      text: 'You can only rate the driver and service after the pickup is completed.',
-    });
-    return;
-  }
-  if (driverRating === 0 || pickupRating === 0) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Oops...',
-      text: 'Please rate the driver and service before submitting.',
-    });
-    return;
-  }
-
-  try {
-    const response = await fetch(`/business/pickup-details/${pickupNumber}/rate-pickup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        driverRating,
-        pickupRating,
-      }),
-    });
-    const data = await response.json();
-    if (response.ok) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: data.message,
-      });
-    } else {
+  async function submitRating() {
+    const t = pdT();
+    const driverRating = parseInt(document.getElementById('driverRating').value, 10);
+    const pickupRating = parseInt(document.getElementById('pickupRating').value, 10);
+    const pickupNumber = '<%= pickup.pickupNumber %>';
+    const isPickupComplete = !!(window.__NS_PICKUP_DETAILS__ && window.__NS_PICKUP_DETAILS__.isPickupComplete);
+    if (!isPickupComplete) {
       Swal.fire({
         icon: 'error',
-        title: 'Oops...',
-        text: data.error || 'Unknown error',
+        title: t.swalNotFinalTitle,
+        text: t.swalNotFinalText,
       });
+      return;
     }
-  } catch (error) {
-    console.error('Error submitting rating:', error);
+    if (driverRating === 0 || pickupRating === 0) {
+      Swal.fire({
+        icon: 'error',
+        title: t.swalRateRequiredTitle,
+        text: t.swalRateRequiredText,
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/business/pickup-details/${pickupNumber}/rate-pickup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          driverRating,
+          pickupRating,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: t.swalSuccessTitle,
+          text: data.message,
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: t.swalErrorTitle,
+          text: data.error || t.unknownError,
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+    }
   }
 
-}
-
-
-
-
-async function fetchOrders(search = "") {
+  async function fetchOrders(search = "") {
+    const t = pdT();
     try {
       const tableBody = document.getElementById("TBody");
       const NoResult = document.querySelector(".noresult");
 
-      // Show loading spinner
       tableBody.innerHTML = `
         <tr>
-          <td colspan="6" class="text-center">
+          <td colspan="5" class="text-center">
             <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading...</span>
+              <span class="visually-hidden">${t.visuallyHiddenLoading}</span>
             </div>
           </td>
         </tr>
       `;
-   
+
       const response = await fetch(`/business/pickup-details/<%= pickup.pickupNumber %>/get-pickedup-orders?search=${search}`);
       const pickup = await response.json();
       if (response.ok) {
-        tableBody.innerHTML = ""; // Clear existing rows
+        tableBody.innerHTML = "";
         NoResult.style.display = "none";
         if (pickup.ordersPickedUp.length === 0) {
           NoResult.style.display = "block";
@@ -784,8 +866,8 @@ async function fetchOrders(search = "") {
       } else {
         Swal.fire({
           icon: 'error',
-          title: 'Oops...',
-          text: `Error fetching orders: ${pickup.error || 'Unknown error'}`,
+          title: t.swalErrorTitle,
+          text: `${t.swalFetchErrorPrefix} ${pickup.error || t.unknownError}`,
         });
       }
     } catch (error) {
@@ -793,203 +875,259 @@ async function fetchOrders(search = "") {
     }
   }
 
-function populateOrdersTable(orders) {
+  function mapOrderType(raw) {
+    const t = pdT();
+    const key = String(raw || '').toLowerCase().replace(/\s+/g, '');
+    const map = {
+      deliver: t.typeDeliver,
+      delivery: t.typeDeliver,
+      return: t.typeReturn,
+      exchange: t.typeExchange,
+    };
+    return map[key] || raw || t.notAvailable;
+  }
+
+  function populateOrdersTable(orders) {
+    const t = pdT();
     const tableBody = document.getElementById("TBody");
-    tableBody.innerHTML = ""; // Clear existing rows
+    tableBody.innerHTML = "";
     orders.forEach(order => {
       const row = document.createElement("tr");
       const statusInfo = getOrderStatusInfo(order.orderStatus);
-      row.innerHTML = `  
+      const amt = order.orderShipping && order.orderShipping.amount != null ? order.orderShipping.amount : 0;
+      row.innerHTML = `
         <td><a href="/business/order-details/${order.orderNumber}" class="fw-medium link-primary fs-15">${order.orderNumber}</a></td>
-        <td>${order.orderShipping.orderType}</td>
+        <td>${mapOrderType(order.orderShipping && order.orderShipping.orderType)}</td>
         <td><span class="badge ${statusInfo.badge} fs-13">${statusInfo.text}</span></td>
-        <td>${order.orderCustomer.zone}</td>
-        <td>${order.orderShipping.amount || 0} EGP</td>
+        <td>${(order.orderCustomer && order.orderCustomer.zone) || t.notAvailable}</td>
+        <td>${amt} ${t.currencyCode}</td>
       `;
-
       tableBody.appendChild(row);
     });
-}
+  }
 
-// Helper functions to get status badges and text
-function getOrderStatusInfo(status) {
-  const statusMap = {
-    'new': {
-      badge: 'bg-info',
-      text: 'New Order'
-    },
-    'pickedUp': {
-      badge: 'bg-primary',
-      text: 'Picked Up'
-    },
-    'inStock': {
-      badge: 'bg-success', 
-      text: 'In Stock'
-    },
-    'inProgress': {
-      badge: 'bg-warning',
-      text: 'In Progress' 
-    },
-    'headingToCustomer': {
-      badge: 'bg-info',
-      text: 'Heading To Customer'
-    },
-    'headingToYou': {
-      badge: 'bg-info', 
-      text: 'Heading To You'
-    },
-    'completed': {
-      badge: 'bg-success',
-      text: 'Completed'
-    },
-    'canceled': {
-      badge: 'bg-danger',
-      text: 'Canceled'
-    },
-    'rejected': {
-      badge: 'bg-danger',
-      text: 'Rejected'
-    },
-    'returned': {
-      badge: 'bg-warning',
-      text: 'Returned'
-    },
-    'terminated': {
-      badge: 'bg-danger',
-      text: 'Terminated'
-    }
-  };
+  function getOrderStatusInfo(status) {
+    const t = pdT();
+    const statusMap = {
+      new: { badge: 'bg-info', text: t.orderStatusNew },
+      pendingPickup: { badge: 'bg-info', text: t.orderStatusPendingPickup },
+      pickedUp: { badge: 'bg-primary', text: t.orderStatusPickedUp },
+      inStock: { badge: 'bg-success', text: t.orderStatusInStock },
+      inProgress: { badge: 'bg-warning', text: t.orderStatusInProgress },
+      headingToCustomer: { badge: 'bg-info', text: t.orderStatusHeadingToCustomer },
+      headingToYou: { badge: 'bg-info', text: t.orderStatusHeadingToYou },
+      completed: { badge: 'bg-success', text: t.orderStatusCompleted },
+      canceled: { badge: 'bg-danger', text: t.orderStatusCanceled },
+      rejected: { badge: 'bg-danger', text: t.orderStatusRejected },
+      returned: { badge: 'bg-warning', text: t.orderStatusReturned },
+      terminated: { badge: 'bg-danger', text: t.orderStatusTerminated },
+    };
+    return statusMap[status] || { badge: 'bg-secondary', text: t.orderStatusUnknown };
+  }
 
-  return statusMap[status] || {
-    badge: 'bg-secondary',
-    text: 'Unknown Status'
-  };
-}
+  function getPickupStatusInfo(status) {
+    const t = pdT();
+    const statusMap = {
+      new: { badge: 'bg-info', text: t.pickupStatusNew },
+      pendingPickup: { badge: 'bg-info', text: t.pickupStatusPendingPickup },
+      driverAssigned: { badge: 'bg-primary', text: t.pickupStatusDriverAssigned },
+      pickedUp: { badge: 'bg-primary', text: t.pickupStatusPickedUp },
+      inStock: { badge: 'bg-success', text: t.pickupStatusInStock },
+      inProgress: { badge: 'bg-warning', text: t.pickupStatusInProgress },
+      completed: { badge: 'bg-success', text: t.pickupStatusCompleted },
+      canceled: { badge: 'bg-danger', text: t.pickupStatusCanceled },
+      rejected: { badge: 'bg-danger', text: t.pickupStatusRejected },
+      returned: { badge: 'bg-warning', text: t.pickupStatusReturned },
+      terminated: { badge: 'bg-danger', text: t.pickupStatusTerminated },
+    };
+    return statusMap[status] || { badge: 'bg-secondary', text: t.pickupStatusUnknown };
+  }
 
-function getPickupStatusInfo(status) {
-  const statusMap = {
-    'new': {
-      badge: 'bg-info',
-      text: 'New Pickup'
-    },
-    'driverAssigned': {
-      badge: 'bg-primary',
-      text: 'Driver Assigned'
-    },
-    'pickedUp': {
-      badge: 'bg-primary',
-      text: 'Picked Up'
-    },
-    'inStock': {
-      badge: 'bg-success',
-      text: 'In Stock'
-    },
-    'inProgress': {
-      badge: 'bg-warning',
-      text: 'In Progress'
-    },
-    'completed': {
-      badge: 'bg-success',
-      text: 'Completed'
-    },
-    'canceled': {
-      badge: 'bg-danger',
-      text: 'Canceled'
-    },
-    'rejected': {
-      badge: 'bg-danger',
-      text: 'Rejected'
-    },
-    'returned': {
-      badge: 'bg-warning',
-      text: 'Returned'
-    },
-    'terminated': {
-      badge: 'bg-danger',
-      text: 'Terminated'
-    }
-  };
-
-  return statusMap[status] || {
-    badge: 'bg-secondary', 
-    text: 'Unknown Status'
-  };
-}
-
-
-document.addEventListener('DOMContentLoaded', function() {
-  const pickupStatus = document.getElementById('pickupStatus');
-  const pickupStatusInfo = getPickupStatusInfo('<%= pickup.picikupStatus %>');
-  pickupStatus.innerHTML = `<span class="badge ${pickupStatusInfo.badge}">${pickupStatusInfo.text}</span>`;
-});
-
-
-// Fetch orders on page load
-document.addEventListener("DOMContentLoaded", () => fetchOrders());
-
-
-
-async function cancelPickup(pickupId) {
-  Swal.fire({
-    title: 'Cancel this pickup?',
-    text: 'The pickup will be marked as cancelled. This cannot be undone.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, cancel pickup',
-  })
-  .then(async (result) => {
-    if (result.isConfirmed) {
-      const response = await fetch(
-        `/business/pickup/cancel-pickup/${pickupId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      let data = {};
-      try {
-        data = await response.json();
-      } catch (_) {
-        data = {};
-      }
-
-      if (response.ok) {
-        Swal.fire({
-          title: 'Cancelled',
-          text: data.message || 'Your pickup has been cancelled.',
-          icon: 'success',
-          confirmButtonText: 'OK',
-        }).then(() => {
-          window.location.href = '/business/pickups';
-        });
-      } else {
-        Swal.fire({
-          title: 'Cannot cancel pickup',
-          text: data.error || 'Unable to cancel this pickup. Please try again or contact support.',
-          icon: 'error',
-          confirmButtonText: 'OK',
-        });
-      }
-    }
-  })
-  .catch((error) => {
-    console.error('Error:', error);
-    Swal.fire({
-      title: 'Error',
-      text: 'There was an error cancelling the pickup. Please try again later.',
-      icon: 'error',
-      confirmButtonText: 'OK',
-    });
+  document.addEventListener('DOMContentLoaded', function() {
+    const pickupStatus = document.getElementById('pickupStatus');
+    const pickupStatusInfo = getPickupStatusInfo('<%= pickup.picikupStatus %>');
+    pickupStatus.innerHTML = `<span class="badge ${pickupStatusInfo.badge}">${pickupStatusInfo.text}</span>`;
   });
-}
 
+  document.addEventListener("DOMContentLoaded", () => fetchOrders());
 
+  async function cancelPickup(pickupId) {
+    const t = pdT();
+    Swal.fire({
+      title: t.cancelConfirmTitle,
+      text: t.cancelConfirmText,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: t.cancelConfirmYes,
+      cancelButtonText: t.cancelConfirmNo,
+    })
+    .then(async (result) => {
+      if (result.isConfirmed) {
+        const response = await fetch(
+          `/business/pickup/cancel-pickup/${pickupId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
+        let data = {};
+        try {
+          data = await response.json();
+        } catch (_) {
+          data = {};
+        }
+
+        if (response.ok) {
+          Swal.fire({
+            title: t.cancelSuccessTitle,
+            text: data.message || t.cancelSuccessText,
+            icon: 'success',
+            confirmButtonText: t.ok,
+          }).then(() => {
+            window.location.href = '/business/pickups';
+          });
+        } else {
+          Swal.fire({
+            title: t.cancelFailedTitle,
+            text: data.error || t.cancelFailedText,
+            icon: 'error',
+            confirmButtonText: t.ok,
+          });
+        }
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      Swal.fire({
+        title: t.cancelErrorTitle,
+        text: t.cancelErrorText,
+        icon: 'error',
+        confirmButtonText: t.ok,
+      });
+    });
+  }
+
+  // ─── Edit / Delete handlers for details page ────────────────────────────────
+
+  async function openEditPickupDetails() {
+    const t = pdT();
+    const pickupId   = '<%= pickup._id %>';
+    const pickupNumber = '<%= pickup.pickupNumber %>';
+
+    // Build a simple modal with the editable fields
+    const pickup = {
+      numberOfOrders : <%= pickup.numberOfOrders %>,
+      phoneNumber    : '<%= (pickup.phoneNumber || '').replace(/'/g, "\\'") %>',
+      isFragileItems : <%= pickup.isFragileItems ? 'true' : 'false' %>,
+      isLargeItems   : <%= pickup.isLargeItems   ? 'true' : 'false' %>,
+      pickupNotes    : '<%= (pickup.pickupNotes || '').replace(/'/g, "\\'").replace(/\n/g, ' ') %>',
+      pickupDate     : '<%= pickup.pickupDate ? new Date(pickup.pickupDate).toISOString().split('T')[0] : '' %>',
+      pickupAddressId: '<%= pickup.pickupAddressId || '' %>',
+    };
+
+    const fragileLabel = t.badgeFragile || 'Fragile';
+    const largeLabel   = t.badgeLarge   || 'Large';
+
+    const { value: formValues, isConfirmed } = await Swal.fire({
+      title: t.editPickup || 'Edit pickup',
+      html: `
+        <div class="text-start">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">${t.numberOfOrders || 'Number of orders'}</label>
+            <input id="swal-numberOfOrders" type="number" min="1" class="form-control swal2-input w-100" value="${pickup.numberOfOrders}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">${t.addressContactPhone || 'Contact phone'}</label>
+            <input id="swal-phone" type="text" class="form-control swal2-input w-100" value="${pickup.phoneNumber}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">${t.pickupDate || 'Pickup date'}</label>
+            <input id="swal-date" type="date" class="form-control swal2-input w-100" value="${pickup.pickupDate}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">${t.pickupNotes || 'Notes'}</label>
+            <textarea id="swal-notes" class="form-control swal2-textarea w-100" rows="2">${pickup.pickupNotes}</textarea>
+          </div>
+          <div class="mb-3 d-flex gap-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="swal-fragile" ${pickup.isFragileItems ? 'checked' : ''}>
+              <label class="form-check-label" for="swal-fragile">${fragileLabel}</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="swal-large" ${pickup.isLargeItems ? 'checked' : ''}>
+              <label class="form-check-label" for="swal-large">${largeLabel}</label>
+            </div>
+          </div>
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: t.submitRating ? (t.editPickup || 'Save') : 'Save',
+      cancelButtonText: t.cancelConfirmNo || 'Cancel',
+      confirmButtonColor: '#0d6efd',
+      focusConfirm: false,
+      preConfirm: () => ({
+        numberOfOrders: document.getElementById('swal-numberOfOrders').value,
+        phoneNumber:    document.getElementById('swal-phone').value,
+        pickupDate:     document.getElementById('swal-date').value,
+        pickupNotes:    document.getElementById('swal-notes').value,
+        isFragileItems: document.getElementById('swal-fragile').checked ? 'true' : 'false',
+        isLargeItems:   document.getElementById('swal-large').checked   ? 'true' : 'false',
+        pickupAddressId: pickup.pickupAddressId,
+      }),
+    });
+
+    if (!isConfirmed || !formValues) return;
+
+    try {
+      const res = await fetch(`/business/pickup/update-pickup/${pickupId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formValues),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        await Swal.fire({ icon: 'success', title: t.editSuccessTitle || 'Updated', text: t.editSuccessText || '', timer: 2000, showConfirmButton: false });
+        window.location.reload();
+      } else {
+        Swal.fire({ icon: 'error', title: t.editFailedTitle || 'Error', text: data.error || t.editFailedText || '' });
+      }
+    } catch (err) {
+      console.error('openEditPickupDetails error:', err);
+      Swal.fire({ icon: 'error', title: t.editFailedTitle || 'Error', text: err.message });
+    }
+  }
+
+  async function deletePickupDetails(pickupId) {
+    const t = pdT();
+    const result = await Swal.fire({
+      title: t.confirmDeleteTitle || 'Delete this pickup?',
+      text: t.confirmDeleteText || 'This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: t.confirmDeleteYes || 'Yes, delete',
+      cancelButtonText: t.confirmDeleteNo  || 'Keep',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      const res = await fetch(`/business/pickup/delete-pickup/${pickupId}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        await Swal.fire({ icon: 'success', title: t.deleteSuccessTitle || 'Deleted', text: t.deleteSuccessText || '', timer: 2000, showConfirmButton: false });
+        window.location.href = '/business/pickups';
+      } else {
+        Swal.fire({ icon: 'error', title: t.deleteFailedTitle || 'Error', text: data.error || t.deleteFailedText || '' });
+      }
+    } catch (err) {
+      console.error('deletePickupDetails error:', err);
+      Swal.fire({ icon: 'error', title: t.deleteFailedTitle || 'Error', text: err.message });
+    }
+  }
 </script>
 
 <!-- prismjs plugin -->

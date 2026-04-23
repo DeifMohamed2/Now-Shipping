@@ -3,6 +3,19 @@
 
   const HAMBURGER_BTN_ID = 'topnav-hamburger-icon';
 
+  /** Keep collapsed/expanded (lg|sm) after refresh when viewport is “desktop” (matches applyResponsiveSidebar). */
+  function persistDesktopSidebarSize() {
+    if (typeof sessionStorage === 'undefined') return;
+    var w = document.documentElement.clientWidth;
+    if (w < 1025) return;
+    var s = document.documentElement.getAttribute('data-sidebar-size');
+    if (s === 'lg' || s === 'sm') {
+      try {
+        sessionStorage.setItem('data-sidebar-size', s);
+      } catch (e) {}
+    }
+  }
+
   function getHamburgerIcon() {
     return document.querySelector('.hamburger-icon');
   }
@@ -61,6 +74,7 @@
           'data-sidebar-size',
           sidebarSize === 'sm' ? '' : 'sm'
         );
+        persistDesktopSidebarSize();
         return;
       }
       if (width > 1025) {
@@ -69,6 +83,7 @@
           'data-sidebar-size',
           sidebarSize === 'lg' ? 'sm' : 'lg'
         );
+        persistDesktopSidebarSize();
       }
       return;
     }
@@ -83,10 +98,12 @@
             'data-sidebar-size',
             sidebarSize === 'lg' ? 'sm' : 'lg'
           );
+          persistDesktopSidebarSize();
         } else {
           const visBtn = document.getElementById('sidebar-visibility-show');
           if (visBtn) visBtn.click();
           document.documentElement.setAttribute('data-sidebar-size', sidebarSize);
+          persistDesktopSidebarSize();
         }
       } else if (width <= 767) {
         body.classList.toggle('vertical-sidebar-enable');

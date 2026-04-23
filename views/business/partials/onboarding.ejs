@@ -1,0 +1,457 @@
+<div class="col-xl-12">
+  <div class="card card_verification">
+    <div class="card-header">
+      <h4 class="card-title mb-0"><%= Dp.onboardingTitle || 'Account activation steps' %></h4>
+    </div>
+    <div class="card-body form-steps">
+      <form class="vertical-navs-step" id="verificationForm">
+        <div class="row gy-5">
+          <div class="col-lg-3">
+            <div class="nav flex-column custom-nav nav-pills" role="tablist" aria-orientation="vertical">
+              <button class="nav-link active" id="v-pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-bill-info" type="button" role="tab" aria-controls="v-pills-bill-info" aria-selected="true">
+                <span class="step-title me-2">
+                  <i class="ri-<%= user.isVerified ? 'check' : 'close' %>-circle-fill step-icon me-2 <%= user.isVerified ? 'text-primary-custom' : '' %>"></i> Step 1
+                </span>
+                <%= Dp.stepEmail || 'Email Verification' %>
+              </button>
+              <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-info-tab" data-bs-toggle="pill" data-bs-target="#v-pills-brand-info" type="button" role="tab" aria-controls="v-pills-brand-info" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
+                <span class="step-title me-2">
+                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 2
+                </span>
+                <%= Dp.stepBrand || 'Brand Info' %>
+              </button>
+              <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-pickUp-tab" data-bs-toggle="pill" data-bs-target="#v-pills-location" type="button" role="tab" aria-controls="v-pills-location" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
+                <span class="step-title me-2">
+                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 3
+                </span>
+                <%= Dp.stepAddress || 'Pickup Address' %>
+              </button>
+              <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-payment-tab" data-bs-toggle="pill" data-bs-target="#v-payment-method" type="button" role="tab" aria-controls="v-payment-method" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
+                <span class="step-title me-2">
+                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 4
+                </span>
+                <%= Dp.stepPayment || 'Payment Method' %>
+              </button>
+              <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-brand-type-tab" data-bs-toggle="pill" data-bs-target="#v-brand-type" type="button" role="tab" aria-controls="v-brand-type" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
+                <span class="step-title me-2">
+                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 5
+                </span>
+                <%= Dp.stepBrandType || 'Brand Type' %>
+              </button>
+              <button class="nav-link <%= user.isVerified ? '' : 'disabled' %>" id="v-pills-finish-tab" data-bs-toggle="pill" data-bs-target="#v-pills-finish" type="button" role="tab" aria-controls="v-pills-finish" aria-selected="false" <%= user.isVerified ? '' : 'disabled' %>>
+                <span class="step-title me-2">
+                  <i class="ri-close-circle-fill step-icon me-2"></i> Step 6
+                </span>
+                <%= Dp.stepFinish || 'Finish' %>
+              </button>
+            </div>
+          </div>
+          <div class="col-lg-9">
+            <div class="px-lg-4">
+              <div class="tab-content">
+                <!-- Step 1: Email Verification -->
+                <div class="tab-pane fade show active text-center p-4" id="v-pills-bill-info" role="tabpanel" aria-labelledby="v-pills-bill-info-tab">
+                  <% if (user.isVerified) { %>
+                  <div class="mb-3">
+                    <h4 class="fw-bold">Email Verified</h4>
+                    <p class="text-muted">Your email has been successfully verified.</p>
+                  </div>
+                  <div class="mb-4">
+                    <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#F39720,secondary:#333333" style="width:120px;height:120px"></lord-icon>
+                  </div>
+                  <button type="button" class="btn btn-primary-custom nexttab" data-nexttab="v-pills-brand-info-tab">
+                    <%= Dp.btnNext || 'Continue' %> <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                  </button>
+                  <% } else { %>
+                  <div class="mb-3">
+                    <h4 class="fw-bold"><%= Dp.stepEmail || 'Email Verification' %></h4>
+                    <p class="text-muted"><%= Dp.emailVerificationLabel || 'Click the button below to verify your email via Gmail' %></p>
+                  </div>
+                  <button type="button" class="btn btn-dark-custom btn-lg d-flex align-items-center mx-auto shadow-sm" id="sendVerificationEmail">
+                    <i class="ri-mail-fill fs-5 me-2"></i> Send Verification Email
+                  </button>
+                  <% } %>
+                </div>
+                <!-- Step 2: Brand Info -->
+                <div class="tab-pane fade p-4" id="v-pills-brand-info" role="tabpanel" aria-labelledby="v-pills-brand-info-tab">
+                  <div class="mb-4">
+                    <h4 class="fw-bold"><%= Dp.stepBrand || 'Brand Info' %></h4>
+                    <p class="text-muted"><%= Dp.brandInfoLabel || 'Add your brand name and logo.' %></p>
+                  </div>
+                  <div class="mb-3">
+                    <label for="brandName" class="form-label fw-semibold">Brand Name</label>
+                    <input type="text" class="form-control" id="brandName" name="brandName" placeholder="Enter your brand name" required>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="industry" class="form-label fw-semibold">Industry</label>
+                      <select class="form-select" id="industry" name="industry" required>
+                        <option value="">Select an industry...</option>
+                        <option value="Books, Arts & Media">Books, Arts &amp; Media</option>
+                        <option value="Fashion & Clothing">Fashion &amp; Clothing</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Health & Beauty">Health &amp; Beauty</option>
+                        <option value="Home & Furniture">Home &amp; Furniture</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      <div id="otherIndustryContainer" class="mt-3" style="display: none;">
+                        <label for="otherIndustry" class="form-label fw-semibold">Specify Industry <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="otherIndustry" name="otherIndustry" placeholder="Enter your industry">
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="orderSize" class="form-label fw-semibold">Monthly Order Volume</label>
+                      <select class="form-select" id="orderSize" name="monthlyOrders" required>
+                        <option value="">Select...</option>
+                        <option>1 - 10</option>
+                        <option>11 - 50</option>
+                        <option>51 - 200</option>
+                        <option>201 - 1000</option>
+                        <option>1000+</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="mt-4">
+                    <h5 class="fw-bold">Where do you sell your products?</h5>
+                    <p class="text-muted">Select all the sales channels you use.</p>
+                    <p class="text-muted small mb-0"><span class="text-danger">*</span> At least one channel is required. Enter a full <strong>https://</strong> profile or store URL for every channel you select.</p>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="card p-3">
+                        <div class="form-check">
+                          <input class="form-check-input channel-checkbox" type="checkbox" id="instagram" name="sellingPoints[]" value="instagram" data-channel="instagram">
+                          <label class="form-check-label d-flex align-items-center" for="instagram"><i class="ri-instagram-line me-2 fs-5 text-danger"></i> Instagram</label>
+                          <div class="social-link-input" id="instagram-link-input">
+                            <label for="instagram-link" class="form-label">Instagram Profile URL</label>
+                            <input type="url" class="form-control" id="instagram-link" name="instagramLink" placeholder="https://instagram.com/yourbrand">
+                          </div>
+                        </div>
+                        <div class="form-check mt-2">
+                          <input class="form-check-input channel-checkbox" type="checkbox" id="tiktok" name="sellingPoints[]" value="tiktok" data-channel="tiktok">
+                          <label class="form-check-label d-flex align-items-center" for="tiktok"><i class="ri-tiktok-line me-2 fs-5 text-dark"></i> TikTok</label>
+                          <div class="social-link-input" id="tiktok-link-input">
+                            <label for="tiktok-link" class="form-label">TikTok Profile URL</label>
+                            <input type="url" class="form-control" id="tiktok-link" name="tiktokLink" placeholder="https://tiktok.com/@yourbrand">
+                          </div>
+                        </div>
+                        <div class="form-check mt-2">
+                          <input class="form-check-input channel-checkbox" type="checkbox" id="woocommerce" name="sellingPoints[]" value="woocommerce" data-channel="woocommerce">
+                          <label class="form-check-label d-flex align-items-center" for="woocommerce"><i class="ri-store-2-line me-2 fs-5 text-primary"></i> WooCommerce</label>
+                          <div class="social-link-input" id="woocommerce-link-input">
+                            <label for="woocommerce-link" class="form-label">WooCommerce Store URL</label>
+                            <input type="url" class="form-control" id="woocommerce-link" name="woocommerceLink" placeholder="https://yourstore.com">
+                          </div>
+                        </div>
+                        <div class="form-check mt-2">
+                          <input class="form-check-input channel-checkbox" type="checkbox" id="customWebsite" name="sellingPoints[]" value="customWebsite" data-channel="customWebsite">
+                          <label class="form-check-label d-flex align-items-center" for="customWebsite"><i class="ri-global-line me-2 fs-5 text-secondary"></i> Custom Website</label>
+                          <div class="social-link-input" id="customWebsite-link-input">
+                            <label for="website-link" class="form-label">Website URL</label>
+                            <input type="url" class="form-control" id="website-link" name="websiteLink" placeholder="https://yourwebsite.com">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="card p-3">
+                        <div class="form-check">
+                          <input class="form-check-input channel-checkbox" type="checkbox" id="facebookShop" name="sellingPoints[]" value="facebookShop" data-channel="facebookShop">
+                          <label class="form-check-label d-flex align-items-center" for="facebookShop"><i class="ri-facebook-circle-line me-2 fs-5 text-primary"></i> Facebook Shop</label>
+                          <div class="social-link-input" id="facebookShop-link-input">
+                            <label for="facebook-shop-link" class="form-label">Facebook Shop URL</label>
+                            <input type="url" class="form-control" id="facebook-shop-link" name="facebookShopLink" placeholder="https://facebook.com/yourbrand/shop">
+                          </div>
+                        </div>
+                        <div class="form-check mt-2">
+                          <input class="form-check-input channel-checkbox" type="checkbox" id="facebookMessenger" name="sellingPoints[]" value="facebookMessenger" data-channel="facebookMessenger">
+                          <label class="form-check-label d-flex align-items-center" for="facebookMessenger"><i class="ri-messenger-line me-2 fs-5 text-info"></i> Facebook Messenger</label>
+                          <div class="social-link-input" id="facebookMessenger-link-input">
+                            <label for="messenger-link" class="form-label">Facebook Page URL</label>
+                            <input type="url" class="form-control" id="messenger-link" name="messengerLink" placeholder="https://facebook.com/yourbrand">
+                          </div>
+                        </div>
+                        <div class="form-check mt-2">
+                          <input class="form-check-input channel-checkbox" type="checkbox" id="shopify" name="sellingPoints[]" value="shopify" data-channel="shopify">
+                          <label class="form-check-label d-flex align-items-center" for="shopify"><i class="ri-shopping-cart-line me-2 fs-5 text-success"></i> Shopify</label>
+                          <div class="social-link-input" id="shopify-link-input">
+                            <label for="shopify-link" class="form-label">Shopify Store URL</label>
+                            <input type="url" class="form-control" id="shopify-link" name="shopifyLink" placeholder="https://yourstore.myshopify.com">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-start gap-3 mt-4">
+                    <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-bill-info-tab">
+                      <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> <%= Dp.stepEmail || 'Email Verification' %>
+                    </button>
+                    <button type="button" class="btn btn-primary-custom ms-auto nexttab" data-nexttab="v-pills-pickUp-tab">
+                      <%= Dp.btnNext || 'Continue' %> <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Step 3: PickUp Address -->
+                <div class="tab-pane fade" id="v-pills-location" role="tabpanel" aria-labelledby="v-pills-pickUp-tab">
+                  <div class="mb-4 d-flex justify-content-between align-items-center">
+                    <div>
+                      <h4 class="fw-bold"><%= Dp.stepAddress || 'Pickup Address' %></h4>
+                      <p class="text-muted"><%= Dp.addressLabel || 'Add one or more pickup locations for your packages' %></p>
+                    </div>
+                    <button type="button" class="btn btn-primary-custom" id="addPickupAddressBtn">
+                      <i class="ri-add-line me-1"></i> Add Address
+                    </button>
+                  </div>
+                  <div id="pickupAddressesContainer"></div>
+                  <template id="pickupAddressTemplate">
+                    <div class="card mb-4 pickup-address-card" data-address-index="">
+                      <div class="card-header d-flex justify-content-between align-items-center" style="cursor: pointer;">
+                        <h5 class="mb-0 d-flex align-items-center">
+                          <i class="ri-arrow-down-s-line collapse-icon me-2" style="transition: transform 0.3s ease; font-size: 1.2rem;"></i>
+                          <i class="ri-map-pin-line me-2 text-primary-custom"></i>
+                          <span class="address-name-display">Main Address</span>
+                          <span class="badge bg-primary ms-2 default-badge" style="display: none;">Default</span>
+                        </h5>
+                        <div class="d-flex gap-2">
+                          <button type="button" class="btn btn-sm btn-outline-danger remove-address-btn" style="display: none;" onclick="event.stopPropagation();">
+                            <i class="ri-delete-bin-line"></i> Remove
+                          </button>
+                        </div>
+                      </div>
+                      <div class="collapse show card-body-collapse">
+                        <div class="card-body">
+                          <div class="row g-3">
+                            <div class="col-md-12">
+                              <label class="form-label">Address Name</label>
+                              <input type="text" class="form-control address-name-input" placeholder="e.g. Main Warehouse, Branch Office" value="Main Address">
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Country <span class="text-danger">*</span></label>
+                              <select class="form-select address-country" required>
+                                <option value="" disabled>Select Country</option>
+                                <option value="egypt" selected>Egypt</option>
+                              </select>
+                            </div>
+                            <div class="col-md-12">
+                              <label class="form-label">Governorate and Area <span class="text-danger">*</span></label>
+                              <button type="button" class="btn btn-outline-secondary w-100 text-start select-area-btn" style="height: 45px; display: flex; align-items: center; justify-content: space-between; border: 2px solid #e0e0e0;">
+                                <span class="selected-area-display">Select Area</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                              </button>
+                              <input type="hidden" class="address-city">
+                              <input type="hidden" class="address-zone">
+                              <small class="text-muted">Click to select governorate and area</small>
+                            </div>
+                            <div class="col-md-12">
+                              <label class="form-label">Address Details <span class="text-danger">*</span></label>
+                              <input type="text" class="form-control address-details" placeholder="Street, Building, Floor, Apartment" required>
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Nearby Landmark (Optional)</label>
+                              <input type="text" class="form-control address-landmark" placeholder="e.g. Near the school">
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Pickup Phone Number <span class="text-danger">*</span></label>
+                              <input type="tel" class="form-control address-phone" placeholder="e.g. 0 123 456 7890" required>
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Other Pickup Phone <span class="text-danger">*</span></label>
+                              <input type="tel" class="form-control address-other-phone" placeholder="e.g. 0 123 456 7890" required>
+                            </div>
+                            <div class="col-md-12">
+                              <label class="form-label">Location on Map (Optional)</label>
+                              <div class="d-flex gap-2 mb-2">
+                                <input type="text" class="form-control address-map-point" placeholder="Search for location or click on map below">
+                                <button type="button" class="btn btn-primary get-current-location-btn" title="Get Current Location" onclick="event.stopPropagation();">
+                                  <i class="ri-map-pin-2-line me-1"></i> Get Location
+                                </button>
+                              </div>
+                              <div class="address-preview-map" style="height: 250px; width: 100%; border-radius: 0.5rem; border: 2px solid #e0e0e6; margin-bottom: 0.5rem;"></div>
+                              <small class="text-muted">Click on the map or search above to set your location</small>
+                              <input type="hidden" class="address-coordinates">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                  <div class="d-flex align-items-start gap-3 mt-4">
+                    <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-brand-info-tab">
+                      <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> <%= Dp.stepBrand || 'Brand Info' %>
+                    </button>
+                    <button type="button" class="btn btn-primary-custom ms-auto nexttab" data-nexttab="v-pills-payment-tab">
+                      <%= Dp.btnNext || 'Continue' %> <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Step 4: Payment Method -->
+                <div class="tab-pane fade p-4" id="v-payment-method" role="tabpanel" aria-labelledby="v-pills-payment-tab">
+                  <div class="mb-4">
+                    <h4 class="fw-bold"><%= Dp.stepPayment || 'Payment Method' %></h4>
+                    <p class="text-muted"><%= Dp.paymentLabel || 'Choose your preferred payment option.' %></p>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-4" style="display: none;">
+                      <div class="card p-3 text-center payment-option" data-value="instapay">
+                        <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="instapay" value="instaPay" required disabled>
+                        <label class="form-check-label" for="instapay"><i class="ri-smartphone-line fs-2 mb-2 text-primary-custom"></i><h5>InstaPay</h5></label>
+                      </div>
+                    </div>
+                    <div class="col-md-4" style="display: none;">
+                      <div class="card p-3 text-center payment-option" data-value="mobileWallet">
+                        <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="mobileWallet" value="mobileWallet" required disabled>
+                        <label class="form-check-label" for="mobileWallet"><i class="ri-wallet-line fs-2 mb-2 text-dark-custom"></i><h5>Mobile Wallet</h5></label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="card p-3 text-center payment-option active" data-value="bankTransfer">
+                        <input class="form-check-input d-none payment-radio" type="radio" name="paymentMethod" id="bankTransfer" value="bankTransfer" required checked>
+                        <label class="form-check-label" for="bankTransfer"><i class="ri-bank-line fs-2 mb-2 text-dark-secondary"></i><h5>Bank Transfer</h5></label>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="paymentDetails" class="mt-4" style="display: block;">
+                    <div id="instapayDetails" class="payment-detail" style="display: none;">
+                      <label for="ipaAddress" class="form-label">Enter your IPA Address:</label>
+                      <input type="text" id="ipaAddress" name="IPAorPhoneNumber" class="form-control" placeholder="Example: ABCD1234" disabled>
+                    </div>
+                    <div id="mobileWalletDetails" class="payment-detail" style="display: none;">
+                      <label for="mobileNumber" class="form-label">Enter your Mobile Number:</label>
+                      <input type="text" id="mobileNumber" name="mobileWalletNumber" class="form-control" placeholder="Example: 01234567890" disabled>
+                    </div>
+                    <div id="bankTransferDetails" class="payment-detail" style="display: block;">
+                      <label for="bankSelect" class="form-label">Select Your Bank:</label>
+                      <select id="bankSelect" class="form-select" name="bankName" required>
+                        <option value="">Choose your bank</option>
+                        <option value="nbe">National Bank of Egypt</option>
+                        <option value="banque-misr">Banque Misr</option>
+                        <option value="cib">CIB (Commercial International Bank)</option>
+                        <option value="qnb">QNB Alahli</option>
+                        <option value="aaib">Arab African International Bank (AAIB)</option>
+                        <option value="adib">Abu Dhabi Islamic Bank - Egypt (ADIB)</option>
+                        <option value="abk">Al Ahli Bank of Kuwait - Egypt (ABK)</option>
+                        <option value="aib">Arab Investment Bank (AIB)</option>
+                        <option value="attijariwafa">Attijariwafa Bank Egypt</option>
+                        <option value="bank-of-alexandria">Bank of Alexandria</option>
+                        <option value="bank-audi">Bank Audi - Egypt</option>
+                        <option value="banque-du-caire">Banque du Caire</option>
+                        <option value="blom">BLOM Bank Egypt</option>
+                        <option value="credit-agricole">Crédit Agricole Egypt</option>
+                        <option value="egb">Egyptian Gulf Bank (EGB)</option>
+                        <option value="emirates-nbd">Emirates NBD Egypt</option>
+                        <option value="ebbe">Export Development Bank of Egypt</option>
+                        <option value="fab">First Abu Dhabi Bank Egypt (FAB)</option>
+                        <option value="faisal-islamic">Faisal Islamic Bank of Egypt</option>
+                        <option value="hdb">Housing and Development Bank (HDB)</option>
+                        <option value="hsbc">HSBC Bank Egypt</option>
+                        <option value="idb">Industrial Development Bank (IDB)</option>
+                        <option value="nbk">National Bank of Kuwait - Egypt (NBK)</option>
+                        <option value="saib">SAIB Bank</option>
+                        <option value="united-bank">United Bank of Egypt</option>
+                        <option value="al-baraka">Al Baraka Bank Egypt</option>
+                        <option value="adcb">Abu Dhabi Commercial Bank Egypt (ADCB)</option>
+                        <option value="suez-canal-bank">Suez Canal Bank</option>
+                        <option value="mashreq">Mashreq Bank Egypt</option>
+                      </select>
+                      <label for="accountNumber" class="form-label mt-3">Enter your Account Number <span class="text-danger">*</span>:</label>
+                      <input type="text" id="accountNumber" class="form-control" name="accountNumber" placeholder="Example: 1234567890123456" required>
+                      <label for="ibanNumber" class="form-label mt-3">Enter your IBAN (Optional):</label>
+                      <input type="text" id="ibanNumber" class="form-control" name="IBAN" placeholder="Example: EG12 3456 7890 1234 5678 90">
+                      <label for="accountName" class="form-label mt-3">Enter your Account Name <span class="text-danger">*</span>:</label>
+                      <input type="text" id="accountName" class="form-control" name="accountName" placeholder="Example: John Doe" required>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-start gap-3 mt-4">
+                    <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-pickUp-tab">
+                      <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> <%= Dp.stepAddress || 'Pickup Address' %>
+                    </button>
+                    <button type="button" class="btn btn-primary-custom ms-auto nexttab" data-nexttab="v-pills-brand-type-tab">
+                      <%= Dp.btnNext || 'Continue' %> <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Step 5: Brand Type -->
+                <div class="tab-pane fade p-4" id="v-brand-type" role="tabpanel" aria-labelledby="v-pills-brand-type-tab">
+                  <div class="mb-4">
+                    <h4 class="fw-bold"><%= Dp.stepBrandType || 'Brand Type' %></h4>
+                    <p class="text-muted"><%= Dp.brandTypeLabel || 'Select the type of your brand.' %></p>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="card p-3 text-center brand-option" data-value="personal">
+                        <input class="form-check-input d-none brand-radio" type="radio" name="brandType" id="brandType1" value="personal" required>
+                        <label class="form-check-label" for="brandType1"><i class="ri-user-line fs-2 mb-2 text-primary-custom"></i><h5>Personal</h5></label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="card p-3 text-center brand-option" data-value="company">
+                        <input class="form-check-input d-none brand-radio" type="radio" name="brandType" id="brandType2" value="company" required>
+                        <label class="form-check-label" for="brandType2"><i class="ri-building-line fs-2 mb-2 text-dark-custom"></i><h5>Company</h5></label>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="personalFields" class="mt-4" style="display: none;">
+                    <label for="nationalIdNumber" class="form-label">Enter your National ID Number:</label>
+                    <input type="text" id="nationalIdNumber" class="form-control" name="nationalId" placeholder="Example: 29811234567890" required>
+                    <label for="nationalIdUpload" class="form-label mt-3">Upload National ID:</label>
+                    <div class="col-lg-12">
+                      <div class="card">
+                        <div class="card-header"><h4 class="card-title mb-0">Upload Your National ID</h4></div>
+                        <div class="card-body">
+                          <p class="text-muted">Upload Front Side And Back Side</p>
+                          <input type="file" class="filepond filepond-input-multiple" multiple name="filepond" data-allow-reorder="true" data-max-file-size="3MB" data-max-files="3" required>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="companyFields" class="mt-4" style="display: none;">
+                    <label for="taxNumber" class="form-label">Enter your Tax Number:</label>
+                    <input type="text" id="taxNumber" class="form-control" name="taxNumber" placeholder="Example: 1234567890" required>
+                    <label for="companyDocs" class="form-label mt-3">Upload Company Papers:</label>
+                    <div class="col-lg-12">
+                      <div class="card">
+                        <div class="card-header"><h4 class="card-title mb-0">Upload Papers</h4></div>
+                        <div class="card-body">
+                          <p class="text-muted">Please Upload All Papers</p>
+                          <input type="file" class="filepond filepond-input-multiple" multiple name="filepond" data-allow-reorder="true" data-max-file-size="3MB" data-max-files="10">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-start gap-3 mt-4">
+                    <button type="button" class="btn btn-outline-secondary previestab" data-previous="v-pills-payment-tab">
+                      <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i> <%= Dp.stepPayment || 'Payment Method' %>
+                    </button>
+                    <span class="photo-count ms-auto me-3" id="photoCount" style="display: none;">
+                      <i class="ri-image-line"></i> <span>0</span> files
+                    </span>
+                    <button type="button" class="btn btn-dark-custom" id="submitButton">
+                      Submit All <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Step 6: Finish -->
+                <div class="tab-pane fade" id="v-pills-finish" role="tabpanel" aria-labelledby="v-pills-finish-tab">
+                  <div class="text-center pt-4 pb-2">
+                    <div class="mb-4">
+                      <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#F39720,secondary:#333333" style="width:120px;height:120px"></lord-icon>
+                    </div>
+                    <h5>Your Account Setup is Completed!</h5>
+                    <p class="text-muted">You will receive a confirmation email with details of your account setup.</p>
+                    <div class="mt-4">
+                      <a href="/business/dashboard" class="btn btn-continue"><%= Dp.goToDashboard || 'Go to Dashboard' %></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -61,8 +61,15 @@ function normalizeFieldsFromBody(body) {
     previewPermission: body.previewPermission === 'on' || body.previewPermission === true,
     referralNumber: body.referralNumber || '',
     Notes: body.Notes || '',
-    isExpressShipping: body.isExpressShipping === 'on' || body.isExpressShipping === true,
-    selectedPickupAddressId: body.selectedPickupAddressId || null,
+    isExpressShipping:
+      body.orderType === 'Deliver' &&
+      (body.isExpressShipping === 'on' || body.isExpressShipping === true),
+    selectedPickupAddressId:
+      body.orderType === 'Deliver' &&
+      (body.isExpressShipping === 'on' || body.isExpressShipping === true) &&
+      body.selectedPickupAddressId
+        ? String(body.selectedPickupAddressId).trim()
+        : null,
     originalOrderNumber: body.originalOrderNumber,
     returnReason: body.returnReason,
     returnNotes: body.returnNotes,
@@ -144,6 +151,14 @@ function validateOrderFieldsStructural(fields) {
     const nn = Number(numberOfItemsNewPD);
     if (!currentPD || !Number.isFinite(ni) || ni <= 0 || !newPD || !Number.isFinite(nn) || nn <= 0) {
       errors.push('Exchange orders require current and new product details with positive item counts.');
+    }
+  }
+
+  if (orderType === 'Deliver' && fields.isExpressShipping) {
+    if (!fields.selectedPickupAddressId) {
+      errors.push(
+        'Express delivery requires a business pickup address. Add one in Settings or select it from the list.'
+      );
     }
   }
 

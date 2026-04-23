@@ -1,26 +1,73 @@
 <%- contentFor('HeaderCss') %>
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<% } %>
+<link rel="stylesheet" href="/assets/rCSS/business.css">
+<style>
+  .order-details-page { font-synthesis: none; }
+  html[dir='rtl'] .order-details-page {
+    font-family: 'Tajawal', 'Cairo', sans-serif;
+  }
+  html[dir='rtl'] .order-details-page .card-header .d-sm-flex,
+  html[dir='rtl'] .order-details-page .card-header .d-flex {
+    flex-direction: row-reverse;
+    text-align: right;
+  }
+  html[dir='rtl'] .order-details-page .accordion-button {
+    text-align: right;
+  }
+  html[dir='rtl'] .order-details-page .accordion-button::after {
+    margin-left: 0;
+    margin-right: auto;
+  }
+  html[dir='rtl'] .order-details-page .od-return-steps,
+  html[dir='rtl'] .order-details-page .od-return-steps ol {
+    text-align: right;
+  }
+  .order-details-page .ltr-embed { direction: ltr; unicode-bidi: embed; display: inline-block; text-align: left; }
+  html[dir='rtl'] .order-details-page .table-responsive .table th,
+  html[dir='rtl'] .order-details-page .table-responsive .table td {
+    text-align: right;
+  }
+</style>
 <%- contentFor('body') %>
 <% var Od = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.orderDetails) ? translation.business.pages.orderDetails : {}; %>
+<% var odLocale = Od.locale || ((typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-EG' : 'en-US'); %>
+<% var odDateFmt = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }; %>
+<% var odDateShort = { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }; %>
+<% function odOrderTypeLabel(t) { if (!t) return ''; var m = { Send: Od.otSend, Return: Od.otReturn, Exchange: Od.otExchange }; return m[t] || t; } %>
+<% function odAmountTypeLabel(t) { if (t === 'COD') return Od.atCOD || t; if (t === 'CD') return Od.atCD || t; return t || ''; } %>
 
 <% if (order) { %>
 <% 
   const canCancelOrderResolved = typeof canCancelOrder !== 'undefined' ? !!canCancelOrder : false;
   const canChangeAddressResolved = typeof canChangeAddress !== 'undefined' ? !!canChangeAddress : false;
+  const canDeleteOrderResolved = typeof canDeleteOrder !== 'undefined' ? !!canDeleteOrder : false;
+  const wa = (typeof waitingActionFlags !== 'undefined' && waitingActionFlags) ? waitingActionFlags : {};
   const returnFlowCancelLabelStatuses = ['pickedUp','inStock','inProgress','returnToWarehouse','returnAtWarehouse','rescheduled','waitingAction','returnInitiated','returnAssigned','returnPickedUp','returnToBusiness','inReturnStock','returnLinked','rejected'];
   const cancelButtonLabel = returnFlowCancelLabelStatuses.includes(order.orderStatus) ? (Od.requestReturn || 'Request return') : (Od.cancelOrder || 'Cancel order');
+  const odCanceledAt = order.orderStages && order.orderStages.canceled && order.orderStages.canceled.completedAt ? new Date(order.orderStages.canceled.completedAt) : null;
+  function odStageBeforeCancel(t) {
+    if (!odCanceledAt || !t) return true;
+    return new Date(t).getTime() <= odCanceledAt.getTime();
+  }
+  const odTrackingBiz = order.smartFlyerBarcode || order.referralNumber || '';
+  const odAmountDisplayBiz = (order.orderShipping.amount != null && order.orderShipping.amount !== '') ? (String(order.orderShipping.amount) + ' EGP') : (order.orderShipping.amountType === 'NA' ? (Od.naAmount || 'N/A') : '—');
 %>
 
-<div class="row g-3">
+<div class="order-details-page row g-3">
 
   <div class="col-12 col-xl-9">
       <div class="col-12">
-<% const isRescheduled = !!order.scheduledRetryAt || (order.orderStages && order.orderStages.inProgress && order.orderStages.inProgress.notes && order.orderStages.inProgress.notes.includes('rescheduled')); %>
+<% const isRescheduled = order.orderStatus === 'rescheduled'; %>
 <% if (order.orderStatus === 'waitingAction' || isRescheduled) { %>
 <div class="card border-0 shadow-sm mb-4">
   <div class="card-body bg-warning-subtle rounded">
-    <div class="d-flex align-items-center">
-      <div class="flex-shrink-0 me-3">
-        <i class="ri-alert-line fs-3 text-warning"></i>
+    <div class="d-flex align-items-center gap-3">
+      <div class="flex-shrink-0">
+        <i class="ri-alert-line fs-3 text-warning" aria-hidden="true"></i>
       </div>
       <div class="flex-grow-1">
         <h5 class="card-title mb-2 text-dark"><%= isRescheduled ? (Od.retryScheduled || 'Retry Scheduled') : (Od.actionRequired || 'Action Required') %></h5>
@@ -32,7 +79,7 @@
           <ul class="mb-0">
             <% if (order.UnavailableReason.includes('customer_not_available')) { %>
               <li class="text-dark">
-              <strong>Customer Not Available:</strong> Please call the customer to confirm availability. <span>Attemp : <span><%= order.Attemps %></span></span>
+              <strong><%= Od.customerNotAvailableTitle || 'Customer not available' %>:</strong> <%= Od.customerNotAvailableBody || '' %> <span><%= Od.attemptLabel || 'Attempt' %>: <span class="ltr-embed"><%= order.Attemps %></span></span>
               </li>
             <% } %>
             <% order.UnavailableReason.forEach(function(reason) { %>
@@ -46,29 +93,42 @@
            <p class="card-text mb-0 text-muted fst-italic"><%= Od.noAdditionalNotes || 'No additional notes provided for this order.' %></p>
         <% } %>
         <div class="mt-3 d-flex flex-wrap gap-2">
-          <% if (order.orderStatus !== 'rescheduled') { %>
+          <% if (wa.canRetryTomorrow) { %>
           <form method="post" action="/business/orders/<%= order._id %>/retry-tomorrow" data-ajax>
-            <button type="submit" class="btn btn-sm btn-primary">Retry Tomorrow</button>
-          </form>
-          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#scheduleRetryModal">Schedule Retry</button>
-          <form method="post" action="/business/orders/<%= order._id %>/return-to-warehouse" data-ajax>
-            <button type="submit" class="btn btn-sm btn-warning">Return to Warehouse</button>
+            <button type="submit" class="btn btn-sm btn-primary"><%= Od.retryTomorrow || 'Retry tomorrow' %></button>
           </form>
           <% } %>
-          <% if (canCancelOrderResolved) { %>
-          <form method="post" action="/business/orders/cancel-order/<%= order._id %>" onsubmit="return confirm('Cancel this order?');" data-ajax>
-            <button type="submit" class="btn btn-sm btn-danger"><%= cancelButtonLabel %></button>
+          <% if (wa.canRetryScheduled) { %>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#scheduleRetryModal"><%= Od.scheduleRetry || 'Schedule retry' %></button>
+          <% } %>
+          <% if (wa.canReturnToWarehouseFromWaiting) { %>
+          <form method="post" action="/business/orders/<%= order._id %>/return-to-warehouse" data-ajax>
+            <button type="submit" class="btn btn-sm btn-warning"><%= Od.returnToWarehouse || 'Return to warehouse' %></button>
+          </form>
+          <% } %>
+          <% if (wa.canCancelFromWaiting) { %>
+          <form method="post" action="/business/orders/<%= order._id %>/cancel-from-waiting" onsubmit="return confirm(<%= JSON.stringify(Od.confirmCancelFromWaiting || Od.confirmCancelOrder || 'Return this order from waiting action?') %>);" data-ajax>
+            <button type="submit" class="btn btn-sm btn-danger"><%= Od.cancelFromWaitingAction || cancelButtonLabel %></button>
           </form>
           <% } %>
         </div>
         <% if (order.scheduledRetryAt) { %>
           <div class="mt-2">
-            <div class="alert alert-success d-flex align-items-center py-2 px-3 mb-0">
-              <i class="ri-time-line me-2 fs-5"></i>
+            <% if (order.orderStatus === 'rescheduled') { %>
+            <div class="alert alert-success d-flex align-items-center gap-2 py-2 px-3 mb-0">
+              <i class="ri-time-line fs-5 flex-shrink-0" aria-hidden="true"></i>
               <div>
-                Retry scheduled for: <strong><%= new Date(order.scheduledRetryAt).toLocaleString() %></strong>
+                <%= Od.retryScheduledFor || 'Retry scheduled for:' %> <strong class="ltr-embed"><%= new Date(order.scheduledRetryAt).toLocaleString(odLocale, odDateFmt) %></strong>
               </div>
             </div>
+            <% } else { %>
+            <div class="alert alert-secondary d-flex align-items-center gap-2 py-2 px-3 mb-0">
+              <i class="ri-time-line fs-5 flex-shrink-0" aria-hidden="true"></i>
+              <div>
+                <%= Od.tentativeRetryAt || 'Tentative retry time (not confirmed — use Retry tomorrow or Schedule retry):' %> <strong class="ltr-embed"><%= new Date(order.scheduledRetryAt).toLocaleString(odLocale, odDateFmt) %></strong>
+              </div>
+            </div>
+            <% } %>
           </div>
         <% } %>
       </div>
@@ -82,17 +142,17 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="scheduleRetryLabel">Schedule Retry</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="scheduleRetryLabel"><%= Od.scheduleRetryTitle || 'Schedule retry' %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= Od.modalCloseAria || 'Close' %>"></button>
       </div>
       <form method="post" action="/business/orders/<%= order._id %>/retry-scheduled" data-ajax>
         <div class="modal-body">
-          <label for="retryDate" class="form-label">Retry Date</label>
+          <label for="retryDate" class="form-label"><%= Od.retryDateLabel || 'Retry date' %></label>
           <input type="datetime-local" id="retryDate" name="date" class="form-control" required />
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-primary">Schedule</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= Od.closeModal || 'Close' %></button>
+          <button type="submit" class="btn btn-primary"><%= Od.scheduleSubmit || 'Schedule' %></button>
         </div>
       </form>
     </div>
@@ -102,21 +162,33 @@
     <div class="card">
       <div class="card-header">
         <div class="d-sm-flex align-items-center">
-          <h5 class="card-title flex-grow-1 mb-0">Order Status - <span style="color: #007bff;"><strong><%= order.orderNumber %></strong></span></h5>
-          <div class="flex-shrink-0 mt-2 mt-sm-0">
+          <h5 class="card-title flex-grow-1 mb-0"><%= Od.orderStatusHeading || 'Order status' %> — <span style="color: #007bff;"><strong class="ltr-embed"><%= order.orderNumber %></strong></span></h5>
+          <div class="flex-shrink-0 mt-2 mt-sm-0 d-flex flex-wrap gap-1 justify-content-sm-end">
             <% if (canChangeAddressResolved) { %>
-            <a href="/business/edit-order/<%= order.orderNumber %>" class="btn btn-soft-info material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-map-pin-line align-middle me-1"></i> Change Address</a>
+            <a href="/business/edit-order/<%= order.orderNumber %>" class="btn btn-soft-info material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-map-pin-line align-middle ms-1 me-1" aria-hidden="true"></i><%= Od.changeAddress || 'Change address' %></a>
+            <% } else { %>
+            <button type="button" class="btn btn-soft-secondary material-shadow-none btn-sm mt-2 mt-sm-0" disabled
+              title="<%= Od.addressEditLockedTitle || 'Address cannot be changed' %>"
+              aria-label="<%= Od.addressEditLockedTitle || 'Address cannot be changed' %>">
+              <i class="ri-lock-line align-middle ms-1 me-1" aria-hidden="true"></i><%= Od.addressEditLockedShort || 'Address locked' %>
+            </button>
             <% } %>
             <% if (order.orderStatus === 'completed' && order.orderShipping.orderType !== 'Return') { %>
-            <a href="/business/create-order" class="btn btn-soft-warning material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-arrow-go-back-line align-middle me-1"></i> Create Return Order</a>
+            <a href="/business/create-order" class="btn btn-soft-warning material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-arrow-go-back-line align-middle ms-1 me-1" aria-hidden="true"></i><%= Od.createReturnOrder || 'Create return order' %></a>
             <% } %>
             <% if (order.orderStatus === 'returnLinked') { %>
-            <button class="btn btn-soft-success material-shadow-none btn-sm mt-2 mt-sm-0" onclick="markOrderAsReturned('<%= order._id %>')"><i class="ri-check-double-line align-middle me-1"></i> Mark as Returned</button>
+            <button type="button" class="btn btn-soft-success material-shadow-none btn-sm mt-2 mt-sm-0" onclick="markOrderAsReturned('<%= order._id %>')"><i class="ri-check-double-line align-middle ms-1 me-1" aria-hidden="true"></i><%= Od.markAsReturned || 'Mark as returned' %></button>
             <% } %>
             <% if (canCancelOrderResolved) { %>
             <button type="button" class="btn btn-soft-danger material-shadow-none btn-sm mt-2 mt-sm-0"
               onclick="cancelOrder('<%= order._id %>', <%= returnFlowCancelLabelStatuses.includes(order.orderStatus) ? 'true' : 'false' %>)">
-              <i class="mdi mdi-archive-remove-outline align-middle me-1"></i> <%= cancelButtonLabel %>
+              <i class="mdi mdi-archive-remove-outline align-middle ms-1 me-1" aria-hidden="true"></i> <%= cancelButtonLabel %>
+            </button>
+            <% } %>
+            <% if (canDeleteOrderResolved) { %>
+            <button type="button" class="btn btn-danger material-shadow-none btn-sm mt-2 mt-sm-0"
+              onclick="deleteOrderFromDetails('<%= order.orderNumber %>')">
+              <i class="ri-delete-bin-2-line align-middle ms-1 me-1" aria-hidden="true"></i><%= Od.deleteOrder || 'Delete Order' %>
             </button>
             <% } %>
           </div>
@@ -136,7 +208,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-0 fw-semibold"><%= Od.stagePlaced || 'Order Placed' %> - <span class="fw-normal"><%= new Date(order.orderDate).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-0 fw-semibold"><%= Od.stagePlaced || 'Order Placed' %> - <span class="fw-normal"><%= new Date(order.orderDate).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
                 </a>
@@ -157,7 +229,7 @@
               <div class="accordion-header" id="headingTwo">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
 
-                  <% if (order.orderStages.packed.isCompleted) { %>
+                  <% if (order.orderStages.packed.isCompleted && odStageBeforeCancel(order.orderStages.packed.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -165,11 +237,21 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stagePacked || 'Packed' %> - <span class="fw-normal"><%= new Date(order.orderStages.packed.completedAt).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stagePacked || 'Packed' %> - <span class="fw-normal"><%= new Date(order.orderStages.packed.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
-
+                  <% } else if (order.orderStages.packed.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="mdi mdi-gift-outline"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted"><%= Od.stagePackedAfterCancel || 'Packed' %> — <span class="fw-normal"><%= new Date(order.orderStages.packed.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -199,7 +281,7 @@
               <div class="accordion-header" id="headingThree">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
 
-                  <% if (order.orderStages.shipping.isCompleted) { %>
+                  <% if (order.orderStages.shipping.isCompleted && odStageBeforeCancel(order.orderStages.shipping.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -207,11 +289,21 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Shipping - <span class="fw-normal"><%= new Date(order.orderStages.shipping.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageShipping || 'Shipping' %> — <span class="fw-normal"><%= new Date(order.orderStages.shipping.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
-
+                  <% } else if (order.orderStages.shipping.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="ri-truck-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted"><%= Od.stageShippingAfterCancel || 'Shipping' %> — <span class="fw-normal"><%= new Date(order.orderStages.shipping.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -219,7 +311,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Shipping </h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageShipping || 'Shipping' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -240,7 +332,7 @@
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingFour">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                  <% if (order.orderStages.inProgress.isCompleted) { %>
+                  <% if (order.orderStages.inProgress.isCompleted && odStageBeforeCancel(order.orderStages.inProgress.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-warning rounded-circle material-shadow">
@@ -248,10 +340,21 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">In Progress - <span class="fw-normal"><%= new Date(order.orderStages.inProgress.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageInProgress || 'In progress' %> — <span class="fw-normal"><%= new Date(order.orderStages.inProgress.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
+                  <% } else if (order.orderStages.inProgress.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="ri-time-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted"><%= Od.stageInProgressAfterCancel || 'In progress' %> — <span class="fw-normal"><%= new Date(order.orderStages.inProgress.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -259,7 +362,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">In Progress </h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageInProgress || 'In progress' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -272,7 +375,7 @@
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingFive">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                  <% if (order.orderStages.outForDelivery.isCompleted) { %>
+                  <% if (order.orderStages.outForDelivery.isCompleted && odStageBeforeCancel(order.orderStages.outForDelivery.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -280,10 +383,21 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Out For Delivery - <span class="fw-normal"><%= new Date(order.orderStages.outForDelivery.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageOutForDelivery || 'Out for delivery' %> — <span class="fw-normal"><%= new Date(order.orderStages.outForDelivery.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
+                  <% } else if (order.orderStages.outForDelivery.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="ri-takeaway-fill"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted"><%= Od.stageOutForDeliveryAfterCancel || 'Out for delivery' %> — <span class="fw-normal"><%= new Date(order.orderStages.outForDelivery.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -291,7 +405,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Out For Delivery </h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageOutForDelivery || 'Out for delivery' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -312,8 +426,8 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Exchange at customer - <span class="fw-normal"><%= new Date(order.orderStages.exchangePickup.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
-                      <p class="text-muted mb-0 fs-12">Replacement delivered; original item collected</p>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageExchangeAtCustomer || 'Exchange at customer' %> — <span class="fw-normal"><%= new Date(order.orderStages.exchangePickup.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
+                      <p class="text-muted mb-0 fs-12"><%= Od.stageExchangePickupSub || '' %></p>
                     </div>
                   </div>
                   <% } else { %>
@@ -324,7 +438,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Exchange at customer</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageExchangeAtCustomer || 'Exchange at customer' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -344,8 +458,8 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Original item in return stock</h6>
-                      <p class="text-muted mb-0 fs-12">Awaiting admin to assign a courier to return it to your business</p>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageOriginalReturnStock || '' %></h6>
+                      <p class="text-muted mb-0 fs-12"><%= Od.stageOriginalReturnStockSub || '' %></p>
                     </div>
                   </div>
                   <% } else { %>
@@ -356,7 +470,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Original item in return stock</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageOriginalReturnStock || '' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -376,8 +490,8 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Original item returned to business - <span class="fw-normal"><%= order.orderStages.returnCompleted.completedAt ? new Date(order.orderStages.returnCompleted.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '' %></span></h6>
-                      <p class="text-muted mb-0 fs-12">Exchange fully completed</p>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageOriginalReturnedBusiness || '' %> — <span class="fw-normal"><%= order.orderStages.returnCompleted.completedAt ? new Date(order.orderStages.returnCompleted.completedAt).toLocaleString(odLocale, odDateFmt) : '' %></span></h6>
+                      <p class="text-muted mb-0 fs-12"><%= Od.stageOriginalReturnedBusinessSub || '' %></p>
                     </div>
                   </div>
                   <% } else { %>
@@ -388,7 +502,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Original item returned to business</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageOriginalReturnedBusiness || '' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -401,7 +515,7 @@
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingSix">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-                  <% if (order.orderStages.delivered.isCompleted) { %>
+                  <% if (order.orderStages.delivered.isCompleted && odStageBeforeCancel(order.orderStages.delivered.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -409,10 +523,21 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageDelivered || 'Delivered' %> - <span class="fw-normal"><%= new Date(order.orderStages.delivered.completedAt).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageDelivered || 'Delivered' %> - <span class="fw-normal"><%= new Date(order.orderStages.delivered.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
+                  <% } else if (order.orderStages.delivered.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="mdi mdi-package-variant"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted"><%= Od.stageDeliveredAfterCancel || 'Delivered' %> — <span class="fw-normal"><%= new Date(order.orderStages.delivered.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -442,7 +567,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Order Canceled - <span class="fw-normal"><%= new Date(order.orderStages.canceled.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageOrderCanceled || 'Order canceled' %> — <span class="fw-normal"><%= new Date(order.orderStages.canceled.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
                   <% } else { %>
@@ -453,7 +578,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Order Canceled</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageOrderCanceled || 'Order canceled' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -468,10 +593,10 @@
             <!-- ── Return Progress Stepper ────────────────────────────────── -->
             <%
               const retSteps = [
-                { key: 'returnInitiated',  icon: 'ri-arrow-go-back-line',  label: 'Requested' },
-                { key: 'returnAssigned',   icon: 'ri-user-add-line',       label: 'Courier Assigned' },
-                { key: 'returnPickedUp',   icon: 'ri-truck-line',          label: 'Picked Up from Customer' },
-                { key: 'returnCompleted',  icon: 'ri-check-double-line',   label: 'Returned to You' },
+                { key: 'returnInitiated',  icon: 'ri-arrow-go-back-line',  label: Od.retStepRequested || 'Requested' },
+                { key: 'returnAssigned',   icon: 'ri-user-add-line',       label: Od.retStepCourierAssigned || 'Courier assigned' },
+                { key: 'returnPickedUp',   icon: 'ri-truck-line',          label: Od.retStepPickedUpCustomer || 'Picked up from customer' },
+                { key: 'returnCompleted',  icon: 'ri-check-double-line',   label: Od.retStepReturnedToYou || 'Returned to you' },
               ];
               const isRetStepDone = (k) => order.orderStages[k] && order.orderStages[k].isCompleted;
               const retActiveKey = ['returnInitiated','returnAssigned','returnPickedUp','returnAtWarehouse','returnToBusiness','returnCompleted']
@@ -480,7 +605,7 @@
             <div class="px-2 pb-2 pt-1">
               <div class="d-flex align-items-start justify-content-between position-relative" style="--ret-line-color: #e2e8f0;">
                 <!-- connecting line -->
-                <div style="position:absolute;top:16px;left:calc(12.5%);right:calc(12.5%);height:2px;background:#e2e8f0;z-index:0;"></div>
+                <div class="od-stepper-line" style="position:absolute;top:16px;inset-inline:12.5%;height:2px;background:#e2e8f0;z-index:0;"></div>
                 <% retSteps.forEach(function(rs, ri) {
                      const done = isRetStepDone(rs.key) || (rs.key === 'returnCompleted' && isRetStepDone('returnToBusiness') && order.orderStatus === 'returnCompleted');
                      const active = !done && (order.orderStatus === rs.key || (rs.key === 'returnCompleted' && order.orderStatus === 'returnToBusiness'));
@@ -509,14 +634,13 @@
               style="background:linear-gradient(135deg,#fff8ee 0%,#fff 100%);border:1.5px solid #F39720;">
               <i class="ri-shield-keyhole-line fs-3 flex-shrink-0" style="color:#F39720;line-height:1.2;"></i>
               <div>
-                <p class="mb-1 fw-semibold" style="font-size:.9rem;">OTP Sent to Your Customer</p>
+                <p class="mb-1 fw-semibold" style="font-size:.9rem;"><%= Od.otpBannerTitle || '' %></p>
                 <p class="mb-0 text-muted" style="font-size:.8rem;">
-                  A 6-digit pickup code was sent via SMS to your customer when the courier was assigned.
-                  The courier must enter this code when they arrive — this protects you from false pickup claims.
+                  <%= Od.otpBannerBody || '' %>
                 </p>
                 <% if (order.returnOtp && order.returnOtp.issuedAt) { %>
                 <span class="badge bg-light text-muted mt-2" style="font-size:.73rem;">
-                  <i class="ri-time-line me-1"></i>Sent at <%= new Date(order.returnOtp.issuedAt).toLocaleString('en-US', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true}) %>
+                  <i class="ri-time-line ms-1 me-1" aria-hidden="true"></i><%= Od.otpSentAt || 'Sent at' %> <%= new Date(order.returnOtp.issuedAt).toLocaleString(odLocale, odDateShort) %>
                 </span>
                 <% } %>
               </div>
@@ -536,7 +660,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Return Initiated - <span class="fw-normal"><%= new Date(order.orderStages.returnInitiated.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturnInitiated || 'Return initiated' %> — <span class="fw-normal"><%= new Date(order.orderStages.returnInitiated.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
                   <% } else { %>
@@ -547,7 +671,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Return Initiated</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturnInitiated || 'Return initiated' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -568,9 +692,9 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageCourierAssigned || 'Courier Assigned' %> - <span class="fw-normal"><%= new Date(order.orderStages.returnAssigned.completedAt).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageCourierAssigned || 'Courier Assigned' %> - <span class="fw-normal"><%= new Date(order.orderStages.returnAssigned.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                       <% if (order.returnOtp && order.returnOtp.issuedAt) { %>
-                      <p class="text-muted mb-0" style="font-size:.78rem;"><i class="ri-shield-keyhole-line me-1" style="color:#F39720;"></i>OTP sent to customer at <%= new Date(order.returnOtp.issuedAt).toLocaleString('en-US', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true}) %></p>
+                      <p class="text-muted mb-0" style="font-size:.78rem;"><i class="ri-shield-keyhole-line ms-1 me-1" style="color:#F39720;" aria-hidden="true"></i><%= Od.otpSentToCustomerAt || '' %> <%= new Date(order.returnOtp.issuedAt).toLocaleString(odLocale, odDateShort) %></p>
                       <% } %>
                     </div>
                   </div>
@@ -602,9 +726,9 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Return Picked Up - <span class="fw-normal"><%= new Date(order.orderStages.returnPickedUp.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturnPickedUp || 'Return picked up' %> — <span class="fw-normal"><%= new Date(order.orderStages.returnPickedUp.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                       <% if (order.returnOtp && order.returnOtp.verifiedAt) { %>
-                      <p class="text-muted mb-0" style="font-size:.78rem;"><i class="ri-shield-check-line me-1 text-success"></i>Customer OTP verified at pickup</p>
+                      <p class="text-muted mb-0" style="font-size:.78rem;"><i class="ri-shield-check-line ms-1 me-1 text-success" aria-hidden="true"></i><%= Od.otpVerifiedPickup || '' %></p>
                       <% } %>
                     </div>
                   </div>
@@ -616,7 +740,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Return Picked Up</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturnPickedUp || 'Return picked up' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -636,7 +760,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">At Warehouse - <span class="fw-normal"><%= new Date(order.orderStages.returnAtWarehouse.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageAtWarehouse || 'At warehouse' %> — <span class="fw-normal"><%= new Date(order.orderStages.returnAtWarehouse.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
                   <% } else { %>
@@ -647,7 +771,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">At Warehouse</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageAtWarehouse || 'At warehouse' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -667,7 +791,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturning || 'Returning to Business' %> - <span class="fw-normal"><%= new Date(order.orderStages.returnToBusiness.completedAt).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturningToBusiness || 'Returning to Business' %> — <span class="fw-normal"><%= new Date(order.orderStages.returnToBusiness.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
                   <% } else { %>
@@ -678,7 +802,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturning || 'Returning to Business' %></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturningToBusiness || 'Returning to Business' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -698,7 +822,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Return Completed - <span class="fw-normal"><%= new Date(order.orderStages.returnCompleted.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturnCompleted || 'Return completed' %> — <span class="fw-normal"><%= new Date(order.orderStages.returnCompleted.completedAt).toLocaleString(odLocale, odDateFmt) %></span></h6>
                     </div>
                   </div>
                   <% } else { %>
@@ -709,7 +833,7 @@
                       </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                      <h6 class="fs-15 mb-1 fw-semibold">Return Completed</h6>
+                      <h6 class="fs-15 mb-1 fw-semibold"><%= Od.stageReturnCompleted || 'Return completed' %></h6>
                     </div>
                   </div>
                   <% } %>
@@ -726,7 +850,7 @@
     <div class="card">
       <div class="card-header">
         <div class="d-flex align-items-center">
-          <h5 class="card-title flex-grow-1 mb-0">Customer Details</h5>
+          <h5 class="card-title flex-grow-1 mb-0"><%= Od.customerDetails || 'Customer details' %></h5>
         </div>
       </div>
       <div class="card-body">
@@ -744,7 +868,7 @@
                   </div>
                   <div class="flex-grow-1 ms-3">
                     <h6 class="fs-14 mb-1"><%= order.orderCustomer.fullName %></h6>
-                    <p class="text-muted mb-0">Customer</p>
+                    <p class="text-muted mb-0"><%= Od.labelCustomer || 'Customer' %></p>
                   </div>
                 </div>
               </li>
@@ -760,7 +884,7 @@
                 </div>
                 <div class="flex-grow-1 ms-3">
                   <h6 class="fs-14 mb-0"><%= order.orderCustomer.phoneNumber %></h6>
-                  <p class="text-muted mb-0">Contact Number</p>
+                  <p class="text-muted mb-0"><%= Od.labelContactNumber || 'Contact number' %></p>
                 </div>
               </li>
               <% if (order.orderCustomer.otherPhoneNumber) { %>
@@ -774,7 +898,7 @@
                 </div>
                 <div class="flex-grow-1 ms-3">
                   <h6 class="fs-14 mb-0"><%= order.orderCustomer.otherPhoneNumber %></h6>
-                  <p class="text-muted mb-0">Alternative Contact Number</p>
+                  <p class="text-muted mb-0"><%= Od.labelAltContact || 'Alternative contact' %></p>
                 </div>
               </li>
               <% } %>
@@ -788,8 +912,8 @@
                   </div>
                 </div>
                 <div class="flex-grow-1 ms-3">
-                  <span class="badge bg-warning text-dark">Work Address</span>
-                  <p class="text-muted mb-0">Delivery Destination</p>
+                  <span class="badge bg-warning text-dark"><%= Od.workAddressBadge || 'Work address' %></span>
+                  <p class="text-muted mb-0"><%= Od.deliveryDestination || 'Delivery destination' %></p>
                 </div>
               </li>
               <% } %>
@@ -806,7 +930,7 @@
                   </div>
                 </div>
                 <div class="flex-grow-1 ms-3">
-                  <p class="text-muted mb-0">Shipping Address</p>
+                  <p class="text-muted mb-0"><%= Od.shippingAddress || 'Shipping address' %></p>
                     <h6 class="fs-14 mb-1"><%= order.orderCustomer.address %></h6>
                     <h6 class="fs-14 mb-1"><%= order.orderCustomer.zone %></h6>
                     <h6 class="fs-14 mb-1"><%= order.orderCustomer.government %></h6>
@@ -821,30 +945,69 @@
 <div class="card shadow-sm border-0 mb-4">
   <div class="card-header bg-light py-3">
     <h5 class="card-title mb-0">
-      <i class="ri-truck-line align-middle me-2 text-primary"></i>
-      Order Shipping Details
+      <i class="ri-truck-line align-middle ms-2 me-2 text-primary" aria-hidden="true"></i>
+      <%= Od.orderShippingDetails || 'Shipping details' %>
     </h5>
   </div>
   <div class="card-body p-4">
-    <!-- Original Order Section -->
+    <!-- Order contents: return vs deliver/exchange -->
     <div class="border rounded p-3 mb-4 bg-white">
       <h6 class="mb-3 d-flex align-items-center">
-        <i class="ri-shopping-bag-line me-2 text-primary"></i>
-        Original Order
+        <i class="ri-shopping-bag-line ms-2 me-2 text-primary" aria-hidden="true"></i>
+        <% if (order.orderShipping.orderType === 'Return') { %>
+        <%= Od.returnDetailsSection || 'Return details' %>
+        <% } else { %>
+        <%= Od.originalOrder || 'Original order' %>
+        <% } %>
       </h6>
       <div class="row g-3">
         <div class="col-md-6">
-          <p class="text-muted small mb-1 fw-medium">Product Description:</p>
+          <p class="text-muted small mb-1 fw-medium">
+            <% if (order.orderShipping.orderType === 'Return') { %>
+            <%= Od.itemsToReturn || 'Items to return' %>:
+            <% } else { %>
+            <%= Od.productDescription || 'Product description' %>:
+            <% } %>
+          </p>
           <h6 class="mb-0 text-wrap fw-semibold"><%= order.orderShipping.productDescription %></h6>
         </div>
         <div class="col-md-6">
-          <p class="text-muted small mb-1 fw-medium">Number of Items:</p>
+          <p class="text-muted small mb-1 fw-medium"><%= Od.numberOfItems || 'Number of items' %>:</p>
           <h6 class="mb-0">
             <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
               <%= order.orderShipping.numberOfItems %>
             </span>
           </h6>
         </div>
+        <% if (order.orderShipping.orderType === 'Return' && order.orderShipping.originalOrderNumber) { %>
+        <div class="col-md-6">
+          <p class="text-muted small mb-1 fw-medium"><%= Od.linkedOriginalOrderNumber || 'Original order number' %>:</p>
+          <h6 class="mb-0 ltr-embed"><span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25"><%= order.orderShipping.originalOrderNumber %></span></h6>
+        </div>
+        <% } %>
+        <% if (order.orderShipping.orderType === 'Return' && order.orderShipping.returnReason) { %>
+        <div class="col-md-6">
+          <p class="text-muted small mb-1 fw-medium"><%= Od.returnReasonLabel || 'Return reason' %>:</p>
+          <h6 class="mb-0 text-wrap"><%= order.orderShipping.returnReason %></h6>
+        </div>
+        <% } %>
+        <% if (order.orderShipping.orderType === 'Return' && order.orderShipping.returnNotes) { %>
+        <div class="col-12">
+          <p class="text-muted small mb-1 fw-medium"><%= Od.returnNotesLabel || 'Return notes' %>:</p>
+          <p class="mb-0 text-body-secondary"><%= order.orderShipping.returnNotes %></p>
+        </div>
+        <% } %>
+        <% if (order.orderShipping.orderType === 'Return' && order.orderShipping.isPartialReturn) { %>
+        <div class="col-12">
+          <p class="mb-0">
+            <span class="badge bg-warning-subtle text-dark border me-1"><%= Od.partialReturnBadge || 'Partial return' %></span>
+            <span class="text-muted small">
+              <% var _om = order.orderShipping.originalOrderItemCount || order.orderShipping.numberOfItems; var _pr = order.orderShipping.partialReturnItemCount || order.orderShipping.numberOfItems; %>
+              <%= (Od.partialReturnCountOf || 'Returning {n} of {m} item(s) from the original order').replace('{n}', String(_pr)).replace('{m}', String(_om)) %>
+            </span>
+          </p>
+        </div>
+        <% } %>
       </div>
     </div>
 
@@ -852,16 +1015,16 @@
     <% if (order.orderShipping.productDescriptionReplacement) { %>
     <div class="border border-primary border-opacity-25 rounded p-3 mb-4 bg-white">
       <h6 class="mb-3 d-flex align-items-center">
-        <i class="ri-refresh-line me-2 text-primary"></i>
-        Replacement Items
+        <i class="ri-refresh-line ms-2 me-2 text-primary" aria-hidden="true"></i>
+        <%= Od.replacementItems || 'Replacement items' %>
       </h6>
       <div class="row g-3">
         <div class="col-md-6">
-          <p class="text-muted small mb-1 fw-medium">Replacement Product Description:</p>
+          <p class="text-muted small mb-1 fw-medium"><%= Od.replacementProductDescription || 'Replacement product description' %>:</p>
           <h6 class="mb-0 text-wrap fw-semibold"><%= order.orderShipping.productDescriptionReplacement %></h6>
         </div>
         <div class="col-md-6">
-          <p class="text-muted small mb-1 fw-medium">Number of Replacement Items:</p>
+          <p class="text-muted small mb-1 fw-medium"><%= Od.numberOfReplacementItems || 'Number of replacement items' %>:</p>
           <h6 class="mb-0">
             <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
               <%= order.orderShipping.numberOfItemsReplacement %>
@@ -876,16 +1039,16 @@
     <% if (order.orderShipping.amountType) { %>
     <div class="border border-warning border-opacity-25 rounded p-3 bg-white">
       <h6 class="mb-3 d-flex align-items-center">
-        <i class="ri-money-dollar-circle-line me-2 text-warning"></i>
-        Payment Information
+        <i class="ri-money-dollar-circle-line ms-2 me-2 text-warning" aria-hidden="true"></i>
+        <%= Od.paymentInformation || 'Payment information' %>
       </h6>
       <div class="row g-3">
         <div class="col-md-6">
           <p class="text-muted small mb-1 fw-medium">
             <% if (order.orderShipping.amountType === 'CD') { %>
-            Cash Difference Amount:
+            <%= Od.cashDifferenceAmount || 'Cash difference amount' %>:
             <% } else if (order.orderShipping.amountType === 'COD') { %>
-            Cash on Delivery Amount:
+            <%= Od.cashOnDeliveryAmount || 'Cash on delivery amount' %>:
             <% } %>
           </p>
         </div>
@@ -896,37 +1059,37 @@
     </div>
     <% } %>
     
-    <!-- Shipping Type Information -->
-    <% if (order.orderShipping.isExpressShipping) { %>
+    <!-- Shipping Type Information (express is only for Deliver) -->
+    <% if (order.orderShipping.isExpressShipping && order.orderShipping.orderType === 'Deliver') { %>
     <div class="border border-success border-opacity-25 rounded p-3 mt-3 bg-white">
       <h6 class="mb-3 d-flex align-items-center">
-        <i class="ri-rocket-line me-2 text-success"></i>
-        Express Shipping
+        <i class="ri-rocket-line ms-2 me-2 text-success" aria-hidden="true"></i>
+        <%= Od.expressShipping || 'Express shipping' %>
       </h6>
       <div class="row g-3">
         <div class="col-md-12">
           <p class="text-muted small mb-1 fw-medium">
-            This order uses express shipping for same-day delivery service.
+            <%= Od.expressShippingDesc || '' %>
           </p>
           <div class="badge bg-success-subtle text-success rounded-pill px-3 py-1 mt-1">
-            <i class="ri-time-line me-1"></i> Priority Handling
+            <i class="ri-time-line ms-1 me-1" aria-hidden="true"></i> <%= Od.priorityHandling || 'Priority handling' %>
           </div>
         </div>
         <% if (selectedPickupAddress) { %>
         <div class="col-md-12 mt-3">
-          <p class="text-muted small mb-1 fw-medium">Pickup Address:</p>
+          <p class="text-muted small mb-1 fw-medium"><%= Od.pickupAddress || 'Pickup address' %>:</p>
           <div class="p-2 bg-light rounded">
-            <h6 class="mb-1 fw-semibold"><%= selectedPickupAddress.addressName || 'Pickup Address' %></h6>
+            <h6 class="mb-1 fw-semibold"><%= selectedPickupAddress.addressName || Od.defaultPickupName || 'Pickup address' %></h6>
             <p class="mb-1 text-muted small"><%= selectedPickupAddress.adressDetails || '' %></p>
             <p class="mb-0 text-muted small"><%= selectedPickupAddress.zone || '' %>, <%= selectedPickupAddress.city || '' %>, <%= selectedPickupAddress.country || '' %></p>
             <% if (selectedPickupAddress.nearbyLandmark) { %>
-            <p class="mb-0 text-muted small mt-1"><i class="ri-map-pin-line me-1"></i>Nearby: <%= selectedPickupAddress.nearbyLandmark %></p>
+            <p class="mb-0 text-muted small mt-1"><i class="ri-map-pin-line ms-1 me-1" aria-hidden="true"></i><%= Od.nearbyPrefix || 'Nearby:' %> <%= selectedPickupAddress.nearbyLandmark %></p>
             <% } %>
             <% if (selectedPickupAddress.pickupPhone) { %>
-            <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line me-1"></i>Contact: <%= selectedPickupAddress.pickupPhone %></p>
+            <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line ms-1 me-1" aria-hidden="true"></i><%= Od.contactPrefix || 'Contact:' %> <%= selectedPickupAddress.pickupPhone %></p>
             <% } %>
             <% if (selectedPickupAddress.otherPickupPhone) { %>
-            <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line me-1"></i>Alternative: <%= selectedPickupAddress.otherPickupPhone %></p>
+            <p class="mb-0 text-muted small mt-1"><i class="ri-phone-line ms-1 me-1" aria-hidden="true"></i><%= Od.alternativePrefix || 'Alternative:' %> <%= selectedPickupAddress.otherPickupPhone %></p>
             <% } %>
           </div>
         </div>
@@ -942,35 +1105,36 @@
     <div class="card">
       <div class="card-header">
         <div class="d-flex">
-          <h5 class="card-title flex-grow-1 mb-0"><i class="mdi mdi-truck-fast-outline align-middle me-1 text-muted"></i> Logistics Details</h5>
+          <h5 class="card-title flex-grow-1 mb-0"><i class="mdi mdi-truck-fast-outline align-middle ms-1 me-1 text-muted" aria-hidden="true"></i> <%= Od.logisticsDetails || 'Logistics' %></h5>
         </div>
       </div>
       <div class="card-body">
         <% if (order.orderStatus === 'canceled') { %>
           <div class="text-center">
             <lord-icon src="https://cdn.lordicon.com/etwtznjn.json" trigger="loop" colors="primary:#dc3545,secondary:#fd7e14" style="width:80px;height:80px"></lord-icon>
-            <h5 class="fs-16 mt-2 text-danger">Order Canceled</h5>
-            <p class="text-muted mb-0">This order has been canceled</p>
+            <h5 class="fs-16 mt-2 text-danger"><%= Od.orderCanceled || 'Order canceled' %></h5>
+            <p class="text-muted mb-0"><%= Od.orderCanceledBody || '' %></p>
             <% if (order.orderStages.canceled && order.orderStages.canceled.completedAt) { %>
-            <p class="text-muted mb-0">Canceled on: <%= new Date(order.orderStages.canceled.completedAt).toLocaleDateString() %></p>
+            <p class="text-muted mb-0"><%= Od.canceledOn || '' %> <span class="ltr-embed"><%= new Date(order.orderStages.canceled.completedAt).toLocaleDateString(odLocale) %></span></p>
             <% } %>
+            <% if (odTrackingBiz) { %><p class="text-muted small mb-0 mt-2"><%= Od.trackingOrAwb || 'Tracking / AWB' %>: <strong class="ltr-embed"><%= odTrackingBiz %></strong></p><% } %>
           </div>
         <% } else if (order.orderStatus === 'returned') { %>
           <div class="text-center">
             <lord-icon src="https://cdn.lordicon.com/etwtznjn.json" trigger="loop" colors="primary:#fd7e14,secondary:#ffc107" style="width:80px;height:80px"></lord-icon>
             <h5 class="fs-16 mt-2 text-warning"><%= Od.stageReturned || 'Order Returned' %></h5>
-            <p class="text-muted mb-0">This order has been returned to the business</p>
+            <p class="text-muted mb-0"><%= Od.returnedBody || '' %></p>
             <% if (order.orderStages.returned && order.orderStages.returned.completedAt) { %>
-            <p class="text-muted mb-0">Returned on: <%= new Date(order.orderStages.returned.completedAt).toLocaleDateString() %></p>
+            <p class="text-muted mb-0"><%= Od.returnedOn || '' %> <span class="ltr-embed"><%= new Date(order.orderStages.returned.completedAt).toLocaleDateString(odLocale) %></span></p>
             <% } %>
           </div>
         <% } else if (order.orderStatus === 'returnLinked') { %>
           <div class="text-center">
             <lord-icon src="https://cdn.lordicon.com/etwtznjn.json" trigger="loop" colors="primary:#0dcaf0,secondary:#6f42c1" style="width:80px;height:80px"></lord-icon>
-            <h5 class="fs-16 mt-2 text-info">Return Linked</h5>
-            <p class="text-muted mb-0">This order is linked to a return order</p>
+            <h5 class="fs-16 mt-2 text-info"><%= Od.returnLinked || 'Return linked' %></h5>
+            <p class="text-muted mb-0"><%= Od.returnLinkedBody || '' %></p>
             <% if (order.orderShipping.returnOrderCode) { %>
-            <p class="text-muted mb-0">Return Order: <%= order.orderShipping.returnOrderCode %></p>
+            <p class="text-muted mb-0"><%= Od.returnOrderLabel || '' %> <span class="ltr-embed"><%= order.orderShipping.returnOrderCode %></span></p>
             <% } %>
           </div>
         <% } else if (order.orderStatus!='completed') { %>
@@ -978,27 +1142,27 @@
           <% if (order.orderStages.delivered.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/tkkkkkdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2"><%= Od.stageDelivered || 'Order Delivered' %></h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <p class="text-muted mb-0"><%= Od.referenceId || 'Reference:' %> <span class="ltr-embed"><%= odTrackingBiz || order.orderNumber %></span></p>
           <% } else if (order.orderStages.outForDelivery.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/uetqnvvg.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">Out For Delivery </h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <h5 class="fs-16 mt-2"><%= Od.stageOutForDelivery || 'Out for delivery' %></h5>
+          <p class="text-muted mb-0"><%= Od.referenceId || 'Reference:' %> <span class="ltr-embed"><%= odTrackingBiz || order.orderNumber %></span></p>
           <% } else if (order.orderStages.inProgress.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/ndydpcaq.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">In Progress</h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <h5 class="fs-16 mt-2"><%= Od.stageInProgress || 'In progress' %></h5>
+          <p class="text-muted mb-0"><%= Od.referenceId || 'Reference:' %> <span class="ltr-embed"><%= odTrackingBiz || order.orderNumber %></span></p>
           <% } else if (order.orderStages.shipping.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/dxjqoygy.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">Shipping</h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <h5 class="fs-16 mt-2"><%= Od.stageShipping || 'Shipping' %></h5>
+          <p class="text-muted mb-0"><%= Od.referenceId || 'Reference:' %> <span class="ltr-embed"><%= odTrackingBiz || order.orderNumber %></span></p>
           <% } else if (order.orderStages.packed.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/ndydpcaq.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2"><%= Od.stagePacked || 'Packed' %></h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <p class="text-muted mb-0"><%= Od.referenceId || 'Reference:' %> <span class="ltr-embed"><%= odTrackingBiz || order.orderNumber %></span></p>
           <% } else { %>
           <lord-icon src="https://cdn.lordicon.com/tdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2"><%= Od.stagePlaced || 'Order Placed' %></h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <p class="text-muted mb-0"><%= Od.referenceId || 'Reference:' %> <span class="ltr-embed"><%= odTrackingBiz || order.orderNumber %></span></p>
           <% } %>
         </div>
         <% } %>
@@ -1011,31 +1175,39 @@
 
     <div class="card">
       <div class="card-header">
-        <h5 class="card-title mb-0"><i class="ri-secure-payment-line align-bottom me-1 text-muted"></i> Billing Info</h5>
+        <h5 class="card-title mb-0"><i class="ri-secure-payment-line align-bottom ms-1 me-1 text-muted" aria-hidden="true"></i> <%= Od.billingInfo || 'Billing' %></h5>
       </div>
       <div class="card-body">
         <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
-            <p class="text-muted mb-0">Order Type:</p>
+            <p class="text-muted mb-0"><%= Od.orderType || 'Order type' %>:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0"><%= order.orderShipping.orderType %></h6>
+            <h6 class="mb-0 ltr-embed"><%= odOrderTypeLabel(order.orderShipping.orderType) %></h6>
           </div>
         </div>
         <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
-            <p class="text-muted mb-0">Amount Type:</p>
+            <p class="text-muted mb-0"><%= Od.amountType || 'Amount type' %>:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0"><%= order.orderShipping.amountType %></h6>
+            <h6 class="mb-0 ltr-embed"><%= odAmountTypeLabel(order.orderShipping.amountType) %></h6>
           </div>
         </div>
         <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
-            <p class="text-muted mb-0">Amount:</p>
+            <p class="text-muted mb-0"><%= Od.amountLabel || 'Amount' %>:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0"><%= order.orderShipping.amount %></h6>
+            <h6 class="mb-0 ltr-embed"><%= odAmountDisplayBiz %></h6>
+          </div>
+        </div>
+        <div class="d-flex align-items-center mb-2">
+          <div class="flex-shrink-0">
+            <p class="text-muted mb-0"><%= Od.orderFees || 'Order fees' %>:</p>
+          </div>
+          <div class="flex-grow-1 ms-2">
+            <h6 class="mb-0 ltr-embed"><%= order.orderFees %> EGP</h6>
           </div>
         </div>
       </div>
@@ -1051,7 +1223,7 @@
 <div class="card shadow-sm border-0 mb-4">
   <div class="card-header bg-light py-3">
     <h5 class="card-title mb-0">
-      <i class="ri-history-line align-middle me-2 text-primary"></i>
+      <i class="ri-history-line align-middle ms-2 me-2 text-primary" aria-hidden="true"></i>
       <%= Od.courierHistory || 'Courier History' %>
     </h5>
   </div>
@@ -1063,18 +1235,18 @@
             <th scope="col" style="width:20%"><%= Od.colDate || 'Date' %></th>
             <th scope="col" style="width:15%"><%= Od.colCourier || 'Courier' %></th>
             <th scope="col" style="width:20%"><%= Od.colAction || 'Action' %></th>
-            <th scope="col" style="width:45%"><%= Od.colNote || 'Notes' %></th>
+            <th scope="col" style="width:45%"><%= Od.colNote || 'Note' %></th>
           </tr>
         </thead>
         <tbody>
           <% order.courierHistory.sort((a, b) => new Date(b.assignedAt) - new Date(a.assignedAt)).forEach(history => { %>
           <tr>
-            <td><%= new Date(history.assignedAt).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></td>
+            <td><%= new Date(history.assignedAt).toLocaleString(odLocale, odDateFmt) %></td>
             <td>
               <% if (history.courier && history.courier.name) { %>
                 <%= history.courier.name %>
               <% } else { %>
-                <span class="text-muted">Unknown</span>
+                <span class="text-muted"><%= Od.unknownCourier || 'Unknown' %></span>
               <% } %>
             </td>
             <td>
@@ -1084,27 +1256,27 @@
                 
                 if (history.action === 'assigned') {
                   badgeClass = 'bg-info-subtle text-info';
-                  actionText = 'Assigned';
+                  actionText = Od.actionAssigned || 'Assigned';
                 } else if (history.action === 'pickup_from_customer') {
                   badgeClass = 'bg-warning-subtle text-warning';
-                  actionText = 'Pickup from Customer';
+                  actionText = Od.actionPickupFromCustomer || 'Pickup from customer';
                 } else if (history.action === 'delivered_to_warehouse') {
                   badgeClass = 'bg-success-subtle text-success';
-                  actionText = 'Delivered to Warehouse';
+                  actionText = Od.actionDeliveredToWarehouse || 'Delivered to warehouse';
                 } else if (history.action === 'pickup_from_warehouse') {
                   badgeClass = 'bg-warning-subtle text-warning';
-                  actionText = 'Pickup from Warehouse';
+                  actionText = Od.actionPickupFromWarehouse || 'Pickup from warehouse';
                 } else if (history.action === 'delivered_to_business') {
                   badgeClass = 'bg-success-subtle text-success';
-                  actionText = 'Delivered to Business';
+                  actionText = Od.actionDeliveredToBusiness || 'Delivered to business';
                 } else if (history.action === 'completed') {
                   badgeClass = 'bg-success-subtle text-success';
-                  actionText = 'Completed';
+                  actionText = Od.actionCompleted || 'Completed';
                 }
               %>
               <span class="badge <%= badgeClass %>"><%= actionText %></span>
             </td>
-            <td><%= history.notes || 'No notes' %></td>
+            <td><%= history.notes || Od.noNotes || 'No notes' %></td>
           </tr>
           <% }); %>
         </tbody>
@@ -1121,9 +1293,9 @@
     <div class="card">
       <div class="card-body">
         <div class="text-center">
-          <img src="/assets/images/empty.svg" alt="" class="img-fluid" style="max-width: 220px;">
-          <h4 class="mt-4">No Order Found</h4>
-          <p class="text-muted  mb-0">We couldn't find the order you are looking for.</p>
+          <img src="/assets/images/empty.svg" alt="<%= Od.noOrderFound || 'No order' %>" class="img-fluid" style="max-width: 220px;">
+          <h4 class="mt-4"><%= Od.noOrderFound || 'No order found' %></h4>
+          <p class="text-muted mb-0"><%= Od.noOrderFoundBody || '' %></p>
         </div>
       </div>
     </div>
@@ -1139,78 +1311,130 @@
 
 <script src="/assets/rJS/business/order-details.js"></script>
 <script>
-  // Intercept forms with data-ajax to show toaster based on JSON response
-  document.addEventListener('DOMContentLoaded', function(){
-    document.querySelectorAll('form[data-ajax]').forEach(function(form){
-      form.addEventListener('submit', async function(e){
-        e.preventDefault();
-        try {
-          const resp = await fetch(form.action, { method: form.method || 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
-          const data = await resp.json().catch(()=>({}));
-          if (resp.ok) {
-            Swal.fire({ icon: 'success', title: 'Success', text: data.message || 'Action completed successfully', timer: 1800, showConfirmButton: false });
-            setTimeout(()=>window.location.reload(), 900);
-          } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message || 'Something went wrong' });
-          }
-        } catch (err) {
-          Swal.fire({ icon: 'error', title: 'Error', text: 'Network error' });
-        }
-      });
-    });
-  });
+  (function () {
+    var __OD = (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.orderDetails) ? window.__NS_BUSINESS_I18N.orderDetails : {};
 
-
-  // Mark order as returned
-  async function markOrderAsReturned(orderId) {
-    try {
-      const result = await Swal.fire({
-        title: 'Mark Order as Returned',
-        text: 'Are you sure you want to mark this order as returned? This action cannot be undone.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#198754',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, mark as returned',
-        cancelButtonText: 'Cancel'
-      });
-
-      if (result.isConfirmed) {
-        const response = await fetch(`/business/orders/${orderId}/mark-returned`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('form[data-ajax]').forEach(function (form) {
+        form.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          try {
+            const resp = await fetch(form.action, {
+              method: form.method || 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(Object.fromEntries(new FormData(form))),
+            });
+            const data = await resp.json().catch(function () { return {}; });
+            if (resp.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: __OD.ajaxSuccess || 'Success',
+                text: data.message || __OD.ajaxCompleted || 'Action completed successfully',
+                timer: 1800,
+                showConfirmButton: false,
+              });
+              setTimeout(function () { window.location.reload(); }, 900);
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: __OD.ajaxError || 'Error',
+                text: data.error || data.message || __OD.ajaxSomethingWrong || 'Something went wrong',
+              });
+            }
+          } catch (err) {
+            Swal.fire({ icon: 'error', title: __OD.ajaxError || 'Error', text: __OD.networkError || 'Network error' });
           }
         });
+      });
+    });
 
-        const data = await response.json();
-
+    window.deleteOrderFromDetails = async function (orderNumber) {
+      const result = await Swal.fire({
+        title: __OD.deleteConfirmTitle || 'Delete order?',
+        text: __OD.deleteConfirmText || 'This will permanently remove the order. You cannot undo this.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: __OD.deleteConfirmYes || 'Yes, delete it',
+        cancelButtonText: __OD.deleteConfirmNo || 'Cancel',
+      });
+      if (!result.isConfirmed) return;
+      try {
+        const response = await fetch('/business/orders/delete-order/' + orderNumber, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+        });
+        const data = await response.json().catch(function () { return {}; });
         if (response.ok) {
-          Swal.fire({
+          await Swal.fire({
             icon: 'success',
-            title: 'Order Marked as Returned',
-            text: data.message || 'Order has been successfully marked as returned.',
-            timer: 3000
-          }).then(() => {
-            window.location.reload();
+            title: __OD.deleteDoneTitle || 'Deleted',
+            text: data.message || __OD.deleteSuccessText || 'Order deleted successfully.',
+            timer: 2000,
+            showConfirmButton: false,
           });
+          window.location.href = '/business/orders';
         } else {
           Swal.fire({
             icon: 'error',
-            title: 'Error',
-            text: data.error || 'Failed to mark order as returned. Please try again.'
+            title: __OD.cannotDeleteTitle || 'Cannot delete',
+            text: data.error || __OD.deleteErrorText || 'This order cannot be deleted.',
           });
         }
+      } catch (err) {
+        console.error('deleteOrderFromDetails error:', err);
+        Swal.fire({ icon: 'error', title: __OD.ajaxError || 'Error', text: __OD.networkError || 'Network error' });
       }
-    } catch (error) {
-      console.error('Error marking order as returned:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'An unexpected error occurred. Please try again.'
-      });
-    }
-  }
+    };
 
+    window.markOrderAsReturned = async function (orderId) {
+      try {
+        const result = await Swal.fire({
+          title: __OD.markReturnedTitle || 'Mark as returned?',
+          text: __OD.markReturnedText || '',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#198754',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: __OD.markReturnedConfirm || 'Yes',
+          cancelButtonText: __OD.markReturnedCancel || 'Cancel',
+        });
+
+        if (!result.isConfirmed) return;
+
+        const response = await fetch('/business/orders/' + orderId + '/mark-returned', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        const data = await response.json().catch(function () { return {}; });
+
+        if (response.ok) {
+          await Swal.fire({
+            icon: 'success',
+            title: __OD.markReturnedSuccessTitle || 'Done',
+            text: data.message || __OD.markReturnedSuccessText || '',
+            timer: 3000,
+          });
+          window.location.reload();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: __OD.ajaxError || 'Error',
+            text: data.error || __OD.markReturnedFailText || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error marking order as returned:', error);
+        Swal.fire({
+          icon: 'error',
+          title: __OD.ajaxError || 'Error',
+          text: __OD.unexpectedError || '',
+        });
+      }
+    };
+  })();
 </script>
 <!-- App js -->

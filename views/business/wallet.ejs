@@ -1,4 +1,9 @@
 <%- contentFor('HeaderCss') %>
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<% } %>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <style>
   /* ── Balance hero ─────────────────────────────── */
@@ -12,7 +17,8 @@
   .wl-hero::before {
     content: '';
     position: absolute;
-    right: -60px; top: -60px;
+    inset-inline-end: -60px;
+    top: -60px;
     width: 220px; height: 220px;
     border-radius: 50%;
     background: rgba(255,255,255,.04);
@@ -21,7 +27,8 @@
   .wl-hero::after {
     content: '';
     position: absolute;
-    right: 60px; bottom: -80px;
+    inset-inline-end: 60px;
+    bottom: -80px;
     width: 180px; height: 180px;
     border-radius: 50%;
     background: rgba(228,162,74,.08);
@@ -119,11 +126,34 @@
   }
   .wl-stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
   .wl-stat-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #868e96; }
+
+  html[dir='rtl'] .wl-stat-label {
+    text-transform: none;
+    letter-spacing: normal;
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+  }
+  html[dir='rtl'] .wl-hero,
+  html[dir='rtl'] .card-header .card-title,
+  html[dir='rtl'] .wl-filter-bar {
+    font-family: 'Cairo', 'Tajawal', sans-serif;
+  }
+  html[dir='rtl'] .table thead th {
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  html[dir='rtl'] #ledgerPagination .page-link {
+    direction: ltr;
+  }
 </style>
 
 <%- contentFor('body') %>
-<% var Wp = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.wallet) ? translation.business.pages.wallet : {}; %>
-<% var _numLoc = (typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-EG' : 'en-EG'; %>
+<%
+  var WpPage = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.wallet) ? translation.business.pages.wallet : {};
+  var WpJs   = (typeof translation !== 'undefined' && translation.business && translation.business.js && translation.business.js.wallet) ? translation.business.js.wallet : {};
+  var Wp     = Object.assign({}, WpJs, WpPage);
+  var _numLoc = (typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-EG' : 'en-US';
+  var _cur = Wp.currency || 'EGP';
+%>
 
 <!-- ── Balance hero ─────────────────────────────────────── -->
 <div class="wl-hero p-4 mb-4">
@@ -131,7 +161,7 @@
     <div class="col-12 col-md-auto">
       <p class="mb-1 opacity-75 fs-13"><%= Wp.availableBalance || 'Available Balance' %></p>
       <div class="wl-balance-amount mb-2" id="heroBalance">
-        <span class="ltr-embed"><%= balance.toLocaleString(_numLoc) %></span> <span class="fs-5 fw-normal opacity-75">EGP</span>
+        <span class="ltr-embed"><%= balance.toLocaleString(_numLoc) %></span> <span class="fs-5 fw-normal opacity-75"><%= _cur %></span>
       </div>
       <% if (businessAccountCode) { %>
       <p class="mb-0 opacity-90 fs-12"><i class="ri-shield-keyhole-line me-1"></i><%= Wp.accountCodeLabel || 'Account' %> <span class="font-monospace fw-semibold letter-spacing-1 ltr-embed"><%= businessAccountCode %></span></p>
@@ -221,11 +251,11 @@
       <!-- Type filter -->
       <select class="form-select form-select-sm" id="typeFilter" style="width:auto;">
         <option value="all"><%= Wp.filterAllTypes || 'All Types' %></option>
-        <option value="cod_collected"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.cod_collected) || 'COD Collected' %></option>
-        <option value="delivery_fee"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.delivery_fee) || 'Delivery Fee' %></option>
-        <option value="pickup_fee"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.pickup_fee) || 'Pickup Fee' %></option>
-        <option value="adjustment"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.adjustment) || 'Adjustment' %></option>
-        <option value="payout"><%= (translation.business && translation.business.js && translation.business.js.wallet && translation.business.js.wallet.types && translation.business.js.wallet.types.payout) || 'Payout' %></option>
+        <option value="cod_collected"><%= (Wp.types && Wp.types.cod_collected) || 'COD Collected' %></option>
+        <option value="delivery_fee"><%= (Wp.types && Wp.types.delivery_fee) || 'Delivery Fee' %></option>
+        <option value="pickup_fee"><%= (Wp.types && Wp.types.pickup_fee) || 'Pickup Fee' %></option>
+        <option value="adjustment"><%= (Wp.types && Wp.types.adjustment) || 'Adjustment' %></option>
+        <option value="payout"><%= (Wp.types && Wp.types.payout) || 'Payout' %></option>
       </select>
 
       <!-- Status -->
@@ -237,7 +267,7 @@
 
       <!-- Search -->
       <div class="search-box ms-auto" style="min-width:200px;">
-        <input type="text" class="form-control form-control-sm search" id="searchInput" placeholder="<%= Wp.searchPlaceholder || 'Search order, description…' %>">
+        <input type="text" class="form-control form-control-sm search" id="searchInput" dir="auto" placeholder="<%= Wp.searchPlaceholder || 'Search order, description…' %>">
         <i class="ri-search-line search-icon"></i>
       </div>
     </div>
@@ -270,4 +300,12 @@
   </div>
 </div>
 
+<script>
+  window.__NS_BUSINESS_I18N = window.__NS_BUSINESS_I18N || {};
+  window.__NS_BUSINESS_I18N.wallet = Object.assign(
+    {},
+    window.__NS_BUSINESS_I18N.wallet || {},
+    <%- JSON.stringify(WpJs) %>
+  );
+</script>
 <script src="/assets/rJS/business/wallet.js"></script>

@@ -3,30 +3,59 @@ const __NS_OD =
     ? window.__NS_BUSINESS_I18N.orderDetails
     : {};
 
-async function cancelOrder(orderId, isReturnFlow) {
-  if (isReturnFlow) {
-    // Enhanced confirmation for return request
-    const result = await Swal.fire({
-      title: 'Request Return',
-      html: `
-        <p class="text-muted mb-3">Once confirmed, we will assign a courier to pick up the item from your customer.</p>
-        <div class="text-start" style="background:#f8fafc;border-radius:10px;padding:1rem;font-size:.875rem;">
-          <p class="mb-2 fw-semibold" style="color:#0f172a;">Here's what happens next:</p>
+function escapeHtml(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function returnRequestDialogHtml() {
+  const intro = escapeHtml(__NS_OD.requestReturnIntro || '');
+  const h = escapeHtml(__NS_OD.requestReturnWhatNext || '');
+  const s1 = escapeHtml(__NS_OD.requestReturnStep1 || '');
+  const s2 = escapeHtml(__NS_OD.requestReturnStep2 || '');
+  const s3 = escapeHtml(__NS_OD.requestReturnStep3 || '');
+  const s4 = escapeHtml(__NS_OD.requestReturnStep4 || '');
+  const s5 = escapeHtml(__NS_OD.requestReturnStep5 || '');
+  return `
+        <p class="text-muted mb-3">${intro}</p>
+        <div class="text-start od-return-steps" style="background:#f8fafc;border-radius:10px;padding:1rem;font-size:.875rem;">
+          <p class="mb-2 fw-semibold" style="color:#0f172a;">${h}</p>
           <ol class="mb-0 ps-3" style="color:#475569;line-height:1.9;">
-            <li>Admin assigns a courier for pickup</li>
-            <li>A one-time OTP is sent to your customer via SMS</li>
-            <li>Courier visits the customer and verifies OTP before pickup</li>
-            <li>Item is delivered back to our warehouse</li>
-            <li>Return is processed and delivered back to you</li>
+            <li>${s1}</li>
+            <li>${s2}</li>
+            <li>${s3}</li>
+            <li>${s4}</li>
+            <li>${s5}</li>
           </ol>
         </div>
-      `,
+      `;
+}
+
+function returnSuccessHtml(message) {
+  const body = escapeHtml(message || __NS_OD.returnRequestedBody || '');
+  const note = escapeHtml(__NS_OD.returnRequestedOtpNote || '');
+  return `
+            <p>${body}</p>
+            <p class="text-muted small mt-2">
+              <i class="ri-shield-keyhole-line me-1" style="color:#F39720;"></i>
+              ${note}
+            </p>
+          `;
+}
+
+async function cancelOrder(orderId, isReturnFlow) {
+  if (isReturnFlow) {
+    const result = await Swal.fire({
+      title: __NS_OD.requestReturnTitle || 'Request return',
+      html: returnRequestDialogHtml(),
       icon: 'info',
       showCancelButton: true,
       confirmButtonColor: '#F39720',
       cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, Request Return',
-      cancelButtonText: 'Not Now',
+      confirmButtonText: __NS_OD.requestReturnConfirm || 'Yes, request return',
+      cancelButtonText: __NS_OD.requestReturnCancel || 'Not now',
       customClass: { popup: 'rounded-3', confirmButton: 'rounded-2', cancelButton: 'rounded-2' },
     });
     if (!result.isConfirmed) return;
@@ -44,28 +73,23 @@ async function cancelOrder(orderId, isReturnFlow) {
   }
 
   try {
-    const response = await fetch(
-      `/business/orders/cancel-order/${orderId}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    const response = await fetch(`/business/orders/cancel-order/${orderId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     let data = {};
-    try { data = await response.json(); } catch (_) { data = {}; }
+    try {
+      data = await response.json();
+    } catch (_) {
+      data = {};
+    }
 
     if (response.ok) {
       if (isReturnFlow) {
         await Swal.fire({
-          title: 'Return Requested!',
-          html: `
-            <p>${data.message || 'Your return request has been submitted successfully.'}</p>
-            <p class="text-muted small mt-2">
-              <i class="ri-shield-keyhole-line me-1" style="color:#F39720;"></i>
-              Once admin assigns a courier, your customer will automatically receive an OTP via SMS for pickup verification.
-            </p>
-          `,
+          title: __NS_OD.returnRequestedTitle || 'Return requested',
+          html: returnSuccessHtml(data.message),
           icon: 'success',
           confirmButtonText: __NS_OD.ok || 'OK',
           confirmButtonColor: '#F39720',

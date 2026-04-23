@@ -120,9 +120,13 @@ router.post('/orders/print-policy/:orderNumber/:pageSize', businessController.pr
 // API route for mobile - returns JSON data
 router.get('/order-details/:orderNumber', businessController.get_orderDetailsAPI);
 
+// ── Order mutations ──────────────────────────────────────────────────────────
 router.put('/orders/edit-order/:orderId', businessController.editOrder);
 
+router.post('/orders/cancel-order/:orderId', businessController.cancelOrder);
+
 router.delete('/orders/delete-order/:orderId', businessController.deleteOrder);
+// ─────────────────────────────────────────────────────────────────────────────
 
 router.post('/calculate-fees', businessController.calculateOrderFees);
 
@@ -143,14 +147,15 @@ router.get('/pickup-details/:pickupNumber/get-pickedup-orders', businessControll
 
 router.post('/pickup-details/:pickupNumber/rate-pickup', businessController.ratePickup);
 
+// Update / cancel by human-readable pickup number (same param as other pickup-details routes)
+router.put('/pickup-details/:pickupNumber/cancel', businessController.cancelPickup);
+router.put('/pickup-details/:pickupNumber', businessController.updatePickup);
+
 router.delete('/pickup-details/:pickupNumber/delete-pickup', businessController.deletePickup);
 
-// Delete pickup by ID (alternative endpoint)
-router.delete('/pickups/:pickupId', businessController.deletePickup);
-
-
-// edit profile
+// edit profile (JSON and/or multipart profileImage). POST is an alias for clients that do not support PUT + multipart.
 router.put('/edit-profile', businessController.editProfile);
+router.post('/edit-profile', businessController.editProfile);
 
 // ==================== RETURN FLOW APIs ==================== //
 
@@ -173,6 +178,8 @@ router.get('/return-orders', businessController.getReturnOrders);
 // router.post('/orders/:orderId/initiate-return', businessController.initiateReturn);
 
 // ==================== WAITING ACTION APIs ==================== //
+// Web mirrors these under /api/v1/business with the same :orderId (Mongo _id or order number).
+// Cancel-from-waiting: web also exposes POST /business/orders/:orderId/cancel (alias).
 
 // Retry order tomorrow
 router.post('/orders/:orderId/retry-tomorrow', businessController.retryTomorrow);
@@ -187,9 +194,6 @@ router.post('/orders/:orderId/return-to-warehouse', businessController.returnToW
 router.post('/orders/:orderId/cancel-from-waiting', businessController.cancelFromWaiting);
 
 // ==================== ORDER MANAGEMENT APIs ==================== //
-
-// Cancel order with proper status transition
-router.post('/orders/:orderId/cancel', businessController.cancelOrder);
 
 // Validate original order for return
 router.post('/orders/validate-original', businessController.validateOriginalOrder);

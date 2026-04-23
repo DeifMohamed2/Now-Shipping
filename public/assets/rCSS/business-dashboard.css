@@ -1,0 +1,709 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Business Dashboard — React-inspired design
+   Palette: #F5A623 orange / #0F172A dark / #F8FAFC page bg
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Design tokens ──────────────────────────────────────────────────────── */
+:root {
+  --db-orange:        #F5A623;
+  --db-orange-lt:     rgba(245,166,35,.12);
+  --db-orange-md:     rgba(245,166,35,.28);
+  --db-teal:          #0ab39c;
+  --db-teal-lt:       rgba(10,179,156,.12);
+  --db-blue:          #4b9fda;
+  --db-blue-lt:       rgba(75,159,218,.12);
+  --db-purple:        #7c3aed;
+  --db-purple-lt:     rgba(124,58,237,.12);
+  --db-amber:         #f7b84b;
+  --db-amber-lt:      rgba(247,184,75,.12);
+  --db-danger:        #EF4444;
+  --db-danger-lt:     rgba(239,68,68,.12);
+  --db-success:       #16A34A;
+  --db-success-lt:    rgba(22,163,74,.12);
+  --db-dark:          #0F172A;
+  --db-text:          #1E293B;
+  --db-muted:         #64748B;
+  --db-border:        rgba(0,0,0,.07);
+  --db-bg-card:       #ffffff;
+  --db-bg-page:       #F8FAFC;
+  --db-radius:        1rem;
+  --db-radius-sm:     .625rem;
+  --db-shadow:        0 2px 16px rgba(0,0,0,.055);
+  --db-shadow-hover:  0 12px 40px rgba(245,166,35,.13);
+  --db-transition:    all .25s ease;
+
+  /* KPI colour themes */
+  --db-kpi-color:     var(--db-orange);
+  --db-kpi-lt:        var(--db-orange-lt);
+}
+
+/* ── Page background ────────────────────────────────────────────────────── */
+.page-content {
+  background: var(--db-bg-page) !important;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.db-header {
+  animation: ns-fade-in-down .45s ease both;
+}
+
+.db-greeting {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--db-text);
+  letter-spacing: -.02em;
+  line-height: 1.3;
+}
+
+.db-greeting-name {
+  color: var(--db-orange);
+}
+
+.db-greeting-sub {
+  font-size: .82rem;
+  color: var(--db-muted);
+}
+
+.db-today-date {
+  font-size: .78rem;
+  color: #94A3B8;
+}
+
+/* ── Range filter card ──────────────────────────────────────────────────── */
+.db-range-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid var(--db-border);
+  border-radius: .875rem;
+  padding: 4px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.05);
+}
+
+.db-range-pill {
+  border: none;
+  background: transparent;
+  padding: .3rem .8rem;
+  border-radius: .625rem;
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--db-muted);
+  cursor: pointer;
+  transition: var(--db-transition);
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.db-range-pill:hover {
+  color: var(--db-orange);
+  background: var(--db-orange-lt);
+}
+
+.db-range-pill.active {
+  background: var(--db-orange);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(245,166,35,.35);
+}
+
+.db-refresh-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: .5rem;
+  background: #F1F5F9;
+  color: #94A3B8;
+  cursor: pointer;
+  font-size: .95rem;
+  margin-left: 2px;
+  transition: var(--db-transition);
+}
+
+.db-refresh-icon:hover {
+  background: var(--db-orange-lt);
+  color: var(--db-orange);
+}
+
+/* ── Create order button ────────────────────────────────────────────────── */
+.db-btn-create {
+  display: inline-flex;
+  align-items: center;
+  background: var(--db-orange) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: .45rem 1.1rem !important;
+  border-radius: .75rem !important;
+  font-size: .84rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 14px rgba(245,166,35,.35) !important;
+  transition: var(--db-transition) !important;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.db-btn-create:hover {
+  background: #e8960f !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 22px rgba(245,166,35,.4) !important;
+  color: #fff !important;
+}
+
+/* ── KPI Cards ──────────────────────────────────────────────────────────── */
+.db-kpi-card {
+  background: var(--db-bg-card);
+  border-radius: var(--db-radius);
+  padding: 1.25rem 1.2rem 1.1rem;
+  border: 1px solid var(--db-border);
+  box-shadow: var(--db-shadow);
+  position: relative;
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease;
+  cursor: default;
+  height: 100%;
+}
+
+/* Accent top bar (2px, matches React accent bar) */
+.db-kpi-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; right: 0;
+  height: 3px;
+  background: var(--db-kpi-color, var(--db-orange));
+  border-radius: var(--db-radius) var(--db-radius) 0 0;
+}
+
+.db-kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--db-shadow-hover);
+}
+
+/* KPI icon box */
+.db-kpi-icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: .65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  background: var(--db-kpi-lt, var(--db-orange-lt));
+  color: var(--db-kpi-color, var(--db-orange));
+  flex-shrink: 0;
+  transition: transform .2s ease;
+}
+
+.db-kpi-card:hover .db-kpi-icon {
+  transform: scale(1.08);
+}
+
+/* Sparkline area (top-right, fixed dimensions for ApexCharts) */
+.db-kpi-sparkline-el {
+  flex-shrink: 0;
+  opacity: .55;
+  margin-top: -4px;
+  width: 80px;
+  height: 42px;
+  overflow: hidden;
+}
+
+.db-kpi-label {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--db-muted);
+  margin-bottom: .3rem;
+  margin-top: .75rem;
+}
+
+.db-kpi-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--db-text);
+  line-height: 1.15;
+  letter-spacing: -.025em;
+}
+
+.db-kpi-sub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin-top: .45rem;
+}
+
+/* ── Delta badges ───────────────────────────────────────────────────────── */
+.db-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+  font-size: .7rem;
+  font-weight: 700;
+  padding: .18rem .5rem;
+  border-radius: 2rem;
+}
+
+.db-delta.up   { background: var(--db-success-lt); color: var(--db-success); }
+.db-delta.down { background: var(--db-danger-lt);  color: var(--db-danger); }
+.db-delta.flat { background: #F1F5F9; color: var(--db-muted); }
+
+.db-kpi-sub .text-muted {
+  font-size: .68rem !important;
+  color: #94A3B8 !important;
+}
+
+/* ── KPI color themes ───────────────────────────────────────────────────── */
+.db-kpi-orders    { --db-kpi-color: var(--db-orange);  --db-kpi-lt: var(--db-orange-lt); }
+.db-kpi-completed { --db-kpi-color: var(--db-teal);    --db-kpi-lt: var(--db-teal-lt); }
+.db-kpi-active    { --db-kpi-color: var(--db-blue);    --db-kpi-lt: var(--db-blue-lt); }
+.db-kpi-revenue   { --db-kpi-color: var(--db-purple);  --db-kpi-lt: var(--db-purple-lt); }
+.db-kpi-aov       { --db-kpi-color: var(--db-amber);   --db-kpi-lt: var(--db-amber-lt); }
+.db-kpi-expected  { --db-kpi-color: var(--db-orange);  --db-kpi-lt: var(--db-orange-lt); }
+.db-kpi-collected { --db-kpi-color: var(--db-teal);    --db-kpi-lt: var(--db-teal-lt); }
+/* ── Chart Cards ────────────────────────────────────────────────────────── */
+.db-chart-card {
+  background: var(--db-bg-card);
+  border-radius: var(--db-radius);
+  border: 1px solid var(--db-border);
+  box-shadow: var(--db-shadow);
+  overflow: hidden;
+  transition: box-shadow .25s ease;
+}
+
+.db-chart-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,.09);
+}
+
+.db-chart-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.1rem 1.25rem .85rem;
+  border-bottom: 1px solid var(--db-border);
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.db-chart-title {
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--db-text);
+  margin-bottom: 0;
+}
+
+.db-chart-subtitle {
+  font-size: .74rem;
+  color: var(--db-muted);
+  margin-top: .15rem;
+}
+
+.db-icon-accent {
+  color: var(--db-orange);
+}
+
+.db-chart-body {
+  padding: 1rem 1rem .75rem;
+}
+
+.db-chart-area {
+  min-height: 320px;
+}
+
+.db-chart-actions {
+  display: flex;
+  gap: 3px;
+  background: #F1F5F9;
+  padding: 3px;
+  border-radius: .6rem;
+  flex-shrink: 0;
+}
+
+.db-chart-toggle {
+  border: none;
+  background: transparent;
+  padding: .25rem .7rem;
+  border-radius: .45rem;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--db-muted);
+  cursor: pointer;
+  transition: var(--db-transition);
+  white-space: nowrap;
+}
+
+.db-chart-toggle:hover {
+  color: var(--db-orange);
+}
+
+.db-chart-toggle.active {
+  background: var(--db-orange);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(245,166,35,.35);
+}
+
+/* View all link */
+.db-view-all-link {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--db-orange) !important;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+  flex-shrink: 0;
+  transition: gap .2s ease;
+}
+
+.db-view-all-link:hover {
+  gap: .4rem;
+  color: #e8960f !important;
+}
+
+/* ── Recent Tables ──────────────────────────────────────────────────────── */
+.db-table-wrapper {
+  overflow-x: auto;
+  padding: 0 .25rem;
+}
+
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .8rem;
+}
+
+.db-table thead tr {
+  background: #F8FAFC;
+}
+
+.db-table th {
+  padding: .6rem .9rem;
+  font-weight: 700;
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--db-muted);
+  border-bottom: 1px solid var(--db-border);
+  white-space: nowrap;
+}
+
+.db-table td {
+  padding: .65rem .9rem;
+  border-bottom: 1px solid var(--db-border);
+  color: var(--db-text);
+  vertical-align: middle;
+}
+
+.db-table tbody tr:last-child td { border-bottom: none; }
+
+.db-table tbody tr {
+  transition: background .15s ease;
+}
+
+.db-table tbody tr:hover td {
+  background: #fafbfc;
+}
+
+.db-order-num {
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  color: var(--db-orange);
+  font-size: .78rem;
+}
+
+/* ── Status badges ──────────────────────────────────────────────────────── */
+.db-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: .22rem .65rem;
+  border-radius: 2rem;
+  font-size: .68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.db-badge-new       { background: var(--db-orange-lt);  color: var(--db-orange); }
+.db-badge-progress  { background: var(--db-blue-lt);    color: var(--db-blue); }
+.db-badge-completed { background: var(--db-teal-lt);    color: var(--db-teal); }
+.db-badge-returned  { background: var(--db-amber-lt);   color: #b45309; }
+.db-badge-canceled  { background: var(--db-danger-lt);  color: var(--db-danger); }
+.db-badge-waiting   { background: var(--db-purple-lt);  color: var(--db-purple); }
+.db-badge-default   { background: #F1F5F9;              color: var(--db-muted); }
+
+/* ── Skeleton loaders ───────────────────────────────────────────────────── */
+@keyframes db-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.db-skeleton-line,
+.db-skeleton-block,
+.db-skeleton-row {
+  background: linear-gradient(90deg, #e9ecef 25%, #f5f7f9 50%, #e9ecef 75%);
+  background-size: 1200px 100%;
+  animation: db-shimmer 1.5s infinite linear;
+  border-radius: .35rem;
+  display: block;
+}
+
+.db-kpi-card.db-skeleton {
+  padding: 1.25rem;
+}
+
+.db-kpi-card.db-skeleton::before {
+  background: #e9ecef;
+}
+
+.db-chart-skeleton {
+  background: linear-gradient(90deg, #e9ecef 25%, #f5f7f9 50%, #e9ecef 75%);
+  background-size: 1200px 100%;
+  animation: db-shimmer 1.5s infinite linear;
+  border-radius: var(--db-radius-sm);
+  min-height: 320px;
+}
+
+.db-table-skeleton {
+  padding: .75rem .9rem;
+}
+
+.db-skeleton-row {
+  height: 34px;
+  margin-bottom: 8px;
+  border-radius: .4rem;
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────── */
+.db-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  color: var(--db-muted);
+  gap: .5rem;
+}
+
+.db-empty-state i { font-size: 2.5rem; opacity: .35; }
+.db-empty-state p { font-size: .8rem; margin: 0; }
+
+/* ── Error / Toast ──────────────────────────────────────────────────────── */
+.db-toast-container {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  pointer-events: none;
+}
+
+.db-toast {
+  background: #fff;
+  border-radius: var(--db-radius-sm);
+  box-shadow: 0 6px 24px rgba(0,0,0,.16);
+  padding: .75rem 1rem;
+  font-size: .8rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  pointer-events: all;
+  animation: ns-slide-in-right .3s ease;
+  max-width: 320px;
+  border-left: 4px solid var(--db-danger);
+}
+
+.db-toast.success { border-left-color: var(--db-teal); }
+
+/* ── Refresh spin ───────────────────────────────────────────────────────── */
+@keyframes db-rotate {
+  to { transform: rotate(360deg); }
+}
+
+.db-spin { animation: db-rotate .7s linear infinite; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Entrance animations
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Keyframes */
+@keyframes ns-fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ns-fade-in-down {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ns-slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Applied via HTML style="--anim-delay:Xms" */
+.ns-fade-in-up {
+  animation: ns-fade-in-up .5s cubic-bezier(.16,1,.3,1) both;
+  animation-delay: var(--anim-delay, 0ms);
+}
+
+.ns-chart-entry {
+  animation: ns-fade-in-up .55s cubic-bezier(.16,1,.3,1) both;
+  animation-delay: var(--anim-delay, 0ms);
+}
+
+/* When JS adds this class after data loads (replaces skeleton) */
+.ns-kpi-col {
+  animation: ns-fade-in-up .5s cubic-bezier(.16,1,.3,1) both;
+  animation-delay: var(--anim-delay, 0ms);
+}
+
+/* ── RTL ────────────────────────────────────────────────────────────────── */
+[dir="rtl"] .db-kpi-card::before {
+  border-radius: 0 var(--db-radius) var(--db-radius) 0;
+}
+
+[dir="rtl"] .db-kpi-sparkline-el {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .db-toast {
+  border-left: none;
+  border-right: 4px solid var(--db-danger);
+  animation-name: ns-slide-in-right;
+}
+
+[dir="rtl"] .db-toast.success { border-right-color: var(--db-teal); }
+
+[dir="rtl"] .db-toast-container {
+  right: auto;
+  left: 1.25rem;
+}
+
+[dir="rtl"] .db-view-all-link {
+  flex-direction: row-reverse;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 991.98px) {
+  .db-header .d-flex.flex-lg-row {
+    align-items: stretch !important;
+  }
+
+  .db-header .flex-grow-1 {
+    min-width: 0;
+  }
+
+  .db-header .d-flex.align-items-center.gap-2.flex-wrap {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .db-range-card {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .db-btn-create {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Menu button is position:fixed — do not pad header; keeps greeting aligned with KPI row */
+  .db-kpi-value { font-size: 1.2rem; }
+  .db-chart-area { min-height: 220px; }
+  .db-chart-skeleton { min-height: 220px; }
+  .db-range-card {
+    overflow-x: auto;
+    border-radius: .75rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .db-range-pill { padding: .25rem .6rem; font-size: .74rem; }
+  .db-greeting { font-size: 1.15rem; }
+  .db-greeting-sub { font-size: .78rem; }
+  .db-today-date { display: block; margin-top: .2rem; margin-left: 0 !important; }
+  .db-chart-card { border-radius: var(--db-radius-sm); }
+  .db-chart-card-header { padding: .95rem 1rem .75rem; }
+  .db-chart-body { padding: .85rem .65rem .65rem; }
+  .db-kpi-card { padding: 1rem 1rem .95rem; }
+  .db-header.mb-4 { margin-bottom: 1.25rem !important; }
+}
+
+@media (max-width: 576px) {
+  .db-header .d-flex.align-items-center.gap-2.flex-wrap {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .db-range-card {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 3px;
+  }
+
+  .db-btn-create {
+    width: 100%;
+    justify-content: center;
+    padding-top: .55rem !important;
+    padding-bottom: .55rem !important;
+  }
+
+  .db-refresh-icon {
+    flex-shrink: 0;
+  }
+
+  #dbKpiRow .col-6 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .db-kpi-value { font-size: 1.35rem; }
+  .db-toast-container {
+    left: .75rem !important;
+    right: .75rem !important;
+    max-width: none;
+  }
+  .db-toast { max-width: none; }
+}
+
+@media (max-width: 480px) {
+  .db-chart-card-header { flex-direction: column; align-items: flex-start; }
+  .db-chart-actions { margin-top: .25rem; width: 100%; flex-wrap: wrap; }
+  .db-chart-toggle { flex: 1 1 auto; text-align: center; min-width: 0; }
+  .db-kpi-label { font-size: .65rem; }
+  .db-greeting { font-size: 1.05rem; }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .db-kpi-card:hover,
+  .db-btn-create:hover {
+    transform: none !important;
+  }
+}
+
+/* ── ApexCharts brand overrides ─────────────────────────────────────────── */
+.apexcharts-tooltip {
+  border-radius: .625rem !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.12) !important;
+  font-size: .8rem !important;
+}
+
+.apexcharts-tooltip-title {
+  background: #F8FAFC !important;
+  border-bottom: 1px solid var(--db-border) !important;
+  font-weight: 700 !important;
+  font-size: .75rem !important;
+}
+
+.apexcharts-xaxistooltip,
+.apexcharts-yaxistooltip {
+  border-radius: .5rem !important;
+}

@@ -1,2216 +1,734 @@
 <%- contentFor('HeaderCss') %>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<% } %>
+<link rel="stylesheet" href="/assets/rCSS/create-edit-order.css">
 <link rel="stylesheet" href="/assets/css/area-selection-modal.css">
-
-<style>
-  :root {
-    --primary-color: #F39720;
-    --primary-hover: #e08a18;
-    --primary-light: #fef4e8;
-    --text-dark: #333333;
-    --text-medium: #555555;
-    --text-light: #777777;
-    --border-color: #e0e0e0;
-    --success-color: #28a745;
-    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  body {
-    font-family: 'Poppins', sans-serif;
-    color: var(--text-dark);
-  }
-
-  /* Card Styling */
-  .card {
-    border: none;
-    border-radius: 16px !important;
-    box-shadow: var(--card-shadow);
-    margin-bottom: 1.5rem;
-    overflow: hidden;
-  }
-
-  .card-header {
-    background-color: #ffffff;
-    border-bottom: 1px solid var(--border-color);
-    padding: 1.25rem;
-    font-weight: 600;
-  }
-
-  .card-body {
-    padding: 1.5rem;
-  }
-
-  /* Form Elements */
-  .form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: var(--text-medium);
-  }
-
-  .form-control,
-  .form-select {
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
-    padding: 0.65rem 1rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-  }
-
-  .form-control:focus,
-  .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.25rem rgba(243, 151, 32, 0.15);
-  }
-
-  .input-group {
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  .input-group .btn {
-    border-radius: 0;
-    background-color: #f8f9fa;
-    color: var(--text-medium);
-    border: 1px solid var(--border-color);
-    font-weight: 500;
-  }
-
-  .input-group .btn:hover {
-    background-color: #e9ecef;
-  }
-
-  /* ── Create order wizard: circle-only triggers (no nav-link / nav-item), caption via <label for> ── */
-  .co-wizard {
-    --co-w-fill: 0;
-    margin: -0.75rem -1.25rem 1rem;
-    padding: 0.2rem 0.5rem 0.28rem;
-    background: #fff;
-    border: 1px solid #e8ecf2;
-    border-top: none;
-    border-radius: 0 0 14px 14px;
-  }
-
-  .co-wizard__list.nav.custom-nav {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 0;
-    position: relative;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    flex-wrap: nowrap;
-  }
-
-  .co-wizard__item {
-    flex: 0 0 auto;
-    margin: 0;
-    padding: 0;
-    position: relative;
-    z-index: 1;
-    list-style: none;
-  }
-
-  .co-wizard__stepcell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.26rem;
-    margin: 0;
-    padding: 0;
-    max-width: 100%;
-  }
-
-  .co-wizard__list::before {
-    content: '';
-    position: absolute;
-    left: 1.35rem;
-    right: 1.35rem;
-    top: calc(0.06rem + 1.25rem);
-    height: 2px;
-    background: #d5dee8;
-    border-radius: 999px;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  .co-wizard__list::after {
-    content: '';
-    position: absolute;
-    left: 1.35rem;
-    right: 1.35rem;
-    top: calc(0.06rem + 1.25rem);
-    height: 2px;
-    background: var(--primary-color);
-    border-radius: 999px;
-    z-index: 0;
-    pointer-events: none;
-    transform: scaleX(var(--co-w-fill, 0));
-    transform-origin: left center;
-    transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
-  }
-
-  html[dir='rtl'] .co-wizard__list::after {
-    transform-origin: right center;
-  }
-
-  /* Circle-only button — zero padding, no Bootstrap nav-link box */
-  .co-wizard__hit.co-wizard__tab {
-    appearance: none;
-    -webkit-appearance: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: transparent !important;
-    box-shadow: none !important;
-    color: inherit;
-    font: inherit;
-    line-height: 0;
-    cursor: pointer;
-    box-sizing: border-box;
-    width: auto;
-    height: auto;
-  }
-
-  .co-wizard__hit.co-wizard__tab:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 4px;
-  }
-
-  .co-wizard__node {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    border: 2px solid #9bb0c4;
-    background: #eef2f6;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    flex-shrink: 0;
-    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-  }
-
-  .co-wizard__ico {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    font-size: 1.1rem;
-    line-height: 1;
-    color: inherit;
-  }
-
-  .co-wizard__ico::before {
-    display: block;
-    line-height: 1;
-  }
-
-  .co-wizard__text {
-    display: block;
-    font-size: clamp(0.72rem, 1.2vw, 0.86rem);
-    font-weight: 600;
-    color: #64748b;
-    padding: 0 0.1rem;
-    max-width: 6.75rem;
-    word-wrap: break-word;
-    line-height: 1.25;
-    text-align: center;
-    text-wrap: balance;
-    cursor: pointer;
-    user-select: none;
-    margin: 0;
-  }
-
-  .co-wizard__text--static {
-    cursor: default;
-    pointer-events: none;
-  }
-
-  .co-wizard__stepcell:hover .co-wizard__text:not(.co-wizard__text--static) {
-    color: #0f172a;
-  }
-
-  .co-wizard__hit.co-wizard__tab:not(.active):not(.done):not(.disabled) .co-wizard__node {
-    border-color: #9bb0c4;
-    background: #eef2f6;
-    color: #5c7a95;
-  }
-
-  .co-wizard__hit.co-wizard__tab:not(.active):not(.done):not(.disabled) + .co-wizard__text {
-    color: #64748b;
-    font-weight: 600;
-  }
-
-  .co-wizard__hit.co-wizard__tab.done:not(.active) .co-wizard__node {
-    border-color: #059669;
-    background: linear-gradient(165deg, #34d399 0%, #059669 100%);
-    color: #fff;
-    box-shadow: 0 2px 10px rgba(5, 150, 105, 0.35);
-  }
-
-  .co-wizard__hit.co-wizard__tab.done:not(.active) .co-wizard__ico,
-  .co-wizard__hit.co-wizard__tab.done:not(.active) .co-wizard__ico::before {
-    color: #fff !important;
-  }
-
-  .co-wizard__hit.co-wizard__tab.done:not(.active) + .co-wizard__text:not(.co-wizard__text--static) {
-    color: #047857;
-    font-weight: 700;
-  }
-
-  .co-wizard__hit.co-wizard__tab.active .co-wizard__node {
-    border-color: #c2410c;
-    background: var(--primary-color);
-    color: #fff;
-    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.22), 0 4px 14px rgba(243, 151, 32, 0.45);
-    transform: scale(1.04);
-  }
-
-  .co-wizard__hit.co-wizard__tab.active .co-wizard__ico,
-  .co-wizard__hit.co-wizard__tab.active .co-wizard__ico::before {
-    color: #fff !important;
-  }
-
-  .co-wizard__hit.co-wizard__tab.active + .co-wizard__text {
-    color: #0f172a;
-    font-weight: 700;
-  }
-
-  .co-wizard__hit.co-wizard__tab.disabled {
-    opacity: 1;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-
-  .co-wizard__hit.co-wizard__tab.disabled .co-wizard__node {
-    border-style: dashed;
-    border-color: #9bb0c4;
-    background: #e8edf2;
-    color: #6b8299;
-    box-shadow: none;
-    transform: none;
-  }
-
-  .co-wizard__hit.co-wizard__tab.disabled ~ .co-wizard__text {
-    color: #64748b;
-    font-weight: 600;
-  }
-
-  @media (min-width: 768px) {
-    .co-wizard__hit.co-wizard__tab:hover,
-    .co-wizard__hit.co-wizard__tab:focus,
-    .co-wizard__hit.co-wizard__tab:active {
-      background: transparent !important;
-      box-shadow: none !important;
-    }
-
-    .checkout-tab .co-wizard .co-wizard__hit.co-wizard__tab:hover,
-    .checkout-tab .co-wizard .co-wizard__hit.co-wizard__tab:focus,
-    .checkout-tab .co-wizard .co-wizard__hit.co-wizard__tab:active {
-      background-color: transparent !important;
-      background-image: none !important;
-    }
-  }
-
-  @media (max-width: 767.98px) {
-    .co-wizard {
-      margin: -0.5rem -0.75rem 0.85rem;
-      padding: 0.35rem 0.55rem 0.4rem;
-    }
-
-    .co-wizard__list::before,
-    .co-wizard__list::after {
-      display: none;
-    }
-
-    .co-wizard__list.nav.custom-nav {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.45rem;
-    }
-
-    .co-wizard__item {
-      flex: none;
-      width: 100%;
-    }
-
-    .co-wizard__stepcell {
-      flex-direction: row !important;
-      align-items: center;
-      justify-content: flex-start;
-      width: 100%;
-      gap: 0;
-      padding: 0.65rem 0.85rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      background: #fff;
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
-    }
-
-    .co-wizard__stepcell:hover {
-      border-color: #cbd5e1;
-      background: #f8fafc;
-    }
-
-    .co-wizard__item:has(.co-wizard__hit.disabled) .co-wizard__stepcell:hover {
-      border-color: #e2e8f0;
-      background: #fff;
-    }
-
-    .co-wizard__stepcell:has(.co-wizard__hit.active) {
-      border-color: var(--primary-color) !important;
-      background: linear-gradient(90deg, #fffbf5 0%, #fff 100%) !important;
-      box-shadow: 0 0 0 2px rgba(243, 151, 32, 0.12);
-    }
-
-    .co-wizard__node {
-      margin: 0 0.75rem 0 0;
-      width: 2.65rem;
-      height: 2.65rem;
-    }
-
-    .co-wizard__ico {
-      font-size: 1.18rem;
-    }
-
-    .co-wizard__text {
-      flex: 1;
-      text-align: start;
-      font-size: 0.88rem;
-      padding: 0;
-      max-width: none;
-    }
-
-    html[dir='rtl'] .co-wizard__stepcell {
-      flex-direction: row-reverse !important;
-    }
-
-    html[dir='rtl'] .co-wizard__text {
-      text-align: right;
-    }
-
-    html[dir='rtl'] .co-wizard__node {
-      margin: 0 0 0 0.75rem;
-    }
-  }
-
-  /* Buttons */
-  .btn-primary {
-    background-color: var(--primary-color);
-    border: none;
-    border-radius: 10px;
-    padding: 0.65rem 1.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-
-  .btn-primary:hover {
-    background-color: var(--primary-hover);
-    transform: translateY(-2px);
-  }
-
-  .btn-light {
-    background-color: #f8f9fa;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 0.65rem 1.5rem;
-    font-weight: 500;
-    color: var(--text-medium);
-    transition: all 0.3s ease;
-  }
-
-  .btn-light:hover {
-    background-color: #e9ecef;
-    transform: translateY(-2px);
-  }
-
-  /* Order Type Cards */
-  .form-check.card-radio {
-    padding: 0;
-    margin-bottom: 0.5rem;
-  }
-
-  .form-check.card-radio .form-check-input {
-    display: none;
-  }
-
-  .form-check.card-radio .form-check-label {
-    display: block;
-    padding: 1.25rem;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .form-check.card-radio .form-check-input:checked+.form-check-label {
-    border-color: var(--primary-color);
-    background-color: var(--primary-light);
-    box-shadow: 0 0 0 1px var(--primary-color);
-  }
-
-  .form-check.card-radio .form-check-label:hover {
-    background-color: var(--primary-light);
-  }
-
-  .form-check.card-radio .form-check-label i {
-    color: var(--primary-color);
-    font-size: 1.25rem;
-  }
-
-  /* Hover Effects */
-  .hover-effect:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  /* Section Headers */
-  .section-title {
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 0.5rem;
-  }
-
-  .section-subtitle {
-    color: var(--text-light);
-    margin-bottom: 1.5rem;
-  }
-
-  /* Fee Display — base (refined in .fee-summary-card below) */
-  .fee-display {
-    text-align: center;
-    position: relative;
-  }
-
-  .fee-amount {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-  }
-
-  .fee-currency {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-medium);
-  }
-
-  .fee-label {
-    color: var(--text-light);
-    font-size: 0.9rem;
-  }
-  
-  /* Loading styles */
-  .loading-spinner {
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  
-  .loading .loading-spinner {
-    display: block;
-  }
-  
-  .loading .fee-amount,
-  .loading .fee-currency {
-    opacity: 0.3;
-  }
-
-  /* Completion Screen */
-  .completion-icon {
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 1.5rem;
-  }
-
-  .completion-title {
-    font-weight: 600;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .completion-message {
-    color: var(--text-light);
-    margin-bottom: 1.5rem;
-  }
-
-  .order-id {
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-
-  .order-id a {
-    color: var(--primary-color);
-    text-decoration: underline;
-  }
-
-  /* Custom Select Styling */
-  .select-container {
-    position: relative;
-  }
-
-  .select-container select {
-    appearance: none;
-    -webkit-appearance: none;
-    padding-right: 2.5rem;
-  }
-
-  .zone-select-wrapper {
-    position: relative;
-  }
-
-  .zone-select-arrow {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-  }
-
-  .zone-select-arrow i {
-    color: var(--text-medium);
-  }
-
-  .loading-spinner {
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .loading .loading-spinner {
-    display: block;
-  }
-
-  .loading .fee-amount,
-  .loading .fee-currency {
-    opacity: 0.3;
-  }
-
-  /* ── Option Toggle Cards ─────────────────────────────────────────────── */
-  .option-cards-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 0.25rem;
-  }
-
-  /* the <label> IS the card — input is hidden */
-  .option-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.9rem 1.25rem;
-    border-radius: 10px;
-    border: 1.5px solid #e8e8e8;
-    background: #ffffff;
-    cursor: pointer;
-    transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
-    -webkit-user-select: none;
-    user-select: none;
-    box-sizing: border-box;
-    max-width: 26rem;
-    width: 100%;
-  }
-
-  /* hidden real checkbox */
-  .option-card input[type="checkbox"] {
-    display: none;
-  }
-
-  /* custom checkbox ring */
-  .option-card-check {
-    flex-shrink: 0;
-    width: 1.2rem;
-    height: 1.2rem;
-    border-radius: 4px;
-    border: 2px solid #d0d0d0;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.18s, background 0.18s;
-    order: 0;
-  }
-
-  .option-card-check svg {
-    width: 0.65rem;
-    height: 0.65rem;
-    stroke: #fff;
-    stroke-width: 2.5;
-    fill: none;
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-
-  /* icon slot */
-  .option-card-icon {
-    flex-shrink: 0;
-    order: 1;
-    width: 2.4rem;
-    height: 2.4rem;
-    border-radius: 8px;
-    background: #f4f6f8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    color: #888;
-    transition: background 0.18s, color 0.18s;
-  }
-
-  /* text block */
-  .option-card-text {
-    flex: 1;
-    min-width: 0;
-    order: 2;
-  }
-
-  .option-card-text strong {
-    display: block;
-    font-size: 0.93rem;
-    font-weight: 600;
-    color: #1e293b;
-    line-height: 1.3;
-  }
-
-  .option-card-text span {
-    display: block;
-    font-size: 0.78rem;
-    color: #94a3b8;
-    margin-top: 0.2rem;
-    line-height: 1.3;
-  }
-
-  /* ── Hover ── */
-  .option-card:hover {
-    border-color: rgba(243, 151, 32, 0.45);
-    background: #fffaf4;
-    box-shadow: 0 2px 8px rgba(243, 151, 32, 0.08);
-  }
-
-  /* ── Checked state ── */
-  .option-card.is-checked {
-    border-color: var(--primary-color);
-    background: linear-gradient(135deg, #fffbf4 0%, #fff5e6 100%);
-    box-shadow: 0 0 0 3px rgba(243, 151, 32, 0.1);
-  }
-
-  .option-card.is-checked .option-card-check {
-    border-color: var(--primary-color);
-    background: var(--primary-color);
-  }
-
-  .option-card.is-checked .option-card-check svg {
-    opacity: 1;
-  }
-
-  .option-card.is-checked .option-card-icon {
-    background: rgba(243, 151, 32, 0.12);
-    color: var(--primary-color);
-  }
-
-  .option-card.is-checked .option-card-text strong {
-    color: #92500a;
-  }
-
-  /* ── RTL: reverse order so check is on the right ── */
-  html[dir='rtl'] .option-card {
-    flex-direction: row-reverse;
-  }
-
-  html[dir='rtl'] .option-card-text {
-    text-align: right;
-  }
-
-  /* section label above cards */
-  .option-section-label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #94a3b8;
-    margin-bottom: 0.6rem;
-  }
-
-  /* Express: after 9 PM Cairo = next-day (not same-day) — high-visibility notice */
-  .express-after-nine-notice {
-    margin-top: 0.65rem;
-    margin-bottom: 0.25rem;
-    padding: 0.85rem 1rem 0.85rem 1rem;
-    border-radius: 8px;
-    border: 2px solid rgba(200, 120, 0, 0.55);
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.35) 0%, rgba(255, 248, 220, 0.95) 55%, #fff 100%);
-    box-shadow: 0 2px 8px rgba(180, 100, 0, 0.12);
-    color: #4a3200;
-    font-size: 0.95rem;
-    line-height: 1.45;
-  }
-
-  .express-after-nine-notice strong {
-    color: #2d1f00;
-  }
-
-  .express-after-nine-notice .express-after-nine-badge {
-    display: inline-block;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #7a4a00;
-    background: rgba(255, 152, 0, 0.35);
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    margin-bottom: 0.35rem;
-  }
-  
-  .amount-input-section {
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    padding: 1rem;
-    margin-top: 1rem;
-    border-left: 3px solid var(--primary-color);
-  }
-  
-  .amount-input-section .info-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .info-badge.info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-  }
-  
-  .info-badge i {
-    font-size: 0.75rem;
-    margin-right: 0.25rem;
-  }
-  
-  .fee-summary-card {
-    border-radius: 14px;
-    overflow: hidden;
-    border-color: #e2e8f0 !important;
-    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06) !important;
-  }
-
-  .fee-summary-card .fee-summary-header {
-    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-    border-bottom: 1px solid #eef2f7;
-    padding: 1rem 1.35rem;
-  }
-
-  .fee-summary-card .fee-summary-header h6 {
-    color: #0f172a;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  .fee-summary-card .fee-header-icon-wrap {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    background: linear-gradient(145deg, rgba(243, 151, 32, 0.18) 0%, rgba(243, 151, 32, 0.06) 100%);
-    color: var(--primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .fee-summary-card .fee-display {
-    position: relative;
-    min-height: 148px;
-    padding: 1.75rem 1.5rem 1.5rem;
-    background: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 45%, #ffffff 100%);
-    border-radius: 14px;
-    border: 1px solid #e2e8f0;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  }
-
-  .fee-summary-card .fee-display .fee-amount {
-    font-size: clamp(2.25rem, 6vw, 3.25rem);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: #1e3a5f;
-  }
-
-  .fee-summary-card .fee-display .fee-currency {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #64748b;
-    vertical-align: 0.15em;
-  }
-
-  .fee-summary-card .fee-display .fee-total-caption {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: #94a3b8;
-  }
-
-  /* Fee Breakdown Styles */
-  .fee-breakdown {
-    margin-top: 1rem;
-    padding: 1.1rem 1.35rem 1.15rem 1.5rem;
-    background: #fafbfc;
-    border: 1px solid #e8ecf0;
-    border-radius: 12px;
-    border-left: 4px solid rgba(243, 151, 32, 0.65);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  }
-
-  .fee-breakdown-header {
-    font-weight: 700;
-    color: #334155;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e8ecf0;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .fee-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.55rem 0;
-    border-bottom: 1px solid #eef1f5;
-  }
-
-  .fee-row:last-of-type {
-    border-bottom: none;
-  }
-
-  .fee-row-label {
-    color: #475569;
-    font-size: 0.92rem;
-    text-align: left;
-    padding-right: 0.5rem;
-  }
-
-  .fee-row-amount {
-    font-weight: 600;
-    color: #1e293b;
-    font-size: 0.92rem;
-    white-space: nowrap;
-  }
-
-  .fee-row-total {
-    font-weight: 800;
-    color: var(--primary-color);
-    font-size: 1.02rem;
-    margin-top: 0.25rem;
-    padding-top: 0.75rem;
-    border-top: 2px solid rgba(243, 151, 32, 0.35);
-  }
-
-  .fee-breakdown-toggle {
-    padding: 0.35rem 0.25rem 0 0.35rem;
-    margin-top: 0.5rem;
-  }
-
-  .fee-breakdown-toggle .form-check-input {
-    width: 1.1rem;
-    height: 1.1rem;
-    margin-top: 0.2rem;
-    cursor: pointer;
-    border-color: #cbd5e1;
-  }
-
-  .fee-breakdown-toggle .form-check-input:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-  }
-
-  .fee-breakdown-toggle .form-check-label {
-    cursor: pointer;
-    color: #64748b;
-    font-size: 0.9rem;
-    padding-left: 0.35rem;
-    user-select: none;
-  }
-
-  .fee-breakdown-hidden {
-    display: none;
-  }
-
-  @media (max-width: 575.98px) {
-    .checkout-tab .card-body {
-      padding: 1rem;
-    }
-
-    .nav-pills .nav-link {
-      padding: 0.75rem 1rem;
-      font-size: 0.9rem;
-    }
-  }
-
-  /* ── RTL overrides ─────────────────────────────────────────────────── */
-  html[dir='rtl'] body {
-    font-family: 'Cairo', 'Poppins', sans-serif;
-  }
-
-  /* Flip left-border accent to right */
-  html[dir='rtl'] .amount-input-section {
-    border-left: none;
-    border-right: 3px solid var(--primary-color);
-  }
-
-  html[dir='rtl'] .fee-breakdown {
-    border-left: none;
-    border-right: 4px solid rgba(243, 151, 32, 0.65);
-  }
-
-  /* nav-link icon spacing */
-  html[dir='rtl'] .nav-pills .nav-link i {
-    margin-right: 0;
-    margin-left: 0.5rem;
-  }
-
-  /* Input group: flip border radii */
-  html[dir='rtl'] .input-group .btn:first-child {
-    border-radius: 0 10px 10px 0;
-  }
-  html[dir='rtl'] .input-group .btn:last-child {
-    border-radius: 10px 0 0 10px;
-  }
-  html[dir='rtl'] .input-group .form-control:not(:first-child):not(:last-child) {
-    border-radius: 0;
-  }
-
-  /* Select custom arrow: flip to left */
-  html[dir='rtl'] .select-container select {
-    padding-right: 1rem;
-    padding-left: 2.5rem;
-  }
-
-  html[dir='rtl'] .zone-select-arrow {
-    right: auto;
-    left: 10px;
-  }
-
-  /* Fee breakdown label alignment */
-  html[dir='rtl'] .fee-row-label {
-    text-align: right;
-    padding-right: 0;
-    padding-left: 0.5rem;
-  }
-
-  /* Card-radio icon margin */
-  html[dir='rtl'] .form-check.card-radio .form-check-label span.fs-16 {
-    margin-right: 0;
-    margin-left: 0.5rem;
-  }
-
-  /* Pickup address section: flip border from start to end */
-  html[dir='rtl'] #pickupAddressSelection {
-    border-right: 2px solid rgba(243, 151, 32, 0.35) !important;
-    border-left: none !important;
-    padding-right: 0.75rem;
-    padding-left: 0;
-    margin-right: 0.5rem;
-    margin-left: 0;
-  }
-
-  /* fee-breakdown toggle label padding */
-  html[dir='rtl'] .fee-breakdown-toggle .form-check-label {
-    padding-left: 0;
-    padding-right: 0.5rem;
-  }
-
-  /* Back/next button icon spacing */
-  html[dir='rtl'] .btn-label i.label-icon {
-    margin-left: 0;
-    margin-right: 0.5rem;
-  }
-
-  /* area selection button arrow */
-  html[dir='rtl'] #selectAreaBtn {
-    text-align: right;
-  }
-
-  /* info badge icon margin */
-  html[dir='rtl'] .info-badge i {
-    margin-right: 0;
-    margin-left: 0.25rem;
-  }
-</style>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 
 <%- contentFor('body') %>
-<% var Co = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.createOrder) ? translation.business.pages.createOrder : {}; %>
-<div class="row justify-content-center g-0 g-sm-3">
-  <div class="col-12 col-xl-11">
-    <div class="card">
-      <div class="card-body checkout-tab">
-        <form id="createOrderForm">
-          <!-- Step navigation: circle-only buttons + <label for> captions (.custom-nav for checkout init.js) -->
-          <div class="co-wizard mt-n3 mx-n3 mb-3">
-            <ul class="nav co-wizard__list custom-nav" role="tablist">
-              <li class="co-wizard__item" role="presentation">
-                <div class="co-wizard__stepcell">
-                  <button class="co-wizard__hit co-wizard__tab nav-create active" id="pills-bill-address-tab" data-bs-toggle="pill" data-bs-target="#pills-bill-address" type="button" role="tab" aria-controls="pills-bill-address" aria-selected="true">
-                    <span class="co-wizard__node" aria-hidden="true"><i class="ri-truck-line co-wizard__ico"></i></span>
-                  </button>
-                  <label class="co-wizard__text" for="pills-bill-address-tab"><%= Co.stepShipping || 'Shipping Details' %></label>
-                </div>
-              </li>
-              <li class="co-wizard__item" role="presentation">
-                <div class="co-wizard__stepcell">
-                  <button class="co-wizard__hit co-wizard__tab nav-create" id="pills-bill-info-tab" data-bs-toggle="pill" data-bs-target="#pills-bill-info" type="button" role="tab" aria-controls="pills-bill-info" aria-selected="false">
-                    <span class="co-wizard__node" aria-hidden="true"><i class="ri-user-2-line co-wizard__ico"></i></span>
-                  </button>
-                  <label class="co-wizard__text" for="pills-bill-info-tab"><%= Co.stepCustomer || 'Customer Details' %></label>
-                </div>
-              </li>
-              <li class="co-wizard__item" role="presentation">
-                <div class="co-wizard__stepcell">
-                  <button class="co-wizard__hit co-wizard__tab nav-create" id="pills-payment-tab" data-bs-toggle="pill" data-bs-target="#pills-payment" type="button" role="tab" aria-controls="pills-payment" aria-selected="false">
-                    <span class="co-wizard__node" aria-hidden="true"><i class="ri-bank-card-line co-wizard__ico"></i></span>
-                  </button>
-                  <label class="co-wizard__text" for="pills-payment-tab"><%= Co.stepAdditional || 'Additional Options' %></label>
-                </div>
-              </li>
-              <li class="co-wizard__item" role="presentation">
-                <div class="co-wizard__stepcell">
-                  <button class="co-wizard__hit co-wizard__tab nav-create disabled" id="pills-finish-tab" data-bs-toggle="pill" data-bs-target="#pills-finish" type="button" role="tab" aria-controls="pills-finish" aria-selected="false" tabindex="-1">
-                    <span class="co-wizard__node" aria-hidden="true"><i class="ri-checkbox-circle-line co-wizard__ico"></i></span>
-                  </button>
-                  <span class="co-wizard__text co-wizard__text--static"><%= Co.stepComplete || 'Complete' %></span>
-                </div>
-              </li>
-            </ul>
+<% 
+  var Co = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.createOrder) ? translation.business.pages.createOrder : {};
+  var Cj = (typeof translation !== 'undefined' && translation.business && translation.business.js && translation.business.js.createOrder) ? translation.business.js.createOrder : {};
+  var Sh = (typeof translation !== 'undefined' && translation.business && translation.business.shell) ? translation.business.shell : {};
+  var Bc = (typeof translation !== 'undefined' && translation.business && translation.business.breadcrumb) ? translation.business.breadcrumb : {};
+  var _coRtl = (typeof isRTL !== 'undefined' && isRTL) || (typeof currentLang !== 'undefined' && currentLang === 'ar');
+  var _coStepBadge = (Cj.stepOf || 'Step {cur} of {max}').replace('{cur}','1').replace('{max}','4');
+  var _coUser = (typeof user !== 'undefined' && user) ? user : ((typeof userData !== 'undefined' && userData) ? userData : {});
+  var _coPickupAddrs = (Array.isArray(_coUser.pickUpAddresses) && _coUser.pickUpAddresses.length) ? _coUser.pickUpAddresses : [];
+%>
+<!-- ═══════════════════════════════════════════════════════════════════
+     Create Order – Redesigned Wizard
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="co-page<% if (_coRtl) { %> co-page--rtl<% } %>" lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>" dir="<%= _coRtl ? 'rtl' : 'ltr' %>">
+
+  <!-- Breadcrumb -->
+  <div class="co-breadcrumb">
+    <a href="/business/dashboard"><i class="ri-home-3-line"></i> <%= Sh.dashboard || 'Dashboard' %></a>
+    <span class="co-breadcrumb__sep"><i class="ri-arrow-right-s-line"></i></span>
+    <a href="/business/orders"><%= Bc.orders || 'Orders' %></a>
+    <span class="co-breadcrumb__sep"><i class="ri-arrow-right-s-line"></i></span>
+    <span class="co-breadcrumb__current"><%= Co.title || 'Create Order' %></span>
+  </div>
+
+  <div class="co-layout">
+
+    <!-- ── Main Form Card ────────────────────────────────────────────── -->
+    <div class="co-form-col">
+      <div class="co-card">
+
+        <!-- Card Header with Step Indicator -->
+        <div class="co-card__header">
+          <div class="co-card__title-row">
+            <div>
+              <h1 class="co-card__title" id="co-step-title"><%= Cj.wizStep1Title || Co.stepShipping %></h1>
+              <p class="co-card__subtitle" id="co-step-subtitle"><%= Cj.wizStep1Sub || Co.shippingInfoSubtitle %></p>
+            </div>
+            <span class="co-step-badge" id="co-step-badge"><%= _coStepBadge %></span>
           </div>
 
-          <!-- Tab Content -->
-          <div class="tab-content">
-            <!-- Shipping Info Tab -->
-            <div class="tab-pane fade show active" id="pills-bill-address" role="tabpanel" aria-labelledby="pills-bill-address-tab">
-              <div class="mb-4">
-                <h5 class="section-title"><%= Co.shippingInfoTitle || 'Shipping Information' %></h5>
-                <p class="section-subtitle"><%= Co.shippingInfoSubtitle || 'Select delivery type and provide shipping details' %></p>
+          <!-- Step Indicator -->
+          <div class="co-step-indicator">
+            <!-- progress line -->
+            <div class="co-step-indicator__line-wrap">
+              <div class="co-step-indicator__track-bg"></div>
+              <div class="co-step-indicator__track-fill" id="co-progress-fill"></div>
+            </div>
+            <!-- step 1 -->
+            <div class="co-step-node-wrap">
+              <div class="co-step-node co-step-node--active" id="co-node-1">
+                <i class="ri-truck-line"></i>
+              </div>
+              <span class="co-step-label co-step-label--active" id="co-label-1"><%= Co.stepShipping %></span>
+            </div>
+            <!-- step 2 -->
+            <div class="co-step-node-wrap">
+              <div class="co-step-node" id="co-node-2">
+                <i class="ri-user-3-line"></i>
+              </div>
+              <span class="co-step-label" id="co-label-2"><%= Co.stepCustomer %></span>
+            </div>
+            <!-- step 3 -->
+            <div class="co-step-node-wrap">
+              <div class="co-step-node" id="co-node-3">
+                <i class="ri-settings-4-line"></i>
+              </div>
+              <span class="co-step-label" id="co-label-3"><%= Co.stepAdditional %></span>
+            </div>
+            <!-- step 4 -->
+            <div class="co-step-node-wrap">
+              <div class="co-step-node" id="co-node-4">
+                <i class="ri-check-double-line"></i>
+              </div>
+              <span class="co-step-label" id="co-label-4"><%= Co.stepComplete %></span>
+            </div>
+          </div>
+        </div><!-- /.co-card__header -->
+
+        <!-- Form body with step panels -->
+        <form id="createOrderForm" novalidate>
+          <div class="co-card__body">
+
+            <!-- ═══ STEP 1: SHIPPING DETAILS ═══════════════════════════ -->
+            <div class="step-panel step-panel--active" id="co-step-1">
+
+              <p class="co-section-label"><%= Co.selectOrderTypeHeading %></p>
+
+              <div class="co-type-grid">
+                <!-- Deliver -->
+                <button type="button" class="co-type-card" id="co-type-deliver"
+                        onclick="coSelectOrderType('Deliver', this)">
+                  <div class="co-type-card__check"><i class="ri-check-line"></i></div>
+                  <div class="co-type-card__icon-wrap"><i class="ri-truck-line"></i></div>
+                  <p class="co-type-card__name"><%= Co.typeDelivery %></p>
+                  <p class="co-type-card__desc"><%= Co.typeDescDelivery %></p>
+                </button>
+                <!-- Exchange -->
+                <button type="button" class="co-type-card" id="co-type-exchange"
+                        onclick="coSelectOrderType('Exchange', this)">
+                  <div class="co-type-card__check"><i class="ri-check-line"></i></div>
+                  <div class="co-type-card__icon-wrap"><i class="ri-refresh-line"></i></div>
+                  <p class="co-type-card__name"><%= Co.typeExchange %></p>
+                  <p class="co-type-card__desc"><%= Co.typeDescExchange %></p>
+                </button>
+                <!-- Return -->
+                <button type="button" class="co-type-card" id="co-type-return"
+                        onclick="coSelectOrderType('Return', this)">
+                  <div class="co-type-card__check"><i class="ri-check-line"></i></div>
+                  <div class="co-type-card__icon-wrap"><i class="ri-arrow-go-back-line"></i></div>
+                  <p class="co-type-card__name"><%= Co.typeReturn %></p>
+                  <p class="co-type-card__desc"><%= Co.typeDescReturn %></p>
+                </button>
               </div>
 
-              <!-- Order Type Section -->
-              <div class="card mb-4 hover-effect">
-                <div class="card-header">
-                  <h6 class="mb-0"><%= Co.orderTypeLabel || 'Order Type' %></h6>
-                </div>
-                <div class="card-body">
-                  <div class="row g-3">
-                    <div class="col-lg-4 col-sm-6" >
-                      <div class="form-check card-radio">
-                        <input id="paymentMethod01" name="orderType" type="radio" class="form-check-input" value="Deliver">
-                        <label class="form-check-label" for="paymentMethod01">
-                          <span class="fs-16 me-2"><i class="ri-truck-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap"><%= Co.typeDelivery || 'Delivery' %></span>
-                        </label>
-                      </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-6">
-                      <div class="form-check card-radio">
-                        <input id="paymentMethod02" name="orderType" type="radio" class="form-check-input" value="Exchange">
-                        <label class="form-check-label" for="paymentMethod02">
-                          <span class="fs-16 me-2"><i class="ri-exchange-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap"><%= Co.typeExchange || 'Exchange' %></span>
-                        </label>
-                      </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-6">
-                      <div class="form-check card-radio" >
-                        <input id="paymentMethod03" name="orderType" type="radio" class="form-check-input" value="Return">
-                        <label class="form-check-label" for="paymentMethod03">
-                          <span class="fs-16 me-2"><i class="ri-arrow-go-back-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap"><%= Co.typeReturn || 'Return' %></span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <!-- Hidden orderType value -->
+              <input type="hidden" name="orderType" id="orderTypeInput" value="">
 
-              <!-- Deliver Section -->
-              <div id="deliver-section" class="card mb-4 hover-effect" style="display: none;">
-                <div class="card-header">
-                  <h6 class="mb-0"><%= Co.deliveryDetailsLabel || 'Delivery Details' %></h6>
+              <!-- Delivery Details section (shown after type selected) -->
+              <div class="co-collapsible" id="co-delivery-details">
+
+                <!-- DELIVER section -->
+                <div class="co-type-section" id="co-section-deliver">
+                  <div class="co-divider">
+                    <div class="co-divider__line"></div>
+                    <span class="co-divider__text"><%= Co.deliveryDetailsLabel %></span>
+                    <div class="co-divider__line"></div>
+                  </div>
+
+                  <div class="co-field">
+                    <label class="co-field__label" for="productDescription">
+                      <%= Co.productDescLabel %> <span class="co-required">*</span>
+                    </label>
+                    <textarea class="co-textarea" id="productDescription" name="productDescription"
+                              rows="3" placeholder="<%= Co.phDescribeProducts %>"></textarea>
+                    <div class="co-field-error" id="err-productDescription"><%= Co.errProductDescription %></div>
+                  </div>
+
+                  <div class="co-field">
+                    <label class="co-field__label"><%= Co.itemsCount %></label>
+                    <div class="co-counter">
+                      <button type="button" class="co-counter__btn" id="co-decrement">
+                        <i class="ri-subtract-line"></i>
+                  </button>
+                      <div class="co-counter__display" id="co-num-display">1</div>
+                      <button type="button" class="co-counter__btn co-counter__btn--plus" id="co-increment">
+                        <i class="ri-add-line"></i>
+                  </button>
+                      <span class="co-counter__label" id="co-num-label"><%= Cj.itemSingular || 'item' %></span>
                 </div>
-                <div class="card-body">
-                  <div class="mb-4">
-                    <label for="delivery-description" class="form-label"><%= Co.productDescLabel || 'Product Description' %></label>
-                    <textarea class="form-control" name="productDescription" id="delivery-description" placeholder="<%= Co.productDescPlaceholder || 'Describe the products being delivered' %>" rows="3"></textarea>
+                    <input type="hidden" name="numberOfItems" id="numberOfItems" value="1">
                   </div>
-                  <div class="mb-4 col-md-4">
-                    <label for="shipping-count" class="form-label"><%= Co.itemsCount || 'Number of Items' %></label>
-                    <div class="input-group">
-                      <button type="button" class="btn" id="decrement-shipping">-</button>
-                      <input type="number" name="numberOfItems" class="form-control text-center" id="shipping-count" value="1" min="1">
-                      <button type="button" class="btn" id="increment-shipping">+</button>
-                    </div>
-                  </div>
-                  
-                  <!-- Shipping speed option card -->
-                  <div class="mb-4">
-                    <p class="option-section-label"><%= Co.shippingSpeedLabel || 'Shipping Speed' %></p>
-                    <div class="option-cards-group">
-                      <label class="option-card" id="express-card" for="express-shipping-checkbox">
-                        <input type="checkbox" name="isExpressShipping" id="express-shipping-checkbox" value="on">
-                        <span class="option-card-check">
-                          <svg viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1"/></svg>
-                        </span>
-                        <span class="option-card-icon"><i class="ri-flashlight-line"></i></span>
-                        <span class="option-card-text">
-                          <strong><%= Co.expressShippingLabel || 'Express Shipping' %></strong>
-                          <span id="express-shipping-subtitle"
-                                data-default="<%= Co.expressShippingSub || 'Same day delivery service' %>"
-                                data-after9="<%= Co.expressNextDaySub || 'Next day delivery — orders after 9:00 PM (Cairo) are not same-day' %>">
-                            <%= Co.expressShippingSub || 'Same day delivery service' %>
-                          </span>
-                        </span>
+
+                  <!-- Express + COD toggles -->
+                  <p class="co-section-label" style="margin-top:1.25rem;"><%= Co.shippingOptionsHeading %></p>
+                  <div class="co-toggle-grid">
+                    <!-- Express Shipping -->
+                    <button type="button" class="co-toggle-card" id="co-express-toggle"
+                            onclick="coToggleCard(this, 'isExpressShipping', 'co-express-toggle')">
+                      <div class="co-toggle-card__icon"><i class="ri-flashlight-line"></i></div>
+                      <div class="co-toggle-card__content">
+                        <p class="co-toggle-card__title"><%= Co.expressShippingLabel %></p>
+                        <p class="co-toggle-card__sub"><%= Co.expressShippingSub %></p>
+                      </div>
+                      <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+                  </button>
+
+                    <!-- Cash on Delivery -->
+                    <button type="button" class="co-toggle-card" id="co-cod-toggle"
+                            onclick="coToggleCOD()">
+                      <div class="co-toggle-card__icon"><i class="ri-money-dollar-circle-line"></i></div>
+                      <div class="co-toggle-card__content">
+                        <p class="co-toggle-card__title"><%= Co.codLabel %></p>
+                        <p class="co-toggle-card__sub"><%= Co.codSub %></p>
+                </div>
+                      <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+                  </button>
+                </div>
+                  <input type="hidden" name="COD" id="COD-input" value="">
+                  <input type="hidden" name="isExpressShipping" id="isExpressShipping-input" value="">
+
+                  <!-- Express: business pickup (courier collection point) — Deliver only -->
+                  <div class="co-collapsible" id="co-express-pickup-wrap" style="display:none;">
+                    <div class="co-field" style="margin-top:0.75rem;">
+                      <label class="co-field__label" for="selectedPickupAddressId">
+                        <%= Co.selectPickupLabel || 'Select pickup address' %> <span class="co-required">*</span>
                       </label>
-                    </div>
-
-                    <div id="express-after-nine-notice" class="express-after-nine-notice d-none mt-2" role="status" aria-live="polite">
-                      <div class="express-after-nine-badge"><%= Co.expressAfterNineBadge || 'After 9:00 PM (Cairo)' %></div>
-                      <strong><%= Co.expressAfterNineText || 'Next-day delivery' %></strong> — <%= Co.expressAfterNineText || 'Express orders placed now are' %> <strong><%= Co.expressAfterNineNot || 'not' %></strong> <%= Co.expressAfterNineSched || 'same-day; they are scheduled for' %> <strong><%= Co.expressAfterNineDay || 'delivery the next calendar day' %></strong>.
-                    </div>
-
-                    <div id="pickupAddressSelection" class="mt-3" style="display: none;">
-                      <label class="form-label mb-2"><%= Co.selectPickupLabel || 'Select Pickup Address' %> <span class="text-danger">*</span></label>
-                      <select class="form-select" id="selectedPickupAddressId" name="selectedPickupAddressId">
+                      <% if (_coPickupAddrs.length) { %>
+                      <select class="co-input" id="selectedPickupAddressId" name="selectedPickupAddressId" dir="auto">
                         <option value=""><%= Co.selectPickupPlaceholder || 'Select pickup address...' %></option>
-                        <% if (userData && userData.pickUpAddresses && userData.pickUpAddresses.length > 0) { %>
-                          <% userData.pickUpAddresses.forEach(address => { %>
-                            <option value="<%= address.addressId %>" <%= address.isDefault ? 'selected' : '' %>>
-                              <%= address.addressName || 'Address' %>
-                              <% if (address.isDefault) { %> (<%= Co.addressDefault || 'Default' %>) <% } %>
-                              - <%= address.zone %>, <%= address.city %>
-                            </option>
-                          <% }); %>
-                        <% } else if (userData && userData.pickUpAdress) { %>
-                          <option value="default" selected>
-                            Main Address - <%= userData.pickUpAdress.zone || '' %>, <%= userData.pickUpAdress.city || '' %>
-                          </option>
-                        <% } %>
+                        <% _coPickupAddrs.forEach(function (a) {
+                          var aid = a.addressId || '';
+                        %>
+                        <option value="<%= aid %>"<% if (a.isDefault) { %> data-co-default="1"<% } %>><%=
+                          (a.addressName || 'Address') + (a.city ? ' — ' + a.city : '')
+                        %></option>
+                        <% }); %>
                       </select>
-                      <div class="mt-2">
-                        <a href="/business/settings#address" class="btn btn-sm btn-outline-primary" target="_blank">
-                          <i class="ri-add-line me-1"></i> <%= Co.addNewAddress || 'Add New Address' %>
-                        </a>
+                      <div class="co-field-error" id="err-selectedPickup"><%= Co.errSelectPickup || Cj.errSelectPickup || 'Please select a pickup address for express shipping.' %></div>
+                      <% } else { %>
+                      <p class="co-field-hint co-field-hint--show co-field-hint--muted" id="co-express-pickup-missing">
+                        <%= Co.expressNoPickupAddress || 'Add a business pickup address in Settings to use express shipping.' %>
+                      </p>
+                      <% } %>
+                    </div>
+                  </div>
+
+                  <!-- COD Amount (collapsible) -->
+                  <div class="co-collapsible" id="co-cod-amount-wrap">
+                    <div class="co-field" style="margin-top:0.75rem;">
+                      <label class="co-field__label" for="amountCOD">
+                        <%= Co.amountCollectLabel %> <span class="co-required">*</span>
+                      </label>
+                      <div class="co-input-suffix">
+                        <input type="number" class="co-input" id="amountCOD" name="amountCOD"
+                               placeholder="0.00" min="0" step="0.01" dir="ltr">
+                        <span class="co-input-suffix__text"><%= Co.currencyCode != null ? Co.currencyCode : 'EGP' %></span>
+          </div>
+                    </div>
+                  </div>
+                </div><!-- /#co-section-deliver -->
+
+                <!-- EXCHANGE section -->
+                <div class="co-type-section" id="co-section-exchange">
+                  <div class="co-divider">
+                    <div class="co-divider__line"></div>
+                    <span class="co-divider__text"><%= Co.exchangeDetailsLabel %></span>
+                    <div class="co-divider__line"></div>
+              </div>
+
+                  <div class="co-field-row">
+                    <div class="co-field">
+                      <label class="co-field__label" for="currentPD">
+                        <%= Co.currentProductShort %> <span class="co-required">*</span>
+                      </label>
+                      <input type="text" class="co-input" id="currentPD" name="currentPD"
+                             placeholder="<%= Co.phExchangeCurrent %>">
+                </div>
+                    <div class="co-field">
+                      <label class="co-field__label" for="numberOfItemsCurrentPD">
+                        <%= Co.itemsToCollect %> <span class="co-required">*</span>
+                        </label>
+                      <div class="co-counter">
+                        <button type="button" class="co-counter__btn" id="co-ex-cur-decrement"
+                                onclick="coAdjustCounter('numberOfItemsCurrentPD','co-ex-cur-display', -1)">
+                          <i class="ri-subtract-line"></i>
+                        </button>
+                        <div class="co-counter__display" id="co-ex-cur-display">1</div>
+                        <button type="button" class="co-counter__btn co-counter__btn--plus" id="co-ex-cur-increment"
+                                onclick="coAdjustCounter('numberOfItemsCurrentPD','co-ex-cur-display', 1)">
+                          <i class="ri-add-line"></i>
+                        </button>
                       </div>
+                      <input type="hidden" name="numberOfItemsCurrentPD" id="numberOfItemsCurrentPD" value="1">
                     </div>
                   </div>
 
-                  <!-- Payment collection option card -->
-                  <div class="mb-3" id="cash-on-delivery-section" style="display: none;">
-                    <p class="option-section-label"><%= Co.paymentCollectionLabel || 'Payment Collection' %></p>
-                    <div class="option-cards-group">
-                      <label class="option-card" id="cod-card" for="cash-on-delivery-checkbox">
-                        <input type="checkbox" name="COD" id="cash-on-delivery-checkbox" value="on">
-                        <span class="option-card-check">
-                          <svg viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1"/></svg>
-                        </span>
-                        <span class="option-card-icon"><i class="ri-money-dollar-circle-line"></i></span>
-                        <span class="option-card-text">
-                          <strong><%= Co.codLabel || 'Cash on Delivery (COD)' %></strong>
-                          <span><%= Co.codSub || 'Collect payment upon delivery' %></span>
-                        </span>
-                      </label>
+                  <div class="co-field-row" style="margin-top:0.5rem;">
+                    <div class="co-field">
+                      <label class="co-field__label" for="newPD">
+                        <%= Co.newProductShort %> <span class="co-required">*</span>
+                        </label>
+                      <input type="text" class="co-input" id="newPD" name="newPD"
+                             placeholder="<%= Co.phExchangeNew %>">
+                      </div>
+                    <div class="co-field">
+                      <label class="co-field__label" for="numberOfItemsNewPD">
+                        <%= Co.itemsToDeliver %> <span class="co-required">*</span>
+                        </label>
+                      <div class="co-counter">
+                        <button type="button" class="co-counter__btn" id="co-ex-new-decrement"
+                                onclick="coAdjustCounter('numberOfItemsNewPD','co-ex-new-display', -1)">
+                          <i class="ri-subtract-line"></i>
+                        </button>
+                        <div class="co-counter__display" id="co-ex-new-display">1</div>
+                        <button type="button" class="co-counter__btn co-counter__btn--plus" id="co-ex-new-increment"
+                                onclick="coAdjustCounter('numberOfItemsNewPD','co-ex-new-display', 1)">
+                          <i class="ri-add-line"></i>
+                        </button>
+                      </div>
+                      <input type="hidden" name="numberOfItemsNewPD" id="numberOfItemsNewPD" value="1">
                     </div>
+                  </div>
+
+                  <p class="co-section-label" style="margin-top:1.25rem;"><%= Co.shippingOptionsHeading %></p>
+                  <div class="co-toggle-grid co-toggle-grid--single">
+                    <!-- Cash Difference (express is Deliver-only) -->
+                    <button type="button" class="co-toggle-card" id="co-cd-toggle"
+                            onclick="coToggleCD()">
+                      <div class="co-toggle-card__icon"><i class="ri-exchange-dollar-line"></i></div>
+                      <div class="co-toggle-card__content">
+                        <p class="co-toggle-card__title"><%= Co.collectCashDiffTitle %></p>
+                        <p class="co-toggle-card__sub"><%= Co.collectCashDiffSub %></p>
+              </div>
+                      <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+                    </button>
+                  </div>
+                  <input type="hidden" name="CashDifference" id="CashDifference-input" value="">
+
+                  <div class="co-collapsible" id="co-cd-amount-wrap">
+                    <div class="co-field" style="margin-top:0.75rem;">
+                      <label class="co-field__label" for="amountCashDifference">
+                        <%= Co.phCashDiffAmount %> <span class="co-required">*</span>
+                      </label>
+                      <div class="co-input-suffix">
+                        <input type="number" class="co-input" id="amountCashDifference" name="amountCashDifference"
+                               placeholder="0.00" min="0" step="0.01" dir="ltr">
+                        <span class="co-input-suffix__text"><%= Co.currencyCode %></span>
+                </div>
+                  </div>
+                    </div>
+                </div><!-- /#co-section-exchange -->
+
+                <!-- RETURN section -->
+                <div class="co-type-section" id="co-section-return">
+                  <div class="co-divider">
+                    <div class="co-divider__line"></div>
+                    <span class="co-divider__text"><%= Co.returnDetailsLabel %></span>
+                    <div class="co-divider__line"></div>
+                  </div>
+
+                  <p class="co-field-hint co-field-hint--muted co-field-hint--show" id="co-return-info-line" style="margin-bottom:0.75rem;">
+                    <%= Co.returnInfoText || '' %>
+                  </p>
+
+                  <div class="co-field">
+                    <label class="co-field__label" for="returnProductDescription">
+                      <%= Co.returnDescLabel %> <span class="co-required">*</span>
+                    </label>
+                    <textarea class="co-textarea" id="returnProductDescription" rows="2"
+                              placeholder="<%= Co.returnDescPlaceholder %>"></textarea>
+                    <div class="co-field-error" id="err-returnProductDescription"><%= Co.errReturnProductDesc %></div>
                   </div>
                   
-                  <!-- Amount Input Section (Full Width Below) -->
-                  <div class="amount-input-section" id="cash-on-delivery-amount" style="display: none;">
-                    <div class="info-badge info">
-                      <i class="ri-information-line"></i>
-                      <%= Co.amountCollectInfo || 'This is the actual full amount that will be collected from the customer' %>
+                  <div class="co-field">
+                    <label class="co-field__label" for="originalOrderNumber">
+                      <%= Co.originalOrderLabel %> <span class="co-required">*</span>
+                      </label>
+                    <div class="co-input-icon-wrap">
+                      <i class="co-input-icon ri-hashtag"></i>
+                      <input type="text" class="co-input" id="originalOrderNumber" name="originalOrderNumber"
+                             placeholder="<%= Co.phOriginalOrder %>" autocomplete="off">
                     </div>
-                    <label for="cash-on-delivery-input" class="form-label"><%= Co.amountCollectLabel || 'Amount to Collect' %></label>
-                    <div class="input-group">
-                      <span class="input-group-text">EGP</span>
-                      <input type="number" name="amountCOD" class="form-control" id="cash-on-delivery-input" placeholder="<%= Co.amountPlaceholder || 'Enter amount' %>">
+                    <div class="co-field-hint" id="co-original-order-ok" aria-live="polite"></div>
+                    <div class="co-field-error" id="err-originalOrderNumber"><%= Co.errOriginalOrder %></div>
                     </div>
+                  <input type="hidden" name="originalOrderItemCount" id="originalOrderItemCount" value="">
+
+                  <div class="co-field">
+                    <label class="co-field__label" for="returnReason">
+                      <%= Co.returnReasonLabel %> <span class="co-required">*</span>
+                    </label>
+                    <input type="text" class="co-input" id="returnReason" name="returnReason"
+                           placeholder="<%= Co.phReturnReason %>">
+                    <div class="co-field-error" id="err-returnReason"><%= Co.errReturnReason %></div>
                   </div>
+
+                  <div class="co-field">
+                    <label class="co-field__label" for="returnNotes">
+                      <%= Co.returnNotesOpt %> <span class="co-optional"><%= Co.optionalTag %></span>
+                      </label>
+                    <textarea class="co-textarea" id="returnNotes" name="returnNotes"
+                              rows="2" placeholder="<%= Co.phReturnNotes %>"></textarea>
+                  </div>
+                  
+                  <!-- Partial Return (only when original order has multiple items) -->
+                  <div id="co-partial-return-block" class="co-partial-return-block" style="display:none;">
+                  <div class="co-toggle-grid" style="margin-top:0.5rem;grid-template-columns:1fr;">
+                    <button type="button" class="co-toggle-card" id="co-partial-return-toggle"
+                            onclick="coTogglePartialReturn()">
+                      <div class="co-toggle-card__icon"><i class="ri-git-branch-line"></i></div>
+                      <div class="co-toggle-card__content">
+                        <p class="co-toggle-card__title"><%= Co.partialReturnTitle %></p>
+                        <p class="co-toggle-card__sub"><%= Co.partialReturnSub %></p>
+                    </div>
+                      <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+                    </button>
+                    </div>
+                  <input type="hidden" name="isPartialReturn" id="isPartialReturn-input" value="">
+
+                  <div class="co-collapsible" id="co-partial-return-wrap">
+                    <div class="co-field" style="margin-top:0.75rem;">
+                      <label class="co-field__label" for="partialReturnItemCount">
+                        <%= Co.itemsToReturn %> <span class="co-required">*</span>
+                      </label>
+                      <div class="co-counter">
+                        <button type="button" class="co-counter__btn"
+                                onclick="coAdjustCounter('partialReturnItemCount','co-pr-display', -1)">
+                          <i class="ri-subtract-line"></i>
+                        </button>
+                        <div class="co-counter__display" id="co-pr-display">1</div>
+                        <button type="button" class="co-counter__btn co-counter__btn--plus"
+                                onclick="coAdjustCounter('partialReturnItemCount','co-pr-display', 1)">
+                          <i class="ri-add-line"></i>
+                        </button>
+                  </div>
+                      <input type="hidden" name="partialReturnItemCount" id="partialReturnItemCount" value="1">
                 </div>
               </div>
+                  </div><!-- /#co-partial-return-block -->
+                </div><!-- /#co-section-return -->
 
-              <!-- Exchange Section -->
-              <div id="exchange-section" class="card mb-4 hover-effect" style="display: none;">
-                <div class="card-header">
-                  <h6 class="mb-0"><%= Co.exchangeDetailsLabel || 'Exchange Details' %></h6>
+              </div><!-- /#co-delivery-details -->
+            </div><!-- /#co-step-1 -->
+
+            <!-- ═══ STEP 2: CUSTOMER DETAILS ═══════════════════════════ -->
+            <div class="step-panel" id="co-step-2">
+
+              <!-- Contact Information -->
+              <div class="co-group-heading">
+                <div class="co-group-heading__icon"><i class="ri-user-3-line"></i></div>
+                <h3 class="co-group-heading__title"><%= Co.contactInfoHeading %></h3>
                 </div>
-                <div class="card-body">
-                  <div class="mb-4">
-                    <label for="exchange-current-product" class="form-label"><%= Co.currentProductLabel || 'Current Product Description' %></label>
-                    <textarea class="form-control" name="currentPD" id="exchange-current-product" placeholder="<%= Co.currentProductPlaceholder || 'Describe the products being returned' %>" rows="3"></textarea>
+
+              <div class="co-field-row">
+                <div class="co-field">
+                  <label class="co-field__label" for="fullName">
+                    <%= Co.fullName %> <span class="co-required">*</span>
+                  </label>
+                  <div class="co-input-icon-wrap">
+                    <i class="co-input-icon ri-user-line"></i>
+                    <input type="text" class="co-input" id="fullName" name="fullName"
+                           placeholder="<%= Co.phEnterFullName %>" dir="auto">
                   </div>
-                  <div class="mb-4 col-md-4">
-                    <label for="exchange-current-count" class="form-label"><%= Co.currentItemsLabel || 'Number of Current Items' %></label>
-                    <div class="input-group">
-                      <button type="button" class="btn" id="decrement-current">-</button>
-                      <input type="number" name="numberOfItemsCurrentPD" class="form-control text-center" id="exchange-current-count" value="1" min="1">
-                      <button type="button" class="btn" id="increment-current">+</button>
+                  <div class="co-field-error" id="err-fullName"><%= Co.errFullName %></div>
                     </div>
+                <div class="co-field">
+                  <label class="co-field__label" for="phoneNumber">
+                    <%= Co.phone %> <span class="co-required">*</span>
+                  </label>
+                  <div class="co-input-icon-wrap">
+                    <i class="co-input-icon ri-phone-line"></i>
+                    <input type="tel" class="co-input" id="phoneNumber" name="phoneNumber"
+                           placeholder="+20 10X XXX XXXX" dir="ltr">
                   </div>
-                  <div class="mb-4">
-                    <label for="exchange-new-product" class="form-label"><%= Co.newProductLabel || 'New Product Description' %></label>
-                    <textarea class="form-control" name="newPD" id="exchange-new-product" placeholder="<%= Co.newProductPlaceholder || 'Describe the replacement products' %>" rows="3"></textarea>
+                  <div class="co-field-error" id="err-phoneNumber"><%= Co.errPhone %></div>
                   </div>
-                  <div class="mb-4 col-md-4">
-                    <label for="exchange-new-count" class="form-label"><%= Co.newItemsLabel || 'Number of New Items' %></label>
-                    <div class="input-group">
-                      <button type="button" class="btn" id="decrement-new">-</button>
-                      <input type="number" name="numberOfItemsNewPD" class="form-control text-center" id="exchange-new-count" value="1" min="1">
-                      <button type="button" class="btn" id="increment-new">+</button>
                     </div>
-                  </div>
-                  <div class="mb-3" id="cash-difference-section" style="display: none;">
-                    <p class="option-section-label"><%= Co.paymentCollectionLabel || 'Payment Collection' %></p>
-                    <div class="option-cards-group">
-                      <label class="option-card" id="cash-diff-card" for="cash-difference-checkbox">
-                        <input type="checkbox" name="CashDifference" id="cash-difference-checkbox" value="on">
-                        <span class="option-card-check">
-                          <svg viewBox="0 0 12 10"><polyline points="1,5 4.5,8.5 11,1"/></svg>
-                        </span>
-                        <span class="option-card-icon"><i class="ri-exchange-dollar-line"></i></span>
-                        <span class="option-card-text">
-                          <strong><%= Co.cashDiffLabel || 'Cash Difference (CD)' %></strong>
-                          <span><%= Co.cashDiffSub || 'Collect additional payment' %></span>
-                        </span>
+
+              <div class="co-field">
+                <label class="co-field__label" for="otherPhoneNumber">
+                  <%= Co.altPhone %> <span class="co-optional"><%= Co.optionalTag %></span>
                       </label>
+                <div class="co-input-icon-wrap">
+                  <i class="co-input-icon ri-phone-line"></i>
+                  <input type="tel" class="co-input" id="otherPhoneNumber" name="otherPhoneNumber"
+                         placeholder="<%= Co.phOptionalPhone %>" dir="ltr">
                     </div>
                   </div>
                   
-                  <!-- Amount Input Section (Full Width Below) -->
-                  <div class="amount-input-section" id="cash-difference-amount" style="display: none;">
-                    <div class="info-badge info">
-                      <i class="ri-information-line"></i>
-                      <%= Co.amountCollectInfo || 'This is the actual full amount that will be collected from the customer' %>
+              <!-- Delivery Location -->
+              <div class="co-group-heading" style="margin-top:1.5rem;">
+                <div class="co-group-heading__icon"><i class="ri-map-pin-line"></i></div>
+                <h3 class="co-group-heading__title"><%= Co.deliveryLocationHeading %></h3>
                     </div>
-                    <label for="cash-difference-input" class="form-label"><%= Co.cashDiffAmountLabel || 'Difference Amount' %></label>
-                    <div class="input-group">
-                      <span class="input-group-text">EGP</span>
-                      <input type="number" name="amountCashDifference" class="form-control" id="cash-difference-input" placeholder="<%= Co.cashDiffAmountPlaceholder || 'Enter difference amount' %>">
-                    </div>
-                  </div>
-                </div>
+
+              <div class="co-field">
+                <label class="co-field__label">
+                  <%= Co.governorateAreaLabel %> <span class="co-required">*</span>
+                </label>
+                <button type="button" class="co-area-btn" id="selectAreaBtn"
+                        data-bs-toggle="modal" data-bs-target="#areaSelectionModal">
+                  <i class="ri-map-pin-2-line"></i>
+                  <span class="co-area-btn__label" id="selectedAreaDisplay"><%= Co.selectAreaPlaceholder %></span>
+                  <i class="co-area-btn__chevron ri-arrow-right-s-line"></i>
+                </button>
+                <input type="hidden" id="government-value" name="government" value="">
+                <input type="hidden" id="zone-value" name="zone" value="">
+                <div class="co-field-error" id="err-zone"><%= Co.errSelectArea %></div>
               </div>
 
-              <!-- Return Section -->
-              <div id="return-section" class="card mb-4 hover-effect" style="display: none;">
-                <div class="card-header">
-                  <h6 class="mb-0"><%= Co.returnDetailsLabel || 'Return Details' %></h6>
-                </div>
-                <div class="card-body">
-                  <div class="alert alert-info mb-4">
-                    <i class="ri-information-line me-2"></i>
-                    <strong><%= Co.returnInfoAlert || 'Return Process:' %></strong> <%= Co.returnInfoText || 'Create a return order for an existing delivered order. The original order will be automatically linked when the return is picked up.' %>
+              <div class="co-field">
+                <label class="co-field__label" for="address">
+                  <%= Co.streetAddress %> <span class="co-required">*</span>
+                </label>
+                <textarea class="co-textarea" id="address" name="address"
+                          rows="3" placeholder="<%= Co.phStreet %>" dir="auto"></textarea>
+                <div class="co-field-error" id="err-address"><%= Co.errAddress %></div>
                   </div>
                   
-                  <div class="mb-4">
-                    <label for="original-order-number" class="form-label"><%= Co.originalOrderLabel || 'Original Order Number' %> *</label>
-                    <input type="text" class="form-control" name="originalOrderNumber" id="original-order-number" placeholder="<%= Co.originalOrderPlaceholder || 'Enter the order number of the delivered order to return' %>" required>
-                    <div class="form-text">
-                      <%= Co.originalOrderHelp || 'Enter the order number of the completed order that needs to be returned.' %>
-                    </div>
-                    <div id="original-order-preview" class="alert alert-success mt-2" style="display: none;">
-                      <h6 id="original-order-found-title"><%= Co.originalOrderFound || 'Original Order Found:' %></h6>
-                      <div id="original-order-details"></div>
-                    </div>
-                  </div>
+              <button type="button" class="co-check-card" id="co-work-addr-toggle"
+                      onclick="coToggleWorkAddress()">
+                <div class="co-check-card__box"><i class="ri-check-line"></i></div>
+                <span class="co-check-card__text">
+                  <i class="ri-building-2-line"></i> <%= Co.deliverToWork %>
+                </span>
+              </button>
+              <input type="hidden" name="deliverToWorkAddress" id="deliverToWorkAddress-input" value="">
 
-                  <!-- Partial Return Section -->
-                  <div id="partial-return-section" class="card mb-4" style="display: none;">
-                    <div class="card-header">
-                      <h6 class="mb-0"><%= Co.returnTypeLabel || 'Return Type Selection' %></h6>
+            </div><!-- /#co-step-2 -->
+
+            <!-- ═══ STEP 3: ADDITIONAL OPTIONS ══════════════════════════ -->
+            <div class="step-panel" id="co-step-3">
+
+              <div class="co-toggle-grid">
+                <!-- Can open package -->
+                <button type="button" class="co-toggle-card" id="co-open-pkg-toggle"
+                        onclick="coToggleCard(this, 'previewPermission', 'co-open-pkg-toggle')">
+                  <div class="co-toggle-card__icon"><i class="ri-box-3-line"></i></div>
+                  <div class="co-toggle-card__content">
+                    <p class="co-toggle-card__title"><%= Co.customerOpenTitle %></p>
+                    <p class="co-toggle-card__sub"><%= Co.allowPackageInspection %></p>
                     </div>
-                    <div class="card-body">
-                      <div class="alert alert-info mb-3">
-                        <i class="ri-information-line me-2"></i>
-                        <strong><%= Co.multipleItemsAlert || 'Multiple Items Detected:' %></strong> <%= Co.multipleItemsText || 'This order contains multiple items. Choose whether to return all items or just specific ones.' %>
+                  <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+                </button>
+
+                <!-- Referral code -->
+                <div class="co-field">
+                  <label class="co-field__label" for="referralNumber">
+                    <i class="ri-price-tag-3-line" style="color:var(--co-orange);font-size:0.85rem;"></i>
+                    <%= Co.referralCodeLabel %> <span class="co-optional"><%= Co.optionalTag %></span>
+                  </label>
+                  <input type="text" class="co-input" id="referralNumber" name="referralNumber"
+                         placeholder="<%= Co.phReferral %>" style="height:3.5rem;" dir="auto">
+                    </div>
                       </div>
                       
-                      <div class="mb-3">
-                        <div class="form-check">
-                          <input class="form-check-input" type="radio" name="returnType" id="full-return" value="full" checked>
-                          <label class="form-check-label" for="full-return">
-                            <strong><%= Co.fullReturnLabel || 'Full Return' %></strong> - <%= Co.fullReturnSub || 'Return all items from the original order' %>
+              <input type="hidden" name="previewPermission" id="previewPermission-input" value="">
+
+              <div class="co-field" style="margin-top:0.25rem;">
+                <label class="co-field__label" for="Notes">
+                  <i class="ri-file-text-line" style="color:var(--co-orange);font-size:0.85rem;"></i>
+                  <%= Co.specialInstructions %> <span class="co-optional"><%= Co.optionalTag %></span>
                           </label>
-                        </div>
-                        <div class="form-check">
-                          <input class="form-check-input" type="radio" name="returnType" id="partial-return" value="partial">
-                          <label class="form-check-label" for="partial-return">
-                            <strong><%= Co.partialReturnLabel || 'Partial Return' %></strong> - <%= Co.partialReturnSub || 'Return only specific items' %>
-                          </label>
-                        </div>
+                <textarea class="co-textarea" id="Notes" name="Notes"
+                          rows="4" placeholder="<%= Co.phNotesCourier %>" dir="auto"></textarea>
                       </div>
 
-                      <!-- Partial Return Details -->
-                      <div id="partial-return-details" style="display: none;">
-                        <div class="row g-3">
-                          <div class="col-md-6">
-                            <label for="partial-return-count" class="form-label"><%= Co.partialItemsLabel || 'Number of Items to Return' %></label>
-                            <div class="input-group">
-                              <button type="button" class="btn" id="decrement-partial">-</button>
-                              <input type="number" name="partialReturnItemCount" class="form-control text-center" id="partial-return-count" value="1" min="1">
-                              <button type="button" class="btn" id="increment-partial">+</button>
+              <!-- Fee Summary Card -->
+              <div class="co-fee-card">
+                <div class="co-fee-card__header">
+                  <div class="co-fee-card__header-icon"><i class="ri-wallet-3-line"></i></div>
+                  <div>
+                    <p class="co-fee-card__header-title"><%= Co.feeSummaryTitle %></p>
+                    <p class="co-fee-card__header-sub"><%= Co.feeSubBasedArea %></p>
                             </div>
-                            <div class="form-text"><%= Co.partialMaxLabel || 'Maximum:' %> <span id="max-items"></span> <%= Co.partialItemsUnit || 'items' %></div>
                           </div>
-                          <div class="col-md-6">
-                            <label for="remaining-count" class="form-label"><%= Co.remainingLabel || 'Items Remaining with Customer' %></label>
-                            <div class="form-control text-center" id="remaining-count" style="background-color: #f8f9fa;">0</div>
+                <div class="co-fee-card__body">
+                  <div class="co-fee-row">
+                    <span class="co-fee-row__label"><%= Co.feeBase %></span>
+                    <span class="co-fee-row__value" id="co-fee-base-val">—</span>
                           </div>
+                  <div class="co-fee-row" id="co-fee-express-row" style="display:none;">
+                    <span class="co-fee-row__label"><%= Co.expressAddonLine %></span>
+                    <span class="co-fee-row__value co-fee-row__value--orange" id="co-fee-express-val">+— EGP</span>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Standard Return Fields (hidden for partial returns) -->
-                  <div id="standard-return-fields">
-                    <div class="mb-4">
-                      <label for="return-description" class="form-label"><%= Co.returnDescLabel || 'Product Description' %></label>
-                      <textarea class="form-control" name="productDescription" id="return-description" placeholder="<%= Co.returnDescPlaceholder || 'Describe the products being returned' %>" rows="3"></textarea>
-                    </div>
-                    <div class="mb-4 col-md-4" id="standard-return-number-of-items">
-                      <label for="return-count" class="form-label"><%= Co.itemsCount || 'Number of Items' %></label>
-                      <div class="input-group">
-                        <button type="button" class="btn" id="decrement-return">-</button>
-                        <input type="number" name="numberOfItems" class="form-control text-center" id="return-count" value="1" min="1">
-                        <button type="button" class="btn" id="increment-return">+</button>
-                      </div>
-                    </div>
-                    <div class="mb-4">
-                      <label for="return-reason" class="form-label"><%= Co.returnReasonLabel || 'Return Reason' %> *</label>
-                      <select class="form-select" name="returnReason" id="return-reason" required>
-                        <option value=""><%= Co.returnReasonPlaceholder || 'Select a reason' %></option>
-                        <option value="Customer requested return"><%= Co.returnReasonCustomer || 'Customer requested return' %></option>
-                        <option value="Damaged product"><%= Co.returnReasonDamaged || 'Damaged product' %></option>
-                        <option value="Wrong product"><%= Co.returnReasonWrong || 'Wrong product' %></option>
-                        <option value="Quality issues"><%= Co.returnReasonQuality || 'Quality issues' %></option>
-                        <option value="Size/Color mismatch"><%= Co.returnReasonSize || 'Size/Color mismatch' %></option>
-                        <option value="Other"><%= Co.returnReasonOther || 'Other' %></option>
-                      </select>
-                    </div>
-                    <div class="mb-4">
-                      <label for="return-notes" class="form-label"><%= Co.returnNotesLabel || 'Return Notes' %></label>
-                      <textarea class="form-control" name="returnNotes" id="return-notes" placeholder="<%= Co.returnNotesPlaceholder || 'Provide any additional details about the return...' %>" rows="3"></textarea>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-
-              <!-- Navigation Buttons -->
-              <div class="d-flex align-items-start gap-3 mt-4 flex-wrap">
-                <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-bill-info-tab">
-                  <i class="ri-user-line label-icon align-middle fs-16 ms-2"></i><%= Co.continueToCustomer || 'Continue to Customer Details' %>
-                </button>
-              </div>
-            </div>
-
-            <!-- Customer Info Tab -->
-            <div class="tab-pane fade" id="pills-bill-info" role="tabpanel" aria-labelledby="pills-bill-info-tab">
-              <div class="mb-4">
-                <h5 class="section-title"><%= Co.customerInfoTitle || 'Customer Information' %></h5>
-                <p class="section-subtitle"><%= Co.customerInfoSubtitle || "Enter the customer's contact details" %></p>
-              </div>
-
-              <!-- Customer Info Form -->
-              <div>
-                <div class="row g-4">
-                  <div class="col-sm-6">
-                    <div class="mb-3">
-                      <label for="billinginfo-firstName" class="form-label"><%= Co.fullName || 'Full Name' %></label>
-                      <input type="text" class="form-control" name="fullName" id="billinginfo-firstName" placeholder="<%= Co.fullName || 'Full Name' %>">
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div class="mb-3">
-                      <label for="billinginfo-phoneNumber" class="form-label"><%= Co.phone || 'Phone Number' %></label>
-                      <input type="tel" class="form-control" name="phoneNumber" id="billinginfo-phoneNumber" placeholder="<%= Co.phone || 'Phone Number' %>">
-                    </div>
-                  </div>
-                </div>
-                <div class="row g-4">
-                  <div class="col-sm-6">
-                    <div class="mb-3">
-                      <label for="billinginfo-otherPhoneNumber" class="form-label"><%= Co.altPhone || 'Other Phone Number (Optional)' %></label>
-                      <input type="tel" class="form-control" name="otherPhoneNumber" id="billinginfo-otherPhoneNumber" placeholder="<%= Co.altPhone || 'Alternative phone' %>">
-                    </div>
-                  </div>
-                </div>
-                <div class="row g-3">
-                  <div class="col-md-12">
-                    <h5 class="section-title mb-3"><%= Co.locationDetailsLabel || 'Location Details' %></h5>
-                  </div>
-
-                  <div class="mb-3 col-md-12">
-                    <label for="governorate-area" class="form-label"><%= Co.governorateAreaLabel || 'Governorate and Area' %></label>
-                    <button type="button" class="btn btn-outline-secondary w-100 text-start" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
-                      <span id="selectedAreaDisplay"><%= Co.selectAreaPlaceholder || 'Select Area' %></span>
-                      <i class="ri-arrow-down-s-line"></i>
-                    </button>
-                    <input type="hidden" name="government" id="government-value">
-                    <input type="hidden" name="zone" id="zone-value">
-                  </div>
-                </div>
-
-                <div class="row g-3">
-                  <div class="col-md-12">
-                    <label for="address" class="form-label"><%= Co.address || 'Address' %></label>
-                    <textarea class="form-control" id="address" name="address" rows="3" placeholder="<%= Co.address || 'Enter full address' %>"></textarea>
-                  </div>
-                </div>
-
-                <div class="row g-3 mt-2">
-                  <div class="col-md-12">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="deliverToWorkAddress" id="deliverToWorkAddress-checkbox">
-                      <label class="form-check-label" for="deliverToWorkAddress-checkbox">
-                        <i class="ri-building-line me-2"></i><%= Co.deliverToWork || 'Deliver to work address' %>
-                      </label>
-                    </div>
-                    <div class="alert alert-info mt-2" style="display: none;" id="work-address-alert">
-                      <i class="ri-time-line me-2"></i>
-                      <strong><%= Co.workAddressNote || 'Note:' %></strong> <%= Co.workAddressText || 'Work address deliveries will be scheduled during business working hours (8:00 AM - 3:00 PM)' %>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="d-flex align-items-start gap-3 mt-4 flex-wrap">
-                  <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-address-tab">
-                    <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i><%= Co.backToShipping || 'Back to Shipping' %>
-                  </button>
-                  <button type="button" class="btn btn-primary btn-label right ms-auto nexttab" data-nexttab="pills-payment-tab">
-                    <i class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i><%= Co.continueToAdditional || 'Continue to Additional Options' %>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-                        <!-- Extra Details Tab -->
-            <div class="tab-pane fade" id="pills-payment" role="tabpanel" aria-labelledby="pills-payment-tab">
-              <div class="mb-4">
-                <h5 class="section-title"><%= Co.additionalTitle || 'Additional Options' %></h5>
-                <p class="section-subtitle"><%= Co.additionalSubtitle || 'Specify any special requirements for this order' %></p>
-              </div>
-
-              <div class="card mb-4 hover-effect">
-                <div class="card-body">
-                  <div class="row g-4">
-                    <div class="col-lg-4 col-md-6" id="orderCanbeOpened">
-                      <div class="form-check card-radio">
-                        <input class="form-check-input" name="previewPermission" type="checkbox" id="order-preview-checkbox">
-                        <label class="form-check-label" for="order-preview-checkbox">
-                          <span class="fs-16 me-2"><i class="ri-eye-line align-bottom"></i></span>
-                          <span class="fs-14 text-wrap"><%= Co.canOpenPackage || 'Customer can open package' %></span>
-                        </label>
-                      </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                      <div class="mb-3">
-                        <label for="referral-number" class="form-label"><%= Co.referralLabel || 'Referral Number (Optional)' %></label>
-                        <input type="text" name="referralNumber" class="form-control" id="referral-number" placeholder="<%= Co.referralPlaceholder || 'Enter referral code if available' %>">
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="mb-4">
-                    <label for="delivery-notes" class="form-label"><%= Co.specialInstructions || 'Special Instructions' %></label>
-                    <textarea class="form-control" name="Notes" id="delivery-notes" placeholder="<%= Co.specialInstructionsPlaceholder || 'Add any special delivery instructions or notes' %>" rows="3"></textarea>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Fees Calculation Section -->
-              <div class="card mb-4 fee-summary-card">
-                <div class="card-header fee-summary-header">
-                  <div class="d-flex align-items-start gap-3">
-                    <div class="fee-header-icon-wrap" aria-hidden="true">
-                      <i class="ri-money-dollar-circle-line fs-4"></i>
-                    </div>
+                  <div class="co-fee-total">
                     <div>
-                      <h6 class="mb-0"><%= Co.feeSummaryTitle || 'Delivery Fee Summary' %></h6>
-                      <small class="text-muted d-block mt-1"><%= Co.feeSummarySubtitle || 'Updates when you select area and shipping options' %></small>
+                      <p class="co-fee-total__label"><%= Co.grandFeeLabel %></p>
+                      <p class="co-fee-total__sub"><%= Co.noHiddenCharges %></p>
+                      </div>
+                    <div class="co-fee-total__amount-col">
+                      <div class="co-fee-total__amount" id="co-fee-total-val">
+                        <span id="co-fee-total-num">0</span>
+                        <span><%= Co.currencyCode %></span>
                     </div>
                   </div>
+                  </div>
                 </div>
-                <div class="card-body p-4">
-                  <div class="fee-display text-center" id="feeDisplayContainer">
-                    <div class="mb-3">
-                      <span class="fee-amount" id="totalFee">0</span>
-                      <span class="fee-currency ms-1">EGP</span>
+              </div>
+
+            </div><!-- /#co-step-3 -->
+
+            <!-- ═══ STEP 4: COMPLETE ═════════════════════════════════════ -->
+            <div class="step-panel" id="co-step-4">
+              <div class="co-success-wrap">
+                <div class="co-success-icon-wrap">
+                  <div class="co-success-icon">
+                    <i class="ri-check-line"></i>
+                  </div>
+                  <div class="co-success-badge">
+                    <i class="ri-sparkling-line"></i>
+              </div>
+            </div>
+
+                <h2 class="co-success-title"><%= Co.orderPlacedTitle %></h2>
+                <p class="co-success-sub"><%= Co.orderPlacedSub %></p>
+                <div class="co-success-order-num">
+                  <i class="ri-box-3-line"></i>
+                  <span id="co-success-order-num">—</span>
+              </div>
+
+                <div class="co-success-grid">
+              <div>
+                    <p class="co-success-detail__label"><%= Co.successLabelOrderType %></p>
+                    <p class="co-success-detail__value" id="co-result-type">—</p>
                     </div>
-                    <p class="fee-total-caption mb-0 text-uppercase"><%= Co.feeTotalCaption || 'Total delivery fee' %></p>
-                    <div class="loading-spinner">
-                      <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                  <div>
+                    <p class="co-success-detail__label"><%= Co.successLabelCustomer %></p>
+                    <p class="co-success-detail__value" id="co-result-customer">—</p>
+                  </div>
+                  <div>
+                    <p class="co-success-detail__label"><%= Co.successLabelPhone %></p>
+                    <p class="co-success-detail__value" id="co-result-phone">—</p>
+                    </div>
+                  <div>
+                    <p class="co-success-detail__label"><%= Co.successLabelArea %></p>
+                    <p class="co-success-detail__value" id="co-result-area">—</p>
+                  </div>
+                  <div>
+                    <p class="co-success-detail__label"><%= Co.successLabelTotalFee %></p>
+                    <p class="co-success-detail__value co-success-detail__value--orange" id="co-result-fee">— <%= Co.currencyCode %></p>
+                </div>
+                  </div>
+
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
+                  <button type="button" class="co-btn-new-order" id="co-btn-new-order">
+                    <i class="ri-add-line"></i> <%= Co.createNewOrder %>
+                    </button>
+                  <a href="/business/orders" class="co-btn-new-order"
+                     style="background:linear-gradient(135deg,#374151,#1F2937); box-shadow:0 4px 14px rgba(0,0,0,0.2); text-decoration:none;">
+                    <i class="ri-list-unordered"></i> <%= Co.viewOrdersList %>
+                  </a>
+                  </div>
+                </div>
+            </div><!-- /#co-step-4 -->
+
+          </div><!-- /.co-card__body -->
+        </form>
+
+        <!-- Navigation Footer -->
+        <div class="co-card__footer" id="co-nav-footer">
+          <button type="button" class="co-btn-back" id="co-btn-back" disabled>
+            <i class="ri-arrow-left-s-line co-btn-back__chev"></i> <%= Cj.labelBack || 'Back' %>
+                  </button>
+          <button type="button" class="co-btn-next" id="co-btn-next">
+            <%= Cj.labelContinue || 'Continue' %> <i class="ri-arrow-right-s-line co-btn-next__chev"></i>
+                  </button>
+            </div>
+
+      </div><!-- /.co-card -->
+    </div><!-- /.co-form-col -->
+
+    <!-- ── Order Summary Sidebar ──────────────────────────────────────── -->
+    <div class="co-sidebar-col">
+      <div class="co-summary">
+
+        <!-- Header -->
+        <div class="co-summary__header">
+          <div class="co-summary__header-blob-1"></div>
+          <div class="co-summary__header-blob-2"></div>
+          <div class="co-summary__eyebrow">
+            <i class="ri-sparkling-line"></i> <%= Co.orderSummaryTitle %>
+                  </div>
+          <p class="co-summary__hint"><%= Co.orderSummaryHint %></p>
+              </div>
+
+        <!-- Summary body -->
+        <div class="co-summary__body">
+          <div class="co-sum-row">
+            <div class="co-sum-row__icon"><i class="ri-box-3-line"></i></div>
+                    <div>
+              <p class="co-sum-row__label"><%= Co.orderTypeLabel %></p>
+              <p class="co-sum-row__value co-sum-row__value--empty" id="sum-type">—</p>
+                    </div>
+                  </div>
+          <div class="co-sum-row" id="sum-product-row" style="display:none;">
+            <div class="co-sum-row__icon"><i class="ri-file-text-line"></i></div>
+            <div style="min-width:0;">
+              <p class="co-sum-row__label"><%= Co.sumLabelProduct %></p>
+              <p class="co-sum-row__value" id="sum-product" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:9rem;">—</p>
+                </div>
+                    </div>
+          <div class="co-sum-row" id="sum-customer-row" style="display:none;">
+            <div class="co-sum-row__icon"><i class="ri-user-line"></i></div>
+            <div>
+              <p class="co-sum-row__label"><%= Co.successLabelCustomer %></p>
+              <p class="co-sum-row__value" id="sum-customer">—</p>
                       </div>
                     </div>
+          <div class="co-sum-row" id="sum-phone-row" style="display:none;">
+            <div class="co-sum-row__icon"><i class="ri-phone-line"></i></div>
+            <div>
+              <p class="co-sum-row__label"><%= Co.successLabelPhone %></p>
+              <p class="co-sum-row__value" id="sum-phone">—</p>
                   </div>
-
-                  <div class="fee-breakdown fee-breakdown-hidden" id="feeBreakdown">
-                    <div class="fee-breakdown-header"><%= Co.feeBreakdownHeader || 'Fee breakdown' %></div>
-                    <div class="fee-row">
-                      <span class="fee-row-label"><%= Co.feeBase || 'Base delivery fee' %></span>
-                      <span class="fee-row-amount" id="baseFee">0 EGP</span>
                     </div>
-                    <div class="fee-row" id="expressRow" style="display: none;">
-                      <span class="fee-row-label">
-                        <i class="ri-flashlight-line text-primary me-1"></i>
-                        <%= Co.feeExpress || 'Express shipping (×2)' %>
-                      </span>
-                      <span class="fee-row-amount text-primary" id="expressFee">+0 EGP</span>
-                    </div>
-                    <div class="fee-row fee-row-total">
-                      <span><%= Co.feeTotal || 'Total' %></span>
-                      <span id="breakdownTotal">0 EGP</span>
+          <div class="co-sum-row" id="sum-area-row" style="display:none;">
+            <div class="co-sum-row__icon"><i class="ri-map-pin-line"></i></div>
+            <div>
+              <p class="co-sum-row__label"><%= Co.successLabelArea %></p>
+              <p class="co-sum-row__value" id="sum-area">—</p>
                     </div>
                   </div>
 
-                  <div class="form-check fee-breakdown-toggle">
-                    <input class="form-check-input" type="checkbox" id="feeBreakdownToggle" autocomplete="off">
-                    <label class="form-check-label" id="feeBreakdownToggleLabel" for="feeBreakdownToggle"><%= Co.showBreakdown || 'Show fee breakdown' %></label>
+          <div class="co-sum-divider"></div>
+
+          <div class="co-sum-fee-row" id="sum-fee-delivery-row" style="display:none;">
+            <span><%= Co.sumLabelBaseDelivery %></span>
+            <span class="co-sum-fee-row__val" id="sum-fee-delivery">—</span>
                   </div>
-                </div>
+          <div class="co-sum-fee-row" id="sum-fee-express-row" style="display:none;">
+            <span><%= Co.sumLabelExpressAddOn %></span>
+            <span class="co-sum-fee-row__val co-sum-fee-row__val--orange" id="sum-fee-express-val">—</span>
               </div>
 
-              <div class="d-flex align-items-start gap-3 mt-4 flex-wrap">
-                <button type="button" class="btn btn-light btn-label previestab" data-previous="pills-bill-info-tab">
-                  <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i><%= Co.backToCustomer || 'Back to Customer Details' %>
-                </button>
-                <button type="submit" id="completeOrderBTN" class="btn btn-primary btn-label right ms-auto">
-                  <i class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i><%= Co.completeOrder || 'Complete Order' %>
-                </button>
+          <div class="co-sum-fee-total" id="sum-fee-total-row" style="display:none;">
+            <span class="co-sum-fee-total__label"><%= Co.sumLabelTotal %></span>
+            <span class="co-sum-fee-total__value" id="sum-fee-total">0 <%= Co.currencyCode %></span>
               </div>
             </div>
 
-            <!-- Finish Tab -->
-            <div class="tab-pane fade" id="pills-finish" role="tabpanel" aria-labelledby="pills-finish-tab">
-              <div class="text-center py-5 px-2">
-                <div class="mb-4">
-                  <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#F39720,secondary:#F39720" style="width:120px;height:120px"></lord-icon>
-                </div>
-                <h5 class="completion-title"><%= Co.finishTitle || 'Thank you! Your Order is Complete' %></h5>
-                <p class="completion-message mb-4"><%= Co.finishMessage || 'A confirmation email with order details has been sent to the customer.' %></p>
-                <h3 class="order-id mb-4"><%= Co.orderId || 'Order ID:' %> <a href="#" class="text-decoration-underline" id="orderNmber"></a></h3>
-                <p class="text-muted small mb-3"><%= Co.finishNext || 'What would you like to do next?' %></p>
-                <div class="d-flex flex-wrap justify-content-center gap-3 mt-2">
-                  <a href="/business/pickups" class="btn btn-outline-primary btn-lg px-4" id="finishGoPickupsBtn">
-                    <i class="ri-truck-line me-2 align-middle"></i><%= Co.goToPickups || 'Go to pickups' %>
-                  </a>
-                  <a href="/business/create-order" class="btn btn-primary btn-lg px-4" id="finishCreateAnotherBtn">
-                    <i class="ri-add-circle-line me-2 align-middle"></i><%= Co.createAnother || 'Create another order' %>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+        <!-- Tip -->
+        <div class="co-summary__tip">
+          <i class="ri-information-line"></i>
+          <p id="co-tip-text"><%= Cj.wizTip1 || Co.shippingInfoSubtitle %></p>
 </div>
 
-<%- contentFor('FooterJs') %>
-<!-- Include Area Selection Modal -->
+            </div>
+    </div><!-- /.co-sidebar-col -->
+
+  </div><!-- /.co-layout -->
+
+</div><!-- /.co-page -->
+
+<!-- Area Selection Modal -->
 <%- include('../partials/area-selection-modal') %>
 
-<!-- Hidden template for zone options -->
-<script type="text/template" id="zone-options-template">
-  <!-- Cairo zones -->
-  <optgroup label="Cairo - Downtown & Central">
-    <option value="Downtown">Downtown Cairo</option>
-    <option value="Garden City">Garden City</option>
-    <option value="Zamalek">Zamalek</option>
-    <option value="Dokki">Dokki</option>
-    <option value="Mohandessin">Mohandessin</option>
-    <option value="Agouza">Agouza</option>
-    <option value="Bulaq">Bulaq</option>
-    <option value="Azbakeya">Azbakeya</option>
-    <option value="Abdeen">Abdeen</option>
-    <option value="Attaba">Attaba</option>
-    <option value="Ramses">Ramses</option>
-    <option value="Qasr El Nil">Qasr El Nil</option>
-    <option value="Talaat Harb">Talaat Harb</option>
-    <option value="Tahrir Square">Tahrir Square</option>
-  </optgroup>
-  <optgroup label="Cairo - East">
-    <option value="Nasr City">Nasr City</option>
-    <option value="Nasr City - First Zone">Nasr City - First Zone</option>
-    <option value="Nasr City - Second Zone">Nasr City - Second Zone</option>
-    <option value="Nasr City - Third Zone">Nasr City - Third Zone</option>
-    <option value="Nasr City - Fourth Zone">Nasr City - Fourth Zone</option>
-    <option value="Nasr City - Seventh Zone">Nasr City - Seventh Zone</option>
-    <option value="Nasr City - Eighth Zone">Nasr City - Eighth Zone</option>
-    <option value="Nasr City - Tenth Zone">Nasr City - Tenth Zone</option>
-    <option value="Heliopolis">Heliopolis</option>
-    <option value="Heliopolis - Korba">Heliopolis - Korba</option>
-    <option value="Heliopolis - Triumph">Heliopolis - Triumph</option>
-    <option value="Heliopolis - Cleopatra">Heliopolis - Cleopatra</option>
-    <option value="Heliopolis - Almaza">Heliopolis - Almaza</option>
-    <option value="Masr El Gedida">Masr El Gedida</option>
-    <option value="El Nozha">El Nozha</option>
-    <option value="El Nozha El Gedida">El Nozha El Gedida</option>
-    <option value="El Zeitoun">El Zeitoun</option>
-    <option value="Ain Shams">Ain Shams</option>
-    <option value="Ain Shams - Ezbet El Nakhl">Ain Shams - Ezbet El Nakhl</option>
-    <option value="El Marg">El Marg</option>
-    <option value="El Marg El Gedida">El Marg El Gedida</option>
-  </optgroup>
-  <optgroup label="Cairo - South & New Cairo">
-    <option value="Maadi">Maadi</option>
-    <option value="New Cairo">New Cairo</option>
-    <option value="Fifth Settlement">Fifth Settlement</option>
-    <option value="First Settlement">First Settlement</option>
-    <option value="Katameya">Katameya</option>
-    <option value="El Mokattam">El Mokattam</option>
-    <option value="El Basateen">El Basateen</option>
-    <option value="Dar El Salam">Dar El Salam</option>
-    <option value="El Rehab">El Rehab</option>
-    <option value="El Tagamoa">El Tagamoa</option>
-    <option value="El Shorouk">El Shorouk</option>
-    <option value="Badr City">Badr City</option>
-    <option value="Helwan">Helwan</option>
-    <option value="15th of May City">15th of May City</option>
-    <option value="Hadayek Helwan">Hadayek Helwan</option>
-  </optgroup>
-  <optgroup label="Cairo - West">
-    <option value="Mohandessin">Mohandessin</option>
-    <option value="Dokki">Dokki</option>
-    <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
-    <option value="Imbaba">Imbaba</option>
-    <option value="Agouza">Agouza</option>
-    <option value="Warraq">Warraq</option>
-    <option value="Rod El Farag">Rod El Farag</option>
-    <option value="Shobra">Shobra</option>
-    <option value="Shobra El Kheima">Shobra El Kheima</option>
-  </optgroup>
-  
-  <!-- Giza zones -->
-  <optgroup label="Giza - Central & East">
-    <option value="Giza Square">Giza Square</option>
-    <option value="Dokki">Dokki</option>
-    <option value="Mohandessin">Mohandessin</option>
-    <option value="Agouza">Agouza</option>
-    <option value="Haram">Haram</option>
-    <option value="Faisal">Faisal</option>
-    <option value="Imbaba">Imbaba</option>
-    <option value="Kit Kat">Kit Kat</option>
-    <option value="El Manial">El Manial</option>
-    <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
-    <option value="El Saff">El Saff</option>
-    <option value="El Hawamdeya">El Hawamdeya</option>
-  </optgroup>
-  <optgroup label="Giza - West & 6th October">
-    <option value="Sheikh Zayed">Sheikh Zayed</option>
-    <option value="6th of October">6th of October</option>
-    <option value="Hadayek Al Ahram">Hadayek Al Ahram</option>
-    <option value="Al Wahat Road">Al Wahat Road</option>
-    <option value="Smart Village">Smart Village</option>
-    <option value="Egyptian Media Production City">Egyptian Media Production City</option>
-  </optgroup>
-  
-  <!-- Alexandria zones -->
-  <optgroup label="Alexandria - East">
-    <option value="Sidi Gaber">Sidi Gaber</option>
-    <option value="Sporting">Sporting</option>
-    <option value="Camp Caesar">Camp Caesar</option>
-    <option value="Smouha">Smouha</option>
-    <option value="Victoria">Victoria</option>
-    <option value="Bolkly">Bolkly</option>
-    <option value="Ibrahimia">Ibrahimia</option>
-    <option value="Laurent">Laurent</option>
-    <option value="Loran">Loran</option>
-  </optgroup>
-  <optgroup label="Alexandria - Central & West">
-    <option value="Bahary">Bahary</option>
-    <option value="Anfushi">Anfushi</option>
-    <option value="Manshiya">Manshiya</option>
-    <option value="Attarin">Attarin</option>
-    <option value="Gomrok">Gomrok</option>
-    <option value="Karmouz">Karmouz</option>
-    <option value="Moharam Bek">Moharam Bek</option>
-    <option value="Dekhela">Dekhela</option>
-    <option value="Agami">Agami</option>
-    <option value="Amreya">Amreya</option>
-    <option value="Borg El Arab">Borg El Arab</option>
-    <option value="King Mariout">King Mariout</option>
-    <option value="Wardian">Wardian</option>
-    <option value="Bacos">Bacos</option>
-  </optgroup>
-  <optgroup label="Alexandria - East & Montaza">
-    <option value="Sidi Bishr">Sidi Bishr</option>
-    <option value="Miami">Miami</option>
-    <option value="Asafra">Asafra</option>
-    <option value="Mandara">Mandara</option>
-    <option value="Montaza">Montaza</option>
-    <option value="Abu Qir">Abu Qir</option>
-    <option value="El Maamoura">El Maamoura</option>
-    <option value="El Max">El Max</option>
-    <option value="Aboukir">Aboukir</option>
-    <option value="Semouha">Semouha</option>
-    <option value="Fleming">Fleming</option>
-    <option value="El Zahria">El Zahria</option>
-    <option value="Gianaclis">Gianaclis</option>
-  </optgroup>
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<%- contentFor('FooterJs') %>
+<script>window.__CO_CURRENCY = '<%= Co.currencyCode %>';window.__CO_PICKUP_ADDR_COUNT=<%= _coPickupAddrs.length %>;</script>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 <script src="/assets/js/area-selection-modal.js"></script>
-
-<script>
-// Enhanced order type handling with return section
-document.addEventListener('DOMContentLoaded', function() {
-  // Handle order type selection
-  const orderTypeRadios = document.querySelectorAll('input[name="orderType"]');
-  const deliverSection = document.getElementById('deliver-section');
-  const exchangeSection = document.getElementById('exchange-section');
-  const returnSection = document.getElementById('return-section');
-  const cashCollectionSection = document.getElementById('cash-collection-section');
-
-  // Utility to enable/disable a section's inputs so hidden sections don't block HTML5 validation
-  function setSectionDisabled(sectionEl, shouldDisable) {
-    if (!sectionEl) return;
-    const fields = sectionEl.querySelectorAll('input, select, textarea, button');
-    fields.forEach(function(field) {
-      if (shouldDisable) {
-        field.setAttribute('disabled', 'disabled');
-        field.removeAttribute('required');
-      } else {
-        field.removeAttribute('disabled');
-      }
-    });
-  }
-
-  function hideAllSections() {
-    // Hide
-    deliverSection.style.display = 'none';
-    exchangeSection.style.display = 'none';
-    returnSection.style.display = 'none';
-    if (cashCollectionSection) cashCollectionSection.style.display = 'none';
-    // Disable all so they don't trigger validation
-    setSectionDisabled(deliverSection, true);
-    setSectionDisabled(exchangeSection, true);
-    setSectionDisabled(returnSection, true);
-    setSectionDisabled(cashCollectionSection, true);
-  }
-
-  function activateDeliver() {
-    deliverSection.style.display = 'block';
-    setSectionDisabled(deliverSection, false);
-  }
-
-  function activateExchange() {
-    exchangeSection.style.display = 'block';
-    setSectionDisabled(exchangeSection, false);
-  }
-
-  function activateReturn() {
-    returnSection.style.display = 'block';
-    setSectionDisabled(returnSection, false);
-    // Apply required attributes only for return-critical fields
-    const originalOrderInput = document.querySelector('input[name="originalOrderNumber"]');
-    const returnReasonSelect = document.querySelector('select[name="returnReason"]');
-    if (originalOrderInput) originalOrderInput.setAttribute('required', 'required');
-    if (returnReasonSelect) returnReasonSelect.setAttribute('required', 'required');
-  }
-
-  orderTypeRadios.forEach(radio => {
-    radio.addEventListener('change', function() {
-      hideAllSections();
-      // Show relevant section
-      if (this.value === 'Deliver') {
-        activateDeliver();
-      } else if (this.value === 'Exchange') {
-        activateExchange();
-      } else if (this.value === 'Return') {
-        activateReturn();
-      }
-    });
-  });
-
-  // On initial load, make sure hidden sections are disabled to avoid native validation errors
-  hideAllSections();
-  const initiallyChecked = Array.from(orderTypeRadios).find(r => r.checked);
-  if (initiallyChecked) {
-    if (initiallyChecked.value === 'Deliver') activateDeliver();
-    else if (initiallyChecked.value === 'Exchange') activateExchange();
-    else if (initiallyChecked.value === 'Return') activateReturn();
-  }
-
-  // Handle return order number validation
-  const originalOrderInput = document.getElementById('original-order-number');
-  const originalOrderPreview = document.getElementById('original-order-preview');
-  const originalOrderDetails = document.getElementById('original-order-details');
-
-  if (originalOrderInput) {
-    originalOrderInput.addEventListener('input', async function() {
-      const orderNumber = this.value.trim();
-      
-      if (orderNumber.length < 6) {
-        originalOrderPreview.style.display = 'none';
-        return;
-      }
-
-      try {
-        const response = await fetch('/business/validate-original-order', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ orderNumber: orderNumber.trim() })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.order) {
-          originalOrderDetails.innerHTML = `
-            <div class="row">
-              <div class="col-6"><strong>Order Number:</strong></div>
-              <div class="col-6">${data.order.orderNumber}</div>
-              <div class="col-6"><strong>Customer:</strong></div>
-              <div class="col-6">${data.order.orderCustomer.fullName}</div>
-              <div class="col-6"><strong>Status:</strong></div>
-              <div class="col-6"><span class="badge bg-success">${data.order.orderStatus}</span></div>
-              <div class="col-6"><strong>Product:</strong></div>
-              <div class="col-6">${data.order.orderShipping.productDescription}</div>
-              <div class="col-6"><strong>Items:</strong></div>
-              <div class="col-6">${data.order.orderShipping.numberOfItems} item(s)</div>
-            </div>
-          `;
-          originalOrderPreview.className = 'alert alert-success mt-2';
-          originalOrderPreview.style.display = 'block';
-          
-          // Show partial return section if order has multiple items
-          const partialReturnSection = document.getElementById('partial-return-section');
-          if (data.order.hasMultipleItems) {
-            partialReturnSection.style.display = 'block';
-            document.getElementById('max-items').textContent = data.order.itemCount;
-            
-            // Set max value for partial return count
-            const partialReturnCount = document.getElementById('partial-return-count');
-            partialReturnCount.max = data.order.itemCount;
-            
-            // Update remaining count when partial return count changes
-            updateRemainingCount();
-          } else {
-            partialReturnSection.style.display = 'none';
-          }
-        } else {
-          const __Co = (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.createOrder) || {};
-          originalOrderDetails.innerHTML = '<div class="text-danger">' + (__Co.orderNotFound || 'Order not found or not eligible for return.') + '</div>';
-          originalOrderPreview.className = 'alert alert-warning mt-2';
-          originalOrderPreview.style.display = 'block';
-        }
-      } catch (error) {
-        console.error('Error validating original order:', error);
-        const __Co = (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.createOrder) || {};
-        originalOrderDetails.innerHTML = '<div class="text-danger">' + (__Co.orderValidateError || 'Error validating order. Please try again.') + '</div>';
-        originalOrderPreview.className = 'alert alert-warning mt-2';
-        originalOrderPreview.style.display = 'block';
-      }
-    });
-  }
-
-  // Handle return item count increment/decrement
-  const decrementReturn = document.getElementById('decrement-return');
-  const incrementReturn = document.getElementById('increment-return');
-  const returnCount = document.getElementById('return-count');
-
-  if (decrementReturn && incrementReturn && returnCount) {
-    decrementReturn.addEventListener('click', function() {
-      const currentValue = parseInt(returnCount.value);
-      if (currentValue > 1) {
-        returnCount.value = currentValue - 1;
-      }
-    });
-
-    incrementReturn.addEventListener('click', function() {
-      const currentValue = parseInt(returnCount.value);
-      returnCount.value = currentValue + 1;
-    });
-  }
-
-  // Handle partial return functionality
-  const returnTypeRadios = document.querySelectorAll('input[name="returnType"]');
-  const partialReturnDetails = document.getElementById('partial-return-details');
-  const decrementPartial = document.getElementById('decrement-partial');
-  const incrementPartial = document.getElementById('increment-partial');
-  const partialReturnCount = document.getElementById('partial-return-count');
-
-  // Function to update remaining count
-  function updateRemainingCount() {
-    const maxItems = parseInt(document.getElementById('max-items').textContent);
-    const partialCount = parseInt(partialReturnCount.value);
-    const remaining = maxItems - partialCount;
-    document.getElementById('remaining-count').textContent = remaining;
-  }
-
-  // Handle return type selection
-  if (returnTypeRadios.length > 0) {
-    returnTypeRadios.forEach(radio => {
-      radio.addEventListener('change', function() {
-        const standardReturnFields = document.getElementById('standard-return-fields');
-        
-        if (this.value === 'partial') {
-          partialReturnDetails.style.display = 'block';
-          standardReturnFields.style.display = 'block';
-          // Hide the standard Number of Items field for partial returns
-          document.getElementById('standard-return-number-of-items').style.display = 'none';
-          updateRemainingCount();
-          
-          // Keep required attributes on standard fields for partial returns
-          document.getElementById('return-reason').setAttribute('required', 'required');
-        } else {
-          partialReturnDetails.style.display = 'none';
-          standardReturnFields.style.display = 'block';
-          // Show the standard Number of Items field for full returns
-          document.getElementById('standard-return-number-of-items').style.display = 'block';
-          
-          // Keep required attributes on standard fields
-          document.getElementById('return-reason').setAttribute('required', 'required');
-        }
-      });
-    });
-  }
-
-  // Handle partial return count increment/decrement
-  if (decrementPartial && incrementPartial && partialReturnCount) {
-    decrementPartial.addEventListener('click', function() {
-      const currentValue = parseInt(partialReturnCount.value);
-      if (currentValue > 1) {
-        partialReturnCount.value = currentValue - 1;
-        updateRemainingCount();
-      }
-    });
-
-    incrementPartial.addEventListener('click', function() {
-      const maxItems = parseInt(document.getElementById('max-items').textContent);
-      const currentValue = parseInt(partialReturnCount.value);
-      if (currentValue < maxItems) {
-        partialReturnCount.value = currentValue + 1;
-        updateRemainingCount();
-      }
-    });
-
-    // Handle manual input changes
-    partialReturnCount.addEventListener('input', function() {
-      const maxItems = parseInt(document.getElementById('max-items').textContent);
-      const value = parseInt(this.value);
-      
-      if (value > maxItems) {
-        this.value = maxItems;
-      } else if (value < 1) {
-        this.value = 1;
-      }
-      
-      updateRemainingCount();
-    });
-  }
-
-  // Fee Breakdown Toggle and Update Functionality
-  function setupFeeBreakdown() {
-    const toggle = document.getElementById('feeBreakdownToggle');
-    const breakdown = document.getElementById('feeBreakdown');
-    const label = document.getElementById('feeBreakdownToggleLabel');
-    const __Co = (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.createOrder) || {};
-
-    if (toggle && breakdown) {
-      function syncBreakdownVisibility() {
-        const show = toggle.checked;
-        breakdown.classList.toggle('fee-breakdown-hidden', !show);
-        if (label) {
-          label.textContent = show ? (__Co.hideBreakdown || 'Hide fee breakdown') : (__Co.showBreakdown || 'Show fee breakdown');
-        }
-      }
-      toggle.addEventListener('change', syncBreakdownVisibility);
-      syncBreakdownVisibility();
-    }
-  }
-  
-  // Function to update fee breakdown display
-  function updateFeeBreakdown(totalFee, isExpress = false) {
-    const baseFeeEl = document.getElementById('baseFee');
-    const expressFeeEl = document.getElementById('expressFee');
-    const expressRowEl = document.getElementById('expressRow');
-    const breakdownTotalEl = document.getElementById('breakdownTotal');
-    
-    if (!baseFeeEl || !expressFeeEl || !expressRowEl || !breakdownTotalEl) return;
-    
-    const total = parseFloat(totalFee) || 0;
-    let baseFee = total;
-    
-    if (isExpress && total > 0) {
-      baseFee = total / 2;
-      const expressFee = baseFee;
-      
-      baseFeeEl.textContent = baseFee.toFixed(0) + ' EGP';
-      expressFeeEl.textContent = '+' + expressFee.toFixed(0) + ' EGP';
-      expressRowEl.style.display = 'flex';
-    } else {
-      baseFeeEl.textContent = total.toFixed(0) + ' EGP';
-      expressRowEl.style.display = 'none';
-    }
-    
-    breakdownTotalEl.textContent = total.toFixed(0) + ' EGP';
-  }
-
-  /** Express same-day cutoff: from 9:00 PM Cairo time, service is next-day (shown prominently). */
-  function getHourInTimeZone(date, timeZone) {
-    const parts = new Intl.DateTimeFormat('en-GB', {
-      timeZone,
-      hour: 'numeric',
-      hour12: false
-    }).formatToParts(date);
-    const h = parts.find((p) => p.type === 'hour');
-    return h ? parseInt(h.value, 10) : 0;
-  }
-
-  function updateExpressShippingTimeNotice() {
-    const notice = document.getElementById('express-after-nine-notice');
-    const subtitle = document.getElementById('express-shipping-subtitle');
-    if (!notice || !subtitle) return;
-
-    const hourCairo = getHourInTimeZone(new Date(), 'Africa/Cairo');
-    const afterNine = hourCairo >= 21;
-
-    notice.classList.toggle('d-none', !afterNine);
-    subtitle.textContent = afterNine
-      ? (subtitle.dataset.after9 || 'Next day delivery — orders after 9:00 PM (Cairo) are not same-day')
-      : (subtitle.dataset.default || 'Same day delivery service');
-  }
-
-  /* Wizard progress 0–1 on .co-wizard (--co-w-fill); RTL handled in CSS */
-  function setupCoWizardProgress() {
-    const wizard = document.querySelector('.co-wizard');
-    const form = document.getElementById('createOrderForm');
-    if (!wizard || !form) return;
-    const tabs = Array.from(wizard.querySelectorAll('.co-wizard__tab[data-bs-toggle="pill"]'));
-    function syncProgress() {
-      const idx = tabs.findIndex(function (t) { return t.classList.contains('active'); });
-      const i = idx >= 0 ? idx : 0;
-      const last = tabs.length - 1;
-      var fill = last <= 0 ? 0 : i / last;
-      wizard.style.setProperty('--co-w-fill', String(fill));
-    }
-    tabs.forEach(function (t) {
-      t.addEventListener('shown.bs.tab', syncProgress);
-    });
-    form.addEventListener('click', function (e) {
-      if (e.target.closest('.nexttab, .previestab')) {
-        setTimeout(syncProgress, 0);
-      }
-    });
-    syncProgress();
-  }
-
-  /* ── Option Cards: sync is-checked class + drive side-effects ── */
-  function syncOptionCard(card) {
-    const input = card.querySelector('input[type="checkbox"]');
-    if (!input) return;
-    card.classList.toggle('is-checked', input.checked);
-  }
-
-  function setupOptionCards() {
-    document.querySelectorAll('.option-card').forEach((card) => {
-      const input = card.querySelector('input[type="checkbox"]');
-      if (!input) return;
-      input.addEventListener('change', () => syncOptionCard(card));
-      syncOptionCard(card); // initial state
-    });
-  }
-
-  function setupShippingOptionRows() {
-    // Express card side-effect: show/hide pickup address
-    const expressCb = document.getElementById('express-shipping-checkbox');
-    if (expressCb) {
-      expressCb.addEventListener('change', function() {
-        const pickupAddressSelection = document.getElementById('pickupAddressSelection');
-        if (pickupAddressSelection) {
-          pickupAddressSelection.style.display = this.checked ? 'block' : 'none';
-          if (this.checked) {
-            const sel = pickupAddressSelection.querySelector('select');
-            if (sel && !sel.value) {
-              const defaultOption = sel.querySelector('option[selected]');
-              if (defaultOption) sel.value = defaultOption.value;
-            }
-          }
-        }
-      });
-    }
-
-    const workAddressCheckbox = document.getElementById('deliverToWorkAddress-checkbox');
-    const workAddressAlert = document.getElementById('work-address-alert');
-    if (workAddressCheckbox && workAddressAlert) {
-      workAddressCheckbox.addEventListener('change', function() {
-        workAddressAlert.style.display = this.checked ? 'block' : 'none';
-      });
-    }
-  }
-
-  setupCoWizardProgress();
-  setupOptionCards();
-  setupShippingOptionRows();
-  updateExpressShippingTimeNotice();
-  setInterval(updateExpressShippingTimeNotice, 60 * 1000);
-
-  // Initialize fee breakdown
-  setupFeeBreakdown();
-  
-  // Make updateFeeBreakdown available globally for create-order.js
-  window.updateFeeBreakdown = updateFeeBreakdown;
-});
-</script>
-
-<script>
-  window.__NS_BUSINESS_I18N = window.__NS_BUSINESS_I18N || {};
-  window.__NS_BUSINESS_I18N.createOrder = {
-    processing: "<%= Co.jsProcessing || 'Processing…' %>",
-    completeOrder: "<%= Co.completeOrder || 'Complete Order' %>",
-    invalidValue: "<%= Co.jsInvalidValue || 'Invalid Value' %>",
-    itemsCannotBeZero: "<%= Co.jsItemsCannotBeZero || 'Number of items cannot be zero or negative.' %>",
-    missingInfo: "<%= Co.jsMissingInfo || 'Missing Information' %>",
-    missingCustomerInfo: "<%= Co.jsMissingCustomerInfo || 'Please fill out all required fields in the Customer Info tab.' %>",
-    missingOrderType: "<%= Co.jsMissingOrderType || 'Please select an order type.' %>",
-    missingDeliverInfo: "<%= Co.jsMissingDeliverInfo || 'Please fill out all required fields in the Deliver section with valid values.' %>",
-    missingExchangeInfo: "<%= Co.jsMissingExchangeInfo || 'Please fill out all required fields in the Exchange section with valid values.' %>",
-    missingReturnInfo: "<%= Co.jsMissingReturnInfo || 'Please fill out all required fields in the Return section with valid values.' %>",
-    sessionExpired: "<%= Co.jsSessionExpired || 'Session Expired' %>",
-    sessionExpiredText: "<%= Co.jsSessionExpiredText || 'Your session has expired. Please log in again.' %>",
-    errorTitle: "<%= Co.jsErrorTitle || 'Error' %>",
-    createError: "<%= Co.jsCreateError || 'An error occurred while creating the order.' %>",
-    createErrorNetwork: "<%= Co.jsCreateErrorNetwork || 'An error occurred while creating the order. Please try again.' %>",
-    showBreakdown: "<%= Co.showBreakdown || 'Show fee breakdown' %>",
-    hideBreakdown: "<%= Co.hideBreakdown || 'Hide fee breakdown' %>",
-    orderNotFound: "<%= Co.orderNotFound || 'Order not found or not eligible for return.' %>",
-    orderValidateError: "<%= Co.orderValidateError || 'Error validating order. Please try again.' %>",
-    orderFoundTitle: "<%= Co.orderFoundTitle || 'Original Order Found:' %>",
-    locale: "<%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US' %>"
-  };
-</script>
 <script src="/assets/rJS/business/create-order.js"></script>
-
-<!-- init js -->
-<script src="/assets/js/pages/ecommerce-product-checkout.init.js"></script>

@@ -118,7 +118,8 @@ async function createOrderEntries(order) {
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Call this when a pickup is completed and the fee should be charged.
+ * Call when a pickup is collected from the business (`picikupStatus === 'pickedUp'`).
+ * The unique { pickupId, type } index keeps this idempotent on re-saves.
  */
 async function createPickupEntry(pickup) {
   const { business, _id, pickupNumber, pickupFees } = pickup;
@@ -129,7 +130,7 @@ async function createPickupEntry(pickup) {
       business,
       type: 'pickup_fee',
       amount: -pickupFees,
-      description: `Pickup fee — ${pickupNumber}`,
+      description: `Pickup fee — ${pickupNumber} (collected from business)`,
       pickupId: _id,
       pickupNumber,
       createdBy: 'system',

@@ -1,611 +1,733 @@
 <%- contentFor('HeaderCss') %>
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<% } %>
+<link rel="stylesheet" href="/assets/rCSS/create-edit-order.css">
 <link rel="stylesheet" href="/assets/css/area-selection-modal.css">
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
 <%- contentFor('body') %>
-<% var Eo = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.editOrder) ? translation.business.pages.editOrder : {}; %>
-  <style>
-    /* Enhanced Design */
-    .hover-effect:hover {
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      transition: background-color 0.3s ease;
-    }
+<% 
+  var Eo = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.editOrder) ? translation.business.pages.editOrder : {};
+  var Ej = (typeof translation !== 'undefined' && translation.business && translation.business.js && translation.business.js.editOrder) ? translation.business.js.editOrder : {};
+  var Co = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.createOrder) ? translation.business.pages.createOrder : {};
+  var Sh = (typeof translation !== 'undefined' && translation.business && translation.business.shell) ? translation.business.shell : {};
+  var Bc = (typeof translation !== 'undefined' && translation.business && translation.business.breadcrumb) ? translation.business.breadcrumb : {};
+  var _coRtl = (typeof isRTL !== 'undefined' && isRTL) || (typeof currentLang !== 'undefined' && currentLang === 'ar');
+%>
+<!-- ═══════════════════════════════════════════════════════════════════
+     Edit Order – Redesigned Wizard
+     ═══════════════════════════════════════════════════════════════════ -->
 
-    .card {
-      border: 1px solid #e9ecef;
-      border-radius: 12px !important;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      margin-bottom: 1.5rem;
-    }
+<% if (!order) { %>
+  <!-- Empty / not-found state -->
+  <div class="co-page<% if (_coRtl) { %> co-page--rtl<% } %>" style="display:flex;align-items:center;justify-content:center;min-height:60vh;" lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>" dir="<%= _coRtl ? 'rtl' : 'ltr' %>">
+    <div style="text-align:center;">
+      <div style="width:5rem;height:5rem;border-radius:50%;background:#F3F4F6;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#9CA3AF;margin:0 auto 1.25rem;">
+        <i class="ri-file-unknown-line"></i>
+      </div>
+      <h3 style="color:#374151;margin:0 0 0.5rem;"><%= Eo.emptyStateTitle %></h3>
+      <p style="color:#9CA3AF;font-size:0.875rem;margin:0 0 1.5rem;"><%= Eo.emptyStateSubtitle %></p>
+      <a href="/business/orders" class="co-btn-new-order"
+         style="display:inline-flex;text-decoration:none;">
+        <i class="ri-list-unordered"></i> <%= Eo.btnGoToOrders %>
+      </a>
+    </div>
+  </div>
+<% } else { %>
 
-    .card-header {
-      background-color: #f8f9fa;
-      border-bottom: 1px solid #e9ecef;
-      padding: 1rem;
-      border-radius: 12px 12px 0 0;
-    }
+<%
+  /* ── Pre-compute a few helpers ──────────────────────────────── */
+  var ot         = order.orderShipping.orderType;        // 'Deliver' | 'Exchange' | 'Return'
+  var isDeliver  = ot === 'Deliver';
+  var isExchange = ot === 'Exchange';
+  var isReturn   = ot === 'Return';
+  var isCOD      = order.orderShipping.amountType === 'COD';
+  var isCD       = order.orderShipping.amountType === 'CD';
+  var isExpress  = !!order.orderShipping.isExpressShipping;
 
-    .card-body {
-      padding: 1.5rem;
-    }
+  /* Express lock: if order was created more than 6 hours ago, lock the toggle */
+  var orderAge       = Date.now() - new Date(order.createdAt).getTime();
+  var expressLocked  = orderAge > (6 * 60 * 60 * 1000);
+  var _eoStepBadge = (Ej.stepOf || 'Step {cur} of {max}').replace('{cur}','1').replace('{max}','4');
+  var _otLabel = ot === 'Deliver' ? Co.typeDelivery : (ot === 'Exchange' ? Co.typeExchange : Co.typeReturn);
 
-    .input-group {
-      border-radius: 8px;
-      overflow: hidden;
-    }
+  /* Area display string */
+  var areaDisplay = order.orderCustomer.zone
+    ? (order.orderCustomer.zone + ', ' + order.orderCustomer.government)
+    : (order.orderCustomer.government || Eo.selectAreaPlaceholder);
+%>
 
-    .input-group .btn {
-      border-radius: 0;
-    }
+<div class="co-page<% if (_coRtl) { %> co-page--rtl<% } %>" lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>" dir="<%= _coRtl ? 'rtl' : 'ltr' %>">
 
-    .form-control {
-      border-radius: 8px;
-      border: 1px solid #e9ecef;
-      padding: 0.5rem 1rem;
-    }
-
-    .form-control:focus {
-      border-color: #86b7fe;
-      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
-
-    .btn-primary {
-      background-color: #0d6efd;
-      border: none;
-      border-radius: 8px;
-      padding: 0.5rem 1.5rem;
-    }
-
-    .btn-primary:hover {
-      background-color: #0b5ed7;
-    }
-
-    .btn-light {
-      border-radius: 8px;
-      padding: 0.5rem 1.5rem;
-    }
-
-    .section-title {
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #e9ecef;
-    }
-
-    .form-check.card-radio {
-      padding: 1rem;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      margin-bottom: 0.5rem;
-    }
-
-    .form-check.card-radio:hover {
-      background-color: #f8f9fa;
-    }
-
-    .sticky-actions {
-      position: sticky;
-      bottom: 20px;
-      background-color: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-      z-index: 100;
-    }
-
-    /* Fee Display */
-    .fee-display {
-      background-color: var(--primary-light);
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-      position: relative;
-    }
-
-    .fee-amount {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--primary-color);
-    }
-
-    .fee-currency {
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--text-medium);
-    }
-
-    .fee-label {
-      color: var(--text-light);
-      font-size: 0.9rem;
-    }
-    
-    /* Loading styles */
-    .loading-spinner {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-    
-    .loading .loading-spinner {
-      display: block;
-    }
-    
-    .loading .fee-amount,
-    .loading .fee-currency {
-      opacity: 0.3;
-    }
-    
-    /* Enhanced Zone Selection Styling */
-    .zone-select-wrapper {
-      position: relative;
-    }
-    
-    .custom-zone-select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      padding-right: 2.5rem;
-      background-color: #fff;
-      transition: all 0.3s ease;
-      border-color: #e6e6e6;
-    }
-    
-    .custom-zone-select:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.25rem rgba(243, 151, 32, 0.25);
-    }
-    
-    .zone-select-arrow {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--primary-color);
-      font-size: 1.5rem;
-      pointer-events: none;
-    }
-  </style>
-
-  <% if (order) { %>
-   
-
-  <div class="container-fluid container-lg py-4 px-2 px-sm-3">
-    <div class="row justify-content-center">
-      <div class="col-12 col-xl-10">
-        <h2 class="mb-4 text-center" ><%= (Eo.headingWithNumber || 'Edit Order — {number}').replace('{number}', order.orderNumber) %></h2>
-
-        <div class="card">
-          <div class="card-body">
-            <form id="editOrderForm" data-order-id="<%= order._id %>">
-              <input type="hidden" name="orderId" value="<%= order._id %>">
-              <!-- Two-column layout for larger screens -->
-              <div class="row g-3">
-                <!-- Left column -->
-                <div class="col-12 col-lg-6">
-                  <!-- Customer Information Section -->
-                  <div class="card mb-4">
-                    <div class="card-header">
-                      <h5 class="mb-0"><i class="ri-user-2-line me-2"></i><%= Eo.sectionCustomer || 'Customer Information' %></h5>
-                    </div>
-                    <div class="card-body">
-                      <div class="mb-3">
-                        <label for="fullName" class="form-label"><%= Eo.fullName || 'Full Name' %></label>
-                        <input type="text" class="form-control" name="fullName" id="fullName" placeholder="<%= Eo.fullName || 'Full Name' %>" value="<%= order.orderCustomer.fullName %>">
-                      </div>
-                      <div class="mb-3">
-                        <label for="phoneNumber" class="form-label"><%= Eo.phone || 'Phone Number' %></label>
-                        <input type="number" class="form-control" name="phoneNumber" id="phoneNumber" placeholder="<%= Eo.phone || 'Phone Number' %>" value="<%= order.orderCustomer.phoneNumber %>">
-                      </div>
-                      <div class="mb-3">
-                        <label for="otherPhoneNumber" class="form-label"><%= Eo.altPhone || 'Other Phone Number (Optional)' %></label>
-                        <input type="number" class="form-control" name="otherPhoneNumber" id="otherPhoneNumber" placeholder="<%= Eo.altPhone || 'Alternative phone' %>" value="<%= order.orderCustomer.otherPhoneNumber || '' %>">
-                      </div>
-                      <div class="mb-3">
-                        <label for="address" class="form-label"><%= Eo.address || 'Address' %></label>
-                        <textarea class="form-control" name="address" id="address" placeholder="<%= Eo.address || 'Enter address' %>" rows="2"><%= order.orderCustomer.address %></textarea>
-                      </div>
-                      <div class="mb-3">
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" name="deliverToWorkAddress" id="deliverToWorkAddress-checkbox" <%= order.orderCustomer.deliverToWorkAddress ? 'checked' : '' %>>
-                          <label class="form-check-label" for="deliverToWorkAddress-checkbox">
-                            <%= Eo.landmark || 'Deliver to work address' %>
-                          </label>
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="mb-3 col-md-12">
-                          <label for="edit-area" class="form-label">Governorate and Area</label>
-                          <button type="button" class="btn btn-outline-secondary w-100 text-start" id="selectAreaBtn" style="height: 45px; display: flex; align-items: center; justify-content: space-between;">
-                            <span id="selectedAreaDisplay"><%= order.orderCustomer.zone ? order.orderCustomer.zone + ', ' + order.orderCustomer.government : 'Select Area' %></span>
-                            <i class="ri-arrow-down-s-line"></i>
-                          </button>
-                          <input type="hidden" name="government" id="government-value" value="<%= order.orderCustomer.government || '' %>">
-                          <input type="hidden" name="zone" id="zone-value" value="<%= order.orderCustomer.zone || '' %>">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Order Type Section -->
-                  <div class="card mb-4">
-                    <div class="card-header">
-                      <h5 class="mb-0"><i class="ri-truck-line me-2"></i>Order Type</h5>
-                    </div>
-                    <div class="card-body">
-                      <!-- Hidden input to ensure orderType is submitted with the form -->
-                      <input type="hidden" name="orderType" value="<%= order.orderShipping.orderType %>">
-                      <div class="row g-3">
-                        <div class="col-md-6">
-                          <div class="form-check card-radio hover-effect">
-                            <input id="orderTypeDeliver" name="orderType_display" type="radio" class="form-check-input" value="Deliver" <%= order.orderShipping.orderType === 'Deliver' ? 'checked' : '' %> disabled>
-                            <label class="form-check-label" for="orderTypeDeliver">
-                              <span class="fs-16 text-muted me-2"><i class="ri-truck-line align-bottom"></i></span>
-                              <span class="fs-14 text-wrap">Deliver</span>
-                            </label>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="form-check card-radio hover-effect">
-                            <input id="orderTypeExchange" name="orderType_display" type="radio" class="form-check-input" value="Exchange" <%= order.orderShipping.orderType === 'Exchange' ? 'checked' : '' %> disabled>
-                            <label class="form-check-label" for="orderTypeExchange">
-                              <span class="fs-16 text-muted me-2"><i class="ri-exchange-line align-bottom"></i></span>
-                              <span class="fs-14 text-wrap">Exchange</span>
-                            </label>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="form-check card-radio hover-effect">
-                            <input id="orderTypeReturn" name="orderType_display" type="radio" class="form-check-input" value="Return" <%= order.orderShipping.orderType === 'Return' ? 'checked' : '' %> disabled>
-                            <label class="form-check-label" for="orderTypeReturn">
-                              <span class="fs-16 text-muted me-2"><i class="ri-arrow-go-back-line align-bottom"></i></span>
-                              <span class="fs-14 text-wrap">Return</span>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+  <!-- Breadcrumb -->
+  <div class="co-breadcrumb">
+    <a href="/business/dashboard"><i class="ri-home-3-line"></i> <%= Sh.dashboard %></a>
+    <span class="co-breadcrumb__sep"><i class="ri-arrow-right-s-line"></i></span>
+    <a href="/business/orders"><%= Bc.orders %></a>
+    <span class="co-breadcrumb__sep"><i class="ri-arrow-right-s-line"></i></span>
+    <span class="co-breadcrumb__current"><%= (Eo.headingWithNumber || 'Edit order — #{number}').replace('#{number}', order.orderNumber) %></span>
                 </div>
 
-                <!-- Right column -->
-                <div class="col-12 col-lg-6">
-                  <!-- Deliver Details Section -->
-                    <div id="deliver-section" class="card mb-4" <%= order.orderShipping.orderType === 'Deliver' || order.orderShipping.orderType === 'Return' ? 'style="display: block;"' : 'style="display: none;"' %>>
-                    <div class="card-header">
-                      <h5 class="mb-0"><i class="ri-truck-line me-2"></i><%= Eo.sectionShipping || 'Shipping Details' %></h5>
-                    </div>
-                    <div class="card-body">
-                      <div class="mb-3">
-                        <label for="productDescription" class="form-label"><%= Eo.notes || 'Product/s Description' %></label>
-                        <textarea class="form-control" name="productDescription" id="productDescription" placeholder="<%= Eo.notes || 'Enter product description' %>" rows="2"><%= order.orderShipping.productDescription %></textarea>
-                      </div>
-                      <div class="mb-3">
-                        <label for="numberOfItems" class="form-label"><%= Eo.itemsCount || 'Number of Items' %></label>
-                        <div class="input-group">
-                          <button type="button" class="btn btn-outline-secondary" id="decrement-shipping">-</button>
-                          <input type="number" name="numberOfItems" class="form-control text-center" id="numberOfItems" placeholder="Enter number of items" value="<%= order.orderShipping.numberOfItems %>" min="0">
-                          <button type="button" class="btn btn-outline-secondary" id="increment-shipping">+</button>
-                        </div>
-                      </div>
-                      <div id="cash-on-delivery-section">
-                        <div class="form-check mb-2">
-                          <input class="form-check-input" name="COD" type="checkbox" id="cash-on-delivery-checkbox" <%= order.orderShipping.amountType === 'COD' ? 'checked' : '' %>>
-                          <label class="form-check-label" for="cash-on-delivery-checkbox">
-                            <%= Eo.codAmount || 'Cash on Delivery' %>
-                          </label>
-                        </div>
-                        <div class="mb-3" id="cash-on-delivery-amount" <%= order.orderShipping.amountType === 'COD' ? 'style="display: block;"' : 'style="display: none;"' %>>
-                          <label for="amountCOD" class="form-label"><%= Eo.codAmount || 'Amount COD' %></label>
-                            <input type="number" name="amountCOD" class="form-control" id="amountCOD" placeholder="Enter amount" value="<%= order.orderShipping.amountType === 'COD' ? order.orderShipping.amount : '' %>">
-                        </div>
-                      </div>
-                      <div class="form-check mb-3">
-                        <input class="form-check-input" name="isExpressShipping" type="checkbox" id="express-shipping-checkbox" <%= order.orderShipping.isExpressShipping ? 'checked' : '' %>>
-                        <label class="form-check-label" for="express-shipping-checkbox">
-                          Express Shipping <i class="ri-information-line text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Same day delivery service. Doubles the shipping fee but ensures faster delivery."></i>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+  <div class="co-layout">
 
-                  <!-- Exchange Details Section (initially hidden) -->
-                  <div id="exchange-section" class="card mb-4" <%= order.orderShipping.orderType === 'Exchange' ? 'style="display: block;"' : 'style="display: none;"' %>>
-                    <div class="card-header">
-                      <h5 class="mb-0"><i class="ri-exchange-line me-2"></i>Exchange Details</h5>
-                    </div>
-                    <div class="card-body">
-                      <div class="mb-3">
-                        <label for="currentPD" class="form-label">Current Product Description</label>
-                        <textarea class="form-control" name="currentPD" id="currentPD" placeholder="Enter current product description" rows="2"><%= order.orderShipping.productDescription %></textarea>
-                      </div>
-                      <div class="mb-3">
-                        <label for="numberOfItemsCurrentPD" class="form-label">Number of Current Items</label>
-                        <div class="input-group">
-                          <button type="button" class="btn btn-outline-secondary" id="decrement-current">-</button>
-                          <input type="number" name="numberOfItemsCurrentPD" class="form-control text-center" id="numberOfItemsCurrentPD" placeholder="Enter number of items" value="<%= order.orderShipping.numberOfItems %>" min="0">
-                          <button type="button" class="btn btn-outline-secondary" id="increment-current">+</button>
-                        </div>
-                      </div>
-                      <div class="mb-3">
-                        <label for="newPD" class="form-label">New Product Description</label>
-                        <textarea class="form-control" name="newPD" id="newPD" placeholder="Enter new product description" rows="2"><%= order.orderShipping.productDescriptionReplacement %></textarea>
-                      </div>
-                      <div class="mb-3">
-                        <label for="numberOfItemsNewPD" class="form-label">Number of New Items</label>
-                        <div class="input-group">
-                          <button type="button" class="btn btn-outline-secondary" id="decrement-new">-</button>
-                          <input type="number" name="numberOfItemsNewPD" class="form-control text-center" id="numberOfItemsNewPD" placeholder="Enter number of items" value="<%= order.orderShipping.numberOfItemsReplacement %>" min="0">
-                          <button type="button" class="btn btn-outline-secondary" id="increment-new">+</button>
-                        </div>
-                      </div>
-                      <div id="cash-difference-section">
-                        <div class="form-check mb-2">
-                          <input class="form-check-input" name="CashDifference" type="checkbox" id="cash-difference-checkbox" <%= order.orderShipping.amountType === 'CD' ? 'checked' : '' %>>
-                          <label class="form-check-label" for="cash-difference-checkbox">
-                            Cash Difference
-                          </label>
-                        </div>
-                        <div class="mb-3" id="cash-difference-amount" <%= order.orderShipping.amountType === 'CD' ? 'style="display: block;"' : 'style="display: none;"' %>>
-                          <label for="amountCashDifference" class="form-label">Difference Amount</label>
-                            <input type="number" name="amountCashDifference" class="form-control" id="amountCashDifference" placeholder="Enter difference amount" value="<%= order.orderShipping.amountType === 'CD' ? order.orderShipping.amount : '' %>">
-                        </div>
-                      </div>
-                      <div class="form-check mb-3">
-                        <input class="form-check-input" name="isExpressShipping" type="checkbox" id="express-shipping-exchange-checkbox" <%= order.orderShipping.isExpressShipping ? 'checked' : '' %>>
-                        <label class="form-check-label" for="express-shipping-exchange-checkbox">
-                          Express Shipping <i class="ri-information-line text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Same day delivery service. Doubles the shipping fee but ensures faster delivery."></i>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+    <!-- ── Main Form Card ────────────────────────────────────────────── -->
+    <div class="co-form-col">
+      <div class="co-card">
 
-                  <!-- Extra Details Section -->
-                  <div class="card mb-4">
-                    <div class="card-header">
-                      <h5 class="mb-0"><i class="ri-information-line me-2"></i>Extra Details</h5>
-                    </div>
-                    <div class="card-body">
-                      <div class="mb-3">
-                        <div class="form-check card-radio">
-                          <input class="form-check-input" name="previewPermission" type="checkbox" id="order-preview-checkbox" <%= order.isOrderAvailableForPreview ? 'checked' : '' %>>
-                          <label class="form-check-label" for="order-preview-checkbox">
-                            <span class="fs-16 text-muted me-2"><i class="ri-eye-line align-bottom"></i></span>
-                            <span class="fs-14 text-wrap">Order can be opened for preview</span>
-                          </label>
-                        </div>
-                      </div>
-                      <div class="mb-3">
-                        <label for="referralNumber" class="form-label">Referral Number (Optional)</label>
-                        <input type="text" name="referralNumber" class="form-control" id="referralNumber" placeholder="Enter referral number" value="<%= order.referralNumber %>">
-                      </div>
-                      <div class="mb-3">
-                        <label for="Notes" class="form-label">Delivery Notes</label>
-                        <textarea class="form-control" name="Notes" id="Notes" placeholder="Enter any delivery notes" rows="2"><%= order.orderNotes %></textarea>
-                      </div>
-                    </div>
-                  </div>
+        <!-- Card Header with Step Indicator -->
+        <div class="co-card__header">
+          <div class="co-card__title-row">
+            <div>
+              <h1 class="co-card__title" id="co-step-title"><%= Ej.wizStep1Title %></h1>
+              <p class="co-card__subtitle" id="co-step-subtitle"><%= Ej.wizStep1Sub %></p>
+                </div>
+            <span class="co-step-badge" id="co-step-badge"><%= _eoStepBadge %></span>
+          </div>
 
-                  <!-- Fees Calculation Section -->
-                  <div class="card mb-4 hover-effect">
-                    <div class="card-header">
-                      <h6 class="mb-0">Delivery Fee Summary</h6>
-                    </div>
-                    <div class="card-body">
-                      <div class="fee-display" id="feeDisplayContainer">
-                        <span class="fee-amount" id="totalFee"><%= order.orderFees %></span>
-                        <span class="fee-currency"> EGP</span>
-                        <p class="fee-label mt-2">Total Delivery Fee</p>
-                        <div class="loading-spinner">
-                          <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+          <!-- Step Indicator -->
+          <div class="co-step-indicator">
+            <div class="co-step-indicator__line-wrap">
+              <div class="co-step-indicator__track-bg"></div>
+              <div class="co-step-indicator__track-fill" id="co-progress-fill"></div>
+            </div>
+            <div class="co-step-node-wrap">
+              <div class="co-step-node co-step-node--active" id="co-node-1">
+                <i class="ri-user-3-line"></i>
+              </div>
+              <span class="co-step-label co-step-label--active" id="co-label-1"><%= Eo.step1 %></span>
+              </div>
+            <div class="co-step-node-wrap">
+              <div class="co-step-node" id="co-node-2">
+                <i class="ri-truck-line"></i>
+              </div>
+              <span class="co-step-label" id="co-label-2"><%= Eo.step2 %></span>
+              </div>
+            <div class="co-step-node-wrap">
+              <div class="co-step-node" id="co-node-3">
+                <i class="ri-settings-4-line"></i>
+              </div>
+              <span class="co-step-label" id="co-label-3"><%= Eo.step3 %></span>
+                </div>
+            <div class="co-step-node-wrap">
+              <div class="co-step-node" id="co-node-4">
+                <i class="ri-file-check-line"></i>
+              </div>
+              <span class="co-step-label" id="co-label-4"><%= Eo.step4 %></span>
+            </div>
+          </div>
+        </div><!-- /.co-card__header -->
+
+        <!-- Form body -->
+        <form id="editOrderForm" data-order-id="<%= order._id %>" novalidate>
+          <input type="hidden" name="orderType" id="orderType" value="<%= ot %>">
+
+          <div class="co-card__body">
+
+            <!-- ═══ STEP 1: CUSTOMER DETAILS ════════════════════════════ -->
+            <div class="step-panel step-panel--active" id="co-step-1">
+
+              <div class="co-group-heading">
+                <div class="co-group-heading__icon"><i class="ri-user-3-line"></i></div>
+                <h3 class="co-group-heading__title"><%= Co.contactInfoHeading %></h3>
+            </div>
+
+              <div class="co-field-row">
+                <div class="co-field">
+                  <label class="co-field__label" for="fullName">
+                    <%= Eo.fullName %> <span class="co-required">*</span>
+                  </label>
+                  <div class="co-input-icon-wrap">
+                    <i class="co-input-icon ri-user-line"></i>
+                    <input type="text" class="co-input" id="fullName" name="fullName"
+                           value="<%= order.orderCustomer.fullName %>" placeholder="<%= Co.phEnterFullName %>" dir="auto">
                   </div>
+                  <div class="co-field-error" id="err-fullName"><%= Co.errFullName %></div>
+                </div>
+                <div class="co-field">
+                  <label class="co-field__label" for="phoneNumber">
+                    <%= Eo.phone %> <span class="co-required">*</span>
+                  </label>
+                  <div class="co-input-icon-wrap">
+                    <i class="co-input-icon ri-phone-line"></i>
+                    <input type="tel" class="co-input" id="phoneNumber" name="phoneNumber"
+                           value="<%= order.orderCustomer.phoneNumber %>" placeholder="+20 10X XXX XXXX" dir="ltr">
+                  </div>
+                  <div class="co-field-error" id="err-phoneNumber"><%= Co.errPhone %></div>
                 </div>
               </div>
 
-              <!-- Action buttons -->
-              <div class="d-flex justify-content-end mt-4">
-                <a href="/business/orders" class="btn btn-light me-2">
-                  <i class="ri-arrow-left-line align-middle me-1"></i> <%= Eo.btnCancel || 'Back' %>
-                </a>
-                <button type="submit" id="updateOrderBtn" class="btn btn-primary">
-                  <i class="ri-save-line align-middle me-1"></i> <%= Eo.btnUpdate || 'Update Order' %>
+              <div class="co-field">
+                <label class="co-field__label" for="otherPhoneNumber">
+                  <%= Eo.altPhone %> <span class="co-optional"><%= Co.optionalTag %></span>
+                  </label>
+                <div class="co-input-icon-wrap">
+                  <i class="co-input-icon ri-phone-line"></i>
+                  <input type="tel" class="co-input" id="otherPhoneNumber" name="otherPhoneNumber"
+                         value="<%= order.orderCustomer.otherPhoneNumber || '' %>"
+                         placeholder="<%= Co.phOptionalPhone %>" dir="ltr">
+                </div>
+              </div>
+
+              <!-- Delivery Location -->
+              <div class="co-group-heading" style="margin-top:1.5rem;">
+                <div class="co-group-heading__icon"><i class="ri-map-pin-line"></i></div>
+                <h3 class="co-group-heading__title"><%= Co.deliveryLocationHeading %></h3>
+              </div>
+
+              <div class="co-field">
+                <label class="co-field__label">
+                  <%= Eo.area %> <span class="co-required">*</span>
+                </label>
+                <button type="button"
+                        class="co-area-btn <%= order.orderCustomer.zone ? 'co-area-btn--filled' : '' %>"
+                        id="selectAreaBtn"
+                        data-bs-toggle="modal" data-bs-target="#areaSelectionModal">
+                  <i class="ri-map-pin-2-line"></i>
+                  <span class="co-area-btn__label" id="selectedAreaDisplay"><%= areaDisplay %></span>
+                  <i class="co-area-btn__chevron ri-arrow-right-s-line"></i>
+                </button>
+                <input type="hidden" id="government-value" name="government"
+                       value="<%= order.orderCustomer.government || '' %>">
+                <input type="hidden" id="zone-value" name="zone"
+                       value="<%= order.orderCustomer.zone || '' %>">
+                <div class="co-field-error" id="err-zone"><%= Co.errSelectArea %></div>
+              </div>
+
+              <div class="co-field">
+                <label class="co-field__label" for="address">
+                  <%= Eo.streetAddress %> <span class="co-required">*</span>
+                </label>
+                <textarea class="co-textarea" id="address" name="address"
+                          rows="3" placeholder="<%= Co.phStreet %>" dir="auto"><%= order.orderCustomer.address %></textarea>
+                <div class="co-field-error" id="err-address"><%= Co.errAddress %></div>
+            </div>
+
+              <button type="button"
+                      class="co-check-card <%= order.orderCustomer.deliverToWorkAddress ? 'co-check-card--on' : '' %>"
+                      id="co-work-addr-toggle" onclick="eoToggleWorkAddress()">
+                <div class="co-check-card__box"><i class="ri-check-line"></i></div>
+                <span class="co-check-card__text">
+                  <i class="ri-building-2-line"></i> <%= Eo.deliverToWork %>
+                </span>
+              </button>
+              <input type="hidden" name="deliverToWorkAddress" id="deliverToWorkAddress-input"
+                     value="<%= order.orderCustomer.deliverToWorkAddress ? 'on' : '' %>">
+
+            </div><!-- /#co-step-1 -->
+
+            <!-- ═══ STEP 2: SHIPPING DETAILS ════════════════════════════ -->
+            <div class="step-panel" id="co-step-2">
+
+              <!-- Order Type (read-only) -->
+              <p class="co-section-label"><%= Eo.orderTypeSection %> <span style="font-style:normal;text-transform:none;font-size:0.7rem;color:var(--co-gray-400);letter-spacing:0;"><%= Eo.orderTypeCannotChange %></span></p>
+
+              <div class="co-type-grid" style="margin-bottom:1.5rem;">
+                <button type="button"
+                        class="co-type-card co-type-card--readonly <%= isDeliver ? 'co-type-card--selected' : '' %>">
+                  <% if (isDeliver) { %><div class="co-type-card__check"><i class="ri-check-line"></i></div><% } %>
+                  <div class="co-type-card__icon-wrap"><i class="ri-truck-line"></i></div>
+                  <p class="co-type-card__name"><%= Co.typeDelivery %></p>
+                  <p class="co-type-card__desc"><%= Co.typeDescDelivery %></p>
+                </button>
+                <button type="button"
+                        class="co-type-card co-type-card--readonly <%= isExchange ? 'co-type-card--selected' : '' %>">
+                  <% if (isExchange) { %><div class="co-type-card__check"><i class="ri-check-line"></i></div><% } %>
+                  <div class="co-type-card__icon-wrap"><i class="ri-refresh-line"></i></div>
+                  <p class="co-type-card__name"><%= Co.typeExchange %></p>
+                  <p class="co-type-card__desc"><%= Co.typeDescExchange %></p>
+                </button>
+                <button type="button"
+                        class="co-type-card co-type-card--readonly <%= isReturn ? 'co-type-card--selected' : '' %>">
+                  <% if (isReturn) { %><div class="co-type-card__check"><i class="ri-check-line"></i></div><% } %>
+                  <div class="co-type-card__icon-wrap"><i class="ri-arrow-go-back-line"></i></div>
+                  <p class="co-type-card__name"><%= Co.typeReturn %></p>
+                  <p class="co-type-card__desc"><%= Co.typeDescReturn %></p>
+              </button>
+            </div>
+
+              <!-- DELIVER fields -->
+              <% if (isDeliver) { %>
+              <div class="co-divider">
+                <div class="co-divider__line"></div>
+                <span class="co-divider__text"><%= Co.deliveryDetailsLabel %></span>
+                <div class="co-divider__line"></div>
+          </div>
+
+              <div class="co-field">
+                <label class="co-field__label" for="productDescription">
+                  <%= Eo.productDescription %> <span class="co-required">*</span>
+                </label>
+                <textarea class="co-textarea" id="productDescription" name="productDescription"
+                          rows="3" placeholder="<%= Eo.productDescriptionPlaceholder %>" dir="auto"><%= order.orderShipping.productDescription || '' %></textarea>
+            </div>
+
+              <div class="co-field">
+                <label class="co-field__label"><%= Eo.numberOfItems %></label>
+                <div class="co-counter">
+                  <button type="button" class="co-counter__btn"
+                          onclick="eoAdjustCounter('numberOfItems','eo-num-display', -1)">
+                    <i class="ri-subtract-line"></i>
+                  </button>
+                  <div class="co-counter__display" id="eo-num-display"><%= order.orderShipping.numberOfItems || 1 %></div>
+                  <button type="button" class="co-counter__btn co-counter__btn--plus"
+                          onclick="eoAdjustCounter('numberOfItems','eo-num-display', 1)">
+                    <i class="ri-add-line"></i>
+                  </button>
+                </div>
+                <input type="hidden" name="numberOfItems" id="numberOfItems"
+                       value="<%= order.orderShipping.numberOfItems || 1 %>">
+              </div>
+              <% } %>
+
+              <!-- EXCHANGE fields -->
+              <% if (isExchange) { %>
+              <div class="co-divider">
+                <div class="co-divider__line"></div>
+                <span class="co-divider__text"><%= Co.exchangeDetailsLabel %></span>
+                <div class="co-divider__line"></div>
+                  </div>
+
+              <div class="co-field-row">
+                <div class="co-field">
+                  <label class="co-field__label" for="currentPD"><%= Co.currentProductShort %></label>
+                  <input type="text" class="co-input" id="currentPD" name="currentPD"
+                         value="<%= order.orderShipping.productDescription || '' %>">
+                    </div>
+                <div class="co-field">
+                  <label class="co-field__label"><%= Co.itemsToCollect %></label>
+                  <div class="co-counter">
+                    <button type="button" class="co-counter__btn"
+                            onclick="eoAdjustCounter('numberOfItemsCurrentPD','eo-ex-cur-display', -1)">
+                      <i class="ri-subtract-line"></i>
+                    </button>
+                    <div class="co-counter__display" id="eo-ex-cur-display"><%= order.orderShipping.numberOfItems || 1 %></div>
+                    <button type="button" class="co-counter__btn co-counter__btn--plus"
+                            onclick="eoAdjustCounter('numberOfItemsCurrentPD','eo-ex-cur-display', 1)">
+                      <i class="ri-add-line"></i>
+                    </button>
+                  </div>
+                  <input type="hidden" name="numberOfItemsCurrentPD" id="numberOfItemsCurrentPD"
+                         value="<%= order.orderShipping.numberOfItems || 1 %>">
+                    </div>
+                  </div>
+
+              <div class="co-field-row" style="margin-top:0.5rem;">
+                <div class="co-field">
+                  <label class="co-field__label" for="newPD"><%= Co.newProductShort %></label>
+                  <input type="text" class="co-input" id="newPD" name="newPD"
+                         value="<%= order.orderShipping.productDescriptionReplacement || '' %>">
+                </div>
+                <div class="co-field">
+                  <label class="co-field__label"><%= Co.itemsToDeliver %></label>
+                  <div class="co-counter">
+                    <button type="button" class="co-counter__btn"
+                            onclick="eoAdjustCounter('numberOfItemsNewPD','eo-ex-new-display', -1)">
+                      <i class="ri-subtract-line"></i>
+                    </button>
+                    <div class="co-counter__display" id="eo-ex-new-display"><%= order.orderShipping.numberOfItemsReplacement || 1 %></div>
+                    <button type="button" class="co-counter__btn co-counter__btn--plus"
+                            onclick="eoAdjustCounter('numberOfItemsNewPD','eo-ex-new-display', 1)">
+                      <i class="ri-add-line"></i>
+                    </button>
+                  </div>
+                  <input type="hidden" name="numberOfItemsNewPD" id="numberOfItemsNewPD"
+                         value="<%= order.orderShipping.numberOfItemsReplacement || 1 %>">
+                </div>
+              </div>
+              <% } %>
+
+              <!-- RETURN fields (read-only display since return details can't be changed) -->
+              <% if (isReturn) { %>
+              <div class="co-divider">
+                <div class="co-divider__line"></div>
+                <span class="co-divider__text"><%= Eo.returnDetailsReadonly %></span>
+                <div class="co-divider__line"></div>
+              </div>
+              <div style="background:var(--co-gray-50);border-radius:var(--co-radius-xl);padding:1rem;border:1px solid var(--co-gray-200);">
+                <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:var(--co-gray-500);margin-bottom:0.75rem;">
+                  <i class="ri-lock-line" style="color:var(--co-orange);"></i>
+                  <%= Eo.returnDetailsLocked %>
+            </div>
+                <div style="font-size:0.8125rem;color:var(--co-gray-700);">
+                  <strong><%= Eo.labelReason %></strong> <%= order.orderShipping.returnReason || '—' %>
+                </div>
+              </div>
+              <% } %>
+
+              <!-- Shipping Options: Express + COD/CD in same row -->
+              <p class="co-section-label" style="margin-top:1.5rem;"><%= Co.shippingOptionsHeading %>
+                <% if (expressLocked) { %>
+                  <span style="font-size:0.68rem;font-style:normal;letter-spacing:0;text-transform:none;color:#EF4444;"> <%= Eo.expressLockedSuffix %></span>
+                <% } %>
+              </p>
+
+              <% if (isDeliver) { %>
+              <!-- Deliver: Express + COD side by side -->
+              <div class="co-toggle-grid">
+                <button type="button"
+                        class="co-toggle-card <%= isExpress ? 'co-toggle-card--on' : '' %>"
+                        id="co-express-toggle"
+                        onclick="<%= !expressLocked ? 'eoToggleExpress()' : '' %>"
+                        <% if (expressLocked) { %>style="pointer-events:none;opacity:0.65;"<% } %>>
+                  <div class="co-toggle-card__icon"><i class="ri-flashlight-line"></i></div>
+                  <div class="co-toggle-card__content">
+                    <p class="co-toggle-card__title"><%= Co.expressShippingLabel %></p>
+                    <p class="co-toggle-card__sub"><% if (expressLocked) { %><%= Eo.expressSubLocked %><% } else { %><%= Co.expressShippingSub %><% } %></p>
+                  </div>
+                  <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+                </button>
+
+                <button type="button"
+                        class="co-toggle-card <%= isCOD ? 'co-toggle-card--on' : '' %>"
+                        id="co-cod-toggle" onclick="eoToggleCOD()">
+                  <div class="co-toggle-card__icon"><i class="ri-money-dollar-circle-line"></i></div>
+                  <div class="co-toggle-card__content">
+                    <p class="co-toggle-card__title"><%= Co.codLabel %></p>
+                    <p class="co-toggle-card__sub"><%= Co.codSub %></p>
+                  </div>
+                  <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
                 </button>
               </div>
-            </form>
+              <input type="hidden" name="isExpressShipping" id="isExpressShipping-input"
+                     value="<%= isExpress ? 'on' : '' %>">
+              <input type="hidden" name="COD" id="COD-input" value="<%= isCOD ? 'on' : '' %>">
+              <div class="co-collapsible <%= isCOD ? 'co-collapsible--open' : '' %>" id="co-cod-amount-wrap">
+                <div class="co-field" style="margin-top:0.75rem;">
+                  <label class="co-field__label" for="amountCOD">
+                    <%= Co.amountCollectLabel %> <span class="co-required">*</span>
+                  </label>
+                  <div class="co-input-suffix">
+                    <input type="number" class="co-input" id="amountCOD" name="amountCOD"
+                           placeholder="0.00" min="0" step="0.01" dir="ltr"
+                           value="<%= isCOD ? (order.orderShipping.amount || '') : '' %>">
+                    <span class="co-input-suffix__text"><%= Eo.currencyCode %></span>
+                  </div>
+                </div>
+                    </div>
+              <% } %>
+
+              <% if (isExchange) { %>
+              <!-- Exchange: Express + Cash Difference side by side -->
+              <div class="co-toggle-grid">
+                <button type="button"
+                        class="co-toggle-card <%= isExpress ? 'co-toggle-card--on' : '' %>"
+                        id="co-express-toggle"
+                        onclick="<%= !expressLocked ? 'eoToggleExpress()' : '' %>"
+                        <% if (expressLocked) { %>style="pointer-events:none;opacity:0.65;"<% } %>>
+                  <div class="co-toggle-card__icon"><i class="ri-flashlight-line"></i></div>
+                  <div class="co-toggle-card__content">
+                    <p class="co-toggle-card__title"><%= Co.expressShippingLabel %></p>
+                    <p class="co-toggle-card__sub"><% if (expressLocked) { %><%= Eo.expressSubLocked %><% } else { %><%= Co.expressShippingSub %><% } %></p>
+                  </div>
+                  <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+                </button>
+
+                <button type="button"
+                        class="co-toggle-card <%= isCD ? 'co-toggle-card--on' : '' %>"
+                        id="co-cd-toggle" onclick="eoToggleCD()">
+                  <div class="co-toggle-card__icon"><i class="ri-exchange-dollar-line"></i></div>
+                  <div class="co-toggle-card__content">
+                    <p class="co-toggle-card__title"><%= Co.collectCashDiffTitle %></p>
+                    <p class="co-toggle-card__sub"><%= Co.collectCashDiffSub %></p>
+                  </div>
+                  <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+                </button>
+              </div>
+              <input type="hidden" name="isExpressShipping" id="isExpressShipping-input"
+                     value="<%= isExpress ? 'on' : '' %>">
+              <input type="hidden" name="CashDifference" id="CashDifference-input"
+                     value="<%= isCD ? 'on' : '' %>">
+              <div class="co-collapsible <%= isCD ? 'co-collapsible--open' : '' %>" id="co-cd-amount-wrap">
+                <div class="co-field" style="margin-top:0.75rem;">
+                  <label class="co-field__label" for="amountCashDifference">
+                    <%= Co.phCashDiffAmount %> <span class="co-required">*</span>
+                    </label>
+                  <div class="co-input-suffix">
+                    <input type="number" class="co-input" id="amountCashDifference" name="amountCashDifference"
+                           placeholder="0.00" min="0" step="0.01" dir="ltr"
+                           value="<%= isCD ? (order.orderShipping.amount || '') : '' %>">
+                    <span class="co-input-suffix__text"><%= Eo.currencyCode %></span>
+                  </div>
+                </div>
+              </div>
+              <% } %>
+
+              <% if (isReturn) { %>
+              <!-- Return: Express only -->
+              <div class="co-toggle-grid" style="grid-template-columns:1fr;">
+                <button type="button"
+                        class="co-toggle-card <%= isExpress ? 'co-toggle-card--on' : '' %>"
+                        id="co-express-toggle"
+                        onclick="<%= !expressLocked ? 'eoToggleExpress()' : '' %>"
+                        <% if (expressLocked) { %>style="pointer-events:none;opacity:0.65;"<% } %>>
+                  <div class="co-toggle-card__icon"><i class="ri-flashlight-line"></i></div>
+                  <div class="co-toggle-card__content">
+                    <p class="co-toggle-card__title"><%= Co.expressShippingLabel %></p>
+                    <p class="co-toggle-card__sub"><% if (expressLocked) { %><%= Eo.expressSubLocked %><% } else { %><%= Co.expressShippingSub %><% } %></p>
+            </div>
+                  <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+              </button>
+            </div>
+              <input type="hidden" name="isExpressShipping" id="isExpressShipping-input"
+                     value="<%= isExpress ? 'on' : '' %>">
+              <% } %>
+
+            </div><!-- /#co-step-2 -->
+
+            <!-- ═══ STEP 3: ADDITIONAL OPTIONS ══════════════════════════ -->
+            <div class="step-panel" id="co-step-3">
+
+              <div class="co-toggle-grid">
+                <button type="button"
+                        class="co-toggle-card <%= order.isOrderAvailableForPreview ? 'co-toggle-card--on' : '' %>"
+                        id="co-open-pkg-toggle"
+                        onclick="eoToggleCard(this,'previewPermission','co-open-pkg-toggle')">
+                  <div class="co-toggle-card__icon"><i class="ri-box-3-line"></i></div>
+                  <div class="co-toggle-card__content">
+                    <p class="co-toggle-card__title"><%= Co.customerOpenTitle %></p>
+                    <p class="co-toggle-card__sub"><%= Co.allowPackageInspection %></p>
+            </div>
+                  <div class="co-toggle-card__check"><i class="ri-check-line"></i></div>
+                </button>
+
+                <div class="co-field">
+                  <label class="co-field__label" for="referralNumber">
+                    <i class="ri-price-tag-3-line" style="color:var(--co-orange);font-size:0.85rem;"></i>
+                    <%= Co.referralCodeLabel %> <span class="co-optional"><%= Co.optionalTag %></span>
+                  </label>
+                  <input type="text" class="co-input" id="referralNumber" name="referralNumber"
+                         placeholder="<%= Eo.referralNumber %>" style="height:3.5rem;" dir="auto"
+                         value="<%= order.referralNumber || '' %>">
+                </div>
+              </div>
+
+              <input type="hidden" name="previewPermission" id="previewPermission-input"
+                     value="<%= order.isOrderAvailableForPreview ? 'on' : '' %>">
+
+              <div class="co-field" style="margin-top:0.25rem;">
+                <label class="co-field__label" for="Notes">
+                  <i class="ri-file-text-line" style="color:var(--co-orange);font-size:0.85rem;"></i>
+                  <%= Eo.deliveryNotes %> <span class="co-optional"><%= Co.optionalTag %></span>
+                </label>
+                <textarea class="co-textarea" id="Notes" name="Notes"
+                          rows="4" placeholder="<%= Eo.deliveryNotesPlaceholder %>" dir="auto"><%= order.orderNotes || '' %></textarea>
+            </div>
+
+            <!-- Fee Summary -->
+              <%
+                /* Pre-compute display values for fee card */
+                var displayBaseFee   = isExpress ? 100 : (order.orderFees || 0);
+                var displayExpressAdd = isExpress ? ((order.orderFees || 0) - 100) : 0;
+              %>
+              <div class="co-fee-card">
+                <div class="co-fee-card__header">
+                  <div class="co-fee-card__header-icon"><i class="ri-wallet-3-line"></i></div>
+                  <div>
+                    <p class="co-fee-card__header-title"><%= Eo.feeSummaryTitle %></p>
+                    <p class="co-fee-card__header-sub"><%= Eo.feeSubUpdates %></p>
+                  </div>
+                </div>
+                <div class="co-fee-card__body">
+                  <div class="co-fee-row">
+                    <span class="co-fee-row__label"><%= Co.feeBase %></span>
+                    <span class="co-fee-row__value" id="co-fee-base-val"><%= displayBaseFee %> <%= Eo.currencyCode %></span>
+                  </div>
+                  <div class="co-fee-row" id="co-fee-express-row" style="<%= isExpress ? '' : 'display:none;' %>">
+                    <span class="co-fee-row__label"><%= Co.expressAddonLine %></span>
+                    <span class="co-fee-row__value co-fee-row__value--orange" id="co-fee-express-val">+<%= displayExpressAdd %> <%= Eo.currencyCode %></span>
+                  </div>
+                  <div class="co-fee-total">
+                    <div>
+                      <p class="co-fee-total__label"><%= Co.grandFeeLabel %></p>
+                      <p class="co-fee-total__sub"><%= Co.noHiddenCharges %></p>
+                    </div>
+                    <div class="co-fee-total__amount-col">
+                      <div class="co-fee-total__amount">
+                        <span id="co-fee-total-num"><%= order.orderFees || 0 %></span>
+                        <span><%= Eo.currencyCode %></span>
+              </div>
+                      <div id="feeLoadingSpinner" style="display:none;font-size:0.75rem;color:var(--co-gray-400);"><%= Eo.recalculating %></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /#co-step-3 -->
+
+            <!-- ═══ STEP 4: REVIEW & UPDATE ══════════════════════════════ -->
+            <div class="step-panel" id="co-step-4">
+
+              <div class="co-group-heading">
+                <div class="co-group-heading__icon"><i class="ri-file-check-line"></i></div>
+                <h3 class="co-group-heading__title"><%= Eo.reviewSectionTitle %></h3>
+              </div>
+              <p style="font-size:0.8rem;color:var(--co-gray-400);margin:0 0 1.25rem;">
+                <%= Eo.reviewIntro %>
+              </p>
+
+              <div class="co-review-grid">
+                <div class="co-review-item">
+                  <p class="co-review-item__label"><%= Eo.labelOrderNumber %></p>
+                  <p class="co-review-item__value"><%= order.orderNumber %></p>
+                </div>
+                <div class="co-review-item">
+                  <p class="co-review-item__label"><%= Co.orderTypeLabel %></p>
+                  <p class="co-review-item__value" id="rev-ord-type"><%= _otLabel %></p>
+                </div>
+                <div class="co-review-item">
+                  <p class="co-review-item__label"><%= Co.successLabelCustomer %></p>
+                  <p class="co-review-item__value" id="rev-customer"><%= order.orderCustomer.fullName %></p>
+                </div>
+                <div class="co-review-item">
+                  <p class="co-review-item__label"><%= Co.successLabelPhone %></p>
+                  <p class="co-review-item__value" id="rev-phone"><%= order.orderCustomer.phoneNumber %></p>
+                </div>
+                <div class="co-review-item">
+                  <p class="co-review-item__label"><%= Co.successLabelArea %></p>
+                  <p class="co-review-item__value" id="rev-area"><%= areaDisplay %></p>
+                </div>
+                <div class="co-review-item">
+                  <p class="co-review-item__label"><%= Eo.labelExpressShipping %></p>
+                  <p class="co-review-item__value" id="rev-express"><%= isExpress ? Ej.yes : Ej.no %></p>
+                </div>
+                <div class="co-review-item">
+                  <p class="co-review-item__label"><%= Co.grandFeeLabel %></p>
+                  <p class="co-review-item__value" id="rev-fee" style="color:var(--co-orange);">
+                    <span id="rev-fee-num"><%= order.orderFees || 0 %></span> <%= Eo.currencyCode %>
+                  </p>
+                </div>
+                <div class="co-review-item">
+                  <p class="co-review-item__label"><%= Eo.streetAddress %></p>
+                  <p class="co-review-item__value" id="rev-address" style="font-size:0.8rem;"><%= order.orderCustomer.address %></p>
+                </div>
+              </div>
+
+              <div class="co-tip-box" style="margin-bottom:1.25rem;">
+                <i class="ri-information-line"></i>
+                <p><%= Eo.updateHintBox %></p>
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                <a href="/business/orders" style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8125rem;color:var(--co-gray-500);text-decoration:none;">
+                  <i class="ri-close-line"></i> <%= Eo.btnCancel %>
+                </a>
+                <button type="submit" class="co-btn-update" id="updateOrderBtn">
+                  <i class="ri-save-line"></i> <%= Eo.btnUpdate %>
+                </button>
+            </div>
+
+            </div><!-- /#co-step-4 -->
+
+          </div><!-- /.co-card__body -->
+        </form>
+
+        <!-- Navigation Footer (hidden on step 4) -->
+        <div class="co-card__footer" id="co-nav-footer">
+          <button type="button" class="co-btn-back" id="co-btn-back" disabled>
+            <i class="ri-arrow-left-s-line co-btn-back__chev"></i> <%= Ej.labelBack || 'Back' %>
+              </button>
+          <button type="button" class="co-btn-next" id="co-btn-next">
+            <%= Ej.labelContinue || 'Continue' %> <i class="ri-arrow-right-s-line co-btn-next__chev"></i>
+              </button>
+        </div>
+
+      </div><!-- /.co-card -->
+    </div><!-- /.co-form-col -->
+
+    <!-- ── Order Summary Sidebar ──────────────────────────────────── -->
+    <div class="co-sidebar-col">
+      <div class="co-summary">
+
+        <!-- Header -->
+        <div class="co-summary__header">
+          <div class="co-summary__header-blob-1"></div>
+          <div class="co-summary__header-blob-2"></div>
+          <div class="co-summary__eyebrow">
+            <i class="ri-edit-line"></i> <%= Eo.editSummaryEyebrow %>
           </div>
+          <p class="co-summary__hint"><%= Eo.orderNumberHint %> <%= order.orderNumber %></p>
         </div>
+
+        <!-- Summary body -->
+        <div class="co-summary__body">
+          <div class="co-sum-row">
+            <div class="co-sum-row__icon"><i class="ri-box-3-line"></i></div>
+            <div>
+              <p class="co-sum-row__label"><%= Co.orderTypeLabel %></p>
+              <p class="co-sum-row__value" id="sum-ord-type"><%= _otLabel %></p>
+            </div>
+          </div>
+          <div class="co-sum-row">
+            <div class="co-sum-row__icon"><i class="ri-user-line"></i></div>
+            <div>
+              <p class="co-sum-row__label"><%= Co.successLabelCustomer %></p>
+              <p class="co-sum-row__value" id="sum-customer"><%= order.orderCustomer.fullName %></p>
+            </div>
+          </div>
+          <div class="co-sum-row">
+            <div class="co-sum-row__icon"><i class="ri-phone-line"></i></div>
+            <div>
+              <p class="co-sum-row__label"><%= Co.successLabelPhone %></p>
+              <p class="co-sum-row__value" id="sum-phone"><%= order.orderCustomer.phoneNumber %></p>
       </div>
     </div>
+          <div class="co-sum-row">
+            <div class="co-sum-row__icon"><i class="ri-map-pin-line"></i></div>
+            <div>
+              <p class="co-sum-row__label"><%= Co.successLabelArea %></p>
+              <p class="co-sum-row__value" id="sum-area"><%= areaDisplay %></p>
   </div>
-  <% } else{ %>
+</div>
 
-  <div class="container-fluid container-lg py-4 px-2 px-sm-3">
-    <div class="row justify-content-center">
-      <div class="col-12 col-xl-10">
-        <div class="text-center">
-          <img src="/assets/images/empty/empty-cart.png" alt="Empty Cart" height="200">
-          <h3 class="mt-4">No Order Found</h3>
-          <p class="text-muted mt-2">The order you are looking for does not exist.</p>
-          <a href="/business/orders" class="btn btn-primary mt-3">
-            <i class="ri-arrow-left-line me-1"></i> Go Back to Orders
-          </a>
-        </div>
-      </div>
+          <div class="co-sum-divider"></div>
 
+          <div class="co-sum-fee-row">
+            <span><%= Eo.sumDeliveryFee %></span>
+            <span class="co-sum-fee-row__val" id="sum-fee-val"><%= order.orderFees || 0 %> <%= Eo.currencyCode %></span>
     </div>
-  </div>
-  <% } %>
+          <% if (isExpress) { %>
+          <div class="co-sum-fee-row" id="sum-express-row">
+            <span><%= Eo.sumExpressIncluded %></span>
+            <span class="co-sum-fee-row__val co-sum-fee-row__val--orange"><%= Eo.sumExpressIncludedValue %></span>
+</div>
+<% } %>
+        </div>
 
+        <!-- Tip -->
+        <div class="co-summary__tip">
+          <i class="ri-information-line"></i>
+          <p id="co-tip-text"><%= Ej.wizTip1 %></p>
+        </div>
 
-<%- contentFor('FooterJs') %>
-<!-- Include Area Selection Modal -->
+      </div>
+    </div><!-- /.co-sidebar-col -->
+
+  </div><!-- /.co-layout -->
+
+</div><!-- /.co-page -->
+
+<!-- Area Selection Modal -->
 <%- include('../partials/area-selection-modal') %>
 
-<!-- Hidden template for zone options -->
-<script type="text/template" id="zone-options-template">
-  <!-- Cairo zones -->
-  <optgroup label="Cairo - Downtown & Central">
-    <option value="Downtown">Downtown Cairo</option>
-    <option value="Garden City">Garden City</option>
-    <option value="Zamalek">Zamalek</option>
-    <option value="Dokki">Dokki</option>
-    <option value="Mohandessin">Mohandessin</option>
-    <option value="Agouza">Agouza</option>
-    <option value="Bulaq">Bulaq</option>
-    <option value="Azbakeya">Azbakeya</option>
-    <option value="Abdeen">Abdeen</option>
-    <option value="Attaba">Attaba</option>
-    <option value="Ramses">Ramses</option>
-    <option value="Qasr El Nil">Qasr El Nil</option>
-    <option value="Talaat Harb">Talaat Harb</option>
-    <option value="Tahrir Square">Tahrir Square</option>
-  </optgroup>
-  <optgroup label="Cairo - East">
-    <option value="Nasr City">Nasr City</option>
-    <option value="Nasr City - First Zone">Nasr City - First Zone</option>
-    <option value="Nasr City - Second Zone">Nasr City - Second Zone</option>
-    <option value="Nasr City - Third Zone">Nasr City - Third Zone</option>
-    <option value="Nasr City - Fourth Zone">Nasr City - Fourth Zone</option>
-    <option value="Nasr City - Seventh Zone">Nasr City - Seventh Zone</option>
-    <option value="Nasr City - Eighth Zone">Nasr City - Eighth Zone</option>
-    <option value="Nasr City - Tenth Zone">Nasr City - Tenth Zone</option>
-    <option value="Heliopolis">Heliopolis</option>
-    <option value="Heliopolis - Korba">Heliopolis - Korba</option>
-    <option value="Heliopolis - Triumph">Heliopolis - Triumph</option>
-    <option value="Heliopolis - Cleopatra">Heliopolis - Cleopatra</option>
-    <option value="Heliopolis - Almaza">Heliopolis - Almaza</option>
-    <option value="Masr El Gedida">Masr El Gedida</option>
-    <option value="El Nozha">El Nozha</option>
-    <option value="El Nozha El Gedida">El Nozha El Gedida</option>
-    <option value="El Zeitoun">El Zeitoun</option>
-    <option value="Ain Shams">Ain Shams</option>
-  </optgroup>
-  <optgroup label="Cairo - South & New Cairo">
-    <option value="Maadi">Maadi</option>
-    <option value="New Cairo">New Cairo</option>
-    <option value="Fifth Settlement">Fifth Settlement</option>
-    <option value="First Settlement">First Settlement</option>
-    <option value="Katameya">Katameya</option>
-    <option value="El Mokattam">El Mokattam</option>
-    <option value="El Basateen">El Basateen</option>
-    <option value="Dar El Salam">Dar El Salam</option>
-    <option value="El Rehab">El Rehab</option>
-    <option value="El Tagamoa">El Tagamoa</option>
-    <option value="El Shorouk">El Shorouk</option>
-    <option value="Badr City">Badr City</option>
-    <option value="Helwan">Helwan</option>
-    <option value="15th of May City">15th of May City</option>
-    <option value="Hadayek Helwan">Hadayek Helwan</option>
-  </optgroup>
-  <optgroup label="Cairo - West">
-    <option value="Mohandessin">Mohandessin</option>
-    <option value="Dokki">Dokki</option>
-    <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
-    <option value="Imbaba">Imbaba</option>
-    <option value="Agouza">Agouza</option>
-    <option value="Warraq">Warraq</option>
-    <option value="Rod El Farag">Rod El Farag</option>
-    <option value="Shobra">Shobra</option>
-    <option value="Shobra El Kheima">Shobra El Kheima</option>
-  </optgroup>
-  
-  <!-- Giza zones -->
-  <optgroup label="Giza - Central & East">
-    <option value="Giza Square">Giza Square</option>
-    <option value="Dokki">Dokki</option>
-    <option value="Mohandessin">Mohandessin</option>
-    <option value="Agouza">Agouza</option>
-    <option value="Haram">Haram</option>
-    <option value="Faisal">Faisal</option>
-    <option value="Imbaba">Imbaba</option>
-    <option value="Kit Kat">Kit Kat</option>
-    <option value="El Manial">El Manial</option>
-    <option value="Boulaq El Dakrour">Boulaq El Dakrour</option>
-    <option value="El Saff">El Saff</option>
-    <option value="El Hawamdeya">El Hawamdeya</option>
-  </optgroup>
-  <optgroup label="Giza - West & 6th October">
-    <option value="Sheikh Zayed">Sheikh Zayed</option>
-    <option value="6th of October">6th of October</option>
-    <option value="Hadayek Al Ahram">Hadayek Al Ahram</option>
-    <option value="Al Wahat Road">Al Wahat Road</option>
-    <option value="Smart Village">Smart Village</option>
-    <option value="Egyptian Media Production City">Egyptian Media Production City</option>
-  </optgroup>
-  
-  <!-- Alexandria zones -->
-  <optgroup label="Alexandria - East">
-    <option value="Sidi Gaber">Sidi Gaber</option>
-    <option value="Sporting">Sporting</option>
-    <option value="Camp Caesar">Camp Caesar</option>
-    <option value="Smouha">Smouha</option>
-    <option value="Victoria">Victoria</option>
-    <option value="Bolkly">Bolkly</option>
-    <option value="Ibrahimia">Ibrahimia</option>
-    <option value="Laurent">Laurent</option>
-    <option value="Loran">Loran</option>
-  </optgroup>
-  <optgroup label="Alexandria - Central & West">
-    <option value="Bahary">Bahary</option>
-    <option value="Anfushi">Anfushi</option>
-    <option value="Manshiya">Manshiya</option>
-    <option value="Attarin">Attarin</option>
-    <option value="Gomrok">Gomrok</option>
-    <option value="Karmouz">Karmouz</option>
-    <option value="Moharam Bek">Moharam Bek</option>
-    <option value="Dekhela">Dekhela</option>
-    <option value="Agami">Agami</option>
-    <option value="Amreya">Amreya</option>
-    <option value="Borg El Arab">Borg El Arab</option>
-    <option value="King Mariout">King Mariout</option>
-    <option value="Wardian">Wardian</option>
-    <option value="Bacos">Bacos</option>
-  </optgroup>
-  <optgroup label="Alexandria - East & Montaza">
-    <option value="Sidi Bishr">Sidi Bishr</option>
-    <option value="Miami">Miami</option>
-    <option value="Asafra">Asafra</option>
-    <option value="Mandara">Mandara</option>
-    <option value="Montaza">Montaza</option>
-    <option value="Abu Qir">Abu Qir</option>
-    <option value="El Maamoura">El Maamoura</option>
-    <option value="El Max">El Max</option>
-    <option value="Aboukir">Aboukir</option>
-    <option value="Semouha">Semouha</option>
-    <option value="Fleming">Fleming</option>
-    <option value="El Zahria">El Zahria</option>
-    <option value="Gianaclis">Gianaclis</option>
-  </optgroup>
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<%- contentFor('FooterJs') %>
+<script>window.__EO_CURRENCY = '<%= Eo.currencyCode %>';</script>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script src="/assets/js/area-selection-modal.js"></script>
 <script>
-  window.__NS_BUSINESS_I18N = window.__NS_BUSINESS_I18N || {};
-  window.__NS_BUSINESS_I18N.editOrder = {
-    selectArea: "<%= Eo.jsSelectArea || 'Select Area' %>",
-    updating: "<%= Eo.jsUpdating || 'Updating…' %>",
-    updateOrder: "<%= Eo.jsUpdateOrder || 'Update Order' %>",
-    validationError: "<%= Eo.jsValidationError || 'Validation Error' %>",
-    fillRequiredFields: "<%= Eo.jsFillRequiredFields || 'Please fill in all required customer information fields.' %>",
-    orderUpdated: "<%= Eo.jsOrderUpdated || 'Order Updated' %>",
-    orderUpdatedText: "<%= Eo.jsOrderUpdatedText || 'Order has been updated successfully!' %>",
-    updateFailed: "<%= Eo.jsUpdateFailed || 'Update Failed' %>",
-    updateFailedText: "<%= Eo.jsUpdateFailedText || 'An error occurred while updating the order.' %>",
-    invalidValue: "<%= Eo.jsInvalidValue || 'Invalid Value' %>",
-    itemsCannotBeZero: "<%= Eo.jsItemsCannotBeZero || 'Number of items cannot be zero or negative.' %>",
-    locale: "<%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US' %>"
+  /* Pass server-side state to edit-order.js */
+  window.__EO_STATE = {
+    orderId:        '<%= order._id %>',
+    orderType:      '<%= ot %>',
+    isExpress:      <%= isExpress ? 'true' : 'false' %>,
+    expressLocked:  <%= expressLocked ? 'true' : 'false' %>,
+    isCOD:          <%= isCOD ? 'true' : 'false' %>,
+    isCD:           <%= isCD ? 'true' : 'false' %>,
+    orderFees:      <%= order.orderFees || 0 %>,
   };
 </script>
 <script src="/assets/rJS/business/edit-order.js"></script>
-<script src="/assets/js/area-selection-modal.js"></script>
 
-<!-- init js -->
-<script src="/assets/js/pages/ecommerce-product-checkout.init.js"></script>
-
-
-
+<% } %> <!-- end if order -->

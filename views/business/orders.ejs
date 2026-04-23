@@ -5,7 +5,11 @@
 <link href="/assets/css/status-styles.css" rel="stylesheet" type="text/css" />
 <link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 <%- contentFor('body') %>
-<% var Op = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.orders) ? translation.business.pages.orders : {}; %>
+<% 
+  var OpPage = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.orders) ? translation.business.pages.orders : {};
+  var OpJs = (typeof translation !== 'undefined' && translation.business && translation.business.js && translation.business.js.orders) ? translation.business.js.orders : {};
+  var Op = Object.assign({}, OpJs, OpPage);
+%>
 
 <style>
   /* ─── Orders Table Dropdown ───────────────────────────────────────── */
@@ -135,7 +139,8 @@
   #orderList .card-body,
   #orderList .card-body.pt-0 { overflow: visible; }
 
-  #orderList .orders-tabs-inner:first-of-type { position: relative; z-index: 1090; isolation: isolate; }
+  /* Below Bootstrap .modal-backdrop (1050) and .modal (1055) so dialogs cover tabs */
+  #orderList .orders-tabs-inner:first-of-type { position: relative; z-index: 25; isolation: isolate; }
 
   .nav-tabs, .nav-tabs-custom { overflow: visible !important; position: relative; z-index: 1; }
   .card-header { overflow: visible !important; position: relative; z-index: 1; }
@@ -302,7 +307,7 @@
   }
 
   .download-text {
-    text-align: left;
+    text-align: start;
   }
 
   .download-label {
@@ -652,7 +657,7 @@
                   <option value="headingToYou"><%= Op.statusHeadingToYou || 'Heading To You' %></option>
                   <option value="completed"><%= Op.statusCompleted || 'Completed' %></option>
                   <option value="canceled"><%= Op.statusCancelled || 'Canceled' %></option>
-                  <option value="rejected"><%= Op.statusRejected || 'Rejected' %></option>
+                  <option value="rejected"><%= Op.statusRejected || 'Customer refused' %></option>
                   <option value="returned"><%= Op.statusReturned || 'Returned' %></option>
                   <option value="returnLinked"><%= Op.statusReturnLinked || 'Return Linked' %></option>
                   <option value="returnToWarehouse"><%= Op.statusReturnToWarehouse || 'Return to Warehouse' %></option>
@@ -732,9 +737,9 @@
                   <th  data-sort="order-type"><%= Op.colOrderType || 'Order Type' %></th>
                   <th  data-sort="order-Location"><%= Op.colLocation || 'Order Location' %></th>
                   <th  data-sort="amount"><%= Op.colAmount || 'Amount' %></th>
-                  <th  data-sort="status"><%= Op.colStatus || 'Delivery Status' %></th>
-                  <th  data-sort="status"><%= Op.colTries || 'Delivery Tries' %></th>
-                  <th  data-sort="date"><%= Op.colDate || 'Order Date' %></th>
+                  <th  data-sort="status"><%= Op.colDeliveryStatus || Op.colStatus || 'Delivery status' %></th>
+                  <th  data-sort="status"><%= Op.colTries || 'Delivery tries' %></th>
+                  <th  data-sort="date"><%= Op.colOrderDate || Op.colDate || 'Order date' %></th>
                   <th data-sort="city"><%= Op.colAction || 'Action' %></th>
                 </tr>
               </thead>
@@ -812,7 +817,7 @@
                       <div class="paper-info">
                         <h6 class="paper-label">A4</h6>
                         <p class="paper-dimensions">210 × 297 mm</p>
-                        <small class="paper-description">Standard size</small>
+                        <small class="paper-description"><%= Op.paperSizeStandard || 'Standard size' %></small>
                       </div>
                       <div class="selection-indicator">
                         <i class="ri-check-line"></i>
@@ -828,7 +833,7 @@
                       <div class="paper-info">
                         <h6 class="paper-label">A5</h6>
                         <p class="paper-dimensions">148 × 210 mm</p>
-                        <small class="paper-description">Compact size</small>
+                        <small class="paper-description"><%= Op.paperSizeCompact || 'Compact size' %></small>
                       </div>
                       <div class="selection-indicator">
                         <i class="ri-check-line"></i>
@@ -887,7 +892,7 @@
                   
                   <div class="features-section">
                     <h6 class="fw-semibold text-dark mb-3">
-                      <i class="ri-star-fill text-warning me-2"></i>Key Features
+                      <i class="ri-star-fill text-warning me-2"></i><%= Op.smartStickerKeyFeatures || 'Key features' %>
                     </h6>
                     <div class="feature-list">
                       <div class="feature-item">
@@ -895,8 +900,8 @@
                           <i class="ri-flashlight-line text-success"></i>
                         </div>
                         <div class="feature-text">
-                          <h6 class="mb-1 fw-medium">Quick Scanning</h6>
-                          <p class="text-muted mb-0 small">Instant order identification</p>
+                          <h6 class="mb-1 fw-medium"><%= Op.smartStickerFeatQuickTitle || 'Quick scanning' %></h6>
+                          <p class="text-muted mb-0 small"><%= Op.smartStickerFeatQuickDesc || 'Instant order identification' %></p>
                         </div>
                       </div>
                       <div class="feature-item">
@@ -904,8 +909,8 @@
                           <i class="ri-refresh-line text-primary"></i>
                         </div>
                         <div class="feature-text">
-                          <h6 class="mb-1 fw-medium">Real-time Updates</h6>
-                          <p class="text-muted mb-0 small">Live status synchronization</p>
+                          <h6 class="mb-1 fw-medium"><%= Op.smartStickerFeatRealtimeTitle || 'Real-time updates' %></h6>
+                          <p class="text-muted mb-0 small"><%= Op.smartStickerFeatRealtimeDesc || 'Live status synchronization' %></p>
                         </div>
                       </div>
                   
@@ -914,8 +919,8 @@
                           <i class="ri-notification-3-line text-info"></i>
                         </div>
                         <div class="feature-text">
-                          <h6 class="mb-1 fw-medium">Push Notifications</h6>
-                          <p class="text-muted mb-0 small">Instant alerts and updates</p>
+                          <h6 class="mb-1 fw-medium"><%= Op.smartStickerFeatPushTitle || 'Push notifications' %></h6>
+                          <p class="text-muted mb-0 small"><%= Op.smartStickerFeatPushDesc || 'Instant alerts and updates' %></p>
                         </div>
                       </div>
                
@@ -928,21 +933,21 @@
                 <div class="download-card h-100">
                   <div class="download-section mb-4">
                     <h6 class="fw-semibold text-dark mb-3">
-                      <i class="ri-download-line text-primary me-2"></i>Download Mobile App
+                      <i class="ri-download-line text-primary me-2"></i><%= Op.smartStickerDownloadHeading || 'Download mobile app' %>
                     </h6>
                     
                     <div class="d-grid gap-3 mb-4">
                       <button class="btn btn-dark btn-lg download-btn" onclick="downloadApp('ios')">
                         <i class="ri-apple-line me-2"></i>
                         <div class="download-text">
-                          <div class="download-label">Download for</div>
+                          <div class="download-label"><%= Op.smartStickerDownloadFor || 'Download for' %></div>
                           <div class="download-platform">iOS</div>
                         </div>
                       </button>
                       <button class="btn btn-success btn-lg download-btn" onclick="downloadApp('android')">
                         <i class="ri-android-line me-2"></i>
                         <div class="download-text">
-                          <div class="download-label">Download for</div>
+                          <div class="download-label"><%= Op.smartStickerDownloadFor || 'Download for' %></div>
                           <div class="download-platform">Android</div>
                         </div>
                       </button>
@@ -951,7 +956,7 @@
                   
                   <div class="how-to-use-section">
                     <h6 class="fw-semibold text-dark mb-3">
-                      <i class="ri-guide-line text-primary me-2"></i>How to Use Smart Scan
+                      <i class="ri-guide-line text-primary me-2"></i><%= Op.smartStickerHowToTitle || 'How to use smart scan' %>
                     </h6>
                     <div class="steps-container">
                       <div class="step-item">
@@ -959,8 +964,8 @@
                           <span class="step-number">1</span>
                         </div>
                         <div class="step-content">
-                          <h6 class="step-title">Open the App</h6>
-                          <p class="step-description">Launch the mobile app and login to your account</p>
+                          <h6 class="step-title"><%= Op.smartStickerStep1Title || 'Open the app' %></h6>
+                          <p class="step-description"><%= Op.smartStickerStep1Desc || 'Launch the mobile app and sign in to your account.' %></p>
                         </div>
                       </div>
                       <div class="step-item">
@@ -968,8 +973,8 @@
                           <span class="step-number">2</span>
                         </div>
                         <div class="step-content">
-                          <h6 class="step-title">Navigate to Orders</h6>
-                          <p class="step-description">Go to the Orders section from the main menu</p>
+                          <h6 class="step-title"><%= Op.smartStickerStep2Title || 'Go to orders' %></h6>
+                          <p class="step-description"><%= Op.smartStickerStep2Desc || 'Open the Orders section from the main menu.' %></p>
                         </div>
                       </div>
                       <div class="step-item">
@@ -977,8 +982,8 @@
                           <span class="step-number">3</span>
                         </div>
                         <div class="step-content">
-                          <h6 class="step-title">Tap Scan Icon</h6>
-                          <p class="step-description">Tap the scan icon in the top right corner</p>
+                          <h6 class="step-title"><%= Op.smartStickerStep3Title || 'Tap the scan icon' %></h6>
+                          <p class="step-description"><%= Op.smartStickerStep3Desc || 'Tap the scan icon in the top corner of the screen.' %></p>
                         </div>
                       </div>
                       <div class="step-item">
@@ -986,8 +991,8 @@
                           <span class="step-number">4</span>
                         </div>
                         <div class="step-content">
-                          <h6 class="step-title">Point Camera</h6>
-                          <p class="step-description">Point your camera at the sticker and wait for scan</p>
+                          <h6 class="step-title"><%= Op.smartStickerStep4Title || 'Point the camera' %></h6>
+                          <p class="step-description"><%= Op.smartStickerStep4Desc || 'Point your camera at the sticker and wait for the scan to complete.' %></p>
                         </div>
                       </div>
                       <div class="step-item">
@@ -995,8 +1000,8 @@
                           <span class="step-number">5</span>
                         </div>
                         <div class="step-content">
-                          <h6 class="step-title">View Details</h6>
-                          <p class="step-description">View order details and update status instantly</p>
+                          <h6 class="step-title"><%= Op.smartStickerStep5Title || 'View details' %></h6>
+                          <p class="step-description"><%= Op.smartStickerStep5Desc || 'Review order details and update status instantly.' %></p>
                         </div>
                       </div>
                     </div>
@@ -1008,10 +1013,10 @@
           <div class="modal-footer bg-light border-0 p-4">
             <div class="d-flex justify-content-between w-100">
               <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
-                <i class="ri-close-line me-1"></i>Close
+                <i class="ri-close-line me-1"></i><%= Op.smartStickerFooterClose || Op.swalClose || 'Close' %>
               </button>
               <button type="button" class="btn btn-primary" onclick="showQRCode()">
-                <i class="ri-qr-code-line me-1"></i>Show QR Code
+                <i class="ri-qr-code-line me-1"></i><%= Op.smartStickerShowQr || 'Show QR code' %>
               </button>
             </div>
           </div>
@@ -1031,16 +1036,16 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="bulkImportModalLabel">Import deliver orders (Excel)</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="bulkImportModalLabel"><%= Op.bulkImportModalTitle || 'Import delivery orders (Excel)' %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= Op.modalCloseAria || 'Close' %>"></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted small mb-2">This import is for <strong>normal delivery orders only</strong> (standard shipping, not express). Download the template, read the <strong>Instructions</strong> sheet, fill <strong>Orders</strong>, and delete the sample row. Use <strong>Validate</strong> first; nothing is created until you click <strong>Import orders</strong>. For returns, exchanges, or express shipping, create the order from the website.</p>
+        <p class="text-muted small mb-2"><%- Op.bulkImportIntroHtml || 'This import is for <strong>normal delivery orders only</strong> (standard shipping, not express). Download the template, read the <strong>Instructions</strong> sheet, fill the <strong>Orders</strong> sheet, and delete the sample row. Use <strong>Validate</strong> first; nothing is created until you click <strong>Import orders</strong>. For returns, exchanges, or express shipping, create the order from the website.' %></p>
         <div class="d-flex flex-wrap gap-2 mb-3">
-          <a href="/business/orders-import-template" class="btn btn-outline-primary btn-sm" download><i class="ri-download-2-line me-1"></i> Download template</a>
+          <a href="/business/orders-import-template" class="btn btn-outline-primary btn-sm" download><i class="ri-download-2-line me-1"></i> <%= Op.bulkImportDownloadTemplate || 'Download template' %></a>
         </div>
         <div class="mb-3">
-          <label class="form-label" for="bulkImportFile">Excel file (.xlsx)</label>
+          <label class="form-label" for="bulkImportFile"><%= Op.bulkImportFileLabel || 'Excel file (.xlsx)' %></label>
           <input type="file" class="form-control" id="bulkImportFile" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
         </div>
         <div id="bulkImportAlert" class="alert py-2 d-none" role="alert"></div>
@@ -1121,7 +1126,7 @@
     statusHeadingToYou: "<%= Op.statusHeadingToYou || 'Heading To You' %>",
     statusCompleted: "<%= Op.statusCompleted || 'Completed' %>",
     statusCancelled: "<%= Op.statusCancelled || 'Cancelled' %>",
-    statusRejected: "<%= Op.statusRejected || 'Rejected' %>",
+    statusRejected: "<%= Op.statusRejected || 'Customer refused' %>",
     statusReturned: "<%= Op.statusReturned || 'Returned' %>",
     statusWaitingAction: "<%= Op.statusWaitingAction || 'Waiting Action' %>",
     statusRescheduled: "<%= Op.statusRescheduled || 'Rescheduled' %>",
@@ -1153,7 +1158,16 @@
     actionSmartSticker: "<%= Op.actionSmartSticker || 'Smart Sticker Scan' %>",
     actionEditOrder: "<%= Op.actionEditOrder || 'Edit Order' %>",
     actionCancelOrder: "<%= Op.actionCancelOrder || 'Cancel order' %>",
+    actionDeleteOrder: "<%= Op.actionDeleteOrder || 'Delete Order' %>",
     actionTrackOrder: "<%= Op.actionTrackOrder || 'Track Order' %>",
+    deleteConfirm: "<%= Op.deleteConfirm || 'Delete order?' %>",
+    deleteConfirmText: "<%= Op.deleteConfirmText || 'This will permanently remove the order. You cannot undo this.' %>",
+    deleteConfirmYes: "<%= Op.deleteConfirmYes || 'Yes, delete it' %>",
+    deleteConfirmNo: "<%= Op.deleteConfirmNo || 'Cancel' %>",
+    deleteDone: "<%= Op.deleteDone || 'Deleted' %>",
+    deleteSuccess: "<%= Op.deleteSuccess || 'Order deleted successfully.' %>",
+    cannotDelete: "<%= Op.cannotDelete || 'Cannot delete' %>",
+    deleteError: "<%= Op.deleteError || 'This order cannot be deleted.' %>",
     loadingTable: "<%= Op.loadingTable || 'Loading…' %>",
     triesOf: "<%= Op.triesOf || '{n}/2' %>",
     selectedCountTemplate: <%- JSON.stringify(Op.selectedCount || '{count} order(s) selected') %>,

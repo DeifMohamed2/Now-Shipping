@@ -37,7 +37,7 @@ const orderStagesSchema = new mongoose.Schema({
         isCompleted: { type: Boolean, default: false },
         completedAt: { type: Date, default: null },
         notes: { type: String, default: '' },
-        initiatedBy: { type: String, enum: ['business', 'system'], default: null },
+        initiatedBy: { type: String, enum: ['business', 'system', 'admin'], default: null },
         reason: { type: String, default: null }
     },
     returnAssigned: {
@@ -193,7 +193,7 @@ const orderSchema = new mongoose.Schema(
         
         // PAUSED category
         'waitingAction',        // Awaiting business action
-        'rejected',             // Order rejected by courier
+        'rejected',             // Customer refused delivery (courier app marks; not "courier rejected" the job)
         
         // SUCCESSFUL category
         'completed',            // Order successfully delivered
@@ -210,7 +210,7 @@ const orderSchema = new mongoose.Schema(
         'returnPickedUp',       // Courier picked up from customer
         'returnAtWarehouse',    // Return delivered to warehouse
         'returnToBusiness',     // Admin assigns courier to deliver to business
-        'deliveryFailed',       // Delivery failed/customer rejected
+        'deliveryFailed',       // Delivery failed (distinct from customer refused at door)
         'autoReturnInitiated',  // System automatically initiated return
         'returnLinked',         // Return order linked to deliver order
 
@@ -561,13 +561,23 @@ orderSchema.pre('save', function(next) {
     
     // Update the model's status category
     this.statusCategory = category;
-    
-    // Add to status history with category
-    this.orderStatusHistory.push({
+
+    const note =
+      this.$locals && typeof this.$locals.nextStatusHistoryNote === 'string'
+        ? this.$locals.nextStatusHistoryNote
+        : null;
+    if (this.$locals && Object.prototype.hasOwnProperty.call(this.$locals, 'nextStatusHistoryNote')) {
+      delete this.$locals.nextStatusHistoryNote;
+    }
+
+    const historyEntry = {
       status: this.orderStatus,
       date: new Date(),
-      category: category
-    });
+      category: category,
+    };
+    if (note) historyEntry.notes = note;
+
+    this.orderStatusHistory.push(historyEntry);
   }
 
   // Fast shipping logic will be handled when courier scans the order during pickup

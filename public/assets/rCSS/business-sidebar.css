@@ -1,0 +1,1348 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Business Sidebar — Dark Navy Theme
+   Palette: #0F172A background / #F5A623 accent / #94A3B8 text
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar container ──────────────────────────────────────────────────── */
+.ns-sidebar-dark,
+.ns-sidebar-dark.app-menu.navbar-menu {
+  background: #0F172A !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  transition: all 0.22s ease;
+}
+
+/* Sticky to viewport: stay put while the page (main content) scrolls. Flex column
+   so #scrollbar fills the rest; kill Velzon’s legacy bottom padding (old footer bar). */
+html:is([data-layout='vertical'], [data-layout='semibox']) .app-menu.ns-sidebar-dark.navbar-menu {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0;
+  right: auto;
+  bottom: 0 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: 100dvh;
+  z-index: 1002;
+  display: flex !important;
+  flex-direction: column;
+  /* Do not set margin shorthand: it overrides Velzon mobile off-canvas (-100%) */
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+html[dir='rtl']:is([data-layout='vertical'], [data-layout='semibox']) .app-menu.ns-sidebar-dark.navbar-menu {
+  left: auto !important;
+  right: 0 !important;
+}
+
+/* Desktop / tablet: pin flush to edge (no horizontal margin bleed) */
+@media (min-width: 768px) {
+  html:is([data-layout='vertical'], [data-layout='semibox']) .app-menu.ns-sidebar-dark.navbar-menu {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+/* Mobile drawer open: must sit ABOVE .vertical-overlay (z-index 1003) or backdrop-filter blurs the menu */
+html:is([data-layout='vertical'], [data-layout='semibox']) body.vertical-sidebar-enable .ns-sidebar-dark.app-menu.navbar-menu {
+  z-index: 1005 !important;
+}
+
+.ns-sidebar-dark .sidebar-mobile-bar {
+  flex-shrink: 0;
+}
+
+/* Override any Velzon CSS variable that bleeds the default sidebar color */
+.ns-sidebar-dark {
+  --vz-vertical-menu-bg: #0F172A;
+  --vz-vertical-menu-item-color: #94A3B8;
+  --vz-vertical-menu-item-hover-color: #E2E8F0;
+  --vz-vertical-menu-item-active-color: #F5A623;
+  --vz-vertical-menu-sub-item-color: #94A3B8;
+  --vz-vertical-menu-sub-item-hover-color: #E2E8F0;
+  --vz-vertical-menu-sub-item-active-color: #F5A623;
+}
+
+/* ── Logo box ───────────────────────────────────────────────────────────── */
+.ns-sidebar-dark .navbar-brand-box,
+.ns-sidebar-dark .ns-logo-box {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  min-height: 56px;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 4px 0 6px !important;
+  flex-shrink: 0;
+}
+
+/* Collapsed sidebar brand box override */
+:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .ns-sidebar-dark .navbar-brand-box {
+  background: transparent !important;
+}
+
+.ns-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Expanded rail: full wordmark; collapsed rail: icon only (toggled per data-sidebar-size) */
+.ns-logo-img--expanded {
+  height: 48px;
+  width: auto;
+  max-width: 78%;
+  object-fit: contain;
+}
+
+.ns-logo-img--collapsed {
+  display: none;
+  width: 40px;
+  height: 40px;
+  max-width: 100%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* ── User card ──────────────────────────────────────────────────────────── */
+.ns-sidebar-dark .ns-user-card {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  padding: 0 !important;
+  margin: 8px !important;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ns-sidebar-dark .ns-user-card:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+.ns-sidebar-dark .ns-user-btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  display: flex !important;
+  justify-content: space-between;
+}
+
+.ns-sidebar-dark .ns-user-avatar {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border: 2px solid rgba(245, 166, 35, 0.45);
+  flex-shrink: 0;
+}
+
+.ns-sidebar-dark .ns-user-name {
+  color: #E2E8F0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.3;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ns-sidebar-dark .ns-user-role {
+  color: #64748B !important;
+  font-size: 11px !important;
+  line-height: 1.4;
+}
+
+.ns-sidebar-dark .ns-chevron {
+  color: #475569;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.ns-sidebar-dark .ns-user-btn[aria-expanded="true"] .ns-chevron {
+  transform: rotate(180deg);
+}
+
+/* ── User dropdown menu (dark) ──────────────────────────────────────────── */
+.ns-sidebar-dark .ns-user-dropdown {
+  background: #1E293B !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  min-width: 220px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45) !important;
+  padding: 6px 0 !important;
+}
+
+.ns-sidebar-dark .ns-dd-header {
+  color: #64748B !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.04) !important;
+  padding: 8px 14px !important;
+}
+
+.ns-sidebar-dark .ns-dd-divider {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  margin: 4px 0 !important;
+}
+
+.ns-sidebar-dark .ns-dd-item {
+  color: #CBD5E1 !important;
+  font-size: 13px;
+  border-radius: 6px;
+  margin: 1px 6px;
+  padding: 8px 10px !important;
+  transition: background 0.15s ease, color 0.15s ease;
+  text-decoration: none;
+}
+
+.ns-sidebar-dark .ns-dd-item:hover {
+  background: rgba(245, 166, 35, 0.12) !important;
+  color: #F5A623 !important;
+}
+
+.ns-sidebar-dark .ns-dd-item:hover .ns-dd-icon {
+  color: #F5A623 !important;
+}
+
+.ns-sidebar-dark .ns-dd-icon {
+  color: #F5A623 !important;
+  transition: color 0.15s ease;
+}
+
+.ns-sidebar-dark .ns-dd-item--danger {
+  color: #F87171 !important;
+}
+
+.ns-sidebar-dark .ns-dd-item--danger i {
+  color: #F87171 !important;
+}
+
+.ns-sidebar-dark .ns-dd-item--danger:hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #EF4444 !important;
+}
+
+/* ── Scrollbar area (only this region scrolls inside the fixed sidebar) ─ */
+.ns-sidebar-dark #scrollbar {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ns-sidebar-dark #scrollbar>.container-fluid {
+  --bs-gutter-x: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: none;
+}
+
+.ns-sidebar-dark #scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ns-sidebar-dark #scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ns-sidebar-dark #scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.ns-sidebar-dark #scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 166, 35, 0.5);
+}
+
+/* ── Section labels ─────────────────────────────────────────────────────── */
+.ns-sidebar-dark .menu-title,
+.ns-sidebar-dark .ns-section-label {
+  padding: 18px 20px 5px 20px !important;
+  margin: 0 !important;
+}
+
+.ns-sidebar-dark .menu-title span,
+.ns-sidebar-dark .ns-section-label span {
+  color: #475569 !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+/* ── Nav items ──────────────────────────────────────────────────────────── */
+.ns-sidebar-dark .nav-item {
+  margin: 1px 0;
+}
+
+.ns-sidebar-dark .ns-link,
+.ns-sidebar-dark .nav-link.ns-link,
+.ns-sidebar-dark .menu-link.ns-link {
+  color: #94A3B8 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 9px 14px 9px 16px !important;
+  border-radius: 9px !important;
+  margin: 1px 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  transition: background 0.2s ease, color 0.2s ease !important;
+  position: relative;
+  background: transparent !important;
+  text-decoration: none;
+}
+
+.ns-sidebar-dark .ns-icon {
+  font-size: 17px;
+  width: 20px;
+  text-align: center;
+  color: #475569;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+  line-height: 1;
+}
+
+/* Nav hover + active — expanded rail (lg). Collapsed (sm) uses dedicated block at end of this file. */
+.ns-sidebar-dark .ns-link:hover,
+.ns-sidebar-dark .nav-link.ns-link:hover,
+.ns-sidebar-dark .menu-link.ns-link:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #E2E8F0 !important;
+}
+
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link:hover:not(.active),
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link:focus-visible:not(.active) {
+  color: #F8FAFC !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.active,
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.active:hover,
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.active:focus-visible {
+  color: #F5A623 !important;
+  background: rgba(245, 166, 35, 0.16) !important;
+}
+
+.ns-sidebar-dark .ns-link:hover .ns-icon,
+.ns-sidebar-dark .ns-link:hover i.ns-icon,
+.ns-sidebar-dark .nav-link.ns-link:hover .ns-icon,
+.ns-sidebar-dark .nav-link.ns-link:hover i.ns-icon,
+.ns-sidebar-dark .menu-link.ns-link:hover .ns-icon,
+.ns-sidebar-dark .menu-link.ns-link:hover i.ns-icon,
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link:hover .ns-icon,
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link:hover i.ns-icon,
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link:hover:not(.active) i[class^='ri-'],
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link:hover:not(.active) i[class*=' ri-'] {
+  color: #FFFFFF !important;
+}
+
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.active:hover,
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.active:focus-visible {
+  color: #FFFFFF !important;
+}
+
+.ns-sidebar-dark .ns-link.active:hover .ns-icon,
+.ns-sidebar-dark .nav-link.active:hover .ns-icon,
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.active:hover .ns-icon,
+html:not([data-sidebar-size='sm']):not([data-sidebar-size='sm-hover']):not([data-sidebar-size='sm-hover-active']):is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.active:hover i {
+  color: #FFFFFF !important;
+}
+
+/* Active state - set by Velzon JS or manually */
+.ns-sidebar-dark .ns-link.active,
+.ns-sidebar-dark .nav-link.ns-link.active,
+.ns-sidebar-dark .menu-link.ns-link.active {
+  background: rgba(245, 166, 35, 0.14) !important;
+  color: #F5A623 !important;
+  font-weight: 600 !important;
+}
+
+.ns-sidebar-dark .ns-link.active .ns-icon {
+  color: #F5A623 !important;
+}
+
+/* Active bar indicator */
+.ns-sidebar-dark .ns-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  background: #F5A623;
+  border-radius: 0 3px 3px 0;
+}
+
+/* Collapse parent open state */
+.ns-sidebar-dark [aria-expanded="true"].ns-link,
+.ns-sidebar-dark [aria-expanded="true"].menu-link.ns-link {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #E2E8F0 !important;
+}
+
+.ns-sidebar-dark [aria-expanded="true"].ns-link .ns-icon {
+  color: #F5A623 !important;
+}
+
+/* Velzon collapse arrow override */
+.ns-sidebar-dark .navbar-nav .menu-link.ns-link[data-bs-toggle='collapse']::after {
+  color: #475569 !important;
+  transition: transform 0.25s ease;
+}
+
+.ns-sidebar-dark .navbar-nav .menu-link.ns-link[data-bs-toggle='collapse'][aria-expanded="true"]::after {
+  color: #F5A623 !important;
+}
+
+.ns-sidebar-dark .navbar-nav .menu-link.ns-link[data-bs-toggle='collapse']:hover::after {
+  color: #FFFFFF !important;
+}
+
+/* ── Submenu ────────────────────────────────────────────────────────────── */
+.ns-sidebar-dark .ns-submenu {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  margin-left: 10px !important;
+  margin-top: 2px;
+  padding-left: 4px;
+}
+
+.ns-sidebar-dark .ns-sublink {
+  font-size: 13px !important;
+  padding: 7px 10px 7px 12px !important;
+  margin: 1px 4px !important;
+}
+
+.ns-sidebar-dark .ns-sublink:hover .ns-icon,
+.ns-sidebar-dark .ns-sublink:hover i {
+  color: #FFFFFF !important;
+}
+
+.ns-sidebar-dark .collapse.ms-3 {
+  margin-left: 8px !important;
+}
+
+/* ── Logout link ────────────────────────────────────────────────────────── */
+.ns-sidebar-dark .ns-link--logout,
+.ns-sidebar-dark .nav-link.ns-link--logout {
+  color: #F87171 !important;
+}
+
+.ns-sidebar-dark .ns-link--logout .ns-icon {
+  color: #F87171 !important;
+}
+
+.ns-sidebar-dark .ns-link--logout:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #EF4444 !important;
+}
+
+.ns-sidebar-dark .ns-link--logout:hover .ns-icon {
+  color: #FCA5A5 !important;
+}
+
+.ns-sidebar-dark .ns-link--logout:hover i {
+  color: #FCA5A5 !important;
+}
+
+/* Beat generic “white icon on hover” for danger logout */
+html:is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark .navbar-nav .nav-link.ns-link--logout:hover .ns-icon,
+html:is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark .navbar-nav .nav-link.ns-link--logout:hover i {
+  color: #FCA5A5 !important;
+}
+
+/* ── Collapsed sidebar (icon-only) state ────────────────────────────────── */
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-link,
+[data-sidebar-size="sm"] .ns-sidebar-dark .nav-link.ns-link,
+[data-sidebar-size="sm"] .ns-sidebar-dark .menu-link.ns-link {
+  justify-content: center !important;
+  padding: 11px 8px !important;
+  margin: 2px 6px !important;
+}
+
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-link .ns-icon {
+  font-size: 20px !important;
+  width: auto;
+  margin: 0 !important;
+}
+
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-link span:not(.menu-arrow),
+[data-sidebar-size="sm"] .ns-sidebar-dark .menu-title,
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-section-label {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* User name/role/chevron: use display:none (see block below) — opacity:0 still reserves layout */
+
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-user-btn {
+  justify-content: center !important;
+  align-items: center !important;
+  align-content: center;
+  place-content: center;
+  place-items: center;
+  padding: 6px 6px !important;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Avatar centering: hidden labels used opacity:0 and still took space — remove from flow */
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-user-btn .text-start,
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-user-btn .ns-chevron {
+  display: none !important;
+}
+
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-user-btn>span.d-flex {
+  width: auto !important;
+  max-width: 100%;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0 auto !important;
+  gap: 0 !important;
+  flex: 0 0 auto;
+}
+
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-user-avatar {
+  display: block !important;
+  margin: 0 !important;
+  object-fit: cover;
+  object-position: center;
+}
+
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-user-card {
+  padding: 0 !important;
+  margin: 8px 4px 6px !important;
+  overflow: visible;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  align-self: stretch;
+}
+
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-logo-img--expanded {
+  display: none !important;
+}
+
+[data-sidebar-size="sm"] .ns-sidebar-dark .ns-logo-img--collapsed {
+  display: block !important;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
+/* ── Mobile bar (close button) ──────────────────────────────────────────── */
+.ns-sidebar-dark .sidebar-mobile-bar {
+  background: linear-gradient(180deg, #162032 0%, #0F172A 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ns-sidebar-dark .sidebar-mobile-bar__label {
+  color: #475569 !important;
+}
+
+.ns-sidebar-dark .sidebar-mobile-close {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #CBD5E1 !important;
+}
+
+.ns-sidebar-dark .sidebar-mobile-close:hover {
+  background: rgba(245, 166, 35, 0.15) !important;
+  border-color: rgba(245, 166, 35, 0.35) !important;
+  color: #F5A623 !important;
+}
+
+/* ── Mobile drawer shadow ───────────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  body.vertical-sidebar-enable .ns-sidebar-dark.app-menu {
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5) !important;
+  }
+}
+
+/* ── Responsive logo sizes ──────────────────────────────────────────────── */
+@media (max-width: 992px) {
+  .ns-logo-img--expanded {
+    height: 42px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ns-logo-img--expanded {
+    height: 38px;
+  }
+
+  /* Do not override collapsed (sm) rail — it uses auto height + icon stack */
+  html[data-layout='vertical']:not([data-sidebar-size='sm']) .ns-sidebar-dark .navbar-brand-box {
+    height: 62px !important;
+  }
+}
+
+/* ── RTL overrides ──────────────────────────────────────────────────────── */
+html[dir='rtl'] .ns-sidebar-dark.app-menu.navbar-menu {
+  right: 0 !important;
+  left: auto !important;
+  border-right: none !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-link,
+html[dir='rtl'] .ns-sidebar-dark .nav-link.ns-link,
+html[dir='rtl'] .ns-sidebar-dark .menu-link.ns-link {
+  padding: 9px 16px 9px 14px !important;
+  flex-direction: row;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-link .ns-icon {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-link.active::before {
+  left: auto !important;
+  right: 0 !important;
+  border-radius: 3px 0 0 3px !important;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .menu-title,
+html[dir='rtl'] .ns-sidebar-dark .ns-section-label {
+  padding: 18px 20px 5px 0 !important;
+  text-align: right;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-submenu {
+  border-left: none !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin-left: 0 !important;
+  margin-right: 10px !important;
+  padding-left: 0 !important;
+  padding-right: 4px !important;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .collapse.ms-3 {
+  margin-left: 0 !important;
+  margin-right: 8px !important;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .navbar-nav .menu-link.ns-link[data-bs-toggle='collapse']::after {
+  right: auto !important;
+  left: 12px !important;
+}
+
+/* RTL: rely on dir=rtl flex order — [chevron at inner edge] [avatar+text toward outer edge] */
+html[dir='rtl'] .ns-sidebar-dark .ns-user-btn {
+  flex-direction: row;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-user-btn > span.d-flex.align-items-center {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-user-btn .text-start {
+  text-align: right !important;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-dd-item {
+  flex-direction: row;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-dd-item i {
+  margin-right: 0 !important;
+  margin-left: 8px !important;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-user-dropdown {
+  right: 0 !important;
+  left: auto !important;
+}
+
+/* Logo row: mirror padding; fold icon reads as “collapse toward content” in RTL */
+html[dir='rtl'] .ns-sidebar-dark .ns-logo-box {
+  padding-left: 8px !important;
+  padding-right: 12px !important;
+}
+
+html[dir='rtl'] .ns-sidebar-dark .ns-collapse-btn i,
+html[dir='rtl'] .ns-mobile-menu-btn i {
+  transform: scaleX(-1);
+}
+
+@media (max-width: 767.98px) {
+  html[dir='rtl'] body.vertical-sidebar-enable .ns-sidebar-dark.app-menu {
+    box-shadow: -4px 0 32px rgba(0, 0, 0, 0.5) !important;
+  }
+}
+
+/* ── High-specificity Velzon override belt ──────────────────────────────── */
+html:is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark .app-menu,
+html:is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark {
+  background: #0F172A !important;
+  background-color: #0F172A !important;
+}
+
+html:is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark .navbar-nav .nav-link,
+html:is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark .navbar-nav .menu-link {
+  color: #94A3B8 !important;
+  background: transparent !important;
+}
+
+html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .ns-sidebar-dark,
+html:is([data-layout='vertical'], [data-layout='semibox'])[data-sidebar-size='sm'] .ns-sidebar-dark.app-menu {
+  background: #0F172A !important;
+  background-color: #0F172A !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEW ADDITIONS: Topbar removal, gaps, language switcher, collapse toggle
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Hide topbar completely (all screen sizes) ───────────────────────── */
+#page-topbar {
+  display: none !important;
+}
+
+/* Remove topbar height clearance from page-content */
+html:is([data-layout='vertical'], [data-layout='twocolumn']) .page-content {
+  padding-top: 1.5rem !important;
+}
+
+/* Mobile: add clearance for the floating menu button + notch */
+@media (max-width: 767.98px) {
+  /* Top band clears fixed menu btn; no horizontal “reserved” gutter on content */
+  html:is([data-layout='vertical'], [data-layout='twocolumn']) .page-content {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 3.35rem + 1.2rem) !important;
+  }
+
+  /* Full-width column: avoid Velzon sm-hover margin leaking on narrow screens */
+  html[data-layout='vertical'] .main-content,
+  html[data-layout='twocolumn'] .main-content {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100%;
+  }
+}
+
+/* ── 3. Gap between sidebar and main content ────────────────────────────── */
+/* Page background fills the 1rem gap between dark sidebar and light content */
+body {
+  background-color: #F0F2F5 !important;
+}
+
+@media (min-width: 768px) {
+  html[data-layout='vertical'] .main-content {
+    margin-left: calc(var(--vz-vertical-menu-width) + 1rem) !important;
+    transition: margin-left 0.22s ease;
+  }
+
+  html[data-layout='vertical'][data-sidebar-size='sm'] .main-content,
+  html[data-layout='vertical'][data-sidebar-size='sm-hover'] .main-content {
+    margin-left: calc(var(--vz-vertical-menu-width-sm, 70px) + 1rem) !important;
+  }
+}
+
+/* RTL gap */
+@media (min-width: 768px) {
+  html[dir='rtl'][data-layout='vertical'] .main-content {
+    margin-right: calc(var(--vz-vertical-menu-width) + 1rem) !important;
+    margin-left: 0 !important;
+  }
+
+  html[dir='rtl'][data-layout='vertical'][data-sidebar-size='sm'] .main-content,
+  html[dir='rtl'][data-layout='vertical'][data-sidebar-size='sm-hover'] .main-content {
+    margin-right: calc(var(--vz-vertical-menu-width-sm, 70px) + 1rem) !important;
+    margin-left: 0 !important;
+  }
+}
+
+/* ── 4. Sidebar collapse toggle button ──────────────────────────────────── */
+.ns-sidebar-dark .ns-logo-box {
+  justify-content: space-between !important;
+  padding-left: 12px !important;
+  padding-right: 8px !important;
+  gap: 6px;
+}
+
+.ns-sidebar-dark .ns-logo-link {
+  flex-shrink: 0;
+}
+
+.ns-collapse-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  color: #64748B !important;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  padding: 0;
+}
+
+.ns-collapse-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.ns-collapse-btn:hover {
+  background: rgba(245, 166, 35, 0.14) !important;
+  border-color: rgba(245, 166, 35, 0.35) !important;
+  color: #F5A623 !important;
+}
+
+/* Icon rail: show compact mark + collapse control (stacked) */
+[data-sidebar-size='sm'] .ns-sidebar-dark .ns-logo-link {
+  display: flex !important;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+}
+
+[data-sidebar-size='sm'] .ns-sidebar-dark .ns-logo-box {
+  flex-direction: column;
+  justify-content: center !important;
+  align-items: center;
+  gap: 6px;
+  height: auto !important;
+  min-height: 0;
+  padding: 2px 4px 6px !important;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+/* Same element has .navbar-brand-box — keep sm rail height from Velzon mobile rule */
+[data-sidebar-size='sm'] .ns-sidebar-dark .navbar-brand-box {
+  height: auto !important;
+  min-height: 0;
+}
+
+[data-sidebar-size='sm'] .ns-sidebar-dark .ns-collapse-btn {
+  width: 30px !important;
+  height: 30px !important;
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 14px !important;
+}
+
+/* RTL: flip fold/unfold arrow direction */
+html[dir='rtl'] .ns-collapse-btn i {
+  transform: scaleX(-1);
+}
+
+/* ── 5. Language switcher in sidebar ────────────────────────────────────── */
+.ns-lang-section {
+  margin: 12px 8px 8px;
+  padding: 10px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ns-lang-section-label {
+  display: block;
+  color: #475569;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.ns-lang-btns {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.ns-lang-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 6px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #64748B;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.ns-lang-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ns-lang-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #CBD5E1;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.ns-lang-btn.ns-lang-active {
+  background: rgba(245, 166, 35, 0.16) !important;
+  border-color: rgba(245, 166, 35, 0.4) !important;
+  color: #F5A623 !important;
+}
+
+.ns-lang-flag {
+  width: 20px !important;
+  height: 14px !important;
+  max-width: 20px !important;
+  max-height: 14px !important;
+  border-radius: 2px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+  vertical-align: middle;
+}
+
+/* Collapsed rail: stack flags (side-by-side clips in ~70px width) */
+[data-sidebar-size='sm'] .ns-lang-section {
+  margin: 8px 4px 6px;
+  padding: 6px 4px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+[data-sidebar-size='sm'] .ns-lang-section-label {
+  display: none !important;
+}
+
+[data-sidebar-size='sm'] .ns-lang-text {
+  display: none !important;
+}
+
+[data-sidebar-size='sm'] .ns-lang-btns {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
+[data-sidebar-size='sm'] .ns-lang-btn {
+  flex: 0 0 auto;
+  width: 32px;
+  min-width: 0;
+  max-width: 100%;
+  height: 26px;
+  padding: 2px 4px;
+  flex-direction: row;
+  gap: 0;
+  box-sizing: border-box;
+}
+
+[data-sidebar-size='sm'] .ns-lang-flag {
+  width: 20px;
+  height: 14px;
+  object-fit: cover;
+}
+
+/* ── 6. Mobile floating menu button ─────────────────────────────────────── */
+.ns-mobile-menu-btn {
+  position: fixed;
+  top: max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem));
+  left: max(0.5rem, calc(env(safe-area-inset-left, 0px) + 0.25rem));
+  z-index: 1050;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background: #0F172A !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #94A3B8 !important;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.14);
+  transition: background 0.18s ease, color 0.18s ease;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ns-mobile-menu-btn:hover {
+  background: #1E293B !important;
+  color: #F5A623 !important;
+}
+
+/* On desktop the mobile button is hidden via d-md-none, but also reinforce */
+@media (min-width: 768px) {
+  .ns-mobile-menu-btn {
+    display: none !important;
+  }
+}
+
+/* When mobile sidebar is open, hide the open button */
+body.vertical-sidebar-enable .ns-mobile-menu-btn {
+  display: none !important;
+}
+
+html[dir='rtl'] .ns-mobile-menu-btn {
+  left: auto;
+  right: max(0.5rem, calc(env(safe-area-inset-right, 0px) + 0.25rem));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Collapsed icon rail (sm): rebuild nav hover — Velzon’s flyout bridge is OFF
+   Velzon uses .nav-item:hover > a.menu-link { width: calc(200px + --vz-…); } so
+   the link is ~270px wide; flex centers the icon in 270px, but only ~70px of the
+   rail is visible — hover looks shifted/clipped. We force real rail width and
+   keep labels hidden (no flyout) with maximum specificity.
+   ═══════════════════════════════════════════════════════════════════════════ */
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav>.nav-item {
+  max-width: 100% !important;
+}
+
+/* Kill the wide “bridge” + restore normal hit target */
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav>.nav-item:hover>a.menu-link,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav>.nav-item:hover>a.nav-link {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  transform: none !important;
+  left: auto !important;
+  right: auto !important;
+  margin: 2px 0 !important;
+  padding: 11px 8px !important;
+  transition: background 0.2s ease, color 0.2s ease !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Velzon re-shows label text on .nav-item:hover — keep icon-only */
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav>.nav-item:hover>a.menu-link>span,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav>.nav-item:hover .nav-link>span {
+  display: none !important;
+  padding: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Hover / focus: centered pill in the real rail */
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link:hover:not(.active),
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link:focus-visible:not(.active) {
+  color: #F8FAFC !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+}
+
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link.active,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link.active:hover,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link.active:focus-visible {
+  color: #F5A623 !important;
+  background: rgba(245, 166, 35, 0.22) !important;
+  background-color: rgba(245, 166, 35, 0.22) !important;
+  box-shadow: none !important;
+}
+
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link:hover .ns-icon,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link:hover i.ns-icon,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link:hover:not(.active) i[class^='ri-'],
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link:hover:not(.active) i[class*=' ri-'] {
+  color: #FFFFFF !important;
+}
+
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link.active:hover,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link.active:focus-visible {
+  color: #FFFFFF !important;
+}
+
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link.active:hover .ns-icon,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link.active:hover i {
+  color: #FFFFFF !important;
+}
+
+/* Logout: keep danger tint in sm */
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link--logout:hover,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link--logout:focus-visible {
+  color: #FCA5A5 !important;
+  background: rgba(239, 68, 68, 0.18) !important;
+  background-color: rgba(239, 68, 68, 0.18) !important;
+}
+
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link--logout:hover .ns-icon,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .nav-link.ns-link--logout:hover i {
+  color: #FCA5A5 !important;
+}
+
+/* Left accent bar: hide in sm — centers icon without a clipped edge */
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark .ns-link.active::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Submenu rows inside expanded collapse: avoid any residual wide hover */
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .ns-submenu .nav-item:hover>a,
+html:is([data-layout='vertical'], [data-layout='semibox']):is([data-sidebar-size='sm'],
+  [data-sidebar-size='sm-hover'],
+  [data-sidebar-size='sm-hover-active']) .ns-sidebar-dark.app-menu.navbar-menu .navbar-nav .ns-submenu a.ns-sublink {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Mobile drawer (≤767.98px) — single close affordance, no desktop collapse chip
+   Readable width, backdrop blur, safe areas. Applies to all business pages.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767.98px) {
+
+  /* Off-canvas: fully hidden until body.vertical-sidebar-enable (Velzon + belt) */
+  html:is([data-layout='vertical'], [data-layout='semibox']) body:not(.vertical-sidebar-enable) .ns-sidebar-dark.app-menu.navbar-menu {
+    margin-left: -100% !important;
+    margin-right: 0 !important;
+  }
+
+  html[dir='rtl']:is([data-layout='vertical'], [data-layout='semibox']) body:not(.vertical-sidebar-enable) .ns-sidebar-dark.app-menu.navbar-menu {
+    margin-right: -100% !important;
+    margin-left: 0 !important;
+  }
+
+  html:is([data-layout='vertical'], [data-layout='semibox']) body.vertical-sidebar-enable .ns-sidebar-dark.app-menu.navbar-menu {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  html[dir='rtl']:is([data-layout='vertical'], [data-layout='semibox']) body.vertical-sidebar-enable .ns-sidebar-dark.app-menu.navbar-menu {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  /* Never show desktop “fold” control on phones — removes duplicate menu icon */
+  .ns-sidebar-dark .ns-collapse-btn {
+    display: none !important;
+  }
+
+  /* Full-viewport drawer when open */
+  html:is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    transition:
+      margin-left 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+      margin-right 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.32s ease !important;
+  }
+
+  html[dir='rtl']:is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu {
+    transition:
+      margin-right 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.32s ease !important;
+  }
+
+  body.vertical-sidebar-enable .ns-sidebar-dark.app-menu.navbar-menu {
+    box-shadow: 8px 0 36px rgba(0, 0, 0, 0.42) !important;
+  }
+
+  html[dir='rtl'] body.vertical-sidebar-enable .ns-sidebar-dark.app-menu.navbar-menu {
+    box-shadow: -8px 0 36px rgba(0, 0, 0, 0.42) !important;
+  }
+
+  /* Top strip: clear hierarchy — label + one close control */
+  .ns-sidebar-dark .sidebar-mobile-bar {
+    min-height: 3.35rem;
+    padding: 0.5rem 0.65rem 0.5rem 0.85rem;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 0.65rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .ns-sidebar-dark .sidebar-mobile-bar__label {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: start;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.14em !important;
+    line-height: 1.3;
+    color: #94a3b8 !important;
+  }
+
+  .ns-sidebar-dark .sidebar-mobile-close {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    min-width: 2.75rem;
+    border-radius: 0.75rem !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .ns-sidebar-dark .sidebar-mobile-close i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .ns-sidebar-dark .sidebar-mobile-close i::before {
+    display: block;
+    line-height: 1;
+  }
+
+  /* Logo row: breathing room below mobile bar */
+  .ns-sidebar-dark .navbar-brand-box.ns-logo-box {
+    padding: 0.4rem 0.75rem 0.5rem !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  .ns-sidebar-dark .ns-logo-img--expanded {
+    max-width: 72% !important;
+    height: auto !important;
+    max-height: 2.25rem;
+  }
+
+  /* Floating open control — aligned with shell gutter (~page-content-shell), top band */
+  .ns-mobile-menu-btn {
+    top: max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) !important;
+    left: max(0.5rem, calc(env(safe-area-inset-left, 0px) + 0.25rem)) !important;
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    border-radius: 0.75rem !important;
+    z-index: 1051;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.14) !important;
+  }
+
+  .ns-mobile-menu-btn i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+  }
+
+  html[dir='rtl'] .ns-mobile-menu-btn {
+    left: auto !important;
+    right: max(0.5rem, calc(env(safe-area-inset-right, 0px) + 0.25rem)) !important;
+  }
+
+  /* Backdrop: dim only — blur stacked above the drawer made the menu illegible */
+  .vertical-overlay {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: rgba(15, 23, 42, 0.52) !important;
+    transition: opacity 0.25s ease;
+  }
+
+  /* Align section headers with nav rows (same horizontal inset as .ns-link) */
+  .ns-sidebar-dark .menu-title,
+  .ns-sidebar-dark .ns-section-label {
+    padding: 14px 8px 6px 16px !important;
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+  }
+
+  html[dir='rtl'] .ns-sidebar-dark .menu-title,
+  html[dir='rtl'] .ns-sidebar-dark .ns-section-label {
+    padding: 14px 16px 6px 8px !important;
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+    text-align: right;
+  }
+
+  .ns-sidebar-dark .ns-link,
+  .ns-sidebar-dark .nav-link.ns-link,
+  .ns-sidebar-dark .menu-link.ns-link {
+    margin-top: 3px !important;
+    margin-bottom: 3px !important;
+  }
+
+  /* User card: allow longer names on narrow drawer */
+  .ns-sidebar-dark .ns-user-name {
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 767.98px) and (prefers-reduced-motion: reduce) {
+  html:is([data-layout='vertical'], [data-layout='semibox']) .ns-sidebar-dark.app-menu.navbar-menu {
+    transition: none !important;
+  }
+}

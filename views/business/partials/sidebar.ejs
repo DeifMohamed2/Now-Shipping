@@ -1,0 +1,277 @@
+<!-- ========== Business App Menu (Dark Navy Theme) ========== -->
+<% var BS = (typeof translation !== 'undefined' && translation.business && translation.business.shell) ? translation.business.shell : {}; %>
+<% var __hl = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en'; %>
+
+<div class="app-menu navbar-menu ns-sidebar-dark">
+  <div class="sidebar-mobile-bar" role="presentation">
+    <span class="sidebar-mobile-bar__label text-uppercase"><%= BS.menu || 'Menu' %></span>
+    <button type="button" class="sidebar-mobile-close" id="sidebar-mobile-close" aria-label="<%= BS.closeMenu || 'Close menu' %>">
+      <i class="ri-close-line" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <!-- LOGO + Collapse Toggle -->
+  <div class="navbar-brand-box ns-logo-box">
+    <a href="/index" class="logo ns-logo-link">
+      <div class="ns-logo-container">
+        <img src="/assets/rImages/app_inside_logo.png" alt="Now Shipping" class="ns-logo-img ns-logo-img--expanded" width="200" height="48" loading="eager" decoding="async">
+        <img src="/assets/rImages/mainlogospining.png" alt="" class="ns-logo-img ns-logo-img--collapsed" width="40" height="40" loading="eager" decoding="async" aria-hidden="true">
+      </div>
+    </a>
+    <button class="ns-collapse-btn d-none d-md-flex" id="nsSidebarToggle" aria-label="<%= BS.toggleNav || 'Toggle sidebar' %>" title="<%= BS.toggleNav || 'Toggle sidebar' %>">
+      <i id="nsSidebarToggleIcon" class="ri-menu-fold-line"></i>
+    </button>
+  </div>
+
+  <!-- User Profile Dropdown -->
+  <div class="dropdown ns-user-card m-2 rounded">
+    <button type="button" class="btn w-100 d-flex align-items-center ns-user-btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <span class="d-flex align-items-center gap-2">
+        <%
+          var sbProfileFallback = '/assets/rImages/logo.png';
+          var sbUserName = BS.userFallback || 'User';
+          var sbUserSub = BS.roleBusiness || 'Business';
+          var sbUserPhoto = sbProfileFallback;
+          if (typeof userData !== 'undefined' && userData) {
+            sbUserName = userData.brandInfo?.brandName || userData.name || 'User';
+            sbUserSub = userData.role === 'business' ? (BS.roleBusiness || 'Business') : (userData.role || (BS.roleAccount || 'Account'));
+            sbUserPhoto = (userData.profileImage && String(userData.profileImage).trim()) ? String(userData.profileImage).trim() : sbProfileFallback;
+          } else if (typeof user !== 'undefined' && user) {
+            sbUserName = user.brandInfo?.brandName || user.name || 'User';
+            sbUserSub = user.role === 'business' ? (BS.roleBusiness || 'Business') : (user.role || (BS.roleAccount || 'Account'));
+            sbUserPhoto = (user.profileImage && String(user.profileImage).trim()) ? String(user.profileImage).trim() : sbProfileFallback;
+          }
+          var sbProfileIsFallback = sbUserPhoto === sbProfileFallback;
+        %>
+        <img class="rounded-circle ns-user-avatar<%= sbProfileIsFallback ? ' profile-img--fallback' : '' %>"
+             src="<%= sbUserPhoto %>"
+             alt="<%= sbUserName %>"
+             onerror="this.onerror=null;this.src='<%= sbProfileFallback %>';this.classList.add('profile-img--fallback');">
+        <span class="text-start">
+          <span class="d-block fw-semibold ns-user-name"><%= sbUserName %></span>
+          <span class="d-block ns-user-role">
+            <i class="ri ri-circle-fill fs-10 text-success align-baseline"></i>
+            <span class="align-middle<%= __hl === 'ar' ? '' : ' text-capitalize' %>"><%= sbUserSub %></span>
+          </span>
+        </span>
+      </span>
+      <i class="ri-chevron-down-line ns-chevron"></i>
+    </button>
+    <div class="dropdown-menu dropdown-menu-end border-0 ns-user-dropdown">
+      <div class="dropdown-header px-3 py-2 ns-dd-header">
+        <span><%= BS.welcome || 'Welcome!' %></span>
+      </div>
+      <div class="dropdown-divider my-1 ns-dd-divider"></div>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 ns-dd-item" href="/business/settings">
+        <i class="ri-user-line fs-16 align-middle me-2 ns-dd-icon"></i>
+        <span class="align-middle"><%= BS.profileSettings || 'Profile Settings' %></span>
+      </a>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 ns-dd-item" href="/business/dashboard">
+        <i class="ri-dashboard-line fs-16 align-middle me-2 ns-dd-icon"></i>
+        <span class="align-middle"><%= BS.dashboard || 'Dashboard' %></span>
+      </a>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 ns-dd-item" href="/business/orders">
+        <i class="ri-shopping-cart-line fs-16 align-middle me-2 ns-dd-icon"></i>
+        <span class="align-middle"><%= BS.myOrders || 'My Orders' %></span>
+      </a>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 ns-dd-item" href="/business/wallet">
+        <i class="ri-wallet-line fs-16 align-middle me-2 ns-dd-icon"></i>
+        <span class="align-middle"><%= BS.myWallet || 'My Wallet' %></span>
+      </a>
+      <div class="dropdown-divider my-2 ns-dd-divider"></div>
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 ns-dd-item ns-dd-item--danger" href="/business/logout">
+        <i class="ri-logout-box-r-line fs-16 align-middle me-2"></i>
+        <span class="align-middle fw-semibold"><%= BS.logoutNav || 'Logout' %></span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Scrollable Nav -->
+  <div id="scrollbar">
+    <div class="container-fluid">
+      <div id="two-column-menu"></div>
+      <ul class="navbar-nav" id="navbar-nav">
+
+        <!-- Dashboard Section -->
+        <li class="menu-title ns-section-label"><span><%= BS.sectionDashboard || 'Dashboard' %></span></li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link ns-link" href="/business/dashboard" role="button">
+            <i class="ri-dashboard-2-line ns-icon"></i>
+            <span><%= BS.dashboard || 'Dashboard' %></span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link ns-link" href="/business/orders" role="button">
+            <i class="ri-shopping-cart-line ns-icon"></i>
+            <span><%= BS.myOrders || 'Orders' %></span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link ns-link" href="/business/pickups" role="button">
+            <i class="ri-truck-line ns-icon"></i>
+            <span><%= BS.pickup || 'Pickup' %></span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link ns-link" href="/business/wallet" role="button">
+            <i class="ri-wallet-line ns-icon"></i>
+            <span><%= BS.myWallet || 'My Wallet' %></span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link ns-link" href="#sidebarShop" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarShop">
+            <i class="ri-store-2-line ns-icon"></i>
+            <span><%= BS.shop || 'Shop' %></span>
+          </a>
+          <div class="collapse ms-3" id="sidebarShop">
+            <ul class="nav flex-column ns-submenu">
+              <li class="nav-item">
+                <a class="nav-link ns-link ns-sublink" href="/business/shop">
+                  <i class="ri-shopping-basket-line ns-icon"></i>
+                  <span><%= BS.browseShop || 'Browse Shop' %></span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link ns-link ns-sublink" href="/business/shop/orders">
+                  <i class="ri-file-list-3-line ns-icon"></i>
+                  <span><%= BS.myShopOrders || 'My Shop Orders' %></span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link ns-link" href="/business/tickets" role="button">
+            <i class="ri-ticket-line ns-icon"></i>
+            <span><%= BS.tickets || 'Tickets' %></span>
+          </a>
+        </li>
+
+        <!-- Account Section -->
+        <li class="menu-title ns-section-label"><span><%= BS.account || 'Account' %></span></li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link ns-link" href="/business/settings" role="button">
+            <i class="ri-settings-3-line ns-icon"></i>
+            <span><%= BS.settings || 'Settings' %></span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link menu-link ns-link ns-link--logout" href="/business/logout" role="button">
+            <i class="ri-logout-box-line ns-icon"></i>
+            <span><%= BS.logOut || 'Log Out' %></span>
+          </a>
+        </li>
+
+      </ul>
+
+      <!-- ── Language Switcher ─────────────────────────────────────── -->
+      <div class="ns-lang-section">
+        <span class="ns-lang-section-label"><%= BS.language || 'Language' %></span>
+        <div class="ns-lang-btns">
+          <a href="?lang=en" class="ns-lang-btn<%= __hl === 'en' ? ' ns-lang-active' : '' %>" title="English">
+            <img src="/assets/images/flags/us.svg" alt="" width="20" height="14" class="ns-lang-flag" decoding="async">
+            <span class="ns-lang-text">English</span>
+          </a>
+          <a href="?lang=ar" class="ns-lang-btn<%= __hl === 'ar' ? ' ns-lang-active' : '' %>" title="العربية">
+            <img src="/assets/images/flags/ae.svg" alt="" width="20" height="14" class="ns-lang-flag" decoding="async">
+            <span class="ns-lang-text">العربية</span>
+          </a>
+        </div>
+      </div>
+      <!-- ────────────────────────────────────────────────────────────── -->
+
+    </div>
+  </div>
+</div>
+<!-- Left Sidebar End -->
+
+<!-- Vertical Overlay (mobile backdrop) -->
+<div class="vertical-overlay"></div>
+
+<!-- Mobile Menu Button (shown when topbar is hidden) -->
+<button class="ns-mobile-menu-btn d-md-none" id="nsMobileMenuBtn" aria-label="<%= BS.openMenu || 'Open menu' %>">
+  <i class="ri-menu-line"></i>
+</button>
+
+<script>
+(function () {
+  /* ── Sidebar collapse toggle ──────────────────────────────────── */
+  function initSidebarToggle() {
+    var btn   = document.getElementById('nsSidebarToggle');
+    var icon  = document.getElementById('nsSidebarToggleIcon');
+    var htmlEl = document.documentElement;
+
+    function getSidebarSize() {
+      return htmlEl.getAttribute('data-sidebar-size') || 'lg';
+    }
+
+    function updateToggleIcon() {
+      if (!icon) return;
+      var size = getSidebarSize();
+      icon.className = (size === 'sm' || size === 'sm-hover')
+        ? 'ri-menu-unfold-line'
+        : 'ri-menu-fold-line';
+    }
+
+    if (btn) {
+      btn.addEventListener('click', function () {
+        /* Delegate to existing Velzon hamburger so all its state logic runs */
+        var hamburger = document.getElementById('topnav-hamburger-icon');
+        if (hamburger) {
+          hamburger.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        } else {
+          /* Fallback: toggle directly */
+          htmlEl.setAttribute(
+            'data-sidebar-size',
+            getSidebarSize() === 'sm' ? 'lg' : 'sm'
+          );
+        }
+        setTimeout(updateToggleIcon, 80);
+      });
+    }
+
+    /* Keep icon in sync with external changes (resize, Velzon JS) */
+    var mo = new MutationObserver(updateToggleIcon);
+    mo.observe(htmlEl, { attributes: true, attributeFilter: ['data-sidebar-size'] });
+
+    updateToggleIcon();
+  }
+
+  /* ── Mobile menu open button ──────────────────────────────────── */
+  function initMobileMenuBtn() {
+    var btn = document.getElementById('nsMobileMenuBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var hamburger = document.getElementById('topnav-hamburger-icon');
+      if (hamburger) {
+        hamburger.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      } else {
+        document.body.classList.toggle('vertical-sidebar-enable');
+      }
+    });
+    /* Hide the button while sidebar drawer is open */
+    var mo = new MutationObserver(function () {
+      btn.style.display = document.body.classList.contains('vertical-sidebar-enable') ? 'none' : '';
+    });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      initSidebarToggle();
+      initMobileMenuBtn();
+    });
+  } else {
+    initSidebarToggle();
+    initMobileMenuBtn();
+  }
+})();
+</script>

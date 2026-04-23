@@ -167,7 +167,7 @@
       statusText = 'Canceled';
     } else if (status === 'rejected') {
       badgeClass = 'bg-danger-subtle text-danger';
-      statusText = 'Rejected';
+      statusText = 'Customer refused';
     } else if (status === 'returned') {
       badgeClass = 'bg-danger-subtle text-danger';
       statusText = 'Returned';
@@ -753,12 +753,12 @@
   async function cancelOrder(orderId) {
     Swal.fire({
       title: 'Cancel this order?',
-      text: 'The order will be marked as canceled.',
+      html: '<p class="text-muted mb-0">The order may be marked <strong>canceled</strong> or moved into the <strong>return</strong> flow (e.g. return to warehouse), depending on pickup and delivery state.</p>',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, cancel it',
+      confirmButtonText: 'Yes, proceed',
     }).then(async (result) => {
       if (!result.isConfirmed) return;
       try {
@@ -766,22 +766,22 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
+        const data = await response.json().catch(() => ({}));
 
         if (response.ok) {
           Swal.fire({
-            title: 'Canceled',
-            text: 'Order has been canceled.',
+            title: 'Updated',
+            text: data.message || 'Order has been updated.',
             icon: 'success',
             confirmButtonText: 'OK',
           }).then(() => {
             fetchOrders(getActiveOrderType(), currentPageAdmin);
           });
         } else {
-          const err = await response.json().catch(() => ({}));
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: err.error || 'Could not cancel order.',
+            text: data.error || 'Could not cancel order.',
           });
         }
       } catch (error) {
@@ -805,10 +805,10 @@
     }
     Swal.fire({
       title: 'Cancel selected orders?',
-      text: `${checked.length} order(s) will be marked as canceled.`,
+      html: `<p class="text-muted mb-0">${checked.length} order(s): each may be canceled or moved into the <strong>return</strong> flow depending on status.</p>`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Yes, cancel them',
+      confirmButtonText: 'Yes, proceed',
     }).then(async (result) => {
       if (!result.isConfirmed) return;
       let ok = 0;
@@ -824,7 +824,9 @@
       Swal.fire({
         icon: ok ? 'success' : 'warning',
         title: ok ? 'Done' : 'Partial failure',
-        text: ok ? `${ok} order(s) canceled.` : 'No orders were canceled.',
+        text: ok
+          ? `${ok} order(s) updated (canceled or moved to return as applicable).`
+          : 'No orders were updated.',
       }).then(() => fetchOrders(getActiveOrderType(), 1));
     });
   }

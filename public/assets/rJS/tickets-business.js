@@ -22,43 +22,94 @@
   let attachedImage = null;
   let currentTypeFilter = 'all';
   let currentTicketStatus = null;
-  
-  // Local upload configuration
+
   const UPLOAD_URL = '/api/v1/upload/single';
+
+  function escAttr(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  }
+
+  function setRootView(view) {
+    const root = document.getElementById('ticketsProRoot');
+    if (root) root.setAttribute('data-tickets-view', view);
+  }
+
+  function updatePillCounts(counts) {
+    if (!counts) return;
+    document.querySelectorAll('[data-pill-count]').forEach((el) => {
+      const k = el.getAttribute('data-pill-count');
+      const n =
+        k === 'all' ? counts.all : counts[k] != null ? counts[k] : 0;
+      el.textContent = n > 0 ? ` ${n}` : '';
+    });
+  }
+
+  function showCreatePanel() {
+    const createPanel = document.getElementById('createTicketPanel');
+    const emptyState = document.getElementById('emptyState');
+    const chatContainer = document.getElementById('chatContainer');
+    if (createPanel) {
+      createPanel.classList.remove('hidden');
+      createPanel.setAttribute('aria-hidden', 'false');
+    }
+    if (emptyState) emptyState.classList.add('hidden');
+    if (chatContainer) {
+      chatContainer.classList.add('hidden');
+      chatContainer.setAttribute('aria-hidden', 'true');
+    }
+    setRootView('detail');
+  }
+
+  function hideCreatePanel() {
+    const createPanel = document.getElementById('createTicketPanel');
+    if (createPanel) {
+      createPanel.classList.add('hidden');
+      createPanel.setAttribute('aria-hidden', 'true');
+    }
+    if (currentTicketId) {
+      document.getElementById('emptyState')?.classList.add('hidden');
+      document.getElementById('chatContainer')?.classList.remove('hidden');
+      document
+        .getElementById('chatContainer')
+        ?.setAttribute('aria-hidden', 'false');
+      setRootView('detail');
+    } else {
+      document.getElementById('emptyState')?.classList.remove('hidden');
+      document.getElementById('chatContainer')?.classList.add('hidden');
+      document
+        .getElementById('chatContainer')
+        ?.setAttribute('aria-hidden', 'true');
+      setRootView('list');
+    }
+  }
+
+  function updateDescriptionCount() {
+    const ta = document.getElementById('ticketDescription');
+    const nEl = document.getElementById('ticketDescriptionCount');
+    if (ta && nEl) {
+      nEl.textContent = `${ta.value.length}/2000`;
+    }
+  }
 
   // Initialize Socket.IO connection
   function initSocket() {
-    // For web-based tickets, use businessPanel authentication
     socket = io({
       auth: {
-        businessPanel: true, // Similar to adminPanel, authenticated via cookie/session
+        businessPanel: true,
       },
     });
 
-    // Socket event handlers
-    socket.on('connect', () => {
-      console.log('Socket connected successfully');
-    });
+    socket.on('connect', () => {});
 
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected');
-    });
+    socket.on('disconnect', () => {});
 
     socket.on('new_ticket_message', (data) => {
-      console.log('Received new_ticket_message event:', data);
       if (data.ticketId === currentTicketId) {
-        console.log('Message is for current ticket, appending to UI');
         appendMessage(data.message);
         scrollToBottom();
-      } else {
-        console.log(
-          'Message is for different ticket:',
-          data.ticketId,
-          'current:',
-          currentTicketId
-        );
       }
-      loadTickets(); // Refresh ticket list
+      loadTickets();
     });
 
     socket.on('ticket_updated', (data) => {
@@ -81,30 +132,26 @@
     });
   }
 
-  // Helper function to get cookie
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-  }
-
   // Load tickets from API
   async function loadTickets() {
     try {
       const params = new URLSearchParams();
+      params.append('limit', '200');
       if (currentFilter !== 'all') {
         params.append('status', currentFilter);
       }
       if (currentTypeFilter !== 'all') params.append('ticketType', currentTypeFilter);
 
       const response = await fetch(`/api/v1/tickets?${params}`, {
-        credentials: 'include', // Send cookies with request
+        credentials: 'include',
       });
       const data = await response.json();
 
       if (data.success) {
         tickets = data.tickets;
+        if (data.statusCounts) {
+          updatePillCounts(data.statusCounts);
+        }
         applyFilters();
       }
     } catch (error) {
@@ -113,13 +160,11 @@
     }
   }
 
-  // Apply all filters (search, type)
   function applyFilters() {
     const searchQuery = document.getElementById('searchTickets')?.value.toLowerCase() || '';
-    
+
     let filtered = tickets;
 
-    // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(
         (ticket) =>
@@ -133,11 +178,15 @@
     renderTickets(filtered);
   }
 
+  function getStatusPillClass(status) {
+    if (!status) return 'tk-pill';
+    return 'tk-pill tk-pill--' + String(status);
+  }
+
   // Render ticket list
   function renderTickets(ticketsToRender) {
     const ticketList = document.getElementById('ticketList');
 
-    // Update ticket count
     const countEl = document.getElementById('ticketCount');
     if (countEl) {
       countEl.textContent = ticketsToRender.length;
@@ -145,9 +194,9 @@
 
     if (ticketsToRender.length === 0) {
       ticketList.innerHTML = `
-        <div class="text-center p-4">
-          <i class="ri-inbox-line display-4 text-muted"></i>
-          <p class="text-muted mt-2">${__NST.noTicketsFound || 'No tickets found'}</p>
+        <div class="tickets-pro__list-empty">
+          <i class="ri-search-line" aria-hidden="true"></i>
+          <p class="mb-0">${__NST.noTicketsFound || 'No tickets found'}</p>
         </div>
       `;
       return;
@@ -157,39 +206,48 @@
       .map((ticket) => {
         const isActive = ticket._id === currentTicketId;
         const hasUnread = ticket.unreadCountBusiness > 0;
-        const statusClass = getStatusBadgeClass(ticket.status);
+        const statusPill = getStatusPillClass(ticket.status);
+        const desc = (ticket.description || '').replace(/\s+/g, ' ');
 
         return `
-        <div class="ticket-item p-2 border-bottom ${
-          isActive ? 'active bg-light' : ''
-        }" 
-             data-ticket-id="${ticket._id}" 
-             style="cursor: pointer;">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-              <small class="text-muted">#${ticket.ticketNumber}</small>
+        <div class="ticket-item tickets-pro__card ${
+          isActive ? 'is-active' : ''
+        }"
+             data-ticket-id="${ticket._id}">
+          <div class="tickets-pro__card-top">
+            <div class="tickets-pro__card-id">
+              <span>#${escapeHtml(ticket.ticketNumber)}</span>
               ${
-                hasUnread ? `<span class="badge bg-danger ms-2">${__NST.newBadge || 'New'}</span>` : ''
+                hasUnread
+                  ? `<span class="tickets-pro__unread-dot" title="${escapeHtml(
+                      __NST.newBadge || 'New'
+                    )}"></span>`
+                  : ''
               }
             </div>
-            <span class="badge ${statusClass}">${ticket.status}</span>
+            <span class="${statusPill}">${escapeHtml(
+          formatStatusLabel(ticket.status)
+        )}</span>
           </div>
-          <h6 class="mb-1">${escapeHtml(ticket.subject)}</h6>
-          <p class="text-muted small mb-2">${escapeHtml(
-            ticket.description
-          ).substring(0, 80)}...</p>
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="badge tickets-type-badge badge-sm">${formatTicketType(ticket.ticketType)}</span>
-          </div>
-          <div class="d-flex justify-content-between align-items-center">
-            <small class="text-muted">
-              <i class="ri-time-line"></i> ${formatDate(
-                ticket.lastMessageAt || ticket.createdAt
-              )}
-            </small>
+          <h3 class="tickets-pro__card-title">${escapeHtml(ticket.subject)}</h3>
+          <p class="tickets-pro__card-preview">${escapeHtml(
+            desc.length > 100 ? desc.substring(0, 100) + '…' : desc
+          )}</p>
+          <div class="tickets-pro__card-meta">
+            <span>
+              <i class="ri-price-tag-3-line" aria-hidden="true"></i>
+              ${escapeHtml(formatTicketType(ticket.ticketType))}
+            </span>
+            <span>
+              <i class="ri-time-line" aria-hidden="true"></i> ${formatDate(
+            ticket.lastMessageAt || ticket.createdAt
+          )}
+            </span>
             ${
               ticket.relatedOrderNumber
-                ? `<small class="text-muted"><i class="ri-shopping-bag-line"></i> ${ticket.relatedOrderNumber}</small>`
+                ? `<span><i class="ri-shopping-bag-line" aria-hidden="true"></i> ${escapeHtml(
+                    ticket.relatedOrderNumber
+                  )}</span>`
                 : ''
             }
           </div>
@@ -198,7 +256,6 @@
       })
       .join('');
 
-    // Add click handlers
     document.querySelectorAll('.ticket-item').forEach((item) => {
       item.addEventListener('click', function () {
         openTicket(this.dataset.ticketId);
@@ -206,20 +263,25 @@
     });
   }
 
-  // Open ticket and load messages
   async function openTicket(ticketId) {
     currentTicketId = ticketId;
 
-    // Update active state in ticket list
-    document.querySelectorAll('.ticket-item').forEach((item) => {
-      item.classList.remove('active', 'bg-light');
-    });
-    const activeItem = document.querySelector(`[data-ticket-id="${ticketId}"]`);
-    if (activeItem) {
-      activeItem.classList.add('active', 'bg-light');
+    const createPanel = document.getElementById('createTicketPanel');
+    if (createPanel) {
+      createPanel.classList.add('hidden');
+      createPanel.setAttribute('aria-hidden', 'true');
     }
 
-    // Hide empty state and show chat container
+    document.querySelectorAll('.ticket-item').forEach((item) => {
+      item.classList.remove('is-active');
+    });
+    const activeItem = document.querySelector(
+      `[data-ticket-id="${String(ticketId).replace(/"/g, '')}"]`
+    );
+    if (activeItem) {
+      activeItem.classList.add('is-active');
+    }
+
     const emptyState = document.getElementById('emptyState');
     const chatContainer = document.getElementById('chatContainer');
 
@@ -228,29 +290,25 @@
     }
     if (chatContainer) {
       chatContainer.classList.remove('hidden');
+      chatContainer.setAttribute('aria-hidden', 'false');
     }
 
-    // Clear previous messages
+    setRootView('detail');
+
     const chatMessages = document.getElementById('chatMessages');
     if (chatMessages) {
       chatMessages.innerHTML = '';
     }
 
-    // Join socket room
     if (socket && socket.connected) {
-      console.log('Joining ticket room:', ticketId);
       socket.emit('join_ticket', { ticketId });
       socket.emit('mark_messages_read', { ticketId });
-    } else {
-      console.log('Socket not connected, cannot join room');
     }
 
-    // Load data
     await loadTicketDetails(ticketId);
     await loadMessages(ticketId);
   }
 
-  // Load ticket details
   async function loadTicketDetails(ticketId) {
     try {
       const response = await fetch(`/api/v1/tickets/${ticketId}`, {
@@ -260,33 +318,34 @@
 
       if (data.success) {
         const ticket = data.ticket;
-        currentTicketStatus = ticket.status; // Store current status
-        document.getElementById(
-          'chatTitle'
-        ).textContent = `#${ticket.ticketNumber} - ${ticket.subject}`;
+        currentTicketStatus = ticket.status;
+        const titlePrefix = __NST.chatTitlePrefix || 'Ticket';
+        document.getElementById('chatTitle').textContent = `${titlePrefix} #${ticket.ticketNumber} - ${ticket.subject}`;
+
+        const st = getStatusPillClass(ticket.status);
+
         document.getElementById('chatInfo').innerHTML = `
-          <span class="badge ${getStatusBadgeClass(ticket.status)}">${
-          ticket.status
-        }</span>
-          <span class="text-muted ms-2">${formatTicketType(
-            ticket.ticketType
+          <span class="${st}">${escapeHtml(formatStatusLabel(ticket.status))}</span>
+          <span class="tk-chip tk-chip--muted">${escapeHtml(
+            formatTicketType(ticket.ticketType)
           )}</span>
           ${
             ticket.relatedOrderNumber
-              ? `<span class="text-muted ms-2">${__NST.orderLabel || 'Order'}: ${ticket.relatedOrderNumber}</span>`
+              ? `<span class="tk-chip tk-chip--muted"><i class="ri-shopping-bag-line" aria-hidden="true"></i> ${__NST.orderLabel || 'Order'}: ${escapeHtml(
+                  ticket.relatedOrderNumber
+                )}</span>`
               : ''
           }
         `;
-        
-        // Enable/disable send button based on status
+
         updateSendButtonState(ticket.status);
+        updateRateUI(ticket);
       }
     } catch (error) {
       console.error('Error loading ticket details:', error);
     }
   }
 
-  // Load messages
   async function loadMessages(ticketId) {
     try {
       const response = await fetch(`/api/v1/tickets/${ticketId}/messages`, {
@@ -309,7 +368,6 @@
     }
   }
 
-  // Append message to chat
   function appendMessage(message) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
@@ -317,60 +375,72 @@
     const isOutgoing = message.senderType === 'business';
     const isSystem = message.senderType === 'system';
 
-    messageDiv.className = `mb-3 ${isOutgoing ? 'text-end' : ''}`;
-
     if (isSystem) {
-      messageDiv.innerHTML = `
-        <div class="text-center">
-          <small class="badge bg-warning text-dark">${escapeHtml(
-            message.content
-          )}</small>
-        </div>
-      `;
+      messageDiv.className = 'tickets-pro__msg-system';
+      messageDiv.innerHTML = `<span>${escapeHtml(message.content)}</span>`;
     } else {
       const initials = message.senderName
         ? message.senderName.substring(0, 2).toUpperCase()
         : '??';
 
       const hasImage = message.attachments && message.attachments.length > 0;
-      const imageUrl = hasImage ? (message.attachments[0].url || message.attachmentUrl || message.imageUrl) : null;
-      
-      messageDiv.innerHTML = `
-        <div class="d-inline-block ${
-          isOutgoing ? 'text-end' : 'text-start'
-        }" style="max-width: 70%;">
-          ${
-            !isOutgoing
-              ? `<small class="text-muted">${escapeHtml(
-                  message.senderName
-                )}</small>`
-              : ''
-          }
-          <div class="card ${
-            isOutgoing ? 'bg-primary text-white' : 'bg-light'
-          } mb-1">
-            <div class="card-body p-2">
-              ${hasImage && imageUrl ? `
-                <div class="mb-2">
-                  <img src="${imageUrl}" 
-                       alt="Attachment" 
-                       class="img-fluid rounded"
-                       style="max-width: 300px; cursor: pointer;"
-                       onclick="window.open('${imageUrl}', '_blank')">
-                </div>
-              ` : ''}
-              ${message.content ? `<p class="mb-0">${escapeHtml(message.content)}</p>` : ''}
+      const imageUrl = hasImage
+        ? message.attachments[0].url || message.attachmentUrl || message.imageUrl
+        : null;
+
+      const textHtml = message.content
+        ? `<p class="mb-0">${escapeHtml(message.content)}</p>`
+        : '';
+      const u = escAttr(imageUrl);
+      const imgHtml =
+        hasImage && imageUrl
+          ? `<div class="mb-2">
+            <a href="${u}" target="_blank" rel="noopener noreferrer" class="d-inline-block">
+              <img src="${u}" alt="${escapeHtml(
+            __NST.attachmentAlt || 'Attachment'
+          )}" class="img-fluid rounded" style="max-width: 280px;">
+            </a>
+          </div>`
+          : '';
+
+      if (isOutgoing) {
+        messageDiv.className = 'tickets-pro__msg-row tickets-pro__msg-row--out';
+        messageDiv.innerHTML = `
+          <div class="tickets-pro__msg-stack">
+            <div class="tickets-pro__bubble tickets-pro__bubble--out">
+              ${imgHtml}
+              ${textHtml}
             </div>
+            <span class="tickets-pro__msg-time">${formatTime(
+              message.createdAt
+            )}</span>
           </div>
-          <small class="text-muted">${formatTime(message.createdAt)}</small>
-        </div>
-      `;
+        `;
+      } else {
+        messageDiv.className = 'tickets-pro__msg-row tickets-pro__msg-row--in';
+        messageDiv.innerHTML = `
+          <div class="tickets-pro__msg-av" aria-hidden="true">${escapeHtml(
+            initials
+          )}</div>
+          <div class="tickets-pro__msg-stack">
+            <span class="tickets-pro__msg-name">${escapeHtml(
+              message.senderName || ''
+            )}</span>
+            <div class="tickets-pro__bubble tickets-pro__bubble--in">
+              ${imgHtml}
+              ${textHtml}
+            </div>
+            <span class="tickets-pro__msg-time">${formatTime(
+              message.createdAt
+            )}</span>
+          </div>
+        `;
+      }
     }
 
     chatMessages.appendChild(messageDiv);
   }
 
-  // Upload image to local storage
   async function uploadImageToCloudinary(file) {
     return new Promise((resolve, reject) => {
       const formData = new FormData();
@@ -378,7 +448,7 @@
       formData.append('folder', 'tickets');
 
       const xhr = new XMLHttpRequest();
-      
+
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           const percentComplete = (e.loaded / e.total) * 100;
@@ -386,7 +456,7 @@
         }
       };
 
-      xhr.onload = function() {
+      xhr.onload = function () {
         if (xhr.status >= 200 && xhr.status < 300) {
           const response = JSON.parse(xhr.responseText);
           updateUploadProgress(100);
@@ -399,7 +469,7 @@
         }
       };
 
-      xhr.onerror = function() {
+      xhr.onerror = function () {
         reject(new Error('Upload failed'));
       };
 
@@ -408,16 +478,14 @@
     });
   }
 
-  // Update upload progress
   function updateUploadProgress(percent) {
     const progressBars = document.querySelectorAll('.upload-progress-bar');
-    progressBars.forEach(bar => {
+    progressBars.forEach((bar) => {
       bar.style.width = percent + '%';
       bar.style.display = percent > 0 && percent < 100 ? 'block' : 'none';
     });
   }
 
-  // Handle image attachment
   function handleImageAttachment(file) {
     if (!file || !file.type.startsWith('image/')) {
       showToast(__NST.invalidImageFile || 'Please select a valid image file', 'error');
@@ -426,15 +494,14 @@
 
     attachedImage = file;
 
-    // Show preview
     const preview = document.getElementById('attachmentPreview');
     const reader = new FileReader();
-    
-    reader.onload = function(e) {
+
+    reader.onload = function (e) {
       const previewItem = document.createElement('div');
       previewItem.className = 'attachment-preview-item';
       previewItem.innerHTML = `
-        <img src="${e.target.result}" alt="Preview">
+        <img src="${e.target.result}" alt="${escapeHtml(__NST.imagePreviewAlt || 'Preview')}">
         <div class="remove-attachment" onclick="removeAttachment()">
           <i class="ri-close-line"></i>
         </div>
@@ -447,19 +514,18 @@
     reader.readAsDataURL(file);
   }
 
-  // Remove attachment
-  window.removeAttachment = function() {
+  window.removeAttachment = function () {
     clearAttachment();
   };
 
-  // Clear attachment
   function clearAttachment() {
     attachedImage = null;
-    document.getElementById('attachmentPreview').innerHTML = '';
-    document.getElementById('imageInput').value = '';
+    const prev = document.getElementById('attachmentPreview');
+    if (prev) prev.innerHTML = '';
+    const inp = document.getElementById('imageInput');
+    if (inp) inp.value = '';
   }
 
-  // Send message
   async function sendMessage() {
     const input = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
@@ -468,19 +534,20 @@
     if (!content && !attachedImage) return;
     if (!currentTicketId) return;
 
-    // Check if ticket is closed or resolved
     if (currentTicketStatus === 'closed' || currentTicketStatus === 'resolved') {
-      showToast(__NST.cannotSendClosed || 'Cannot send messages to closed or resolved tickets', 'error');
+      showToast(
+        __NST.cannotSendClosed ||
+          'Cannot send messages to closed or resolved tickets',
+        'error'
+      );
       return;
     }
 
-    // Disable send button and show loading
     const originalBtnHtml = sendBtn.innerHTML;
     sendBtn.disabled = true;
     sendBtn.innerHTML = '<i class="ri-loader-4-line animate-spin"></i>';
 
     try {
-      // If there's an attached image, upload it first
       let imageUrl = null;
       if (attachedImage) {
         try {
@@ -488,7 +555,10 @@
           clearAttachment();
         } catch (uploadError) {
           console.error('Upload failed:', uploadError);
-          showToast(__NST.uploadFailed || 'Failed to upload image. Please try again.', 'error');
+          showToast(
+            __NST.uploadFailed || 'Failed to upload image. Please try again.',
+            'error'
+          );
           sendBtn.disabled = false;
           sendBtn.innerHTML = originalBtnHtml;
           return;
@@ -501,41 +571,40 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ 
-            content, 
+          body: JSON.stringify({
+            content,
             messageType: imageUrl ? 'image' : 'text',
-            attachmentUrl: imageUrl
+            attachmentUrl: imageUrl,
           }),
         }
       );
 
       const data = await response.json();
 
-      if (data.success) {
-        input.value = '';
-        // Message will be added via socket event (new_ticket_message)
-        // No need to append here as socket broadcasts to all users including sender
+      if (!data.success) {
+        showToast(
+          data.message || __NST.errorSending || 'Failed to send message',
+          'error'
+        );
       } else {
-        showToast(data.message || __NST.errorSending || 'Failed to send message', 'error');
+        input.value = '';
       }
     } catch (error) {
       console.error('Error sending message:', error);
       showToast(__NST.errorSending || 'Failed to send message', 'error');
     } finally {
-      // Re-enable send button
       sendBtn.disabled = false;
       sendBtn.innerHTML = originalBtnHtml;
     }
   }
 
-  // Show typing indicator
   function showTypingIndicator(show) {
     let typingDiv = document.getElementById('typingIndicator');
 
     if (show && !typingDiv) {
       typingDiv = document.createElement('div');
       typingDiv.id = 'typingIndicator';
-      typingDiv.className = 'text-muted small mb-2';
+      typingDiv.className = 'tickets-pro__typing';
       typingDiv.innerHTML = `<em>${__NST.supportTyping || 'Support team is typing...'}</em>`;
       document.getElementById('chatMessages').appendChild(typingDiv);
       scrollToBottom();
@@ -544,7 +613,6 @@
     }
   }
 
-  // Create new ticket
   async function createTicket() {
     const subject = document.getElementById('ticketSubject').value.trim();
     const ticketType = document.getElementById('ticketType').value;
@@ -574,17 +642,9 @@
       const data = await response.json();
 
       if (data.success) {
-        // Close modal
-        const modal = bootstrap.Modal.getInstance(
-          document.getElementById('createTicketModal')
-        );
-        modal.hide();
-
-        // Reset form
-        document.getElementById('createTicketForm').reset();
-
+        document.getElementById('createTicketForm')?.reset();
+        updateDescriptionCount();
         showToast(__NST.ticketCreated || 'Ticket created successfully', 'success');
-
         await loadTickets();
         openTicket(data.ticket._id);
       } else {
@@ -596,10 +656,9 @@
     }
   }
 
-  // Utility functions
   function escapeHtml(text) {
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = text == null ? '' : String(text);
     return div.innerHTML;
   }
 
@@ -626,45 +685,150 @@
   }
 
   function formatTicketType(type) {
-    return type
+    if (!type) return '';
+    const labels = __NST.ticketTypeLabels;
+    if (labels && typeof labels === 'object' && labels[type]) {
+      return labels[type];
+    }
+    return String(type)
       .split('_')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   }
 
-  function getStatusBadgeClass(status) {
-    const classes = {
-      new: 'bg-success',
-      open: 'bg-primary',
-      pending: 'bg-warning',
-      in_progress: 'bg-info',
-      resolved: 'bg-success',
-      closed: 'bg-secondary',
-    };
-    return classes[status] || 'bg-secondary';
+  function formatStatusLabel(status) {
+    if (!status) return '';
+    const labels = __NST.statusLabels;
+    if (labels && typeof labels === 'object' && labels[status]) {
+      return labels[status];
+    }
+    return String(status)
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  function formatRatingStars(n) {
+    const r = Math.min(5, Math.max(0, parseInt(n, 10) || 0));
+    if (r < 1) return '\u2014';
+    const full = '\u2605';
+    const empty = '\u2606';
+    return full.repeat(r) + empty.repeat(5 - r);
+  }
+
+  function ticketAlreadyRated(ticket) {
+    if (!ticket) return false;
+    if (ticket.ratedAt) return true;
+    const r = Number(ticket.rating);
+    return r >= 1 && r <= 5;
+  }
+
+  function canRateTicketNow(ticket) {
+    if (!ticket) return false;
+    if (ticketAlreadyRated(ticket)) return false;
+    const s = ticket.status;
+    return s === 'resolved' || s === 'closed';
+  }
+
+  function updateRateUI(ticket) {
+    const btn = document.getElementById('rateTicketBtn');
+    const labelEl = document.getElementById('rateTicketBtnLabel');
+    const banner = document.getElementById('rateHintBanner');
+    const actionWrap = document.getElementById('rateTicketActionWrap');
+    if (!btn || !banner) return;
+
+    const defaultLabel = __NST.rateTicketLabel || 'Rate';
+    const ratedLabel = __NST.rateTicketLabelRated || 'Rated';
+
+    const showRateChrome =
+      ticketAlreadyRated(ticket) || canRateTicketNow(ticket);
+
+    if (!showRateChrome) {
+      banner.hidden = true;
+      banner.innerHTML = '';
+      banner.className = 'tickets-pro__rate-banner';
+      if (actionWrap) actionWrap.setAttribute('hidden', '');
+      btn.disabled = true;
+      btn.setAttribute('aria-disabled', 'true');
+      btn.classList.remove('tickets-pro__btn-rate--ready');
+      btn.classList.add('tickets-pro__btn-rate--locked');
+      if (labelEl) labelEl.textContent = defaultLabel;
+      btn.removeAttribute('title');
+      return;
+    }
+
+    if (actionWrap) actionWrap.removeAttribute('hidden');
+    banner.hidden = false;
+    banner.className = 'tickets-pro__rate-banner';
+    btn.classList.remove('tickets-pro__btn-rate--ready', 'tickets-pro__btn-rate--locked');
+
+    if (ticketAlreadyRated(ticket)) {
+      banner.classList.add('tickets-pro__rate-banner--done');
+      const starStr = formatRatingStars(ticket.rating);
+      const line = (
+        __NST.ratingThanksStars || 'Thank you! {stars} / 5.'
+      ).replace('{stars}', starStr);
+      banner.innerHTML = `
+        <i class="ri-checkbox-circle-fill tickets-pro__rate-banner-icon" aria-hidden="true"></i>
+        <div class="tickets-pro__rate-banner-text">
+          <p class="tickets-pro__rate-banner-title mb-1">${escapeHtml(
+            __NST.ratingAlreadyThanks || 'You already submitted a rating.'
+          )}</p>
+          <p class="tickets-pro__rate-banner-sub mb-0">${escapeHtml(line)}</p>
+        </div>
+      `;
+      btn.disabled = true;
+      btn.setAttribute('aria-disabled', 'true');
+      btn.classList.add('tickets-pro__btn-rate--locked');
+      if (labelEl) labelEl.textContent = ratedLabel;
+      btn.title = __NST.ratingAlreadyThanks || '';
+      return;
+    }
+
+    banner.classList.add('tickets-pro__rate-banner--ready');
+    banner.innerHTML = `
+      <i class="ri-star-smile-line tickets-pro__rate-banner-icon" aria-hidden="true"></i>
+      <div class="tickets-pro__rate-banner-text">
+        <p class="tickets-pro__rate-banner-sub mb-0">${escapeHtml(
+          __NST.ratingCanRateHint ||
+            'You can now rate your support experience using the Rate button above.'
+        )}</p>
+      </div>
+    `;
+    btn.disabled = false;
+    btn.setAttribute('aria-disabled', 'false');
+    btn.classList.add('tickets-pro__btn-rate--ready');
+    if (labelEl) labelEl.textContent = defaultLabel;
+    btn.title = __NST.titleRateTicket || 'Rate this ticket';
   }
 
   function updateSendButtonState(status) {
     const sendBtn = document.getElementById('sendBtn');
     const messageInput = document.getElementById('messageInput');
     const attachBtn = document.getElementById('attachImageBtn');
-    
+
     if (status === 'closed' || status === 'resolved') {
       sendBtn.disabled = true;
       messageInput.disabled = true;
       attachBtn.disabled = true;
-      messageInput.placeholder = (__NST.ticketClosedPlaceholder || 'This ticket is {status}. You cannot send messages.').replace('{status}', status);
+      messageInput.placeholder = (
+        __NST.ticketClosedPlaceholder ||
+        'This ticket is {status}. You cannot send messages.'
+      ).replace('{status}', formatStatusLabel(status));
     } else {
       sendBtn.disabled = false;
       messageInput.disabled = false;
       attachBtn.disabled = false;
-      messageInput.placeholder = __NST.sendPlaceholder || 'Type your message...';
+      messageInput.placeholder =
+        __NST.sendPlaceholder || 'Type your message...';
     }
   }
 
   function scrollToBottom() {
     const chatMessages = document.getElementById('chatMessages');
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    if (chatMessages) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
   }
 
   function showToast(message, type = 'info') {
@@ -678,39 +842,58 @@
     });
   }
 
-  // Event listeners
   function initEventListeners() {
-    // Create ticket button
     document
       .getElementById('createTicketBtn')
       ?.addEventListener('click', () => {
-        const modal = new bootstrap.Modal(
-          document.getElementById('createTicketModal')
-        );
-        modal.show();
+        showCreatePanel();
       });
 
-    // Submit ticket
+    document
+      .getElementById('emptyStateCreateBtn')
+      ?.addEventListener('click', () => {
+        showCreatePanel();
+      });
+
+    document
+      .getElementById('createTicketBackBtn')
+      ?.addEventListener('click', () => {
+        hideCreatePanel();
+      });
+
+    document
+      .getElementById('createTicketCancelBtn')
+      ?.addEventListener('click', () => {
+        hideCreatePanel();
+      });
+
+    document
+      .getElementById('ticketsBackToList')
+      ?.addEventListener('click', () => {
+        setRootView('list');
+      });
+
     document
       .getElementById('submitTicketBtn')
       ?.addEventListener('click', createTicket);
 
-    // Send message
     document.getElementById('sendBtn')?.addEventListener('click', sendMessage);
 
-    // Image attachment handlers
-    document.getElementById('attachImageBtn')?.addEventListener('click', function() {
-      document.getElementById('imageInput').click();
-    });
+    document
+      .getElementById('attachImageBtn')
+      ?.addEventListener('click', function () {
+        document.getElementById('imageInput').click();
+      });
 
-    document.getElementById('imageInput')?.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        handleImageAttachment(file);
-      }
-    });
+    document
+      .getElementById('imageInput')
+      ?.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+          handleImageAttachment(file);
+        }
+      });
 
-    // Send on Enter
     document
       .getElementById('messageInput')
       ?.addEventListener('keydown', (e) => {
@@ -719,7 +902,6 @@
           sendMessage();
         }
 
-        // Typing indicator
         if (socket && socket.connected && currentTicketId) {
           if (!isTyping) {
             socket.emit('ticket_typing', {
@@ -740,7 +922,10 @@
         }
       });
 
-    // Filter tabs
+    document
+      .getElementById('ticketDescription')
+      ?.addEventListener('input', updateDescriptionCount);
+
     document.querySelectorAll('.filter-tab').forEach((tab) => {
       tab.addEventListener('click', function () {
         document.querySelectorAll('.filter-tab').forEach((t) => {
@@ -752,7 +937,6 @@
       });
     });
 
-    // Search
     let searchTimeout;
     document
       .getElementById('searchTickets')
@@ -763,32 +947,34 @@
         }, 300);
       });
 
-    // Type filter
-    document.getElementById('filterType')?.addEventListener('change', function () {
-      currentTypeFilter = this.value;
-      loadTickets();
-    });
+    document
+      .getElementById('filterType')
+      ?.addEventListener('change', function () {
+        currentTypeFilter = this.value;
+        loadTickets();
+      });
   }
 
-  // Rate ticket functionality
   let currentRating = 0;
 
   function initRatingStars() {
     const stars = document.querySelectorAll('#ratingStars .star');
-    stars.forEach((star, index) => {
-      star.addEventListener('click', function() {
-        currentRating = parseInt(this.dataset.rating);
+    stars.forEach((star) => {
+      star.addEventListener('click', function () {
+        currentRating = parseInt(this.dataset.rating, 10);
         updateRatingDisplay(currentRating);
       });
-      star.addEventListener('mouseenter', function() {
-        const rating = parseInt(this.dataset.rating);
+      star.addEventListener('mouseenter', function () {
+        const rating = parseInt(this.dataset.rating, 10);
         highlightStars(rating);
       });
     });
 
-    document.getElementById('ratingStars')?.addEventListener('mouseleave', function() {
-      highlightStars(currentRating);
-    });
+    document
+      .getElementById('ratingStars')
+      ?.addEventListener('mouseleave', function () {
+        highlightStars(currentRating);
+      });
   }
 
   function highlightStars(rating) {
@@ -798,7 +984,7 @@
       2: __NST.ratingFair || 'Fair',
       3: __NST.ratingGood || 'Good',
       4: __NST.ratingVeryGood || 'Very Good',
-      5: __NST.ratingExcellent || 'Excellent'
+      5: __NST.ratingExcellent || 'Excellent',
     };
 
     stars.forEach((star, index) => {
@@ -815,7 +1001,10 @@
 
     const ratingText = document.getElementById('ratingText');
     if (ratingText) {
-      ratingText.textContent = rating > 0 ? texts[rating] : (__NST.clickToRate || 'Click to rate');
+      ratingText.textContent =
+        rating > 0
+          ? texts[rating]
+          : __NST.clickToRate || 'Click to rate';
     }
   }
 
@@ -838,21 +1027,34 @@
         credentials: 'include',
         body: JSON.stringify({
           rating: currentRating,
-          comment: comment
+          comment: comment,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        showToast(__NST.thankYouFeedback || 'Thank you for your feedback!', 'success');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('rateTicketModal'));
-        modal.hide();
+        showToast(
+          __NST.thankYouFeedback || 'Thank you for your feedback!',
+          'success'
+        );
+        const el = document.getElementById('rateTicketModal');
+        if (el && window.bootstrap) {
+          const m = window.bootstrap.Modal.getInstance(el) || new window.bootstrap.Modal(el);
+          m.hide();
+        }
         currentRating = 0;
-        document.getElementById('ratingComment').value = '';
+        const rc = document.getElementById('ratingComment');
+        if (rc) rc.value = '';
         highlightStars(0);
+        if (currentTicketId) {
+          await loadTicketDetails(currentTicketId);
+        }
       } else {
-        showToast(data.message || __NST.ratingFailed || 'Failed to submit rating', 'error');
+        showToast(
+          data.message || __NST.ratingFailed || 'Failed to submit rating',
+          'error'
+        );
       }
     } catch (error) {
       console.error('Error submitting rating:', error);
@@ -860,22 +1062,31 @@
     }
   }
 
-  // Initialize on DOM ready
   document.addEventListener('DOMContentLoaded', function () {
+    setRootView('list');
     initSocket();
     initEventListeners();
     initRatingStars();
+    updateDescriptionCount();
     loadTickets();
 
-    // Rate ticket button
-    document.getElementById('rateTicketBtn')?.addEventListener('click', function() {
-      if (currentTicketId) {
-        const modal = new bootstrap.Modal(document.getElementById('rateTicketModal'));
-        modal.show();
-      }
-    });
+    document
+      .getElementById('rateTicketBtn')
+      ?.addEventListener('click', function () {
+        if (this.disabled || this.getAttribute('aria-disabled') === 'true') {
+          return;
+        }
+        if (currentTicketId) {
+          const el = document.getElementById('rateTicketModal');
+          if (el && window.bootstrap) {
+            const m = window.bootstrap.Modal.getInstance(el) || new window.bootstrap.Modal(el);
+            m.show();
+          }
+        }
+      });
 
-    // Submit rating
-    document.getElementById('submitRatingBtn')?.addEventListener('click', submitRating);
+    document
+      .getElementById('submitRatingBtn')
+      ?.addEventListener('click', submitRating);
   });
 })();

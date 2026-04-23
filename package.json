@@ -8,7 +8,8 @@
     "dev": "webpack --mode development --watch",
     "start": "nodemon app.js",
     "test:notifications": "node scripts/test-business-notifications.js",
-    "test:notifications:business": "node scripts/test-business-notifications.js"
+    "test:notifications:business": "node scripts/test-business-notifications.js",
+    "verify:dashboard": "node scripts/verify-dashboard-invariants.js"
   },
   "author": "Themesbrand",
   "license": "ISC",

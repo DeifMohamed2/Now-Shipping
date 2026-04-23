@@ -1,344 +1,547 @@
-document.addEventListener('DOMContentLoaded', function () {
-  const __NSEO =
-    typeof window !== 'undefined' && window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.editOrder
+/**
+ * edit-order.js — Redesigned 4-step wizard for editing an order.
+ * Works with the redesigned edit-order.ejs.
+ */
+(function () {
+  'use strict';
+
+  var CUR = (typeof window !== 'undefined' && window.__EO_CURRENCY) ? window.__EO_CURRENCY : 'EGP';
+
+  // ── i18n ─────────────────────────────────────────────────────────────────
+  var __NSEO =
+    typeof window !== 'undefined' &&
+    window.__NS_BUSINESS_I18N &&
+    window.__NS_BUSINESS_I18N.editOrder
       ? window.__NS_BUSINESS_I18N.editOrder
       : {};
 
-  // Order Type Toggle Logic
-  const orderTypeRadios = document.querySelectorAll('input[name="orderType_display"]');
-  const deliverSection = document.getElementById('deliver-section');
-  const exchangeSection = document.getElementById('exchange-section');
-  const cashCollectionSection = document.getElementById(
-    'cash-collection-section'
-  );
-  
-  // Initialize section visibility based on the hidden orderType input
-  function initializeOrderTypeSections() {
-    // Get the value from the hidden input
-    const orderType = document.querySelector('input[name="orderType"]').value;
-    
-    // Hide all sections first
-    if (deliverSection) deliverSection.style.display = 'none';
-    if (exchangeSection) exchangeSection.style.display = 'none';
-    if (cashCollectionSection) cashCollectionSection.style.display = 'none';
-    
-    // Show the appropriate section based on the order type
-    if (orderType === 'Deliver' || orderType === 'Return') {
-      if (deliverSection) deliverSection.style.display = 'block';
-    } else if (orderType === 'Exchange') {
-      if (exchangeSection) exchangeSection.style.display = 'block';
+  function t(key, fallback) {
+    return (__NSEO[key] != null ? __NSEO[key] : fallback) || fallback || '';
+  }
+
+  function stepBadgeText(step, max) {
+    var m = max != null ? max : 4;
+    return t('stepOf', 'Step {cur} of {max}')
+      .replace(/\{cur\}/g, String(step))
+      .replace(/\{max\}/g, String(m));
+  }
+
+  function getStepMeta(step) {
+    var table = {
+      1: { kT: 'wizStep1Title', kS: 'wizStep1Sub', fT: 'Customer Details', fS: 'Update the recipient\'s contact and location' },
+      2: { kT: 'wizStep2Title', kS: 'wizStep2Sub', fT: 'Shipping Details', fS: 'Review order type and configure delivery options' },
+      3: { kT: 'wizStep3Title', kS: 'wizStep3Sub', fT: 'Additional Options', fS: 'Update special instructions and review fees' },
+      4: { kT: 'wizStep4Title', kS: 'wizStep4Sub', fT: 'Review & Update', fS: 'Confirm your changes before saving' },
+    };
+    var d = table[step] || table[1];
+    return { title: t(d.kT, d.fT), subtitle: t(d.kS, d.fS) };
+  }
+
+  function getStepTip(step) {
+    return t('wizTip' + step, [
+      'Update the customer info, address, and options then review before saving.',
+      'Express shipping toggle is locked for orders older than 6 hours.',
+      'Add special notes so our couriers know exactly what to do.',
+      'Review all changes carefully before pressing Update Order.',
+    ][step - 1] || '');
+  }
+
+  // ── Server-side state injected by EJS ─────────────────────────────────────
+  var S = (typeof window !== 'undefined' && window.__EO_STATE) ? window.__EO_STATE : {};
+
+  // ── Mutable state ─────────────────────────────────────────────────────────
+  var state = {
+    step:          1,
+    isExpress:     !!S.isExpress,
+    expressLocked: !!S.expressLocked,
+    isCOD:         !!S.isCOD,
+    isCD:          !!S.isCD,
+    canOpenPackage: false,
+    submitting:    false,
+    baseFee:       0,
+    lastFee:       S.orderFees || 0,
+  };
+
+  // ── DOM helpers ───────────────────────────────────────────────────────────
+  function el(id)  { return document.getElementById(id); }
+
+  function setCollapsible(id, open) {
+    var c = el(id);
+    if (!c) return;
+    c.classList.toggle('co-collapsible--open', open);
+  }
+
+  function setToggleCard(btn, on) {
+    if (!btn) return;
+    btn.classList.toggle('co-toggle-card--on', on);
+  }
+
+  function setCheckCard(btn, on) {
+    if (!btn) return;
+    btn.classList.toggle('co-check-card--on', on);
+  }
+
+  function showFieldError(id, show) {
+    var e = el(id);
+    if (!e) return;
+    e.classList.toggle('co-field-error--show', show);
+  }
+
+  function setInputError(inputId, isError) {
+    var i = el(inputId);
+    if (!i) return;
+    i.classList.toggle('is-error', isError);
+  }
+
+  // ── Step Indicator Update ─────────────────────────────────────────────────
+  function updateStepUI(step) {
+    var meta = getStepMeta(step);
+    var titleEl = el('co-step-title');
+    var subEl   = el('co-step-subtitle');
+    var badgeEl = el('co-step-badge');
+    if (titleEl) titleEl.textContent = meta.title;
+    if (subEl)   subEl.textContent   = meta.subtitle;
+    if (badgeEl) badgeEl.textContent = stepBadgeText(step, 4);
+
+    var fill = el('co-progress-fill');
+    if (fill) fill.style.width = ((step - 1) / 3 * 100) + '%';
+
+    for (var i = 1; i <= 4; i++) {
+      var node  = el('co-node-'  + i);
+      var label = el('co-label-' + i);
+      if (!node) continue;
+      node.classList.remove('co-step-node--active', 'co-step-node--done');
+      if (label) label.classList.remove('co-step-label--active', 'co-step-label--done');
+      if (i < step) {
+        node.classList.add('co-step-node--done');
+        if (label) label.classList.add('co-step-label--done');
+      } else if (i === step) {
+        node.classList.add('co-step-node--active');
+        if (label) label.classList.add('co-step-label--active');
+      }
+    }
+
+    var tip = el('co-tip-text');
+    if (tip) tip.textContent = getStepTip(step) || '';
+
+    var footer = el('co-nav-footer');
+    if (footer) footer.style.display = step === 4 ? 'none' : '';
+
+    var btnBack = el('co-btn-back');
+    if (btnBack) btnBack.disabled = step === 1;
+
+    var btnNext = el('co-btn-next');
+    if (btnNext) {
+      if (step === 3) {
+        btnNext.innerHTML = t('labelReview', 'Review') + ' <i class="ri-arrow-right-s-line co-btn-next__chev" aria-hidden="true"></i>';
+      } else {
+        btnNext.innerHTML = t('labelContinue', 'Continue') + ' <i class="ri-arrow-right-s-line co-btn-next__chev" aria-hidden="true"></i>';
+      }
+    }
+
+    if (btnBack) {
+      btnBack.innerHTML = '<i class="ri-arrow-left-s-line co-btn-back__chev" aria-hidden="true"></i> ' + t('labelBack', 'Back');
     }
   }
-  
-  // Call the initialization function
-  initializeOrderTypeSections();
 
-  // Cash on Delivery toggle
-  const cashOnDeliveryCheckbox = document.getElementById('cash-on-delivery-checkbox');
-  const cashOnDeliveryAmount = document.getElementById('cash-on-delivery-amount');
-  
-  if (cashOnDeliveryCheckbox && cashOnDeliveryAmount) {
-    cashOnDeliveryCheckbox.addEventListener('change', function() {
-      cashOnDeliveryAmount.style.display = this.checked ? 'block' : 'none';
-    });
-  }
-  
-  // Cash Difference toggle
-  const cashDifferenceCheckbox = document.getElementById('cash-difference-checkbox');
-  const cashDifferenceAmount = document.getElementById('cash-difference-amount');
-  
-  if (cashDifferenceCheckbox && cashDifferenceAmount) {
-    cashDifferenceCheckbox.addEventListener('change', function() {
-      cashDifferenceAmount.style.display = this.checked ? 'block' : 'none';
-    });
+  // ── Show step panel ───────────────────────────────────────────────────────
+  function showStep(step) {
+    for (var i = 1; i <= 4; i++) {
+      var panel = el('co-step-' + i);
+      if (!panel) continue;
+      panel.classList.toggle('step-panel--active', i === step);
+    }
+    state.step = step;
+    updateStepUI(step);
+    if (step === 3) { updateFeeSummary(); }
+    if (step === 4) { populateReview(); }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Filter zones based on selected government
-  function filterZonesByGovernment(governmentSelect, zoneSelect) {
-    // Get the selected government
-    const selectedGovernment = governmentSelect.value;
-    const previouslySelectedZone = zoneSelect.getAttribute('data-selected-zone');
-    
-    // Clear the zone select dropdown first
-    zoneSelect.innerHTML = '<option value="">' + (__NSEO.selectArea || 'Select Area') + '</option>';
-    
-    // If no government is selected, just leave the empty dropdown
-    if (!selectedGovernment) {
+  // ── Validation ────────────────────────────────────────────────────────────
+  function validateStep(step) {
+    var ok = true;
+
+    if (step === 1) {
+      var fn   = el('fullName');
+      var ph   = el('phoneNumber');
+      var gv   = el('government-value');
+      var zn   = el('zone-value');
+      var addr = el('address');
+
+      if (!fn || !fn.value.trim()) {
+        setInputError('fullName', true);
+        showFieldError('err-fullName', true);
+        ok = false;
+      }
+      if (!ph || !ph.value.trim()) {
+        setInputError('phoneNumber', true);
+        showFieldError('err-phoneNumber', true);
+        ok = false;
+      }
+      if (!gv || !gv.value || !zn || !zn.value) {
+        var areaBtn = el('selectAreaBtn');
+        if (areaBtn) areaBtn.classList.add('is-error');
+        showFieldError('err-zone', true);
+        ok = false;
+      }
+      if (!addr || !addr.value.trim()) {
+        setInputError('address', true);
+        showFieldError('err-address', true);
+        ok = false;
+      }
+      if (!ok && fn && !fn.value.trim()) fn.focus();
+    }
+
+    return ok;
+  }
+
+  function clearErrors() {
+    ['fullName','phoneNumber','address'].forEach(function (id) {
+      setInputError(id, false);
+    });
+    ['err-fullName','err-phoneNumber','err-zone','err-address'].forEach(function (id) {
+      showFieldError(id, false);
+    });
+    var areaBtn = el('selectAreaBtn');
+    if (areaBtn) areaBtn.classList.remove('is-error');
+  }
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+  function goNext() {
+    if (!validateStep(state.step)) return;
+    clearErrors();
+    showStep(state.step + 1);
+  }
+
+  function goBack() {
+    if (state.step <= 1) return;
+    clearErrors();
+    showStep(state.step - 1);
+  }
+
+  // ── Toggle helpers ────────────────────────────────────────────────────────
+  window.eoToggleCard = function (btn, hiddenInputName, btnId) {
+    var isOn = btn.classList.contains('co-toggle-card--on');
+    setToggleCard(btn, !isOn);
+    if (hiddenInputName) {
+      var inp = document.querySelector('input[name="' + hiddenInputName + '"]');
+      if (inp) inp.value = !isOn ? 'on' : '';
+    }
+    if (btnId === 'co-open-pkg-toggle') {
+      state.canOpenPackage = !isOn;
+    }
+  };
+
+  window.eoToggleWorkAddress = function () {
+    var btn = el('co-work-addr-toggle');
+    var inp = el('deliverToWorkAddress-input');
+    var isOn = btn && btn.classList.contains('co-check-card--on');
+    setCheckCard(btn, !isOn);
+    if (inp) inp.value = !isOn ? 'on' : '';
+  };
+
+  window.eoToggleExpress = function () {
+    if (state.expressLocked) return;
+    state.isExpress = !state.isExpress;
+    var btn = el('co-express-toggle');
+    setToggleCard(btn, state.isExpress);
+    var inp = el('isExpressShipping-input');
+    if (inp) inp.value = state.isExpress ? 'on' : '';
+    // Show/hide express row in fee summary
+    var expRow = el('co-fee-express-row');
+    if (expRow) expRow.style.display = state.isExpress ? '' : 'none';
+    // Update review panel
+    var revExp = el('rev-express');
+    if (revExp) revExp.textContent = state.isExpress ? t('yes', 'Yes') : t('no', 'No');
+    updateFeeSummary();
+  };
+
+  window.eoToggleCOD = function () {
+    state.isCOD = !state.isCOD;
+    var btn = el('co-cod-toggle');
+    var inp = el('COD-input');
+    setToggleCard(btn, state.isCOD);
+    if (inp) inp.value = state.isCOD ? 'on' : '';
+    setCollapsible('co-cod-amount-wrap', state.isCOD);
+  };
+
+  window.eoToggleCD = function () {
+    state.isCD = !state.isCD;
+    var btn = el('co-cd-toggle');
+    var inp = el('CashDifference-input');
+    setToggleCard(btn, state.isCD);
+    if (inp) inp.value = state.isCD ? 'on' : '';
+    setCollapsible('co-cd-amount-wrap', state.isCD);
+  };
+
+  // ── Item counter ──────────────────────────────────────────────────────────
+  window.eoAdjustCounter = function (inputId, displayId, delta) {
+    var inp  = el(inputId);
+    var disp = el(displayId);
+    if (!inp) return;
+    var val = Math.max(1, (parseInt(inp.value) || 1) + delta);
+    inp.value = val;
+    if (disp) disp.textContent = val;
+  };
+
+  // ── Fee calculation ───────────────────────────────────────────────────────
+  function updateFeeSummary() {
+    var govEl      = el('government-value');
+    var government = govEl ? govEl.value : '';
+    var orderType  = S.orderType || 'Deliver';
+    var isExpress  = state.isExpress;
+
+    var feeBaseEl    = el('co-fee-base-val');
+    var feeExpressEl = el('co-fee-express-val');
+    var feeExpressRow = el('co-fee-express-row');
+    var feeTotEl     = el('co-fee-total-num');
+    var spinnerEl    = el('feeLoadingSpinner');
+
+    if (!government) {
+      state.baseFee = 0;
+      state.lastFee = 0;
       return;
     }
-    
-    // Get all optgroups from the dropdown
-    const sourceElement = document.createElement('select');
-    sourceElement.style.display = 'none';
-    sourceElement.innerHTML = document.getElementById('zone-options-template').innerHTML;
-    document.body.appendChild(sourceElement);
-    
-    // Add only relevant optgroups and options based on selected government
-    if (selectedGovernment === 'Cairo') {
-      // Add only Cairo zones
-      sourceElement.querySelectorAll('optgroup[label^="Cairo"]').forEach(optgroup => {
-        zoneSelect.appendChild(optgroup.cloneNode(true));
-      });
-    } else if (selectedGovernment === 'Giza') {
-      // Add only Giza zones
-      sourceElement.querySelectorAll('optgroup[label^="Giza"]').forEach(optgroup => {
-        zoneSelect.appendChild(optgroup.cloneNode(true));
-      });
-    } else if (selectedGovernment === 'Alexandria') {
-      // Add only Alexandria zones
-      sourceElement.querySelectorAll('optgroup[label^="Alexandria"]').forEach(optgroup => {
-        zoneSelect.appendChild(optgroup.cloneNode(true));
-      });
-    }
-    
-    // Select the previously selected zone if applicable
-    if (previouslySelectedZone) {
-      Array.from(zoneSelect.options).forEach(option => {
-        if (option.value === previouslySelectedZone) {
-          option.selected = true;
-        }
-      });
-    }
-    
-    // Clean up the temporary element
-    document.body.removeChild(sourceElement);
-  }
 
-  // Function to update fees by calling server API
-  async function updateFees() {
-    try {
-      const selectedGovernment = document.querySelector('select[name="government"]').value;
-      if (!selectedGovernment) {
-        document.getElementById('totalFee').textContent = '0';
-        return;
-      }
-      
-      // Show loading indicator
-      const feeDisplayContainer = document.getElementById('feeDisplayContainer');
-      if (feeDisplayContainer) {
-          feeDisplayContainer.classList.add('loading');
-      }
-      
-      const selectedOrderType = document.querySelector('input[name="orderType"]:checked')?.value || 'Deliver';
-      const isExpressShipping = document.querySelector('input[name="isExpressShipping"]:checked') !== null;
-      
-      const response = await fetch('/business/calculate-fees', {
+    if (spinnerEl) spinnerEl.style.display = '';
+
+    // Fetch base (non-express) and express fees simultaneously
+    var baseCall = fetch('/business/calculate-fees', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ government: government, orderType: orderType, isExpressShipping: false }),
+    }).then(function(r) { return r.json(); });
+
+    var expressCall = isExpress
+      ? fetch('/business/calculate-fees', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          government: selectedGovernment,
-          orderType: selectedOrderType,
-          isExpressShipping: isExpressShipping
-        }),
+        headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ government: government, orderType: orderType, isExpressShipping: true }),
+        }).then(function(r) { return r.json(); })
+      : Promise.resolve(null);
+
+    Promise.all([baseCall, expressCall])
+      .then(function(results) {
+        var baseFee    = (results[0] && results[0].fee != null) ? results[0].fee : 0;
+        var expressFee = (results[1] && results[1].fee != null) ? results[1].fee : 0;
+        var totalFee   = isExpress ? expressFee : baseFee;
+        var expressAdd = isExpress ? (expressFee - baseFee) : 0;
+
+        state.baseFee = baseFee;
+        state.lastFee = totalFee;
+
+        if (feeBaseEl)     feeBaseEl.textContent     = baseFee + ' ' + CUR;
+        if (feeTotEl)      feeTotEl.textContent      = totalFee;
+        if (feeExpressRow) feeExpressRow.style.display = isExpress ? '' : 'none';
+        if (feeExpressEl && isExpress) feeExpressEl.textContent = '+' + expressAdd + ' ' + CUR;
+
+        // Sidebar
+        var sumFee = el('sum-fee-val');
+        if (sumFee) sumFee.textContent = totalFee + ' ' + CUR;
+
+        // Review step
+        var revFeeNum = el('rev-fee-num');
+        if (revFeeNum) revFeeNum.textContent = totalFee;
+      })
+      .catch(function(err) { console.error('eoFee error:', err); })
+      .finally(function() {
+        if (spinnerEl) spinnerEl.style.display = 'none';
       });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        document.getElementById('totalFee').textContent = data.fee;
-      } else {
-        console.error('Error calculating fees:', data.error);
-        document.getElementById('totalFee').textContent = '0';
-      }
-    } catch (error) {
-      console.error('Error calculating fees:', error);
-      document.getElementById('totalFee').textContent = '0';
-    } finally {
-      // Hide loading indicator
-      const feeDisplayContainer = document.getElementById('feeDisplayContainer');
-      if (feeDisplayContainer) {
-          feeDisplayContainer.classList.remove('loading');
-      }
-    }
   }
 
-  // Setup government and zone filtering
-  const governmentSelect = document.querySelector('select[name="government"]');
-  const zoneSelect = document.querySelector('select[name="zone"]');
-  
-  if (governmentSelect && zoneSelect) {
-    // Initialize filtering on page load
-    if (governmentSelect.value) {
-      filterZonesByGovernment(governmentSelect, zoneSelect);
+  // ── Populate review step ──────────────────────────────────────────────────
+  function populateReview() {
+    var fn   = (el('fullName')          || {}).value || '—';
+    var ph   = (el('phoneNumber')       || {}).value || '—';
+    var gv   = (el('government-value')  || {}).value || '';
+    var zv   = (el('zone-value')        || {}).value || '';
+    var addr = (el('address')           || {}).value || '—';
+    var area = zv && gv ? zv + ', ' + gv : (gv || zv || '—');
+
+    var revCust = el('rev-customer'); if (revCust) revCust.textContent = fn;
+    var revPh   = el('rev-phone');    if (revPh)   revPh.textContent   = ph;
+    var revArea = el('rev-area');     if (revArea) revArea.textContent  = area;
+    var revAddr = el('rev-address');  if (revAddr) revAddr.textContent  = addr;
+    var revExp  = el('rev-express');  if (revExp)  revExp.textContent   = state.isExpress ? t('yes', 'Yes') : t('no', 'No');
+    var revFee  = el('rev-fee-num');  if (revFee)  revFee.textContent   = state.lastFee;
+
+    // Also update sidebar
+    var sumCust = el('sum-customer'); if (sumCust) sumCust.textContent = fn;
+    var sumPh   = el('sum-phone');    if (sumPh)   sumPh.textContent   = ph;
+    var sumArea = el('sum-area');     if (sumArea) sumArea.textContent  = area;
+  }
+
+  // ── Area selection integration ────────────────────────────────────────────
+  function onAreaSelected() {
+    var govInput  = el('government-value');
+    var zoneInput = el('zone-value');
+    var areaBtn   = el('selectAreaBtn');
+    var display   = el('selectedAreaDisplay');
+
+    var gv  = govInput  ? govInput.value  : '';
+    var zv  = zoneInput ? zoneInput.value : '';
+    var txt = display ? display.textContent : (zv && gv ? zv + ', ' + gv : (gv || zv || ''));
+
+    if (areaBtn) {
+      areaBtn.classList.toggle('co-area-btn--filled', !!(zv || gv));
+      if (zv || gv) {
+        areaBtn.classList.remove('is-error');
+        showFieldError('err-zone', false);
+      }
     }
-    
-    // Add change event listener to government dropdown
-    governmentSelect.addEventListener('change', function() {
-        filterZonesByGovernment(governmentSelect, zoneSelect);
-        updateFees(); // Recalculate fees when government changes
+
+    // Update sidebar + review
+    var sumArea = el('sum-area'); if (sumArea) sumArea.textContent = txt;
+    var revArea = el('rev-area'); if (revArea) revArea.textContent = txt;
+
+    updateFeeSummary();
+  }
+
+  function bindAreaListeners() {
+    // area-selection-modal.js calls window.updateFees() after selection
+    // Also listen for change events as fallback
+    var govInput  = el('government-value');
+    var zoneInput = el('zone-value');
+    if (govInput)  govInput.addEventListener('change', onAreaSelected);
+    if (zoneInput) zoneInput.addEventListener('change', onAreaSelected);
+  }
+
+  // Called by area-selection-modal.js after area is confirmed
+  window.updateFees = function () { onAreaSelected(); };
+
+  // ── Bind live customer field updates ─────────────────────────────────────
+  function bindCustomerListeners() {
+    function syncSidebar() {
+      var fn  = (el('fullName')         || {}).value || '—';
+      var ph  = (el('phoneNumber')      || {}).value || '—';
+      var sc  = el('sum-customer'); if (sc) sc.textContent = fn;
+      var sp  = el('sum-phone');    if (sp) sp.textContent = ph;
+    }
+
+    ['fullName','phoneNumber'].forEach(function(id) {
+      var inp = el(id);
+      if (!inp) return;
+      inp.addEventListener('input', function () {
+        setInputError(id, false);
+        showFieldError('err-' + id, false);
+        syncSidebar();
+      });
     });
-    
-    // Add change listener to zone select
-    zoneSelect.addEventListener('change', updateFees);
+
+    var addr = el('address');
+    if (addr) addr.addEventListener('input', function () {
+      setInputError('address', false);
+      showFieldError('err-address', false);
+    });
   }
 
-  // Add event listeners for order type changes - This part is commented out since the order type is disabled in edit mode
-  // orderTypeRadios.forEach((radio) => {
-  //   radio.addEventListener('change', function () {
-  //     // Show/hide sections based on order type
-  //     deliverSection.style.display =
-  //       this.id === 'orderTypeDeliver' || this.id === 'orderTypeReturn'
-  //         ? 'block'
-  //         : 'none';
-  //     exchangeSection.style.display = this.id === 'orderTypeExchange' ? 'block' : 'none';
-  //     cashCollectionSection.style.display = this.id === 'orderTypeCashCollection' ? 'block' : 'none';
-  //     
-  //     // Show/hide express shipping checkboxes based on order type
-  //     const expressCheckboxes = document.querySelectorAll('input[name="isExpressShipping"]');
-  //     expressCheckboxes.forEach(checkbox => {
-  //         checkbox.checked = false; // Reset when changing order type
-  //     });
-  //     
-  //     // Recalculate fees when order type changes
-  //     updateFees();
-  //   });
-  // });
-  
-  // Add event listeners for express shipping checkboxes
-  document.querySelectorAll('input[name="isExpressShipping"]').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-      // Ensure only one express shipping checkbox is checked at a time
-      if (this.checked) {
-          document.querySelectorAll('input[name="isExpressShipping"]').forEach(cb => {
-              if (cb !== this) cb.checked = false;
+  // ── Form submission ───────────────────────────────────────────────────────
+  function bindFormSubmit() {
+    var form = el('editOrderForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (state.submitting) return;
+
+      state.submitting = true;
+      var updateBtn = el('updateOrderBtn');
+      if (updateBtn) {
+        updateBtn.disabled = true;
+        updateBtn.innerHTML = '<span class="co-spinner"></span> ' + t('updating', 'Updating…');
+      }
+
+      var formData = new FormData(form);
+      var payload  = {};
+      formData.forEach(function (v, k) { payload[k] = v; });
+
+      // Consolidate express and area from state / hidden inputs
+      payload.isExpressShipping = state.isExpress ? 'true' : 'false';
+      payload.government = (el('government-value') || {}).value || '';
+      payload.zone       = (el('zone-value')       || {}).value || '';
+
+      // Ensure orderType from hidden (not from disabled radio buttons)
+      payload.orderType = S.orderType || payload.orderType || 'Deliver';
+
+      var orderId = form.getAttribute('data-order-id');
+
+      fetch('/business/orders/edit-order/' + orderId, {
+        method:  'PUT',
+          headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      })
+        .then(function (r) {
+          return r.json().then(function (d) { return { ok: r.ok, data: d }; });
+        })
+        .then(function (res) {
+          if (res.ok) {
+          Swal.fire({
+              icon:              'success',
+              title:             t('swalUpdated', 'Order updated'),
+              text:              t('swalUpdatedText', 'The order has been updated successfully.'),
+            confirmButtonText: t('swalViewOrder', 'View order'),
+              confirmButtonColor: '#2D3561',
+          }).then(function (result) {
+              if (result.isConfirmed && res.data && res.data.order && res.data.order.orderNumber) {
+                window.location.href = '/business/order-details/' + res.data.order.orderNumber;
+            } else {
+              window.location.href = '/business/orders';
+            }
           });
-      }
-      
-      // Recalculate fees when express shipping option changes
-      updateFees();
-    });
-  });
-
-  // Form Submission
-  document.getElementById('editOrderForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    
-    // Get form data
-    const formData = new FormData(this);
-    const formValues = Object.fromEntries(formData.entries());
-    
-    // Handle express shipping checkbox
-    formValues.isExpressShipping = !!document.querySelector('input[name="isExpressShipping"]:checked');
-    
-    // Make sure orderType is included (it should be from the hidden input)
-    if (!formValues.orderType) {
-      // Fallback in case the hidden input is not working
-      const orderTypeDisplayed = document.querySelector('input[name="orderType_display"]:checked');
-      if (orderTypeDisplayed) {
-        formValues.orderType = orderTypeDisplayed.value;
-      }
-    }
-    
-    // Validate required fields
-    if (!formValues.fullName || !formValues.phoneNumber || !formValues.address || 
-        !formValues.government || !formValues.zone) {
-      Swal.fire({
-        icon: 'error',
-        title: __NSEO.validationError || 'Validation Error',
-        text: __NSEO.fillRequiredFields || 'Please fill in all required customer information fields.',
-      });
-      return;
-    }
-    
-    const updateBtn = document.getElementById('updateOrderBtn');
-    updateBtn.disabled = true;
-    updateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ' + (__NSEO.updating || 'Updating…');
-    
-    const orderId = this.getAttribute('data-order-id');
-    
-    try {
-      const response = await fetch(`/business/orders/edit-order/${orderId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formValues),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        Swal.fire({
-          icon: 'success',
-          title: __NSEO.orderUpdated || 'Order Updated',
-          text: __NSEO.orderUpdatedText || 'Order has been updated successfully!',
-          confirmButtonText: 'View Order',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = `/business/order-details/${data.order.orderNumber}`;
-          }
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: __NSEO.updateFailed || 'Update Failed',
-          text: data.error || (__NSEO.updateFailedText || 'An error occurred while updating the order.'),
-        });
-      }
-    } catch (error) {
-      console.error('An error occurred:', error);
-      Swal.fire({
-        icon: 'error',
-        title: __NSEO.updateFailed || 'Update Failed',
-        text: __NSEO.updateFailedText || 'An error occurred while updating the order.',
-      });
-    } finally {
-      updateBtn.disabled = false;
-      updateBtn.innerHTML = '<i class="ri-save-line align-middle me-1"></i> ' + (__NSEO.updateOrder || 'Update Order');
-    }
-  });
-
-  // Counter functionality
-  function setupCounter(buttonId, inputId, increment = true) {
-    document.getElementById(buttonId)?.addEventListener('click', function() {
-      const input = document.getElementById(inputId);
-      let value = parseInt(input.value) || 0;
-      if(increment) {
-        input.value = value + 1;
-      } else {
-        if(value > 1) {
-          input.value = value - 1;
         } else {
           Swal.fire({
-            icon: 'warning',
-            title: __NSEO.invalidValue || 'Invalid Value',
-            text: __NSEO.itemsCannotBeZero || 'Number of items cannot be zero or negative.',
+              icon:  'error',
+              title: t('swalUpdateFailed', 'Update failed'),
+              text:  (res.data && res.data.error) || t('swalUpdateFailedText', 'Failed to update the order.'),
+              confirmButtonColor: '#F97316',
+            });
+          }
+        })
+        .catch(function (err) {
+          console.error('editOrder submit error:', err);
+          Swal.fire({
+            icon:  'error',
+            title: t('swalUpdateFailed', 'Update failed'),
+            text:  t('swalUpdateFailedText', 'An error occurred while updating the order.'),
+            confirmButtonColor: '#F97316',
           });
-        }
-      }
-    });
-  }
-
-  // Add input validation for number fields
-  function setupNumberValidation(inputId) {
-    document.getElementById(inputId)?.addEventListener('input', function() {
-      const value = parseInt(this.value);
-      if(value <= 0) {
-        Swal.fire({
-          icon: 'warning',
-          title: __NSEO.invalidValue || 'Invalid Value',
-          text: __NSEO.itemsCannotBeZero || 'Number of items cannot be zero or negative.',
+        })
+        .finally(function () {
+          state.submitting = false;
+          if (updateBtn) {
+            updateBtn.disabled = false;
+            updateBtn.innerHTML = t('labelUpdateHtml', '<i class="ri-save-line"></i> Update Order');
+          }
         });
-        this.value = 1;
-      }
     });
   }
 
-  // Setup counters for all number inputs
-  setupCounter('increment-shipping', 'numberOfItems', true);
-  setupCounter('decrement-shipping', 'numberOfItems', false);
-  setupCounter('increment-current', 'numberOfItemsCurrentPD', true);
-  setupCounter('decrement-current', 'numberOfItemsCurrentPD', false);
-  setupCounter('increment-new', 'numberOfItemsNewPD', true);
-  setupCounter('decrement-new', 'numberOfItemsNewPD', false);
+  // ── Init ──────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function () {
+    // Nav buttons
+    var btnNext = el('co-btn-next');
+    var btnBack = el('co-btn-back');
+    if (btnNext) btnNext.addEventListener('click', goNext);
+    if (btnBack) btnBack.addEventListener('click', goBack);
 
-  // Setup validation for all number input fields
-  setupNumberValidation('numberOfItems');
-  setupNumberValidation('numberOfItemsCurrentPD');
-  setupNumberValidation('numberOfItemsNewPD');
-  
-  // Initialize fees calculation
-  updateFees();
-});
+    // Area integration
+    bindAreaListeners();
+    bindCustomerListeners();
+
+    // Form submit
+    bindFormSubmit();
+
+    // Initial fee calculation
+    updateFeeSummary();
+
+    // Set initial toggle states from server state
+    setToggleCard(el('co-express-toggle'), state.isExpress);
+    setToggleCard(el('co-cod-toggle'),     state.isCOD);
+    setToggleCard(el('co-cd-toggle'),      state.isCD);
+
+    // Initial step UI
+    updateStepUI(1);
+  });
+
+})();

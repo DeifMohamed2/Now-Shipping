@@ -1,241 +1,279 @@
 <%- contentFor('HeaderCss') %>
+<% if ((typeof direction !== 'undefined' && direction === 'rtl') || (typeof currentLang !== 'undefined' && currentLang === 'ar')) { %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<% } %>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="/assets/rCSS/tickets-new.css">
 
 <%- contentFor('body') %>
 <% var Tt = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.tickets) ? translation.business.pages.tickets : {}; %>
-<div class="tickets-page">
+<% var Tj = (typeof translation !== 'undefined' && translation.business && translation.business.js && translation.business.js.tickets) ? translation.business.js.tickets : {}; %>
+<% var _ticketTypeLabels = {
+  order_issue: Tt.typeOrder || 'Order Issue',
+  delivery_issue: Tt.typeDelivery || 'Delivery Issue',
+  payment_issue: Tt.typeBilling || 'Billing',
+  return_request: Tt.typeReturnRequest || 'Return request',
+  technical_support: Tt.typeTechnicalSupport || 'Technical support',
+  account_issue: Tt.typeAccount || 'Account',
+  general_inquiry: Tt.typeGeneralInquiry || 'General inquiry',
+  complaint: Tt.typeComplaint || 'Complaint',
+  feature_request: Tt.typeFeatureRequest || 'Feature request',
+  other: Tt.typeOther || 'Other'
+}; %>
+<% var _statusLabels = {
+  new: Tt.statusNew || 'New',
+  open: Tt.statusOpen || 'Open',
+  pending: Tt.statusPending || 'Pending',
+  in_progress: Tt.statusInProgress || 'In progress',
+  resolved: Tt.statusResolved || 'Resolved',
+  closed: Tt.statusClosed || 'Closed',
+  reopened: Tt.statusReopened || 'Reopened'
+}; %>
+<div class="tickets-page tickets-page--business">
   <div class="container-fluid tickets-page__inner py-2">
-    <!-- Header Section -->
-    <div class="row mb-3">
-      <div class="col-12">
-        <div class="tickets-page__masthead d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <div>
-            <h1 class="tickets-page__title mb-1">
-              <i class="ri-customer-service-2-line tickets-page__title-icon" aria-hidden="true"></i>
-              <%= Tt.mastheadTitle || 'Support tickets' %>
-            </h1>
-            <p class="tickets-page__lead text-muted mb-0"><%= Tt.mastheadLead || 'Message the team about orders, delivery, billing, or account help.' %></p>
+    <div class="tickets-pro">
+      <header class="tickets-pro__bar">
+        <div class="tickets-pro__bar-text">
+          <div class="tickets-pro__crumb" aria-label="<%= Tt.breadcrumbAria || 'Breadcrumb' %>">
+            <span class="tickets-pro__crumb-item"><%= Tt.breadcrumbSupport || 'Support' %></span>
+            <i class="ri-arrow-right-s-line tickets-pro__crumb-sep" aria-hidden="true"></i>
+            <span class="tickets-pro__crumb-item tickets-pro__crumb-item--current"><%= Tt.breadcrumbMyTickets || 'My tickets' %></span>
           </div>
-          <button type="button" class="btn btn-tickets-primary tickets-page__cta" id="createTicketBtn">
-            <i class="ri-add-line me-1" aria-hidden="true"></i><%= Tt.newTicket || 'New ticket' %>
-          </button>
+          <p class="tickets-pro__lead"><%= Tt.mastheadLead || 'Message the team about orders, delivery, billing, or account help.' %></p>
         </div>
-      </div>
-    </div>
+        <button type="button" class="btn btn-tickets-primary tickets-pro__new-btn" id="createTicketBtn">
+          <i class="ri-add-line me-1" aria-hidden="true"></i><%= Tt.newTicket || 'New ticket' %>
+        </button>
+      </header>
 
-    <div class="row g-3">
-      <!-- Ticket List Sidebar -->
-      <div class="col-lg-4">
-        <div class="card tickets-panel h-100 border-0">
-          <div class="tickets-panel__head card-header border-0">
-            <div class="d-flex align-items-center justify-content-between">
-              <h2 class="tickets-panel__title mb-0">
-                <i class="ri-ticket-2-line me-2" aria-hidden="true"></i><%= Tt.myTickets || 'My tickets' %>
-              </h2>
-              <span class="badge tickets-count-badge" id="ticketCount">0</span>
-            </div>
-          </div>
-          <div class="card-body p-0 d-flex flex-column tickets-panel__body">
-            <!-- Enhanced Filters -->
-            <div class="p-3 border-bottom bg-light">
-              <div class="input-group mb-3">
-                <span class="input-group-text bg-white border-end-0">
-                  <i class="ri-search-line text-muted"></i>
-                </span>
-                <input type="text" class="form-control border-start-0" id="searchTickets" placeholder="<%= Tt.searchPlaceholder || 'Search tickets…' %>">
+      <div class="tickets-pro__split" id="ticketsProRoot" data-tickets-view="list">
+        <aside class="tickets-pro__list-col" id="ticketsListColumn">
+          <div class="tickets-pro__panel">
+            <div class="tickets-pro__panel-head">
+              <div class="d-flex align-items-center justify-content-between gap-2">
+                <h2 class="tickets-pro__panel-title">
+                  <i class="ri-ticket-2-line me-2" aria-hidden="true"></i><%= Tt.myTickets || 'My tickets' %>
+                </h2>
+                <span class="tickets-pro__count-badge" id="ticketCount">0</span>
               </div>
-              <div class="mb-0">
-                <label class="form-label small fw-semibold mb-1"><%= Tt.filterType || 'Type' %></label>
-                <select class="form-select form-select-sm" id="filterType">
+            </div>
+            <div class="tickets-pro__panel-filters">
+              <div class="tickets-pro__search">
+                <i class="ri-search-line tickets-pro__search-icon" aria-hidden="true"></i>
+                <input type="search" class="tickets-pro__search-input" id="searchTickets" placeholder="<%= Tt.searchPlaceholder || 'Search tickets…' %>" autocomplete="off">
+              </div>
+              <label class="tickets-pro__field-label" for="filterType"><%= Tt.filterType || 'Type' %></label>
+              <div class="tickets-pro__select-wrap">
+                <select class="tickets-pro__select" id="filterType">
                   <option value="all"><%= Tt.filterAllTypes || 'All types' %></option>
                   <option value="order_issue"><%= Tt.typeOrder || 'Order Issue' %></option>
                   <option value="delivery_issue"><%= Tt.typeDelivery || 'Delivery Issue' %></option>
                   <option value="payment_issue"><%= Tt.typeBilling || 'Billing' %></option>
-                  <option value="return_request"><%= Tt.typeOther || 'Return Request' %></option>
-                  <option value="technical_support"><%= Tt.typeAccount || 'Technical Support' %></option>
-                  <option value="general_inquiry"><%= Tt.typeOther || 'General Inquiry' %></option>
+                  <option value="return_request"><%= Tt.typeReturnRequest || 'Return request' %></option>
+                  <option value="technical_support"><%= Tt.typeTechnicalSupport || 'Technical support' %></option>
+                  <option value="account_issue"><%= Tt.typeAccount || 'Account' %></option>
+                  <option value="general_inquiry"><%= Tt.typeGeneralInquiry || 'General inquiry' %></option>
+                  <option value="complaint"><%= Tt.typeComplaint || 'Complaint' %></option>
+                  <option value="feature_request"><%= Tt.typeFeatureRequest || 'Feature request' %></option>
                   <option value="other"><%= Tt.typeOther || 'Other' %></option>
                 </select>
+                <i class="ri-arrow-down-s-line tickets-pro__select-chev" aria-hidden="true"></i>
               </div>
             </div>
-            <!-- Status filters -->
-            <div class="tickets-filter-bar border-bottom" role="toolbar" aria-label="Filter by status">
-              <button type="button" class="tickets-filter-pill active filter-tab" data-status="all">
-                <i class="ri-list-check" aria-hidden="true"></i> <%= Tt.filterAll || 'All' %>
+            <div class="tickets-filter-bar tickets-pro__status-bar" role="toolbar" aria-label="<%= Tt.filterByStatusAria || 'Filter by ticket status' %>">
+              <button type="button" class="tickets-filter-pill filter-tab active" data-status="all">
+                <%= Tt.filterAll || 'All' %> <span class="tickets-filter-pill__count" data-pill-count="all" aria-hidden="true"></span>
               </button>
               <button type="button" class="tickets-filter-pill filter-tab" data-status="new">
-                <i class="ri-add-circle-line" aria-hidden="true"></i> <%= Tt.statusNew || 'New' %>
+                <%= Tt.statusNew || 'New' %> <span class="tickets-filter-pill__count" data-pill-count="new"></span>
               </button>
               <button type="button" class="tickets-filter-pill filter-tab" data-status="open">
-                <i class="ri-mail-open-line" aria-hidden="true"></i> <%= Tt.statusOpen || 'Open' %>
+                <%= Tt.statusOpen || 'Open' %> <span class="tickets-filter-pill__count" data-pill-count="open"></span>
               </button>
               <button type="button" class="tickets-filter-pill filter-tab" data-status="pending">
-                <i class="ri-time-line" aria-hidden="true"></i> <%= Tt.statusPending || 'Pending' %>
+                <%= Tt.statusPending || 'Pending' %> <span class="tickets-filter-pill__count" data-pill-count="pending"></span>
+              </button>
+              <button type="button" class="tickets-filter-pill filter-tab" data-status="in_progress">
+                <%= Tt.statusInProgress || 'In progress' %> <span class="tickets-filter-pill__count" data-pill-count="in_progress"></span>
               </button>
               <button type="button" class="tickets-filter-pill filter-tab" data-status="resolved">
-                <i class="ri-check-line" aria-hidden="true"></i> <%= Tt.statusResolved || 'Resolved' %>
+                <%= Tt.statusResolved || 'Resolved' %> <span class="tickets-filter-pill__count" data-pill-count="resolved"></span>
+              </button>
+              <button type="button" class="tickets-filter-pill filter-tab" data-status="closed">
+                <%= Tt.statusClosed || 'Closed' %> <span class="tickets-filter-pill__count" data-pill-count="closed"></span>
+              </button>
+              <button type="button" class="tickets-filter-pill filter-tab" data-status="reopened">
+                <%= Tt.statusReopened || 'Reopened' %> <span class="tickets-filter-pill__count" data-pill-count="reopened"></span>
               </button>
             </div>
-            <!-- Ticket List -->
-            <div id="ticketList" class="flex-grow-1 overflow-auto" style="max-height: 100%;"></div>
+            <div id="ticketList" class="tickets-pro__list"></div>
           </div>
-        </div>
-      </div>
+        </aside>
 
-      <!-- Chat -->
-      <div class="col-lg-8">
-        <div class="card tickets-chat-card border-0 h-100">
-          <!-- Empty State -->
-          <div id="emptyState" class="tickets-empty h-100 d-flex flex-column align-items-center justify-content-center p-4 p-md-5">
-            <div class="tickets-empty__icon mb-3" aria-hidden="true">
-              <i class="ri-message-3-line"></i>
+        <main class="tickets-pro__detail-col" id="ticketsMainColumn">
+          <div class="tickets-pro__main-card">
+            <div id="emptyState" class="tickets-pro__empty">
+              <div class="tickets-pro__empty-icon" aria-hidden="true">
+                <i class="ri-inbox-2-line"></i>
+              </div>
+              <h2 class="tickets-pro__empty-title"><%= Tt.noTicketSelected || 'No ticket selected' %></h2>
+              <p class="tickets-pro__empty-text"><%= Tt.chooseTicket || 'Choose a ticket from the list or open a new one.' %></p>
+              <button type="button" class="btn btn-tickets-primary tickets-pro__empty-cta" id="emptyStateCreateBtn">
+                <i class="ri-add-line me-1" aria-hidden="true"></i><%= Tt.emptyStateCreateCta || 'Create new ticket' %>
+              </button>
             </div>
-            <h2 class="tickets-empty__title mb-2"><%= Tt.noTicketSelected || 'No ticket selected' %></h2>
-            <p class="tickets-empty__text text-muted text-center mb-0"><%= Tt.chooseTicket || 'Choose a ticket from the list or open a new one.' %></p>
-          </div>
 
-          <div id="chatContainer" class="h-100 d-flex flex-column hidden">
-            <div class="tickets-chat-head card-header border-0">
-              <div class="d-flex justify-content-between align-items-start gap-2">
-                <div class="flex-grow-1 min-w-0">
-                  <h2 id="chatTitle" class="tickets-chat-head__title mb-1">Ticket #…</h2>
-                  <div id="chatInfo" class="tickets-chat-head__meta small"></div>
+            <div id="createTicketPanel" class="tickets-pro__create hidden" aria-hidden="true">
+              <div class="tickets-pro__create-head">
+                <button type="button" class="tickets-pro__icon-btn" id="createTicketBackBtn" aria-label="<%= Tt.backToList || 'Back' %>">
+                  <i class="ri-arrow-left-line" aria-hidden="true"></i>
+                </button>
+                <div>
+                  <h2 class="tickets-pro__create-title"><%= Tt.newTicketTitle || 'Open a new ticket' %></h2>
+                  <p class="tickets-pro__create-sub"><%= Tt.createFormLead || 'Fill in the details below and we will get back to you shortly.' %></p>
                 </div>
-                <div class="d-flex gap-2 align-items-start flex-shrink-0">
-                  <button type="button" class="btn btn-sm btn-tickets-ghost" id="rateTicketBtn" title="Rate this ticket">
-                    <i class="ri-star-line me-1" aria-hidden="true"></i>Rate
+              </div>
+              <form id="createTicketForm" class="tickets-pro__create-body" novalidate>
+                <div class="tickets-pro__field">
+                  <label class="tickets-pro__label" for="ticketSubject">
+                    <i class="ri-align-left" aria-hidden="true"></i> <%= Tt.ticketSubject || 'Subject' %> <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" class="tickets-pro__input" id="ticketSubject" placeholder="<%= Tt.subjectPlaceholder || '' %>" required>
+                  <small class="tickets-pro__hint"><%= Tt.subjectHint || '' %></small>
+                </div>
+                <div class="tickets-pro__field">
+                  <label class="tickets-pro__label" for="ticketType">
+                    <i class="ri-price-tag-3-line" aria-hidden="true"></i> <%= Tt.ticketType || 'Ticket Type' %> <span class="text-danger">*</span>
+                  </label>
+                  <div class="tickets-pro__select-wrap">
+                    <select class="tickets-pro__select" id="ticketType" required>
+                      <option value=""><%= Tt.ticketSelectType || 'Select type…' %></option>
+                      <option value="order_issue"><%= Tt.typeOrder || 'Order Issue' %></option>
+                      <option value="delivery_issue"><%= Tt.typeDelivery || 'Delivery Issue' %></option>
+                      <option value="payment_issue"><%= Tt.typeBilling || 'Billing' %></option>
+                      <option value="return_request"><%= Tt.typeReturnRequest || 'Return request' %></option>
+                      <option value="technical_support"><%= Tt.typeTechnicalSupport || 'Technical support' %></option>
+                      <option value="account_issue"><%= Tt.typeAccount || 'Account' %></option>
+                      <option value="general_inquiry"><%= Tt.typeGeneralInquiry || 'General inquiry' %></option>
+                      <option value="complaint"><%= Tt.typeComplaint || 'Complaint' %></option>
+                      <option value="feature_request"><%= Tt.typeFeatureRequest || 'Feature request' %></option>
+                      <option value="other"><%= Tt.typeOther || 'Other' %></option>
+                    </select>
+                    <i class="ri-arrow-down-s-line tickets-pro__select-chev" aria-hidden="true"></i>
+                  </div>
+                </div>
+                <div class="tickets-pro__field">
+                  <label class="tickets-pro__label" for="relatedOrder">
+                    <i class="ri-shopping-bag-line" aria-hidden="true"></i> <%= Tt.relatedOrderLabel || 'Related order (optional)' %>
+                  </label>
+                  <div class="tickets-pro__input-icon">
+                    <i class="ri-shopping-bag-line" aria-hidden="true"></i>
+                    <input type="text" class="tickets-pro__input" id="relatedOrder" placeholder="<%= Tt.relatedOrderPlaceholder || '' %>">
+                  </div>
+                  <small class="tickets-pro__hint"><%= Tt.relatedOrderHint || '' %></small>
+                </div>
+                <div class="tickets-pro__field">
+                  <label class="tickets-pro__label" for="ticketDescription">
+                    <i class="ri-align-left" aria-hidden="true"></i> <%= Tt.ticketMessage || 'Message' %> <span class="text-danger">*</span>
+                  </label>
+                  <textarea class="tickets-pro__textarea" id="ticketDescription" rows="6" maxlength="2000" placeholder="<%= Tt.descriptionPlaceholder || '' %>" required></textarea>
+                  <div class="tickets-pro__char-row">
+                    <small class="tickets-pro__hint mb-0"><%= Tt.descriptionHint || '' %></small>
+                    <span class="tickets-pro__char-count" id="ticketDescriptionCount">0/2000</span>
+                  </div>
+                </div>
+                <div class="tickets-pro__callout">
+                  <i class="ri-information-line" aria-hidden="true"></i>
+                  <p><%= Tt.supportSlaNote || 'Our support team typically responds within 2–4 business hours.' %></p>
+                </div>
+              </form>
+              <div class="tickets-pro__create-foot">
+                <button type="button" class="tickets-pro__btn-secondary" id="createTicketCancelBtn"><%= Tt.cancelTicket || 'Cancel' %></button>
+                <button type="button" class="tickets-pro__btn-primary" id="submitTicketBtn">
+                  <i class="ri-send-plane-fill me-1" aria-hidden="true"></i><%= Tt.createTicketSubmit || 'Create ticket' %>
+                </button>
+              </div>
+            </div>
+
+            <div id="chatContainer" class="tickets-pro__chat hidden" aria-hidden="true">
+              <div class="tickets-pro__chat-head">
+                <button type="button" class="tickets-pro__icon-btn tickets-pro__back-mobile" id="ticketsBackToList" aria-label="<%= Tt.backToList || 'Back to list' %>">
+                  <i class="ri-arrow-left-line" aria-hidden="true"></i>
+                </button>
+                <div class="tickets-pro__chat-head-text flex-grow-1 min-w-0">
+                  <h2 id="chatTitle" class="tickets-pro__chat-title"><%= Tt.chatTitlePlaceholder || 'Ticket' %> #…</h2>
+                  <div id="chatInfo" class="tickets-pro__chips"></div>
+                </div>
+                <div class="tickets-pro__chat-actions" id="rateTicketActionWrap">
+                  <button type="button" class="tickets-pro__btn-rate" id="rateTicketBtn" title="<%= Tt.titleRateTicket || 'Rate this ticket' %>" disabled aria-disabled="true">
+                    <i class="ri-star-line me-1" aria-hidden="true"></i><span id="rateTicketBtnLabel"><%= Tt.rateTicketBtn || 'Rate' %></span>
+                  </button>
+                </div>
+              </div>
+              <div id="rateHintBanner" class="tickets-pro__rate-banner" role="status" aria-live="polite" hidden></div>
+              <div id="chatMessages" class="tickets-pro__messages"></div>
+              <div class="tickets-pro__composer">
+                <p class="tickets-pro__kbd-hint d-none d-md-block"><%= Tj.composerKbdHint || 'Press Enter to send, Shift+Enter for a new line.' %></p>
+                <div id="attachmentPreview" class="tickets-pro__attach-preview"></div>
+                <div class="tickets-pro__composer-inner">
+                  <button type="button" class="tickets-pro__composer-attach" id="attachImageBtn" title="<%= Tt.titleAttachImage || 'Attach image' %>" aria-label="<%= Tt.titleAttachImage || 'Attach image' %>">
+                    <i class="ri-attachment-2" aria-hidden="true"></i>
+                  </button>
+                  <input type="file" id="imageInput" accept="image/*" class="visually-hidden" aria-hidden="true">
+                  <label for="messageInput" class="visually-hidden"><%= Tt.send || 'Message' %></label>
+                  <textarea id="messageInput" class="tickets-pro__composer-input" placeholder="<%= Tt.sendPlaceholder || 'Write a message…' %>" rows="1" autocomplete="off"></textarea>
+                  <button type="button" class="tickets-pro__composer-send btn-tickets-primary" id="sendBtn" aria-label="<%= Tt.send || 'Send' %>">
+                    <i class="ri-send-plane-fill" aria-hidden="true"></i>
                   </button>
                 </div>
               </div>
             </div>
-            
-            <!-- Messages Area -->
-            <div id="chatMessages" class="flex-grow-1 overflow-auto p-4"></div>
-            
-            <div class="tickets-composer card-footer border-0 bg-white">
-              <div id="attachmentPreview" class="mb-2"></div>
-              <div class="input-group">
-                <button type="button" class="btn btn-tickets-attach" id="attachImageBtn" title="Attach image">
-                  <i class="ri-image-add-line" aria-hidden="true"></i>
-                </button>
-                <input type="file" id="imageInput" accept="image/*" class="visually-hidden">
-                <textarea id="messageInput" class="form-control tickets-composer__input" placeholder="<%= Tt.sendPlaceholder || 'Write a message…' %>" rows="2"></textarea>
-                <button type="button" class="btn btn-tickets-primary px-3" id="sendBtn">
-                  <i class="ri-send-plane-fill" aria-hidden="true"></i> <%= Tt.send || 'Send' %>
-                </button>
-              </div>
-            </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   </div>
 
-<!-- Create Ticket Modal -->
-<div class="modal fade" id="createTicketModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content tickets-modal">
-      <div class="modal-header tickets-modal__header border-0">
-        <h5 class="modal-title tickets-modal__title mb-0">
-          <i class="ri-add-circle-line me-2" aria-hidden="true"></i>New ticket
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-4">
-        <form id="createTicketForm">
-          <div class="mb-3">
-            <label class="form-label fw-semibold">
-              Subject <span class="text-danger">*</span>
-            </label>
-            <input type="text" class="form-control" id="ticketSubject" placeholder="Brief description of your issue..." required>
-            <small class="text-muted">Be specific and concise</small>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">
-              Type <span class="text-danger">*</span>
-            </label>
-            <select class="form-select" id="ticketType" required>
-              <option value=""><%= Tt.ticketSelectType || 'Select ticket type…' %></option>
-              <option value="order_issue"><%= Tt.typeOrder || 'Order Issue' %></option>
-              <option value="delivery_issue"><%= Tt.typeDelivery || 'Delivery Issue' %></option>
-              <option value="payment_issue"><%= Tt.typeBilling || 'Billing' %></option>
-              <option value="return_request"><%= Tt.typeOther || 'Return Request' %></option>
-              <option value="technical_support"><%= Tt.typeAccount || 'Technical Support' %></option>
-              <option value="general_inquiry"><%= Tt.typeOther || 'General Inquiry' %></option>
-              <option value="other"><%= Tt.typeOther || 'Other' %></option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Related Order (Optional)</label>
-            <div class="input-group">
-              <span class="input-group-text">
-                <i class="ri-shopping-bag-line"></i>
-              </span>
-              <input type="text" class="form-control" id="relatedOrder" placeholder="Enter order number...">
+  <!-- Rate Ticket Modal -->
+  <div class="modal fade" id="rateTicketModal" tabindex="-1" aria-labelledby="rateTicketModalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content tickets-modal">
+        <div class="modal-header tickets-modal__header border-0">
+          <h5 class="modal-title tickets-modal__title mb-0" id="rateTicketModalTitle">
+            <i class="ri-star-line me-2" aria-hidden="true"></i><%= Tt.rateTicketTitle || 'Rate support' %>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= Tt.closeModalAria || 'Close' %>"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="text-center mb-4">
+            <div class="rating-stars mb-3" id="ratingStars" role="group" aria-label="<%= Tt.rateTicketTitle || 'Rate support' %>">
+              <i class="ri-star-line star" data-rating="1" role="button" tabindex="0" aria-label="1"></i>
+              <i class="ri-star-line star" data-rating="2" role="button" tabindex="0" aria-label="2"></i>
+              <i class="ri-star-line star" data-rating="3" role="button" tabindex="0" aria-label="3"></i>
+              <i class="ri-star-line star" data-rating="4" role="button" tabindex="0" aria-label="4"></i>
+              <i class="ri-star-line star" data-rating="5" role="button" tabindex="0" aria-label="5"></i>
             </div>
-            <small class="text-muted">If this ticket is related to a specific order</small>
+            <p class="text-muted mb-0" id="ratingText"><%= Tj.clickToRate || 'Click to rate' %></p>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">
-              Description <span class="text-danger">*</span>
-            </label>
-            <textarea class="form-control" id="ticketDescription" rows="6" placeholder="Please provide detailed information about your issue..." required></textarea>
-            <small class="text-muted">Include all relevant details to help us assist you better</small>
+            <label class="form-label fw-semibold" for="ratingComment"><%= Tt.ratingCommentsLabel || 'Comments (optional)' %></label>
+            <textarea class="form-control" id="ratingComment" rows="3" placeholder="<%= Tt.ratingCommentPlaceholder || '' %>"></textarea>
           </div>
-        </form>
-      </div>
-      <div class="modal-footer border-top">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="ri-close-line me-1"></i>Cancel
-        </button>
-        <button type="button" class="btn btn-tickets-primary" id="submitTicketBtn">
-          <i class="ri-send-plane-fill me-1" aria-hidden="true"></i>Create ticket
-        </button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= Tt.cancelTicket || 'Cancel' %></button>
+          <button type="button" class="btn btn-tickets-primary" id="submitRatingBtn"><%= Tt.submitRating || 'Submit rating' %></button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-<!-- Rate Ticket Modal -->
-<div class="modal fade" id="rateTicketModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content tickets-modal">
-      <div class="modal-header tickets-modal__header border-0">
-        <h5 class="modal-title tickets-modal__title mb-0">
-          <i class="ri-star-line me-2" aria-hidden="true"></i>Rate support
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-4">
-        <div class="text-center mb-4">
-          <div class="rating-stars mb-3" id="ratingStars">
-            <i class="ri-star-line star" data-rating="1"></i>
-            <i class="ri-star-line star" data-rating="2"></i>
-            <i class="ri-star-line star" data-rating="3"></i>
-            <i class="ri-star-line star" data-rating="4"></i>
-            <i class="ri-star-line star" data-rating="5"></i>
-          </div>
-          <p class="text-muted" id="ratingText">Click to rate</p>
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Comments (Optional)</label>
-          <textarea class="form-control" id="ratingComment" rows="3" placeholder="Tell us about your experience..."></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-tickets-primary" id="submitRatingBtn">Submit rating</button>
-      </div>
-    </div>
-  </div>
-</div>
 </div>
 
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<% var Tj = (typeof translation !== 'undefined' && translation.business && translation.business.js && translation.business.js.tickets) ? translation.business.js.tickets : {}; %>
 <script>
   window.__NS_BUSINESS_I18N = window.__NS_BUSINESS_I18N || {};
   window.__NS_BUSINESS_I18N.tickets = {
@@ -267,7 +305,20 @@
     selectRating: "<%= Tj.selectRating || 'Please select a rating' %>",
     thankYouFeedback: "<%= Tj.thankYouFeedback || 'Thank you for your feedback!' %>",
     ratingFailed: "<%= Tj.ratingFailed || 'Failed to submit rating' %>",
-    locale: "<%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US' %>"
+    ratingWaitHint: "<%= Tj.ratingWaitHint || 'You can rate support after this ticket is Resolved or Closed.' %>",
+    ratingCanRateHint: "<%= Tj.ratingCanRateHint || 'You can now rate your support experience using the Rate button above.' %>",
+    ratingAlreadyThanks: "<%= Tj.ratingAlreadyThanks || 'You already submitted a rating for this ticket.' %>",
+    ratingThanksStars: "<%= Tj.ratingThanksStars || 'Thank you! You rated this ticket: {stars} / 5.' %>",
+    ratingNotYetTitle: "<%= Tj.ratingNotYetTitle || 'Rating not available yet' %>",
+    rateTicketLabelRated: "<%= Tj.rateTicketLabelRated || 'Rated' %>",
+    rateTicketLabel: "<%= Tt.rateTicketBtn || 'Rate' %>",
+    titleRateTicket: "<%= Tt.titleRateTicket || 'Rate this ticket' %>",
+    locale: "<%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US' %>",
+    chatTitlePrefix: "<%= Tt.chatTitlePlaceholder || 'Ticket' %>",
+    attachmentAlt: "<%= Tt.attachmentAlt || 'Attachment' %>",
+    imagePreviewAlt: "<%= Tt.imagePreviewAlt || 'Preview' %>",
+    ticketTypeLabels: <%- JSON.stringify(_ticketTypeLabels) %>,
+    statusLabels: <%- JSON.stringify(_statusLabels) %>
   };
 </script>
 <script src="/assets/rJS/tickets-business.js"></script>

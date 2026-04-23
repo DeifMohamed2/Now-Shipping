@@ -149,6 +149,11 @@ router.get(
   businessController.get_orderDetailsPage
 );
 
+// Redirect legacy / mis-typed URL patterns to the canonical order details route
+router.get('/orders/:orderNumber/details', function (req, res) {
+  res.redirect(301, '/business/order-details/' + req.params.orderNumber);
+});
+
 router.get('/edit-order/:orderNumber', businessController.get_editOrderPage);
 
 router.put('/orders/edit-order/:orderId', businessController.editOrder);
@@ -197,7 +202,12 @@ router.post(
   '/orders/:orderId/return-to-warehouse',
   businessController.returnToWarehouseFromWaiting
 );
+// Same handler as /cancel — alias for parity with /api/v1/business/.../cancel-from-waiting
 router.post('/orders/:orderId/cancel', businessController.cancelFromWaiting);
+router.post(
+  '/orders/:orderId/cancel-from-waiting',
+  businessController.cancelFromWaiting
+);
 
 // return actions
 router.post(
@@ -221,6 +231,11 @@ router.post(
   '/orders/:orderId/mark-returned',
   businessController.markDeliverOrderAsReturned
 ); //
+
+router.put(
+  '/pickup/update-pickup/:pickupId',
+  businessController.updatePickup
+);
 
 router.put(
   '/pickup/cancel-pickup/:pickupId',

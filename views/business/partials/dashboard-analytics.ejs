@@ -1,0 +1,279 @@
+<%
+  const hour = new Date().getHours();
+  let greeting = Dp.greetingEvening || 'Good Evening';
+  if (hour < 12) greeting = Dp.greetingMorning || 'Good Morning';
+  else if (hour < 18) greeting = Dp.greetingAfternoon || 'Good Afternoon';
+  const businessName = user.brandInfo && user.brandInfo.brandName ? user.brandInfo.brandName : (user.name || 'there');
+  const todayDate = new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+%>
+
+<!-- ═══ Header ════════════════════════════════════════════════════════════ -->
+<div class="db-header mb-4">
+  <div class="d-flex align-items-lg-center flex-lg-row flex-column gap-3">
+
+    <!-- Greeting -->
+    <div class="flex-grow-1">
+      <h4 class="db-greeting mb-1">
+        <%= greeting %>, <span class="db-greeting-name"><%= businessName %></span>!
+      </h4>
+      <p class="db-greeting-sub mb-0">
+        <%= Dp.todayOverview || "Here's your business performance at a glance." %>
+        <span class="db-today-date ms-1"><%= todayDate %></span>
+      </p>
+    </div>
+
+    <!-- Controls -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <!-- Range filter card -->
+      <div class="db-range-card" id="dbRangePills" role="group" aria-label="<%= Dp.dateRangeAria || 'Date range' %>">
+        <button class="db-range-pill" data-range="today"><%= Dp.rangeToday || 'Today' %></button>
+        <button class="db-range-pill" data-range="7d"><%= Dp.range7d || '7 Days' %></button>
+        <button class="db-range-pill active" data-range="30d"><%= Dp.range30d || '30 Days' %></button>
+        <button class="db-range-pill" data-range="90d"><%= Dp.range90d || '90 Days' %></button>
+        <button class="db-range-pill" data-range="ytd"><%= Dp.rangeYtd || 'This Year' %></button>
+        <button class="db-refresh-icon" id="dbRefreshBtn" title="<%= Dp.refreshDashboard || 'Refresh' %>" aria-label="<%= Dp.refreshDashboard || 'Refresh' %>">
+          <i class="ri-refresh-line"></i>
+        </button>
+      </div>
+      <!-- Create order CTA -->
+      <a href="/business/create-order" class="btn db-btn-create">
+        <i class="ri-add-circle-line align-middle me-1"></i>
+        <%= Dp.createNewOrder || 'New Order' %>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ KPI Grid ══════════════════════════════════════════════════════════ -->
+<div class="row g-3 mb-4" id="dbKpiRow">
+  <!-- Skeleton cards rendered until JS loads data -->
+  <% for(let i = 0; i < 7; i++){ %>
+  <div class="col-6 col-md-4 col-xl-3 ns-kpi-col" style="--anim-delay: <%= i * 60 %>ms">
+    <div class="db-kpi-card db-skeleton ns-fade-in-up">
+      <div class="d-flex align-items-start justify-content-between mb-3">
+        <div class="db-skeleton-block" style="width:40px;height:40px;border-radius:10px;"></div>
+        <div class="db-skeleton-block" style="width:70px;height:28px;border-radius:6px;"></div>
+      </div>
+      <div class="db-skeleton-line" style="width:60%;height:11px;margin-bottom:10px;"></div>
+      <div class="db-skeleton-line" style="width:45%;height:26px;margin-bottom:10px;"></div>
+      <div class="db-skeleton-line" style="width:55%;height:10px;"></div>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<!-- ═══ Row A: Revenue Trend + Status Donut ══════════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-xl-8">
+    <div class="db-chart-card h-100 ns-chart-entry" style="--anim-delay:0ms">
+      <div class="db-chart-card-header">
+        <div>
+          <h5 class="db-chart-title mb-0">
+            <i class="ri-line-chart-line me-2 db-icon-accent"></i><%= Dp.chartRevenueTrend || 'Revenue & Orders Trend' %>
+          </h5>
+          <p class="db-chart-subtitle mb-0" id="dbTrendSubtitle"></p>
+        </div>
+        <div class="db-chart-actions">
+          <button class="db-chart-toggle active" data-chart="trend" data-series="revenue"><%= Dp.chartRevenue || 'Revenue' %></button>
+          <button class="db-chart-toggle" data-chart="trend" data-series="orders"><%= Dp.chartOrders || 'Orders' %></button>
+        </div>
+      </div>
+      <div class="db-chart-body">
+        <div id="chartRevenueTrend" class="db-chart-area db-chart-skeleton"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="db-chart-card h-100 ns-chart-entry" style="--anim-delay:80ms">
+      <div class="db-chart-card-header">
+        <h5 class="db-chart-title mb-0">
+          <i class="ri-pie-chart-2-line me-2 db-icon-accent"></i><%= Dp.chartStatusBreakdown || 'Order Status Breakdown' %>
+        </h5>
+      </div>
+      <div class="db-chart-body">
+        <div id="chartStatusDonut" class="db-chart-area db-chart-skeleton" style="height:300px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Row B: COD Cash Flow + Delivery Rates ════════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-xl-6">
+    <div class="db-chart-card h-100 ns-chart-entry" style="--anim-delay:0ms">
+      <div class="db-chart-card-header">
+        <div>
+          <h5 class="db-chart-title mb-0">
+            <i class="ri-money-dollar-circle-line me-2 db-icon-accent"></i><%= Dp.chartCashFlow || 'COD Cash Flow' %>
+          </h5>
+          <p class="db-chart-subtitle mb-0"><%= Dp.chartCashFlowDesc || 'Expected vs Collected vs Shipping Fees' %></p>
+        </div>
+      </div>
+      <div class="db-chart-body">
+        <div id="chartCashFlow" class="db-chart-area db-chart-skeleton" style="height:280px;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="db-chart-card h-100 ns-chart-entry" style="--anim-delay:80ms">
+      <div class="db-chart-card-header">
+        <div>
+          <h5 class="db-chart-title mb-0">
+            <i class="ri-speed-up-line me-2 db-icon-accent"></i><%= Dp.chartRateTrend || 'Delivery Performance Rates' %>
+          </h5>
+          <p class="db-chart-subtitle mb-0"><%= Dp.chartRateTrendDesc || 'Success, Return & Cancel rates over time' %></p>
+          <% if (Dp.chartRateTrendFootnote) { %>
+          <p class="db-chart-subtitle mb-0 text-muted small"><%= Dp.chartRateTrendFootnote %></p>
+          <% } %>
+        </div>
+      </div>
+      <div class="db-chart-body">
+        <div id="chartRateTrend" class="db-chart-area db-chart-skeleton" style="height:280px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Row C: Top Governorates + Order Heatmap ══════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-xl-6">
+    <div class="db-chart-card h-100 ns-chart-entry" style="--anim-delay:0ms">
+      <div class="db-chart-card-header">
+        <div>
+          <h5 class="db-chart-title mb-0">
+            <i class="ri-map-pin-2-line me-2 db-icon-accent"></i><%= Dp.chartTopGov || 'Top Governorates' %>
+          </h5>
+          <p class="db-chart-subtitle mb-0"><%= Dp.chartTopGovDesc || 'Top 10 delivery destinations' %></p>
+        </div>
+        <div class="db-chart-actions">
+          <button class="db-chart-toggle active" data-chart="geo" data-series="count"><%= Dp.chartOrders || 'Orders' %></button>
+          <button class="db-chart-toggle" data-chart="geo" data-series="revenue"><%= Dp.chartRevenue || 'Revenue' %></button>
+        </div>
+      </div>
+      <div class="db-chart-body">
+        <div id="chartTopGov" class="db-chart-area db-chart-skeleton" style="height:300px;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="db-chart-card h-100 ns-chart-entry" style="--anim-delay:80ms">
+      <div class="db-chart-card-header">
+        <div>
+          <h5 class="db-chart-title mb-0">
+            <i class="ri-calendar-2-line me-2 db-icon-accent"></i><%= Dp.chartHeatmap || 'Order Volume Heatmap' %>
+          </h5>
+          <p class="db-chart-subtitle mb-0"><%= Dp.chartHeatmapDesc || 'Orders by day of week &amp; hour' %></p>
+        </div>
+      </div>
+      <div class="db-chart-body">
+        <div id="chartHeatmap" class="db-chart-area db-chart-skeleton" style="height:300px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Row D: Recent Orders + Recent Pickups ════════════════════════════ -->
+<div class="row g-3 mb-5">
+  <div class="col-xl-6">
+    <div class="db-chart-card h-100 ns-chart-entry" style="--anim-delay:0ms">
+      <div class="db-chart-card-header">
+        <h5 class="db-chart-title mb-0">
+          <i class="ri-list-ordered me-2 db-icon-accent"></i><%= Dp.recentOrders || 'Recent Orders' %>
+        </h5>
+        <a href="/business/orders" class="db-view-all-link">
+          <%= Dp.viewAll || 'View All' %> <i class="ri-arrow-right-line align-middle"></i>
+        </a>
+      </div>
+      <div class="db-table-wrapper" id="dbRecentOrdersTable">
+        <div class="db-table-skeleton">
+          <% for(let i = 0; i < 6; i++){ %>
+          <div class="db-skeleton-row"></div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="db-chart-card h-100 ns-chart-entry" style="--anim-delay:80ms">
+      <div class="db-chart-card-header">
+        <h5 class="db-chart-title mb-0">
+          <i class="ri-truck-line me-2 db-icon-accent"></i><%= Dp.recentPickups || 'Recent Pickups' %>
+        </h5>
+        <a href="/business/pickup" class="db-view-all-link">
+          <%= Dp.viewAll || 'View All' %> <i class="ri-arrow-right-line align-middle"></i>
+        </a>
+      </div>
+      <div class="db-table-wrapper" id="dbRecentPickupsTable">
+        <div class="db-table-skeleton">
+          <% for(let i = 0; i < 6; i++){ %>
+          <div class="db-skeleton-row"></div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- i18n data consumed by dashboard-analytics.js -->
+<script id="ns-dashboard-i18n" type="application/json">
+{
+  "lang": "<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>",
+  "currency": "EGP",
+  "weekdays": [
+    "<%= Dp.weekdaySun || 'Sun' %>",
+    "<%= Dp.weekdayMon || 'Mon' %>",
+    "<%= Dp.weekdayTue || 'Tue' %>",
+    "<%= Dp.weekdayWed || 'Wed' %>",
+    "<%= Dp.weekdayThu || 'Thu' %>",
+    "<%= Dp.weekdayFri || 'Fri' %>",
+    "<%= Dp.weekdaySat || 'Sat' %>"
+  ],
+  "labels": {
+    "totalOrders":    "<%= Dp.kpiTotalOrders    || 'Total Orders' %>",
+    "completedOrders":"<%= Dp.kpiCompleted      || 'Completed Orders' %>",
+    "activeOrders":   "<%= Dp.kpiActive         || 'Active Orders' %>",
+    "totalRevenue":   "<%= Dp.kpiRevenue        || 'Total Revenue' %>",
+    "avgOrderValue":  "<%= Dp.kpiAvgOrder       || 'Avg Order Value' %>",
+    "expectedCash":   "<%= Dp.kpiExpectedCash   || 'Expected Cash' %>",
+    "collectedCash":  "<%= Dp.kpiCollectedCash  || 'Collected Cash' %>",
+    "days":           "<%= Dp.days              || 'days' %>",
+    "kpiSuccessRateSuffix": "<%= Dp.kpiSuccessRateSuffix || 'success rate' %>",
+    "kpiExpectedCashSub":   "<%= Dp.kpiExpectedCashSub   || 'Pending COD/CD' %>",
+    "chartTooltipOrders":   "<%= Dp.chartTooltipOrders   || 'orders' %>",
+    "successRate":    "<%= Dp.labelSuccess      || 'Success' %>",
+    "returnRate":     "<%= Dp.labelReturn       || 'Return' %>",
+    "cancelRate":     "<%= Dp.labelCancel       || 'Cancel' %>",
+    "expected":       "<%= Dp.labelExpected     || 'Expected' %>",
+    "collected":      "<%= Dp.labelCollected    || 'Collected' %>",
+    "fees":           "<%= Dp.labelFees         || 'Shipping Fees' %>",
+    "orderNum":       "<%= Dp.colOrderId        || 'Order #' %>",
+    "customer":       "<%= Dp.colCustomer       || 'Customer' %>",
+    "status":         "<%= Dp.colStatus         || 'Status' %>",
+    "date":           "<%= Dp.colDate           || 'Date' %>",
+    "pickupNum":      "<%= Dp.colPickupId       || 'Pickup #' %>",
+    "items":          "<%= Dp.colItems          || 'Items' %>",
+    "noOrders":       "<%= Dp.noRecentOrders    || 'No recent orders' %>",
+    "noPickups":      "<%= Dp.noRecentPickups   || 'No recent pickups' %>",
+    "loading":        "<%= Dp.loading           || 'Loading\u2026' %>",
+    "errorLoad":      "<%= Dp.errorLoad         || 'Failed to load data' %>",
+    "retry":          "<%= Dp.retry             || 'Retry' %>",
+    "vsLast":         "<%= Dp.vsLastPeriod      || 'vs last period' %>",
+    "statuses": {
+      "new":              "<%= Dp.statusNew             || 'New' %>",
+      "inProgress":       "<%= Dp.statusInProgress      || 'In Progress' %>",
+      "headingToCustomer":"<%= Dp.statusHeadingCust     || 'Heading to Customer' %>",
+      "inStock":          "<%= Dp.statusInStock         || 'In Stock' %>",
+      "waitingAction":    "<%= Dp.statusWaiting         || 'Awaiting Action' %>",
+      "returnToBusiness": "<%= Dp.statusReturnBiz       || 'Heading to You' %>",
+      "completed":        "<%= Dp.statusCompleted       || 'Completed' %>",
+      "returned":         "<%= Dp.statusReturned        || 'Returned' %>",
+      "returnCompleted":  "<%= Dp.statusReturnCompleted || 'Return Completed' %>",
+      "canceled":         "<%= Dp.statusCanceled        || 'Canceled' %>",
+      "rejected":         "<%= Dp.statusRejected        || 'Customer refused' %>",
+      "terminated":       "<%= Dp.statusTerminated      || 'Terminated' %>",
+      "deliveryFailed":   "<%= Dp.statusDeliveryFailed  || 'Delivery Failed' %>"
+    }
+  }
+}
+</script>

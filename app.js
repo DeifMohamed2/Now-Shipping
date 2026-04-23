@@ -177,14 +177,43 @@ app.use('/api/v1/courier', courierRouterApi);
 app.use('/api/v1/tickets', ticketRouterApi);
 app.use('/api/v1/upload', uploadRouterApi);
 
-// Catch-all 404 handler (use app.use to avoid path-to-regexp parsing issues)
+// Catch-all 404 handler — uses the business dashboard layout for /business/* routes,
+// the auth layout for everything else.
 app.use(function (req, res) {
   res.status(404);
-  res.locals = {
-    title: 'Error 404',
-  };
+  const url = req.originalUrl || req.url || '';
+  const isBusinessRoute = url.startsWith('/business');
+  const isCourierRoute  = url.startsWith('/courier');
+  const isAdminRoute    = url.startsWith('/admin');
+
+  if (isBusinessRoute) {
+    return res.render('business/404', {
+      layout: 'layouts/layout',
+      title: 'Page not found',
+      page_title: '404 — Page not found',
+      requestedUrl: url,
+    });
+  }
+
+  if (isAdminRoute) {
+    return res.render('auth/auth-404', {
+      layout: 'layouts/admin-layout',
+      title: 'Page not found',
+      requestedUrl: url,
+    });
+  }
+
+  if (isCourierRoute) {
+    return res.render('auth/auth-404', {
+      layout: 'layouts/courier-layout',
+      title: 'Page not found',
+      requestedUrl: url,
+    });
+  }
+
   res.render('auth/auth-404', {
     layout: 'layouts/layout-without-nav',
+    title: 'Error 404',
   });
 });
 

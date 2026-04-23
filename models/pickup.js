@@ -105,7 +105,7 @@ const pickupSchema = new Schema(
         
         // UNSUCCESSFUL category
         'canceled',         // Canceled
-        'rejected',         // Rejected by driver
+        'rejected',         // Driver declined pickup (distinct from order customer-refused)
         'returned',         // Returned to business
         'terminated',       // Terminated
       ],
@@ -169,30 +169,38 @@ const pickupSchema = new Schema(
   { timestamps: true }
 );
 
+/** Strips duplicate ids (must run before the ordersPickedUp custom validator on save). */
+function dedupeOrdersPickedUpArray(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) return arr;
+  const seen = new Set();
+  const out = [];
+  for (const item of arr) {
+    const id = item && item._id ? item._id : item;
+    if (!id) continue;
+    const s = id.toString();
+    if (seen.has(s)) continue;
+    seen.add(s);
+    out.push(id);
+  }
+  return out;
+}
+
+pickupSchema.pre('validate', function (next) {
+  if (Array.isArray(this.ordersPickedUp) && this.ordersPickedUp.length > 0) {
+    this.ordersPickedUp = dedupeOrdersPickedUpArray(this.ordersPickedUp);
+  }
+  if (next) next();
+});
+
 // Add pre-save hook to update status category
 pickupSchema.pre('save', updateStatusCategory);
 
-// Create a pickup_fee ledger entry when a pickup is completed
-pickupSchema.post('save', async function(doc) {
-  if (doc.picikupStatus === 'completed' && doc.pickupFees > 0) {
-    try {
-      const LedgerEntry = require('./ledgerEntry');
-      await LedgerEntry.create({
-        business: doc.business,
-        type: 'pickup_fee',
-        amount: -doc.pickupFees,
-        description: `Pickup fee for pickup #${doc.pickupNumber}`,
-        pickupId: doc._id,
-        pickupNumber: doc.pickupNumber,
-        createdBy: 'system',
-      });
-    } catch (err) {
-      if (err.code === 11000) {
-        // Duplicate — entry already exists, ignore
-      } else {
-        console.error('Error creating pickup_fee ledger entry:', err);
-      }
-    }
+// Charge pickup fee in the wallet when the courier finishes collecting from the business (pickedUp),
+// not when the pickup run is later marked completed at the warehouse.
+pickupSchema.post('save', async function (doc) {
+  if (doc.picikupStatus === 'pickedUp' && doc.pickupFees > 0) {
+    const { createPickupEntry } = require('../utils/ledgerService');
+    await createPickupEntry(doc);
   }
 });
 
@@ -236,7 +244,7 @@ pickupSchema.methods.getStatusDescription = function() {
     'inProgress': 'In Progress',
     'completed': 'Completed',
     'canceled': 'Canceled',
-    'rejected': 'Rejected',
+    'rejected': 'Declined by driver',
     'returned': 'Returned',
     'terminated': 'Terminated'
   };

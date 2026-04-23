@@ -211,14 +211,12 @@
   <!-- Brand Info Tab -->
   <div id="brand" class="settings-content">
     <form id="brandForm" class="settings-card">
-      <div class="card-header">
+      <div class="card-header card-header--section-intro">
         <i class="ri-store-line"></i>
-        <h3><%= St.tabBrand || 'Brand Information' %></h3>
-      </div>
-
-      <div class="mb-4">
-        <h4 class="fw-bold"><%= St.brandProfileTitle || 'Brand Profile' %></h4>
-        <p class="text-muted"><%= St.brandProfileLead || 'Add your business details' %></p>
+        <div>
+          <h3 class="mb-1"><%= St.brandProfileTitle || 'Brand Profile' %></h3>
+          <p class="text-muted mb-0 small"><%= St.brandProfileLead || 'Add your business details' %></p>
+        </div>
       </div>
 
       <div class="form-group">
@@ -506,13 +504,11 @@
   <!-- Payment Method Tab -->
   <div id="payment" class="settings-content">
     <form id="paymentForm" class="settings-card">
-      <div class="card-header">
-        <i class="ri-bank-card-line"></i>
-        <h3><%= St.tabPayment || 'Payment Method' %></h3>
-      </div>
-
       <div class="form-group">
-        <label class="form-label"><%= St.selectPaymentLabel || 'Select Payment Method' %> <span class="required">*</span></label>
+        <label class="form-label d-flex align-items-center gap-2">
+          <i class="ri-bank-card-line text-muted" aria-hidden="true"></i>
+          <span><%= St.selectPaymentLabel || 'Select Payment Method' %> <span class="required">*</span></span>
+        </label>
         <div class="row g-3">
           <div class="col-md-4" style="display: none;">
             <div class="payment-option <%= user.paymentMethod?.paymentChoice === 'instaPay' ? 'selected' : '' %>" data-value="instaPay">

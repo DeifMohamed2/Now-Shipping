@@ -1,4 +1,5 @@
 const PDFDocument = require('pdfkit');
+const firebase = require('../config/firebase');
 const User = require('../models/user');
 const Order = require('../models/order');
 const Pickup = require('../models/pickup');
@@ -9,7 +10,7 @@ const nodemailer = require('nodemailer');
 const statusHelper = require('../utils/statusHelper');
 const ExcelJS = require('exceljs');
 const { emailService } = require('../utils/email');
-const { uploadFile } = require('../utils/fileUpload');
+const { uploadFile, deleteFile } = require('../utils/fileUpload');
 const { calculateOrderFee, calculatePickupFee: calcPickupFee } = require('../utils/fees');
 const puppeteer = require('puppeteer');
 const bwipjs = require('bwip-js');
@@ -28,12 +29,21 @@ const {
 const orderBulkImport = require('../utils/orderBulkImport');
 const {
   canBusinessCancelPickupStatus,
+  canBusinessEditPickupStatus,
+  canBusinessHardDeletePickupStatus,
 } = require('../utils/pickupCancellation.js');
 const {
   canBusinessCancel,
   canBusinessChangeAddress,
   ADDRESS_EDITABLE_STATUSES,
 } = require('../utils/orderUiPolicy');
+const { applyBusinessLikeCancellation } = require('../utils/orderCancellationFlow');
+const orderWaitingActionPolicy = require('../utils/orderWaitingActionPolicy');
+const {
+  DASHBOARD_HEATMAP_TIMEZONE,
+  resolveDashboardRange,
+  pctDelta,
+} = require('../utils/dashboardMetricHelpers');
 
 const normalizeBusinessLanguage = (language) => {
   const normalized = String(language || '').trim().toLowerCase();
@@ -58,478 +68,303 @@ require('../models/shopOrder');
 // Transporter is centralized in utils/email via emailService
 
 //================================================ Dashboard  ================================================= //
-// Simple in-memory cache for dashboard data
+// Cache: keyed by userId+range, 60s TTL
 const dashboardCache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const DASHBOARD_CACHE_TTL = 60 * 1000;
 
 const getDashboardPage = async (req, res) => {
   try {
-    // Only load data if user has completed account setup
-    let dashboardData = {};
-
-    if (req.userData.isCompleted) {
-      // Check cache first
-      const cacheKey = `dashboard_${req.userData._id}`;
-      const cachedData = dashboardCache.get(cacheKey);
-      
-      if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION) {
-        dashboardData = cachedData.data;
-      } else {
-      // Use aggregation pipeline for optimal performance
-      const businessId = req.userData._id;
-      
-      // Single aggregation query to get all order statistics
-      const orderStatsPipeline = [
-        { $match: { business: businessId } },
-        {
-          $group: {
-            _id: null,
-            totalOrders: { $sum: 1 },
-            inProgressCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'inProgress'] }, 1, 0] }
-            },
-            headingToCustomerCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'headingToCustomer'] }, 1, 0] }
-            },
-            completedCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, 1, 0] }
-            },
-            awaitingActionCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'waitingAction'] }, 1, 0] }
-            },
-            headingToYouCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'returnToBusiness'] }, 1, 0] }
-            },
-            newOrdersCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'new'] }, 1, 0] }
-            }
-          }
-        }
-      ];
-
-      // Financial data aggregation
-      const financialStatsPipeline = [
-        { $match: { business: businessId } },
-        {
-          $group: {
-            _id: null,
-            expectedCash: {
-              $sum: {
-                $cond: [
-                  {
-                    $and: [
-                      { $in: ['$orderShipping.amountType', ['COD', 'CD']] },
-                      { $in: ['$orderStatus', ['headingToCustomer', 'inProgress']] }
-                    ]
-                  },
-                  { $ifNull: ['$orderShipping.amount', 0] },
-                  0
-                ]
-              }
-            },
-            collectedCash: {
-              $sum: {
-                $cond: [
-                  {
-                    $and: [
-                      { $eq: ['$orderShipping.amountType', 'COD'] },
-                      { $eq: ['$orderStatus', 'completed'] },
-                      {
-                        $gte: ['$completedDate', new Date(new Date().setHours(0, 0, 0, 0))]
-                      },
-                      {
-                        $lte: ['$completedDate', new Date(new Date().setHours(23, 59, 59, 999))]
-                      }
-                    ]
-                  },
-                  { $ifNull: ['$orderShipping.amount', 0] },
-                  0
-                ]
-              }
-            }
-          }
-        }
-      ];
-
-      // Monthly chart data aggregation (single query)
-      const chartDataPipeline = [
-        { $match: { business: businessId } },
-        {
-          $addFields: {
-            orderMonth: {
-              $dateToString: {
-                format: "%Y-%m",
-                date: "$orderDate"
-              }
-            },
-            completedMonth: {
-              $dateToString: {
-                format: "%Y-%m",
-                date: "$completedDate"
-              }
-            }
-          }
-        },
-        {
-          $group: {
-            _id: "$orderMonth",
-            orderCount: { $sum: 1 },
-            completedRevenue: {
-              $sum: {
-                $cond: [
-                  { $eq: ['$orderStatus', 'completed'] },
-                  { $ifNull: ['$orderShipping.amount', 0] },
-                  0
-                ]
-              }
-            }
-          }
-        },
-        { $sort: { _id: 1 } },
-        { $limit: 9 }
-      ];
-
-      // Execute all queries in parallel
-      const [orderStats, financialStats, chartData, recentOrders, recentPickups] = await Promise.all([
-        Order.aggregate(orderStatsPipeline),
-        Order.aggregate(financialStatsPipeline),
-        Order.aggregate(chartDataPipeline),
-        Order.find({ business: businessId })
-        .sort({ orderDate: -1 })
-          .limit(5)
-          .select('orderNumber orderCustomer.fullName orderStatus')
-          .lean(),
-        Pickup.find({ business: businessId })
-        .sort({ pickupDate: -1 })
-          .limit(4)
-          .select('pickupNumber pickupDate numberOfOrders picikupStatus')
-          .lean()
-      ]);
-
-      // Process results
-      const stats = orderStats[0] || {};
-      const financial = financialStats[0] || {};
-      
-      const completionRate = stats.totalOrders > 0 
-        ? Math.round((stats.completedCount / stats.totalOrders) * 100) 
-        : 0;
-
-      const collectionRate = financial.expectedCash > 0 
-        ? Math.round((financial.collectedCash / financial.expectedCash) * 100) 
-        : 0;
-
-      // Process chart data
-      const monthlyLabels = [];
-      const monthlyRevenue = [];
-      const monthlyOrderCounts = [];
-
-      chartData.forEach(item => {
-        const date = new Date(item._id + '-01');
-        monthlyLabels.push(date.toLocaleString('default', { month: 'short' }));
-        monthlyRevenue.push(item.completedRevenue);
-        monthlyOrderCounts.push(item.orderCount);
-      });
-
-      // Compile all dashboard data
-      dashboardData = {
-        orderStats: {
-          inProgressCount: stats.inProgressCount || 0,
-          headingToCustomerCount: stats.headingToCustomerCount || 0,
-          completedCount: stats.completedCount || 0,
-          awaitingActionCount: stats.awaitingActionCount || 0,
-          headingToYouCount: stats.headingToYouCount || 0,
-          newOrdersCount: stats.newOrdersCount || 0,
-          totalOrders: stats.totalOrders || 0,
-          completionRate,
-        },
-        financialStats: {
-          expectedCash: financial.expectedCash || 0,
-          collectedCash: financial.collectedCash || 0,
-          collectionRate,
-        },
-        recentData: {
-          recentOrders,
-          recentPickups,
-        },
-        chartData: {
-          monthlyLabels,
-          monthlyRevenue,
-          monthlyOrderCounts,
-        },
-      };
-      
-      // Cache the data
-      dashboardCache.set(cacheKey, {
-        data: dashboardData,
-        timestamp: Date.now()
-      });
-      
-      // Clean old cache entries (keep only last 100 entries)
-      if (dashboardCache.size > 100) {
-        const oldestKey = dashboardCache.keys().next().value;
-        dashboardCache.delete(oldestKey);
-      }
-    }
-    }
-
     res.render('business/dashboard', {
       title: req.translations.business.pages.dashboard.title,
       page_title: req.translations.business.pages.dashboard.title,
       folder: req.translations.business.breadcrumb.pages,
       user: req.userData,
-      dashboardData,
     });
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
+    console.error('Error rendering dashboard:', error);
     res.render('business/dashboard', {
       title: req.translations.business.pages.dashboard.title,
       page_title: req.translations.business.pages.dashboard.title,
       folder: req.translations.business.breadcrumb.pages,
       user: req.userData,
-      error: 'Failed to load dashboard data',
+      error: 'Failed to load dashboard',
     });
   }
 };
-// get Dash Baord data For API 
 
+// Dashboard data API — supports ?range=today|7d|30d|90d|ytd|custom&from=&to=
 const getDashboardData = async (req, res) => {
   try {
-    // Only load data if user has completed account setup
-    let dashboardData = {};
+    if (!req.userData.isCompleted) {
+      return res.status(200).json({ status: 'success', dashboardData: {} });
+    }
 
-    if (req.userData.isCompleted) {
-      const businessId = req.userData._id;
-      
-      // Single optimized aggregation query for all statistics
-      const statsPipeline = [
-        { $match: { business: businessId } },
+    const businessId = req.userData._id;
+    const { range = '30d', from, to } = req.query;
+    const cacheKey = `db_${businessId}_${range}_${from || ''}_${to || ''}`;
+
+    const cached = dashboardCache.get(cacheKey);
+    if (cached && (Date.now() - cached.ts) < DASHBOARD_CACHE_TTL) {
+      return res.status(200).json({ status: 'success', dashboardData: cached.data });
+    }
+
+    const { start, end, prevStart, prevEnd } = resolveDashboardRange(range, from, to);
+
+    // ── helpers ──────────────────────────────────────────────────────────
+    const matchCurrent  = { business: businessId, orderDate: { $gte: start, $lte: end } };
+    const matchPrevious = { business: businessId, orderDate: { $gte: prevStart, $lte: prevEnd } };
+
+    // KPI pipeline (current period)
+    function kpiPipeline(matchFilter) {
+      return Order.aggregate([
+        { $match: matchFilter },
         {
           $group: {
             _id: null,
             totalOrders: { $sum: 1 },
-            inProgressCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'inProgress'] }, 1, 0] }
-            },
-            headingToCustomerCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'headingToCustomer'] }, 1, 0] }
-            },
-            inStockCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'inStock'] }, 1, 0] }
-            },
-            completedCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, 1, 0] }
-            },
-            unsuccessfulCount: {
+            completedCount:       { $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, 1, 0] } },
+            returnCount:          { $sum: { $cond: [{ $in: ['$orderStatus', ['returned', 'returnCompleted', 'returnToBusiness']] }, 1, 0] } },
+            cancelCount:          { $sum: { $cond: [{ $in: ['$orderStatus', ['canceled', 'rejected', 'terminated', 'deliveryFailed']] }, 1, 0] } },
+            activeCount:          { $sum: { $cond: [{ $in: ['$orderStatus', ['inProgress', 'headingToCustomer', 'new', 'inStock', 'waitingAction']] }, 1, 0] } },
+            revenue: {
               $sum: {
                 $cond: [
-                  { $in: ['$orderStatus', ['canceled', 'rejected', 'returnCompleted', 'terminated', 'deliveryFailed']] },
+                  { $in: ['$orderStatus', ['completed', 'returnCompleted']] },
+                  { $ifNull: ['$feeBreakdown.total', { $ifNull: ['$orderFees', 0] }] },
+                  0
+                ]
+              }
+            },
+            revenueOrderCount: {
+              $sum: {
+                $cond: [
+                  { $in: ['$orderStatus', ['completed', 'returnCompleted']] },
                   1,
                   0
                 ]
               }
             },
-            awaitingActionCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'waitingAction'] }, 1, 0] }
-            },
-            headingToYouCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'returnToBusiness'] }, 1, 0] }
-            },
-            newOrdersCount: {
-              $sum: { $cond: [{ $eq: ['$orderStatus', 'new'] }, 1, 0] }
-            },
             expectedCash: {
               $sum: {
                 $cond: [
-                  {
-                    $and: [
-                      { $in: ['$orderShipping.amountType', ['COD', 'CD']] },
-                      { $in: ['$orderStatus', ['headingToCustomer', 'inProgress']] }
-                    ]
-                  },
-                  { $ifNull: ['$orderShipping.amount', 0] },
-                  0
+                  { $and: [
+                    { $in: ['$orderShipping.amountType', ['COD', 'CD']] },
+                    { $in: ['$orderStatus', ['headingToCustomer', 'inProgress']] }
+                  ]},
+                  { $ifNull: ['$orderShipping.amount', 0] }, 0
                 ]
               }
             },
+            /* COD collected for completed orders in scope (orderDate window) — matches sum(series.daily.codCollected) */
             collectedCash: {
               $sum: {
                 $cond: [
-                  {
-                    $and: [
-                      { $eq: ['$orderShipping.amountType', 'COD'] },
-                      { $eq: ['$orderStatus', 'completed'] },
-                      {
-                        $gte: ['$completedDate', new Date(new Date().setHours(0, 0, 0, 0))]
-                      },
-                      {
-                        $lte: ['$completedDate', new Date(new Date().setHours(23, 59, 59, 999))]
-                      }
-                    ]
-                  },
-                  { $ifNull: ['$orderShipping.amount', 0] },
-                  0
+                  { $and: [
+                    { $eq: ['$orderShipping.amountType', 'COD'] },
+                    { $eq: ['$orderStatus', 'completed'] }
+                  ]},
+                  { $ifNull: ['$orderShipping.amount', 0] }, 0
                 ]
               }
+            },
+          }
+        }
+      ]);
+    }
+
+    // Daily trend series (buckets within current range)
+    const useDayBucket = (end.getTime() - start.getTime()) <= 91 * 86400000;
+    const dateTruncUnit = useDayBucket ? 'day' : 'month';
+
+    const trendPipeline = Order.aggregate([
+      { $match: matchCurrent },
+      {
+        $group: {
+          _id: {
+            $dateTrunc: { unit: dateTruncUnit, date: '$orderDate' }
+          },
+          orders: { $sum: 1 },
+          completed: { $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, 1, 0] } },
+          returned:  { $sum: { $cond: [{ $in: ['$orderStatus', ['returned', 'returnCompleted', 'returnToBusiness']] }, 1, 0] } },
+          canceled:  { $sum: { $cond: [{ $in: ['$orderStatus', ['canceled', 'rejected', 'terminated', 'deliveryFailed']] }, 1, 0] } },
+          revenue: {
+            $sum: {
+              $cond: [
+                { $in: ['$orderStatus', ['completed', 'returnCompleted']] },
+                { $ifNull: ['$feeBreakdown.total', { $ifNull: ['$orderFees', 0] }] },
+                0
+              ]
+            }
+          },
+          shippingFees: {
+            $sum: { $ifNull: ['$orderFees', 0] }
+          },
+          codCollected: {
+            $sum: {
+              $cond: [
+                { $and: [
+                  { $eq: ['$orderShipping.amountType', 'COD'] },
+                  { $eq: ['$orderStatus', 'completed'] }
+                ]},
+                { $ifNull: ['$orderShipping.amount', 0] }, 0
+              ]
+            }
+          },
+          codExpected: {
+            $sum: {
+              $cond: [
+                { $and: [
+                  { $in: ['$orderShipping.amountType', ['COD', 'CD']] },
+                  { $in: ['$orderStatus', ['headingToCustomer', 'inProgress']] }
+                ]},
+                { $ifNull: ['$orderShipping.amount', 0] }, 0
+              ]
             }
           }
         }
-      ];
+      },
+      { $sort: { _id: 1 } }
+    ]);
 
-      const [stats, revenueByMonth, ordersByMonth, performanceStats] = await Promise.all([
-        Order.aggregate(statsPipeline),
-        // Revenue by month for this business (completed & returnCompleted)
-        Order.aggregate([
-          { $match: { business: businessId, orderStatus: { $in: ['completed', 'returnCompleted'] } } },
-          { $project: { m: { $month: { $ifNull: ['$completedDate', '$updatedAt'] } }, y: { $year: { $ifNull: ['$completedDate', '$updatedAt'] } }, amount: { $ifNull: ['$feeBreakdown.total', '$orderFees'] } } },
-          { $group: { _id: { y: '$y', m: '$m' }, revenue: { $sum: '$amount' }, orders: { $sum: 1 } } },
-          { $sort: { '_id.y': -1, '_id.m': -1 } },
-          { $limit: 9 }
-        ]),
-        // Orders by month (all statuses)
-        Order.aggregate([
-          { $match: { business: businessId } },
-          { $project: { m: { $month: '$orderDate' }, y: { $year: '$orderDate' } } },
-          { $group: { _id: { y: '$y', m: '$m' }, count: { $sum: 1 } } },
-          { $sort: { '_id.y': -1, '_id.m': -1 } },
-          { $limit: 9 }
-        ]),
-        // Performance metrics aggregation
-        Order.aggregate([
-          { $match: { business: businessId } },
-          {
-            $project: {
-              orderDate: 1,
-              completedDate: 1,
-              orderStatus: 1,
-              deliveryDays: {
-                $cond: {
-                  if: {
-                    $and: [
-                      { $ne: ['$orderDate', null] },
-                      { $ne: ['$completedDate', null] },
-                      { $eq: ['$orderStatus', 'completed'] }
-                    ]
-                  },
-                  then: {
-                    $divide: [
-                      { $subtract: ['$completedDate', '$orderDate'] },
-                      1000 * 60 * 60 * 24 // Convert milliseconds to days
-                    ]
-                  },
-                  else: null
-                }
-              }
-            }
-          },
-          {
-            $group: {
-              _id: null,
-              totalOrders: { $sum: 1 },
-              completedOrders: {
-                $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, 1, 0] }
-              },
-              returnOrders: {
-                $sum: {
-                  $cond: [
-                    { $in: ['$orderStatus', ['returned', 'returnCompleted', 'returnToBusiness']] },
-                    1,
-                    0
-                  ]
-                }
-              },
-              cancelledOrders: {
-                $sum: {
-                  $cond: [
-                    { $in: ['$orderStatus', ['canceled', 'rejected', 'terminated', 'deliveryFailed']] },
-                    1,
-                    0
-                  ]
-                }
-              },
-              avgDeliveryDays: { $avg: '$deliveryDays' },
-              successfulOrders: {
-                $sum: {
-                  $cond: [
-                    { $eq: ['$orderStatus', 'completed'] },
-                    1,
-                    0
-                  ]
-                }
-              }
+    // Status breakdown donut
+    const statusBreakdownPipeline = Order.aggregate([
+      { $match: matchCurrent },
+      { $group: { _id: '$orderStatus', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    // Top governorates
+    const topGovPipeline = Order.aggregate([
+      { $match: matchCurrent },
+      {
+        $group: {
+          _id: '$orderCustomer.government',
+          count: { $sum: 1 },
+          revenue: {
+            $sum: {
+              $cond: [
+                { $in: ['$orderStatus', ['completed', 'returnCompleted']] },
+                { $ifNull: ['$feeBreakdown.total', { $ifNull: ['$orderFees', 0] }] },
+                0
+              ]
             }
           }
-        ])
-      ]).then(results => [results[0][0], results[1], results[2], results[3][0] || {}]);
-      const result = stats || {};
-      const performance = performanceStats || {};
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
 
-      // Calculate rates
-      const completionRate = result.totalOrders > 0 
-        ? Math.round((result.completedCount / result.totalOrders) * 100) 
-        : 0;
+    // Weekday × hour heatmap (local wall clock via IANA tz — DASHBOARD_HEATMAP_TZ)
+    const heatmapPipeline = Order.aggregate([
+      { $match: matchCurrent },
+      {
+        $group: {
+          _id: {
+            dow: { $dayOfWeek: { date: '$orderDate', timezone: DASHBOARD_HEATMAP_TIMEZONE } },
+            hour: { $hour: { date: '$orderDate', timezone: DASHBOARD_HEATMAP_TIMEZONE } }
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
 
-      const unsuccessfulRate = result.totalOrders > 0 
-        ? Math.round((result.unsuccessfulCount / result.totalOrders) * 100) 
-        : 0;
+    // Recent orders + pickups
+    const recentOrdersPipeline = Order.find({ business: businessId })
+      .sort({ orderDate: -1 })
+      .limit(6)
+      .select('orderNumber orderCustomer.fullName orderStatus orderDate orderShipping.amountType orderShipping.amount')
+      .lean();
 
-      const collectionRate = result.expectedCash > 0 
-        ? Math.round((result.collectedCash / result.expectedCash) * 100) 
-        : 0;
+    const recentPickupsPipeline = Pickup.find({ business: businessId })
+      .sort({ pickupDate: -1 })
+      .limit(6)
+      .select('pickupNumber pickupDate numberOfOrders picikupStatus')
+      .lean();
 
-      // Calculate performance metrics
-      const avgDeliveryDays = performance.avgDeliveryDays ? parseFloat(performance.avgDeliveryDays.toFixed(1)) : 0;
-      const returnRate = performance.totalOrders > 0
-        ? parseFloat(((performance.returnOrders / performance.totalOrders) * 100).toFixed(1))
-        : 0;
-      const successRate = performance.totalOrders > 0
-        ? Math.round(((performance.successfulOrders / performance.totalOrders) * 100))
-        : 0;
+    // ── Execute all in parallel ─────────────────────────────────────────
+    const [
+      kpiCurrentRaw,
+      kpiPrevRaw,
+      trendSeries,
+      statusBreakdown,
+      topGov,
+      heatmapRaw,
+      recentOrders,
+      recentPickups
+    ] = await Promise.all([
+      kpiPipeline(matchCurrent),
+      kpiPipeline(matchPrevious),
+      trendPipeline,
+      statusBreakdownPipeline,
+      topGovPipeline,
+      heatmapPipeline,
+      recentOrdersPipeline,
+      recentPickupsPipeline
+    ]);
 
-      // Compile all dashboard data
-      dashboardData = {
-        orderStats: {
-          inProgressCount: result.inProgressCount || 0,
-          headingToCustomerCount: result.headingToCustomerCount || 0,
-          completedCount: result.completedCount || 0,
-          awaitingActionCount: result.awaitingActionCount || 0,
-          headingToYouCount: result.headingToYouCount || 0,
-          newOrdersCount: result.newOrdersCount || 0,
-          inStockCount: result.inStockCount || 0,
-          totalOrders: result.totalOrders || 0,
-          completionRate,
-          unsuccessfulCount: result.unsuccessfulCount || 0,
-          unsuccessfulRate,
+    const cur  = kpiCurrentRaw[0]  || {};
+    const prev = kpiPrevRaw[0]     || {};
+
+    const totalOrders     = cur.totalOrders     || 0;
+    const completedCount  = cur.completedCount  || 0;
+    const revenue         = cur.revenue         || 0;
+    const revenueOrderCount = cur.revenueOrderCount || 0;
+    const avgOrderValue   = revenueOrderCount > 0 ? parseFloat((revenue / revenueOrderCount).toFixed(2)) : 0;
+    const successRate = totalOrders > 0 ? parseFloat(((completedCount / totalOrders) * 100).toFixed(1)) : 0;
+    const returnRate  = totalOrders > 0 ? parseFloat(((( cur.returnCount || 0) / totalOrders) * 100).toFixed(1)) : 0;
+    const cancelRate  = totalOrders > 0 ? parseFloat(((( cur.cancelCount || 0) / totalOrders) * 100).toFixed(1)) : 0;
+
+    const dashboardData = {
+      range: { from: start.toISOString(), to: end.toISOString() },
+      kpi: {
+        totalOrders,
+        completedCount,
+        activeCount:      cur.activeCount      || 0,
+        revenue,
+        avgOrderValue,
+        expectedCash:     cur.expectedCash     || 0,
+        collectedCash:    cur.collectedCash    || 0,
+        successRate,
+        returnRate,
+        cancelRate,
+        delta: {
+          totalOrders:   pctDelta(cur.totalOrders   || 0, prev.totalOrders   || 0),
+          revenue:       pctDelta(cur.revenue        || 0, prev.revenue        || 0),
+          completedCount:pctDelta(cur.completedCount || 0, prev.completedCount || 0),
+          collectedCash: pctDelta(cur.collectedCash  || 0, prev.collectedCash  || 0),
         },
-        financialStats: {
-          expectedCash: result.expectedCash || 0,
-          collectedCash: result.collectedCash || 0,
-          collectionRate,
-          revenueByMonth: revenueByMonth || [],
-          ordersByMonth: ordersByMonth || [],
-        },
-        performanceStats: {
-          avgDeliveryDays,
-          completionRate,
-          returnRate,
-          successRate,
-        },
-      };
+      },
+      series: {
+        daily: trendSeries.map(b => ({
+          date:          b._id,
+          orders:        b.orders,
+          completed:     b.completed,
+          returned:      b.returned,
+          canceled:      b.canceled,
+          revenue:       b.revenue,
+          shippingFees:  b.shippingFees,
+          codCollected:  b.codCollected,
+          codExpected:   b.codExpected,
+        })),
+        status: statusBreakdown.map(s => ({ status: s._id, count: s.count })),
+        geo:    topGov.map(g => ({ name: g._id || 'Unknown', count: g.count, revenue: g.revenue })),
+        heatmap: heatmapRaw.map(h => ({ dow: h._id.dow, hour: h._id.hour, count: h.count })),
+      },
+      recent: { recentOrders, recentPickups }
+    };
+
+    // Cache result
+    dashboardCache.set(cacheKey, { data: dashboardData, ts: Date.now() });
+    if (dashboardCache.size > 200) {
+      dashboardCache.delete(dashboardCache.keys().next().value);
     }
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Dashboard data fetched successfully',
-      dashboardData: dashboardData,
-      userDate: req.userData,
-    });
+    return res.status(200).json({ status: 'success', dashboardData });
 
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to load dashboard data',
-      error: error.message,
-    });
+    return res.status(500).json({ status: 'error', message: 'Failed to load dashboard data', error: error.message });
   }
 };
 
@@ -936,7 +771,7 @@ const get_orders = async (req, res) => {
       .limit(parseInt(limit));
     const totalCount = await Order.countDocuments(query);
 
-    // Enhance orders with status info
+    // Enhance orders with status info + UI flags aligned with API rules
     const enhancedOrders = orders.map(order => {
       const orderObj = order.toObject();
       orderObj.statusLabel = statusHelper.getOrderStatusLabel(order.orderStatus);
@@ -944,6 +779,9 @@ const get_orders = async (req, res) => {
       orderObj.categoryClass = statusHelper.getCategoryClass(order.statusCategory);
       orderObj.categoryColor = statusHelper.getCategoryColor(order.statusCategory);
       orderObj.isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
+      orderObj.canCancel = canBusinessCancel(order);
+      orderObj.canEditAddress = canBusinessChangeAddress(order);
+      orderObj.canDelete = order.orderStatus === 'new';
       return orderObj;
     });
 
@@ -1249,9 +1087,10 @@ const get_editOrderPage = async (req, res) => {
     if (!canBusinessChangeAddress(order)) {
       req.flash(
         'error',
-        `Address changes are not allowed at status "${order.orderStatus}".`
+        req.translations?.business?.pages?.orderDetails?.addressEditLocked ||
+          'Address and order details cannot be edited — a courier may already be assigned, or this order is past the editable stage.'
       );
-      return res.redirect(`/business/orders/${order.orderNumber}/details`);
+      return res.redirect(`/business/order-details/${order.orderNumber}`);
     }
 
     res.render('business/edit-order' , {
@@ -1307,8 +1146,7 @@ const editOrder = async (req, res) => {
   } = req.body;
 
   try {
-    // Find the order
-    const order = await Order.findById(orderId);
+    const order = await findOrderByIdOrNumber(orderId);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -1320,9 +1158,11 @@ const editOrder = async (req, res) => {
 
     if (!canBusinessChangeAddress(order)) {
       return res.status(403).json({
-        error: `Address changes are not allowed while order is ${order.orderStatus}.`,
+        error:
+          'Address and order details cannot be edited — a courier may already be assigned, or this order is past the editable stage.',
         orderStatus: order.orderStatus,
         allowedStatuses: Array.from(ADDRESS_EDITABLE_STATUSES),
+        courierAssigned: Boolean(order.deliveryMan),
       });
     }
 
@@ -1371,9 +1211,9 @@ const editOrder = async (req, res) => {
     // Get the shipping fee (either from the frontend or calculate it here)
     const calculatedOrderFees = orderFees ? Number(orderFees) : 120; // Default fee if not provided
 
-    // ✅ 3. Update Order
+    // ✅ 3. Update Order (always by Mongo _id; :orderId may be order number)
     const updatedOrder = await Order.findByIdAndUpdate(
-      orderId,
+      order._id,
       {
       orderCustomer: {
         fullName,
@@ -1455,6 +1295,8 @@ const get_orderDetailsPage = async (req, res) => {
       selectedPickupAddress: selectedPickupAddress,
       canCancelOrder: canBusinessCancel(order),
       canChangeAddress: canBusinessChangeAddress(order),
+      canDeleteOrder: order.orderStatus === 'new',
+      waitingActionFlags: orderWaitingActionPolicy.getWaitingActionFlags(order),
     });
   } catch (error) {
     console.log(error);
@@ -1561,7 +1403,11 @@ const get_orderDetailsAPI = async (req, res) => {
         business: orderObj.business,
         scheduledRetryAt: orderObj.scheduledRetryAt,
         createdAt: orderObj.createdAt,
-        updatedAt: orderObj.updatedAt
+        updatedAt: orderObj.updatedAt,
+        canCancelOrder: canBusinessCancel(order),
+        canChangeAddress: canBusinessChangeAddress(order),
+        canDelete: order.orderStatus === 'new',
+        waitingAction: orderWaitingActionPolicy.getWaitingActionFlags(order),
       }
     };
 
@@ -1583,7 +1429,7 @@ const cancelOrder = async (req, res) => {
   const { orderId } = req.params;
 
   try {
-    const order = await Order.findById(orderId);
+    const order = await findOrderByIdOrNumber(orderId);
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -1593,295 +1439,48 @@ const cancelOrder = async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    // Determine cancellation behavior based on order status and stage
-    const isOrderPickedUp = order.orderStages.packed && order.orderStages.packed.isCompleted;
-    const isOrderInProgress = order.orderStages.shipping && order.orderStages.shipping.isCompleted;
-    const isOrderOutForDelivery = order.orderStages.outForDelivery && order.orderStages.outForDelivery.isCompleted;
-    const hasCourierAssigned = order.deliveryMan && order.deliveryMan.toString().length > 0;
-
-    console.log('Cancellation Debug:', {
-      orderNumber: order.orderNumber,
-      isOrderPickedUp,
-      isOrderInProgress,
-      isOrderOutForDelivery,
-      hasCourierAssigned,
-      deliveryMan: order.deliveryMan,
-      orderStatus: order.orderStatus
-    });
-
-    // If order is just created (not picked up yet), cancel directly
-    if (!isOrderPickedUp && !isOrderInProgress && !isOrderOutForDelivery) {
-      order.orderStatus = 'canceled';
-      order.orderStages.canceled = {
-        isCompleted: true,
-        completedAt: new Date(),
-        notes: 'Order canceled by business before pickup',
-        canceledBy: 'business'
-      };
-      await order.save();
-
-      // Send push notification to courier about order cancellation (if assigned)
-      if (order.deliveryMan) {
-        try {
-          await firebase.sendOrderStatusNotification(
-            order.deliveryMan,
-            order.orderNumber,
-            'canceled',
-            {
-              cancelledBy: 'Business',
-              cancelledAt: new Date(),
-              reason: 'Order canceled by business before pickup'
-            }
-          );
-          console.log(`📱 Push notification sent to courier ${order.deliveryMan} about order ${order.orderNumber} cancellation`);
-        } catch (notificationError) {
-          console.error(`❌ Failed to send push notification to courier ${order.deliveryMan}:`, notificationError);
-          // Don't fail the cancellation if notification fails
-        }
-      }
-
-      return res.status(200).json({ message: 'Order canceled successfully.' });
-    }
-
-    // If order status is 'pickedUp', update to returnPickedUp and change status to returnToWarehouse
-    // Validate the status transition
-    if (!statusHelper.isValidStatusTransition(order.orderStatus, 'canceled')) {
+    // Same rule as UI / order list: only if cancel API would proceed
+    if (!canBusinessCancel(order)) {
       return res.status(400).json({
-        error: `Cannot cancel order from current status: ${order.orderStatus}`,
+        error: 'This order cannot be canceled from its current status.',
         currentStatus: order.orderStatus,
-        statusLabel: statusHelper.getOrderStatusLabel(order.orderStatus)
+        statusLabel: statusHelper.getOrderStatusLabel(order.orderStatus),
       });
     }
 
-    // Exchange orders must never be coerced into the Return flow — cancel directly
-    if (order.orderShipping && order.orderShipping.orderType === 'Exchange') {
-      order.orderStatus = 'canceled';
-      order.orderStages.canceled = {
-        isCompleted: true,
-        completedAt: new Date(),
-        notes: 'Exchange order canceled by business after pickup — no return leg initiated',
-        canceledBy: 'business',
-        reason: 'business_canceled'
-      };
-      await order.save();
-
-      if (order.deliveryMan) {
-        try {
-          await firebase.sendOrderStatusNotification(
-            order.deliveryMan,
-            order.orderNumber,
-            'canceled',
-            { cancelledBy: 'Business', cancelledAt: new Date(), reason: 'Exchange order canceled by business' }
-          );
-        } catch (notificationError) {
-          console.error(`Failed to send cancellation notification for Exchange order ${order.orderNumber}:`, notificationError);
-        }
-      }
-
-      return res.status(200).json({ message: 'Exchange order canceled successfully.' });
+    const cancelOutcome = applyBusinessLikeCancellation(order, { canceledBy: 'business' });
+    if (cancelOutcome.result === 'already_in_return') {
+      return res.status(400).json({ error: cancelOutcome.message });
     }
-
-    if (order.orderStatus === 'pickedUp') {
-      order.orderStatus = 'returnToWarehouse';
-      
-      // Ensure order is treated as a Return type going forward
-      if (order.orderShipping && order.orderShipping.orderType !== 'Return') {
-        order.orderShipping.returnReason = 'business_canceled';
-        order.orderShipping.orderType = 'Return';
-      }
-      
-      // Initialize return stages properly
-      order.orderStages.returnInitiated = {
-        isCompleted: true,
-        completedAt: new Date(),
-        notes: 'Order canceled by business after pickup — moved to return flow',
-        initiatedBy: 'business',
-        reason: 'business_canceled'
-      };
-      
-      // Mark returnPickedUp as completed since order was already picked up
-      order.orderStages.returnPickedUp = {
-        isCompleted: true,
-        completedAt: new Date(),
-        notes: 'Return picked up (courier already has the order from original pickup)',
-        pickedUpBy: order.deliveryMan
-      };
-      
-      await order.save();
-      return res.status(200).json({ message: 'Order moved to return to warehouse.' });
-    }
-    
-    // If order status is 'inStock', update to returnAtWarehouse
-    if (order.orderStatus === 'inStock') {
-      order.orderStatus = 'returnAtWarehouse';
-      
-      // Ensure order is treated as a Return type going forward
-      if (order.orderShipping && order.orderShipping.orderType !== 'Return') {
-        order.orderShipping.returnReason = 'business_canceled';
-        order.orderShipping.orderType = 'Return';
-      }
-      
-      // Initialize return stages
-      order.orderStages.returnInitiated = {
-        isCompleted: true,
-        completedAt: new Date(),
-        notes: 'Order canceled by business while in stock — moved to return flow',
-        initiatedBy: 'business',
-        reason: 'business_canceled'
-      };
-      
-      // Mark returnPickedUp and returnAtWarehouse as completed since order is already at warehouse
-      order.orderStages.returnPickedUp = {
-        isCompleted: true,
-        completedAt: new Date(),
-        notes: 'Return picked up (order was already at warehouse)',
-        pickedUpBy: order.deliveryMan
-      };
-      
-      order.orderStages.returnAtWarehouse = {
-        isCompleted: true,
-        completedAt: new Date(),
-        notes: 'Return at warehouse (order was already at warehouse)',
-        receivedBy: null,
-        warehouseLocation: 'main_warehouse',
-        conditionNotes: 'Order was already in stock before cancellation'
-      };
-      
-      await order.save();
-      return res.status(200).json({ message: 'Order moved to return at warehouse.' });
-    }
-    
-    // If order status is 'headingToCustomer', update to returnToWarehouse
-    if (order.orderStatus === 'headingToCustomer') {
-      order.orderStatus = 'returnToWarehouse';
-      
-      // Ensure order is treated as a Return type going forward
-      if (order.orderShipping && order.orderShipping.orderType !== 'Return') {
-        order.orderShipping.returnReason = 'business_canceled';
-        order.orderShipping.orderType = 'Return';
-      }
-      
-      // Initialize return stages
-      order.orderStages.returnInitiated = {
-        isCompleted: true,
-        completedAt: new Date(),
-        notes: 'Order canceled by business while heading to customer — moved to return flow',
-        initiatedBy: 'business',
-        reason: 'business_canceled'
-      };
-      
-      // If courier is assigned, preserve for return
-      if (order.deliveryMan) {
-        order.courierHistory.push({
-          courier: order.deliveryMan,
-          assignedAt: new Date(),
-          action: 'assigned',
-          notes: 'Courier reassigned for return process after cancellation'
-        });
-        
-        order.orderStages.returnAssigned = {
-          isCompleted: true,
-          completedAt: new Date(),
-          notes: 'Same courier assigned for return (preserved from original delivery)',
-          assignedCourier: order.deliveryMan,
-          assignedBy: null
-        };
-      }
-      
-      await order.save();
-      return res.status(200).json({ message: 'Order heading to customer has been recalled to warehouse.' });
-    }
-
-    // If order is in any other stage that involves courier, handle the return flow
-    if (isOrderPickedUp || isOrderInProgress || isOrderOutForDelivery) {
-      const statusBeforeReturn = order.orderStatus;
-      order.orderStatus = 'returnToWarehouse';
-      
-      // Ensure order is treated as a Return type going forward
-      if (order.orderShipping && order.orderShipping.orderType !== 'Return') {
-        order.orderShipping.returnReason = 'business_canceled';
-        order.orderShipping.orderType = 'Return';
-      }
-      
-      // Initialize return stages properly
-      if (!order.orderStages.returnInitiated || !order.orderStages.returnInitiated.isCompleted) {
-        order.orderStages.returnInitiated = {
-          isCompleted: true,
-          completedAt: new Date(),
-          notes: 'Order canceled by business after processing — moved to return flow',
-          initiatedBy: 'business',
-          reason: 'business_canceled'
-        };
-      }
-
-      // If order has a courier assigned, preserve the assignment for return
-      if (order.deliveryMan) {
-        // Add courier to history for return process
-        order.courierHistory.push({
-          courier: order.deliveryMan,
-          assignedAt: new Date(),
-          action: 'assigned',
-          notes: 'Courier preserved for return process after cancellation'
-        });
-        
-        // Mark return assigned as completed (same courier)
-        order.orderStages.returnAssigned = {
-          isCompleted: true,
-          completedAt: new Date(),
-          notes: 'Same courier assigned for return (preserved from original delivery)',
-          assignedCourier: order.deliveryMan,
-          assignedBy: null
-        };
-
-        // Mark return picked up as completed if courier already has the order (use status before overwrite)
-        if (
-          statusBeforeReturn === 'headingToCustomer' ||
-          isOrderOutForDelivery
-        ) {
-          order.orderStages.returnPickedUp = {
-            isCompleted: true,
-            completedAt: new Date(),
-            notes: 'Return picked up (courier already has the order from delivery)',
-            pickedUpBy: order.deliveryMan,
-            pickupLocation: 'with_courier',
-            pickupPhotos: []
-          };
-        }
-      } else {
-        // SAFETY CHECK: If order has stages completed but no courier assigned, log this issue
-        console.warn(`Order ${order.orderNumber} has completed stages but no courier assigned:`, {
-          isOrderPickedUp,
-          isOrderInProgress,
-          isOrderOutForDelivery,
-          orderStages: order.orderStages
-        });
-        
-        // Initialize return stages without courier (admin will need to assign)
-        order.orderStages.returnAssigned = {
-          isCompleted: false,
-          completedAt: null,
-          notes: 'No courier assigned - admin needs to assign courier for return',
-          assignedCourier: null,
-          assignedBy: null
-        };
-      }
-      
-      // Mark forward delivery stages inactive
-      if (order.orderStages.outForDelivery) {
-        order.orderStages.outForDelivery.isCompleted = false;
-      }
-      if (order.orderStages.inProgress) {
-        order.orderStages.inProgress.isCompleted = false;
-      }
-      
-      await order.save();
-      return res.status(200).json({ message: 'Order moved to return pipeline for processing.' });
-    }
-
-    // For any other status, just mark as canceled
-    order.orderStatus = 'canceled';
+    order.$locals = order.$locals || {};
+    order.$locals.nextStatusHistoryNote = cancelOutcome.message;
     await order.save();
-    return res.status(200).json({ message: 'Order canceled successfully.' });
+
+    if (cancelOutcome.notifyCourier && order.deliveryMan) {
+      try {
+        const reason =
+          cancelOutcome.result === 'exchange_cancel'
+            ? 'Exchange order canceled by business'
+            : 'Order canceled by business before pickup';
+        await firebase.sendOrderStatusNotification(
+          order.deliveryMan,
+          order.orderNumber,
+          'canceled',
+          {
+            cancelledBy: 'Business',
+            cancelledAt: new Date(),
+            reason,
+          }
+        );
+      } catch (notificationError) {
+        console.error(
+          `Failed to send push notification to courier ${order.deliveryMan}:`,
+          notificationError
+        );
+      }
+    }
+
+    return res.status(200).json({ message: cancelOutcome.message });
 
   } catch (error) {
     console.error('Error in cancelOrder:', error);
@@ -1893,18 +1492,29 @@ const deleteOrder = async (req, res) => {
   const { orderId } = req.params;
 
   try {
-    const deletedOrder = await Order.findByIdAndDelete(orderId);
+    const order = await findOrderByIdOrNumber(orderId);
 
-    if (!deletedOrder) {
+    if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    if (order.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'You do not have permission to delete this order' });
+    }
+
+    if (order.orderStatus !== 'new') {
+      return res.status(400).json({
+        error: 'This order can no longer be deleted — it has already been processed.',
+        currentStatus: order.orderStatus,
+      });
+    }
+
+    await order.deleteOne();
     res.status(200).json({ message: 'Order deleted successfully.' });
   } catch (error) {
     console.error('Error in deleteOrder:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-
 };
 
 // Helper functions for PDF generation
@@ -2946,103 +2556,170 @@ const printPolicy = async (req, res) => {
 };
 
 // ================= WaitingAction Actions ================= //
+// See utils/orderWaitingActionPolicy.js for eligibility; :orderId may be Mongo _id or orderNumber.
+
+function ensureInProgressStageDoc(order) {
+  if (!order.orderStages) {
+    order.orderStages = {};
+  }
+  if (!order.orderStages.inProgress) {
+    order.orderStages.inProgress = {
+      isCompleted: false,
+      completedAt: null,
+      notes: '',
+    };
+  }
+}
+
+function ensureOutForDeliveryStageDoc(order) {
+  if (!order.orderStages) {
+    order.orderStages = {};
+  }
+  if (!order.orderStages.outForDelivery) {
+    order.orderStages.outForDelivery = {
+      isCompleted: false,
+      completedAt: null,
+      notes: '',
+    };
+  }
+}
+
+function applyInProgressRetryTouch(order, notes) {
+  ensureInProgressStageDoc(order);
+  if (!order.orderStages.inProgress.isCompleted) {
+    order.orderStages.inProgress.isCompleted = true;
+    order.orderStages.inProgress.completedAt = new Date();
+    order.orderStages.inProgress.notes = notes;
+  }
+  if (typeof order.markModified === 'function') {
+    order.markModified('orderStages');
+  }
+}
 
 const retryTomorrow = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const order = await Order.findById(orderId);
+    const order = await findOrderByIdOrNumber(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.business.toString() !== req.userData._id.toString()) return res.status(403).json({ error: 'Forbidden' });
-    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
-    order.scheduledRetryAt = new Date(Date.now() + 24*60*60*1000);
-    // Update inProgress stage for rescheduled
-    if (!order.orderStages.inProgress.isCompleted) {
-      order.orderStages.inProgress.isCompleted = true;
-      order.orderStages.inProgress.completedAt = new Date();
-      order.orderStages.inProgress.notes = 'Retry scheduled for tomorrow';
+    if (order.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
+    if (!orderWaitingActionPolicy.canRetryTomorrow(order)) {
+      return res.status(400).json({
+        error: 'This action is only available when the order is waiting for your action.',
+        code: 'INVALID_STATUS',
+        currentStatus: order.orderStatus,
+      });
+    }
+    order.scheduledRetryAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    applyInProgressRetryTouch(order, 'Retry scheduled for tomorrow');
     order.orderStatus = 'rescheduled';
     await order.save();
     return res.status(200).json({ message: 'Retry scheduled for tomorrow' });
   } catch (e) {
+    console.error('retryTomorrow:', e);
     return res.status(500).json({ error: 'Failed to schedule retry' });
   }
-}
+};
 
 const retryScheduled = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { date } = req.body; // ISO date string
-    const order = await Order.findById(orderId);
+    const order = await findOrderByIdOrNumber(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.business.toString() !== req.userData._id.toString()) return res.status(403).json({ error: 'Forbidden' });
-    if (!['waitingAction','rescheduled'].includes(order.orderStatus)) return res.status(400).json({ error: 'Order not eligible for scheduling' });
-    const when = new Date(date);
-    if (isNaN(when.getTime())) return res.status(400).json({ error: 'Invalid date' });
-    order.scheduledRetryAt = when;
-    // Update inProgress stage for rescheduled
-    if (!order.orderStages.inProgress.isCompleted) {
-      order.orderStages.inProgress.isCompleted = true;
-      order.orderStages.inProgress.completedAt = new Date();
-      order.orderStages.inProgress.notes = 'Retry rescheduled';
+    if (order.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
+    if (!orderWaitingActionPolicy.canRetryScheduled(order)) {
+      return res.status(400).json({
+        error: 'Scheduling is only available for orders in waiting for action or rescheduled state.',
+        code: 'INVALID_STATUS',
+        currentStatus: order.orderStatus,
+      });
+    }
+    const dateParsed = orderWaitingActionPolicy.validateRetryScheduledDate(req.body);
+    if (!dateParsed.ok) {
+      return res.status(400).json({
+        error: dateParsed.error,
+        code: dateParsed.code,
+        currentStatus: order.orderStatus,
+      });
+    }
+    order.scheduledRetryAt = dateParsed.when;
+    applyInProgressRetryTouch(order, 'Retry rescheduled');
     order.orderStatus = 'rescheduled';
     await order.save();
     return res.status(200).json({ message: 'Retry scheduled' });
   } catch (e) {
+    console.error('retryScheduled:', e);
     return res.status(500).json({ error: 'Failed to schedule retry' });
   }
-}
+};
 
 const returnToWarehouseFromWaiting = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const order = await Order.findById(orderId);
+    const order = await findOrderByIdOrNumber(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.business.toString() !== req.userData._id.toString()) return res.status(403).json({ error: 'Forbidden' });
-    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
-    order.orderStatus = 'returnToWarehouse';
-    // Update inProgress stage for return to warehouse
-    if (!order.orderStages.inProgress.isCompleted) {
-      order.orderStages.inProgress.isCompleted = true;
-      order.orderStages.inProgress.completedAt = new Date();
-      order.orderStages.inProgress.notes = 'Business requested return to warehouse';
+    if (order.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
+    if (!orderWaitingActionPolicy.canReturnToWarehouseFromWaiting(order)) {
+      return res.status(400).json({
+        error: 'This action is only available when the order is waiting for your action.',
+        code: 'INVALID_STATUS',
+        currentStatus: order.orderStatus,
+      });
+    }
+    order.orderStatus = 'returnToWarehouse';
+    applyInProgressRetryTouch(order, 'Business requested return to warehouse');
     await order.save();
     return res.status(200).json({ message: 'Order moved to return stock' });
   } catch (e) {
+    console.error('returnToWarehouseFromWaiting:', e);
     return res.status(500).json({ error: 'Failed to move to return stock' });
   }
-}
+};
 
 const cancelFromWaiting = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const order = await Order.findById(orderId);
+    const order = await findOrderByIdOrNumber(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.business.toString() !== req.userData._id.toString()) return res.status(403).json({ error: 'Forbidden' });
-    if (order.orderStatus !== 'waitingAction') return res.status(400).json({ error: 'Order not in waitingAction' });
-    // Transition to return pipeline instead of final cancel
+    if (order.business.toString() !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    if (!orderWaitingActionPolicy.canCancelFromWaiting(order)) {
+      return res.status(400).json({
+        error: 'This action is only available when the order is waiting for your action.',
+        code: 'INVALID_STATUS',
+        currentStatus: order.orderStatus,
+      });
+    }
     order.orderStatus = 'returnToWarehouse';
-    // Initialize return stages
     if (!order.orderStages.returnInitiated || !order.orderStages.returnInitiated.isCompleted) {
       order.orderStages.returnInitiated = {
         isCompleted: true,
         completedAt: new Date(),
         notes: 'Business canceled from waiting — moved to return flow',
         initiatedBy: 'business',
-        reason: 'customer_canceled'
+        reason: 'customer_canceled',
       };
     }
-    // Mark forward delivery stages inactive
+    ensureOutForDeliveryStageDoc(order);
+    ensureInProgressStageDoc(order);
     order.orderStages.outForDelivery.isCompleted = false;
     order.orderStages.inProgress.isCompleted = false;
+    if (typeof order.markModified === 'function') {
+      order.markModified('orderStages');
+    }
     await order.save();
     return res.status(200).json({ message: 'Order moved to return pipeline' });
   } catch (e) {
+    console.error('cancelFromWaiting:', e);
     return res.status(500).json({ error: 'Failed to cancel order' });
   }
-}
+};
 
 // Enhanced Return Flow Functions
 
@@ -3686,9 +3363,11 @@ const get_pickupDetailsPage = async(req, res) => {
     
     console.log(pickup);  
     if (!pickup) {
-    // Check if the request is from API or web
-    if (req.originalUrl.includes('/api/')) {
-      // API request - return JSON response
+    const wantsJsonNotFound =
+      req.originalUrl.includes('/api/') ||
+      req.query.json === '1' ||
+      (req.headers.accept && req.headers.accept.includes('application/json'));
+    if (wantsJsonNotFound) {
       return res.status(404).json({ error: 'Pickup not found' });
     } else {
       res.render('business/pickup-details', {
@@ -3702,8 +3381,11 @@ const get_pickupDetailsPage = async(req, res) => {
   }
 
   // Pickup found - render the page with pickup data
-  if (req.originalUrl.includes('/api/')) {
-    // API request - return JSON response
+  const wantsJson =
+    req.originalUrl.includes('/api/') ||
+    req.query.json === '1' ||
+    (req.headers.accept && req.headers.accept.includes('application/json'));
+  if (wantsJson) {
     return res.status(200).json({ pickup });
   } else {
     res.render('business/pickup-details', {
@@ -3768,14 +3450,55 @@ const ratePickup = async (req, res) => {
 
 };
 
+/**
+ * Load pickup for business actions from req.params.pickupId or req.params.pickupNumber.
+ * Mobile API uses pickupNumber on some routes; web uses Mongo _id.
+ */
+async function findPickupByIdOrNumberParam(req, extraPopulates = []) {
+  const raw = req.params.pickupId ?? req.params.pickupNumber;
+  if (!raw) {
+    return null;
+  }
+  const buildQuery = (filter) => {
+    let q = Pickup.findOne(filter).populate('business');
+    extraPopulates.forEach((path) => {
+      q = q.populate(path);
+    });
+    return q;
+  };
+  let pickup = null;
+  if (mongoose.Types.ObjectId.isValid(raw)) {
+    pickup = await buildQuery({ _id: raw });
+  }
+  if (!pickup) {
+    pickup = await buildQuery({ pickupNumber: raw });
+  }
+  return pickup;
+}
+
+/**
+ * Resolve an order from a route param that may be Mongo _id or orderNumber.
+ * Some clients (and URLs) use order number instead of _id.
+ */
+async function findOrderByIdOrNumber(orderId) {
+  if (orderId == null || String(orderId).trim() === '') {
+    return null;
+  }
+  const raw = String(orderId).trim();
+  let order = null;
+  if (mongoose.Types.ObjectId.isValid(raw)) {
+    order = await Order.findById(raw);
+  }
+  if (!order) {
+    order = await Order.findOne({ orderNumber: raw });
+  }
+  return order;
+}
+
 /** Soft-cancel pickup for business: status → canceled, with ownership + status guards. */
 const cancelPickup = async (req, res) => {
-  const { pickupId } = req.params;
-
   try {
-    const pickup = await Pickup.findById(pickupId)
-      .populate('assignedDriver')
-      .populate('business');
+    const pickup = await findPickupByIdOrNumberParam(req, ['assignedDriver']);
 
     if (!pickup) {
       return res.status(404).json({ error: 'Pickup not found' });
@@ -3857,22 +3580,112 @@ const cancelPickup = async (req, res) => {
   }
 };
 
-const deletePickup  = async (req, res) => {
-  const { pickupId } = req.params;
+/** Update editable pickup fields (only while status is new / pendingPickup). */
+const updatePickup = async (req, res) => {
+  const {
+    numberOfOrders,
+    pickupDate,
+    phoneNumber,
+    isFragileItems,
+    isLargeItems,
+    pickupNotes,
+    pickupLocation,
+    pickupAddressId,
+  } = req.body;
 
   try {
-    const deletedPickup = await Pickup.findByIdAndDelete(pickupId);
+    const pickup = await findPickupByIdOrNumberParam(req, []);
 
-    if (!deletedPickup) {
-      return res.status(404).json({ error: 'Pickup not found' });
+    if (!pickup) {
+      return res.status(404).json({ error: 'Pickup not found.' });
     }
 
-    res.status(200).json({ message: 'Pickup deleted successfully.' });
+    const businessId = pickup.business._id
+      ? pickup.business._id.toString()
+      : pickup.business.toString();
+    if (businessId !== req.userData._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
+
+    if (!canBusinessEditPickupStatus(pickup.picikupStatus)) {
+      return res.status(400).json({
+        error: 'This pickup can no longer be edited — it is already in progress.',
+        currentStatus: pickup.picikupStatus,
+      });
+    }
+
+    if (!numberOfOrders || !pickupDate || !phoneNumber) {
+      return res.status(400).json({ error: 'numberOfOrders, pickupDate and phoneNumber are required.' });
+    }
+
+    // Re-resolve address and recompute fee
+    const business = pickup.business;
+    let selectedAddress = null;
+    const addressId = pickupAddressId || pickup.pickupAddressId;
+    if (addressId && business.pickUpAddresses && business.pickUpAddresses.length > 0) {
+      selectedAddress = business.pickUpAddresses.find(addr => addr.addressId === addressId);
+    }
+    if (!selectedAddress && business.pickUpAddresses && business.pickUpAddresses.length > 0) {
+      selectedAddress = business.pickUpAddresses.find(addr => addr.isDefault) || business.pickUpAddresses[0];
+    }
+
+    const businessCity = selectedAddress?.city || business?.pickUpAdress?.city || 'Cairo';
+    const computedPickupFee = calcPickupFee(businessCity, 0);
+
+    pickup.numberOfOrders = numberOfOrders;
+    pickup.pickupDate = pickupDate;
+    pickup.phoneNumber = phoneNumber;
+    pickup.isFragileItems = isFragileItems === 'true' || isFragileItems === true;
+    pickup.isLargeItems = isLargeItems === 'true' || isLargeItems === true;
+    pickup.pickupNotes = pickupNotes || pickup.pickupNotes;
+    pickup.pickupFees = computedPickupFee;
+    if (pickupAddressId) pickup.pickupAddressId = pickupAddressId;
+    if (pickupLocation) pickup.pickupLocation = pickupLocation;
+    else if (selectedAddress && pickupAddressId) {
+      pickup.pickupLocation = `${selectedAddress.adressDetails}, ${selectedAddress.city}, ${selectedAddress.country}`;
+    }
+
+    const saved = await pickup.save();
+    return res.status(200).json({ message: 'Pickup updated successfully.', pickup: saved });
+  } catch (error) {
+    console.error('Error in updatePickup:', error);
+    return res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
+/** Hard-delete a pickup. Business-side: only allowed while status is new / pendingPickup. */
+const deletePickup = async (req, res) => {
+  try {
+    const pickup = await findPickupByIdOrNumberParam(req, []);
+
+    if (!pickup) {
+      return res.status(404).json({ error: 'Pickup not found.' });
+    }
+
+    // Ownership check (skip for admin routes that go through a different auth middleware)
+    if (req.userData) {
+      const businessId = pickup.business._id
+        ? pickup.business._id.toString()
+        : pickup.business.toString();
+      if (businessId !== req.userData._id.toString()) {
+        return res.status(403).json({ error: 'Forbidden.' });
+      }
+
+      if (!canBusinessHardDeletePickupStatus(pickup.picikupStatus)) {
+        return res.status(400).json({
+          error: 'This pickup can no longer be deleted — it is already in progress or has been assigned to a driver.',
+          currentStatus: pickup.picikupStatus,
+        });
+      }
+    }
+
+    await Pickup.findByIdAndDelete(pickup._id);
+    return res.status(200).json({ message: 'Pickup deleted successfully.' });
   } catch (error) {
     console.error('Error in deletePickup:', error);
-    res.status(500).json({ error: 'Internal server error. Please try again.' });
+    return res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
+};
 
 
 //================================================END Pickup  ================================================= //
@@ -4153,36 +3966,213 @@ const calculatePickupFee = async (req, res) => {
 
 // ================================================= Edit Profile ================================================= //
 
+const PROFILE_IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+
+/** express-fileupload may return a single file or an array for the same field */
+function firstUploadedFile(raw) {
+  if (!raw) return null;
+  return Array.isArray(raw) ? raw[0] || null : raw;
+}
+
+function absoluteProfileImageUrl(req, imagePath) {
+  if (!imagePath || typeof imagePath !== 'string') return null;
+  if (/^https?:\/\//i.test(imagePath)) return imagePath;
+  const host = req.get('host') || 'localhost';
+  const base = `${req.protocol}://${host}`;
+  return imagePath.startsWith('/') ? `${base}${imagePath}` : `${base}/${imagePath}`;
+}
+
 const editProfile = async (req, res) => {
   try {
-    const { name, phoneNumber, profileImage, brandName, email } = req.body;
+    const userId = req.userData._id;
+    const current = await User.findById(userId).select('profileImage email phoneNumber').lean();
+    if (!current) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+    }
 
-    // Create an update object with only the fields that need to be updated
     const updateData = {};
-    
-    if (name) updateData.name = name;
-    if (phoneNumber) updateData.phoneNumber = phoneNumber;
-    if (profileImage) updateData.profileImage = profileImage;
-    if (email) updateData.email = email;
-    if (brandName) updateData['brandInfo.brandName'] = brandName;
-    
+    const { name, phoneNumber, profileImage, brandName, email, industry, monthlyOrders } =
+      req.body;
+    const removeProfileImage =
+      req.body.removeProfileImage === 'true' ||
+      req.body.removeProfileImage === true;
+
+    if (name !== undefined && name !== null && String(name).trim() !== '') {
+      updateData.name = String(name).trim();
+    }
+
+    if (email !== undefined && email !== null && String(email).trim() !== '') {
+      const newEmail = String(email).trim().toLowerCase();
+      const existingEmailUser = await User.findOne({ email: newEmail });
+      if (existingEmailUser && existingEmailUser._id.toString() !== userId.toString()) {
+        return res.status(400).json({
+          status: 'error',
+          code: 'EMAIL_IN_USE',
+          message: 'This email is already registered to another account',
+        });
+      }
+      updateData.email = newEmail;
+    }
+
+    if (phoneNumber !== undefined && phoneNumber !== null && String(phoneNumber).trim() !== '') {
+      const newPhone = String(phoneNumber).trim();
+      const existingPhoneUser = await User.findOne({ phoneNumber: newPhone });
+      if (existingPhoneUser && existingPhoneUser._id.toString() !== userId.toString()) {
+        return res.status(400).json({
+          status: 'error',
+          code: 'PHONE_IN_USE',
+          message: 'This phone number is already registered to another account',
+        });
+      }
+      updateData.phoneNumber = newPhone;
+    }
+
+    if (brandName !== undefined) {
+      updateData['brandInfo.brandName'] =
+        brandName === null || brandName === '' ? null : String(brandName).trim();
+    }
+    if (industry !== undefined) {
+      updateData['brandInfo.industry'] =
+        industry === null || industry === '' ? null : String(industry).trim();
+    }
+    if (monthlyOrders !== undefined) {
+      updateData['brandInfo.monthlyOrders'] =
+        monthlyOrders === null || monthlyOrders === '' ? null : String(monthlyOrders).trim();
+    }
+    if (req.body.sellingPoints !== undefined) {
+      const sp = req.body.sellingPoints;
+      const arr = Array.isArray(sp)
+        ? sp
+        : String(sp)
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+      updateData['brandInfo.sellingPoints'] = arr;
+    }
+    if (req.body.socialLinks !== undefined) {
+      let parsed;
+      try {
+        const sl = req.body.socialLinks;
+        parsed = typeof sl === 'string' ? JSON.parse(sl || '{}') : sl;
+      } catch (e) {
+        return res.status(400).json({
+          status: 'error',
+          code: 'INVALID_JSON',
+          message: 'socialLinks must be valid JSON (object) or a JSON string.',
+        });
+      }
+      updateData['brandInfo.socialLinks'] = parsed;
+    }
+    if (req.body.notificationPreferences !== undefined) {
+      let prefs;
+      try {
+        const np = req.body.notificationPreferences;
+        prefs = typeof np === 'string' ? JSON.parse(np || '{}') : np;
+      } catch (e) {
+        return res.status(400).json({
+          status: 'error',
+          code: 'INVALID_JSON',
+          message: 'notificationPreferences must be valid JSON or a JSON string.',
+        });
+      }
+      if (prefs && typeof prefs === 'object') {
+        if (prefs.whatsapp !== undefined) {
+          updateData['notificationPreferences.whatsapp'] = Boolean(prefs.whatsapp);
+        }
+        if (prefs.sms !== undefined) {
+          updateData['notificationPreferences.sms'] = Boolean(prefs.sms);
+        }
+      }
+    }
+
+    if (removeProfileImage) {
+      if (current.profileImage && String(current.profileImage).startsWith('/uploads/profiles/')) {
+        try {
+          await deleteFile(current.profileImage, 'profiles');
+        } catch (e) {
+          console.warn('editProfile: could not delete old profile file', e);
+        }
+      }
+      updateData.profileImage = null;
+    } else if (req.files && req.files.profileImage) {
+      const file = firstUploadedFile(req.files.profileImage);
+      if (!file) {
+        return res.status(400).json({
+          status: 'error',
+          code: 'INVALID_IMAGE',
+          message: 'No profile image file was received.',
+        });
+      }
+      // Same as updateSettings / completion photo uploads: trust the client file; many send application/octet-stream or omit MIME.
+      if (file.size > PROFILE_IMAGE_MAX_BYTES) {
+        return res.status(400).json({
+          status: 'error',
+          code: 'FILE_TOO_LARGE',
+          message: `Image must be ${PROFILE_IMAGE_MAX_BYTES / (1024 * 1024)} MB or smaller.`,
+        });
+      }
+      if (current.profileImage && String(current.profileImage).startsWith('/uploads/profiles/')) {
+        try {
+          await deleteFile(current.profileImage, 'profiles');
+        } catch (e) {
+          console.warn('editProfile: could not delete old profile file', e);
+        }
+      }
+      const result = await uploadFile(file, 'profiles');
+      updateData.profileImage = result.url;
+    } else if (profileImage !== undefined) {
+      const s = String(profileImage).trim();
+      if (s === '' || s === 'null') {
+        updateData.profileImage = null;
+      } else {
+        updateData.profileImage = s;
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      const unchanged = await User.findById(userId).select('-password').lean();
+      const u = JSON.parse(JSON.stringify(unchanged));
+      return res.status(200).json({
+        status: 'success',
+        message: 'No changes to apply',
+        user: u,
+        profileImageUrl: absoluteProfileImageUrl(req, u && u.profileImage),
+      });
+    }
+
     const user = await User.findByIdAndUpdate(
-      req.userData._id,
-      updateData,
-      { new: true }
-    );
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    )
+      .select('-password')
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+    }
 
     res.status(200).json({
       status: 'success',
       message: 'Profile updated successfully',
-      user
-    }); 
-
+      user,
+      profileImageUrl: absoluteProfileImageUrl(req, user.profileImage),
+    });
   } catch (error) {
     console.error('Error in editProfile:', error);
-    res.status(500).json({ error: 'Internal server error. Please try again.' });
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        status: 'error',
+        code: 'VALIDATION_ERROR',
+        message: error.message || 'Validation failed',
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error. Please try again.',
+    });
   }
-}
+};
 
 // ================================================= Settings Page ================================================= //
 
@@ -5654,6 +5644,7 @@ module.exports = {
   get_pickedupOrders,
   ratePickup,
   createPickup,
+  updatePickup,
   cancelPickup,
   deletePickup,
 

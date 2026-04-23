@@ -1,16 +1,18 @@
-/* Business settings — aligns with brand #E4A24A, calmer layout */
+/* Business settings — brand orange aligned with shell / create-order (#F39720) */
 :root {
-  --primary-color: #e4a24a;
-  --primary-hover: #c98e3f;
-  --primary-light: #faf6ef;
-  --primary-rgb: 228, 162, 74;
-  --secondary-color: #d4af56;
+  --primary-color: #f39720;
+  --primary-hover: #e8890f;
+  --primary-light: #fff8ed;
+  --primary-rgb: 243, 151, 32;
+  --secondary-color: #fdb614;
   --text-dark: #1a1d21;
   --text-medium: #4a5058;
   --text-light: #6c757d;
   --border-color: #e4e6ea;
-  --success-color: #28a745;
-  --danger-color: #dc3545;
+  --success-color: #16a34a;
+  --danger-color: #dc2626;
+  --warning-ink: #b45309;
+  --warning-bg: #fff7ed;
   --card-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
   --card-shadow-hover: 0 4px 16px rgba(16, 24, 40, 0.08);
 }
@@ -51,8 +53,8 @@ button,
   padding: 1.35rem 1.5rem;
   margin-bottom: 1.25rem;
   color: var(--text-dark);
-  box-shadow: var(--card-shadow);
-  border-left: 4px solid var(--primary-color);
+  /* Inset bar: same horizontal text offset as .settings-card (no extra border width) */
+  box-shadow: var(--card-shadow), inset 4px 0 0 0 var(--primary-color);
 }
 
 .settings-header h1 {
@@ -136,9 +138,13 @@ button,
 }
 
 .nav-tab.active {
-  color: #5c4a2a;
-  background: rgba(var(--primary-rgb), 0.16);
-  border-color: rgba(var(--primary-rgb), 0.35);
+  color: var(--text-dark);
+  background: rgba(var(--primary-rgb), 0.14);
+  border-color: rgba(var(--primary-rgb), 0.4);
+}
+
+.nav-tab.active i {
+  color: var(--primary-color);
 }
 
 .nav-tab.active::after {
@@ -198,6 +204,14 @@ button,
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-dark);
+}
+
+.card-header.card-header--section-intro {
+  align-items: flex-start;
+}
+
+.card-header.card-header--section-intro > i {
+  margin-top: 0.15rem;
 }
 
 .form-group {
@@ -352,7 +366,7 @@ button,
   font-size: 2.35rem;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: #9a7b45;
+  color: #c2410c;
   line-height: 1;
   font-family: 'Poppins', sans-serif;
 }
@@ -412,13 +426,15 @@ button,
 }
 
 .badge-unverified {
-  background: rgba(220, 53, 69, 0.1);
-  color: var(--danger-color);
+  background: var(--warning-bg);
+  color: var(--warning-ink);
+  border: 1px solid rgba(180, 83, 9, 0.2);
 }
 
 .badge-completed {
   background: rgba(var(--primary-rgb), 0.12);
-  color: #7a5f28;
+  color: #9a3412;
+  border: 1px solid rgba(var(--primary-rgb), 0.22);
 }
 
 .info-row {
@@ -595,12 +611,35 @@ input:checked + .slider:before {
   transform: translateX(22px);
 }
 
+.settings-card .input-group {
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.settings-card .input-group > .form-control {
+  min-width: 0;
+}
+
 .btn-settings-edit {
   border: 1px solid var(--border-color) !important;
   color: var(--text-medium) !important;
   background: #fff !important;
   font-weight: 500;
   font-size: 0.875rem;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 0.95rem !important;
+  white-space: nowrap;
+}
+
+.settings-card .input-group .btn-settings-edit {
+  border-radius: 0 8px 8px 0 !important;
+}
+
+html[dir='rtl'] .settings-card .input-group .btn-settings-edit {
+  border-radius: 8px 0 0 8px !important;
 }
 
 .btn-settings-edit:hover {

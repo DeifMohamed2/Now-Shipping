@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Ticket = require('../models/ticket');
 const TicketMessage = require('../models/ticketMessage');
 const Order = require('../models/order');
@@ -177,7 +178,7 @@ exports.getTickets = async (req, res) => {
 
     const total = await Ticket.countDocuments(query);
 
-    res.status(200).json({
+    const payload = {
       success: true,
       tickets,
       pagination: {
@@ -186,7 +187,34 @@ exports.getTickets = async (req, res) => {
         totalTickets: total,
         limit: parseInt(limit),
       },
-    });
+    };
+
+    if (userType === 'business' && userId) {
+      const bizId = new mongoose.Types.ObjectId(String(userId));
+      const grouped = await Ticket.aggregate([
+        { $match: { business: bizId } },
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]);
+      const statusCounts = {
+        all: 0,
+        new: 0,
+        open: 0,
+        pending: 0,
+        in_progress: 0,
+        resolved: 0,
+        closed: 0,
+        reopened: 0,
+      };
+      grouped.forEach((g) => {
+        if (g._id && Object.prototype.hasOwnProperty.call(statusCounts, g._id)) {
+          statusCounts[g._id] = g.count;
+        }
+        statusCounts.all += g.count;
+      });
+      payload.statusCounts = statusCounts;
+    }
+
+    res.status(200).json(payload);
   } catch (error) {
     console.error('Error fetching tickets:', error);
     res.status(500).json({

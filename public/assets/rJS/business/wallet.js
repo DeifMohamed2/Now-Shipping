@@ -7,6 +7,48 @@
   const I = typeof window !== 'undefined' && window.__NS_BUSINESS_I18N ? window.__NS_BUSINESS_I18N : {};
   const W = I.wallet || {};
   const TYPES = W.types || {};
+  const DESC = W.desc || {};
+  const CUR = W.currency || 'EGP';
+
+  function isRTL() {
+    const html = document.documentElement;
+    return html.getAttribute('dir') === 'rtl' || html.lang === 'ar';
+  }
+
+  /** Map stored English ledger descriptions to Arabic when UI is RTL. */
+  function localizeLedgerDescription(raw) {
+    if (!raw || !isRTL()) return raw || '';
+    const d = String(raw).trim();
+    const L = DESC;
+
+    let m = d.match(/^Pickup fee for pickup #(\d+)$/i);
+    if (m) return (L.pickupForPickup || d).replace(/\{n\}/g, m[1]);
+
+    m = d.match(/^Pickup fee — (\d+)$/);
+    if (m) return (L.pickupFeeDash || d).replace(/\{n\}/g, m[1]);
+
+    m = d.match(/^Delivery fee — Order (.+)$/);
+    if (m) return (L.deliveryFee || d).replace(/\{order\}/g, m[1]);
+
+    m = d.match(/^Return fee — Order (.+)$/);
+    if (m) return (L.returnFee || d).replace(/\{order\}/g, m[1]);
+
+    m = d.match(/^Cancellation fee — Order (.+)$/);
+    if (m) return (L.cancellationFee || d).replace(/\{order\}/g, m[1]);
+
+    m = d.match(/^Order (.+) delivered — COD collected$/);
+    if (m) return (L.codCollected || d).replace(/\{order\}/g, m[1]);
+
+    m = d.match(/^Admin adjustment:\s*(.+)$/i);
+    if (m) return (L.adminAdjustment || d).replace(/\{note\}/g, m[1]);
+
+    if (/^Weekly payout$/i.test(d)) return L.weeklyPayout || d;
+
+    m = d.match(/^Shop order delivery #(.+)$/i);
+    if (m) return (L.shopDelivery || d).replace(/\{order\}/g, m[1]);
+
+    return d;
+  }
 
   // ── State ──────────────────────────────────────────────────
   let currentPage = 1;
@@ -86,12 +128,6 @@
     payout: TYPES.payout || 'Payout',
   };
 
-  function typeIconClass(type) {
-    if (type === 'cod_collected' || (type === 'adjustment')) return 'credit';
-    if (type === 'payout') return 'payout';
-    return 'debit';
-  }
-
   function typeIcon(type, amount) {
     const cls = amount >= 0 ? 'credit' : (type === 'payout' ? 'payout' : 'debit');
     const icon = amount >= 0 ? 'ri-arrow-down-line' : 'ri-arrow-up-line';
@@ -101,13 +137,21 @@
 
   // ── Format ─────────────────────────────────────────────────
   function fmt(n) {
-    const loc = document.documentElement.lang === 'ar' ? 'ar-EG' : 'en-EG';
+    const loc = isRTL() ? 'ar-EG' : 'en-EG';
     return Number(n).toLocaleString(loc, { minimumFractionDigits: 0 });
   }
 
   function fmtDate(iso) {
-    const loc = document.documentElement.lang === 'ar' ? 'ar-EG' : 'en-GB';
-    return new Date(iso).toLocaleDateString(loc, { day: '2-digit', month: 'short', year: 'numeric' });
+    const loc = isRTL() ? 'ar-EG' : 'en-GB';
+    return new Date(iso).toLocaleDateString(loc, { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function fmtMoney(amount, signed) {
+    const loc = isRTL() ? 'ar-EG' : 'en-EG';
+    const n = Number(amount);
+    const abs = Math.abs(n).toLocaleString(loc, { minimumFractionDigits: 0 });
+    const sign = signed ? (n >= 0 ? '+' : '−') : (n < 0 ? '−' : '');
+    return sign + abs + '\u00a0' + CUR;
   }
 
   // ── Load entries ───────────────────────────────────────────
@@ -137,10 +181,14 @@
       const from = (currentPage - 1) * 50 + 1;
       const to   = Math.min(currentPage * 50, data.total);
       const rangeTpl = W.showingRange || 'Showing {from}–{to} of {total}';
+      const fmtInt = (x) => (isRTL() ? Number(x).toLocaleString('ar-EG') : String(x));
       infoEl.textContent =
         data.total === 0
           ? (W.noTransactionsFound || 'No transactions found')
-          : rangeTpl.replace('{from}', String(from)).replace('{to}', String(to)).replace('{total}', String(data.total));
+          : rangeTpl
+              .replace('{from}', fmtInt(from))
+              .replace('{to}', fmtInt(to))
+              .replace('{total}', fmtInt(data.total));
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">${W.failedLoad || 'Failed to load transactions'}</td></tr>`;
       console.error(err);
@@ -157,8 +205,7 @@
     tbody.innerHTML = entries.map(e => {
       const isCredit = e.amount >= 0;
       const amtClass = isCredit ? 'wl-amount-credit' : 'wl-amount-debit';
-      const amtStr   = (isCredit ? '+' : '') + fmt(e.amount) + ' EGP';
-      // payoutId is populated → has .status; if null entry is still pending
+      const amtStr   = fmtMoney(e.amount, true);
       const payoutStatus = e.payoutId?.status || null;
       let statusPill;
       if (!payoutStatus) {
@@ -166,24 +213,24 @@
       } else if (payoutStatus === 'paid') {
         statusPill = `<span class="wl-status-pill wl-status-pill-settled">${W.paid || 'Paid'}</span>`;
       } else {
-        // scheduled or processing — in payout batch but money not sent yet
         statusPill = `<span class="wl-status-pill wl-status-pill-inpayout">${W.inPayout || 'In Payout'}</span>`;
       }
       const settled = statusPill;
+      const desc = localizeLedgerDescription(e.description);
 
       return `<tr>
-        <td class="text-muted fs-13">${fmtDate(e.createdAt)}</td>
+        <td class="text-muted fs-13"><span class="wl-date-cell">${fmtDate(e.createdAt)}</span></td>
         <td>
           <div class="d-flex align-items-center gap-2">
             ${typeIcon(e.type, e.amount)}
             <div>
-              <div class="fw-medium fs-13">${escHtml(e.description)}</div>
-              ${e.orderNumber ? `<small class="text-muted">${escHtml(e.orderNumber)}</small>` : ''}
+              <div class="fw-medium fs-13">${escHtml(desc)}</div>
+              ${e.orderNumber ? `<small class="text-muted ltr-embed d-inline-block">${escHtml(e.orderNumber)}</small>` : ''}
             </div>
           </div>
         </td>
         <td><span class="badge bg-light text-dark fw-normal">${TYPE_LABELS[e.type] || e.type}</span></td>
-        <td class="text-end ${amtClass} fw-semibold">${amtStr}</td>
+        <td class="text-end ${amtClass} fw-semibold"><span class="wl-amount-cell ltr-embed">${amtStr}</span></td>
         <td class="text-center">${settled}</td>
       </tr>`;
     }).join('');
@@ -198,13 +245,13 @@
     if (end - start < max - 1) start = Math.max(1, end - max + 1);
 
     let html = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-      <a class="page-link" href="#" data-page="${currentPage - 1}">«</a></li>`;
+      <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="${W.prevPage || 'Previous'}">«</a></li>`;
     for (let i = start; i <= end; i++) {
       html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-        <a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+        <a class="page-link" href="#" data-page="${i}">${isRTL() ? Number(i).toLocaleString('ar-EG') : i}</a></li>`;
     }
     html += `<li class="page-item ${currentPage === pages ? 'disabled' : ''}">
-      <a class="page-link" href="#" data-page="${currentPage + 1}">»</a></li>`;
+      <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="${W.nextPage || 'Next'}">»</a></li>`;
     pagination.innerHTML = html;
 
     pagination.querySelectorAll('a[data-page]').forEach(a => {
@@ -221,7 +268,7 @@
 
   // ── Update hero balance ────────────────────────────────────
   function updateHeroBalance(bal) {
-    heroBalance.innerHTML = `${fmt(bal)} <span class="fs-5 fw-normal opacity-75">EGP</span>`;
+    heroBalance.innerHTML = `<span class="ltr-embed">${fmt(bal)}</span> <span class="fs-5 fw-normal opacity-75">${CUR}</span>`;
   }
 
   // ── Stat cards ─────────────────────────────────────────────
@@ -232,9 +279,9 @@
       if (e.type === 'delivery_fee' || e.type === 'pickup_fee') fees += Math.abs(e.amount);
       if (e.type === 'payout') paid += Math.abs(e.amount);
     });
-    statCod.textContent  = `${fmt(cod)} EGP`;
-    statFees.textContent = `${fmt(fees)} EGP`;
-    statPaid.textContent = `${fmt(paid)} EGP`;
+    statCod.textContent  = fmtMoney(cod, false);
+    statFees.textContent = fmtMoney(fees, false);
+    statPaid.textContent = fmtMoney(paid, false);
   }
 
   // ── Escape html ────────────────────────────────────────────

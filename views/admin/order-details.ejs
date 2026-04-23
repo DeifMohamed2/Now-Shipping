@@ -4,19 +4,89 @@
 <% if (order) { %>
 <%
   const canCancelOrderResolved = typeof canCancelOrder !== 'undefined' ? !!canCancelOrder : false;
-  const canChangeAddressResolved = typeof canChangeAddress !== 'undefined' ? !!canChangeAddress : false;
+  const odTracking = typeof trackingDisplay !== 'undefined' ? trackingDisplay : (order.smartFlyerBarcode || order.referralNumber || '');
+  const odHist = typeof statusHistoryChronological !== 'undefined' ? statusHistoryChronological : [];
+  const odStatusLabel = typeof orderStatusLabel !== 'undefined' ? orderStatusLabel : order.orderStatus;
+  const odCanceledAt = order.orderStages && order.orderStages.canceled && order.orderStages.canceled.completedAt ? new Date(order.orderStages.canceled.completedAt) : null;
+  function odStageBeforeCancel(t) {
+    if (!odCanceledAt || !t) return true;
+    return new Date(t).getTime() <= odCanceledAt.getTime();
+  }
+  const odShowReturnStages = order.orderShipping.orderType === 'Return' || /return/i.test(String(order.orderStatus || ''));
+  const odAmountDisplay = (order.orderShipping.amount != null && order.orderShipping.amount !== '') ? (order.orderShipping.amount + ' EGP') : (order.orderShipping.amountType === 'NA' ? 'N/A' : '—');
 %>
 
 <div class="row">
+  <div class="col-12 mb-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body py-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <p class="text-muted text-uppercase fs-12 mb-1">Order</p>
+          <h4 class="mb-0"><span class="ltr-embed"><%= order.orderNumber %></span></h4>
+          <% if (order.business && order.business.brandInfo && order.business.brandInfo.businessName) { %>
+          <p class="text-muted mb-0 small"><%= order.business.brandInfo.businessName %></p>
+          <% } %>
+        </div>
+        <div class="text-md-end">
+          <span class="badge bg-primary-subtle text-primary fs-12 mb-1"><%= odStatusLabel %></span>
+          <p class="text-muted mb-0 small">Placed <span class="ltr-embed"><%= new Date(order.orderDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></p>
+          <% if (order.completedDate) { %>
+          <p class="text-muted mb-0 small">Closed <span class="ltr-embed"><%= new Date(order.completedDate).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></p>
+          <% } %>
+        </div>
+        <div>
+          <% if (order.orderShipping.isExpressShipping) { %>
+          <span class="badge bg-success-subtle text-success"><i class="ri-rocket-line me-1"></i>Express</span>
+          <% } %>
+          <% if (odTracking) { %>
+          <p class="text-muted small mb-0 mt-1">Tracking / AWB: <strong class="ltr-embed"><%= odTracking %></strong></p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 mb-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-light border-0 py-3">
+        <h5 class="card-title mb-0"><i class="ri-time-line me-2 text-primary"></i>Status history</h5>
+        <p class="text-muted small mb-0 mt-1">Full audit trail of status changes (oldest first).</p>
+      </div>
+      <div class="card-body p-0">
+        <% if (odHist.length) { %>
+        <div class="table-responsive">
+          <table class="table table-hover table-sm mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" style="width:22%">When</th>
+                <th scope="col" style="width:22%">Status</th>
+                <th scope="col" style="width:14%">Category</th>
+                <th scope="col">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% odHist.forEach(function(row) { %>
+              <tr>
+                <td class="text-muted small ltr-embed"><%= row.date ? new Date(row.date).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '—' %></td>
+                <td><span class="fw-medium"><%= row.label || row.status %></span><% if (row.status && row.label !== row.status) { %><br><span class="text-muted small font-monospace"><%= row.status %></span><% } %></td>
+                <td><span class="badge bg-light text-dark border"><%= row.category || '—' %></span></td>
+                <td class="small"><%= row.notes || row.reason || '—' %></td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+        <% } else { %>
+        <div class="p-4 text-center text-muted small">No status history recorded yet.</div>
+        <% } %>
+      </div>
+    </div>
+  </div>
   <div class="col-xl-9">
     <div class="card">
       <div class="card-header">
         <div class="d-sm-flex align-items-center">
           <h5 class="card-title flex-grow-1 mb-0">Order Status - <span style="color: #007bff;"><strong><%= order.orderNumber %></strong></span></h5>
           <div class="flex-shrink-0 mt-2 mt-sm-0">
-            <% if (canChangeAddressResolved) { %>
-            <a href="/business/edit-order/<%= order.orderNumber %>" class="btn btn-soft-info material-shadow-none btn-sm mt-2 mt-sm-0"><i class="ri-map-pin-line align-middle me-1"></i> Change Address</a>
-            <% } %>
             <% if (canCancelOrderResolved) { %>
             <button class="btn btn-soft-danger material-shadow-none btn-sm mt-2 mt-sm-0" onclick="cancelOrder('<%= order._id %>')"><i class="mdi mdi-archive-remove-outline align-middle me-1"></i> Cancel Order</button>
             <% } %>
@@ -94,7 +164,7 @@
               <div class="accordion-header" id="headingTwo">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
 
-                  <% if (order.orderStages.packed.isCompleted) { %>
+                  <% if (order.orderStages.packed.isCompleted && odStageBeforeCancel(order.orderStages.packed.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -105,8 +175,18 @@
                       <h6 class="fs-15 mb-1 fw-semibold">Packed - <span class="fw-normal"><%= new Date(order.orderStages.packed.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
-
+                  <% } else if (order.orderStages.packed.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="mdi mdi-gift-outline"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted">Packed (timestamp after cancel) — <span class="fw-normal"><%= new Date(order.orderStages.packed.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -136,7 +216,7 @@
               <div class="accordion-header" id="headingThree">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
 
-                  <% if (order.orderStages.shipping.isCompleted) { %>
+                  <% if (order.orderStages.shipping.isCompleted && odStageBeforeCancel(order.orderStages.shipping.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -147,8 +227,18 @@
                       <h6 class="fs-15 mb-1 fw-semibold">Shipping - <span class="fw-normal"><%= new Date(order.orderStages.shipping.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
-
+                  <% } else if (order.orderStages.shipping.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="ri-truck-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted">Shipping (timestamp after cancel) — <span class="fw-normal"><%= new Date(order.orderStages.shipping.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -177,7 +267,7 @@
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingFour">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                  <% if (order.orderStages.inProgress.isCompleted) { %>
+                  <% if (order.orderStages.inProgress.isCompleted && odStageBeforeCancel(order.orderStages.inProgress.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-warning rounded-circle material-shadow">
@@ -188,7 +278,18 @@
                       <h6 class="fs-15 mb-1 fw-semibold">In Progress - <span class="fw-normal"><%= new Date(order.orderStages.inProgress.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
+                  <% } else if (order.orderStages.inProgress.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="ri-time-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted">In progress (timestamp after cancel) — <span class="fw-normal"><%= new Date(order.orderStages.inProgress.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -209,7 +310,7 @@
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingFive">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                  <% if (order.orderStages.outForDelivery.isCompleted) { %>
+                  <% if (order.orderStages.outForDelivery.isCompleted && odStageBeforeCancel(order.orderStages.outForDelivery.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -220,7 +321,18 @@
                       <h6 class="fs-15 mb-1 fw-semibold">Out For Delivery - <span class="fw-normal"><%= new Date(order.orderStages.outForDelivery.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
+                  <% } else if (order.orderStages.outForDelivery.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="ri-takeaway-fill"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted">Out for delivery (timestamp after cancel) — <span class="fw-normal"><%= new Date(order.orderStages.outForDelivery.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -241,7 +353,7 @@
             <div class="accordion-item border-0">
               <div class="accordion-header" id="headingSix">
                 <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-                  <% if (order.orderStages.delivered.isCompleted) { %>
+                  <% if (order.orderStages.delivered.isCompleted && odStageBeforeCancel(order.orderStages.delivered.completedAt)) { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-success rounded-circle material-shadow">
@@ -252,7 +364,18 @@
                       <h6 class="fs-15 mb-1 fw-semibold">Delivered - <span class="fw-normal"><%= new Date(order.orderStages.delivered.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
                     </div>
                   </div>
-                  <% } else{%>
+                  <% } else if (order.orderStages.delivered.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-light text-muted rounded-circle material-shadow border">
+                        <i class="mdi mdi-package-variant"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold text-muted">Delivered (timestamp after cancel) — <span class="fw-normal"><%= new Date(order.orderStages.delivered.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                    </div>
+                  </div>
+                  <% } else { %>
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 avatar-xs">
                       <div class="avatar-title bg-light text-muted rounded-circle material-shadow">
@@ -268,8 +391,55 @@
               </div>
             </div>
             <% } %>
+            <% if (order.orderStatus === 'canceled') { %>
+            <div class="accordion-item border-0">
+              <div class="accordion-header" id="headingCanceled">
+                <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseCanceled" aria-expanded="false" aria-controls="collapseCanceled">
+                  <% if (order.orderStages.canceled && order.orderStages.canceled.isCompleted) { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-danger rounded-circle material-shadow">
+                        <i class="ri-close-circle-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Order canceled — <span class="fw-normal"><%= new Date(order.orderStages.canceled.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></h6>
+                      <% if (order.orderStages.canceled.notes) { %><p class="text-muted small mb-0"><%= order.orderStages.canceled.notes %></p><% } %>
+                    </div>
+                  </div>
+                  <% } else { %>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar-xs">
+                      <div class="avatar-title bg-danger rounded-circle material-shadow">
+                        <i class="ri-close-circle-line"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                      <h6 class="fs-15 mb-1 fw-semibold">Order canceled</h6>
+                    </div>
+                  </div>
+                  <% } %>
+                </a>
+              </div>
+            </div>
+            <% } %>
           </div>
           <!--end accordion-->
+        <% if (odShowReturnStages) { %>
+        <div class="border-top mt-3 pt-3">
+          <h6 class="fw-semibold mb-3"><i class="ri-arrow-go-back-line me-2 text-warning"></i>Return pipeline</h6>
+          <ul class="list-unstyled vstack gap-2 small mb-0">
+            <% [['returnInitiated','Return initiated'],['returnAssigned','Courier assigned'],['returnPickedUp','Picked up'],['returnAtWarehouse','At warehouse'],['returnToBusiness','To business'],['returnCompleted','Completed']].forEach(function(pair) { var k = pair[0], lab = pair[1]; var st = order.orderStages[k]; %>
+            <li class="d-flex justify-content-between gap-2 border rounded px-2 py-2 bg-light-subtle">
+              <span><%= lab %></span>
+              <% if (st && st.isCompleted) { %>
+              <span class="text-success text-end"><i class="ri-check-line me-1"></i><span class="ltr-embed"><%= st.completedAt ? new Date(st.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }) : '' %></span></span>
+              <% } else { %><span class="text-muted">Pending</span><% } %>
+            </li>
+            <% }); %>
+          </ul>
+        </div>
+        <% } %>
         </div>
       </div>
     </div>
@@ -600,30 +770,43 @@
       </div>
       <div class="card-body">
         <div class="text-center">
-          <% if (order.orderStages.delivered.isCompleted) { %>
+          <% if (order.orderStatus === 'canceled') { %>
+          <lord-icon src="https://cdn.lordicon.com/tdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#dc3545" style="width:80px;height:80px"></lord-icon>
+          <h5 class="fs-16 mt-2 text-danger">Order canceled</h5>
+          <% if (order.orderStages.canceled && order.orderStages.canceled.completedAt) { %>
+          <p class="text-muted mb-0 small">Canceled on: <span class="ltr-embed"><%= new Date(order.orderStages.canceled.completedAt).toLocaleString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) %></span></p>
+          <% } %>
+          <% if (odTracking) { %><p class="text-muted mb-0 small mt-1">Tracking: <strong class="ltr-embed"><%= odTracking %></strong></p><% } %>
+          <% } else if (order.orderStages.delivered.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/tkkkkkdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2">Order Delivered</h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <p class="text-muted mb-0 small"><%= odStatusLabel %></p>
+          <% if (odTracking) { %><p class="text-muted mb-0 small">AWB / Ref: <strong class="ltr-embed"><%= odTracking %></strong></p><% } %>
           <% } else if (order.orderStages.outForDelivery.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/uetqnvvg.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">Out For Delivery </h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <h5 class="fs-16 mt-2">Out for delivery</h5>
+          <p class="text-muted mb-0 small"><%= odStatusLabel %></p>
+          <% if (odTracking) { %><p class="text-muted mb-0 small">AWB / Ref: <strong class="ltr-embed"><%= odTracking %></strong></p><% } %>
           <% } else if (order.orderStages.inProgress.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/ndydpcaq.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">In Progress</h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <h5 class="fs-16 mt-2">In progress</h5>
+          <p class="text-muted mb-0 small"><%= odStatusLabel %></p>
+          <% if (odTracking) { %><p class="text-muted mb-0 small">AWB / Ref: <strong class="ltr-embed"><%= odTracking %></strong></p><% } %>
           <% } else if (order.orderStages.shipping.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/dxjqoygy.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2">Shipping</h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <p class="text-muted mb-0 small"><%= odStatusLabel %></p>
+          <% if (odTracking) { %><p class="text-muted mb-0 small">AWB / Ref: <strong class="ltr-embed"><%= odTracking %></strong></p><% } %>
           <% } else if (order.orderStages.packed.isCompleted) { %>
           <lord-icon src="https://cdn.lordicon.com/ndydpcaq.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
           <h5 class="fs-16 mt-2">Packed</h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <p class="text-muted mb-0 small"><%= odStatusLabel %></p>
+          <% if (odTracking) { %><p class="text-muted mb-0 small">AWB / Ref: <strong class="ltr-embed"><%= odTracking %></strong></p><% } %>
           <% } else { %>
           <lord-icon src="https://cdn.lordicon.com/tdrtiskw.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
-          <h5 class="fs-16 mt-2">Order Placed</h5>
-          <p class="text-muted mb-0">ID: MFDS1400457854</p>
+          <h5 class="fs-16 mt-2">Order placed</h5>
+          <p class="text-muted mb-0 small"><%= odStatusLabel %></p>
+          <% if (odTracking) { %><p class="text-muted mb-0 small">AWB / Ref: <strong class="ltr-embed"><%= odTracking %></strong></p><% } %>
           <% } %>
         </div>
       </div>
@@ -650,7 +833,7 @@
             <p class="text-muted mb-0">Amount Type:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0"><%= order.orderShipping.amountType %></h6>
+            <h6 class="mb-0"><% if (order.orderShipping.amountType === 'COD') { %>Cash on delivery (COD)<% } else if (order.orderShipping.amountType === 'CD') { %>Cash difference (CD)<% } else if (order.orderShipping.amountType === 'NA') { %>Not applicable (NA)<% } else { %><%= order.orderShipping.amountType %><% } %></h6>
           </div>
         </div>
         <div class="d-flex align-items-center mb-2">
@@ -658,7 +841,7 @@
             <p class="text-muted mb-0">Amount:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0"><%= order.orderShipping.amount %></h6>
+            <h6 class="mb-0"><%= odAmountDisplay %></h6>
           </div>
         </div>
         <div class="d-flex align-items-center mb-2">
@@ -714,14 +897,15 @@
             <p class="text-muted mb-0">ID:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0"><%= order.deliveryMan._id %></h6>
+            <h6 class="mb-0 font-monospace small"><%= order.deliveryMan._id %></h6>
           </div>
         </div>
+        <div class="d-flex align-items-center mb-2">
           <div class="flex-shrink-0">
             <p class="text-muted mb-0">Name:</p>
           </div>
           <div class="flex-grow-1 ms-2">
-            <h6 class="mb-0"><%= order.deliveryMan.name.split(' ').slice(0, 2).join(' ') %></h6>
+            <h6 class="mb-0"><%= order.deliveryMan.name ? order.deliveryMan.name.split(' ').slice(0, 2).join(' ') : '—' %></h6>
           </div>
         </div>
         <div class="d-flex align-items-center mb-2">
@@ -808,8 +992,40 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script src="/assets/rJS/business/order-details.js"></script>
 <script>
+async function cancelOrder(orderId) {
+  const confirm = await Swal.fire({
+    title: 'Cancel this order?',
+    html: '<p class="text-muted mb-0">Depending on status, the order may be marked canceled or moved into the <strong>return</strong> flow (e.g. return to warehouse).</p>',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, proceed',
+  });
+  if (!confirm.isConfirmed) return;
+  try {
+    const response = await fetch('/admin/orders/cancel-order/' + orderId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok) {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Updated',
+        text: data.message || 'Order updated.',
+        confirmButtonText: 'OK',
+      });
+      window.location.reload();
+    } else {
+      Swal.fire({ icon: 'error', title: 'Cannot cancel', text: data.error || 'Request failed.' });
+    }
+  } catch (e) {
+    Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong. Try again.' });
+  }
+}
+
 async function resendReturnOtp(orderNumber) {
   const confirm = await Swal.fire({
     title: 'Resend Return OTP?',

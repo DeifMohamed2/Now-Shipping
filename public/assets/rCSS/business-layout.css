@@ -233,6 +233,14 @@ html[dir='rtl'] .navbar-menu {
   border-left: 1px solid #e9ecef !important;
 }
 
+/* RTL sidebar scroll area: no extra horizontal inset (Velzon vertical layout already sets padding:0 on .container-fluid; guard against Bootstrap gutters). */
+html[dir='rtl'] .app-menu.navbar-menu #scrollbar > .container-fluid {
+  --bs-gutter-x: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: none;
+}
+
 /* 2. Topbar: inset from right instead of left */
 @media (min-width: 768px) {
   html[dir='rtl'] [data-layout='vertical'] #page-topbar {
@@ -281,13 +289,9 @@ html[dir='rtl'] .navbar-menu {
   }
 }
 
-/* 6. Text alignment and breadcrumb */
+/* 6. Text alignment */
 html[dir='rtl'] #layout-wrapper .main-content {
   text-align: right;
-}
-
-html[dir='rtl'] .page-title-box .breadcrumb {
-  justify-content: flex-end;
 }
 
 /* 7. Mobile sidebar bar */

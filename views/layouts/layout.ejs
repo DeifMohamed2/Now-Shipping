@@ -2,7 +2,18 @@
 <html lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>" dir="<%= typeof direction !== 'undefined' ? direction : 'ltr' %>" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
 
 <head>
-
+  <script>
+    (function () {
+      try {
+        if (typeof matchMedia !== 'undefined' && matchMedia('(min-width: 1025px)').matches) {
+          var s = sessionStorage.getItem('data-sidebar-size');
+          if (s === 'sm' || s === 'lg') {
+            document.documentElement.setAttribute('data-sidebar-size', s);
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta charset="utf-8" />
   <title><%= typeof page_title !== 'undefined' && page_title ? page_title + ' | ' : '' %><%= typeof translation !== 'undefined' && translation.business && translation.business.meta ? translation.business.meta.defaultTitle : 'Now Shipping' %></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +26,7 @@
 <%- typeof HeaderCss !== 'undefined' ? HeaderCss : '' %>
   <%- include ('../partials/head-css.ejs') %>
   <link rel="stylesheet" href="/assets/rCSS/business-layout.css" />
+  <link rel="stylesheet" href="/assets/rCSS/business-sidebar.css" />
 
 
 </head>
@@ -25,7 +37,7 @@
   <div id="layout-wrapper">
 
     <%- include ('../partials/topbar') %>
-    <%- include ('../partials/sidebar') %>
+    <%- include ('../business/partials/sidebar') %>
     <!-- Left Sidebar End -->
  
     <!-- ============================================================== -->
@@ -36,12 +48,7 @@
       <div class="page-content">
         <div class="container-fluid">
 
-          <!-- start page title -->
-            <%- include ('../partials/page-title') %>
           <%- body%>
-
-
-          <!-- end page title -->
 
         </div>
         <!-- container-fluid -->

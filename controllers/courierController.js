@@ -33,6 +33,39 @@ const normalizeCourierLanguage = (language) => {
   return normalized === 'ar' || normalized === 'en' ? normalized : null;
 };
 
+/** `ordersPickedUp` may be ObjectIds or populated order docs; extract id. */
+const pickedListEntryId = (entry) => (entry && entry._id ? entry._id : entry);
+
+function isOrderInPickedUpList(ordersPickedUp, orderId) {
+  if (!orderId) return false;
+  const want = orderId.toString();
+  return (ordersPickedUp || []).some((e) => pickedListEntryId(e).toString() === want);
+}
+
+function countUniquePicked(ordersPickedUp) {
+  return new Set((ordersPickedUp || []).map((e) => pickedListEntryId(e).toString())).size;
+}
+
+/**
+ * A physical order can only be on one "live" pickup at a time. Pickups in terminal/unsuccessful
+ * states can keep stale refs for history; re‑adding the order to a new run is allowed only then.
+ */
+const PICKUP_CONFLICT_INACTIVE = ['canceled', 'rejected', 'returned', 'terminated'];
+
+/**
+ * @returns {Promise<{ pickupNumber: string }|null>}
+ */
+async function findOtherActivePickupHoldingOrder(orderId, currentPickupId) {
+  if (!orderId) return null;
+  return Pickup.findOne({
+    _id: { $ne: currentPickupId },
+    ordersPickedUp: orderId,
+    picikupStatus: { $nin: PICKUP_CONFLICT_INACTIVE },
+  })
+    .select('pickupNumber')
+    .lean();
+}
+
 //=============================================== Orders =============================================== //
 const get_orders = async (req, res) => {
   // Handle both API (JWT) and web (session) authentication
@@ -432,7 +465,7 @@ const fullInitiationReturn = async (order, status) => {
       status: 'returnToWarehouse',
       date: new Date(),
       notes: `Order ${
-        status === 'rejected' ? 'rejected by courier' : 'failed delivery'
+        status === 'rejected' ? 'refused by customer at delivery' : 'failed delivery'
       }, initiating return process.`,
       reason: status,
     });
@@ -447,11 +480,11 @@ const fullInitiationReturn = async (order, status) => {
         completedAt: new Date(),
         notes: `Return initiated due to ${
           status === 'rejected'
-            ? 'courier rejection'
+            ? 'customer refusal at delivery'
             : 'failed delivery attempts'
         }`,
         initiatedBy: 'system',
-        reason: status === 'rejected' ? 'courier_rejection' : 'delivery_failed',
+        reason: status === 'rejected' ? 'customer_rejection' : 'delivery_failed',
         previousStatus: previousStatus,
       };
     }
@@ -466,7 +499,7 @@ const fullInitiationReturn = async (order, status) => {
         courier: order.deliveryMan,
         assignedAt: new Date(),
         action: 'assigned',
-        notes: `Courier preserved for return process after ${status}`,
+        notes: `Same courier kept assigned for the return after ${status === 'rejected' ? 'customer refusal' : 'failed delivery'}`,
       });
 
       // Mark return assigned as completed (same courier)
@@ -487,7 +520,7 @@ const fullInitiationReturn = async (order, status) => {
         courier: order.deliveryMan,
         pickupLocation: order.orderCustomer.address,
         returnReason:
-          status === 'rejected' ? 'Courier rejection' : 'Failed delivery',
+          status === 'rejected' ? 'Customer refused delivery' : 'Failed delivery',
       };
     } else {
       // SAFETY CHECK: If order has stages completed but no courier assigned, log this issue
@@ -506,7 +539,7 @@ const fullInitiationReturn = async (order, status) => {
         notes: 'No courier assigned - admin needs to assign courier for return',
         courier: null,
         returnReason:
-          status === 'rejected' ? 'Courier rejection' : 'Failed delivery',
+          status === 'rejected' ? 'Customer refused delivery' : 'Failed delivery',
       };
 
       order.orderStages.returnPickedUp = {
@@ -526,7 +559,7 @@ const fullInitiationReturn = async (order, status) => {
     order.orderShipping.originalOrderNumber = order.orderNumber;
     order.orderShipping.returnInitiatedAt = new Date();
     order.orderShipping.returnReason =
-      status === 'rejected' ? 'Courier rejection' : 'Failed delivery attempts';
+      status === 'rejected' ? 'Customer refused delivery' : 'Failed delivery attempts';
 
     // Update any scheduled delivery times
     order.scheduledRetryAt = null;
@@ -617,10 +650,14 @@ const updateOrderStatus = async (req, res) => {
         if (!order.orderStages.inProgress.isCompleted) {
           order.orderStages.inProgress.isCompleted = true;
           order.orderStages.inProgress.completedAt = new Date();
-          order.orderStages.inProgress.notes = 'Customer unavailable';
+          const r = typeof reason === 'string' && reason.trim() ? reason.trim().slice(0, 240) : '';
+          order.orderStages.inProgress.notes = r
+            ? `Delivery attempt failed (${r})`
+            : 'Delivery attempt failed';
         }
         order.orderStages.outForDelivery.isCompleted = false;
-        order.scheduledRetryAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        // Do not set scheduledRetryAt here — that implies the business confirmed a retry.
+        // The business sets the retry time via "Retry tomorrow" or "Schedule retry".
       }
       await order.save();
 
@@ -643,10 +680,10 @@ const updateOrderStatus = async (req, res) => {
         // Don't fail the status update if notification fails
       }
     } else if (status === 'rejected') {
-      // Courier rejected the order - initiate full return process
+      // Customer refused at delivery — initiate full return process
       await fullInitiationReturn(order, status);
 
-      // Send push notification to business about order rejection
+      // Send push notification to business (customer refused at delivery)
       try {
         await firebase.sendOrderStatusNotification(
           order.business._id,
@@ -654,11 +691,11 @@ const updateOrderStatus = async (req, res) => {
           'rejected',
           {
             courierName: order.deliveryMan.name,
-            reason: reason || 'Order rejected by courier',
+            reason: reason || 'Customer refused delivery',
             updatedAt: new Date()
           }
         );
-        console.log(`📱 Push notification sent to business ${order.business._id} about order ${order.orderNumber} rejection`);
+        console.log(`📱 Push notification sent to business ${order.business._id} about order ${order.orderNumber} (customer refused)`);
       } catch (notificationError) {
         console.error(`❌ Failed to send push notification to business ${order.business._id}:`, notificationError);
         // Don't fail the status update if notification fails
@@ -2246,7 +2283,7 @@ const getAndSet_order_To_Pickup = async (req, res) => {
     return respondCourierWebDeprecated(req, res);
     }
 
-    if (pickup.ordersPickedUp.length === pickup.numberOfOrders) {
+    if (countUniquePicked(pickup.ordersPickedUp) >= pickup.numberOfOrders) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Maximum number of orders reached for this pickup' });
       }
@@ -2292,12 +2329,22 @@ const getAndSet_order_To_Pickup = async (req, res) => {
     return respondCourierWebDeprecated(req, res);
     }
 
-    if (!pickup.ordersPickedUp.includes(order._id)) {
+    const otherPickupHolding = await findOtherActivePickupHoldingOrder(order._id, pickup._id);
+    if (otherPickupHolding) {
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(400).json({
+          message: `This order is already on pickup #${otherPickupHolding.pickupNumber}. It cannot be added to another pickup.`,
+        });
+      }
+      return respondCourierWebDeprecated(req, res);
+    }
+
+    if (!isOrderInPickedUpList(pickup.ordersPickedUp, order._id)) {
       pickup.ordersPickedUp.push(order._id);
     }
     // Recalculate pickup fee based on picked orders count and business city
     const businessCity = pickup?.business?.pickUpAdress?.city || '';
-    const pickedCount = pickup.ordersPickedUp.length;
+    const pickedCount = countUniquePicked(pickup.ordersPickedUp);
     pickup.pickupFees = calculatePickupFee(businessCity, pickedCount);
     await pickup.save();
     const populatedPickup = await Pickup.findOne({ pickupNumber: pickupNumber })
@@ -2389,15 +2436,17 @@ const removePickedUpOrder = async (req, res) => {
       }
     return respondCourierWebDeprecated(req, res);
     }
-    if (!pickup.ordersPickedUp.includes(order._id)) {
+    if (!isOrderInPickedUpList(pickup.ordersPickedUp, order._id)) {
       if (req.headers.accept && req.headers.accept.includes('application/json')) {
         return res.status(400).json({ message: 'Order is not picked up' });
       }
     return respondCourierWebDeprecated(req, res);
     }
 
-    const index = pickup.ordersPickedUp.indexOf(order._id);
-    pickup.ordersPickedUp.splice(index, 1);
+    const target = order._id.toString();
+    pickup.ordersPickedUp = (pickup.ordersPickedUp || []).filter(
+      (e) => pickedListEntryId(e).toString() !== target
+    );
     // Recalculate pickup fee after removal
     const businessCity = pickup?.business?.pickUpAdress?.city || '';
     const governmentCategories = {
@@ -2446,7 +2495,7 @@ const removePickedUpOrder = async (req, res) => {
       return baseByCategory[category] || 50;
     }
     const basePickupFee = getPickupBaseFeeByCity(businessCity);
-    const pickedCount = pickup.ordersPickedUp.length;
+    const pickedCount = countUniquePicked(pickup.ordersPickedUp);
     pickup.pickupFees =
       pickedCount < 3 ? Math.round(basePickupFee * 1.3) : basePickupFee;
     // order.orderStatus = 'new';
