@@ -1,3 +1,12 @@
+/* Admin shell uses business sidebar layout — keep main column readable */
+body.admin-app .main-content {
+  min-height: 100vh;
+}
+
+body.admin-app .page-content {
+  background: #f8fafc !important;
+}
+
 /* Shared admin data tables — sticky header, scroll region, striping, filters */
 
 .admin-data-filters .form-label,

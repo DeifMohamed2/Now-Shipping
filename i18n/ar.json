@@ -272,6 +272,23 @@
       "accountCreated": "تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني للتحقق.",
       "verificationSent": "تم إرسال بريد التحقق. يرجى التحقق من صندوق الوارد."
     },
+    "emailVerified": {
+      "pageTitleSuccess": "تم التحقق من البريد",
+      "pageTitleInvalid": "رابط التحقق",
+      "pageTitleExpired": "انتهت صلاحية الرابط",
+      "pageTitleError": "خطأ في التحقق",
+      "successTitle": "تم التحقق من بريدك الإلكتروني",
+      "successSubtitle": "يمكنك تسجيل الدخول من الموقع أو المتابعة في تطبيق الجوال بحسابك.",
+      "invalidTitle": "هذا الرابط غير صالح",
+      "invalidSubtitle": "قد يكون الرابط غير صحيح أو مستخدماً مسبقاً، أو تم التحقق من بريدك مسبقاً. إذا كان لديك حساب، سجّل الدخول أدناه.",
+      "expiredTitle": "انتهت صلاحية هذا الرابط",
+      "expiredSubtitle": "تنتهي صلاحية روابط التحقق بعد فترة. سجّل الدخول واطلب رسالة تحقق جديدة من إعدادات الحساب.",
+      "errorTitle": "تعذر إتمام التحقق",
+      "errorSubtitle": "حدث خطأ من جهتنا. أعد المحاولة لاحقاً أو اطلب بريد تحقق جديد من الإعدادات بعد تسجيل الدخول.",
+      "continueDashboard": "الانتقال إلى لوحة التحكم",
+      "signIn": "تسجيل الدخول",
+      "backHome": "العودة للرئيسية"
+    },
     "validation": {
       "emailRequired": "البريد الإلكتروني مطلوب",
       "emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صحيح",
@@ -470,6 +487,43 @@
       "notifyMe": "أخبرني",
       "email": "عنوان البريد الإلكتروني",
       "emailPlaceholder": "أدخل بريدك الإلكتروني"
+    }
+  },
+  "admin": {
+    "shell": {
+      "menu": "القائمة",
+      "closeMenu": "إغلاق القائمة",
+      "welcome": "مرحباً!",
+      "toggleNav": "طي/توسيع القائمة",
+      "openMenu": "فتح القائمة",
+      "language": "اللغة",
+      "logoutNav": "تسجيل الخروج",
+      "logOut": "تسجيل الخروج",
+      "userFallback": "مسؤول",
+      "roleAdmin": "مسؤول النظام",
+      "sectionDashboard": "لوحة التحكم",
+      "sectionTools": "أدوات",
+      "sectionAccount": "الحساب",
+      "dashboard": "لوحة التحكم",
+      "orders": "الطلبات",
+      "pickups": "الاستلامات",
+      "couriers": "المندوبون",
+      "couriersFollowUp": "متابعة المندوبين",
+      "stockManagement": "إدارة المخزون",
+      "stockFromPickups": "من الاستلامات",
+      "stockFromReturns": "من المرتجعات",
+      "storages": "المخازن",
+      "walletManagement": "إدارة المحافظ",
+      "payouts": "المدفوعات",
+      "shopManagement": "إدارة المتجر",
+      "shopProducts": "المنتجات",
+      "shopOrders": "طلبات المتجر",
+      "businesses": "الشركات",
+      "tickets": "التذاكر",
+      "notifyCouriers": "إشعارات للمندوبين",
+      "notifyBusinesses": "إشعارات للشركات",
+      "courierTracking": "تتبع المندوبين",
+      "printFlyers": "طباعة فلايرات"
     }
   },
   "business": {
@@ -873,6 +927,9 @@
         "errSelectPickup": "يرجى اختيار عنوان استلام لخدمة الشحن السريع.",
         "expressNoPickupAddress": "أضف عنوان استلام للنشاط من الإعدادات قبل تفعيل الشحن السريع.",
         "expressPickupRequiredTitle": "عنوان الاستلام مطلوب",
+        "businessPickupLabel": "عنوان استلام النشاط / إرجاع الشحنة",
+        "businessPickupNoAddress": "أضف عنوان استلام واحدًا على الأقل من الإعدادات. مطلوب للمرتجعات ويُستخدم للشحن السريع ولإرجاع الطرود إلى نشاطك.",
+        "errBusinessPickup": "يرجى اختيار عنوان استلام للنشاط.",
         "addNewAddress": "إضافة عنوان جديد",
         "paymentCollectionLabel": "تحصيل الدفع",
         "codLabel": "الدفع عند الاستلام (COD)",
@@ -2208,7 +2265,8 @@
         "errOriginalOrderEmpty": "يرجى إدخال رقم الطلب الأصلي.",
         "returnPartialCountInvalid": "للإرجاع الجزئي اختر عدد القطع (من 1 إلى {max}).",
         "expressNoPickupAddress": "أضف عنوان استلام للنشاط من الإعدادات قبل تفعيل الشحن السريع.",
-        "expressPickupRequiredTitle": "عنوان الاستلام مطلوب"
+        "expressPickupRequiredTitle": "عنوان الاستلام مطلوب",
+        "businessPickupNoAddress": "أضف عنوان استلام للنشاط من الإعدادات قبل إنشاء طلب إرجاع."
       },
       "editOrder": {
         "selectArea": "اختر المنطقة",

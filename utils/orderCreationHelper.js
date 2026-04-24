@@ -4,6 +4,10 @@
 const Order = require('../models/order');
 const statusHelper = require('./statusHelper');
 const { calculateOrderFee } = require('./fees');
+const {
+  getDefaultPickupAddressId,
+  findPickupAddressById,
+} = require('./pickupAddressResolve');
 
 function calculateFees(government, orderType, isExpressShipping) {
   return calculateOrderFee(government, orderType, isExpressShipping);
@@ -65,9 +69,9 @@ function normalizeFieldsFromBody(body) {
       body.orderType === 'Deliver' &&
       (body.isExpressShipping === 'on' || body.isExpressShipping === true),
     selectedPickupAddressId:
-      body.orderType === 'Deliver' &&
-      (body.isExpressShipping === 'on' || body.isExpressShipping === true) &&
-      body.selectedPickupAddressId
+      ['Deliver', 'Return', 'Exchange'].includes(body.orderType) &&
+      body.selectedPickupAddressId != null &&
+      String(body.selectedPickupAddressId).trim() !== ''
         ? String(body.selectedPickupAddressId).trim()
         : null,
     originalOrderNumber: body.originalOrderNumber,
@@ -162,6 +166,57 @@ function validateOrderFieldsStructural(fields) {
     }
   }
 
+  return { errors };
+}
+
+const ORDER_TYPES_WITH_PICKUP = ['Deliver', 'Return', 'Exchange'];
+
+/**
+ * When the client omits or sends an unknown pickup id, set the business default (main / first).
+ * Mutates `fields.selectedPickupAddressId`.
+ * @param {{ pickUpAddresses?: Array<{ addressId?: string }> }} userData
+ * @param {object} fields - normalized fields (must include orderType)
+ */
+function applyPickupDefaults(userData, fields) {
+  if (!fields || !ORDER_TYPES_WITH_PICKUP.includes(fields.orderType)) return;
+  const list = Array.isArray(userData && userData.pickUpAddresses) ? userData.pickUpAddresses : [];
+  if (!list.length) {
+    fields.selectedPickupAddressId = null;
+    return;
+  }
+  const raw = fields.selectedPickupAddressId;
+  const trimmed = raw != null && raw !== '' ? String(raw).trim() : '';
+  const match = trimmed ? findPickupAddressById(list, trimmed) : null;
+  if (match) {
+    fields.selectedPickupAddressId = trimmed;
+    return;
+  }
+  fields.selectedPickupAddressId = getDefaultPickupAddressId(list);
+}
+
+/**
+ * Pickup rules that need the business user document (after applyPickupDefaults).
+ * @param {{ pickUpAddresses?: unknown[] }} userData
+ * @param {object} fields
+ * @returns {{ errors: string[] }}
+ */
+function validatePickupForOrderCreation(userData, fields) {
+  const errors = [];
+  if (!fields || fields.orderType !== 'Return') {
+    return { errors };
+  }
+  const list = Array.isArray(userData && userData.pickUpAddresses) ? userData.pickUpAddresses : [];
+  if (list.length === 0) {
+    errors.push(
+      'Return orders require at least one business pickup address. Add pickup addresses in Settings.'
+    );
+    return { errors };
+  }
+  if (!fields.selectedPickupAddressId) {
+    errors.push(
+      'Return orders require a valid business pickup address. Add pickup addresses in Settings or select one.'
+    );
+  }
   return { errors };
 }
 
@@ -443,6 +498,8 @@ module.exports = {
   generateOrderNumber,
   normalizeFieldsFromBody,
   validateOrderFieldsStructural,
+  applyPickupDefaults,
+  validatePickupForOrderCreation,
   validateReturnOrderAsync,
   buildReturnPreload,
   buildOrderDocumentFromFields,

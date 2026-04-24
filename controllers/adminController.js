@@ -10,6 +10,7 @@ const ledgerService = require('../utils/ledgerService');
 const { getBalance, getBalances } = ledgerService;
 const LedgerEntry = require('../models/ledgerEntry');
 const Payout = require('../models/payout');
+const Ticket = require('../models/ticket');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const statusHelper = require('../utils/statusHelper');
@@ -25,7 +26,116 @@ const {
   canAdminCancel,
   canAdminChangeAddress,
 } = require('../utils/orderUiPolicy');
+const { DASHBOARD_HEATMAP_TIMEZONE } = require('../utils/dashboardMetricHelpers');
 const { applyBusinessLikeCancellation } = require('../utils/orderCancellationFlow');
+const {
+  resolvePickupAddressForOrder,
+  getDefaultPickupAddressId,
+} = require('../utils/pickupAddressResolve');
+
+/** `range` query: all | today | 7d | 30d | 90d | ytd — filters orders by `orderDate` (inclusive end-of-day). */
+function parseAdminDashboardOrderRange(req) {
+  const raw = (req.query && (req.query.range || req.query.preset)) || 'all';
+  const range = String(raw).toLowerCase();
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  if (range === 'all') {
+    return { range: 'all', match: {}, from: null, to: end };
+  }
+  let start;
+  if (range === 'today') {
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  } else if (range === '7d') {
+    start = new Date(now.getTime() - 7 * 86400000);
+    start.setHours(0, 0, 0, 0);
+  } else if (range === '30d') {
+    start = new Date(now.getTime() - 30 * 86400000);
+    start.setHours(0, 0, 0, 0);
+  } else if (range === '90d') {
+    start = new Date(now.getTime() - 90 * 86400000);
+    start.setHours(0, 0, 0, 0);
+  } else if (range === 'ytd') {
+    start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+  } else {
+    return { range: 'all', match: {}, from: null, to: end };
+  }
+  return { range, match: { orderDate: { $gte: start, $lte: end } }, from: start, to: end };
+}
+
+function recentCreatedRange(from, to) {
+  if (!from) return {};
+  return { createdAt: { $gte: from, $lte: to } };
+}
+
+const RETURN_IN_PROCESS_STATUSES = [
+  'returnInitiated',
+  'returnAssigned',
+  'returnPickedUp',
+  'returnAtWarehouse',
+  'returnToBusiness',
+  'inReturnStock',
+];
+
+const ADMIN_ACTIVE_SHIPMENT_STATUSES = [
+  'new',
+  'pendingPickup',
+  'pickedUp',
+  'inStock',
+  'inProgress',
+  'headingToCustomer',
+  'headingToYou',
+  'waitingAction',
+  'rescheduled',
+];
+
+const ADMIN_EXCEPTION_ORDER_STATUSES = [
+  'deliveryFailed',
+  'canceled',
+  'terminated',
+  'rejected',
+];
+
+/** Previous window of equal length ending just before `from` (same wall span as [from, to]). */
+function adminPreviousOrderDateMatch(from, to) {
+  if (!from || !to) return null;
+  const spanMs = to.getTime() - from.getTime();
+  const prevEnd = new Date(from.getTime() - 1);
+  const prevStart = new Date(prevEnd.getTime() - spanMs);
+  return { orderDate: { $gte: prevStart, $lte: prevEnd } };
+}
+
+/** Last 7 calendar days ending on `endDate`'s date in `tz` (YYYY-MM-DD keys, oldest first). */
+function last7CalendarDayKeys(endDate, tz) {
+  const nf = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const endKey = nf.format(endDate);
+  const [Y, M, D] = endKey.split('-').map(Number);
+  const out = [];
+  for (let i = 6; i >= 0; i -= 1) {
+    const jd = Date.UTC(Y, M - 1, D - i);
+    out.push(nf.format(new Date(jd)));
+  }
+  return out;
+}
+
+function seriesFromDailyAgg(keys, aggRows) {
+  const map = {};
+  (aggRows || []).forEach((r) => {
+    if (r && r._id) map[String(r._id)] = r.c || 0;
+  });
+  return keys.map((k) => map[k] || 0);
+}
+
+function pctChangeVsPrevious(current, previous) {
+  if (previous == null || Number.isNaN(previous)) return null;
+  if (previous === 0) return current > 0 ? 100 : current < 0 ? -100 : 0;
+  return Math.round(((current - previous) / previous) * 1000) / 10;
+}
+
 const getDashboardPage = (req, res) => {
   res.render('admin/dashboard', {
     title: 'Dashboard',
@@ -37,8 +147,23 @@ const getDashboardPage = (req, res) => {
 // Admin Dashboard Data (aggregated)
 const getAdminDashboardData = async (req, res) => {
   try {
-    // Basic order status buckets used across the app
-    const statusQuery = (status) => ({ orderStatus: status });
+    const { range, match: orderDateMatch, from, to } = parseAdminDashboardOrderRange(req);
+    const orderMatch = Object.keys(orderDateMatch).length ? orderDateMatch : {};
+    const statusQuery = (status) => ({ ...orderMatch, orderStatus: status });
+    const prevOrderMatch = adminPreviousOrderDateMatch(from, to);
+    const courierOrderMatch = Object.keys(orderDateMatch).length
+      ? { ...orderDateMatch, deliveryMan: { $ne: null } }
+      : {
+          createdAt: {
+            $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          },
+          deliveryMan: { $ne: null },
+        };
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
 
     const [
       totalOrders,
@@ -47,6 +172,10 @@ const getAdminDashboardData = async (req, res) => {
       newOrdersCount,
       headingToYouCount,
       awaitingActionCount,
+      pickedUpCount,
+      inProgressCount,
+      activeShipmentsCount,
+      exceptionsCountInRange,
       recentOrders,
       recentPickups,
       activeCouriers,
@@ -60,84 +189,532 @@ const getAdminDashboardData = async (req, res) => {
       courierAssignments30d,
       returnRateMonthly,
       ordersByMonth,
+      returnInProcess,
+      returnCompletedCount,
+      failedDeliveriesCount,
+      openTicketsCount,
+      cancellationsToday,
+      avgDeliveryAgg,
+      pickupByStatus,
+      shopByStatus,
+      businessAggRaw,
+      maxRevenueRow,
+      problemOrdersBad,
+      heatmapRaw,
     ] = await Promise.all([
-      Order.countDocuments({}),
+      Order.countDocuments(orderMatch),
       Order.countDocuments(statusQuery('completed')),
       Order.countDocuments(statusQuery('headingToCustomer')),
       Order.countDocuments(statusQuery('new')),
       Order.countDocuments(statusQuery('headingToYou')),
-      Order.countDocuments({ orderStatus: { $in: ['waitingAction', 'rescheduled'] } }),
-      Order.find({}, 'orderNumber orderStatus orderBusiness businessId createdAt')
+      Order.countDocuments({
+        ...orderMatch,
+        orderStatus: { $in: ['waitingAction', 'rescheduled'] },
+      }),
+      Order.countDocuments(statusQuery('pickedUp')),
+      Order.countDocuments(statusQuery('inProgress')),
+      Order.countDocuments({
+        ...orderMatch,
+        orderStatus: { $in: ADMIN_ACTIVE_SHIPMENT_STATUSES },
+      }),
+      Order.countDocuments({
+        ...orderMatch,
+        orderStatus: { $in: ADMIN_EXCEPTION_ORDER_STATUSES },
+      }),
+      Order.find(recentCreatedRange(from, to))
+        .select('orderNumber orderStatus orderBusiness business createdAt')
+        .populate('business', 'name brandInfo.brandName')
         .sort({ createdAt: -1 })
         .limit(7)
         .lean(),
-      Pickup.find({}, 'pickupNumber pickupDate numberOfOrders picikupStatus createdAt')
+      Pickup.find(from ? recentCreatedRange(from, to) : {})
+        .select('pickupNumber pickupDate numberOfOrders picikupStatus createdAt')
         .sort({ createdAt: -1 })
         .limit(7)
         .lean(),
       Courier.countDocuments({ isActive: true }),
       Courier.countDocuments({ isOnline: true }).catch(() => 0),
-      // Orders by status
       Order.aggregate([
+        { $match: orderMatch },
         { $group: { _id: '$orderStatus', count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
+        { $sort: { count: -1 } },
       ]),
-      // Orders by high-level category
       Order.aggregate([
+        { $match: orderMatch },
         { $group: { _id: '$statusCategory', count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
+        { $sort: { count: -1 } },
       ]),
-      // Top governments
       Order.aggregate([
+        { $match: orderMatch },
         { $group: { _id: '$orderCustomer.government', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
-        { $limit: 8 }
+        { $limit: 8 },
       ]),
-      // Revenue by month (last 9 months) based on completed/returnCompleted
       Order.aggregate([
-        { $match: { orderStatus: { $in: ['completed', 'returnCompleted'] } } },
-        { $project: { m: { $month: { $ifNull: ['$completedDate', '$updatedAt'] } }, y: { $year: { $ifNull: ['$completedDate', '$updatedAt'] } }, amount: { $ifNull: ['$feeBreakdown.total', '$orderFees'] } } },
+        {
+          $match: {
+            ...orderMatch,
+            orderStatus: { $in: ['completed', 'returnCompleted'] },
+          },
+        },
+        {
+          $project: {
+            m: { $month: { $ifNull: ['$completedDate', '$updatedAt'] } },
+            y: { $year: { $ifNull: ['$completedDate', '$updatedAt'] } },
+            amount: { $ifNull: ['$feeBreakdown.total', '$orderFees'] },
+          },
+        },
         { $group: { _id: { y: '$y', m: '$m' }, revenue: { $sum: '$amount' }, orders: { $sum: 1 } } },
         { $sort: { '_id.y': -1, '_id.m': -1 } },
-        { $limit: 9 }
+        { $limit: 12 },
       ]),
-      // Amount type breakdown (COD/CD/NA)
       Order.aggregate([
+        { $match: orderMatch },
         { $group: { _id: '$orderShipping.amountType', count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
+        { $sort: { count: -1 } },
       ]),
-      // Express vs Standard
       Order.aggregate([
-        { $group: { _id: { $ifNull: ['$orderShipping.isExpressShipping', false] }, count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
+        { $match: orderMatch },
+        {
+          $group: {
+            _id: { $ifNull: ['$orderShipping.isExpressShipping', false] },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { count: -1 } },
       ]),
-      // Courier assignment load last 30 days
       Order.aggregate([
-        { $match: { createdAt: { $gte: new Date(Date.now() - 30*24*60*60*1000) }, deliveryMan: { $ne: null } } },
+        { $match: courierOrderMatch },
         { $group: { _id: '$deliveryMan', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 10 },
+        {
+          $lookup: {
+            from: 'couriers',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'courierDoc',
+          },
+        },
+        {
+          $project: {
+            count: 1,
+            courierName: { $arrayElemAt: ['$courierDoc.courierName', 0] },
+          },
+        },
       ]),
-      // Return rates by month (last 9 months)
       Order.aggregate([
-        { $match: { orderStatus: { $in: ['returned', 'returnCompleted', 'deliveryFailed'] } } },
-        { $project: { m: { $month: { $ifNull: ['$updatedAt', '$orderDate'] } }, y: { $year: { $ifNull: ['$updatedAt', '$orderDate'] } } } },
+        {
+          $match: {
+            ...orderMatch,
+            orderStatus: { $in: ['returned', 'returnCompleted', 'deliveryFailed'] },
+          },
+        },
+        {
+          $project: {
+            m: { $month: { $ifNull: ['$updatedAt', '$orderDate'] } },
+            y: { $year: { $ifNull: ['$updatedAt', '$orderDate'] } },
+          },
+        },
         { $group: { _id: { y: '$y', m: '$m' }, count: { $sum: 1 } } },
         { $sort: { '_id.y': -1, '_id.m': -1 } },
-        { $limit: 9 }
+        { $limit: 9 },
       ]),
-      // Orders by month (fallback for chart when no revenue months)
       Order.aggregate([
+        { $match: orderMatch },
         { $project: { m: { $month: '$orderDate' }, y: { $year: '$orderDate' } } },
         { $group: { _id: { y: '$y', m: '$m' }, count: { $sum: 1 } } },
         { $sort: { '_id.y': -1, '_id.m': -1 } },
-        { $limit: 9 }
+        { $limit: 12 },
+      ]),
+      Order.countDocuments({
+        ...orderMatch,
+        orderStatus: { $in: RETURN_IN_PROCESS_STATUSES },
+      }),
+      Order.countDocuments({ ...orderMatch, orderStatus: 'returnCompleted' }),
+      Order.countDocuments({ ...orderMatch, orderStatus: 'deliveryFailed' }),
+      Ticket.countDocuments({
+        status: { $in: ['new', 'open', 'pending', 'in_progress', 'reopened'] },
+      }),
+      Order.countDocuments({
+        orderStatus: 'canceled',
+        updatedAt: { $gte: startOfToday, $lte: endOfToday },
+      }),
+      Order.aggregate([
+        {
+          $match: {
+            ...orderMatch,
+            orderStatus: 'completed',
+            completedDate: { $exists: true, $ne: null },
+            orderDate: { $exists: true, $ne: null },
+          },
+        },
+        {
+          $project: {
+            days: {
+              $divide: [{ $subtract: ['$completedDate', '$orderDate'] }, 86400000],
+            },
+          },
+        },
+        { $group: { _id: null, avg: { $avg: '$days' } } },
+      ]),
+      Pickup.aggregate([
+        ...(from
+          ? [{ $match: { createdAt: { $gte: from, $lte: to } } }]
+          : []),
+        { $group: { _id: '$picikupStatus', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]),
+      ShopOrder.aggregate([
+        ...(from
+          ? [{ $match: { createdAt: { $gte: from, $lte: to } } }]
+          : []),
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]),
+      Order.aggregate([
+        { $match: { ...orderMatch, business: { $exists: true, $ne: null } } },
+        {
+          $group: {
+            _id: '$business',
+            totalOrders: { $sum: 1 },
+            completed: {
+              $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, 1, 0] },
+            },
+            revenue: {
+              $sum: {
+                $cond: [
+                  { $eq: ['$orderStatus', 'completed'] },
+                  { $ifNull: ['$feeBreakdown.total', '$orderFees'] },
+                  0,
+                ],
+              },
+            },
+            bad: {
+              $sum: {
+                $cond: [
+                  {
+                    $in: [
+                      '$orderStatus',
+                      ['canceled', 'returned', 'terminated', 'deliveryFailed', 'rejected'],
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+          },
+        },
+        { $match: { totalOrders: { $gte: 1 } } },
+      ]),
+      Order.aggregate([
+        { $match: { ...orderMatch, orderStatus: 'completed' } },
+        {
+          $group: {
+            _id: null,
+            maxRev: { $max: { $ifNull: ['$feeBreakdown.total', '$orderFees'] } },
+          },
+        },
+      ]),
+      Order.countDocuments({
+        ...orderMatch,
+        orderStatus: {
+          $in: ['canceled', 'returned', 'terminated', 'deliveryFailed', 'rejected'],
+        },
+      }),
+      Order.aggregate([
+        { $match: orderMatch },
+        {
+          $group: {
+            _id: {
+              dow: {
+                $dayOfWeek: {
+                  date: '$orderDate',
+                  timezone: DASHBOARD_HEATMAP_TIMEZONE,
+                },
+              },
+              hour: {
+                $hour: {
+                  date: '$orderDate',
+                  timezone: DASHBOARD_HEATMAP_TIMEZONE,
+                },
+              },
+            },
+            count: { $sum: 1 },
+          },
+        },
       ]),
     ]);
 
-    const completionRate = totalOrders > 0 ? Math.round((completedCount / totalOrders) * 100) : 0;
+    const avgDeliveryDays =
+      avgDeliveryAgg && avgDeliveryAgg[0] && avgDeliveryAgg[0].avg != null
+        ? Math.round(avgDeliveryAgg[0].avg * 10) / 10
+        : null;
+
+    const completionRate =
+      totalOrders > 0 ? Math.round((completedCount / totalOrders) * 100) : 0;
+    const badRate =
+      totalOrders > 0 ? (problemOrdersBad || 0) / totalOrders : 0;
+
+    const maxRev =
+      maxRevenueRow && maxRevenueRow[0] && maxRevenueRow[0].maxRev != null
+        ? maxRevenueRow[0].maxRev
+        : 0;
+    const maxRevSafe = Math.max(1, maxRev);
+
+    function scoreRow(r) {
+      const t = r.totalOrders || 1;
+      const compPct = (r.completed || 0) / t;
+      const badPct = (r.bad || 0) / t;
+      const revNorm =
+        Math.log10(1 + (r.revenue || 0)) / Math.log10(1 + maxRevSafe);
+      const boundedRev = Math.min(1, Math.max(0, revNorm));
+      const raw = compPct * 55 + boundedRev * 35 - badPct * 40;
+      return Math.max(0, Math.min(100, Math.round(raw * 10) / 10));
+    }
+
+    const enriched = (businessAggRaw || []).map((r) => {
+      const total = r.totalOrders || 0;
+      const completed = r.completed || 0;
+      const successPct =
+        total > 0 ? Math.round((completed / total) * 1000) / 10 : 0;
+      return {
+        businessId: r._id,
+        totalOrders: total,
+        completed,
+        revenue: Math.round((r.revenue || 0) * 100) / 100,
+        bad: r.bad,
+        completionRate: successPct,
+        successRatePercent: successPct,
+        badRate: total > 0 ? Math.round((r.bad / total) * 1000) / 10 : 0,
+        score: scoreRow(r),
+      };
+    });
+
+    const MIN_FOR_LEADERBOARD = 5;
+    const MIN_FOR_TABLE = 1;
+    const qualified = enriched.filter((b) => b.totalOrders >= MIN_FOR_LEADERBOARD);
+    const forTable = enriched.filter((b) => b.totalOrders >= MIN_FOR_TABLE);
+    const sortedDesc = [...qualified].sort((a, b) => b.score - a.score);
+    const sortedAsc = [...qualified].sort((a, b) => a.score - b.score);
+    const sortedTable = [...forTable].sort((a, b) => b.score - a.score);
+    const topSlice = sortedDesc.slice(0, 10);
+    const bottomSlice = sortedAsc.slice(0, 10);
+    const topTableSlice = sortedTable.slice(0, 25).map((b, idx) => ({
+      ...b,
+      rank: idx + 1,
+    }));
+
+    const ids = [
+      ...new Set(
+        [...topSlice, ...bottomSlice, ...topTableSlice].map((x) =>
+          String(x.businessId)
+        )
+      ),
+    ];
+    const idObjs = ids.filter(Boolean).map((id) => {
+      try {
+        return new mongoose.Types.ObjectId(id);
+      } catch (e) {
+        return null;
+      }
+    }).filter(Boolean);
+    const users =
+      idObjs.length > 0
+        ? await User.find({ _id: { $in: idObjs } })
+            .select('name brandInfo.brandName')
+            .lean()
+        : [];
+    const nameMap = {};
+    users.forEach((u) => {
+      nameMap[String(u._id)] =
+        u.brandInfo?.brandName || u.name || 'Business';
+    });
+
+    const attachNames = (arr) =>
+      arr.map((b) => ({
+        ...b,
+        businessName: nameMap[String(b.businessId)] || 'Business',
+      }));
+
+    const topBusinesses = attachNames(topSlice);
+    const bottomBusinesses = attachNames(bottomSlice);
+    const topBusinessesTable = attachNames(topTableSlice);
+
+    const heatmap = (heatmapRaw || []).map((h) => ({
+      dow: h._id.dow,
+      hour: h._id.hour,
+      count: h.count,
+    }));
+
+    const tzHeat = DASHBOARD_HEATMAP_TIMEZONE;
+    const sparkKeys = last7CalendarDayKeys(to, tzHeat);
+    const sparkEnd = to;
+    const sixDaysBefore = new Date(sparkEnd);
+    sixDaysBefore.setDate(sixDaysBefore.getDate() - 6);
+    sixDaysBefore.setHours(0, 0, 0, 0);
+    const sparkLow =
+      from && from.getTime() > sixDaysBefore.getTime() ? from : sixDaysBefore;
+    const sparkOrderMatch = {
+      ...orderMatch,
+      orderDate: { $gte: sparkLow, $lte: sparkEnd },
+    };
+    const dailyOrderBucket = {
+      $group: {
+        _id: {
+          $dateToString: {
+            format: '%Y-%m-%d',
+            date: '$orderDate',
+            timezone: tzHeat,
+          },
+        },
+        c: { $sum: 1 },
+      },
+    };
+    const sparkAggBundles = await Promise.all([
+      Order.aggregate([
+        { $match: sparkOrderMatch },
+        dailyOrderBucket,
+        { $sort: { _id: 1 } },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            ...sparkOrderMatch,
+            orderStatus: { $in: RETURN_IN_PROCESS_STATUSES },
+          },
+        },
+        dailyOrderBucket,
+        { $sort: { _id: 1 } },
+      ]),
+      Order.aggregate([
+        {
+          $match: {
+            ...sparkOrderMatch,
+            orderStatus: { $in: ADMIN_EXCEPTION_ORDER_STATUSES },
+          },
+        },
+        dailyOrderBucket,
+        { $sort: { _id: 1 } },
+      ]),
+    ]);
+    const sparkOrdersByDay = sparkAggBundles[0];
+    const sparkReturnsByDay = sparkAggBundles[1];
+    const sparkExceptionsByDay = sparkAggBundles[2];
+
+    let prevTotals = null;
+    if (prevOrderMatch) {
+      const pm = prevOrderMatch;
+      const [
+        pTotal,
+        pActive,
+        pCompleted,
+        pInTransit,
+        pReturns,
+        pExceptions,
+      ] = await Promise.all([
+        Order.countDocuments(pm),
+        Order.countDocuments({
+          ...pm,
+          orderStatus: { $in: ADMIN_ACTIVE_SHIPMENT_STATUSES },
+        }),
+        Order.countDocuments({ ...pm, orderStatus: 'completed' }),
+        Order.countDocuments({
+          ...pm,
+          orderStatus: {
+            $in: ['headingToCustomer', 'pickedUp', 'inProgress'],
+          },
+        }),
+        Order.countDocuments({
+          ...pm,
+          orderStatus: { $in: RETURN_IN_PROCESS_STATUSES },
+        }),
+        Order.countDocuments({
+          ...pm,
+          orderStatus: { $in: ADMIN_EXCEPTION_ORDER_STATUSES },
+        }),
+      ]);
+      prevTotals = {
+        totalOrders: pTotal,
+        activeShipments: pActive,
+        delivered: pCompleted,
+        inTransit: pInTransit,
+        returns: pReturns,
+        exceptions: pExceptions,
+      };
+    }
+
+    const inTransitCount =
+      (headingToCustomerCount || 0) +
+      (pickedUpCount || 0) +
+      (inProgressCount || 0);
+
+    const sparklineOrders7d = seriesFromDailyAgg(sparkKeys, sparkOrdersByDay);
+    const sparklineReturns7d = seriesFromDailyAgg(sparkKeys, sparkReturnsByDay);
+    const sparklineExceptions7d = seriesFromDailyAgg(
+      sparkKeys,
+      sparkExceptionsByDay
+    );
+
+    const kpiDeltas = prevTotals
+      ? {
+          totalOrders: pctChangeVsPrevious(totalOrders, prevTotals.totalOrders),
+          activeShipments: pctChangeVsPrevious(
+            activeShipmentsCount,
+            prevTotals.activeShipments
+          ),
+          delivered: pctChangeVsPrevious(completedCount, prevTotals.delivered),
+          inTransit: pctChangeVsPrevious(inTransitCount, prevTotals.inTransit),
+          returns: pctChangeVsPrevious(returnInProcess, prevTotals.returns),
+          exceptions: pctChangeVsPrevious(
+            exceptionsCountInRange,
+            prevTotals.exceptions
+          ),
+        }
+      : {
+          totalOrders: null,
+          activeShipments: null,
+          delivered: null,
+          inTransit: null,
+          returns: null,
+          exceptions: null,
+        };
+
+    const recentOrdersOut = (recentOrders || []).map((o) => ({
+      orderNumber: o.orderNumber,
+      orderStatus: o.orderStatus,
+      createdAt: o.createdAt,
+      businessName:
+        o.business?.brandInfo?.brandName ||
+        o.business?.name ||
+        o.orderBusiness?.name ||
+        null,
+    }));
 
     const dashboardData = {
+      meta: {
+        range,
+        from: from ? from.toISOString() : null,
+        to: to ? to.toISOString() : null,
+        heatmapTimezone: tzHeat,
+        courierLoadNote: Object.keys(orderDateMatch).length
+          ? 'Assignments in the selected order date range.'
+          : 'Assignments in the last 30 days (all-time has no order date filter).',
+        rangeLabelHuman: from
+          ? `${from.toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })} – ${to.toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}`
+          : 'All time',
+        scoreNote:
+          'Score = completion×55 + log-scaled revenue×35 − bad-order rate×40 (0–100, businesses with 5+ orders in range).',
+      },
       orderStats: {
         totalOrders,
         completedCount,
@@ -146,13 +723,32 @@ const getAdminDashboardData = async (req, res) => {
         newOrdersCount,
         headingToYouCount,
         awaitingActionCount,
+        pickedUpCount,
+        inProgressCount,
+        inTransitCount,
+        activeShipmentsCount,
+        exceptionsCountInRange,
       },
       recentData: {
-        recentOrders,
-        recentPickups,
+        recentOrders: recentOrdersOut,
+        recentPickups: (recentPickups || []).map((p) => ({
+          pickupNumber: p.pickupNumber,
+          pickupDate: p.pickupDate,
+          picikupStatus: p.picikupStatus,
+          pickupStatus: p.picikupStatus,
+        })),
       },
+      kpiSparklines: {
+        orders7d: sparklineOrders7d,
+        returns7d: sparklineReturns7d,
+        exceptions7d: sparklineExceptions7d,
+        dayKeys: sparkKeys,
+      },
+      kpiDeltas,
       financialStats: {
-        totalRevenue: Array.isArray(revenueByMonth) ? revenueByMonth.reduce((s,r)=>s+(r.revenue||0),0) : 0,
+        totalRevenue: Array.isArray(revenueByMonth)
+          ? revenueByMonth.reduce((s, r) => s + (r.revenue || 0), 0)
+          : 0,
         revenueByMonth,
         ordersByMonth,
       },
@@ -162,16 +758,16 @@ const getAdminDashboardData = async (req, res) => {
         assignments30d: courierAssignments30d,
       },
       slaStats: {
-        avgDeliveryDays: 0,
+        avgDeliveryDays: avgDeliveryDays != null ? avgDeliveryDays : null,
       },
       issueStats: {
-        open: 0,
-        cancellationsToday: 0,
+        open: openTicketsCount || 0,
+        cancellationsToday: cancellationsToday || 0,
       },
       returnStats: {
-        inProcess: 0,
-        completed: 0,
-        failedDeliveries: 0,
+        inProcess: returnInProcess || 0,
+        completed: returnCompletedCount || 0,
+        failedDeliveries: failedDeliveriesCount || 0,
         monthly: returnRateMonthly,
       },
       breakdowns: {
@@ -180,7 +776,17 @@ const getAdminDashboardData = async (req, res) => {
         byGovernment: ordersByGovernment,
         amountType: amountTypeBreakdown,
         express: expressBreakdown,
-      }
+      },
+      pickupBreakdown: pickupByStatus,
+      shopBreakdown: shopByStatus,
+      businessPerformance: {
+        topBusinesses,
+        bottomBusinesses,
+        topBusinessesTable,
+        minOrdersForRanking: MIN_FOR_LEADERBOARD,
+        minOrdersForTable: MIN_FOR_TABLE,
+      },
+      heatmap,
     };
 
     res.status(200).json({ status: 'success', dashboardData });
@@ -393,13 +999,10 @@ const get_orderDetailsPage = async (req, res) => {
       return res.redirect('/admin/orders');
     }
 
-    // Get selected pickup address if order has selectedPickupAddressId
-    let selectedPickupAddress = null;
-    if (order.selectedPickupAddressId && order.business && order.business.pickUpAddresses) {
-      selectedPickupAddress = order.business.pickUpAddresses.find(
-        addr => addr.addressId === order.selectedPickupAddressId
-      );
-    }
+    const { address: selectedPickupAddress } = resolvePickupAddressForOrder(
+      order,
+      order.business
+    );
 
     const trackingDisplay =
       order.smartFlyerBarcode || order.referralNumber || '';
@@ -1390,13 +1993,10 @@ const get_pickupDetailsPage = async (req, res) => {
     return;
   }
 
-  // Get selected pickup address if pickup has pickupAddressId
-  let selectedPickupAddress = null;
-  if (pickup.pickupAddressId && pickup.business && pickup.business.pickUpAddresses) {
-    selectedPickupAddress = pickup.business.pickUpAddresses.find(
-      addr => addr.addressId === pickup.pickupAddressId
-    );
-  }
+  const { address: selectedPickupAddress } = resolvePickupAddressForOrder(
+    { selectedPickupAddressId: pickup.pickupAddressId },
+    pickup.business
+  );
 
   res.render('admin/pickup-details', {
     title: 'Pickup Details',
@@ -2354,6 +2954,13 @@ const convertFailedDeliveryToReturn = async (req, res) => {
       },
       business: deliverOrder.business,
     });
+
+    let returnPickupId = deliverOrder.selectedPickupAddressId || null;
+    if (!returnPickupId && deliverOrder.business) {
+      const bizUser = await User.findById(deliverOrder.business).select('pickUpAddresses').lean();
+      returnPickupId = getDefaultPickupAddressId(bizUser && bizUser.pickUpAddresses);
+    }
+    returnOrder.selectedPickupAddressId = returnPickupId;
 
     // Link the deliver order to the return order
     deliverOrder.orderShipping.linkedReturnOrder = returnOrder._id;

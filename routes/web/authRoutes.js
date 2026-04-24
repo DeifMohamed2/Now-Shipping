@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const authController = require('../../controllers/authController2.js');
+const authController = require('../../controllers/authController.js');
 
 // Timeout middleware for login routes
 const loginTimeout = (req, res, next) => {
@@ -49,6 +49,7 @@ router.post('/send-otp', authController.sendOTP);
 router.post('/login', loginTimeout, authController.login);
 
 router.get('/verify-email', authController.verifyEmailBytoken);
+router.get('/email-verified', authController.emailVerifiedPage);
 
 router.get('/admin-login', authController.adminLogin);
 router.post('/admin-login', loginTimeout, authController.loginAsAdmin);

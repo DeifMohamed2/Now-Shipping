@@ -22,11 +22,14 @@ const mongoose = require('mongoose');
 const {
   normalizeFieldsFromBody,
   validateOrderFieldsStructural,
+  applyPickupDefaults,
+  validatePickupForOrderCreation,
   validateReturnOrderAsync,
   buildOrderDocumentFromFields,
   generateOrderNumber,
 } = require('../utils/orderCreationHelper');
 const orderBulkImport = require('../utils/orderBulkImport');
+const { resolvePickupAddressForOrder } = require('../utils/pickupAddressResolve');
 const {
   canBusinessCancelPickupStatus,
   canBusinessEditPickupStatus,
@@ -985,6 +988,7 @@ const postOrdersImportCommit = async (req, res) => {
       try {
         await session.withTransaction(async () => {
           for (const { fields } of parsed.rows) {
+            applyPickupDefaults(req.userData, fields);
             const doc = buildOrderDocumentFromFields(req.userData, fields, generateOrderNumber());
             const saved = await doc.save({ session });
             created.push({ orderNumber: saved.orderNumber, orderId: saved._id });
@@ -998,6 +1002,7 @@ const postOrdersImportCommit = async (req, res) => {
         );
         created.length = 0;
         for (const { fields } of parsed.rows) {
+          applyPickupDefaults(req.userData, fields);
           const doc = buildOrderDocumentFromFields(req.userData, fields, generateOrderNumber());
           const saved = await doc.save();
           created.push({ orderNumber: saved.orderNumber, orderId: saved._id });
@@ -1050,10 +1055,16 @@ const submitOrder = async (req, res) => {
     console.log(req.body);
 
     const fields = normalizeFieldsFromBody(req.body);
+    applyPickupDefaults(req.userData, fields);
 
     const structural = validateOrderFieldsStructural(fields);
     if (structural.errors.length) {
       return res.status(400).json({ error: structural.errors[0] });
+    }
+
+    const pickupVal = validatePickupForOrderCreation(req.userData, fields);
+    if (pickupVal.errors.length) {
+      return res.status(400).json({ error: pickupVal.errors[0] });
     }
 
     const returnVal = await validateReturnOrderAsync(req.userData._id, fields);
@@ -1279,13 +1290,10 @@ const get_orderDetailsPage = async (req, res) => {
       return res.redirect('/business/orders');
     }
 
-    // Get selected pickup address if order has selectedPickupAddressId
-    let selectedPickupAddress = null;
-    if (order.selectedPickupAddressId && order.business && order.business.pickUpAddresses) {
-      selectedPickupAddress = order.business.pickUpAddresses.find(
-        addr => addr.addressId === order.selectedPickupAddressId
-      );
-    }
+    const { address: selectedPickupAddress } = resolvePickupAddressForOrder(
+      order,
+      order.business
+    );
 
     res.render('business/order-details', {
       title: req.translations.business.pages.orderDetails.title,
@@ -1325,7 +1333,7 @@ const get_orderDetailsAPI = async (req, res) => {
         model: 'courier',
         select: 'name phone email'
       })
-      .populate('business', 'name email phone brandInfo');
+      .populate('business', 'name email phone brandInfo pickUpAddresses');
 
     if (!order) {
       return res.status(404).json({
@@ -1374,6 +1382,18 @@ const get_orderDetailsAPI = async (req, res) => {
       ...(order.orderStages[stage]?.toObject ? order.orderStages[stage].toObject() : order.orderStages[stage] || {})
     }));
 
+    const { address: resolvedPickupAddress, addressId: resolvedPickupAddressId } =
+      resolvePickupAddressForOrder(order, order.business);
+
+    const businessForApi =
+      orderObj.business && typeof orderObj.business === 'object'
+        ? (() => {
+            const b = { ...orderObj.business };
+            delete b.pickUpAddresses;
+            return b;
+          })()
+        : orderObj.business;
+
     // Prepare response data
     const responseData = {
       status: 'success',
@@ -1400,7 +1420,7 @@ const get_orderDetailsAPI = async (req, res) => {
         orderStages: orderObj.orderStages,
         progressPercentage,
         stageTimeline,
-        business: orderObj.business,
+        business: businessForApi,
         scheduledRetryAt: orderObj.scheduledRetryAt,
         createdAt: orderObj.createdAt,
         updatedAt: orderObj.updatedAt,
@@ -1408,6 +1428,9 @@ const get_orderDetailsAPI = async (req, res) => {
         canChangeAddress: canBusinessChangeAddress(order),
         canDelete: order.orderStatus === 'new',
         waitingAction: orderWaitingActionPolicy.getWaitingActionFlags(order),
+        selectedPickupAddressId: orderObj.selectedPickupAddressId,
+        selectedPickupAddress: resolvedPickupAddress,
+        resolvedPickupAddressId,
       }
     };
 
@@ -3353,13 +3376,12 @@ const get_pickupDetailsPage = async(req, res) => {
 
     const pickup = await Pickup.findOne({ pickupNumber }).populate('business').populate('assignedDriver');
     
-    // Get selected pickup address if pickup has pickupAddressId
-    let selectedPickupAddress = null;
-    if (pickup && pickup.pickupAddressId && pickup.business && pickup.business.pickUpAddresses) {
-      selectedPickupAddress = pickup.business.pickUpAddresses.find(
-        addr => addr.addressId === pickup.pickupAddressId
-      );
-    }
+    const { address: selectedPickupAddress } = pickup
+      ? resolvePickupAddressForOrder(
+          { selectedPickupAddressId: pickup.pickupAddressId },
+          pickup.business
+        )
+      : { address: null };
     
     console.log(pickup);  
     if (!pickup) {
@@ -3386,7 +3408,7 @@ const get_pickupDetailsPage = async(req, res) => {
     req.query.json === '1' ||
     (req.headers.accept && req.headers.accept.includes('application/json'));
   if (wantsJson) {
-    return res.status(200).json({ pickup });
+    return res.status(200).json({ pickup, selectedPickupAddress });
   } else {
     res.render('business/pickup-details', {
       title: req.translations.business.pages.pickupDetails.title,
@@ -3829,9 +3851,15 @@ const get_ticketsPage = (req, res) => {
 }
 
 const logOut = (req, res) => {
-  res.clearCookie('token');
+  const cookieOpts = {
+    path: '/',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  };
+  res.clearCookie('token', cookieOpts);
   res.redirect('/login');
-}
+};
 
 const calculateFees = (government, orderType, isExpressShipping) => {
   return calculateOrderFee(government, orderType, isExpressShipping);

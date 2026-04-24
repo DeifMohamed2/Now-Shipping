@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const authController = require('../../../controllers/authController2.js');
+const authController = require('../../../controllers/authController.js');
 
 // Business routes
 router.post('/login', authController.login);

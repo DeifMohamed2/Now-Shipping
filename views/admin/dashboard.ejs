@@ -1,422 +1,738 @@
 <%- contentFor('HeaderCss') %>
-<link rel="stylesheet" href="/assets/rCSS/business.css">
-<style>
-  .dashboard-card{border-radius:1rem;box-shadow:0 4px 20px rgba(0,0,0,0.05);transition:all .3s ease;overflow:hidden}
-  .dashboard-card:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.1)}
-  .order-status{display:inline-block;padding:.25rem .75rem;border-radius:2rem;font-size:.75rem;font-weight:600}
-  .order-status.delivered{background:rgba(10,179,156,.1);color:#0ab39c}
-  .order-status.pending{background:rgba(243,151,32,.1);color:#F39720}
-  .order-status.processing{background:rgba(64,81,137,.1);color:#405189}
-  .order-status.cancelled{background:rgba(220,53,69,.1);color:#dc3545}
-  .text-primary-custom{color:#F39720!important}
-  .bg-neutral-light{background:#f8f9fa!important}
-  .btn-primary-custom{background:#F39720;border-color:#F39720;color:#fff}
-  .btn-primary-custom:hover{background:#E58809;border-color:#E58809}
-  .small-muted{font-size:.875rem;color:#6c757d}
-</style>
+<link rel="stylesheet" href="/assets/rCSS/admin-dashboard.css">
+<link rel="stylesheet" href="/assets/rCSS/admin-dashboard-redesign.css">
 <%- contentFor('body') %>
 
-<div class="row">
-  <div class="col">
-    <div class="h-100">
-      <div class="row mb-3">
-        <div class="col-12">
-          <div class="d-flex align-items-lg-center flex-lg-row flex-column">
-            <div class="flex-grow-1">
-              <% 
-                const hour = new Date().getHours();
-                let greeting = 'Good Evening';
-                if (hour < 12) greeting = 'Good Morning';
-                else if (hour < 18) greeting = 'Good Afternoon';
-              %>
-              <h4 class="fs-16 mb-1 fw-semibold"><%= greeting %>, Admin! 👋</h4>
-              <p class="text-muted mb-0">Platform-wide analytics and live operations at a glance.</p>
-            </div>
-            <div class="mt-3 mt-lg-0">
-              <a href="/admin/orders" class="btn btn-primary-custom">
-                <i class="ri-file-list-3-line align-middle me-1"></i> Go to Orders
-              </a>
-            </div>
-          </div>
-        </div>
+<div class="admin-dash-redesign">
+  <header class="adm-db-header adm-reveal">
+    <div>
+      <h1 class="adm-db-header-title">Shipping dashboard</h1>
+      <p class="adm-db-header-sub" id="adminDashLastUpdated">Loading…</p>
+    </div>
+    <div class="adm-db-header-spacer"></div>
+    <form class="adm-db-search-wrap" action="/admin/orders" method="get" role="search">
+      <i class="ri-search-line" aria-hidden="true"></i>
+      <input class="adm-db-search" type="search" name="search" placeholder="Search orders, businesses…" autocomplete="off" />
+    </form>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="text-muted small d-none d-md-inline" id="adminDashRangeLabel" style="max-width:200px;"></span>
+      <div class="adm-db-pill-wrap" id="adminRangePills" role="group" aria-label="Date range">
+        <button type="button" class="adm-db-range-pill" data-range="today">Today</button>
+        <button type="button" class="adm-db-range-pill" data-range="7d">7d</button>
+        <button type="button" class="adm-db-range-pill active" data-range="30d">30d</button>
+        <button type="button" class="adm-db-range-pill" data-range="90d">90d</button>
+        <button type="button" class="adm-db-range-pill" data-range="ytd">YTD</button>
+        <button type="button" class="adm-db-range-pill" data-range="all">All</button>
+        <button type="button" class="adm-db-icon-btn" id="adminDashRefresh" title="Refresh" aria-label="Refresh"><i class="ri-refresh-line"></i></button>
       </div>
+      <a href="/admin/orders" class="adm-db-btn-export"><i class="ri-download-line"></i> Orders</a>
+    </div>
+  </header>
 
-      <!-- Top Analytics: Status, Category, Geography, Payments, Shipping, Couriers, Returns -->
-      
+  <div id="adminDbKpiRow" class="adm-db-kpi-grid">
+    <% for (let i = 0; i < 6; i++) { %>
+    <div class="adm-kpi-card" style="animation-delay: <%= i * 45 %>ms">
+      <div class="adm-kpi-top">
+        <div class="adm-kpi-icon" style="background:#f1f5f9;color:#94a3b8"><i class="ri-loader-4-line"></i></div>
+      </div>
+      <div class="adm-kpi-value">—</div>
+      <div class="adm-kpi-label">Loading</div>
+    </div>
+    <% } %>
+  </div>
 
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="card dashboard-card">
-            <div class="card-header d-flex align-items-center">
-              <h4 class="card-title mb-0">Today's Overview</h4>
-              <div class="ms-auto"><span class="text-muted small" id="adminLastUpdated">Loading...</span></div>
-            </div>
-            <div class="card-body">
-              <div class="row g-3" id="adminDashboardStats">
-                <div class="col-12 text-center py-4">
-                  <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
-                  <p class="mt-2 text-muted">Loading dashboard data...</p>
-                </div>
+  <div class="row g-4 mb-4">
+    <div class="col-xl-8">
+      <div class="adm-db-card adm-db-card--delayed" style="animation-delay:60ms">
+        <div class="adm-db-card-head">
+          <div>
+            <div class="adm-db-card-head-inline">
+              <div class="adm-db-card-icon" style="background:#fffbeb;color:#f59e0b"><i class="ri-line-chart-line"></i></div>
+              <div>
+                <h2 class="adm-db-card-title mb-0">Revenue &amp; orders</h2>
+                <p class="adm-db-card-desc">Monthly totals in the selected range</p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-xl-8">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Revenue & Orders Analytics</h4></div>
-            <div class="card-body"><div id="admin-revenue-chart" style="height: 350px;"></div></div>
+          <div class="adm-db-legend">
+            <span class="adm-db-legend-item"><span class="adm-db-legend-dot" style="background:#f59e0b"></span> Revenue (EGP)</span>
+            <span class="adm-db-legend-item"><span class="adm-db-legend-dot" style="background:#334155"></span> Orders</span>
           </div>
         </div>
-        <div class="col-xl-4">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Operational Snapshot</h4></div>
-            <div class="card-body p-0">
-              <div class="admin-table-scroll admin-table-scroll--compact">
-                <table class="table table-borderless mb-0 admin-data-table">
-                  <thead class="table-light"><tr><th>Metric</th><th class="text-end">Value</th></tr></thead>
-                  <tbody id="adminOperationalSnapshot">
-                    <tr><td class="small-muted">Loading...</td><td class="text-end">—</td></tr>
-                  </tbody>
-                </table>
-              </div>
+        <div class="adm-chart-body-inner" id="admin-revenue-chart"></div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="adm-db-card adm-db-card--delayed" style="animation-delay:100ms">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#fffbeb;color:#f59e0b"><i class="ri-flashlight-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Operational snapshot</h2>
+        </div>
+        <div id="adminOperationalSnapshot"></div>
+        <div class="adm-op-foot">
+          <span class="adm-op-pulse" aria-hidden="true"></span>
+          <span>Live metrics from your database for the selected range.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="adm-db-card mb-4 adm-db-card--delayed" style="animation-delay:120ms">
+    <div class="adm-db-card-head">
+      <div>
+        <div class="adm-db-card-head-inline">
+          <div class="adm-db-card-icon" style="background:#fffbeb;color:#f59e0b"><i class="ri-grid-line"></i></div>
+          <div>
+            <h2 class="adm-db-card-title mb-0">Order volume heatmap</h2>
+            <p class="adm-db-card-desc mb-0">Orders by weekday and 3-hour slot (<span id="adminHeatmapTz"></span>), range-scoped.</p>
+          </div>
+        </div>
+      </div>
+      <div class="adm-hm-legend-scale">
+        <span class="adm-hm-scale-label">Low</span>
+        <span class="adm-hm-scale-swatch" style="background:#fef3c7"></span>
+        <span class="adm-hm-scale-swatch" style="background:#fde68a"></span>
+        <span class="adm-hm-scale-swatch" style="background:#fcd34d"></span>
+        <span class="adm-hm-scale-swatch" style="background:#f59e0b"></span>
+        <span class="adm-hm-scale-swatch" style="background:#d97706"></span>
+        <span class="adm-hm-scale-label">High</span>
+      </div>
+    </div>
+    <div id="admin-order-heatmap" class="adm-hm-grid"></div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-xl-6">
+      <div class="adm-db-card h-100">
+        <div class="adm-db-card-head">
+          <div class="adm-db-card-head-inline">
+            <div class="adm-db-card-icon" style="background:#fffbeb;color:#f59e0b"><i class="ri-trophy-line"></i></div>
+            <div>
+              <h2 class="adm-db-card-title mb-0">Top businesses</h2>
+              <p class="adm-db-card-desc mb-0" id="adminScoreNote"></p>
             </div>
           </div>
         </div>
+        <div class="adm-tb-head">
+          <span>#</span><span>Business</span><span>Orders</span><span>Done</span><span>OK %</span><span>EGP</span><span>Bad %</span><span>Score</span>
+        </div>
+        <div id="adminTopBusinessesBody"></div>
       </div>
-
-      <div class="row mt-3">
-        <div class="col-xl-6">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Recent Orders</h4></div>
-            <div class="card-body p-0">
-              <div class="admin-table-scroll admin-table-scroll--compact">
-                <table class="table table-borderless mb-0 admin-data-table">
-                  <thead class="table-light"><tr><th>Order</th><th>Business</th><th>Status</th></tr></thead>
-                  <tbody id="adminRecentOrders">
-                    <tr><td colspan="3" class="text-center py-3">Loading...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="adm-db-card mb-4">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#fff7ed;color:#f97316"><i class="ri-alert-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Returns &amp; exceptions</h2>
         </div>
-        <div class="col-xl-6">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Recent Pickups</h4></div>
-            <div class="card-body p-0">
-              <div class="admin-table-scroll admin-table-scroll--compact">
-                <table class="table table-borderless mb-0 admin-data-table">
-                  <thead class="table-light"><tr><th>Pickup</th><th>Date</th><th>Status</th></tr></thead>
-                  <tbody id="adminRecentPickups">
-                    <tr><td colspan="3" class="text-center py-3">Loading...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div class="adm-ret-grid-h"><span>Type</span><span>Count</span><span>Note</span></div>
+        <div id="adminReturnsExceptions"></div>
       </div>
-
-      <div class="row mt-3">
-        <div class="col-xl-6">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Performance Metrics</h4></div>
-            <div class="card-body"><div id="admin-performance-chart" style="height: 200px;"></div></div>
+      <div class="adm-db-card adm-attn-card">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="adm-db-card-head-inline mb-0">
+            <div class="adm-db-card-icon" style="background:#fef2f2;color:#ef4444"><i class="ri-error-warning-line"></i></div>
+            <h2 class="adm-db-card-title mb-0">Needs attention</h2>
           </div>
+          <span class="text-muted" style="font-size:0.6875rem">Min <span id="adminMinRankOrders">5</span> orders</span>
         </div>
-        <div class="col-xl-6">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Returns & Exceptions</h4></div>
-            <div class="card-body p-0">
-              <div class="admin-table-scroll admin-table-scroll--compact">
-                <table class="table table-borderless mb-0 admin-data-table">
-                  <thead class="table-light"><tr><th>Type</th><th>Count</th><th class="text-end">Trend</th></tr></thead>
-                  <tbody id="adminReturnsExceptions">
-                    <tr><td class="small-muted">Loading...</td><td>—</td><td class="text-end">—</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div id="adminBottomBusinessesWrap"></div>
       </div>
+    </div>
+  </div>
 
-      <div class="row mt-3">
-        <div class="col-xl-4">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Orders by Status</h4></div>
-            <div class="card-body"><div id="admin-orders-by-status" style="height: 280px;"></div></div>
+  <div class="row g-4 mb-4">
+    <div class="col-xl-6">
+      <div class="adm-db-card h-100">
+        <div class="adm-db-card-head">
+          <div class="adm-db-card-head-inline">
+            <div class="adm-db-card-icon" style="background:#fffbeb;color:#f59e0b"><i class="ri-shopping-bag-3-line"></i></div>
+            <h2 class="adm-db-card-title mb-0">Recent orders</h2>
           </div>
+          <a href="/admin/orders" class="adm-view-all">View all <i class="ri-arrow-right-s-line"></i></a>
         </div>
-        <div class="col-xl-4">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Orders by Category</h4></div>
-            <div class="card-body"><div id="admin-orders-by-category" style="height: 280px;"></div></div>
-          </div>
-        </div>
-        <div class="col-xl-4">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Top Governorates</h4></div>
-            <div class="card-body"><div id="admin-orders-by-government" style="height: 280px;"></div></div>
-          </div>
-        </div>
+        <div class="adm-ro-h"><span>Order</span><span>Business</span><span>Status</span></div>
+        <div id="adminRecentOrders"></div>
       </div>
-
-      <div class="row mt-3">
-        <div class="col-xl-6">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Payment Breakdown</h4></div>
-            <div class="card-body"><div id="admin-amount-type" style="height: 260px;"></div></div>
+    </div>
+    <div class="col-xl-6">
+      <div class="adm-db-card h-100">
+        <div class="adm-db-card-head">
+          <div class="adm-db-card-head-inline">
+            <div class="adm-db-card-icon" style="background:#eff6ff;color:#3b82f6"><i class="ri-truck-line"></i></div>
+            <h2 class="adm-db-card-title mb-0">Recent pickups</h2>
           </div>
+          <a href="/admin/pickups" class="adm-view-all">View all <i class="ri-arrow-right-s-line"></i></a>
         </div>
-        <div class="col-xl-6">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Express vs Standard</h4></div>
-            <div class="card-body"><div id="admin-express-breakdown" style="height: 260px;"></div></div>
-          </div>
-        </div>
+        <div class="adm-ro-h"><span>Pickup</span><span>Date</span><span>Status</span></div>
+        <div id="adminRecentPickups"></div>
       </div>
+    </div>
+  </div>
 
-      <div class="row mt-3">
-        <div class="col-xl-6">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Courier Assignments (30d)</h4></div>
-            <div class="card-body"><div id="admin-courier-assignments" style="height: 300px;"></div></div>
-          </div>
+  <div class="row g-4 mb-4 adm-donut-stats-row">
+    <div class="col-lg-3 col-md-6 d-flex">
+      <div class="adm-db-card adm-donut-stat-card w-100">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#eef2ff;color:#6366f1"><i class="ri-pie-chart-2-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Pickups by status</h2>
         </div>
-        <div class="col-xl-6">
-          <div class="card dashboard-card">
-            <div class="card-header"><h4 class="card-title mb-0">Return Rate by Month</h4></div>
-            <div class="card-body"><div id="admin-returns-monthly" style="height: 300px;"></div></div>
-          </div>
-        </div>
+        <div class="adm-chart-body-inner--sm adm-chart-donut" id="admin-pickup-status-chart"></div>
       </div>
+    </div>
+    <div class="col-lg-3 col-md-6 d-flex">
+      <div class="adm-db-card adm-donut-stat-card w-100">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#eef2ff;color:#6366f1"><i class="ri-pie-chart-2-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Orders by status</h2>
+        </div>
+        <div class="adm-chart-body-inner--sm adm-chart-donut" id="admin-orders-by-status"></div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 d-flex">
+      <div class="adm-db-card adm-donut-stat-card w-100">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#eef2ff;color:#6366f1"><i class="ri-pie-chart-2-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Orders by category</h2>
+        </div>
+        <div class="adm-chart-body-inner--sm adm-chart-donut" id="admin-orders-by-category"></div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 d-flex">
+      <div class="adm-db-card adm-donut-stat-card w-100">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#eef2ff;color:#6366f1"><i class="ri-pie-chart-2-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Express vs standard</h2>
+        </div>
+        <div class="adm-chart-body-inner--sm adm-chart-donut" id="admin-express-breakdown"></div>
+      </div>
+    </div>
+  </div>
 
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="adm-db-card">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#ecfdf5;color:#10b981"><i class="ri-store-2-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Shop orders by status</h2>
+        </div>
+        <div class="adm-chart-body-inner--sm" id="admin-shop-status-chart"></div>
+      </div>
+    </div>
+    <div class="col-lg-6 d-flex align-items-center">
+      <p class="text-muted small mb-0 px-2">Shop breakdown uses the same created-at window as pickups when a range is selected.</p>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <div class="col-xl-6">
+      <div class="adm-db-card">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#eef2ff;color:#6366f1"><i class="ri-bank-card-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Payment breakdown</h2>
+        </div>
+        <div class="adm-chart-body-inner--sm" id="admin-amount-type"></div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="adm-db-card">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#fffbeb;color:#f59e0b"><i class="ri-map-pin-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Top governorates</h2>
+        </div>
+        <div class="adm-chart-body-inner--sm" id="admin-orders-by-government"></div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="adm-db-card">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#eff6ff;color:#3b82f6"><i class="ri-bar-chart-horizontal-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Courier load</h2>
+        </div>
+        <p class="adm-courier-note mb-2" id="adminCourierChartNote"></p>
+        <div class="adm-chart-body-inner--sm" id="admin-courier-assignments"></div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="adm-db-card">
+        <div class="adm-db-card-head-inline mb-3">
+          <div class="adm-db-card-icon" style="background:#fef2f2;color:#ef4444"><i class="ri-arrow-down-line"></i></div>
+          <h2 class="adm-db-card-title mb-0">Return volume by month</h2>
+        </div>
+        <div class="adm-chart-body-inner--sm" id="admin-returns-monthly"></div>
+      </div>
     </div>
   </div>
 </div>
+
 <%- contentFor('FooterJs') %>
-<script src="/assets/libs/apexcharts/apexcharts.min.js"></script>
+<script src="/assets/libs/chart.js/chart.umd.min.js"></script>
+<script src="/assets/rJS/admin/admin-dashboard-charts.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function(){
-    loadAdminDashboardData();
-    initAdminCharts();
-  });
+(function () {
+  var currentRange = '30d';
 
-  async function loadAdminDashboardData(){
-    try{
-      const res = await fetch('/admin/dashboard-data');
-      const json = await res.json();
-      if(json.status === 'success'){
-        renderAdminStats(json.dashboardData);
-        renderAdminTables(json.dashboardData);
-        renderAdminOperationalSnapshot(json.dashboardData);
-        renderAdminReturns(json.dashboardData);
-        renderAdminBreakdowns(json.dashboardData);
-        renderAdminAuxCharts(json.dashboardData);
-        renderAdminRevenueOrders(json.dashboardData);
-        updateAdminLastUpdated();
-      }
-    }catch(e){
-      const stats = document.getElementById('adminDashboardStats');
-      if(stats){
-        stats.innerHTML = '<div class="col-12 text-center py-4"><i class="ri-error-warning-line text-danger fs-1"></i><p class="mt-2 text-muted">Failed to load dashboard data</p></div>';
-      }
-    }
+  function escHtml(s) {
+    if (s == null || s === '') return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
-  function renderAdminStats(data){
-    const stats = data.orderStats || {};
-    const financial = data.financialStats || {};
-    const couriers = data.courierStats || {};
-    const returns = data.returnStats || {};
-    const container = document.getElementById('adminDashboardStats');
-    if(!container) return;
-    container.innerHTML = `
-      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Total Orders</h6></div><h2 class="mb-0">${stats.totalOrders || 0}</h2></div></div></div>
-      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Completed</h6></div><div class="d-flex align-items-baseline"><h2 class="mb-0 text-success">${stats.completedCount || 0}</h2><span class="text-muted ms-2">/ ${stats.totalOrders || 0}</span><span class="badge bg-success ms-auto">${stats.completionRate || 0}%</span></div></div></div></div>
-      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Heading to Customer</h6></div><h2 class="mb-0 text-primary-custom">${stats.headingToCustomerCount || 0}</h2></div></div></div>
-      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Awaiting Action</h6></div><h2 class="mb-0 text-warning">${stats.awaitingActionCount || 0}</h2></div></div></div>
-      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Heading to You</h6></div><h2 class="mb-0">${stats.headingToYouCount || 0}</h2></div></div></div>
-      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">New Orders</h6></div><h2 class="mb-0 text-primary-custom">${stats.newOrdersCount || 0}</h2></div></div></div>
-      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Active Couriers</h6></div><h2 class="mb-0">${couriers.active || 0}</h2></div></div></div>
-      <div class="col-md-3"><div class="card border shadow-sm h-100"><div class="card-body"><div class="d-flex align-items-center mb-2"><h6 class="text-muted mb-0">Revenue (EGP)</h6></div><h2 class="mb-0">${financial.totalRevenue || 0}</h2></div></div></div>
-    `;
-  }
-
-  function renderAdminTables(data){
-    const ordersTbody = document.getElementById('adminRecentOrders');
-    const pickupsTbody = document.getElementById('adminRecentPickups');
-    const recentOrders = data.recentData?.recentOrders || [];
-    const recentPickups = data.recentData?.recentPickups || [];
-
-    if(ordersTbody){
-      if(recentOrders.length === 0){
-        ordersTbody.innerHTML = '<tr><td colspan="3" class="text-center py-3">No recent orders</td></tr>';
-      }else{
-        ordersTbody.innerHTML = recentOrders.map(o=>{
-          let statusClass = 'pending';
-          switch(o.orderStatus){
-            case 'completed': statusClass='delivered'; break;
-            case 'processing':
-            case 'headingToCustomer': statusClass='processing'; break;
-            case 'cancelled': statusClass='cancelled'; break;
-          }
-          return `<tr>
-            <td>#${o.orderNumber}</td>
-            <td>${o.businessName || o.orderBusiness?.name || 'N/A'}</td>
-            <td><span class="order-status ${statusClass}">${o.orderStatus}</span></td>
-          </tr>`;
-        }).join('');
-      }
-    }
-
-    if(pickupsTbody){
-      if(recentPickups.length === 0){
-        pickupsTbody.innerHTML = '<tr><td colspan="3" class="text-center py-3">No recent pickups</td></tr>';
-      }else{
-        pickupsTbody.innerHTML = recentPickups.map(p=>{
-          let statusClass = 'pending';
-          switch(p.picikupStatus){
-            case 'Completed': statusClass='delivered'; break;
-            case 'In Progress': statusClass='processing'; break;
-          }
-          return `<tr>
-            <td>#${p.pickupNumber}</td>
-            <td>${new Date(p.pickupDate).toLocaleDateString()}</td>
-            <td><span class="order-status ${statusClass}">${p.picikupStatus}</span></td>
-          </tr>`;
-        }).join('');
-      }
-    }
-  }
-
-  function renderAdminOperationalSnapshot(data){
-    const el = document.getElementById('adminOperationalSnapshot');
-    if(!el) return;
-    const couriers = data.courierStats || {};
-    const sla = data.slaStats || {};
-    const issues = data.issueStats || {};
-    el.innerHTML = `
-      <tr><td>Couriers Online</td><td class="text-end">${couriers.online || 0}</td></tr>
-      <tr><td>Avg. Delivery Time</td><td class="text-end">${sla.avgDeliveryDays || '-'} days</td></tr>
-      <tr><td>Open Issues</td><td class="text-end">${issues.open || 0}</td></tr>
-      <tr><td>Today Cancellations</td><td class="text-end">${issues.cancellationsToday || 0}</td></tr>
-    `;
-  }
-
-  function renderAdminReturns(data){
-    const el = document.getElementById('adminReturnsExceptions');
-    if(!el) return;
-    const r = data.returnStats || {};
-    el.innerHTML = `
-      <tr><td>Returns In-Process</td><td>${r.inProcess || 0}</td><td class="text-end">${r.inProcessTrend || '—'}</td></tr>
-      <tr><td>Returns Completed</td><td>${r.completed || 0}</td><td class="text-end">${r.completedTrend || '—'}</td></tr>
-      <tr><td>Failed Deliveries</td><td>${r.failedDeliveries || 0}</td><td class="text-end">${r.failedTrend || '—'}</td></tr>
-    `;
-  }
-
-  function updateAdminLastUpdated(){
-    const el = document.getElementById('adminLastUpdated');
-    if(el){ el.textContent = `Last updated at ${new Date().toLocaleTimeString()}`; }
-  }
-
-  function initAdminCharts(){
-    setTimeout(()=>{
-      // revenue chart is rendered once data loads via renderAdminRevenueOrders
-      if(document.getElementById('admin-performance-chart')){
-        const popts = { series:[{name:'Performance',data:[75,85,65,90,82,78]}], chart:{type:'radar',height:200,toolbar:{show:false}}, colors:['#F39720'], xaxis:{categories:['Delivery','Quality','Service','Value','Satisfaction','Retention']}, yaxis:{show:false}, markers:{size:4,colors:['#333333'],strokeColors:'#fff',strokeWidth:2}, tooltip:{y:{formatter:val=>val+'%'}} };
-        new ApexCharts(document.getElementById('admin-performance-chart'), popts).render();
-      }
-    }, 500);
-  }
-
-  function renderAdminRevenueOrders(d){
-    const el = document.getElementById('admin-revenue-chart');
-    if(!el) return;
-    const rev = d.financialStats?.revenueByMonth || [];
-    const ord = d.financialStats?.ordersByMonth || [];
-    const revMap = new Map(rev.map(r => [r._id.y + '-' + String(r._id.m).padStart(2,'0'), r.revenue]));
-    const ordMap = new Map(
-      (rev.map(r => [r._id.y + '-' + String(r._id.m).padStart(2,'0'), r.orders]))
-      .concat(ord.map(o => [o._id.y + '-' + String(o._id.m).padStart(2,'0'), o.count]))
+  function sparklineSvg(series, color) {
+    var data = (series && series.length) ? series : [0];
+    var w = 56;
+    var h = 28;
+    var max = Math.max.apply(null, data);
+    var min = Math.min.apply(null, data);
+    var range = max - min || 1;
+    var pts = data.map(function (v, i) {
+      var x = data.length <= 1 ? w / 2 : (i / (data.length - 1)) * w;
+      var y = h - ((v - min) / range) * h;
+      return x + ',' + y;
+    });
+    var last = pts[pts.length - 1].split(',');
+    var lx = parseFloat(last[0]);
+    var ly = parseFloat(last[1]);
+    return (
+      '<svg class="adm-kpi-spark" width="' +
+      w +
+      '" height="' +
+      h +
+      '" viewBox="0 0 ' +
+      w +
+      ' ' +
+      h +
+      '"><polyline fill="none" stroke="' +
+      color +
+      '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85" points="' +
+      pts.join(' ') +
+      '"/><circle cx="' +
+      lx +
+      '" cy="' +
+      ly +
+      '" r="2.5" fill="' +
+      color +
+      '"/></svg>'
     );
-    const keys = Array.from(new Set([...revMap.keys(), ...ordMap.keys()])).sort().slice(-9);
-    const revSeries = keys.map(k => revMap.get(k) || 0);
-    const ordSeries = keys.map(k => ordMap.get(k) || 0);
-    const opts = { series:[{name:'Revenue',type:'column',data:revSeries},{name:'Orders',type:'line',data:ordSeries}], chart:{height:350,type:'line',toolbar:{show:false}}, stroke:{width:[0,4],curve:'smooth'}, colors:['#F39720','#333333'], dataLabels:{enabled:true,enabledOnSeries:[1]}, labels:keys, xaxis:{type:'category'}, yaxis:[{title:{text:'Revenue (EGP)'}},{opposite:true,title:{text:'Orders'}}] };
-    new ApexCharts(el, opts).render();
   }
 
-  function renderAdminBreakdowns(data){
-    const b = data.breakdowns || {};
-    // Orders by Status (donut)
-    if(document.getElementById('admin-orders-by-status')){
-      const labels = (b.byStatus||[]).map(x=>x._id||'Unknown');
-      const series = (b.byStatus||[]).map(x=>x.count||0);
-      new ApexCharts(document.getElementById('admin-orders-by-status'), {
-        chart:{type:'donut',height:280}, labels, series, colors:['#405189','#0ab39c','#f7b84b','#f06548','#299cdb','#F39720','#6c757d']
-      }).render();
+  function deltaBlock(deltas, key) {
+    var v = deltas && deltas[key];
+    if (v == null || v === '') {
+      return '<div class="adm-kpi-delta flat"><span class="adm-kpi-delta-note">vs prev —</span></div>';
     }
-    // Orders by Category (pie)
-    if(document.getElementById('admin-orders-by-category')){
-      const labels = (b.byCategory||[]).map(x=>x._id||'Unknown');
-      const series = (b.byCategory||[]).map(x=>x.count||0);
-      new ApexCharts(document.getElementById('admin-orders-by-category'), {
-        chart:{type:'pie',height:280}, labels, series, colors:['#0ab39c','#405189','#f7b84b','#198754','#f06548']
-      }).render();
+    var up = v >= 0;
+    return (
+      '<div class="adm-kpi-delta ' +
+      (up ? 'up' : 'down') +
+      '"><i class="ri-arrow-' +
+      (up ? 'up' : 'down') +
+      '-s-line"></i><span>' +
+      (up ? '+' : '') +
+      v +
+      '%</span><span class="adm-kpi-delta-note">vs last period</span></div>'
+    );
+  }
+
+  function kpiCard(cfg, delayMs) {
+    var t = cfg.theme;
+    return (
+      '<div class="adm-kpi-card" style="animation-delay:' +
+      delayMs +
+      'ms"><div class="adm-kpi-top"><div class="adm-kpi-icon" style="background:' +
+      t.bg +
+      ';color:' +
+      t.fg +
+      '"><i class="' +
+      cfg.icon +
+      '"></i></div>' +
+      sparklineSvg(cfg.spark, t.spark) +
+      '</div><div class="adm-kpi-value">' +
+      cfg.value +
+      '</div><div class="adm-kpi-label">' +
+      escHtml(cfg.label) +
+      '</div>' +
+      deltaBlock(cfg.deltas, cfg.deltaKey) +
+      '</div>'
+    );
+  }
+
+  function renderKpis(d) {
+    var stats = d.orderStats || {};
+    var ret = d.returnStats || {};
+    var sp = d.kpiSparklines || {};
+    var del = d.kpiDeltas || {};
+    var o7 = sp.orders7d && sp.orders7d.length ? sp.orders7d : [0, 0, 0, 0, 0, 0, 0];
+    var r7 = sp.returns7d && sp.returns7d.length ? sp.returns7d : o7;
+    var x7 = sp.exceptions7d && sp.exceptions7d.length ? sp.exceptions7d : o7;
+    var themes = {
+      amber: { bg: '#fffbeb', fg: '#f59e0b', spark: '#f59e0b' },
+      blue: { bg: '#eff6ff', fg: '#3b82f6', spark: '#3b82f6' },
+      emerald: { bg: '#ecfdf5', fg: '#10b981', spark: '#10b981' },
+      violet: { bg: '#f5f3ff', fg: '#8b5cf6', spark: '#8b5cf6' },
+      orange: { bg: '#fff7ed', fg: '#f97316', spark: '#f97316' },
+      red: { bg: '#fef2f2', fg: '#ef4444', spark: '#ef4444' },
+    };
+    var rows = [
+      { label: 'Total orders', value: stats.totalOrders || 0, icon: 'ri-shopping-cart-2-line', theme: themes.amber, spark: o7, deltas: del, deltaKey: 'totalOrders' },
+      { label: 'Active shipments', value: stats.activeShipmentsCount || 0, icon: 'ri-truck-line', theme: themes.blue, spark: o7, deltas: del, deltaKey: 'activeShipments' },
+      { label: 'Delivered', value: stats.completedCount || 0, icon: 'ri-checkbox-circle-line', theme: themes.emerald, spark: o7, deltas: del, deltaKey: 'delivered' },
+      { label: 'In transit', value: stats.inTransitCount || 0, icon: 'ri-time-line', theme: themes.violet, spark: o7, deltas: del, deltaKey: 'inTransit' },
+      { label: 'Returns in flow', value: ret.inProcess || 0, icon: 'ri-refresh-line', theme: themes.orange, spark: r7, deltas: del, deltaKey: 'returns' },
+      { label: 'Order exceptions', value: stats.exceptionsCountInRange || 0, icon: 'ri-alert-line', theme: themes.red, spark: x7, deltas: del, deltaKey: 'exceptions' },
+    ];
+    var el = document.getElementById('adminDbKpiRow');
+    if (!el) return;
+    el.className = 'adm-db-kpi-grid';
+    el.innerHTML = rows
+      .map(function (r, i) {
+        return kpiCard(r, i * 50);
+      })
+      .join('');
+  }
+
+  function renderOperational(data) {
+    var el = document.getElementById('adminOperationalSnapshot');
+    if (!el) return;
+    var c = data.courierStats || {};
+    var sla = data.slaStats || {};
+    var issues = data.issueStats || {};
+    var rows = [
+      { label: 'Couriers online', value: c.online || 0, icon: 'ri-wifi-line', bg: '#ecfdf5', ic: '#10b981' },
+      { label: 'Avg. delivery (days)', value: sla.avgDeliveryDays != null ? sla.avgDeliveryDays : '—', icon: 'ri-timer-line', bg: '#eff6ff', ic: '#3b82f6' },
+      { label: 'Open tickets', value: issues.open || 0, icon: 'ri-question-answer-line', bg: '#fffbeb', ic: '#f59e0b' },
+      { label: 'Cancellations today', value: issues.cancellationsToday || 0, icon: 'ri-close-circle-line', bg: '#fef2f2', ic: '#ef4444' },
+    ];
+    el.innerHTML = rows
+      .map(function (m) {
+        return (
+          '<div class="adm-op-row"><div class="adm-op-left"><div class="adm-kpi-icon" style="width:1.75rem;height:1.75rem;font-size:0.85rem;background:' +
+          m.bg +
+          ';color:' +
+          m.ic +
+          '"><i class="' +
+          m.icon +
+          '"></i></div><span class="adm-op-label">' +
+          escHtml(m.label) +
+          '</span></div><span class="adm-op-value">' +
+          escHtml(String(m.value)) +
+          '</span></div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderReturns(data) {
+    var el = document.getElementById('adminReturnsExceptions');
+    if (!el) return;
+    var r = data.returnStats || {};
+    var rows = [
+      { type: 'Returns in process', count: r.inProcess || 0, note: 'In return flow' },
+      { type: 'Returns completed', count: r.completed || 0, note: '—' },
+      { type: 'Failed deliveries', count: r.failedDeliveries || 0, note: '—' },
+    ];
+    el.innerHTML = rows
+      .map(function (row) {
+        return (
+          '<div class="adm-ret-grid-r"><span class="text-secondary">' +
+          escHtml(row.type) +
+          '</span><span class="adm-ret-count ' +
+          (row.count > 0 ? 'adm-ret-count--hot' : 'adm-ret-count--muted') +
+          '">' +
+          row.count +
+          '</span><span class="text-muted" style="font-size:0.6875rem">' +
+          escHtml(row.note) +
+          '</span></div>'
+        );
+      })
+      .join('');
+  }
+
+  function statusBadgeLabel(st) {
+    var map = {
+      completed: 'Completed',
+      returnCompleted: 'Return completed',
+      new: 'New',
+      pickedUp: 'Picked up',
+      headingToCustomer: 'Heading to customer',
+      returnToWarehouse: 'Return to WH',
+      inProgress: 'In progress',
+      waitingAction: 'Awaiting action',
+      rescheduled: 'Rescheduled',
+      driverAssigned: 'Driver assigned',
+      canceled: 'Canceled',
+      terminated: 'Terminated',
+      deliveryFailed: 'Delivery failed',
+    };
+    return map[st] || String(st || '—');
+  }
+
+  function statusBadgeStyle(st) {
+    var s = String(st || '');
+    if (s === 'completed' || s === 'returnCompleted') return { bg: '#ecfdf5', fg: '#047857' };
+    if (s === 'new') return { bg: '#f1f5f9', fg: '#475569' };
+    if (s === 'pickedUp' || s === 'inProgress') return { bg: '#eff6ff', fg: '#1d4ed8' };
+    if (s === 'headingToCustomer' || s === 'driverAssigned') return { bg: '#fffbeb', fg: '#b45309' };
+    if (s.indexOf('return') === 0 || s === 'headingToYou') return { bg: '#fff7ed', fg: '#c2410c' };
+    return { bg: '#f1f5f9', fg: '#64748b' };
+  }
+
+  function renderStatusBadge(st) {
+    var c = statusBadgeStyle(st);
+    return '<span class="adm-badge" style="background:' + c.bg + ';color:' + c.fg + '">' + escHtml(statusBadgeLabel(st)) + '</span>';
+  }
+
+  function renderRecent(data) {
+    var ordersTbody = document.getElementById('adminRecentOrders');
+    var pickupsTbody = document.getElementById('adminRecentPickups');
+    var recentOrders = (data.recentData && data.recentData.recentOrders) || [];
+    var recentPickups = (data.recentData && data.recentData.recentPickups) || [];
+    if (ordersTbody) {
+      ordersTbody.innerHTML =
+        recentOrders.length === 0
+          ? '<div class="text-center py-3 text-muted small">No recent orders</div>'
+          : recentOrders
+              .map(function (o) {
+                var bn = o.businessName || '—';
+                var st = o.orderStatus || '';
+                return (
+                  '<div class="adm-ro-r"><span class="adm-ro-id">#' +
+                  escHtml(String(o.orderNumber)) +
+                  '</span><span class="adm-ro-biz">' +
+                  escHtml(bn) +
+                  '</span>' +
+                  renderStatusBadge(st) +
+                  '</div>'
+                );
+              })
+              .join('');
     }
-    // Top Governorates (bar)
-    if(document.getElementById('admin-orders-by-government')){
-      const cats = (b.byGovernment||[]).map(x=>x._id||'N/A');
-      const vals = (b.byGovernment||[]).map(x=>x.count||0);
-      new ApexCharts(document.getElementById('admin-orders-by-government'), {
-        chart:{type:'bar',height:280,toolbar:{show:false}},
-        series:[{name:'Orders',data:vals}], xaxis:{categories:cats}, colors:['#F39720']
-      }).render();
-    }
-    // Amount Types (bar)
-    if(document.getElementById('admin-amount-type')){
-      const cats = (b.amountType||[]).map(x=>x._id||'N/A');
-      const vals = (b.amountType||[]).map(x=>x.count||0);
-      new ApexCharts(document.getElementById('admin-amount-type'), {
-        chart:{type:'bar',height:260,toolbar:{show:false}}, series:[{name:'Count',data:vals}], xaxis:{categories:cats}, colors:['#405189']
-      }).render();
-    }
-    // Express breakdown (donut)
-    if(document.getElementById('admin-express-breakdown')){
-      const labels = (b.express||[]).map(x=> (x._id ? 'Express':'Standard'));
-      const series = (b.express||[]).map(x=>x.count||0);
-      new ApexCharts(document.getElementById('admin-express-breakdown'), {
-        chart:{type:'donut',height:260}, labels, series, colors:['#F39720','#6c757d']
-      }).render();
+    if (pickupsTbody) {
+      pickupsTbody.innerHTML =
+        recentPickups.length === 0
+          ? '<div class="text-center py-3 text-muted small">No recent pickups</div>'
+          : recentPickups
+              .map(function (p) {
+                var ps = p.pickupStatus != null ? p.pickupStatus : p.picikupStatus;
+                var d = p.pickupDate ? new Date(p.pickupDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+                return (
+                  '<div class="adm-ro-r"><span class="adm-ro-id">#' +
+                  escHtml(String(p.pickupNumber)) +
+                  '</span><span class="adm-ro-biz">' +
+                  escHtml(d) +
+                  '</span>' +
+                  renderStatusBadge(ps) +
+                  '</div>'
+                );
+              })
+              .join('');
     }
   }
 
-  function renderAdminAuxCharts(data){
-    // Courier Assignments (horizontal bar)
-    if(document.getElementById('admin-courier-assignments')){
-      const items = data.courierStats?.assignments30d || [];
-      const cats = items.map(i=>String(i._id).slice(-6));
-      const vals = items.map(i=>i.count||0);
-      new ApexCharts(document.getElementById('admin-courier-assignments'), {
-        chart:{type:'bar',height:300,toolbar:{show:false}},
-        plotOptions:{bar:{horizontal:true}},
-        series:[{name:'Assignments',data:vals}], xaxis:{categories:cats}, colors:['#299cdb']
-      }).render();
+  function renderHeatmapHtml(d) {
+    var el = document.getElementById('admin-order-heatmap');
+    if (!el) return;
+    var raw = d.heatmap || [];
+    var hours = ['0:00', '3:00', '6:00', '9:00', '12:00', '15:00', '18:00', '21:00'];
+    var bins = 8;
+    var dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    var matrix = [];
+    for (var di = 0; di < 7; di++) matrix.push(new Array(bins).fill(0));
+    raw.forEach(function (cell) {
+      var dow = cell.dow;
+      var hour = cell.hour;
+      if (dow == null || hour == null) return;
+      var mon0 = (dow + 5) % 7;
+      var bin = Math.min(bins - 1, Math.floor(hour / 3));
+      if (mon0 >= 0 && mon0 < 7) matrix[mon0][bin] += cell.count || 0;
+    });
+    var flat = [];
+    for (var a = 0; a < 7; a++) for (var b = 0; b < bins; b++) flat.push(matrix[a][b]);
+    var maxVal = Math.max.apply(null, flat.concat([0]));
+    function cellColor(val) {
+      if (!maxVal || val === 0) return '#f8fafc';
+      var r = val / maxVal;
+      if (r < 0.25) return '#fef3c7';
+      if (r < 0.5) return '#fde68a';
+      if (r < 0.75) return '#fcd34d';
+      if (r < 0.9) return '#fbbf24';
+      return '#f59e0b';
     }
-    // Returns monthly (line)
-    if(document.getElementById('admin-returns-monthly')){
-      const items = data.returnStats?.monthly || [];
-      const cats = items.map(i=> `${i._id.y}-${String(i._id.m).padStart(2,'0')}` ).reverse();
-      const vals = items.map(i=> i.count||0).reverse();
-      new ApexCharts(document.getElementById('admin-returns-monthly'), {
-        chart:{type:'line',height:300,toolbar:{show:false}},
-        stroke:{curve:'smooth',width:3}, series:[{name:'Returns',data:vals}], xaxis:{categories:cats}, colors:['#f06548']
-      }).render();
+    function textColor(val) {
+      if (!maxVal || val === 0) return 'transparent';
+      var r = val / maxVal;
+      return r > 0.45 ? '#92400e' : '#78350f';
     }
+    var hourRow =
+      '<div class="adm-hm-hour-row">' +
+      hours
+        .map(function (h) {
+          return '<div class="adm-hm-hour-cell">' + h + '</div>';
+        })
+        .join('') +
+      '</div>';
+    var body = dayLabels
+      .map(function (day, di) {
+        var cells = matrix[di]
+          .map(function (val, hi) {
+            var title = day + ' ' + hours[hi] + ': ' + val + ' orders';
+            var show = val > 0;
+            return (
+              '<div class="adm-hm-cell" style="background-color:' +
+              cellColor(val) +
+              '" title="' +
+              escHtml(title) +
+              '">' +
+              (show
+                ? '<span class="adm-hm-cell-val" style="color:' + textColor(val) + '">' + val + '</span>'
+                : '') +
+              '</div>'
+            );
+          })
+          .join('');
+        return '<div class="adm-hm-day-row"><div class="adm-hm-day-label">' + day + '</div>' + cells + '</div>';
+      })
+      .join('');
+    el.innerHTML = hourRow + body;
   }
+
+  function renderTopBusinessesTable(data) {
+    var body = document.getElementById('adminTopBusinessesBody');
+    var note = document.getElementById('adminScoreNote');
+    var bp = data.businessPerformance || {};
+    var rows = bp.topBusinessesTable || [];
+    if (note && data.meta && data.meta.scoreNote) note.textContent = data.meta.scoreNote;
+    if (!body) return;
+    if (!rows.length) {
+      body.innerHTML = '<div class="text-center py-4 text-muted small">No businesses with orders in this range.</div>';
+      return;
+    }
+    var rankCls = ['adm-tb-row--gold', 'adm-tb-row--slate', 'adm-tb-row--orange'];
+    body.innerHTML = rows
+      .map(function (b, idx) {
+        var rk = b.rank || idx + 1;
+        var rowClass = rk <= 3 ? rankCls[rk - 1] : '';
+        var sr = b.successRatePercent != null ? b.successRatePercent : b.completionRate;
+        var sc = b.score != null && b.score >= 50 ? 'adm-tb-cell--score-good' : 'adm-tb-cell--score-bad';
+        var rankStyle = rk === 1 ? 'color:#f59e0b' : rk === 2 ? 'color:#94a3b8' : rk === 3 ? 'color:#ea580c' : '';
+        return (
+          '<div class="adm-tb-row ' +
+          rowClass +
+          '"><span class="adm-tb-cell adm-tb-cell--rank" style="' +
+          rankStyle +
+          '">' +
+          rk +
+          '</span><span class="adm-tb-cell adm-tb-cell--name">' +
+          escHtml(b.businessName || '—') +
+          '</span><span class="adm-tb-cell">' +
+          (b.totalOrders || 0) +
+          '</span><span class="adm-tb-cell">' +
+          (b.completed || 0) +
+          '</span><span class="adm-tb-cell">' +
+          sr +
+          '</span><span class="adm-tb-cell">' +
+          (b.revenue != null ? b.revenue : '0') +
+          '</span><span class="adm-tb-cell">' +
+          (b.badRate != null ? b.badRate : '—') +
+          '</span><span class="adm-tb-cell ' +
+          sc +
+          '">' +
+          (b.score != null ? b.score : '—') +
+          '</span></div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderBottomCards(data) {
+    var wrap = document.getElementById('adminBottomBusinessesWrap');
+    var minEl = document.getElementById('adminMinRankOrders');
+    var bp = data.businessPerformance || {};
+    var bottom = bp.bottomBusinesses || [];
+    if (minEl) minEl.textContent = String(bp.minOrdersForRanking || 5);
+    if (!wrap) return;
+    if (!bottom.length) {
+      wrap.innerHTML =
+        '<p class="text-muted small mb-0">No businesses meet the minimum orders for ranking in this range.</p>';
+      return;
+    }
+    wrap.innerHTML = bottom
+      .map(function (b) {
+        var sr = b.successRatePercent != null ? b.successRatePercent : b.completionRate;
+        return (
+          '<div class="adm-attn-row"><div><p class="adm-attn-name">' +
+          escHtml(b.businessName || '—') +
+          '</p><p class="adm-attn-meta">' +
+          (b.totalOrders || 0) +
+          ' orders · ' +
+          sr +
+          '% success</p></div><div><div class="adm-attn-score">' +
+          (b.score != null ? b.score : '—') +
+          '</div><div class="adm-attn-score-lbl">score</div></div></div>'
+        );
+      })
+      .join('');
+  }
+
+  function updateMeta(d) {
+    var lu = document.getElementById('adminDashLastUpdated');
+    var rl = document.getElementById('adminDashRangeLabel');
+    var tzEl = document.getElementById('adminHeatmapTz');
+    var cn = document.getElementById('adminCourierChartNote');
+    if (lu) lu.textContent = 'Last updated: ' + new Date().toLocaleString();
+    if (rl && d.meta && d.meta.rangeLabelHuman) rl.textContent = d.meta.rangeLabelHuman;
+    if (tzEl && d.meta && d.meta.heatmapTimezone) tzEl.textContent = d.meta.heatmapTimezone;
+    if (cn && d.meta && d.meta.courierLoadNote) cn.textContent = d.meta.courierLoadNote;
+  }
+
+  window.loadAdminDashboardData = async function () {
+    try {
+      var res = await fetch('/admin/dashboard-data?range=' + encodeURIComponent(currentRange));
+      var json = await res.json();
+      if (json.status !== 'success' || !json.dashboardData) throw new Error('bad response');
+      var d = json.dashboardData;
+      updateMeta(d);
+      renderKpis(d);
+      renderOperational(d);
+      renderReturns(d);
+      renderRecent(d);
+      renderTopBusinessesTable(d);
+      renderBottomCards(d);
+      renderHeatmapHtml(d);
+      if (window.AdminDashboardCharts && typeof window.AdminDashboardCharts.render === 'function') {
+        window.AdminDashboardCharts.render(d);
+      }
+    } catch (e) {
+      if (window.AdminDashboardCharts && typeof window.AdminDashboardCharts.destroy === 'function') {
+        window.AdminDashboardCharts.destroy();
+      }
+      var hm = document.getElementById('admin-order-heatmap');
+      if (hm) hm.innerHTML = '';
+      var row = document.getElementById('adminDbKpiRow');
+      if (row) row.innerHTML = '<div class="col-12 text-center py-5 text-danger">Failed to load dashboard.</div>';
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var pills = document.querySelectorAll('#adminRangePills .adm-db-range-pill[data-range]');
+    pills.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        pills.forEach(function (p) {
+          p.classList.remove('active');
+        });
+        btn.classList.add('active');
+        currentRange = btn.getAttribute('data-range') || '30d';
+        window.loadAdminDashboardData();
+      });
+    });
+    var ref = document.getElementById('adminDashRefresh');
+    if (ref) ref.addEventListener('click', function () {
+      window.loadAdminDashboardData();
+    });
+    window.loadAdminDashboardData();
+  });
+})();
 </script>

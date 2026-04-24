@@ -190,32 +190,6 @@
                   <input type="hidden" name="COD" id="COD-input" value="">
                   <input type="hidden" name="isExpressShipping" id="isExpressShipping-input" value="">
 
-                  <!-- Express: business pickup (courier collection point) — Deliver only -->
-                  <div class="co-collapsible" id="co-express-pickup-wrap" style="display:none;">
-                    <div class="co-field" style="margin-top:0.75rem;">
-                      <label class="co-field__label" for="selectedPickupAddressId">
-                        <%= Co.selectPickupLabel || 'Select pickup address' %> <span class="co-required">*</span>
-                      </label>
-                      <% if (_coPickupAddrs.length) { %>
-                      <select class="co-input" id="selectedPickupAddressId" name="selectedPickupAddressId" dir="auto">
-                        <option value=""><%= Co.selectPickupPlaceholder || 'Select pickup address...' %></option>
-                        <% _coPickupAddrs.forEach(function (a) {
-                          var aid = a.addressId || '';
-                        %>
-                        <option value="<%= aid %>"<% if (a.isDefault) { %> data-co-default="1"<% } %>><%=
-                          (a.addressName || 'Address') + (a.city ? ' — ' + a.city : '')
-                        %></option>
-                        <% }); %>
-                      </select>
-                      <div class="co-field-error" id="err-selectedPickup"><%= Co.errSelectPickup || Cj.errSelectPickup || 'Please select a pickup address for express shipping.' %></div>
-                      <% } else { %>
-                      <p class="co-field-hint co-field-hint--show co-field-hint--muted" id="co-express-pickup-missing">
-                        <%= Co.expressNoPickupAddress || 'Add a business pickup address in Settings to use express shipping.' %>
-                      </p>
-                      <% } %>
-                    </div>
-                  </div>
-
                   <!-- COD Amount (collapsible) -->
                   <div class="co-collapsible" id="co-cod-amount-wrap">
                     <div class="co-field" style="margin-top:0.75rem;">
@@ -410,6 +384,32 @@
               </div>
                   </div><!-- /#co-partial-return-block -->
                 </div><!-- /#co-section-return -->
+
+                <!-- Business pickup / return-to-business (Deliver, Exchange, Return) -->
+                <div class="co-collapsible" id="co-business-pickup-wrap" style="display:none;">
+                  <div class="co-field" style="margin-top:1rem;">
+                    <label class="co-field__label" for="selectedPickupAddressId">
+                      <span id="co-business-pickup-label-text"><%= Co.businessPickupLabel || Co.selectPickupLabel || 'Business pickup address' %></span><span id="co-business-pickup-required" class="co-required" style="display:none;">*</span>
+                    </label>
+                    <% if (_coPickupAddrs.length) { %>
+                    <select class="co-input" id="selectedPickupAddressId" name="selectedPickupAddressId" dir="auto">
+                      <option value=""><%= Co.selectPickupPlaceholder || 'Select pickup address...' %></option>
+                      <% _coPickupAddrs.forEach(function (a) {
+                        var aid = a.addressId || '';
+                      %>
+                      <option value="<%= aid %>"<% if (a.isDefault) { %> data-co-default="1"<% } %>><%=
+                        (a.addressName || 'Address') + (a.city ? ' — ' + a.city : '')
+                      %></option>
+                      <% }); %>
+                    </select>
+                    <div class="co-field-error" id="err-selectedPickup"><%= Co.errBusinessPickup || Co.errSelectPickup || Cj.errSelectPickup || 'Please select a business pickup address.' %></div>
+                    <% } else { %>
+                    <p class="co-field-hint co-field-hint--show co-field-hint--muted" id="co-business-pickup-missing">
+                      <%= Co.businessPickupNoAddress || Co.expressNoPickupAddress || 'Add a business pickup address in Settings.' %>
+                    </p>
+                    <% } %>
+                  </div>
+                </div>
 
               </div><!-- /#co-delivery-details -->
             </div><!-- /#co-step-1 -->

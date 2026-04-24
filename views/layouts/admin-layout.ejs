@@ -1,35 +1,41 @@
 <!doctype html>
-<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
+<html lang="<%= typeof currentLang !== 'undefined' ? currentLang : 'en' %>" dir="<%= typeof direction !== 'undefined' ? direction : 'ltr' %>" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
 
 <head>
-
+  <script>
+    (function () {
+      try {
+        if (typeof matchMedia !== 'undefined' && matchMedia('(min-width: 1025px)').matches) {
+          var s = sessionStorage.getItem('data-sidebar-size');
+          if (s === 'sm' || s === 'lg') {
+            document.documentElement.setAttribute('data-sidebar-size', s);
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta charset="utf-8" />
-  <title>Starter | Now Shipping</title>
+  <title><%= typeof page_title !== 'undefined' && page_title ? page_title + ' | ' : '' %>Admin | Now Shipping</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta content="Professional shipping services - fast and reliable delivery for your cargo." name="description" />
-<meta content="Now Shipping" name="author" />
+  <meta content="Professional shipping services - fast and reliable delivery for your cargo." name="description" />
+  <meta content="Now Shipping" name="author" />
 
-  <!-- App favicon -->
   <link rel="shortcut icon" href="/assets/rImages/mainlogospining.png">
-<%- HeaderCss%>
+  <%- typeof HeaderCss !== 'undefined' ? HeaderCss : '' %>
   <%- include ('../partials/head-css.ejs') %>
+  <link rel="stylesheet" href="/assets/rCSS/business-layout.css" />
+  <link rel="stylesheet" href="/assets/rCSS/business-sidebar.css" />
   <link href="/assets/css/admin-tables.css" rel="stylesheet" type="text/css" />
-
 
 </head>
 
-<body>
+<body class="admin-app <%= typeof isRTL !== 'undefined' && isRTL ? 'lang-ar rtl' : 'lang-en ltr' %>">
 
-  <!-- Begin page -->
   <div id="layout-wrapper">
 
     <%- include ('../partials/topbar') %>
-    <%- include ('../partials/sidebar-manage') %>
-    <!-- Left Sidebar End -->
- 
-    <!-- ============================================================== -->
-    <!-- Start right Content here -->
-    <!-- ============================================================== -->
+    <%- include ('../admin/partials/sidebar') %>
+
     <div class="main-content">
 
       <div class="page-content">
@@ -38,18 +44,14 @@
           <%- body%>
 
         </div>
-        <!-- container-fluid -->
       </div>
-      <!-- End Page-content -->
     </div>
-    <!-- end main content-->
 
   </div>
-  <!-- END layout-wrapper -->
-
 
   <%- include ('../partials/vendor-scripts') %>
   <script src="/assets/rJS/admin/admin-table-dropdowns.js"></script>
+  <script src="/assets/rJS/business/main.js" defer></script>
   <%- typeof FooterJs !== 'undefined' ? FooterJs : '' %>
 </body>
 

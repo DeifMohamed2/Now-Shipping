@@ -186,28 +186,67 @@ async function sendVerificationEmail(user, token) {
   }
 }
 
+const EMAIL_VERIFIED_STATUSES = new Set(['success', 'invalid', 'expired', 'error']);
+
 const verifyEmailBytoken = async (req, res) => {
     const token = req.query.token;
+    if (!token || typeof token !== 'string' || token.length > 128) {
+        return res.redirect('/email-verified?status=invalid');
+    }
     try {
         const user = await User.findOne({ verificationToken: token });
         if (!user) {
-            return res.status(400).redirect('/business/dashboard');
+            return res.redirect('/email-verified?status=invalid');
         }
 
         if (user.verifyEmail(token)) {
             await user.save();
-            return res.status(200).redirect('/business/dashboard');
+            return res.redirect('/email-verified?status=success');
         }
 
-        return res.status(400).redirect('/business/dashboard');
-
+        return res.redirect('/email-verified?status=expired');
     } catch (err) {
-        res.status(500).json({
-            status: 'error',
-            message: 'An error occurred'
-        });
+        console.error('verifyEmailBytoken:', err);
+        return res.redirect('/email-verified?status=error');
     }
-}
+};
+
+/** Public result page after clicking the email verification link (works without a session). */
+const emailVerifiedPage = (req, res) => {
+    const lang = req.query.lang || req.cookies.language || 'en';
+    const raw = (req.query.status || '').toString().toLowerCase();
+    const status = EMAIL_VERIFIED_STATUSES.has(raw) ? raw : 'invalid';
+
+    let sessionContinue = null;
+    if (status === 'success' && req.cookies.token) {
+        try {
+            const decoded = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
+            const role = (decoded.role || '').toString();
+            if (decoded.userId && /^business$/i.test(role)) {
+                sessionContinue = { href: '/business/dashboard' };
+            }
+        } catch (_) {
+            /* not a valid business session */
+        }
+    }
+
+    const ev = (res.locals.translation && res.locals.translation.auth && res.locals.translation.auth.emailVerified) || {};
+    const titleMap = {
+        success: ev.pageTitleSuccess || 'Email verified',
+        invalid: ev.pageTitleInvalid || 'Verification link',
+        expired: ev.pageTitleExpired || 'Link expired',
+        error: ev.pageTitleError || 'Something went wrong',
+    };
+
+    return res.render('auth/email-verified', {
+        title: titleMap[status] || titleMap.invalid,
+        layout: 'layouts/layout-without-nav',
+        currentLang: lang,
+        verificationStatus: status,
+        sessionContinue,
+        translation: res.locals.translation,
+    });
+};
 
 const loginPage = (req, res) => {
     const lang = req.query.lang || req.cookies.language || 'en';
@@ -765,6 +804,7 @@ module.exports = {
   signup,
   login,
   verifyEmailBytoken,
+  emailVerifiedPage,
   sendOTP,
   createAdminAccount,
   loginAsAdmin,

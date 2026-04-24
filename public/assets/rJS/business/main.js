@@ -166,6 +166,20 @@
       topnavHamburgerIcon.addEventListener('click', toggleHamburgerIcon);
     }
 
+    /** Full navigation — avoids cases where theme/Velzon handlers block default on sidebar links. */
+    document.querySelectorAll('a[data-ns-logout="1"][href]').forEach(function (el) {
+      el.addEventListener(
+        'click',
+        function (e) {
+          var href = el.getAttribute('href');
+          if (!href) return;
+          e.preventDefault();
+          window.location.assign(href);
+        },
+        true
+      );
+    });
+
     document.querySelector('.vertical-overlay')?.addEventListener('click', function () {
       closeMobileSidebar();
       const layout = document.documentElement.getAttribute('data-layout');

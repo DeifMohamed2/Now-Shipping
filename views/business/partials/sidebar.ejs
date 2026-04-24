@@ -79,7 +79,7 @@
         <span class="align-middle"><%= BS.myWallet || 'My Wallet' %></span>
       </a>
       <div class="dropdown-divider my-2 ns-dd-divider"></div>
-      <a class="dropdown-item d-flex align-items-center px-3 py-2 ns-dd-item ns-dd-item--danger" href="/business/logout">
+      <a class="dropdown-item d-flex align-items-center px-3 py-2 ns-dd-item ns-dd-item--danger" href="/business/logout" data-ns-logout="1">
         <i class="ri-logout-box-r-line fs-16 align-middle me-2"></i>
         <span class="align-middle fw-semibold"><%= BS.logoutNav || 'Logout' %></span>
       </a>
@@ -164,7 +164,7 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link menu-link ns-link ns-link--logout" href="/business/logout" role="button">
+          <a class="nav-link menu-link ns-link ns-link--logout" href="/business/logout" data-ns-logout="1">
             <i class="ri-logout-box-line ns-icon"></i>
             <span><%= BS.logOut || 'Log Out' %></span>
           </a>

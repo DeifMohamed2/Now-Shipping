@@ -101,6 +101,9 @@ async function authenticateUser(req, res, next) {
   }
 }
 
+/** Public: must run before authenticateUser so logout always clears the session cookie. */
+router.get('/logout', businessController.logOut);
+
 router.use(authenticateUser);
 
 // Define routes
@@ -298,8 +301,5 @@ router.post('/assistant/preferences', assistantController.updatePreferences);
 router.get('/assistant/conversation', assistantController.getConversation);
 router.post('/assistant/send', assistantController.sendMessage);
 router.post('/assistant/clear', assistantController.clearConversation);
-
-//logout
-router.get('/logout', businessController.logOut);
 
 module.exports = router;

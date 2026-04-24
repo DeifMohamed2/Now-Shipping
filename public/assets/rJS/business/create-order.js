@@ -458,6 +458,30 @@ var __NSCO =
         if (!ok && cur) cur.focus();
       }
 
+      if (state.orderType === 'Return') {
+        var pcR = typeof window !== 'undefined' && window.__CO_PICKUP_ADDR_COUNT != null
+          ? Number(window.__CO_PICKUP_ADDR_COUNT) : 0;
+        if (pcR < 1) {
+          Swal.fire({
+            icon: 'warning',
+            title: t('expressPickupRequiredTitle', 'Pickup address required'),
+            text: t('businessPickupNoAddress', 'Add a business pickup address in Settings before creating a return.'),
+            confirmButtonColor: '#F97316',
+          });
+          ok = false;
+        } else {
+          ensureDefaultPickupSelection();
+          var pSelR = el('selectedPickupAddressId');
+          if (pSelR && pSelR.tagName === 'SELECT' && !pSelR.value) {
+            pSelR.classList.add('is-error');
+            var erR = el('err-selectedPickup');
+            if (erR) erR.classList.add('co-field-error--show');
+            ok = false;
+            pSelR.focus();
+          }
+        }
+      }
+
       if (state.orderType === 'Deliver' && state.expressShipping) {
         var pc = typeof window !== 'undefined' && window.__CO_PICKUP_ADDR_COUNT != null
           ? Number(window.__CO_PICKUP_ADDR_COUNT) : 0;
@@ -470,6 +494,7 @@ var __NSCO =
           });
           ok = false;
         } else {
+          ensureDefaultPickupSelection();
           var pSel = el('selectedPickupAddressId');
           if (pSel && pSel.tagName === 'SELECT' && !pSel.value) {
             pSel.classList.add('is-error');
@@ -610,6 +635,7 @@ var __NSCO =
     }
     syncExpressToggle();
     updatePartialReturnBlockVisibility();
+    updateBusinessPickupVisibility();
     updateSummary();
   };
 
@@ -661,20 +687,24 @@ var __NSCO =
     if (first) sel.value = first.value;
   }
 
-  /** Business pickup (collection) — shown only for Deliver + express. */
-  function updateExpressPickupVisibility() {
-    var wrap = el('co-express-pickup-wrap');
+  /** Business pickup / return-to-business — Deliver, Exchange, Return. */
+  function updateBusinessPickupVisibility() {
+    var wrap = el('co-business-pickup-wrap');
     if (!wrap) return;
-    var show = state.orderType === 'Deliver' && state.expressShipping;
+    var t = state.orderType;
+    var show = t === 'Deliver' || t === 'Exchange' || t === 'Return';
     if (show) {
       wrap.classList.add('co-collapsible--open');
       wrap.style.removeProperty('display');
+      ensureDefaultPickupSelection();
     } else {
       wrap.classList.remove('co-collapsible--open');
       wrap.style.display = 'none';
     }
-    if (show) {
-      ensureDefaultPickupSelection();
+    var reqStar = el('co-business-pickup-required');
+    if (reqStar) {
+      reqStar.style.display =
+        t === 'Return' || (t === 'Deliver' && state.expressShipping) ? '' : 'none';
     }
     var err = el('err-selectedPickup');
     if (err) {
@@ -689,7 +719,7 @@ var __NSCO =
     if (inp) inp.value = state.expressShipping ? 'on' : '';
     // Deliver only — exchange no longer has a separate express control
     setToggleCard(el('co-express-toggle'), state.expressShipping);
-    updateExpressPickupVisibility();
+    updateBusinessPickupVisibility();
   }
 
   window.coToggleCOD = function () {
@@ -1097,7 +1127,7 @@ var __NSCO =
     if (pSelR && pSelR.tagName === 'SELECT') {
       pSelR.selectedIndex = 0;
     }
-    updateExpressPickupVisibility();
+    updateBusinessPickupVisibility();
     updatePartialReturnBlockVisibility();
 
     // Reset area button
@@ -1145,7 +1175,7 @@ var __NSCO =
         if (er) er.classList.remove('co-field-error--show');
       });
     }
-    updateExpressPickupVisibility();
+    updateBusinessPickupVisibility();
     updatePartialReturnBlockVisibility();
 
     // When step 3 becomes active, recalculate fees

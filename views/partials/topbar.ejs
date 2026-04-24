@@ -460,7 +460,7 @@
             </a>
             <div class="dropdown-divider"></div>
             <% } %>
-            <a class="dropdown-item topbar-dropdown-item text-danger" href="<% if ((typeof courierData !== 'undefined' && courierData) || (typeof courier !== 'undefined' && courier)) { %>/courier/logout<% } else if (typeof adminData !== 'undefined' && adminData) { %>/admin/logout<% } else { %>/business/logout<% } %>">
+            <a class="dropdown-item topbar-dropdown-item text-danger" data-ns-logout="1" href="<% if ((typeof courierData !== 'undefined' && courierData) || (typeof courier !== 'undefined' && courier)) { %>/courier/logout<% } else if (typeof adminData !== 'undefined' && adminData) { %>/admin/logout<% } else { %>/business/logout<% } %>">
               <i class="ri-logout-box-r-line fs-16 align-middle me-2"></i>
               <span class="align-middle fw-semibold" data-key="t-logout"><%= __BS.logOut || 'Logout' %></span>
             </a>

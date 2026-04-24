@@ -9,6 +9,38 @@ const { emailService } = require('../utils/email');
 const firebase = require('../config/firebase');
 const { sendSms } = require('../utils/sms');
 const bcrypt = require('bcrypt');
+const { resolvePickupAddressForOrder } = require('../utils/pickupAddressResolve');
+
+/** Business fields needed to resolve default pickup for courier/mobile JSON. */
+const BUSINESS_PICKUP_POPULATE_SELECT =
+  'businessName email phone address pickUpAddresses brandInfo name';
+
+/**
+ * Sets `selectedPickupAddress` and fills `selectedPickupAddressId` when missing
+ * (effective id = stored id or business default). Mutates plain object.
+ * @param {Record<string, unknown>|null|undefined} orderPlain
+ * @param {import('mongoose').Document|object|null|undefined} businessDoc
+ */
+function attachEffectivePickupToOrderPlain(orderPlain, businessDoc) {
+  if (!orderPlain) return;
+  const { addressId, address } = resolvePickupAddressForOrder(
+    { selectedPickupAddressId: orderPlain.selectedPickupAddressId },
+    businessDoc
+  );
+  orderPlain.selectedPickupAddress = address || null;
+  if (addressId) {
+    orderPlain.selectedPickupAddressId =
+      orderPlain.selectedPickupAddressId || addressId;
+  }
+  // Do not ship full pickUpAddresses on embedded business — client uses selectedPickupAddress.
+  if (
+    orderPlain.business &&
+    typeof orderPlain.business === 'object' &&
+    orderPlain.business.pickUpAddresses
+  ) {
+    delete orderPlain.business.pickUpAddresses;
+  }
+}
 
 /** Courier browser UI removed — use mobile app + `/api/v1/courier` (Bearer JWT). */
 const respondCourierWebDeprecated = (req, res) => {
@@ -320,7 +352,7 @@ const getReturnOrderDetails = async (req, res) => {
       'orderShipping.orderType': 'Return',
     })
       .populate('deliveryMan', 'name phone email')
-      .populate('business', 'businessName email phone address')
+      .populate('business', BUSINESS_PICKUP_POPULATE_SELECT)
       .populate(
         'orderShipping.linkedDeliverOrder',
         'orderNumber orderStatus orderCustomer'
@@ -362,8 +394,14 @@ const getReturnOrderDetails = async (req, res) => {
       ...order.orderStages[stage]?.toObject(),
     }));
 
+    const orderPlain = order.toObject();
+    if (orderPlain.returnOtp && orderPlain.returnOtp.otpHash) {
+      delete orderPlain.returnOtp.otpHash;
+    }
+    attachEffectivePickupToOrderPlain(orderPlain, order.business);
+
     const responseData = {
-      order: order,
+      order: orderPlain,
       progressPercentage,
       stageTimeline,
       currentStage: getCurrentReturnStage(order.orderStatus),
@@ -419,14 +457,11 @@ const get_orderDetails= async (req, res) => {
     return respondCourierWebDeprecated(req, res);
     }
     
-    // Get selected pickup address if order has selectedPickupAddressId
-    let selectedPickupAddress = null;
-    if (order.selectedPickupAddressId && order.business && order.business.pickUpAddresses) {
-      selectedPickupAddress = order.business.pickUpAddresses.find(
-        addr => addr.addressId === order.selectedPickupAddressId
-      );
-    }
-    
+    const { address: selectedPickupAddress } = resolvePickupAddressForOrder(
+      order,
+      order.business
+    );
+
     // Enhance order with partial return information
     const enhancedOrder = {
       ...order.toObject(),
@@ -438,10 +473,20 @@ const get_orderDetails= async (req, res) => {
         remainingItemsDescription: order.orderShipping.remainingItemsDescription
       } : null
     };
+    attachEffectivePickupToOrderPlain(enhancedOrder, order.business);
+    if (enhancedOrder.returnOtp && enhancedOrder.returnOtp.otpHash) {
+      delete enhancedOrder.returnOtp.otpHash;
+    }
+    if (enhancedOrder.deliveryOtp && enhancedOrder.deliveryOtp.otpHash) {
+      delete enhancedOrder.deliveryOtp.otpHash;
+    }
 
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
-      return res.status(200).json({ order: enhancedOrder, selectedPickupAddress: selectedPickupAddress });
+      return res.status(200).json({
+        order: enhancedOrder,
+        selectedPickupAddress: selectedPickupAddress || enhancedOrder.selectedPickupAddress,
+      });
     }
     return respondCourierWebDeprecated(req, res);
   } catch (error) {
@@ -1671,7 +1716,7 @@ const pickupReturn = async (req, res) => {
     // Reload for API + mobile: full row so the app can switch to "Deliver to warehouse" without a second GET
     const populatedReturn = await Order.findById(order._id)
       .populate('deliveryMan', 'name phone email')
-      .populate('business', 'brandInfo.brandName email phone address')
+      .populate('business', BUSINESS_PICKUP_POPULATE_SELECT)
       .populate(
         'orderShipping.linkedDeliverOrder',
         'orderNumber orderStatus orderCustomer'
@@ -1724,6 +1769,7 @@ const pickupReturn = async (req, res) => {
               populatedReturn.orderShipping.partialReturnItemCount,
           }
         : null;
+      attachEffectivePickupToOrderPlain(orderForClient, populatedReturn.business);
     }
 
     // Courier push: advance UI to warehouse leg without requiring pull-to-refresh
@@ -1877,16 +1923,29 @@ const deliverReturnToWarehouse = async (req, res) => {
     });
 
     await order.save();
-    
+
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      const fresh = await Order.findById(order._id)
+        .populate('deliveryMan', 'name phone email')
+        .populate('business', BUSINESS_PICKUP_POPULATE_SELECT)
+        .populate(
+          'orderShipping.linkedDeliverOrder',
+          'orderNumber orderStatus orderCustomer'
+        )
+        .exec();
+      const orderOut = fresh ? fresh.toObject() : order.toObject();
+      if (orderOut.returnOtp && orderOut.returnOtp.otpHash) {
+        delete orderOut.returnOtp.otpHash;
+      }
+      attachEffectivePickupToOrderPlain(orderOut, fresh ? fresh.business : null);
       return res.status(200).json({
         message: 'Return delivered to warehouse successfully',
-        order: order,
+        order: orderOut,
         nextAction: 'Wait for admin inspection and processing',
       });
     }
-    
+
     // For web requests, redirect back to return details
     return respondCourierWebDeprecated(req, res);
   } catch (error) {
@@ -2114,13 +2173,26 @@ const completeReturnToBusiness = async (req, res) => {
     
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
+      const fresh = await Order.findById(order._id)
+        .populate('deliveryMan', 'name phone email')
+        .populate('business', BUSINESS_PICKUP_POPULATE_SELECT)
+        .populate(
+          'orderShipping.linkedDeliverOrder',
+          'orderNumber orderStatus orderCustomer'
+        )
+        .exec();
+      const orderOut = fresh ? fresh.toObject() : order.toObject();
+      if (orderOut.returnOtp && orderOut.returnOtp.otpHash) {
+        delete orderOut.returnOtp.otpHash;
+      }
+      attachEffectivePickupToOrderPlain(orderOut, fresh ? fresh.business : null);
       return res.status(200).json({
         message: 'Return completed successfully',
-        order: order,
+        order: orderOut,
         completionDate: order.completedDate,
       });
     }
-    
+
     // For web requests, redirect back to return details
     return respondCourierWebDeprecated(req, res);
   } catch (error) {
@@ -2181,14 +2253,11 @@ const get_pickupDetails = async (req, res) => {
     return respondCourierWebDeprecated(req, res);
     }
     
-    // Get selected pickup address if pickup has pickupAddressId
-    let selectedPickupAddress = null;
-    if (pickup.pickupAddressId && pickup.business && pickup.business.pickUpAddresses) {
-      selectedPickupAddress = pickup.business.pickUpAddresses.find(
-        addr => addr.addressId === pickup.pickupAddressId
-      );
-    }
-    
+    const { address: selectedPickupAddress } = resolvePickupAddressForOrder(
+      { selectedPickupAddressId: pickup.pickupAddressId },
+      pickup.business
+    );
+
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(200).json({ pickup: pickup, selectedPickupAddress: selectedPickupAddress });
@@ -2233,14 +2302,11 @@ const get_picked_up_orders = async (req, res) => {
     return respondCourierWebDeprecated(req, res);
     }
     
-    // Get selected pickup address if pickup has pickupAddressId
-    let selectedPickupAddress = null;
-    if (pickup.pickupAddressId && pickup.business && pickup.business.pickUpAddresses) {
-      selectedPickupAddress = pickup.business.pickUpAddresses.find(
-        addr => addr.addressId === pickup.pickupAddressId
-      );
-    }
-    
+    const { address: selectedPickupAddress } = resolvePickupAddressForOrder(
+      { selectedPickupAddressId: pickup.pickupAddressId },
+      pickup.business
+    );
+
     // Check if request expects JSON response (API call)
     if (req.headers.accept && req.headers.accept.includes('application/json')) {
       return res.status(200).json({ orders: pickup.ordersPickedUp, selectedPickupAddress: selectedPickupAddress });

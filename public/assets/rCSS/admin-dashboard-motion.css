@@ -1,0 +1,86 @@
+/* Admin dashboard — motion only (keyframes + entrance classes). Loaded after tokens. */
+
+@keyframes admin-db-shimmer {
+  0% {
+    background-position: -600px 0;
+  }
+  100% {
+    background-position: 600px 0;
+  }
+}
+
+@keyframes admin-ns-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-ns-fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-ns-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes admin-db-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.admin-dash .db-header {
+  animation: admin-ns-fade-in-down 0.45s ease both;
+}
+
+.admin-dash .ns-fade-in-up {
+  animation: admin-ns-fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--anim-delay, 0ms);
+}
+
+.admin-dash .ns-chart-entry {
+  animation: admin-ns-fade-in-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--anim-delay, 0ms);
+}
+
+.admin-dash .ns-kpi-col {
+  animation: admin-ns-fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--anim-delay, 0ms);
+}
+
+.admin-dash .db-spin {
+  animation: admin-db-rotate 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dash .db-header,
+  .admin-dash .ns-fade-in-up,
+  .admin-dash .ns-chart-entry,
+  .admin-dash .ns-kpi-col {
+    animation: none !important;
+  }
+
+  .admin-dash .db-kpi-card:hover,
+  .admin-dash .db-btn-create:hover {
+    transform: none !important;
+  }
+}

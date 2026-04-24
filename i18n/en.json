@@ -272,6 +272,23 @@
       "accountCreated": "Account created successfully. Please check your email for verification.",
       "verificationSent": "Verification email sent. Please check your inbox."
     },
+    "emailVerified": {
+      "pageTitleSuccess": "Email verified",
+      "pageTitleInvalid": "Verification link",
+      "pageTitleExpired": "Link expired",
+      "pageTitleError": "Verification error",
+      "successTitle": "Your email is verified",
+      "successSubtitle": "You can sign in on the web or continue in the mobile app with your account.",
+      "invalidTitle": "This link is not valid",
+      "invalidSubtitle": "The link may be incorrect, already used, or your email was verified earlier. If you already have an account, sign in below.",
+      "expiredTitle": "This link has expired",
+      "expiredSubtitle": "Verification links expire after a while. Sign in and request a new verification email from your account settings.",
+      "errorTitle": "We could not complete verification",
+      "errorSubtitle": "Something went wrong on our side. Please try again in a moment or request a new verification email from settings after signing in.",
+      "continueDashboard": "Go to dashboard",
+      "signIn": "Sign in",
+      "backHome": "Back to home"
+    },
     "validation": {
       "emailRequired": "Email is required",
       "emailInvalid": "Please enter a valid email address",
@@ -470,6 +487,43 @@
       "notifyMe": "Notify Me",
       "email": "Email Address",
       "emailPlaceholder": "Enter your email"
+    }
+  },
+  "admin": {
+    "shell": {
+      "menu": "Menu",
+      "closeMenu": "Close menu",
+      "welcome": "Welcome!",
+      "toggleNav": "Toggle navigation menu",
+      "openMenu": "Open menu",
+      "language": "Language",
+      "logoutNav": "Logout",
+      "logOut": "Log Out",
+      "userFallback": "Admin",
+      "roleAdmin": "Administrator",
+      "sectionDashboard": "Dashboard",
+      "sectionTools": "Tools",
+      "sectionAccount": "Account",
+      "dashboard": "Dashboard",
+      "orders": "Orders",
+      "pickups": "Pickups",
+      "couriers": "Couriers",
+      "couriersFollowUp": "Couriers Follow-Up",
+      "stockManagement": "Stock Management",
+      "stockFromPickups": "From Pickups",
+      "stockFromReturns": "From Returns",
+      "storages": "Storages",
+      "walletManagement": "Wallet Management",
+      "payouts": "Payouts",
+      "shopManagement": "Shop Management",
+      "shopProducts": "Products",
+      "shopOrders": "Shop Orders",
+      "businesses": "Businesses",
+      "tickets": "Tickets",
+      "notifyCouriers": "Send Courier Notifications",
+      "notifyBusinesses": "Send Business Notifications",
+      "courierTracking": "Courier Tracking",
+      "printFlyers": "Print Smart Flyers"
     }
   },
   "business": {
@@ -873,6 +927,9 @@
         "errSelectPickup": "Please select a pickup address for express shipping.",
         "expressNoPickupAddress": "Add a business pickup address in Settings before using express shipping.",
         "expressPickupRequiredTitle": "Pickup address required",
+        "businessPickupLabel": "Business pickup / return address",
+        "businessPickupNoAddress": "Add a business pickup address in Settings. Pickup addresses are required for returns and are used for express collection and when items are returned to your business.",
+        "errBusinessPickup": "Please select a business pickup address.",
         "addNewAddress": "Add New Address",
         "paymentCollectionLabel": "Payment Collection",
         "codLabel": "Cash on Delivery (COD)",
@@ -2208,7 +2265,8 @@
         "errOriginalOrderEmpty": "Please enter the original order number.",
         "returnPartialCountInvalid": "For a partial return, choose how many items to return (1 to {max}).",
         "expressNoPickupAddress": "Add a business pickup address in Settings before using express shipping.",
-        "expressPickupRequiredTitle": "Pickup address required"
+        "expressPickupRequiredTitle": "Pickup address required",
+        "businessPickupNoAddress": "Add a business pickup address in Settings before creating a return."
       },
       "editOrder": {
         "selectArea": "Select Area",
