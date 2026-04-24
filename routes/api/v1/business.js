@@ -10,6 +10,12 @@ const notificationController = require('../../../controllers/notificationControl
 const { uploadMultipleFiles } = require('../../../utils/fileUpload');
 
 
+/** path for this request on the v1 business API (e.g. /api/v1/business/dashboard) */
+function businessApiPath(req) {
+    const p = (req.baseUrl + req.path).split('?')[0];
+    return p.replace(/\/$/, '') || p;
+}
+
 async function authenticateUser(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -26,6 +32,25 @@ async function authenticateUser(req, res, next) {
         req.userData = user; // Attach user data to request object
         if (!user) {
             return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        // Match web businessRoutes: incomplete business accounts may only use onboarding + dashboard
+        const normalizedRole = (user.role ? String(user.role).toLowerCase() : '');
+        const isCompleted = Boolean(user.isCompleted);
+        if (normalizedRole === 'business' && !isCompleted) {
+            const p = businessApiPath(req);
+            const allowedWhenIncomplete = new Set([
+                '/api/v1/business/dashboard', // like /business/dashboard & dashboard-data
+                '/api/v1/business/user-data', // load profile in app
+                '/api/v1/business/complete-confirmation-form',
+                '/api/v1/business/request-verification-email',
+            ]);
+            if (!allowedWhenIncomplete.has(p)) {
+                return res.status(403).json({
+                    error: 'Account not completed',
+                    message: 'Access restricted until your account is completed. Use the dashboard and completion flow only.',
+                });
+            }
         }
 
         next(); // Move to the next middleware
