@@ -1716,7 +1716,12 @@
         "locale": "ar-EG",
         "governmentCairo": "القاهرة",
         "governmentGiza": "الجيزة",
-        "governmentAlex": "الإسكندرية"
+        "governmentAlex": "الإسكندرية",
+        "labelDeliverToPreset": "التوصيل إلى",
+        "optionManualAddress": "عنوان مختلف…",
+        "legacyPickupLabel": "عنوان الاستلام الرئيسي",
+        "deliveryModalIntro": "اختر عنوان استلام محفوظ: المحافظة والمنطقة والشارع تُؤخذ منه فقط (يمكنك تعديل الاسم والهاتف). اختر «عنوان مختلف…» لإدخال الموقع يدوياً.",
+        "deliveryValidationError": "يرجى إكمال جميع الحقول المطلوبة."
       },
       "shopProducts": {
         "title": "منتجات المتجر"
@@ -1838,6 +1843,7 @@
         "deliveryAddress": "عنوان التسليم",
         "zone": "المنطقة",
         "notSpecified": "غير محدد",
+        "badgeSavedPickup": "عنوان استلام محفوظ",
         "orderActions": "إجراءات الطلب",
         "noOrderFound": "لم يُعثر على الطلب",
         "noOrderMsg": "لم نتمكن من العثور على الطلب الذي تبحث عنه.",

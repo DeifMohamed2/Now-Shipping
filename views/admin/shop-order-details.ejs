@@ -317,6 +317,9 @@
       <div class="card-header">
         <h5 class="card-title mb-0">
           <i class="ri-user-line me-2"></i>Customer Information
+          <% if (order.deliveryAddressSource === 'saved_pickup') { %>
+          <span class="badge bg-secondary ms-2">Saved pickup address</span>
+          <% } %>
         </h5>
       </div>
       <div class="card-body">
@@ -568,6 +571,7 @@
       <form id="assignForm">
         <div class="modal-body">
           <input type="hidden" id="assignOrderId" value="<%= order?._id %>">
+          <input type="hidden" id="deliveryZone" value="<%= order?.orderCustomer?.zone || '' %>">
           <div class="mb-3">
             <label class="form-label">Select Courier</label>
             <select class="form-select" id="courierSelect" required>
@@ -634,18 +638,41 @@
   }
 
   async function loadAvailableCouriers() {
+    const courierSelect = document.getElementById('courierSelect');
+    const zoneEl = document.getElementById('deliveryZone');
+    const zone = zoneEl ? zoneEl.value.trim() : '';
+
     try {
-      const response = await fetch('/admin/api/couriers/available');
+      let response;
+      if (zone) {
+        response = await fetch(
+          `/admin/api/shop/couriers-by-zone?zone=${encodeURIComponent(zone)}`
+        );
+      } else {
+        response = await fetch('/admin/api/couriers');
+      }
+
+      if (!response.ok) {
+        showError('Failed to load couriers');
+        courierSelect.innerHTML = '<option value="">Error loading couriers</option>';
+        return;
+      }
+
       const couriers = await response.json();
-      
-      const courierSelect = document.getElementById('courierSelect');
+      const list = Array.isArray(couriers) ? couriers : [];
+
       courierSelect.innerHTML = '<option value="">Choose a courier...</option>' +
-        couriers.map(courier => 
+        list.map(courier =>
           `<option value="${courier._id}">${courier.name} - ${courier.phoneNumber}</option>`
         ).join('');
+
+      if (list.length === 0) {
+        showError(zone ? 'No couriers available for this zone' : 'No couriers found');
+      }
     } catch (error) {
       console.error('Error loading couriers:', error);
       showError('Failed to load available couriers');
+      courierSelect.innerHTML = '<option value="">Error loading couriers</option>';
     }
   }
 

@@ -687,19 +687,22 @@ var __NSCO =
     if (first) sel.value = first.value;
   }
 
-  /** Business pickup / return-to-business — Deliver, Exchange, Return. */
+  /** Business pickup / return-to-business — show UI for Return, Exchange, and express Deliver only. Standard Deliver: hide block but keep default pickup selected (server also applies applyPickupDefaults). */
   function updateBusinessPickupVisibility() {
     var wrap = el('co-business-pickup-wrap');
     if (!wrap) return;
     var t = state.orderType;
-    var show = t === 'Deliver' || t === 'Exchange' || t === 'Return';
-    if (show) {
+    var showPickupUi = t === 'Return' || t === 'Exchange' || (t === 'Deliver' && state.expressShipping);
+    if (showPickupUi) {
       wrap.classList.add('co-collapsible--open');
       wrap.style.removeProperty('display');
       ensureDefaultPickupSelection();
     } else {
       wrap.classList.remove('co-collapsible--open');
       wrap.style.display = 'none';
+      if (t === 'Deliver' && !state.expressShipping) {
+        ensureDefaultPickupSelection();
+      }
     }
     var reqStar = el('co-business-pickup-required');
     if (reqStar) {

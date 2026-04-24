@@ -1716,7 +1716,12 @@
         "locale": "en-US",
         "governmentCairo": "Cairo",
         "governmentGiza": "Giza",
-        "governmentAlex": "Alexandria"
+        "governmentAlex": "Alexandria",
+        "labelDeliverToPreset": "Deliver to",
+        "optionManualAddress": "Different address…",
+        "legacyPickupLabel": "Primary pickup address",
+        "deliveryModalIntro": "Pick a saved pickup location: governorate, zone, and street come only from that profile (you can still edit name and phone). Choose “Different address…” to enter location yourself.",
+        "deliveryValidationError": "Please complete all required fields."
       },
       "shopProducts": {
         "title": "Shop Products"
@@ -1838,6 +1843,7 @@
         "deliveryAddress": "Delivery Address",
         "zone": "Zone",
         "notSpecified": "Not specified",
+        "badgeSavedPickup": "Saved pickup address",
         "orderActions": "Order Actions",
         "noOrderFound": "No Order Found",
         "noOrderMsg": "We couldn't find the order you are looking for.",

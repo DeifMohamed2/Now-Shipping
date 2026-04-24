@@ -97,9 +97,10 @@
         <h5 class="modal-title" id="productModalTitle">Add Product</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form id="productForm" enctype="multipart/form-data">
+      <form id="productForm" enctype="multipart/form-data" novalidate>
         <div class="modal-body">
           <input type="hidden" id="productId">
+          <input type="hidden" id="sku" value="">
 
           <!-- Product Images -->
           <div class="mb-3">
@@ -138,17 +139,15 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">Category (EN) <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="categoryEn" placeholder="e.g., Packaging">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Unit (EN) <span class="text-danger">*</span></label>
-                <select class="form-select" id="unit">
-                  <option value="piece">Piece</option>
-                  <option value="pack">Pack</option>
-                  <option value="roll">Roll</option>
-                  <option value="box">Box</option>
-                  <option value="kg">Kilogram</option>
-                  <option value="meter">Meter</option>
+                <select class="form-select" id="categoryEn" required>
+                  <option value="">Select category</option>
+                  <option value="Packaging">Packaging</option>
+                  <option value="Labels">Labels</option>
+                  <option value="Boxes">Boxes</option>
+                  <option value="Bags">Bags</option>
+                  <option value="Tape">Tape</option>
+                  <option value="Bubble Wrap">Bubble Wrap</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>
@@ -165,37 +164,32 @@
               </div>
               <div class="mb-3">
                 <label class="form-label">الفئة (AR) <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="categoryAr" dir="rtl" placeholder="مثال: التعبئة والتغليف">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">الوحدة (AR) <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="unitAr" dir="rtl" placeholder="مثال: قطعة، علبة، لفة">
+                <select class="form-select" id="categoryAr" dir="rtl" required>
+                  <option value="">اختر الفئة</option>
+                  <option value="التعبئة والتغليف" data-en="Packaging">التعبئة والتغليف</option>
+                  <option value="الملصقات" data-en="Labels">الملصقات</option>
+                  <option value="الصناديق والكراتين" data-en="Boxes">الصناديق والكراتين</option>
+                  <option value="الأكياس" data-en="Bags">الأكياس</option>
+                  <option value="الشريط اللاصق" data-en="Tape">الشريط اللاصق</option>
+                  <option value="البلاستيك الفقاعي" data-en="Bubble Wrap">البلاستيك الفقاعي</option>
+                  <option value="أخرى" data-en="Other">أخرى</option>
+                </select>
               </div>
             </div>
           </div>
 
-          <!-- Product Details -->
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Category <span class="text-danger">*</span></label>
-                <select class="form-select" id="category" required>
-                  <option value="">Select Category</option>
-                  <option value="Packaging">Packaging</option>
-                  <option value="Labels">Labels</option>
-                  <option value="Boxes">Boxes</option>
-                  <option value="Bags">Bags</option>
-                  <option value="Tape">Tape</option>
-                  <option value="Bubble Wrap">Bubble Wrap</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">SKU</label>
-                <input type="text" class="form-control" id="sku" placeholder="e.g., PKG-001">
-              </div>
+          <div class="px-3 pb-2 border-top">
+            <div class="mb-3 mt-3">
+              <label class="form-label" for="unit">Unit <span class="text-danger">*</span></label>
+              <select class="form-select" id="unit" required>
+                <option value="">Select unit</option>
+                <option value="piece" data-unit-ar="قطعة">Piece / قطعة</option>
+                <option value="pack" data-unit-ar="علبة">Pack / علبة</option>
+                <option value="roll" data-unit-ar="لفة">Roll / لفة</option>
+                <option value="box" data-unit-ar="صندوق">Box / صندوق</option>
+                <option value="kg" data-unit-ar="كيلوغرام">Kilogram / كيلوغرام</option>
+                <option value="meter" data-unit-ar="متر">Meter / متر</option>
+              </select>
             </div>
           </div>
 
@@ -278,12 +272,38 @@
   let productsData = [];
   let uploadedImages = [];
   const UPLOAD_URL = '/api/v1/upload/single';
+  const SHOP_PRODUCTS_API_BASE = '/admin/api/shop/products';
+
+  function generateRandomSku() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let tail = '';
+    for (let i = 0; i < 6; i++) {
+      tail += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return `pack-${Date.now().toString(36)}-${tail}`;
+  }
+
+  function syncCategoryArFromEn() {
+    const en = document.getElementById('categoryEn').value;
+    const sel = document.getElementById('categoryAr');
+    if (!sel || !en) return;
+    const match = Array.from(sel.options).find((o) => o.dataset.en === en);
+    if (match) sel.value = match.value;
+  }
+
+  function getUnitArFromSelect() {
+    const sel = document.getElementById('unit');
+    const opt = sel && sel.selectedOptions && sel.selectedOptions[0];
+    if (!opt || !opt.value) return '';
+    return opt.dataset.unitAr || '';
+  }
 
   document.addEventListener('DOMContentLoaded', function() {
     initializeFilePond();
     loadProducts();
 
     // Event listeners
+    document.getElementById('categoryEn').addEventListener('change', syncCategoryArFromEn);
     document.getElementById('categoryFilter').addEventListener('change', loadProducts);
     document.getElementById('availabilityFilter').addEventListener('change', loadProducts);
     document.getElementById('searchInput').addEventListener('input', debounce(loadProducts, 500));
@@ -294,8 +314,7 @@
     tabLinks.forEach(tab => {
       tab.addEventListener('click', function() {
         // Remove validation error styling when switching tabs
-        const allInputs = document.querySelectorAll('.form-control.is-invalid');
-        allInputs.forEach(input => input.classList.remove('is-invalid'));
+        document.querySelectorAll('.form-control.is-invalid, .form-select.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
       });
     });
   });
@@ -397,8 +416,24 @@
     if (search) params.append('search', search);
 
     try {
-      const response = await fetch(`/api/admin/shop/products?${params}`);
+      const response = await fetch(`${SHOP_PRODUCTS_API_BASE}?${params}`);
+      if (!response.ok) {
+        const text = await response.text();
+        let message = `Failed to load products (${response.status})`;
+        try {
+          const err = JSON.parse(text);
+          if (err.error || err.message) message = err.error || err.message;
+        } catch (_) {
+          if (text && !text.trimStart().startsWith('<')) message = text.slice(0, 200);
+        }
+        showError(message);
+        return;
+      }
       const products = await response.json();
+      if (!Array.isArray(products)) {
+        showError('Invalid response from server');
+        return;
+      }
       productsData = products;
       renderProducts(products);
     } catch (error) {
@@ -491,7 +526,7 @@
 
   async function editProduct(id) {
     try {
-      const response = await fetch(`/api/admin/shop/products/${id}`);
+      const response = await fetch(`${SHOP_PRODUCTS_API_BASE}/${id}`);
       const product = await response.json();
 
       document.getElementById('productModalTitle').textContent = 'Edit Product';
@@ -500,11 +535,14 @@
       document.getElementById('nameAr').value = product.nameAr;
       document.getElementById('description').value = product.description;
       document.getElementById('descriptionAr').value = product.descriptionAr;
-      document.getElementById('category').value = product.category;
       document.getElementById('categoryEn').value = product.category;
-      document.getElementById('categoryAr').value = product.categoryAr;
-      document.getElementById('unit').value = product.unit;
-      document.getElementById('unitAr').value = product.unitAr;
+      syncCategoryArFromEn();
+      const catArSel = document.getElementById('categoryAr');
+      if (product.categoryAr && !catArSel.value) {
+        const legacy = Array.from(catArSel.options).find((o) => o.value === product.categoryAr);
+        if (legacy) catArSel.value = product.categoryAr;
+      }
+      document.getElementById('unit').value = product.unit || '';
       document.getElementById('sku').value = product.sku || '';
       document.getElementById('price').value = product.price;
       document.getElementById('stock').value = product.stock;
@@ -551,7 +589,13 @@
       return;
     }
 
-    const productId = document.getElementById('productId').value;
+    const productId = document.getElementById('productId').value.trim();
+    let skuVal = document.getElementById('sku').value.trim();
+    if (!productId) {
+      skuVal = generateRandomSku();
+    } else if (!skuVal) {
+      skuVal = generateRandomSku();
+    }
 
     // Prepare product data as JSON
     const productData = {
@@ -559,11 +603,11 @@
       nameAr: document.getElementById('nameAr').value,
       description: document.getElementById('description').value,
       descriptionAr: document.getElementById('descriptionAr').value,
-      category: document.getElementById('category').value,
+      category: document.getElementById('categoryEn').value,
       categoryAr: document.getElementById('categoryAr').value,
       unit: document.getElementById('unit').value,
-      unitAr: document.getElementById('unitAr').value,
-      sku: document.getElementById('sku').value,
+      unitAr: getUnitArFromSelect(),
+      sku: skuVal,
       price: parseFloat(document.getElementById('price').value),
       stock: parseInt(document.getElementById('stock').value),
       discount: parseFloat(document.getElementById('discount').value),
@@ -577,8 +621,8 @@
 
     try {
       const url = productId ?
-        `/api/admin/shop/products/${productId}` :
-        '/api/admin/shop/products';
+        `${SHOP_PRODUCTS_API_BASE}/${productId}` :
+        SHOP_PRODUCTS_API_BASE;
       const method = productId ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -617,6 +661,10 @@
       {
         id: 'description',
         label: 'Description (EN)'
+      },
+      {
+        id: 'categoryEn',
+        label: 'Category (EN)'
       }
     ];
 
@@ -628,13 +676,17 @@
       {
         id: 'descriptionAr',
         label: 'Description (AR)'
+      },
+      {
+        id: 'categoryAr',
+        label: 'Category (AR)'
       }
     ];
 
-    // Other required fields
+    // Other required fields (shared, not language tabs)
     const otherFields = [{
-        id: 'category',
-        label: 'Category'
+        id: 'unit',
+        label: 'Unit'
       },
       {
         id: 'price',
@@ -698,11 +750,15 @@
     return isValid;
   }
 
-  // Helper to check if a tab's fields are all valid
+  // Helper to check if a tab's fields are all valid (do not rely on [required] + hidden tabs)
   function isValidTab(tabId) {
-    const tab = document.getElementById(tabId);
-    const requiredFields = tab.querySelectorAll('[required]');
-    return Array.from(requiredFields).every(field => field.value.trim() !== '');
+    const englishIds = ['name', 'description', 'categoryEn'];
+    const arabicIds = ['nameAr', 'descriptionAr', 'categoryAr'];
+    const ids = tabId === 'englishTab' ? englishIds : tabId === 'arabicTab' ? arabicIds : [];
+    return ids.every((id) => {
+      const el = document.getElementById(id);
+      return el && String(el.value).trim() !== '';
+    });
   }
 
   // Reset form and uploaded images
@@ -736,7 +792,7 @@
 
   async function toggleAvailability(id, isAvailable) {
     try {
-      const response = await fetch(`/api/admin/shop/products/${id}`, {
+      const response = await fetch(`${SHOP_PRODUCTS_API_BASE}/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -771,7 +827,7 @@
 
     if (result.isConfirmed) {
       try {
-        const response = await fetch(`/api/admin/shop/products/${id}`, {
+        const response = await fetch(`${SHOP_PRODUCTS_API_BASE}/${id}`, {
           method: 'DELETE'
         });
 

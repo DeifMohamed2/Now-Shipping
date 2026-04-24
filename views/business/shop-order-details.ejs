@@ -232,6 +232,9 @@
       <div class="card-header">
         <h5 class="card-title mb-0">
           <i class="ri-user-line me-2"></i><%= Sod.sectionCustomer || 'Customer Information' %>
+          <% if (order.deliveryAddressSource === 'saved_pickup') { %>
+          <span class="badge bg-secondary ms-2"><%= Sod.badgeSavedPickup || 'Saved pickup address' %></span>
+          <% } %>
         </h5>
       </div>
       <div class="card-body">

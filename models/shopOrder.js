@@ -88,6 +88,11 @@ const shopOrderSchema = new mongoose.Schema(
       enum: ['cash', 'wallet', 'card', 'bank_transfer'],
       default: 'wallet',
     },
+    /**
+     * Delivery snapshot for couriers/admin (always populated on save).
+     * For deliveryAddressSource "saved_pickup", address/government/zone are set only from the
+     * resolved pickup profile on the server, not from separate client fields.
+     */
     orderCustomer: {
       fullName: {
         type: String,
@@ -109,6 +114,16 @@ const shopOrderSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
+    },
+    /** When set, matches User.pickUpAddresses[].addressId or legacy_primary */
+    savedPickupAddressId: {
+      type: String,
+      required: false,
+    },
+    deliveryAddressSource: {
+      type: String,
+      enum: ['saved_pickup', 'manual'],
+      required: false,
     },
     contactInfo: {
       name: String,

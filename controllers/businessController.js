@@ -11,7 +11,7 @@ const statusHelper = require('../utils/statusHelper');
 const ExcelJS = require('exceljs');
 const { emailService } = require('../utils/email');
 const { uploadFile, deleteFile } = require('../utils/fileUpload');
-const { calculateOrderFee, calculatePickupFee: calcPickupFee } = require('../utils/fees');
+const { calculateOrderFee, calculatePickupFee: calcPickupFee, orderBaseFees } = require('../utils/fees');
 const puppeteer = require('puppeteer');
 const bwipjs = require('bwip-js');
 const QRCode = require('qrcode');
@@ -5078,6 +5078,10 @@ const getBusinessShopPage = async (req, res) => {
       'Other',
     ];
 
+    const shopDeliverFees = Object.fromEntries(
+      Object.entries(orderBaseFees).map(([cat, types]) => [cat, types.Deliver])
+    );
+
     res.render('business/shop', {
       title: req.translations.business.pages.shop.title,
       page_title: req.translations.business.pages.shopProducts.title,
@@ -5087,6 +5091,7 @@ const getBusinessShopPage = async (req, res) => {
       allCategories: allCategories,
       user: req.userData,
       userData: req.userData, // Make sure userData is available for the template
+      shopDeliverFees,
     });
   } catch (error) {
     console.error('Error loading shop page:', error);
@@ -5140,16 +5145,26 @@ const getAvailableProducts = async (req, res) => {
 // Create shop order from business
 const createShopOrder = async (req, res) => {
   try {
-    const { items, fullName, phoneNumber, address, government, zone, notes } =
-      req.body;
+    const {
+      items,
+      fullName,
+      phoneNumber,
+      address,
+      government,
+      zone,
+      notes,
+      pickupAddressId: pickupAddressIdRaw,
+    } = req.body;
     const businessId = req.userData._id;
-
-    // Validate required delivery information
-    if (!fullName || !phoneNumber || !address || !government || !zone) {
-      return res.status(400).json({
-        error: 'All delivery information fields are required',
-      });
-    }
+    const pickupAddressId = (pickupAddressIdRaw || '').trim();
+    const shopOrderAddress = require('../utils/shopOrderAddress');
+    const {
+      MANUAL_SENTINEL,
+      resolveShopDeliveryFromUser,
+      mergeDeliveryWithOverrides,
+      mergeSavedPickupContactOnly,
+      isCompleteOrderCustomer,
+    } = shopOrderAddress;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ error: 'Cart is empty' });
@@ -5197,15 +5212,58 @@ const createShopOrder = async (req, res) => {
       await product.reduceStock(item.quantity);
     }
 
-    // Get business info
+    // Get business info (pickup addresses needed for saved delivery resolution)
     const business = await User.findById(businessId);
     if (!business) {
       return res.status(404).json({ error: 'Business not found' });
     }
 
+    const overrides = {
+      fullName,
+      phoneNumber,
+      address,
+      government,
+      zone,
+    };
+
+    let savedPickupAddressId;
+    let deliveryAddressSource = 'manual';
+    let orderCustomerPayload;
+
+    if (pickupAddressId && pickupAddressId !== MANUAL_SENTINEL) {
+      const resolved = resolveShopDeliveryFromUser(business, pickupAddressId);
+      if (!resolved.ok) {
+        return res.status(400).json({ error: resolved.error || 'Invalid pickup address' });
+      }
+      deliveryAddressSource = 'saved_pickup';
+      savedPickupAddressId = resolved.savedPickupAddressId;
+      orderCustomerPayload = mergeSavedPickupContactOnly(resolved.base, {
+        fullName,
+        phoneNumber,
+      });
+    } else {
+      orderCustomerPayload = {
+        fullName: fullName != null ? String(fullName).trim() : '',
+        phoneNumber: phoneNumber != null ? String(phoneNumber).trim() : '',
+        address: address != null ? String(address).trim() : '',
+        government: government != null ? String(government).trim() : '',
+        zone: zone != null ? String(zone).trim() : '',
+      };
+    }
+
+    if (!isCompleteOrderCustomer(orderCustomerPayload)) {
+      return res.status(400).json({
+        error: 'All delivery information fields are required',
+      });
+    }
+
     // Calculate delivery fee using the same logic as normal orders
     const { calculateOrderFee } = require('../utils/fees');
-    const deliveryFee = calculateOrderFee(government, 'Deliver', false);
+    const deliveryFee = calculateOrderFee(
+      orderCustomerPayload.government,
+      'Deliver',
+      false
+    );
 
     // Create shop order
     const shopOrder = new ShopOrder({
@@ -5216,16 +5274,13 @@ const createShopOrder = async (req, res) => {
       tax: totalTax,
       deliveryFee,
       totalAmount: subtotal + totalTax + deliveryFee,
-      orderCustomer: {
-        fullName,
-        phoneNumber,
-        address,
-        government,
-        zone,
-      },
+      orderCustomer: orderCustomerPayload,
+      savedPickupAddressId:
+        deliveryAddressSource === 'saved_pickup' ? savedPickupAddressId : undefined,
+      deliveryAddressSource,
       contactInfo: {
-        name: fullName,
-        phone: phoneNumber,
+        name: orderCustomerPayload.fullName,
+        phone: orderCustomerPayload.phoneNumber,
       },
       notes,
       createdBy: businessId,

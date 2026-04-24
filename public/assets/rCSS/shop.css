@@ -609,3 +609,66 @@
     flex: 1 1 100%;
   }
 }
+
+/* Checkout delivery modal (Bootstrap) */
+.shop-delivery-modal .modal-dialog {
+  max-width: 560px;
+}
+
+.shop-delivery-modal__content {
+  border: 1px solid var(--shop-border);
+  border-radius: var(--shop-radius);
+  box-shadow: 0 8px 32px rgba(16, 24, 40, 0.12);
+}
+
+.shop-delivery-modal__header {
+  border-bottom: 1px solid var(--shop-border);
+  padding: 1rem 1.25rem;
+}
+
+.shop-delivery-modal__header .modal-title {
+  color: var(--shop-text);
+  font-weight: 600;
+}
+
+.shop-delivery-modal__intro {
+  line-height: 1.45;
+}
+
+.shop-delivery-modal .modal-body {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.shop-delivery-modal .form-label {
+  font-size: 0.875rem;
+  color: var(--shop-text);
+}
+
+.shop-delivery-modal .form-control,
+.shop-delivery-modal .form-select {
+  border-color: var(--shop-border);
+  border-radius: var(--shop-radius-sm);
+}
+
+.shop-delivery-modal .form-control:focus,
+.shop-delivery-modal .form-select:focus {
+  border-color: rgba(var(--shop-accent-rgb), 0.55);
+  box-shadow: 0 0 0 3px rgba(var(--shop-accent-rgb), 0.15);
+}
+
+.shop-delivery-modal__footer {
+  border-top: 1px solid var(--shop-border);
+  padding: 0.85rem 1.25rem;
+}
+
+.shop-delivery-modal__primary {
+  background-color: var(--shop-accent) !important;
+  border-color: var(--shop-accent) !important;
+  color: #fff !important;
+}
+
+.shop-delivery-modal__primary:hover {
+  background-color: var(--shop-accent-hover) !important;
+  border-color: var(--shop-accent-hover) !important;
+  color: #fff !important;
+}

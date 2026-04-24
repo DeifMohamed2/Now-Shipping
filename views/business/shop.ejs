@@ -22,7 +22,44 @@
   'stickers': Sp.catStickers,
   'labels': Sp.catLabels,
   'tapes': Sp.catTape
-}; %>
+};
+var shopPickupPresets = [];
+if (typeof userData !== 'undefined' && userData) {
+  if (userData.pickUpAddresses && userData.pickUpAddresses.length) {
+    userData.pickUpAddresses.forEach(function (addr) {
+      shopPickupPresets.push({
+        id: addr.addressId,
+        label: (addr.addressName || 'Address') + ' — ' + (addr.city || '') + (addr.zone ? ' / ' + addr.zone : ''),
+        city: addr.city || '',
+        zone: addr.zone || '',
+        adressDetails: addr.adressDetails || '',
+        nearbyLandmark: addr.nearbyLandmark || '',
+        pickupPhone: addr.pickupPhone || '',
+        isDefault: !!addr.isDefault
+      });
+    });
+  } else if (userData.pickUpAdress && (userData.pickUpAdress.city || userData.pickUpAdress.adressDetails)) {
+    shopPickupPresets.push({
+      id: 'legacy_primary',
+      label: Sp.legacyPickupLabel || 'Primary pickup address',
+      city: userData.pickUpAdress.city || '',
+      zone: userData.pickUpAdress.zone || '',
+      adressDetails: userData.pickUpAdress.adressDetails || '',
+      nearbyLandmark: userData.pickUpAdress.nearbyLandmark || '',
+      pickupPhone: userData.pickUpAdress.pickupPhone || '',
+      isDefault: true
+    });
+  }
+}
+var shopUserSnapshot = null;
+if (typeof userData !== 'undefined' && userData) {
+  shopUserSnapshot = {
+    name: userData.name || '',
+    phone: userData.phone != null ? String(userData.phone) : '',
+    brandInfo: userData.brandInfo || {}
+  };
+}
+%>
 
 <div class="shop-page">
   <div class="shop-layout">
@@ -147,12 +184,81 @@
       </div>
     </aside>
   </div>
+
+  <div class="modal fade shop-delivery-modal" id="shopDeliveryModal" tabindex="-1" aria-labelledby="shopDeliveryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable shop-delivery-modal__dialog">
+      <div class="modal-content shop-delivery-modal__content">
+        <div class="modal-header shop-delivery-modal__header">
+          <h2 class="modal-title h5 mb-0" id="shopDeliveryModalLabel"><%= Sp.deliveryDetailsTitle || 'Delivery details' %></h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="shop-delivery-modal__intro text-muted small mb-3"><%= Sp.deliveryModalIntro || '' %></p>
+          <div id="shopDeliveryValidation" class="alert alert-danger py-2 px-3 small d-none" role="alert"></div>
+          <form id="shopDeliveryForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label fw-medium" for="deliveryPreset"><%= Sp.labelDeliverToPreset || 'Deliver to' %></label>
+              <select class="form-select" id="deliveryPreset" name="deliveryPreset">
+                <option value="__manual__"><%= Sp.optionManualAddress || 'Different address…' %></option>
+                <% shopPickupPresets.forEach(function (p) { %>
+                <option value="<%= p.id %>"><%= p.label %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="deliveryFullName"><%= Sp.labelFullName || 'Full name' %> <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="deliveryFullName" name="deliveryFullName" autocomplete="name" placeholder="<%= Sp.phFullName || '' %>">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="deliveryPhone"><%= Sp.labelPhone || 'Phone' %> <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" id="deliveryPhone" name="deliveryPhone" autocomplete="tel" placeholder="<%= Sp.phPhone || '' %>">
+              </div>
+            </div>
+            <div id="shopDeliveryManualFields" class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="deliveryGovernment"><%= Sp.labelGovernment || 'Governorate' %> <span class="text-danger">*</span></label>
+                <select class="form-select" id="deliveryGovernment" name="deliveryGovernment">
+                  <option value=""><%= Sp.selectGovernment || 'Select' %></option>
+                  <option value="Cairo"><%= Sp.governmentCairo || 'Cairo' %></option>
+                  <option value="Giza"><%= Sp.governmentGiza || 'Giza' %></option>
+                  <option value="Alexandria"><%= Sp.governmentAlex || 'Alexandria' %></option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="deliveryZone"><%= Sp.labelZone || 'Zone' %> <span class="text-danger">*</span></label>
+                <select class="form-select" id="deliveryZone" name="deliveryZone">
+                  <option value=""><%= Sp.selectZone || 'Select zone' %></option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="deliveryAddress"><%= Sp.labelAddress || 'Address' %> <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="deliveryAddress" name="deliveryAddress" rows="3" placeholder="<%= Sp.phAddress || '' %>"></textarea>
+              </div>
+            </div>
+            <div class="row g-3 mt-0">
+              <div class="col-12">
+                <label class="form-label" for="deliveryNotes"><%= Sp.labelNotesOptional || 'Notes (optional)' %></label>
+                <textarea class="form-control" id="deliveryNotes" name="deliveryNotes" rows="2" placeholder="<%= Sp.phNotes || '' %>"></textarea>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer shop-delivery-modal__footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal"><%= Sp.btnCancel || 'Cancel' %></button>
+          <button type="button" class="btn btn-primary shop-delivery-modal__primary" id="btnShopDeliveryContinue"><%= Sp.btnContinue || 'Continue' %></button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <%- contentFor('FooterJs') %>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   window.__SHOP_I18N = <%- JSON.stringify(Sp && typeof Sp === 'object' ? Sp : {}) %>;
+  window.__SHOP_PICKUP_PRESETS__ = <%- JSON.stringify(shopPickupPresets) %>;
+  window.__SHOP_USER_SNAPSHOT__ = <%- JSON.stringify(shopUserSnapshot || {}) %>;
 
   const governmentCategories = {
     'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
@@ -168,20 +274,16 @@
     ]
   };
 
-  const deliveryFees = {
-    'Cairo': 80,
-    'Alexandria': 85,
-    'Delta-Canal': 91,
-    'Upper-RedSea': 116
-  };
+  /* Must match utils/fees.js orderBaseFees.Deliver (passed as shopDeliverFees from server) */
+  const deliveryFees = <%- JSON.stringify(typeof shopDeliverFees !== 'undefined' && shopDeliverFees ? shopDeliverFees : { Cairo: 100, Alexandria: 100, 'Delta-Canal': 100, 'Upper-RedSea': 100 }) %>;
 
   function calculateDeliveryFee(government) {
     for (const [category, govs] of Object.entries(governmentCategories)) {
       if (govs.includes(government)) {
-        return deliveryFees[category] || 80;
+        return deliveryFees[category] ?? 100;
       }
     }
-    return 80;
+    return 100;
   }
 
   function syncCategoryTabs(value) {
@@ -458,6 +560,212 @@
     window.cartManager = new CartManager();
   });
 
+  const zoneOptions = {
+    'Cairo': [
+      { group: 'Cairo - Downtown & Central', zones: ['Downtown', 'Garden City', 'Zamalek', 'Dokki', 'Mohandessin', 'Agouza', 'Bulaq', 'Azbakeya', 'Abdeen', 'Attaba', 'Ramses', 'Qasr El Nil', 'Talaat Harb', 'Tahrir Square'] },
+      { group: 'Cairo - East', zones: ['Nasr City', 'Nasr City - First Zone', 'Nasr City - Second Zone', 'Nasr City - Third Zone', 'Nasr City - Fourth Zone', 'Nasr City - Seventh Zone', 'Nasr City - Eighth Zone', 'Nasr City - Tenth Zone', 'Heliopolis', 'Heliopolis - Korba', 'Heliopolis - Triumph', 'Heliopolis - Cleopatra', 'Heliopolis - Almaza', 'Masr El Gedida', 'El Nozha', 'El Nozha El Gedida', 'El Zeitoun', 'Ain Shams', 'Ain Shams - Ezbet El Nakhl', 'El Marg', 'El Marg El Gedida'] },
+      { group: 'Cairo - South & New Cairo', zones: ['Maadi', 'New Cairo', 'Fifth Settlement', 'First Settlement', 'Katameya', 'El Mokattam', 'El Basateen', 'Dar El Salam', 'El Rehab', 'El Tagamoa', 'El Shorouk', 'Badr City', 'Helwan', '15th of May City', 'Hadayek Helwan'] },
+      { group: 'Cairo - West', zones: ['Mohandessin', 'Dokki', 'Boulaq El Dakrour', 'Imbaba', 'Agouza', 'Warraq', 'Rod El Farag', 'Shobra', 'Shobra El Kheima'] }
+    ],
+    'Giza': [
+      { group: 'Giza - Central & East', zones: ['Giza Square', 'Dokki', 'Mohandessin', 'Agouza', 'Haram', 'Faisal', 'Imbaba', 'Kit Kat', 'El Manial', 'Boulaq El Dakrour', 'El Saff', 'El Hawamdeya'] },
+      { group: 'Giza - West & 6th October', zones: ['Sheikh Zayed', '6th of October', 'Hadayek Al Ahram', 'Al Wahat Road', 'Smart Village', 'Egyptian Media Production City'] }
+    ],
+    'Alexandria': [
+      { group: 'Alexandria - East', zones: ['Sidi Gaber', 'Sporting', 'Camp Caesar', 'Smouha', 'Victoria', 'Bolkly', 'Ibrahimia', 'Laurent', 'Loran'] },
+      { group: 'Alexandria - Central & West', zones: ['Bahary', 'Anfushi', 'Manshiya', 'Attarin', 'Gomrok', 'Karmouz', 'Moharam Bek', 'Dekhela', 'Agami', 'Amreya', 'Borg El Arab', 'King Mariout', 'Wardian', 'Bacos'] },
+      { group: 'Alexandria - East & Montaza', zones: ['Sidi Bishr', 'Miami', 'Asafra', 'Mandara', 'Montaza', 'Abu Qir', 'El Maamoura', 'El Max', 'Aboukir', 'Semouha', 'Fleming', 'El Zahria', 'Gianaclis'] }
+    ]
+  };
+
+  function updateShopDeliveryZones() {
+    const governmentSelect = document.getElementById('deliveryGovernment');
+    const zoneSelect = document.getElementById('deliveryZone');
+    if (!governmentSelect || !zoneSelect) return;
+    const selectedGovernment = governmentSelect.value;
+    const I = window.__SHOP_I18N || {};
+    const previousZone = zoneSelect.value;
+    zoneSelect.innerHTML = '<option value="">' + (I.selectZone || 'Select zone') + '</option>';
+    if (selectedGovernment && zoneOptions[selectedGovernment]) {
+      zoneOptions[selectedGovernment].forEach((group) => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = group.group;
+        group.zones.forEach((zone) => {
+          const option = document.createElement('option');
+          option.value = zone;
+          option.textContent = zone;
+          optgroup.appendChild(option);
+        });
+        zoneSelect.appendChild(optgroup);
+      });
+    }
+    if (previousZone) {
+      ensureZoneOptionExists(zoneSelect, previousZone);
+      zoneSelect.value = previousZone;
+    }
+  }
+
+  const SHOP_MANUAL_PICKUP = '__manual__';
+
+  function getShopDeliveryModal() {
+    return document.getElementById('shopDeliveryModal');
+  }
+
+  function showShopDeliveryValidation(msg) {
+    const el = document.getElementById('shopDeliveryValidation');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.classList.toggle('d-none', !msg);
+  }
+
+  function hideShopDeliveryValidation() {
+    showShopDeliveryValidation('');
+  }
+
+  function ensureZoneOptionExists(zoneSelect, zoneValue) {
+    if (!zoneSelect || !zoneValue) return;
+    const exists = Array.from(zoneSelect.options).some((o) => o.value === zoneValue);
+    if (!exists) {
+      const opt = document.createElement('option');
+      opt.value = zoneValue;
+      opt.textContent = zoneValue;
+      zoneSelect.appendChild(opt);
+    }
+  }
+
+  function toggleShopDeliveryManualFields() {
+    const presetEl = document.getElementById('deliveryPreset');
+    const wrap = document.getElementById('shopDeliveryManualFields');
+    if (!wrap) return;
+    const isManual = !presetEl || presetEl.value === SHOP_MANUAL_PICKUP;
+    wrap.classList.toggle('d-none', !isManual);
+  }
+
+  function applyShopDeliveryPreset() {
+    const presetEl = document.getElementById('deliveryPreset');
+    const presetId = presetEl ? presetEl.value : SHOP_MANUAL_PICKUP;
+    const form = document.getElementById('shopDeliveryForm');
+    if (form) form.dataset.selectedPickupId = presetId;
+
+    const govEl = document.getElementById('deliveryGovernment');
+    const zoneEl = document.getElementById('deliveryZone');
+    const addrEl = document.getElementById('deliveryAddress');
+
+    if (presetId === SHOP_MANUAL_PICKUP) {
+      if (govEl) govEl.value = '';
+      if (zoneEl) {
+        zoneEl.innerHTML = '<option value="">' + ((window.__SHOP_I18N || {}).selectZone || 'Select zone') + '</option>';
+      }
+      if (addrEl) addrEl.value = '';
+      toggleShopDeliveryManualFields();
+      return;
+    }
+
+    const presets = window.__SHOP_PICKUP_PRESETS__ || [];
+    const p = presets.find((x) => x.id === presetId);
+    if (!p) {
+      toggleShopDeliveryManualFields();
+      return;
+    }
+
+    const u = window.__SHOP_USER_SNAPSHOT__ || {};
+    const brand = u.brandInfo || {};
+    const defaultName = (u.name || '').trim() || (brand.contactPersonName || '').trim() || (brand.brandName || '').trim() || '';
+
+    const fullNameEl = document.getElementById('deliveryFullName');
+    const phoneEl = document.getElementById('deliveryPhone');
+
+    if (fullNameEl) fullNameEl.value = defaultName;
+    if (phoneEl) phoneEl.value = (p.pickupPhone || u.phone || '').trim();
+
+    toggleShopDeliveryManualFields();
+  }
+
+  function initShopDeliveryPresetDefault() {
+    const presetEl = document.getElementById('deliveryPreset');
+    if (!presetEl) return;
+    const presets = window.__SHOP_PICKUP_PRESETS__ || [];
+    if (presets.length === 0) {
+      presetEl.value = SHOP_MANUAL_PICKUP;
+      return;
+    }
+    const def = presets.find((x) => x.isDefault) || presets[0];
+    presetEl.value = def.id;
+  }
+
+  function validateShopDeliveryForm() {
+    const I = window.__SHOP_I18N || {};
+    const fullName = (document.getElementById('deliveryFullName')?.value || '').trim();
+    const phoneNumber = (document.getElementById('deliveryPhone')?.value || '').trim();
+    const notes = (document.getElementById('deliveryNotes')?.value || '').trim();
+    const presetEl = document.getElementById('deliveryPreset');
+    const pickupAddressId = presetEl ? presetEl.value : SHOP_MANUAL_PICKUP;
+
+    if (!fullName || !phoneNumber) {
+      showShopDeliveryValidation(I.deliveryValidationError || I.validationCompleteFields || 'Please complete all required fields');
+      return null;
+    }
+
+    if (pickupAddressId === SHOP_MANUAL_PICKUP) {
+      const government = (document.getElementById('deliveryGovernment')?.value || '').trim();
+      const zone = (document.getElementById('deliveryZone')?.value || '').trim();
+      const address = (document.getElementById('deliveryAddress')?.value || '').trim();
+      if (!government || !zone || !address) {
+        showShopDeliveryValidation(I.deliveryValidationError || I.validationCompleteFields || 'Please complete all required fields');
+        return null;
+      }
+      hideShopDeliveryValidation();
+      return {
+        fullName,
+        phoneNumber,
+        government,
+        zone,
+        address,
+        notes,
+        pickupAddressId: SHOP_MANUAL_PICKUP,
+        isSavedPickup: false
+      };
+    }
+
+    const presets = window.__SHOP_PICKUP_PRESETS__ || [];
+    const p = presets.find((x) => x.id === pickupAddressId);
+    if (!p) {
+      showShopDeliveryValidation(I.deliveryValidationError || I.validationCompleteFields || 'Please complete all required fields');
+      return null;
+    }
+
+    const government = (p.city || '').trim();
+    const zone = (p.zone || '').trim();
+    const address = [p.adressDetails, p.nearbyLandmark].filter((x) => x && String(x).trim()).join(' — ').trim() || '—';
+    if (!government || !zone) {
+      showShopDeliveryValidation(I.deliveryValidationError || I.validationCompleteFields || 'Please complete all required fields');
+      return null;
+    }
+
+    hideShopDeliveryValidation();
+    return {
+      fullName,
+      phoneNumber,
+      government,
+      zone,
+      address,
+      notes,
+      pickupAddressId,
+      isSavedPickup: true
+    };
+  }
+
+  function openShopDeliveryModal() {
+    hideShopDeliveryValidation();
+    initShopDeliveryPresetDefault();
+    applyShopDeliveryPreset();
+    toggleShopDeliveryManualFields();
+    const el = getShopDeliveryModal();
+    if (el && typeof bootstrap !== 'undefined') {
+      bootstrap.Modal.getOrCreateInstance(el).show();
+    }
+  }
+
   async function proceedToCheckout() {
     const I = window.__SHOP_I18N || {};
     const subtotal = cartManager.calculateSubtotal();
@@ -472,69 +780,20 @@
       return;
     }
 
-    const { value: formValues } = await Swal.fire({
-      shopPrefillDelivery: true,
-      title: I.deliveryDetailsTitle || 'Delivery details',
-      html: `
-        <div class="text-start">
-          <div class="mb-3">
-            <label class="form-label">${I.labelFullName || 'Full name'} <span class="text-danger">*</span></label>
-            <input type="text" id="fullName" class="swal2-input" placeholder="${I.phFullName || ''}" style="width: 100%;">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">${I.labelPhone || 'Phone'} <span class="text-danger">*</span></label>
-            <input type="tel" id="phoneNumber" class="swal2-input" placeholder="${I.phPhone || ''}" style="width: 100%;">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">${I.labelGovernment || 'Governorate'} <span class="text-danger">*</span></label>
-            <select id="government" class="swal2-input" style="width: 100%;" onchange="updateZoneOptions()">
-              <option value="">${I.selectGovernment || 'Select'}</option>
-              <option value="Cairo">${I.governmentCairo || 'Cairo'}</option>
-              <option value="Giza">${I.governmentGiza || 'Giza'}</option>
-              <option value="Alexandria">${I.governmentAlex || 'Alexandria'}</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">${I.labelZone || 'Zone'} <span class="text-danger">*</span></label>
-            <select id="zone" class="swal2-input" style="width: 100%;">
-              <option value="">${I.selectZone || 'Select zone'}</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">${I.labelAddress || 'Address'} <span class="text-danger">*</span></label>
-            <textarea id="address" class="swal2-textarea" placeholder="${I.phAddress || ''}" style="width: 100%;"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">${I.labelNotesOptional || 'Notes (optional)'}</label>
-            <textarea id="notes" class="swal2-textarea" placeholder="${I.phNotes || ''}" style="width: 100%;"></textarea>
-          </div>
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonColor: '#E4A24A',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: I.btnContinue || 'Continue',
-      cancelButtonText: I.btnBack || 'Back',
-      width: '560px',
-      preConfirm: () => {
-        const fullName = document.getElementById('fullName').value;
-        const phoneNumber = document.getElementById('phoneNumber').value;
-        const government = document.getElementById('government').value;
-        const zone = document.getElementById('zone').value;
-        const address = document.getElementById('address').value;
-        const notes = document.getElementById('notes').value;
+    openShopDeliveryModal();
+  }
 
-        if (!fullName || !phoneNumber || !government || !zone || !address) {
-          Swal.showValidationMessage(I.validationCompleteFields || 'Please complete all required fields');
-          return false;
-        }
-
-        return { fullName, phoneNumber, government, zone, address, notes };
-      }
-    });
-
+  async function continueShopCheckoutAfterDelivery() {
+    const I = window.__SHOP_I18N || {};
+    const formValues = validateShopDeliveryForm();
     if (!formValues) return;
+
+    const modalEl = getShopDeliveryModal();
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      bootstrap.Modal.getInstance(modalEl)?.hide();
+    }
+
+    const subtotal = cartManager.calculateSubtotal();
 
     const deliveryFee = calculateDeliveryFee(formValues.government);
     cartManager.deliveryFee = deliveryFee;
@@ -579,11 +838,15 @@
       items: items,
       fullName: formValues.fullName,
       phoneNumber: formValues.phoneNumber,
-      address: formValues.address,
-      government: formValues.government,
-      zone: formValues.zone,
       notes: formValues.notes
     };
+    if (formValues.isSavedPickup && formValues.pickupAddressId && formValues.pickupAddressId !== SHOP_MANUAL_PICKUP) {
+      orderData.pickupAddressId = formValues.pickupAddressId;
+    } else {
+      orderData.address = formValues.address;
+      orderData.government = formValues.government;
+      orderData.zone = formValues.zone;
+    }
 
     try {
       const response = await fetch('/business/api/shop/orders', {
@@ -624,88 +887,24 @@
     }
   }
 
-  const zoneOptions = {
-    'Cairo': [
-      { group: 'Cairo - Downtown & Central', zones: ['Downtown', 'Garden City', 'Zamalek', 'Dokki', 'Mohandessin', 'Agouza', 'Bulaq', 'Azbakeya', 'Abdeen', 'Attaba', 'Ramses', 'Qasr El Nil', 'Talaat Harb', 'Tahrir Square'] },
-      { group: 'Cairo - East', zones: ['Nasr City', 'Nasr City - First Zone', 'Nasr City - Second Zone', 'Nasr City - Third Zone', 'Nasr City - Fourth Zone', 'Nasr City - Seventh Zone', 'Nasr City - Eighth Zone', 'Nasr City - Tenth Zone', 'Heliopolis', 'Heliopolis - Korba', 'Heliopolis - Triumph', 'Heliopolis - Cleopatra', 'Heliopolis - Almaza', 'Masr El Gedida', 'El Nozha', 'El Nozha El Gedida', 'El Zeitoun', 'Ain Shams', 'Ain Shams - Ezbet El Nakhl', 'El Marg', 'El Marg El Gedida'] },
-      { group: 'Cairo - South & New Cairo', zones: ['Maadi', 'New Cairo', 'Fifth Settlement', 'First Settlement', 'Katameya', 'El Mokattam', 'El Basateen', 'Dar El Salam', 'El Rehab', 'El Tagamoa', 'El Shorouk', 'Badr City', 'Helwan', '15th of May City', 'Hadayek Helwan'] },
-      { group: 'Cairo - West', zones: ['Mohandessin', 'Dokki', 'Boulaq El Dakrour', 'Imbaba', 'Agouza', 'Warraq', 'Rod El Farag', 'Shobra', 'Shobra El Kheima'] }
-    ],
-    'Giza': [
-      { group: 'Giza - Central & East', zones: ['Giza Square', 'Dokki', 'Mohandessin', 'Agouza', 'Haram', 'Faisal', 'Imbaba', 'Kit Kat', 'El Manial', 'Boulaq El Dakrour', 'El Saff', 'El Hawamdeya'] },
-      { group: 'Giza - West & 6th October', zones: ['Sheikh Zayed', '6th of October', 'Hadayek Al Ahram', 'Al Wahat Road', 'Smart Village', 'Egyptian Media Production City'] }
-    ],
-    'Alexandria': [
-      { group: 'Alexandria - East', zones: ['Sidi Gaber', 'Sporting', 'Camp Caesar', 'Smouha', 'Victoria', 'Bolkly', 'Ibrahimia', 'Laurent', 'Loran'] },
-      { group: 'Alexandria - Central & West', zones: ['Bahary', 'Anfushi', 'Manshiya', 'Attarin', 'Gomrok', 'Karmouz', 'Moharam Bek', 'Dekhela', 'Agami', 'Amreya', 'Borg El Arab', 'King Mariout', 'Wardian', 'Bacos'] },
-      { group: 'Alexandria - East & Montaza', zones: ['Sidi Bishr', 'Miami', 'Asafra', 'Mandara', 'Montaza', 'Abu Qir', 'El Maamoura', 'El Max', 'Aboukir', 'Semouha', 'Fleming', 'El Zahria', 'Gianaclis'] }
-    ]
-  };
-
-  function updateZoneOptions() {
-    const governmentSelect = document.getElementById('government');
-    const zoneSelect = document.getElementById('zone');
-    const selectedGovernment = governmentSelect.value;
-
-    const I = window.__SHOP_I18N || {};
-    zoneSelect.innerHTML = '<option value="">' + (I.selectZone || 'Select zone') + '</option>';
-
-    if (selectedGovernment && zoneOptions[selectedGovernment]) {
-      zoneOptions[selectedGovernment].forEach((group) => {
-        const optgroup = document.createElement('optgroup');
-        optgroup.label = group.group;
-        group.zones.forEach((zone) => {
-          const option = document.createElement('option');
-          option.value = zone;
-          option.textContent = zone;
-          optgroup.appendChild(option);
-        });
-        zoneSelect.appendChild(optgroup);
+  document.addEventListener('DOMContentLoaded', function () {
+    const btnCont = document.getElementById('btnShopDeliveryContinue');
+    if (btnCont) {
+      btnCont.addEventListener('click', () => {
+        continueShopCheckoutAfterDelivery();
       });
     }
-  }
-
-  function prefillDeliveryForm() {
-    try {
-      <% if (typeof userData !== 'undefined' && userData) { %>
-      const userData = <%- JSON.stringify(userData) %>;
-      let pickupAddress = null;
-      if (userData.pickUpAddresses && userData.pickUpAddresses.length > 0) {
-        pickupAddress = userData.pickUpAddresses.find(addr => addr.isDefault) || userData.pickUpAddresses[0];
-      }
-      if (!pickupAddress && userData.pickUpAdress) {
-        pickupAddress = userData.pickUpAdress;
-      }
-      pickupAddress = pickupAddress || {};
-
-      if (pickupAddress.city) {
-        const governmentSelect = document.getElementById('government');
-        const zoneSelect = document.getElementById('zone');
-        if (governmentSelect && zoneSelect) {
-          governmentSelect.value = pickupAddress.city;
-          updateZoneOptions();
-          setTimeout(() => {
-            zoneSelect.value = pickupAddress.zone || '';
-          }, 100);
-        }
-      }
-      <% } %>
-    } catch (error) {
-      console.log('No user data for prefill');
+    const presetSel = document.getElementById('deliveryPreset');
+    if (presetSel) {
+      presetSel.addEventListener('change', applyShopDeliveryPreset);
     }
-  }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    const originalSwalFire = window.Swal.fire;
-    window.Swal.fire = function (options) {
-      if (options && options.shopPrefillDelivery) {
-        const result = originalSwalFire.call(this, options);
-        setTimeout(() => {
-          prefillDeliveryForm();
-        }, 100);
-        return result;
-      }
-      return originalSwalFire.call(this, options);
-    };
+    const govSel = document.getElementById('deliveryGovernment');
+    if (govSel) {
+      govSel.addEventListener('change', () => {
+        const zoneSelect = document.getElementById('deliveryZone');
+        if (zoneSelect) zoneSelect.value = '';
+        updateShopDeliveryZones();
+      });
+    }
   });
 </script>
