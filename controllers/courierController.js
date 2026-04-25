@@ -119,7 +119,9 @@ const get_orders = async (req, res) => {
     ];
 
     // Build query with courier ID.
-    // Regular orders endpoint must not surface return-flow orders/statuses.
+    // Exclude return-pipeline statuses for non-Return orders. True Return-type jobs use GET /returns.
+    // Do not exclude returnToBusiness here: Exchange phase 2 (return original to business) keeps
+    // orderType "Exchange" with orderStatus returnToBusiness and must appear in this list.
     const query = {
       deliveryMan: courierId,
       'orderShipping.orderType': { $ne: 'Return' },
@@ -132,7 +134,6 @@ const get_orders = async (req, res) => {
           'returnAtWarehouse',
           'returnInspection',
           'returnProcessing',
-          'returnToBusiness',
           'returnCompleted',
           'returnLinked',
           ...terminalOrderStatuses,
