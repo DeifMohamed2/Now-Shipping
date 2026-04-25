@@ -216,6 +216,7 @@
       "title": "Welcome Back",
       "subtitle": "Sign in to your account to continue",
       "email": "Email Address",
+      "emailOrPhone": "Email or phone number",
       "password": "Password",
       "rememberMe": "Remember Me",
       "forgotPassword": "Forgot Password?",
@@ -292,6 +293,7 @@
     "validation": {
       "emailRequired": "Email is required",
       "emailInvalid": "Please enter a valid email address",
+      "emailOrPhoneInvalid": "Please enter a valid email address or 11-digit phone number (e.g. 01xxxxxxxxx)",
       "passwordRequired": "Password is required",
       "passwordMinLength": "Password must be at least 6 characters",
       "nameRequired": "Full name is required",

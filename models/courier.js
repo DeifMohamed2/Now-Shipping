@@ -32,6 +32,7 @@ const courierSchema = new Schema(
     phoneNumber: {
       type: String,
       required: true,
+      unique: true,
     },
     ordersHistory: {
       type: [mongoose.Schema.Types.ObjectId],

@@ -322,6 +322,17 @@ const signup = async (req, res) => {
         });
       }
 
+      const [phoneUsedUser, phoneUsedCourier] = await Promise.all([
+        User.findOne({ phoneNumber }),
+        Courier.findOne({ phoneNumber }),
+      ]);
+      if (phoneUsedUser || phoneUsedCourier) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'This phone number is already registered with us.',
+        });
+      }
+
       // ✅ Proceed to create new user
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = new User({
@@ -356,7 +367,11 @@ const signup = async (req, res) => {
       let errorMessage = 'An error occurred';
 
       if (error.code === 11000) {
-        errorMessage = 'This email is already registered with us.';
+        const dupField = error.keyValue && Object.keys(error.keyValue)[0];
+        errorMessage =
+          dupField === 'phoneNumber'
+            ? 'This phone number is already registered with us.'
+            : 'This email is already registered with us.';
       } else if (error.name === 'ValidationError') {
         errorMessage = 'Validation error';
       }
@@ -377,6 +392,16 @@ const sendOTP = async (req, res) => {
   if (!phoneNumber || !/^\d{11}$/.test(phoneNumber)) {
     console.error('❌ Invalid phone number format:', phoneNumber);
     return res.status(400).json({ message: 'Invalid phone number' });
+  }
+
+  const [phoneTakenUser, phoneTakenCourier] = await Promise.all([
+    User.findOne({ phoneNumber }),
+    Courier.findOne({ phoneNumber }),
+  ]);
+  if (phoneTakenUser || phoneTakenCourier) {
+    return res.status(400).json({
+      message: 'This phone number is already registered. Please use a different number.',
+    });
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -481,7 +506,7 @@ const login = async (req, res) => {
   const { email, password } = req.body;
   
   try {
-    // Input validation
+    // Input validation (field is still `email` for clients; may hold email or phone)
     if (!email || !password) {
       return res.status(400).json({
         status: 'error',
@@ -489,20 +514,27 @@ const login = async (req, res) => {
       });
     }
 
-    // Email format validation
+    const identifier = String(email).trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    const digitsOnly = identifier.replace(/\D/g, '');
+    const isPhone = digitsOnly.length === 11 && /^\d{11}$/.test(digitsOnly);
+    if (!isPhone && !emailRegex.test(identifier)) {
       return res.status(400).json({
         status: 'error',
-        message: 'Please enter a valid email address',
+        message: 'Please enter a valid email address or 11-digit phone number',
       });
     }
 
     // Use Promise.all to check both collections simultaneously for better performance
-    const [businessUser, courierUser] = await Promise.all([
-      User.findOne({ email }).select('+password'),
-      Courier.findOne({ email }).select('+password')
-    ]);
+    const [businessUser, courierUser] = isPhone
+      ? await Promise.all([
+          User.findOne({ phoneNumber: digitsOnly }).select('+password'),
+          Courier.findOne({ phoneNumber: digitsOnly }).select('+password'),
+        ])
+      : await Promise.all([
+          User.findOne({ email: identifier }).select('+password'),
+          Courier.findOne({ email: identifier }).select('+password'),
+        ]);
 
     let user = businessUser || courierUser;
     let role = businessUser ? 'Business' : 'Courier';
@@ -511,7 +543,7 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(400).json({
         status: 'error',
-        message: 'Email or password is incorrect',
+        message: 'Email, phone number, or password is incorrect',
       });
     }
 
@@ -520,7 +552,7 @@ const login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({
         status: 'error',
-        message: 'Email or password is incorrect',
+        message: 'Email, phone number, or password is incorrect',
       });
     }
 
@@ -544,8 +576,11 @@ const login = async (req, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
-      role
+      role,
     };
+    if (user.phoneNumber) {
+      userData.phoneNumber = user.phoneNumber;
+    }
 
     // Add role-specific data
     if (role === 'Business') {

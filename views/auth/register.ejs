@@ -748,6 +748,13 @@
   [dir="rtl"] .phone-input {
     border-radius: 8px 0 0 8px;
   }
+
+  /* While OTP is sending or after sent — number is not editable */
+  .form-control.phone-input[readonly] {
+    background-color: var(--gray-100);
+    cursor: not-allowed;
+    color: var(--gray-800);
+  }
 </style>
 
 <%- contentFor('body') %>
@@ -915,6 +922,12 @@
     const otpInput = document.getElementById('otpInput');
     const timerElement = document.getElementById('timer');
     const resendBtn = document.getElementById('resendBtn');
+    const verifyBtnDefaultHtml = verifyBtn ? verifyBtn.innerHTML : '';
+
+    function setPhoneFieldLocked(locked) {
+      if (!phoneNumberInput) return;
+      phoneNumberInput.readOnly = !!locked;
+    }
 
     let countdown;
 
@@ -938,6 +951,13 @@
       }, 1000);
     }
 
+    function resetVerifyButton() {
+      if (!verifyBtn) return;
+      verifyBtn.innerHTML = verifyBtnDefaultHtml;
+      verifyBtn.disabled = false;
+      setPhoneFieldLocked(false);
+    }
+
     // Handle verify button click
     async function sendOTP() {
       if (phoneNumberInput.value.trim() === '' || !/^\d{11}$/.test(phoneNumberInput.value.trim())) {
@@ -948,50 +968,62 @@
         return;
       }
 
-      // api request
       try {
-        // Show loading state
+        setPhoneFieldLocked(true);
         verifyBtn.innerHTML = 'Sending... <i class="ri-loader-2-line ri-spin"></i>';
         verifyBtn.disabled = true;
-        
-        // API request
+
         const response = await fetch('/send-otp', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            phoneNumber: phoneNumberInput.value
+            phoneNumber: phoneNumberInput.value.trim()
           }),
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to send OTP');
+        let data = {};
+        try {
+          const text = await response.text();
+          if (text) data = JSON.parse(text);
+        } catch (parseErr) {
+          data = {};
         }
 
-        const data = await response.json();
-        console.log(data);
-        // Show OTP container
-        otpContainer.style.display = 'block';
+        if (!response.ok) {
+          const msg =
+            data.message ||
+            data.error ||
+            'Failed to send verification code. Please try again.';
+          await Swal.fire({
+            icon: 'error',
+            title: 'OTP Error',
+            text: msg,
+            confirmButtonColor: '#F39720'
+          });
+          resetVerifyButton();
+          console.error('Error sending OTP:', response.status, msg);
+          return;
+        }
 
-        // Change button text
+        console.log(data);
+        otpContainer.style.display = 'block';
         verifyBtn.textContent = 'Sent';
         verifyBtn.disabled = true;
-
-        // Start countdown
         startCountdown(40);
-
       } catch (err) {
-        // Display error with SweetAlert2
-        Swal.fire({
+        await Swal.fire({
           icon: 'error',
           title: 'OTP Error',
-          text: 'Failed to send verification code. Please try again.',
+          text:
+            err.message ||
+            'Failed to send verification code. Please try again.',
           confirmButtonColor: '#F39720'
         });
         console.error('Error sending OTP:', err);
+        resetVerifyButton();
       }
-
     }
 
     // Handle verify button click

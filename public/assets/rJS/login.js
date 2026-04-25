@@ -5,12 +5,33 @@ const btnText = document.querySelector('.btn-text');
 
 let isSubmitting = false;
 
+function validateEmailOrPhone(value) {
+  const s = String(value).trim();
+  if (!s) return false;
+  const emailRe =
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  if (emailRe.test(s.toLowerCase())) return true;
+  const digits = s.replace(/\D/g, '');
+  return /^\d{11}$/.test(digits);
+}
+
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
   // Prevent multiple submissions
   if (isSubmitting) return;
   
+  const formData = new FormData(loginForm);
+  const formObject = Object.fromEntries(formData.entries());
+  if (!validateEmailOrPhone(formObject.email || '')) {
+    showError('Please enter a valid email address or 11-digit phone number.');
+    return;
+  }
+  if (String(formObject.password || '').length < 8) {
+    showError('Password must be at least 8 characters.');
+    return;
+  }
+
   isSubmitting = true;
   
   // Show loading state
@@ -20,9 +41,6 @@ loginForm.addEventListener('submit', async (e) => {
   hideError();
   
   try {
-    const formData = new FormData(loginForm);
-    const formObject = Object.fromEntries(formData.entries());
-    
     const response = await fetch('/login', {
       method: 'POST',
       headers: {

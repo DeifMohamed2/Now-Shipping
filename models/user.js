@@ -33,6 +33,7 @@ const UserSchema = new mongoose.Schema(
     phoneNumber: {
       type: String,
       required: true,
+      unique: true,
     },
     /** Optional preferences for outbound notifications (reserved for future use). */
     notificationPreferences: {

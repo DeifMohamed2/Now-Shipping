@@ -1215,6 +1215,18 @@ const createCourier = async (req, res) => {
       });
     }
 
+    const [phoneInUser, phoneInCourier] = await Promise.all([
+      User.findOne({ phoneNumber }),
+      Courier.findOne({ phoneNumber }),
+    ]);
+    if (phoneInUser || phoneInCourier) {
+      return res.status(400).json({
+        status: 'error',
+        error:
+          'This phone number is already used by an existing account. Please use a different number.',
+      });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const courier = new Courier({
@@ -1250,10 +1262,16 @@ const createCourier = async (req, res) => {
       .catch((err) => {
         console.log(err);
         if (err.code === 11000) {
+          const k = err.keyValue && Object.keys(err.keyValue)[0];
+          let msg =
+            'It looks like a courier with this email or national ID already exists. Please use a different email or national ID.';
+          if (k === 'phoneNumber') {
+            msg =
+              'This phone number is already used by an existing account. Please use a different number.';
+          }
           res.status(400).json({
             status: 'error',
-            error:
-              'It looks like a courier with this email or national ID already exists. Please use a different email or national ID.',
+            error: msg,
           });
         } else if (err.name === 'ValidationError') {
           res.status(400).json({
