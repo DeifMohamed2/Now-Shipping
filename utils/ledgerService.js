@@ -18,79 +18,144 @@ const { calculateOrderFee } = require('./fees');
  *
  * Idempotent: the unique index on { orderId, type } means re-running
  * this for the same order is safe — duplicate writes are silently ignored.
+ *
+ * Logic is branched on BOTH orderType and orderStatus so that a Deliver
+ * order later transitioning to 'returned' never picks up a "Return fee"
+ * (only Return-type orders get that row).
+ *
+ * Every entry includes an immutable snapshot of order fields captured at
+ * write time so the row remains meaningful even if the order is later
+ * edited or hard-deleted by an admin.
  */
 async function createOrderEntries(order) {
   const { orderStatus, orderShipping, orderFees, business, _id, orderNumber } = order;
   const entries = [];
 
-  if (orderStatus === 'completed') {
-    // 1. COD collected from customer (positive — money comes to the business)
-    if (
-      orderShipping.amountType === 'COD' &&
-      orderShipping.amount > 0
-    ) {
-      entries.push({
-        business,
-        type: 'cod_collected',
-        amount: orderShipping.amount,
-        description: `Order ${orderNumber} delivered — COD collected`,
-        orderId: _id,
-        orderNumber,
-        createdBy: 'system',
-      });
-    }
+  // ── Compute the fee once, snapshotted at this moment ───────────────
+  // orderFees is set by the courier/system before the status flip; fall
+  // back to the rate table only if it hasn't been set yet.
+  const fee = (orderFees > 0)
+    ? orderFees
+    : calculateOrderFee(
+        order.orderCustomer.government,
+        orderShipping.orderType,
+        orderShipping.isExpressShipping
+      );
 
-    // 2. Delivery fee (negative — charged to the business)
-    const fee = orderFees || calculateOrderFee(
-      order.orderCustomer.government,
-      orderShipping.orderType,
-      orderShipping.isExpressShipping
-    );
-    if (fee > 0) {
-      entries.push({
-        business,
-        type: 'delivery_fee',
-        amount: -fee,
-        description: `Delivery fee — Order ${orderNumber}`,
-        orderId: _id,
-        orderNumber,
-        createdBy: 'system',
-      });
-    }
-  }
+  // ── Shared snapshot payload (immutable — never mutated after write) ─
+  const snap = {
+    business,
+    orderId: _id,
+    orderNumber,
+    createdBy: 'system',
+    orderTypeSnapshot: orderShipping.orderType || null,
+    amountTypeSnapshot: orderShipping.amountType || null,
+    orderAmountSnapshot: orderShipping.amount || 0,
+    feeAmountSnapshot: fee || 0,
+    governmentSnapshot: (order.orderCustomer && order.orderCustomer.government) || null,
+    zoneSnapshot: (order.orderCustomer && order.orderCustomer.zone) || null,
+    customerNameSnapshot: (order.orderCustomer && order.orderCustomer.fullName) || null,
+    originalOrderNumberSnapshot: orderShipping.originalOrderNumber || null,
+  };
 
-  if (orderStatus === 'returned' || orderStatus === 'returnCompleted') {
-    // Return fee (negative — charged to the business)
-    const fee = orderFees || calculateOrderFee(
-      order.orderCustomer.government,
-      'Return',
-      false
-    );
-    if (fee > 0) {
-      entries.push({
-        business,
-        type: 'delivery_fee',
-        amount: -fee,
-        description: `Return fee — Order ${orderNumber}`,
-        orderId: _id,
-        orderNumber,
-        createdBy: 'system',
-      });
-    }
-  }
+  // ── DELIVER orders ─────────────────────────────────────────────────
+  if (orderShipping.orderType === 'Deliver') {
+    if (orderStatus === 'completed') {
+      // 1. COD collected from customer (credit to the business)
+      if (orderShipping.amountType === 'COD' && orderShipping.amount > 0) {
+        entries.push({
+          ...snap,
+          type: 'cod_collected',
+          amount: orderShipping.amount,
+          description: `Order ${orderNumber} delivered — COD collected`,
+        });
+      }
 
-  if (orderStatus === 'canceled') {
-    // Only charge if courier already picked it up (has an orderFees value > 0)
-    const fee = orderFees || 0;
-    if (fee > 0) {
+      // 2. Delivery fee (debit to the business)
+      if (fee > 0) {
+        entries.push({
+          ...snap,
+          type: 'delivery_fee',
+          amount: -fee,
+          description: `Delivery fee — Order ${orderNumber}`,
+        });
+      }
+    }
+    // Deliver + 'returned': the order was returned after being completed or
+    // refused on first attempt. The delivery_fee row (written at 'completed')
+    // or no row at all (never delivered) is the correct state — we do NOT
+    // add a separate "Return fee" for Deliver-type orders. The unique index
+    // already protects the existing row from being double-written.
+    // Deliver + 'canceled': charge only if the courier already picked it up.
+    if (orderStatus === 'canceled' && fee > 0) {
       entries.push({
-        business,
+        ...snap,
         type: 'delivery_fee',
         amount: -fee,
         description: `Cancellation fee — Order ${orderNumber}`,
-        orderId: _id,
-        orderNumber,
-        createdBy: 'system',
+      });
+    }
+  }
+
+  // ── RETURN orders ──────────────────────────────────────────────────
+  if (orderShipping.orderType === 'Return') {
+    if (orderStatus === 'returned' || orderStatus === 'returnCompleted') {
+      // Return-type orders always use 'Return' rate, not the original order's fee.
+      const returnFee = (orderFees > 0)
+        ? orderFees
+        : calculateOrderFee(order.orderCustomer.government, 'Return', false);
+
+      if (returnFee > 0) {
+        entries.push({
+          ...snap,
+          type: 'delivery_fee',
+          amount: -returnFee,
+          feeAmountSnapshot: returnFee,
+          description: `Return fee — Order ${orderNumber}`,
+        });
+      }
+    }
+
+    if (orderStatus === 'canceled' && fee > 0) {
+      entries.push({
+        ...snap,
+        type: 'delivery_fee',
+        amount: -fee,
+        description: `Cancellation fee — Order ${orderNumber}`,
+      });
+    }
+  }
+
+  // ── EXCHANGE orders ────────────────────────────────────────────────
+  if (orderShipping.orderType === 'Exchange') {
+    if (orderStatus === 'completed') {
+      // Cash Difference collected from the customer (credit to the business)
+      if (orderShipping.amountType === 'CD' && orderShipping.amount > 0) {
+        entries.push({
+          ...snap,
+          type: 'cash_difference_collected',
+          amount: orderShipping.amount,
+          description: `Order ${orderNumber} exchange — cash difference collected`,
+        });
+      }
+
+      // Exchange delivery/service fee (debit to the business)
+      if (fee > 0) {
+        entries.push({
+          ...snap,
+          type: 'delivery_fee',
+          amount: -fee,
+          description: `Delivery fee — Order ${orderNumber}`,
+        });
+      }
+    }
+
+    if (orderStatus === 'canceled' && fee > 0) {
+      entries.push({
+        ...snap,
+        type: 'delivery_fee',
+        amount: -fee,
+        description: `Cancellation fee — Order ${orderNumber}`,
       });
     }
   }

@@ -2158,6 +2158,7 @@
       "wallet": {
         "types": {
           "cod_collected": "COD Collected",
+          "cash_difference_collected": "Cash Difference",
           "delivery_fee": "Delivery Fee",
           "pickup_fee": "Pickup Fee",
           "adjustment": "Adjustment",
@@ -2181,6 +2182,7 @@
           "returnFee": "Return fee — Order {order}",
           "cancellationFee": "Cancellation fee — Order {order}",
           "codCollected": "Order {order} delivered — COD collected",
+          "cashDifferenceCollected": "Order {order} exchange — cash difference collected",
           "adminAdjustment": "Admin adjustment: {note}",
           "weeklyPayout": "Weekly payout",
           "shopDelivery": "Shop order delivery #{order}"

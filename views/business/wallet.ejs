@@ -252,6 +252,7 @@
       <select class="form-select form-select-sm" id="typeFilter" style="width:auto;">
         <option value="all"><%= Wp.filterAllTypes || 'All Types' %></option>
         <option value="cod_collected"><%= (Wp.types && Wp.types.cod_collected) || 'COD Collected' %></option>
+        <option value="cash_difference_collected"><%= (Wp.types && Wp.types.cash_difference_collected) || 'Cash Difference' %></option>
         <option value="delivery_fee"><%= (Wp.types && Wp.types.delivery_fee) || 'Delivery Fee' %></option>
         <option value="pickup_fee"><%= (Wp.types && Wp.types.pickup_fee) || 'Pickup Fee' %></option>
         <option value="adjustment"><%= (Wp.types && Wp.types.adjustment) || 'Adjustment' %></option>

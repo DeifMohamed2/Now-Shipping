@@ -13,10 +13,21 @@ function calculateFees(government, orderType, isExpressShipping) {
   return calculateOrderFee(government, orderType, isExpressShipping);
 }
 
+/** Six-digit numeric string (100000–999999), suitable for display as Order ID. */
 function generateOrderNumber() {
-  const randomPart = Math.floor(100000 + Math.random() * 900000);
-  const timestampPart = Date.now().toString().slice(-4);
-  return `${randomPart}${timestampPart}`;
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+/**
+ * Reserves a 6-digit order number not already used in `Order` (unique index).
+ */
+async function generateUniqueOrderNumber(maxAttempts = 50) {
+  for (let i = 0; i < maxAttempts; i++) {
+    const n = generateOrderNumber();
+    const taken = await Order.exists({ orderNumber: n });
+    if (!taken) return n;
+  }
+  throw new Error('Could not allocate a unique order number');
 }
 
 /**
@@ -346,7 +357,7 @@ async function buildReturnPreload(businessId, originalNumbers) {
  * Build unsaved Mongoose Order document.
  * @param {object} userData - req.userData (needs _id)
  * @param {object} fields - normalized fields from normalizeFieldsFromBody or import
- * @param {string} [orderNumber] - defaults to generateOrderNumber()
+ * @param {string} [orderNumber] - defaults to generateOrderNumber(); prefer generateUniqueOrderNumber() at save sites to avoid collisions.
  */
 function buildOrderDocumentFromFields(userData, fields, orderNumber) {
   const orderType = fields.orderType;
@@ -496,6 +507,7 @@ function buildOrderDocumentFromFields(userData, fields, orderNumber) {
 module.exports = {
   calculateFees,
   generateOrderNumber,
+  generateUniqueOrderNumber,
   normalizeFieldsFromBody,
   validateOrderFieldsStructural,
   applyPickupDefaults,

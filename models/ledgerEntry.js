@@ -24,11 +24,12 @@ const ledgerEntrySchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: [
-        'cod_collected',  // COD cash collected from customer and handed to us
-        'delivery_fee',   // Delivery / return / exchange service fee
-        'pickup_fee',     // Pickup service fee
-        'adjustment',     // Manual admin credit or debit
-        'payout',         // Weekly transfer to business bank account
+        'cod_collected',              // COD cash collected from customer and handed to us
+        'cash_difference_collected',  // Cash difference collected on a completed Exchange order
+        'delivery_fee',               // Delivery / return / exchange service fee
+        'pickup_fee',                 // Pickup service fee
+        'adjustment',                 // Manual admin credit or debit
+        'payout',                     // Weekly transfer to business bank account
       ],
     },
 
@@ -81,6 +82,44 @@ const ledgerEntrySchema = new mongoose.Schema(
 
     // Required when createdBy === 'admin'
     adminNote: {
+      type: String,
+      default: null,
+    },
+
+    // ── Immutable order snapshot (set once at ledger-write time, never mutated) ──
+    // These fields persist financial context even if the source order is later
+    // edited or hard-deleted by an admin.
+    orderTypeSnapshot: {
+      type: String,
+      enum: ['Deliver', 'Return', 'Exchange', null],
+      default: null,
+    },
+    amountTypeSnapshot: {
+      type: String,
+      enum: ['COD', 'CD', 'NA', null],
+      default: null,
+    },
+    orderAmountSnapshot: {
+      type: Number,
+      default: null,
+    },
+    feeAmountSnapshot: {
+      type: Number,
+      default: null,
+    },
+    governmentSnapshot: {
+      type: String,
+      default: null,
+    },
+    zoneSnapshot: {
+      type: String,
+      default: null,
+    },
+    customerNameSnapshot: {
+      type: String,
+      default: null,
+    },
+    originalOrderNumberSnapshot: {
       type: String,
       default: null,
     },

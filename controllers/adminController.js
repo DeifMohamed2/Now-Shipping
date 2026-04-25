@@ -32,6 +32,7 @@ const {
   resolvePickupAddressForOrder,
   getDefaultPickupAddressId,
 } = require('../utils/pickupAddressResolve');
+const { generateUniqueOrderNumber } = require('../utils/orderCreationHelper');
 
 /** `range` query: all | today | 7d | 30d | 90d | ytd — filters orders by `orderDate` (inclusive end-of-day). */
 function parseAdminDashboardOrderRange(req) {
@@ -2918,10 +2919,9 @@ const convertFailedDeliveryToReturn = async (req, res) => {
     }
 
     // Create a new Return order (R2) automatically
+    const returnOrderNumber = await generateUniqueOrderNumber();
     const returnOrder = new Order({
-      orderNumber: `${
-        Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000
-      }`,
+      orderNumber: returnOrderNumber,
       orderDate: new Date(),
       orderStatus: 'autoReturnInitiated',
       orderFees: deliverOrder.orderFees, // Use same fees

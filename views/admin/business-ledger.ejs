@@ -53,10 +53,11 @@
     font-size: 0.72rem; font-weight: 600; padding: 2px 8px;
     border-radius: 20px; white-space: nowrap;
   }
-  .bl-type-cod_collected  { background: #d1fae5; color: #065f46; }
-  .bl-type-delivery_fee   { background: #fee2e2; color: #991b1b; }
-  .bl-type-return_fee     { background: #fef3c7; color: #92400e; }
-  .bl-type-pickup_fee     { background: #e0e7ff; color: #3730a3; }
+  .bl-type-cod_collected             { background: #d1fae5; color: #065f46; }
+  .bl-type-cash_difference_collected { background: #d1fae5; color: #065f46; }
+  .bl-type-delivery_fee              { background: #fee2e2; color: #991b1b; }
+  .bl-type-return_fee                { background: #fef3c7; color: #92400e; }
+  .bl-type-pickup_fee                { background: #e0e7ff; color: #3730a3; }
   .bl-type-payout         { background: #f3e8ff; color: #6b21a8; }
   .bl-type-adjustment     { background: #dbeafe; color: #1e3a5f; }
   .bl-type-default        { background: #f1f5f9; color: #475569; }
@@ -167,6 +168,7 @@
         <select id="blTypeFilter">
           <option value="">All Types</option>
           <option value="cod_collected">COD Collected</option>
+          <option value="cash_difference_collected">Cash Difference</option>
           <option value="delivery_fee">Delivery Fee</option>
           <option value="return_fee">Return Fee</option>
           <option value="pickup_fee">Pickup Fee</option>
@@ -273,6 +275,7 @@
   function typePill(type) {
     const labels = {
       cod_collected: 'COD Collected',
+      cash_difference_collected: 'Cash Difference',
       delivery_fee: 'Delivery Fee',
       return_fee: 'Return Fee',
       pickup_fee: 'Pickup Fee',

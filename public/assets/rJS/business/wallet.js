@@ -39,6 +39,9 @@
     m = d.match(/^Order (.+) delivered — COD collected$/);
     if (m) return (L.codCollected || d).replace(/\{order\}/g, m[1]);
 
+    m = d.match(/^Order (.+) exchange — cash difference collected$/);
+    if (m) return (L.cashDifferenceCollected || d).replace(/\{order\}/g, m[1]);
+
     m = d.match(/^Admin adjustment:\s*(.+)$/i);
     if (m) return (L.adminAdjustment || d).replace(/\{note\}/g, m[1]);
 
@@ -122,6 +125,7 @@
   // ── Type display helpers ───────────────────────────────────
   const TYPE_LABELS = {
     cod_collected: TYPES.cod_collected || 'COD Collected',
+    cash_difference_collected: TYPES.cash_difference_collected || 'Cash Difference',
     delivery_fee: TYPES.delivery_fee || 'Delivery Fee',
     pickup_fee: TYPES.pickup_fee || 'Pickup Fee',
     adjustment: TYPES.adjustment || 'Adjustment',
@@ -275,7 +279,7 @@
   function computeStats(entries) {
     let cod = 0, fees = 0, paid = 0;
     entries.forEach(e => {
-      if (e.type === 'cod_collected') cod  += e.amount;
+      if (e.type === 'cod_collected' || e.type === 'cash_difference_collected') cod += e.amount;
       if (e.type === 'delivery_fee' || e.type === 'pickup_fee') fees += Math.abs(e.amount);
       if (e.type === 'payout') paid += Math.abs(e.amount);
     });

@@ -26,7 +26,7 @@ const {
   validatePickupForOrderCreation,
   validateReturnOrderAsync,
   buildOrderDocumentFromFields,
-  generateOrderNumber,
+  generateUniqueOrderNumber,
 } = require('../utils/orderCreationHelper');
 const orderBulkImport = require('../utils/orderBulkImport');
 const { resolvePickupAddressForOrder } = require('../utils/pickupAddressResolve');
@@ -989,7 +989,11 @@ const postOrdersImportCommit = async (req, res) => {
         await session.withTransaction(async () => {
           for (const { fields } of parsed.rows) {
             applyPickupDefaults(req.userData, fields);
-            const doc = buildOrderDocumentFromFields(req.userData, fields, generateOrderNumber());
+            const doc = buildOrderDocumentFromFields(
+              req.userData,
+              fields,
+              await generateUniqueOrderNumber()
+            );
             const saved = await doc.save({ session });
             created.push({ orderNumber: saved.orderNumber, orderId: saved._id });
           }
@@ -1003,7 +1007,11 @@ const postOrdersImportCommit = async (req, res) => {
         created.length = 0;
         for (const { fields } of parsed.rows) {
           applyPickupDefaults(req.userData, fields);
-          const doc = buildOrderDocumentFromFields(req.userData, fields, generateOrderNumber());
+          const doc = buildOrderDocumentFromFields(
+            req.userData,
+            fields,
+            await generateUniqueOrderNumber()
+          );
           const saved = await doc.save();
           created.push({ orderNumber: saved.orderNumber, orderId: saved._id });
         }
@@ -1072,7 +1080,8 @@ const submitOrder = async (req, res) => {
       return res.status(400).json({ error: returnVal.errors[0] });
     }
 
-    const newOrder = buildOrderDocumentFromFields(req.userData, fields);
+    const orderNumber = await generateUniqueOrderNumber();
+    const newOrder = buildOrderDocumentFromFields(req.userData, fields, orderNumber);
     const savedOrder = await newOrder.save();
     res.status(201).json({ message: 'Order created successfully.', order: savedOrder });
   } catch (error) {

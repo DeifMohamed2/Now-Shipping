@@ -2158,6 +2158,7 @@
       "wallet": {
         "types": {
           "cod_collected": "تحصيل عند الاستلام",
+          "cash_difference_collected": "فرق السعر",
           "delivery_fee": "رسوم التوصيل",
           "pickup_fee": "رسوم الاستلام",
           "adjustment": "تسوية",
@@ -2181,6 +2182,7 @@
           "returnFee": "رسوم الإرجاع — الطلب {order}",
           "cancellationFee": "رسوم الإلغاء — الطلب {order}",
           "codCollected": "تم تسليم الطلب {order} — تحصيل عند الاستلام",
+          "cashDifferenceCollected": "طلب {order} استبدال — تم تحصيل فرق السعر",
           "adminAdjustment": "تعديل إداري: {note}",
           "weeklyPayout": "تحويل أسبوعي",
           "shopDelivery": "توصيل طلب متجر #{order}"

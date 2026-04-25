@@ -408,10 +408,11 @@
   let pdCurrentPayoutId = null;
 
   const TYPE_LABELS = {
-    cod_collected: 'COD Collected',
-    delivery_fee:  'Delivery Fee',
-    return_fee:    'Return Fee',
-    pickup_fee:    'Pickup Fee',
+    cod_collected:             'COD Collected',
+    cash_difference_collected: 'Cash Difference',
+    delivery_fee:              'Delivery Fee',
+    return_fee:                'Return Fee',
+    pickup_fee:                'Pickup Fee',
     payout:        'Payout',
     adjustment:    'Adjustment',
   };
