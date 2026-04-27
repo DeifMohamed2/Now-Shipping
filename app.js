@@ -169,7 +169,13 @@ app.get(
   notificationController.emergencyCleanupCourier
 );
 
-// Mobile app routes V1
+// Mobile app routes V1 — tell CDNs (e.g. Cloudflare) not to transform response bodies.
+// Clients that send Accept-Encoding: br may otherwise receive Brotli-compressed JSON; many mobile
+// stacks decode gzip but not br, which surfaces as FormatException when parsing JSON (bad UTF-8 at offset 0).
+app.use('/api/v1', (req, res, next) => {
+  res.setHeader('Cache-Control', 'private, no-transform');
+  next();
+});
 app.use('/api/v1/auth', AuthRouterApi);
 app.use('/api/v1/business', businessRouterApi);
 app.use('/api/v1/assistant', assistantRouterApi);
