@@ -5,8 +5,9 @@ const Admin = require('../models/admin');
 const Courier = require('../models/courier');
 const crypto = require('crypto');
 const OtpVerification = require('../models/OtpVerification');
+const PasswordResetOtp = require('../models/PasswordResetOtp');
+const PasswordResetSession = require('../models/PasswordResetSession');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const sms = require('../utils/sms');
 const { emailService } = require('../utils/email');
 const Order = require('../models/order');
@@ -282,7 +283,206 @@ const registerPage = (req, res) => {
       currentLang: lang,
       translation: res.locals.translation // Ensure translation is passed
     });
+};
+
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+function normalizeEmailKey(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+async function findBusinessUserByEmailInput(emailInput) {
+  const key = normalizeEmailKey(emailInput);
+  if (!key) return null;
+  return User.findOne({
+    email: new RegExp(`^${escapeRegex(key)}$`, 'i'),
+    role: { $regex: /^business$/i },
+  });
+}
+
+const forgotPasswordPage = (req, res) => {
+  const lang = req.query.lang || req.cookies.language || 'en';
+  return res.render('auth/forgot-password', {
+    title: res.locals.translation?.auth?.forgotPassword?.pageTitle || 'Forgot password',
+    layout: 'layouts/layout-without-nav',
+    currentLang: lang,
+    translation: res.locals.translation,
+  });
+};
+
+const forgotPasswordSendOtp = async (req, res) => {
+  const rawEmail = req.body && req.body.email;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!rawEmail || !emailRegex.test(String(rawEmail).trim())) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Please enter a valid email address',
+    });
+  }
+
+  const emailKey = normalizeEmailKey(rawEmail);
+  const genericOk = {
+    status: 'success',
+    message:
+      'If an account exists for this email, a verification code has been sent.',
+  };
+
+  try {
+    const user = await findBusinessUserByEmailInput(rawEmail);
+    if (!user) {
+      return res.status(200).json(genericOk);
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+
+    await PasswordResetOtp.deleteMany({ email: emailKey });
+    await PasswordResetOtp.create({ email: emailKey, otpHash });
+
+    const businessName =
+      (user.brandInfo && user.brandInfo.brandName && String(user.brandInfo.brandName).trim()) ||
+      (user.name && String(user.name).trim()) ||
+      'Now Shipping';
+
+    await emailService.sendPasswordResetOtp(user.email, otp, businessName);
+
+    return res.status(200).json(genericOk);
+  } catch (err) {
+    console.error('forgotPasswordSendOtp:', err);
+    try {
+      await PasswordResetOtp.deleteMany({ email: emailKey });
+    } catch (_) {
+      /* ignore */
+    }
+    return res.status(500).json({
+      status: 'error',
+      message: 'Could not send email. Please try again later.',
+    });
+  }
+};
+
+const forgotPasswordVerifyOtp = async (req, res) => {
+  const { email, otp } = req.body || {};
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!email || !otp) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Please fill all the fields',
+    });
+  }
+
+  if (!emailRegex.test(String(email).trim())) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Please enter a valid email address',
+    });
+  }
+
+  const emailKey = normalizeEmailKey(email);
+
+  try {
+    const record = await PasswordResetOtp.findOne({ email: emailKey });
+    if (!record) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid or expired verification code',
+      });
+    }
+
+    const hash = crypto.createHash('sha256').update(String(otp).trim()).digest('hex');
+    if (hash !== record.otpHash) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid or expired verification code',
+      });
+    }
+
+    const user = await findBusinessUserByEmailInput(email);
+    if (!user) {
+      await PasswordResetOtp.deleteOne({ _id: record._id });
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid or expired verification code',
+      });
+    }
+
+    await PasswordResetOtp.deleteOne({ _id: record._id });
+    await PasswordResetSession.deleteMany({ email: emailKey });
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    await PasswordResetSession.create({ email: emailKey, tokenHash });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Code verified. You can set your new password.',
+      resetToken,
+    });
+  } catch (err) {
+    console.error('forgotPasswordVerifyOtp:', err);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Something went wrong. Please try again.',
+    });
+  }
+};
+
+const forgotPasswordReset = async (req, res) => {
+  const { resetToken, newPassword } = req.body || {};
+
+  if (!resetToken || !newPassword) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Please fill all the fields',
+    });
+  }
+
+  if (String(newPassword).length < 8) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Password must be at least 8 characters',
+    });
+  }
+
+  const tokenHash = crypto.createHash('sha256').update(String(resetToken).trim()).digest('hex');
+
+  try {
+    const session = await PasswordResetSession.findOne({ tokenHash });
+    if (!session) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'This reset link has expired. Please start again.',
+      });
+    }
+
+    const user = await findBusinessUserByEmailInput(session.email);
+    if (!user) {
+      await PasswordResetSession.deleteOne({ _id: session._id });
+      return res.status(400).json({
+        status: 'error',
+        message: 'This reset link has expired. Please start again.',
+      });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    await PasswordResetSession.deleteOne({ _id: session._id });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Your password has been updated. You can sign in now.',
+    });
+  } catch (err) {
+    console.error('forgotPasswordReset:', err);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Something went wrong. Please try again.',
+    });
+  }
+};
 
 const signup = async (req, res) => {
   const { email, fullName, password, phoneNumber, storageCheck, termsCheck ,otp } =
@@ -847,4 +1047,8 @@ module.exports = {
   courierLogin,
   loginAsCourier,
 
+  forgotPasswordPage,
+  forgotPasswordSendOtp,
+  forgotPasswordVerifyOtp,
+  forgotPasswordReset,
 };

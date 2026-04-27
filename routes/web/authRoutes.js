@@ -48,6 +48,12 @@ router.post('/signup', authController.signup);
 router.post('/send-otp', authController.sendOTP);
 router.post('/login', loginTimeout, authController.login);
 
+router.get('/forgotpassword', (req, res) => res.redirect(302, '/forgot-password'));
+router.get('/forgot-password', authController.forgotPasswordPage);
+router.post('/forgot-password/send-otp', authController.forgotPasswordSendOtp);
+router.post('/forgot-password/verify-otp', authController.forgotPasswordVerifyOtp);
+router.post('/forgot-password/reset', authController.forgotPasswordReset);
+
 router.get('/verify-email', authController.verifyEmailBytoken);
 router.get('/email-verified', authController.emailVerifiedPage);
 

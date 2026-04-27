@@ -639,6 +639,27 @@ const getWelcomeTemplate = (businessData) => {
   );
 };
 
+const getPasswordResetOtpTemplate = (businessDisplayName, otp) => {
+  const safeName = String(businessDisplayName || 'Now Shipping').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const safeOtp = String(otp || '').replace(/\D/g, '').slice(0, 6);
+  const content = `
+    <h2>Password reset</h2>
+    <p>You requested to reset the password for your <strong>${safeName}</strong> account on Now Shipping.</p>
+    <div class="highlight-box">
+      <p style="font-size: 14px; margin-bottom: 8px;"><strong>Your verification code</strong></p>
+      <p style="font-size: 32px; letter-spacing: 8px; font-weight: 700; color: #2b71b9; margin: 0;">${safeOtp}</p>
+      <p style="font-size: 13px; margin-top: 12px; color: #666;">This code expires in 15 minutes. If you did not request a reset, you can ignore this email.</p>
+    </div>
+  `;
+  return getEmailBaseTemplate(
+    'Password reset code',
+    content,
+    null,
+    null,
+    'For your security, never share this code with anyone. Now Shipping staff will never ask you for it.'
+  );
+};
+
 module.exports = {
   getEmailBaseTemplate,
   getEmailVerificationTemplate,
@@ -646,5 +667,6 @@ module.exports = {
   getDailyCashCycleTemplate,
   getMoneyReleaseTemplate,
   getOrderStatusUpdateTemplate,
-  getWelcomeTemplate
+  getWelcomeTemplate,
+  getPasswordResetOtpTemplate,
 };

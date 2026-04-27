@@ -49,9 +49,10 @@ class EmailService {
   async sendEmail(options) {
     try {
       const cfg = getEmailConfig();
+      const fromName = options.fromName || 'Now Shipping';
       const mailOptions = {
         from: {
-          name: 'Now Shipping',
+          name: fromName,
           address: cfg.from,
         },
         to: options.email,
@@ -154,6 +155,20 @@ class EmailService {
       email: user.email,
       subject: 'Verify your email address',
       html,
+    });
+  }
+
+  /**
+   * Password reset OTP for business accounts. "From" name uses the business display name when provided.
+   */
+  async sendPasswordResetOtp(toEmail, otp, businessDisplayName) {
+    const display = (businessDisplayName || '').trim() || 'Now Shipping';
+    const html = emailTemplates.getPasswordResetOtpTemplate(display, otp);
+    return await this.sendEmail({
+      email: toEmail,
+      subject: `${display} — Password reset code`,
+      html,
+      fromName: display,
     });
   }
 

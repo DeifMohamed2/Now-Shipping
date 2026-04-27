@@ -10,17 +10,14 @@ router.post('/signup', authController.signup);
 
 router.post('/send-otp', authController.sendOTP);
 
+router.post('/forgot-password/send-otp', authController.forgotPasswordSendOtp);
+router.post('/forgot-password/verify-otp', authController.forgotPasswordVerifyOtp);
+router.post('/forgot-password/reset', authController.forgotPasswordReset);
+
 // ADMIN LOGIN
 router.post('/admin-login', authController.loginAsAdmin);
 
-
 // COURIER LOGIN
 router.post('/courier-login', authController.loginAsCourier);
-
-
-// OTP
-router.post('/send-otp', authController.sendOTP);
-
-
 
 module.exports = router;
