@@ -573,6 +573,19 @@
       "language": "Language",
       "breadcrumbNav": "Breadcrumb"
     },
+    "shared": {
+      "areaSelectionModal": {
+        "title": "Select Area",
+        "searchPlaceholder": "Search by area in English or Arabic (e.g. Nasr City or مدينة نصر)",
+        "hint": "Click on any governorate to view and select available areas",
+        "confirm": "Confirm Selection",
+        "cancel": "Cancel",
+        "closeAria": "Close",
+        "swalSelectTitle": "Please Select",
+        "swalSelectText": "Please select both a governorate and an area.",
+        "loadingRegions": "Loading regions…"
+      }
+    },
     "pages": {
       "dashboard": {
         "title": "Overview",

@@ -249,6 +249,9 @@ router.put('/language', businessController.updateBusinessLanguage);
 // Get business notifications
 router.get('/notifications', notificationController.getBusinessNotifications);
 
+// Mark all notifications as read
+router.put('/notifications/read-all', notificationController.markAllNotificationsAsRead);
+
 // Mark notification as read
 router.put('/notifications/:notificationId/read', notificationController.markNotificationAsRead);
 

@@ -2,4144 +2,4144 @@
   "Cairo": {
     "value": "Cairo",
     "label": {
-      "ar": "Cairo",
+      "ar": "القاهرة",
       "en": "Cairo"
     },
     "areas": [
       {
         "value": "15 May",
         "label": {
-          "ar": "15 May",
+          "ar": "١٥ مايو",
           "en": "15 May"
         }
       },
       {
         "value": "Abdeen",
         "label": {
-          "ar": "Abdeen",
+          "ar": "عابدين",
           "en": "Abdeen"
         }
       },
       {
         "value": "Abdeen - Bab ElLouq",
         "label": {
-          "ar": "Abdeen - Bab ElLouq",
+          "ar": "عابدين - باب اللوق",
           "en": "Abdeen - Bab ElLouq"
         }
       },
       {
         "value": "Abdeen - Downtown Cairo",
         "label": {
-          "ar": "Abdeen - Downtown Cairo",
+          "ar": "عابدين - وسط البلد",
           "en": "Abdeen - Downtown Cairo"
         }
       },
       {
         "value": "Abdeen - ElAtaba",
         "label": {
-          "ar": "Abdeen - ElAtaba",
+          "ar": "عابدين - العتبه",
           "en": "Abdeen - ElAtaba"
         }
       },
       {
         "value": "Abdeen - ElBalaqsah",
         "label": {
-          "ar": "Abdeen - ElBalaqsah",
+          "ar": "عابدين - البلاقسه",
           "en": "Abdeen - ElBalaqsah"
         }
       },
       {
         "value": "Abdeen - ElDawawin",
         "label": {
-          "ar": "Abdeen - ElDawawin",
+          "ar": "عابدين - الدواوين",
           "en": "Abdeen - ElDawawin"
         }
       },
       {
         "value": "Abdeen - ElFawalah",
         "label": {
-          "ar": "Abdeen - ElFawalah",
+          "ar": "عابدين - الفواله",
           "en": "Abdeen - ElFawalah"
         }
       },
       {
         "value": "Abdeen - ElGazirah ElGadidah",
         "label": {
-          "ar": "Abdeen - ElGazirah ElGadidah",
+          "ar": "عابدين - الجزيره الجديده",
           "en": "Abdeen - ElGazirah ElGadidah"
         }
       },
       {
         "value": "Abdeen - ElSahah",
         "label": {
-          "ar": "Abdeen - ElSahah",
+          "ar": "عابدين - الساحه",
           "en": "Abdeen - ElSahah"
         }
       },
       {
         "value": "Abdeen - ElSaqayin",
         "label": {
-          "ar": "Abdeen - ElSaqayin",
+          "ar": "عابدين - السقايين",
           "en": "Abdeen - ElSaqayin"
         }
       },
       {
         "value": "Abdeen - ElSheikh Abd Allah",
         "label": {
-          "ar": "Abdeen - ElSheikh Abd Allah",
+          "ar": "عابدين - الشيخ عبد الله",
           "en": "Abdeen - ElSheikh Abd Allah"
         }
       },
       {
         "value": "Abdeen - Ghayt ElAdah",
         "label": {
-          "ar": "Abdeen - Ghayt ElAdah",
+          "ar": "عابدين - غيط العده",
           "en": "Abdeen - Ghayt ElAdah"
         }
       },
       {
         "value": "Abdeen - Rahbet Abdin",
         "label": {
-          "ar": "Abdeen - Rahbet Abdin",
+          "ar": "عابدين - رحبه عابدين",
           "en": "Abdeen - Rahbet Abdin"
         }
       },
       {
         "value": "Agouza",
         "label": {
-          "ar": "Agouza",
+          "ar": "العجوزه",
           "en": "Agouza"
         }
       },
       {
         "value": "Agouza - ElAbbas",
         "label": {
-          "ar": "Agouza - ElAbbas",
+          "ar": "العجوزه - العباس",
           "en": "Agouza - ElAbbas"
         }
       },
       {
         "value": "Agouza - ElHuwaiteyah",
         "label": {
-          "ar": "Agouza - ElHuwaiteyah",
+          "ar": "العجوزه - الحوتيه",
           "en": "Agouza - ElHuwaiteyah"
         }
       },
       {
         "value": "Agouza - Gazirat Mit Oqbah",
         "label": {
-          "ar": "Agouza - Gazirat Mit Oqbah",
+          "ar": "العجوزه - جزيره ميت عقبه",
           "en": "Agouza - Gazirat Mit Oqbah"
         }
       },
       {
         "value": "Agouza - Madinet ElAwkaf",
         "label": {
-          "ar": "Agouza - Madinet ElAwkaf",
+          "ar": "العبور - مدينه الجولف",
           "en": "Agouza - Madinet ElAwkaf"
         }
       },
       {
         "value": "Agouza - Mit Oqbah",
         "label": {
-          "ar": "Agouza - Mit Oqbah",
+          "ar": "العجوزه - ميت عقبه",
           "en": "Agouza - Mit Oqbah"
         }
       },
       {
         "value": "Agouza - Mohandesiin",
         "label": {
-          "ar": "Agouza - Mohandesiin",
+          "ar": "العجوزه - المهندسين",
           "en": "Agouza - Mohandesiin"
         }
       },
       {
         "value": "AlAtaba - El Mosky",
         "label": {
-          "ar": "AlAtaba - El Mosky",
+          "ar": "العتبه - الموسكي",
           "en": "AlAtaba - El Mosky"
         }
       },
       {
         "value": "Azhar",
         "label": {
-          "ar": "Azhar",
+          "ar": "الازهر",
           "en": "Azhar"
         }
       },
       {
         "value": "Bab ElSharia",
         "label": {
-          "ar": "Bab ElSharia",
+          "ar": "باب الشعريه",
           "en": "Bab ElSharia"
         }
       },
       {
         "value": "Bab ElSharia - Bab ElBahr",
         "label": {
-          "ar": "Bab ElSharia - Bab ElBahr",
+          "ar": "باب الشعريه - باب البحر",
           "en": "Bab ElSharia - Bab ElBahr"
         }
       },
       {
         "value": "Bab ElSharia - Berket ElZatli",
         "label": {
-          "ar": "Bab ElSharia - Berket ElZatli",
+          "ar": "باب الشعريه - بركه الظاتلي",
           "en": "Bab ElSharia - Berket ElZatli"
         }
       },
       {
         "value": "Bab ElSharia - Darb ElAkmaeya",
         "label": {
-          "ar": "Bab ElSharia - Darb ElAkmaeya",
+          "ar": "باب الشعريه - درب الاقماعيه",
           "en": "Bab ElSharia - Darb ElAkmaeya"
         }
       },
       {
         "value": "Bab ElSharia - ElAdawy",
         "label": {
-          "ar": "Bab ElSharia - ElAdawy",
+          "ar": "باب الشعريه - العدوي",
           "en": "Bab ElSharia - ElAdawy"
         }
       },
       {
         "value": "Bab ElSharia - ElMansi",
         "label": {
-          "ar": "Bab ElSharia - ElMansi",
+          "ar": "باب الشعريه - المنسي",
           "en": "Bab ElSharia - ElMansi"
         }
       },
       {
         "value": "Bab ElSharia - ElNasr",
         "label": {
-          "ar": "Bab ElSharia - ElNasr",
+          "ar": "باب الشعريه - النصر",
           "en": "Bab ElSharia - ElNasr"
         }
       },
       {
         "value": "Bab ElSharia - ElSawabi",
         "label": {
-          "ar": "Bab ElSharia - ElSawabi",
+          "ar": "باب الشعريه - الصوابي",
           "en": "Bab ElSharia - ElSawabi"
         }
       },
       {
         "value": "Bab ElSharia - Sidi Madin",
         "label": {
-          "ar": "Bab ElSharia - Sidi Madin",
+          "ar": "باب الشعريه - سيدي مدين",
           "en": "Bab ElSharia - Sidi Madin"
         }
       },
       {
         "value": "Badr City - Ahya'a Badr - Capital Road",
         "label": {
-          "ar": "Badr City - Ahya'a Badr - Capital Road",
+          "ar": "مدينه بدر - احياء بدر طريق العاصمه",
           "en": "Badr City - Ahya'a Badr - Capital Road"
         }
       },
       {
         "value": "Badr City - Badr University (Badr City)",
         "label": {
-          "ar": "Badr City - Badr University (Badr City)",
+          "ar": "مدينه بدر - جامعه بدر (مدينه بدر)",
           "en": "Badr City - Badr University (Badr City)"
         }
       },
       {
         "value": "Badr City - Capital Flower Compound",
         "label": {
-          "ar": "Badr City - Capital Flower Compound",
+          "ar": "مدينه بدر - الجامعه الروسيه (مدينه بدر)",
           "en": "Badr City - Capital Flower Compound"
         }
       },
       {
         "value": "Badr City - Capital Gardens (Badr City)",
         "label": {
-          "ar": "Badr City - Capital Gardens (Badr City)",
+          "ar": "مدينه بدر - الحي السادس (مدينه بدر)",
           "en": "Badr City - Capital Gardens (Badr City)"
         }
       },
       {
         "value": "Badr City - District Four (Badr City)",
         "label": {
-          "ar": "Badr City - District Four (Badr City)",
+          "ar": "الطريق الاوسطى - الطرىق الاوسطى",
           "en": "Badr City - District Four (Badr City)"
         }
       },
       {
         "value": "Badr City - District One (Badr City)",
         "label": {
-          "ar": "Badr City - District One (Badr City)",
+          "ar": "مدينه بدر - الحي الثاني (مدينه بدر)",
           "en": "Badr City - District One (Badr City)"
         }
       },
       {
         "value": "Badr City - District Seven (Badr City)",
         "label": {
-          "ar": "Badr City - District Seven (Badr City)",
+          "ar": "مدينه بدر - استيلا (مدينه بدر)",
           "en": "Badr City - District Seven (Badr City)"
         }
       },
       {
         "value": "Badr City - District Six (Badr City)",
         "label": {
-          "ar": "Badr City - District Six (Badr City)",
+          "ar": "مدينه بدر - حدائق العاصمه (مدينه بدر)",
           "en": "Badr City - District Six (Badr City)"
         }
       },
       {
         "value": "Badr City - District Three (Badr City)",
         "label": {
-          "ar": "Badr City - District Three (Badr City)",
+          "ar": "مدينه بدر - كمبوند زهره العاصمه",
           "en": "Badr City - District Three (Badr City)"
         }
       },
       {
         "value": "Badr City - District Two (Badr City)",
         "label": {
-          "ar": "Badr City - District Two (Badr City)",
+          "ar": "مدينه بدر - الحي الرابع (مدينه بدر)",
           "en": "Badr City - District Two (Badr City)"
         }
       },
       {
         "value": "Badr City - El Robeky",
         "label": {
-          "ar": "Badr City - El Robeky",
+          "ar": "مدينه بدر - الروبيكي",
           "en": "Badr City - El Robeky"
         }
       },
       {
         "value": "Badr City - ElAndalous (Badr City)",
         "label": {
-          "ar": "Badr City - ElAndalous (Badr City)",
+          "ar": "مدينه بدر - الاندلس (مدينه بدر)",
           "en": "Badr City - ElAndalous (Badr City)"
         }
       },
       {
         "value": "Badr City - ElMotamyez District (Badr City)",
         "label": {
-          "ar": "Badr City - ElMotamyez District (Badr City)",
+          "ar": "مدينه بدر - الحي المتميز الشمالي (مدينه بدر)",
           "en": "Badr City - ElMotamyez District (Badr City)"
         }
       },
       {
         "value": "Badr City - ElQoronfel / ElBanafseg (Badr City)",
         "label": {
-          "ar": "Badr City - ElQoronfel / ElBanafseg (Badr City)",
+          "ar": "مدينه بدر - اسكان القرنفل والبنفسج (مدينه بدر)",
           "en": "Badr City - ElQoronfel / ElBanafseg (Badr City)"
         }
       },
       {
         "value": "Badr City - ElReyhana & Awqaf District (Badr City)",
         "label": {
-          "ar": "Badr City - ElReyhana & Awqaf District (Badr City)",
+          "ar": "مدينه بدر - حي الريحانه والاوقاف (مدينه بدر)",
           "en": "Badr City - ElReyhana & Awqaf District (Badr City)"
         }
       },
       {
         "value": "Badr City - ElYasmeen / ElNarges (Badr City)",
         "label": {
-          "ar": "Badr City - ElYasmeen / ElNarges (Badr City)",
+          "ar": "مدينه بدر - اسكان الياسمين والنرجس (مدينه بدر)",
           "en": "Badr City - ElYasmeen / ElNarges (Badr City)"
         }
       },
       {
         "value": "Badr City - Industrial Zone (Badr City)",
         "label": {
-          "ar": "Badr City - Industrial Zone (Badr City)",
+          "ar": "مدينه بدر - الحي الاول (مدينه بدر)",
           "en": "Badr City - Industrial Zone (Badr City)"
         }
       },
       {
         "value": "Badr City - Mokhabarat District (Badr City)",
         "label": {
-          "ar": "Badr City - Mokhabarat District (Badr City)",
+          "ar": "مدينه بدر - الحي المخابرات (مدينه بدر)",
           "en": "Badr City - Mokhabarat District (Badr City)"
         }
       },
       {
         "value": "Badr City - New Heliopolis (Badr City)",
         "label": {
-          "ar": "Badr City - New Heliopolis (Badr City)",
+          "ar": "مدينه بدر - هليوبوليس الجديده (مدينه بدر)",
           "en": "Badr City - New Heliopolis (Badr City)"
         }
       },
       {
         "value": "Badr City - Northen Motamyez District (Badr City)",
         "label": {
-          "ar": "Badr City - Northen Motamyez District (Badr City)",
+          "ar": "مدينه بدر - الحي المتميز (مدينه بدر)",
           "en": "Badr City - Northen Motamyez District (Badr City)"
         }
       },
       {
         "value": "Badr City - Russian University (Badr City)",
         "label": {
-          "ar": "Badr City - Russian University (Badr City)",
+          "ar": "العبور - اسكان الشباب (العبور)",
           "en": "Badr City - Russian University (Badr City)"
         }
       },
       {
         "value": "Badr City - Stella (Badr City)",
         "label": {
-          "ar": "Badr City - Stella (Badr City)",
+          "ar": "مدينه بدر - الحي السابع (مدينه بدر)",
           "en": "Badr City - Stella (Badr City)"
         }
       },
       {
         "value": "Boulak Abu ElEila",
         "label": {
-          "ar": "Boulak Abu ElEila",
+          "ar": "بولاق ابو العلا",
           "en": "Boulak Abu ElEila"
         }
       },
       {
         "value": "Daher",
         "label": {
-          "ar": "Daher",
+          "ar": "الضاهر",
           "en": "Daher"
         }
       },
       {
         "value": "Daher - Abu Khodah",
         "label": {
-          "ar": "Daher - Abu Khodah",
+          "ar": "الضاهر - ابو خوده",
           "en": "Daher - Abu Khodah"
         }
       },
       {
         "value": "Daher - ElGanzouri",
         "label": {
-          "ar": "Daher - ElGanzouri",
+          "ar": "الضاهر - الجنزوري",
           "en": "Daher - ElGanzouri"
         }
       },
       {
         "value": "Daher - ElQbeisi",
         "label": {
-          "ar": "Daher - ElQbeisi",
+          "ar": "الضاهر - القبيسي",
           "en": "Daher - ElQbeisi"
         }
       },
       {
         "value": "Daher - ElSakakeni",
         "label": {
-          "ar": "Daher - ElSakakeni",
+          "ar": "الضاهر - السكاكيني",
           "en": "Daher - ElSakakeni"
         }
       },
       {
         "value": "Daher - ElZaher",
         "label": {
-          "ar": "Daher - ElZaher",
+          "ar": "الضاهر - الظاهر",
           "en": "Daher - ElZaher"
         }
       },
       {
         "value": "Daher - Ghamrah",
         "label": {
-          "ar": "Daher - Ghamrah",
+          "ar": "الضاهر - غمره",
           "en": "Daher - Ghamrah"
         }
       },
       {
         "value": "Ein Shams - Ahmed Esmat",
         "label": {
-          "ar": "Ein Shams - Ahmed Esmat",
+          "ar": "عين شمس - احمد عصمت",
           "en": "Ein Shams - Ahmed Esmat"
         }
       },
       {
         "value": "Ein Shams - Ahmed Oraby",
         "label": {
-          "ar": "Ein Shams - Ahmed Oraby",
+          "ar": "عين شمس - احمد عرابي",
           "en": "Ein Shams - Ahmed Oraby"
         }
       },
       {
         "value": "Ein Shams - Ein Shams ElGharbeyah",
         "label": {
-          "ar": "Ein Shams - Ein Shams ElGharbeyah",
+          "ar": "عين شمس - عين شمس الغربيه",
           "en": "Ein Shams - Ein Shams ElGharbeyah"
         }
       },
       {
         "value": "Ein Shams - Ein Shams Sharkeya",
         "label": {
-          "ar": "Ein Shams - Ein Shams Sharkeya",
+          "ar": "عين شمس - عين شمس الشرقيه",
           "en": "Ein Shams - Ein Shams Sharkeya"
         }
       },
       {
         "value": "Ein Shams - ElNaam",
         "label": {
-          "ar": "Ein Shams - ElNaam",
+          "ar": "عين شمس - النعام",
           "en": "Ein Shams - ElNaam"
         }
       },
       {
         "value": "Ein Shams - ElZahraa w Masaken ElHelmeyah",
         "label": {
-          "ar": "Ein Shams - ElZahraa w Masaken ElHelmeyah",
+          "ar": "عين شمس - الزهراء ومساكن الحلميه",
           "en": "Ein Shams - ElZahraa w Masaken ElHelmeyah"
         }
       },
       {
         "value": "Ein Shams - Helmeyat ElZeitoun",
         "label": {
-          "ar": "Ein Shams - Helmeyat ElZeitoun",
+          "ar": "عين شمس - حلميه الزيتون",
           "en": "Ein Shams - Helmeyat ElZeitoun"
         }
       },
       {
         "value": "Ein Shams - Mansheya ElTahrir",
         "label": {
-          "ar": "Ein Shams - Mansheya ElTahrir",
+          "ar": "عين شمس - منشيه التحرير",
           "en": "Ein Shams - Mansheya ElTahrir"
         }
       },
       {
         "value": "ElAzbakeya - ElFagalah",
         "label": {
-          "ar": "ElAzbakeya - ElFagalah",
+          "ar": "الازبكيه - الفجاله",
           "en": "ElAzbakeya - ElFagalah"
         }
       },
       {
         "value": "ElAzbakeya - ElQebleyah",
         "label": {
-          "ar": "ElAzbakeya - ElQebleyah",
+          "ar": "الازبكيه - القبليه",
           "en": "ElAzbakeya - ElQebleyah"
         }
       },
       {
         "value": "ElAzbakeya - ElQolali",
         "label": {
-          "ar": "ElAzbakeya - ElQolali",
+          "ar": "الازبكيه - القللي",
           "en": "ElAzbakeya - ElQolali"
         }
       },
       {
         "value": "ElAzbakeya - ElRihani",
         "label": {
-          "ar": "ElAzbakeya - ElRihani",
+          "ar": "الازبكيه - الريحاني",
           "en": "ElAzbakeya - ElRihani"
         }
       },
       {
         "value": "ElAzbakeya - Klot Beik",
         "label": {
-          "ar": "ElAzbakeya - Klot Beik",
+          "ar": "الازبكيه - كلوت بك",
           "en": "ElAzbakeya - Klot Beik"
         }
       },
       {
         "value": "ElAzbakeya - Ramsis",
         "label": {
-          "ar": "ElAzbakeya - Ramsis",
+          "ar": "الازبكيه - رمسيس",
           "en": "ElAzbakeya - Ramsis"
         }
       },
       {
         "value": "ElBasatin",
         "label": {
-          "ar": "ElBasatin",
+          "ar": "البساتين",
           "en": "ElBasatin"
         }
       },
       {
         "value": "ElBasatin - Compound Tijan (ElBasatin)",
         "label": {
-          "ar": "ElBasatin - Compound Tijan (ElBasatin)",
+          "ar": "البساتين - كمبوند تيجان (البساتين)",
           "en": "ElBasatin - Compound Tijan (ElBasatin)"
         }
       },
       {
         "value": "ElBasatin - Dar ElSalam",
         "label": {
-          "ar": "ElBasatin - Dar ElSalam",
+          "ar": "البساتين - دار السلام",
           "en": "ElBasatin - Dar ElSalam"
         }
       },
       {
         "value": "ElBasatin - ElBasatin ElGharbeyah",
         "label": {
-          "ar": "ElBasatin - ElBasatin ElGharbeyah",
+          "ar": "البساتين - البساتين الغربيه",
           "en": "ElBasatin - ElBasatin ElGharbeyah"
         }
       },
       {
         "value": "ElBasatin - ElBasatin Sharkeya",
         "label": {
-          "ar": "ElBasatin - ElBasatin Sharkeya",
+          "ar": "البساتين - البساتين الشرقيه",
           "en": "ElBasatin - ElBasatin Sharkeya"
         }
       },
       {
         "value": "ElBasatin - ElIsaweyah",
         "label": {
-          "ar": "ElBasatin - ElIsaweyah",
+          "ar": "البساتين - العيسويه",
           "en": "ElBasatin - ElIsaweyah"
         }
       },
       {
         "value": "ElBasatin - ElLasilki",
         "label": {
-          "ar": "ElBasatin - ElLasilki",
+          "ar": "البساتين - اللاسلكي",
           "en": "ElBasatin - ElLasilki"
         }
       },
       {
         "value": "ElBasatin - Ezbet Fahmy",
         "label": {
-          "ar": "ElBasatin - Ezbet Fahmy",
+          "ar": "البساتين - عزبه فهمي",
           "en": "ElBasatin - Ezbet Fahmy"
         }
       },
       {
         "value": "ElBasatin - Ezbet Khair Allah",
         "label": {
-          "ar": "ElBasatin - Ezbet Khair Allah",
+          "ar": "البساتين - عزبه خير الله",
           "en": "ElBasatin - Ezbet Khair Allah"
         }
       },
       {
         "value": "ElBasatin - Ezbet Nafie",
         "label": {
-          "ar": "ElBasatin - Ezbet Nafie",
+          "ar": "البساتين - عزبه نافع",
           "en": "ElBasatin - Ezbet Nafie"
         }
       },
       {
         "value": "ElBasatin - Grand City - ElHay ElItaly (ElBasatin)",
         "label": {
-          "ar": "ElBasatin - Grand City - ElHay ElItaly (ElBasatin)",
+          "ar": "البساتين - جراند سيتي - الحي الايطالي (البساتين))",
           "en": "ElBasatin - Grand City - ElHay ElItaly (ElBasatin)"
         }
       },
       {
         "value": "ElBasatin - Morshedy Group Crystal Plaza (ElBasatin)",
         "label": {
-          "ar": "ElBasatin - Morshedy Group Crystal Plaza (ElBasatin)",
+          "ar": "البساتين - كريستال بلازا معمار المرشدى (البساتين)",
           "en": "ElBasatin - Morshedy Group Crystal Plaza (ElBasatin)"
         }
       },
       {
         "value": "ElBasatin - Nerco (ElBasatin)",
         "label": {
-          "ar": "ElBasatin - Nerco (ElBasatin)",
+          "ar": "البساتين - نيركو (البساتين)",
           "en": "ElBasatin - Nerco (ElBasatin)"
         }
       },
       {
         "value": "ElBasatin - Sarayat ElKatameya w Makani ElKatameya",
         "label": {
-          "ar": "ElBasatin - Sarayat ElKatameya w Makani ElKatameya",
+          "ar": "البساتين - كمبوند سرايات القطاميه و مكاني قطاميه",
           "en": "ElBasatin - Sarayat ElKatameya w Makani ElKatameya"
         }
       },
       {
         "value": "ElDarb ElAhmar",
         "label": {
-          "ar": "ElDarb ElAhmar",
+          "ar": "الدرب الاحمر",
           "en": "ElDarb ElAhmar"
         }
       },
       {
         "value": "ElDarb ElAhmar - ElHelmeyah ElGedida",
         "label": {
-          "ar": "ElDarb ElAhmar - ElHelmeyah ElGedida",
+          "ar": "الدرب الاحمر - الحلميه الجديده",
           "en": "ElDarb ElAhmar - ElHelmeyah ElGedida"
         }
       },
       {
         "value": "ElGamaliya - ElGamaliya (Downtown)",
         "label": {
-          "ar": "ElGamaliya - ElGamaliya (Downtown)",
+          "ar": "الجماليه - الجماليه (وسط البلد)",
           "en": "ElGamaliya - ElGamaliya (Downtown)"
         }
       },
       {
         "value": "ElKhalifa",
         "label": {
-          "ar": "ElKhalifa",
+          "ar": "الخليفه",
           "en": "ElKhalifa"
         }
       },
       {
         "value": "ElKhalifa - Arab Contractors Sporting Club",
         "label": {
-          "ar": "ElKhalifa - Arab Contractors Sporting Club",
+          "ar": "الخليفه - نادي المقاولون العرب",
           "en": "ElKhalifa - Arab Contractors Sporting Club"
         }
       },
       {
         "value": "ElKhalifa - Baron City (ElKhalifa)",
         "label": {
-          "ar": "ElKhalifa - Baron City (ElKhalifa)",
+          "ar": "الخليفه - البارون سيتي (الخليفه)",
           "en": "ElKhalifa - Baron City (ElKhalifa)"
         }
       },
       {
         "value": "ElKhalifa - Citadel (ElKal3a)",
         "label": {
-          "ar": "ElKhalifa - Citadel (ElKal3a)",
+          "ar": "الخليفه - القلعه",
           "en": "ElKhalifa - Citadel (ElKal3a)"
         }
       },
       {
         "value": "ElKhalifa - El Salebeya",
         "label": {
-          "ar": "ElKhalifa - El Salebeya",
+          "ar": "الخليفه - الصليبه",
           "en": "ElKhalifa - El Salebeya"
         }
       },
       {
         "value": "ElKhalifa - ElAbajiyyah",
         "label": {
-          "ar": "ElKhalifa - ElAbajiyyah",
+          "ar": "الخليفه - الاباجيه",
           "en": "ElKhalifa - ElAbajiyyah"
         }
       },
       {
         "value": "ElKhalifa - Knights Compound Katameya",
         "label": {
-          "ar": "ElKhalifa - Knights Compound Katameya",
+          "ar": "الخليفه - كمبوند الفرسان القطاميه",
           "en": "ElKhalifa - Knights Compound Katameya"
         }
       },
       {
         "value": "ElKhalifa - Maadi Gardens Compound Katameya",
         "label": {
-          "ar": "ElKhalifa - Maadi Gardens Compound Katameya",
+          "ar": "الخليفه - كمبوند معادي جاردنز القطاميه",
           "en": "ElKhalifa - Maadi Gardens Compound Katameya"
         }
       },
       {
         "value": "ElKhalifa - Sama Compound",
         "label": {
-          "ar": "ElKhalifa - Sama Compound",
+          "ar": "الخليفه - كمبوند سما",
           "en": "ElKhalifa - Sama Compound"
         }
       },
       {
         "value": "ElMaadi",
         "label": {
-          "ar": "ElMaadi",
+          "ar": "المعادي",
           "en": "ElMaadi"
         }
       },
       {
         "value": "ElMaadi - Arab ElMaadi",
         "label": {
-          "ar": "ElMaadi - Arab ElMaadi",
+          "ar": "المعادي - عرب المعادي",
           "en": "ElMaadi - Arab ElMaadi"
         }
       },
       {
         "value": "ElMaadi - Beer Om Soltan",
         "label": {
-          "ar": "ElMaadi - Beer Om Soltan",
+          "ar": "المعادي - بير ام سلطان",
           "en": "ElMaadi - Beer Om Soltan"
         }
       },
       {
         "value": "ElMaadi - Corniche ElMaadi",
         "label": {
-          "ar": "ElMaadi - Corniche ElMaadi",
+          "ar": "المعادي - كورنيش المعادي",
           "en": "ElMaadi - Corniche ElMaadi"
         }
       },
       {
         "value": "ElMaadi - Degla",
         "label": {
-          "ar": "ElMaadi - Degla",
+          "ar": "المعادي - دجله",
           "en": "ElMaadi - Degla"
         }
       },
       {
         "value": "ElMaadi - ElGezira (ElBasatin)",
         "label": {
-          "ar": "ElMaadi - ElGezira (ElBasatin)",
+          "ar": "المعادي - الجزيره (البساتين)",
           "en": "ElMaadi - ElGezira (ElBasatin)"
         }
       },
       {
         "value": "ElMaadi - ElSarayat ElGharbeyah",
         "label": {
-          "ar": "ElMaadi - ElSarayat ElGharbeyah",
+          "ar": "المعادي - معادي السرايات الغربيه",
           "en": "ElMaadi - ElSarayat ElGharbeyah"
         }
       },
       {
         "value": "ElMaadi - ElSarayat ElSharkia",
         "label": {
-          "ar": "ElMaadi - ElSarayat ElSharkia",
+          "ar": "المعادي - معادي السرايات الشرقيه",
           "en": "ElMaadi - ElSarayat ElSharkia"
         }
       },
       {
         "value": "ElMaadi - Emtedad ElAmal (ElMaadi)",
         "label": {
-          "ar": "ElMaadi - Emtedad ElAmal (ElMaadi)",
+          "ar": "المعادي - امتداد الامل (المعادي)",
           "en": "ElMaadi - Emtedad ElAmal (ElMaadi)"
         }
       },
       {
         "value": "ElMaadi - Hadayek ElMaadi",
         "label": {
-          "ar": "ElMaadi - Hadayek ElMaadi",
+          "ar": "المعادي - حدائق المعادى",
           "en": "ElMaadi - Hadayek ElMaadi"
         }
       },
       {
         "value": "ElMaadi - Maadi ElKhabiri ElGharbeyah",
         "label": {
-          "ar": "ElMaadi - Maadi ElKhabiri ElGharbeyah",
+          "ar": "المعادي - معادي الخبيري الغربيه",
           "en": "ElMaadi - Maadi ElKhabiri ElGharbeyah"
         }
       },
       {
         "value": "ElMaadi - Maadi ElKhabiri ElSharqeyah",
         "label": {
-          "ar": "ElMaadi - Maadi ElKhabiri ElSharqeyah",
+          "ar": "المعادي - معادي الخبيري الشرقيه",
           "en": "ElMaadi - Maadi ElKhabiri ElSharqeyah"
         }
       },
       {
         "value": "ElMaadi - Maadi ElKhabiri ElWasti",
         "label": {
-          "ar": "ElMaadi - Maadi ElKhabiri ElWasti",
+          "ar": "المعادي - معادي الخبيري الوسطي",
           "en": "ElMaadi - Maadi ElKhabiri ElWasti"
         }
       },
       {
         "value": "ElMaadi - Merag City",
         "label": {
-          "ar": "ElMaadi - Merag City",
+          "ar": "المعادي - المعادي الجديده",
           "en": "ElMaadi - Merag City"
         }
       },
       {
         "value": "ElMaadi - Monshaat Nasir (Hadayek Helwan)",
         "label": {
-          "ar": "ElMaadi - Monshaat Nasir (Hadayek Helwan)",
+          "ar": "المعادي - منشاه ناصر (حدائق حلوان)",
           "en": "ElMaadi - Monshaat Nasir (Hadayek Helwan)"
         }
       },
       {
         "value": "ElMaadi - New Maadi",
         "label": {
-          "ar": "ElMaadi - New Maadi",
+          "ar": "المعادي - مدينه المعراج",
           "en": "ElMaadi - New Maadi"
         }
       },
       {
         "value": "ElMaadi - Sakanat ElMaadi",
         "label": {
-          "ar": "ElMaadi - Sakanat ElMaadi",
+          "ar": "المعادي - ثكنات المعادي",
           "en": "ElMaadi - Sakanat ElMaadi"
         }
       },
       {
         "value": "ElMaadi - Saqr Korayesh (Maadi)",
         "label": {
-          "ar": "ElMaadi - Saqr Korayesh (Maadi)",
+          "ar": "المعادي - صقر قريش (المعادي)",
           "en": "ElMaadi - Saqr Korayesh (Maadi)"
         }
       },
       {
         "value": "ElMaadi - Zahraa El Maadi",
         "label": {
-          "ar": "ElMaadi - Zahraa El Maadi",
+          "ar": "المعادي - زهراء المعادي",
           "en": "ElMaadi - Zahraa El Maadi"
         }
       },
       {
         "value": "ElMarg",
         "label": {
-          "ar": "ElMarg",
+          "ar": "المرج",
           "en": "ElMarg"
         }
       },
       {
         "value": "ElMarg - Al Bayda New Marg",
         "label": {
-          "ar": "ElMarg - Al Bayda New Marg",
+          "ar": "المرج - المرج الجديده البيضا",
           "en": "ElMarg - Al Bayda New Marg"
         }
       },
       {
         "value": "ElMarg - Berket ElHag",
         "label": {
-          "ar": "ElMarg - Berket ElHag",
+          "ar": "المرج - بركه الحاج",
           "en": "ElMarg - Berket ElHag"
         }
       },
       {
         "value": "ElMarg - ElGabal ElAsfar",
         "label": {
-          "ar": "ElMarg - ElGabal ElAsfar",
+          "ar": "المرج - الجبل الاصفر",
           "en": "ElMarg - ElGabal ElAsfar"
         }
       },
       {
         "value": "ElMarg - ElMarg ElBahreyah",
         "label": {
-          "ar": "ElMarg - ElMarg ElBahreyah",
+          "ar": "المرج - المرج البحريه",
           "en": "ElMarg - ElMarg ElBahreyah"
         }
       },
       {
         "value": "ElMarg - ElMarg ElGedida",
         "label": {
-          "ar": "ElMarg - ElMarg ElGedida",
+          "ar": "المرج - المرج الجديده",
           "en": "ElMarg - ElMarg ElGedida"
         }
       },
       {
         "value": "ElMarg - ElMarg ElGharbeyah",
         "label": {
-          "ar": "ElMarg - ElMarg ElGharbeyah",
+          "ar": "المرج - المرج الغربيه",
           "en": "ElMarg - ElMarg ElGharbeyah"
         }
       },
       {
         "value": "ElMarg - ElMarg ElQebleyah",
         "label": {
-          "ar": "ElMarg - ElMarg ElQebleyah",
+          "ar": "المرج - المرج القبليه",
           "en": "ElMarg - ElMarg ElQebleyah"
         }
       },
       {
         "value": "ElMarg - ElMarg ElSharkeya",
         "label": {
-          "ar": "ElMarg - ElMarg ElSharkeya",
+          "ar": "المرج - المرج الشرقيه",
           "en": "ElMarg - ElMarg ElSharkeya"
         }
       },
       {
         "value": "ElMarg - Kafr Abu Sir",
         "label": {
-          "ar": "ElMarg - Kafr Abu Sir",
+          "ar": "المرج - كفر ابوصير",
           "en": "ElMarg - Kafr Abu Sir"
         }
       },
       {
         "value": "ElMarg - Kafr ElBasha",
         "label": {
-          "ar": "ElMarg - Kafr ElBasha",
+          "ar": "المرج - كفر الباشا",
           "en": "ElMarg - Kafr ElBasha"
         }
       },
       {
         "value": "ElMarg - Kafr ElShorafa-Cairo",
         "label": {
-          "ar": "ElMarg - Kafr ElShorafa-Cairo",
+          "ar": "المرج - كفر الشرفاء-القاهره",
           "en": "ElMarg - Kafr ElShorafa-Cairo"
         }
       },
       {
         "value": "ElMarg - Moasset AlZakah",
         "label": {
-          "ar": "ElMarg - Moasset AlZakah",
+          "ar": "المرج - مؤسسه الزكاه",
           "en": "ElMarg - Moasset AlZakah"
         }
       },
       {
         "value": "ElMarg - Mohamed Nagiub (ElMarg)",
         "label": {
-          "ar": "ElMarg - Mohamed Nagiub (ElMarg)",
+          "ar": "المرج - محمد نجيب (المرج)",
           "en": "ElMarg - Mohamed Nagiub (ElMarg)"
         }
       },
       {
         "value": "ElMatareya",
         "label": {
-          "ar": "ElMatareya",
+          "ar": "المطريه",
           "en": "ElMatareya"
         }
       },
       {
         "value": "ElMatareya - Arab ElHoson - ElMasallah",
         "label": {
-          "ar": "ElMatareya - Arab ElHoson - ElMasallah",
+          "ar": "المطريه - عرب الحصن والمسله",
           "en": "ElMatareya - Arab ElHoson - ElMasallah"
         }
       },
       {
         "value": "ElMatareya - ElAzab (ElMatareyah)",
         "label": {
-          "ar": "ElMatareya - ElAzab (ElMatareyah)",
+          "ar": "المطريه - العزب (المطريه)",
           "en": "ElMatareya - ElAzab (ElMatareyah)"
         }
       },
       {
         "value": "ElMatareya - ElKablat (ElMatareyah)",
         "label": {
-          "ar": "ElMatareya - ElKablat (ElMatareyah)",
+          "ar": "المطريه - الكابلات (المطريه)",
           "en": "ElMatareya - ElKablat (ElMatareyah)"
         }
       },
       {
         "value": "ElMatareya - ElMatareyah ElBahreyah",
         "label": {
-          "ar": "ElMatareya - ElMatareyah ElBahreyah",
+          "ar": "المطريه - المطريه البحريه",
           "en": "ElMatareya - ElMatareyah ElBahreyah"
         }
       },
       {
         "value": "ElMatareya - ElMatareyah ElGharbeyah",
         "label": {
-          "ar": "ElMatareya - ElMatareyah ElGharbeyah",
+          "ar": "المطريه - المطريه الغربيه",
           "en": "ElMatareya - ElMatareyah ElGharbeyah"
         }
       },
       {
         "value": "ElMatareya - ElMatareyah ElQebleyah",
         "label": {
-          "ar": "ElMatareya - ElMatareyah ElQebleyah",
+          "ar": "المطريه - المطريه القبليه",
           "en": "ElMatareya - ElMatareyah ElQebleyah"
         }
       },
       {
         "value": "ElMatareya - Shagret Mariem",
         "label": {
-          "ar": "ElMatareya - Shagret Mariem",
+          "ar": "المطريه - شجره مريم",
           "en": "ElMatareya - Shagret Mariem"
         }
       },
       {
         "value": "ElMokattam - ElMokattam - ElHadaba ElWosta",
         "label": {
-          "ar": "ElMokattam - ElMokattam - ElHadaba ElWosta",
+          "ar": "المقطم - المقطم - الهضبه الوسطي",
           "en": "ElMokattam - ElMokattam - ElHadaba ElWosta"
         }
       },
       {
         "value": "ElMokattam - ElMokattam - Street 9",
         "label": {
-          "ar": "ElMokattam - ElMokattam - Street 9",
+          "ar": "المقطم - المقطم - شارع ٩",
           "en": "ElMokattam - ElMokattam - Street 9"
         }
       },
       {
         "value": "ElMokattam - ElMokattam- Hay Elasmarat",
         "label": {
-          "ar": "ElMokattam - ElMokattam- Hay Elasmarat",
+          "ar": "المقطم - المقطم - حي الاسمرات",
           "en": "ElMokattam - ElMokattam- Hay Elasmarat"
         }
       },
       {
         "value": "ElMokattam - Golden Gates Compound",
         "label": {
-          "ar": "ElMokattam - Golden Gates Compound",
+          "ar": "المقطم - كمبوند جولدن جيتس",
           "en": "ElMokattam - Golden Gates Compound"
         }
       },
       {
         "value": "ElMokattam - Karim Bannona Street",
         "label": {
-          "ar": "ElMokattam - Karim Bannona Street",
+          "ar": "المقطم - شارع كريم بنونه",
           "en": "ElMokattam - Karim Bannona Street"
         }
       },
       {
         "value": "ElMokattam - Morshedy Group One Katameya",
         "label": {
-          "ar": "ElMokattam - Morshedy Group One Katameya",
+          "ar": "المقطم - كمبوند مدينه النخيل القطاميه",
           "en": "ElMokattam - Morshedy Group One Katameya"
         }
       },
       {
         "value": "ElMokattam - Palm City Compound Katameya",
         "label": {
-          "ar": "ElMokattam - Palm City Compound Katameya",
+          "ar": "السلام - كمبوند الملاحه الجويه",
           "en": "ElMokattam - Palm City Compound Katameya"
         }
       },
       {
         "value": "ElMokattam - Uptown Cairo",
         "label": {
-          "ar": "ElMokattam - Uptown Cairo",
+          "ar": "المقطم - اب تاون كايرو",
           "en": "ElMokattam - Uptown Cairo"
         }
       },
       {
         "value": "ElNozha - Cairo Airport",
         "label": {
-          "ar": "ElNozha - Cairo Airport",
+          "ar": "النزهه - مطار القاهره",
           "en": "ElNozha - Cairo Airport"
         }
       },
       {
         "value": "ElNozha - ElKilo 4,5 (Almazah)",
         "label": {
-          "ar": "ElNozha - ElKilo 4,5 (Almazah)",
+          "ar": "النزهه - الكيلو ٤,٥ (الماظه)",
           "en": "ElNozha - ElKilo 4,5 (Almazah)"
         }
       },
       {
         "value": "ElNozha - Masaken ElMohandessin",
         "label": {
-          "ar": "ElNozha - Masaken ElMohandessin",
+          "ar": "النزهه - مساكن المهندسين",
           "en": "ElNozha - Masaken ElMohandessin"
         }
       },
       {
         "value": "ElNozha - New Nozha (Joseph Tito)",
         "label": {
-          "ar": "ElNozha - New Nozha (Joseph Tito)",
+          "ar": "النزهه - النزهه الجديده (جوزيف تيتو)",
           "en": "ElNozha - New Nozha (Joseph Tito)"
         }
       },
       {
         "value": "ElNozha - Triumph Square",
         "label": {
-          "ar": "ElNozha - Triumph Square",
+          "ar": "النزهه - ميدان تريومف",
           "en": "ElNozha - Triumph Square"
         }
       },
       {
         "value": "ElRehab - ElRehab - Extension",
         "label": {
-          "ar": "ElRehab - ElRehab - Extension",
+          "ar": "الرحاب - الرحاب - سوق الرحاب",
           "en": "ElRehab - ElRehab - Extension"
         }
       },
       {
         "value": "ElRehab - ElRehab - Market",
         "label": {
-          "ar": "ElRehab - ElRehab - Market",
+          "ar": "الرحاب - الرحاب - امتداد الرحاب",
           "en": "ElRehab - ElRehab - Market"
         }
       },
       {
         "value": "ElRehab - ElRehab - Phase 1",
         "label": {
-          "ar": "ElRehab - ElRehab - Phase 1",
+          "ar": "الرحاب - الرحاب - المرحله ١",
           "en": "ElRehab - ElRehab - Phase 1"
         }
       },
       {
         "value": "ElRehab - ElRehab - Phase 2",
         "label": {
-          "ar": "ElRehab - ElRehab - Phase 2",
+          "ar": "الرحاب - الرحاب - المرحله ٢",
           "en": "ElRehab - ElRehab - Phase 2"
         }
       },
       {
         "value": "ElRehab - ElRehab - Phase 3",
         "label": {
-          "ar": "ElRehab - ElRehab - Phase 3",
+          "ar": "الرحاب - الرحاب - المرحله ٣",
           "en": "ElRehab - ElRehab - Phase 3"
         }
       },
       {
         "value": "ElRehab - ElRehab - Phase 4",
         "label": {
-          "ar": "ElRehab - ElRehab - Phase 4",
+          "ar": "الرحاب - الرحاب - المرحله ٤",
           "en": "ElRehab - ElRehab - Phase 4"
         }
       },
       {
         "value": "ElRehab - ElRehab - Phase 5",
         "label": {
-          "ar": "ElRehab - ElRehab - Phase 5",
+          "ar": "الرحاب - الرحاب - المرحله ٥",
           "en": "ElRehab - ElRehab - Phase 5"
         }
       },
       {
         "value": "ElRehab - ElRehab - Phase 6",
         "label": {
-          "ar": "ElRehab - ElRehab - Phase 6",
+          "ar": "الرحاب - الرحاب - المرحله ٦",
           "en": "ElRehab - ElRehab - Phase 6"
         }
       },
       {
         "value": "ElRehab - ElRehab - Sporting Club",
         "label": {
-          "ar": "ElRehab - ElRehab - Sporting Club",
+          "ar": "الرحاب - الرحاب - نادي الرحاب الرياضي",
           "en": "ElRehab - ElRehab - Sporting Club"
         }
       },
       {
         "value": "ElSalam",
         "label": {
-          "ar": "ElSalam",
+          "ar": "السلام",
           "en": "ElSalam"
         }
       },
       {
         "value": "ElSalam - Air Navigation Compound",
         "label": {
-          "ar": "ElSalam - Air Navigation Compound",
+          "ar": "العبور - الاسكان الوطني",
           "en": "ElSalam - Air Navigation Compound"
         }
       },
       {
         "value": "ElSalam - ElNahda",
         "label": {
-          "ar": "ElSalam - ElNahda",
+          "ar": "السلام - النهضه",
           "en": "ElSalam - ElNahda"
         }
       },
       {
         "value": "ElSalam - ElSalam City",
         "label": {
-          "ar": "ElSalam - ElSalam City",
+          "ar": "السلام - مدينه السلام",
           "en": "ElSalam - ElSalam City"
         }
       },
       {
         "value": "ElSalam - ElSalam ElGharbeyah",
         "label": {
-          "ar": "ElSalam - ElSalam ElGharbeyah",
+          "ar": "السلام - السلام الغربيه",
           "en": "ElSalam - ElSalam ElGharbeyah"
         }
       },
       {
         "value": "ElSalam - ElSalam Sharkeya",
         "label": {
-          "ar": "ElSalam - ElSalam Sharkeya",
+          "ar": "السلام - السلام الشرقيه",
           "en": "ElSalam - ElSalam Sharkeya"
         }
       },
       {
         "value": "ElSalam - ElSalam Taqseem Maka",
         "label": {
-          "ar": "ElSalam - ElSalam Taqseem Maka",
+          "ar": "السلام - السلام تقسيم مكه",
           "en": "ElSalam - ElSalam Taqseem Maka"
         }
       },
       {
         "value": "ElSalam - Masaken ElMahmoudeya ElQadimah (ElSalam)",
         "label": {
-          "ar": "ElSalam - Masaken ElMahmoudeya ElQadimah (ElSalam)",
+          "ar": "السلام - مساكن المحموديه القديمه (السلام)",
           "en": "ElSalam - Masaken ElMahmoudeya ElQadimah (ElSalam)"
         }
       },
       {
         "value": "ElSayeda Zainab",
         "label": {
-          "ar": "ElSayeda Zainab",
+          "ar": "السيده زينب",
           "en": "ElSayeda Zainab"
         }
       },
       {
         "value": "ElSayeda Zainab - ElAtris",
         "label": {
-          "ar": "ElSayeda Zainab - ElAtris",
+          "ar": "السيده زينب - العتريس",
           "en": "ElSayeda Zainab - ElAtris"
         }
       },
       {
         "value": "ElSayeda Zainab - ElBaghalah",
         "label": {
-          "ar": "ElSayeda Zainab - ElBaghalah",
+          "ar": "السيده زينب - البغاله",
           "en": "ElSayeda Zainab - ElBaghalah"
         }
       },
       {
         "value": "ElSayeda Zainab - ElHanafi",
         "label": {
-          "ar": "ElSayeda Zainab - ElHanafi",
+          "ar": "السيده زينب - الحنفي",
           "en": "ElSayeda Zainab - ElHanafi"
         }
       },
       {
         "value": "ElSayeda Zainab - ElInshaa w ElMunirah",
         "label": {
-          "ar": "ElSayeda Zainab - ElInshaa w ElMunirah",
+          "ar": "السيده زينب - الانشاء والمنيره",
           "en": "ElSayeda Zainab - ElInshaa w ElMunirah"
         }
       },
       {
         "value": "ElSayeda Zainab - ElSebaeyin",
         "label": {
-          "ar": "ElSayeda Zainab - ElSebaeyin",
+          "ar": "السيده زينب - السبعيني",
           "en": "ElSayeda Zainab - ElSebaeyin"
         }
       },
       {
         "value": "ElSayeda Zainab - Kasr ElEini",
         "label": {
-          "ar": "ElSayeda Zainab - Kasr ElEini",
+          "ar": "السيده زينب - القصر العيني",
           "en": "ElSayeda Zainab - Kasr ElEini"
         }
       },
       {
         "value": "ElSayeda Zainab - Khairat",
         "label": {
-          "ar": "ElSayeda Zainab - Khairat",
+          "ar": "السيده زينب - خيرت",
           "en": "ElSayeda Zainab - Khairat"
         }
       },
       {
         "value": "ElSayeda Zainab - Sayeda Naffisa",
         "label": {
-          "ar": "ElSayeda Zainab - Sayeda Naffisa",
+          "ar": "السيده زينب - السيده نفيسه",
           "en": "ElSayeda Zainab - Sayeda Naffisa"
         }
       },
       {
         "value": "ElSayeda Zainab - Sonqor",
         "label": {
-          "ar": "ElSayeda Zainab - Sonqor",
+          "ar": "السيده زينب - سنقر",
           "en": "ElSayeda Zainab - Sonqor"
         }
       },
       {
         "value": "ElSayeda Zainab - Tolon",
         "label": {
-          "ar": "ElSayeda Zainab - Tolon",
+          "ar": "السيده زينب - طولون",
           "en": "ElSayeda Zainab - Tolon"
         }
       },
       {
         "value": "ElSayeda Zainab - Zeinhom",
         "label": {
-          "ar": "ElSayeda Zainab - Zeinhom",
+          "ar": "السيده زينب - زينهم",
           "en": "ElSayeda Zainab - Zeinhom"
         }
       },
       {
         "value": "ElSharabiya",
         "label": {
-          "ar": "ElSharabiya",
+          "ar": "الشرابيه",
           "en": "ElSharabiya"
         }
       },
       {
         "value": "ElSharabiya - Mahmashah",
         "label": {
-          "ar": "ElSharabiya - Mahmashah",
+          "ar": "الشرابيه - مهمشه",
           "en": "ElSharabiya - Mahmashah"
         }
       },
       {
         "value": "ElShorouk - 100 meter Area (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - 100 meter Area (ElShorouk)",
+          "ar": "الشروق - الحي التاسع (الشروق)",
           "en": "ElShorouk - 100 meter Area (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - 63 meter Area (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - 63 meter Area (ElShorouk)",
+          "ar": "الشروق - الحي الرابع (الشروق)",
           "en": "ElShorouk - 63 meter Area (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - 70 meter Area (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - 70 meter Area (ElShorouk)",
+          "ar": "الشروق - المنطقه الرابعه (الشروق)",
           "en": "ElShorouk - 70 meter Area (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - AlHayaa Residence Compound (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - AlHayaa Residence Compound (ElShorouk)",
+          "ar": "الشروق - الحي الثاني غرب (الشروق)",
           "en": "ElShorouk - AlHayaa Residence Compound (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - AlMotamyez District(ElShorouk)",
         "label": {
-          "ar": "ElShorouk - AlMotamyez District(ElShorouk)",
+          "ar": "الشروق - المنطقه السادسه (الشروق)",
           "en": "ElShorouk - AlMotamyez District(ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - AlWadi Compund (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - AlWadi Compund (ElShorouk)",
+          "ar": "الشروق - (الشروق) كومبوند الواحه الخضراء",
           "en": "ElShorouk - AlWadi Compund (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Andalous ElShorouk (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Andalous ElShorouk (ElShorouk)",
+          "ar": "الشروق - المنطقه الخامسه (الشروق)",
           "en": "ElShorouk - Andalous ElShorouk (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Andalusiah (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Andalusiah (ElShorouk)",
+          "ar": "الشروق - المنطقه االسابعه (الشروق)",
           "en": "ElShorouk - Andalusiah (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Buildings 400 - 500 (Mostakbal City)",
         "label": {
-          "ar": "ElShorouk - Buildings 400 - 500 (Mostakbal City)",
+          "ar": "الشروق - عمارات ٤٠٠ - ٥٠٠ (مدينه المستقبل)",
           "en": "ElShorouk - Buildings 400 - 500 (Mostakbal City)"
         }
       },
       {
         "value": "ElShorouk - Buildings 700 - 800 (Mostakbal City)",
         "label": {
-          "ar": "ElShorouk - Buildings 700 - 800 (Mostakbal City)",
+          "ar": "الشروق - عمارات ٧٠٠ - ٨٠٠ (مدينه المستقبل)",
           "en": "ElShorouk - Buildings 700 - 800 (Mostakbal City)"
         }
       },
       {
         "value": "ElShorouk - Buildings 900 (Mostakbal City)",
         "label": {
-          "ar": "ElShorouk - Buildings 900 (Mostakbal City)",
+          "ar": "الشروق - عمارات ٩٠٠ (مدينه المستقبل)",
           "en": "ElShorouk - Buildings 900 (Mostakbal City)"
         }
       },
       {
         "value": "ElShorouk - Cleopatra Palace (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Cleopatra Palace (ElShorouk)",
+          "ar": "الشروق - كليوباترا بالاس (الشروق)",
           "en": "ElShorouk - Cleopatra Palace (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Clubs Area",
         "label": {
-          "ar": "ElShorouk - Clubs Area",
+          "ar": "الشروق - حي النوادي",
           "en": "ElShorouk - Clubs Area"
         }
       },
       {
         "value": "ElShorouk - Cooperative Housing (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Cooperative Housing (ElShorouk)",
+          "ar": "الشروق - الحي الثالث شرق (الشروق)",
           "en": "ElShorouk - Cooperative Housing (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Dar Masr - ElShorouk",
         "label": {
-          "ar": "ElShorouk - Dar Masr - ElShorouk",
+          "ar": "الشروق - دار مصر - الشروق",
           "en": "ElShorouk - Dar Masr - ElShorouk"
         }
       },
       {
         "value": "ElShorouk - Der Batmas",
         "label": {
-          "ar": "ElShorouk - Der Batmas",
+          "ar": "الشروق - دير بطمس",
           "en": "ElShorouk - Der Batmas"
         }
       },
       {
         "value": "ElShorouk - District 1 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - District 1 (ElShorouk)",
+          "ar": "الشروق - (الشروق) حي النادي",
           "en": "ElShorouk - District 1 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - District 4 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - District 4 (ElShorouk)",
+          "ar": "الشروق - الحي الاول (الشروق)",
           "en": "ElShorouk - District 4 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - District 7 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - District 7 (ElShorouk)",
+          "ar": "الشروق - الحي التامن (الشروق)",
           "en": "ElShorouk - District 7 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - District 8 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - District 8 (ElShorouk)",
+          "ar": "الشروق - (الشروق) كاليميرا",
           "en": "ElShorouk - District 8 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - District 9 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - District 9 (ElShorouk)",
+          "ar": "الشروق - الحي المتميز (الشروق)",
           "en": "ElShorouk - District 9 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Divina Gardens (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Divina Gardens (ElShorouk)",
+          "ar": "الشروق - ديفينا جاردنز (الشروق)",
           "en": "ElShorouk - Divina Gardens (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - El Nady District (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - El Nady District (ElShorouk)",
+          "ar": "الشروق - وادي الربيع (الشروق)",
           "en": "ElShorouk - El Nady District (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - El Patio 4 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - El Patio 4 (ElShorouk)",
+          "ar": "الشروق - الباتيو ٤ (الشروق)",
           "en": "ElShorouk - El Patio 4 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - El Patio 5 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - El Patio 5 (ElShorouk)",
+          "ar": "الشروق - الباتيو ٥ (الشروق)",
           "en": "ElShorouk - El Patio 5 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - El Patio Casa (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - El Patio Casa (ElShorouk)",
+          "ar": "الشروق - الباتيو كازا (الشروق)",
           "en": "ElShorouk - El Patio Casa (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - El Patio Prime (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - El Patio Prime (ElShorouk)",
+          "ar": "الشروق - الباتيو برايم (الشروق)",
           "en": "ElShorouk - El Patio Prime (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - El Patio Solia (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - El Patio Solia (ElShorouk)",
+          "ar": "الشروق - الباتيو سولا (الشروق)",
           "en": "ElShorouk - El Patio Solia (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - ElBurouj (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - ElBurouj (ElShorouk)",
+          "ar": "الشروق - البروج (الشروق)",
           "en": "ElShorouk - ElBurouj (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - ElNakheel District (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - ElNakheel District (ElShorouk)",
+          "ar": "الشروق - منطقه ال70 متر (الشروق)",
           "en": "ElShorouk - ElNakheel District (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - ElShorouk 2000 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - ElShorouk 2000 (ElShorouk)",
+          "ar": "الشروق - الشروق ٢٠٠٠ (الشروق)",
           "en": "ElShorouk - ElShorouk 2000 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - ElShorouk Gardens (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - ElShorouk Gardens (ElShorouk)",
+          "ar": "الشروق - (الشروق) اندلس الشروق",
           "en": "ElShorouk - ElShorouk Gardens (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - ElShorouk Springs (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - ElShorouk Springs (ElShorouk)",
+          "ar": "الشروق - الشروق سبرينجز (الشروق)",
           "en": "ElShorouk - ElShorouk Springs (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - First District – West (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - First District – West (ElShorouk)",
+          "ar": "الشروق - (الشروق) جوهره الشروق",
           "en": "ElShorouk - First District – West (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Gawharet ElShorouk (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Gawharet ElShorouk (ElShorouk)",
+          "ar": "الشروق - (الشروق) الشروق جاردن",
           "en": "ElShorouk - Gawharet ElShorouk (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Golden City (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Golden City (ElShorouk)",
+          "ar": "الشروق - جولدن سيتي (الشروق)",
           "en": "ElShorouk - Golden City (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Granda Life (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Granda Life (ElShorouk)",
+          "ar": "الشروق - جراندا لايف (الشروق)",
           "en": "ElShorouk - Granda Life (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Green Oasis Compound (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Green Oasis Compound (ElShorouk)",
+          "ar": "الشروق - كمبوند لاكولينا (الشروق)",
           "en": "ElShorouk - Green Oasis Compound (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Greenland ElShorouk (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Greenland ElShorouk (ElShorouk)",
+          "ar": "الشروق - جرين لاند الشروق (الشروق)",
           "en": "ElShorouk - Greenland ElShorouk (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Greenland Valley (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Greenland Valley (ElShorouk)",
+          "ar": "الشروق - جرين فالي (الشروق)",
           "en": "ElShorouk - Greenland Valley (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Heliopolis residence (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Heliopolis residence (ElShorouk)",
+          "ar": "الشروق - هيليوبوليس ريزيدنس (الشروق)",
           "en": "ElShorouk - Heliopolis residence (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Ivy Residence (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Ivy Residence (ElShorouk)",
+          "ar": "الشروق - ايفي ريزيدنس (الشروق)",
           "en": "ElShorouk - Ivy Residence (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Jannah El Shorouk Compound (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Jannah El Shorouk Compound (ElShorouk)",
+          "ar": "الشروق - (الشروق) كمبوند الحياه رزيدنس",
           "en": "ElShorouk - Jannah El Shorouk Compound (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Jannat Masr (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Jannat Masr (ElShorouk)",
+          "ar": "الشروق - جنه مصر (الشروق)",
           "en": "ElShorouk - Jannat Masr (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Kalimera El Shorouk (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Kalimera El Shorouk (ElShorouk)",
+          "ar": "الشروق - الحي اول غرب (الشروق)",
           "en": "ElShorouk - Kalimera El Shorouk (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Lacolina ElShorouk (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Lacolina ElShorouk (ElShorouk)",
+          "ar": "الشروق - الحي السابع (الشروق)",
           "en": "ElShorouk - Lacolina ElShorouk (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Life Park (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Life Park (ElShorouk)",
+          "ar": "الشروق - لايف بارك (الشروق)",
           "en": "ElShorouk - Life Park (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Life View Compound (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Life View Compound (ElShorouk)",
+          "ar": "الشروق - (الشروق) كمبوند جنه الشروق",
           "en": "ElShorouk - Life View Compound (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Maadi View (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Maadi View (ElShorouk)",
+          "ar": "الشروق - معادي فيو (الشروق)",
           "en": "ElShorouk - Maadi View (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Madinat ElHikestep (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Madinat ElHikestep (ElShorouk)",
+          "ar": "الشروق - مدينه الهايكستب (الشروق)",
           "en": "ElShorouk - Madinat ElHikestep (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Maxim residence (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Maxim residence (ElShorouk)",
+          "ar": "الشروق - ماكسيم ريزيدنس (الشروق)",
           "en": "ElShorouk - Maxim residence (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - May Fair (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - May Fair (ElShorouk)",
+          "ar": "الشروق - ماي فير (الشروق)",
           "en": "ElShorouk - May Fair (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Merida ElShorouk (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Merida ElShorouk (ElShorouk)",
+          "ar": "الشروق - ميريدا الشروق (الشروق)",
           "en": "ElShorouk - Merida ElShorouk (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Panorama ElShorouk (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Panorama ElShorouk (ElShorouk)",
+          "ar": "الشروق - بانوراما الشروق (الشروق)",
           "en": "ElShorouk - Panorama ElShorouk (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Paradise (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Paradise (ElShorouk)",
+          "ar": "الشروق - باراديس (الشروق)",
           "en": "ElShorouk - Paradise (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Pearl (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Pearl (ElShorouk)",
+          "ar": "الشروق - ضاحيه النخيل (الشروق)",
           "en": "ElShorouk - Pearl (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - SODIC East (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - SODIC East (ElShorouk)",
+          "ar": "الشروق - سوديك ايست (الشروق)",
           "en": "ElShorouk - SODIC East (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Sakan Misr (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Sakan Misr (ElShorouk)",
+          "ar": "الشروق - (الشروق) الجامعه البريطانيه في مصر",
           "en": "ElShorouk - Sakan Misr (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Second District – East (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Second District – East (ElShorouk)",
+          "ar": "الشروق - سكن مصر - حجر الاساس (الشروق)",
           "en": "ElShorouk - Second District – East (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Second District – West (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Second District – West (ElShorouk)",
+          "ar": "الشروق - كمبوند لايف فيو (الشروق)",
           "en": "ElShorouk - Second District – West (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Shorouk Resort (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Shorouk Resort (ElShorouk)",
+          "ar": "الشروق - شروق ريزورت (الشروق)",
           "en": "ElShorouk - Shorouk Resort (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Spring Valley (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Spring Valley (ElShorouk)",
+          "ar": "الشروق - سبرينج فالي (الشروق)",
           "en": "ElShorouk - Spring Valley (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Stella Location (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Stella Location (ElShorouk)",
+          "ar": "الشروق - ستيلا لوكيشن (الشروق)",
           "en": "ElShorouk - Stella Location (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - T - Buildings 100 (Mostakbal City)",
         "label": {
-          "ar": "ElShorouk - T - Buildings 100 (Mostakbal City)",
+          "ar": "الشروق - قطاع T - عمارات ١٠٠ (مدينه المستقبل)",
           "en": "ElShorouk - T - Buildings 100 (Mostakbal City)"
         }
       },
       {
         "value": "ElShorouk - The British University in Egypt (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - The British University in Egypt (ElShorouk)",
+          "ar": "الشروق - منطقه ال٦٣ متر - اسكان عائلي (الشروق)",
           "en": "ElShorouk - The British University in Egypt (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Third District – East (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Third District – East (ElShorouk)",
+          "ar": "الشروق - اسكان تعاونيات (الشروق)",
           "en": "ElShorouk - Third District – East (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Third District – West (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Third District – West (ElShorouk)",
+          "ar": "الشروق - الحي الثالث غرب (الشروق)",
           "en": "ElShorouk - Third District – West (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - VIVENS (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - VIVENS (ElShorouk)",
+          "ar": "الشروق - فيفينس (الشروق)",
           "en": "ElShorouk - VIVENS (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Valley of the Spring (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Valley of the Spring (ElShorouk)",
+          "ar": "الشروق - الحي الثاني شرق (الشروق)",
           "en": "ElShorouk - Valley of the Spring (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Wadi ElMesk (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Wadi ElMesk (ElShorouk)",
+          "ar": "الشروق - وادي المسك (الشروق)",
           "en": "ElShorouk - Wadi ElMesk (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Wahet El Shorouk (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Wahet El Shorouk (ElShorouk)",
+          "ar": "الشروق - واحه الشروق (الشروق)",
           "en": "ElShorouk - Wahet El Shorouk (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Wessal Residence (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Wessal Residence (ElShorouk)",
+          "ar": "الشروق - وصال ريزدنس (الشروق)",
           "en": "ElShorouk - Wessal Residence (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Wessal Views (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Wessal Views (ElShorouk)",
+          "ar": "الشروق - وصال فيوز (الشروق)",
           "en": "ElShorouk - Wessal Views (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Zone 1 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Zone 1 (ElShorouk)",
+          "ar": "الشروق - منطقه ال١٠٠ متر (الشروق)",
           "en": "ElShorouk - Zone 1 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Zone 2 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Zone 2 (ElShorouk)",
+          "ar": "الشروق - كمبوند اندلسيه (الشروق)",
           "en": "ElShorouk - Zone 2 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Zone 3 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Zone 3 (ElShorouk)",
+          "ar": "الشروق - المنطقه الاولي (الشروق)",
           "en": "ElShorouk - Zone 3 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Zone 4 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Zone 4 (ElShorouk)",
+          "ar": "الشروق - لؤلؤه (الشروق)",
           "en": "ElShorouk - Zone 4 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Zone 5 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Zone 5 (ElShorouk)",
+          "ar": "الشروق - كمبوند الوادي (الشروق)",
           "en": "ElShorouk - Zone 5 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Zone 6 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Zone 6 (ElShorouk)",
+          "ar": "الشروق - المنطقه التانيه (الشروق)",
           "en": "ElShorouk - Zone 6 (ElShorouk)"
         }
       },
       {
         "value": "ElShorouk - Zone 7 (ElShorouk)",
         "label": {
-          "ar": "ElShorouk - Zone 7 (ElShorouk)",
+          "ar": "الشروق - المنطقه الثالثه (الشروق)",
           "en": "ElShorouk - Zone 7 (ElShorouk)"
         }
       },
       {
         "value": "ElTahrir",
         "label": {
-          "ar": "ElTahrir",
+          "ar": "التحرير",
           "en": "ElTahrir"
         }
       },
       {
         "value": "ElTibbin",
         "label": {
-          "ar": "ElTibbin",
+          "ar": "قسم التبين",
           "en": "ElTibbin"
         }
       },
       {
         "value": "ElTibbin - ElSolb",
         "label": {
-          "ar": "ElTibbin - ElSolb",
+          "ar": "قسم التبين - الصلب",
           "en": "ElTibbin - ElSolb"
         }
       },
       {
         "value": "ElTibbin - ElTibbin ElBahreyah",
         "label": {
-          "ar": "ElTibbin - ElTibbin ElBahreyah",
+          "ar": "قسم التبين - التبين البحريه",
           "en": "ElTibbin - ElTibbin ElBahreyah"
         }
       },
       {
         "value": "ElTibbin - ElTibbin ElQebleyah",
         "label": {
-          "ar": "ElTibbin - ElTibbin ElQebleyah",
+          "ar": "قسم التبين - التبين القبليه",
           "en": "ElTibbin - ElTibbin ElQebleyah"
         }
       },
       {
         "value": "ElTibbin - Hakr ElTebin",
         "label": {
-          "ar": "ElTibbin - Hakr ElTebin",
+          "ar": "قسم التبين - حكر التبين",
           "en": "ElTibbin - Hakr ElTebin"
         }
       },
       {
         "value": "ElTibbin - Masaken ElTebin ElShaabeyah",
         "label": {
-          "ar": "ElTibbin - Masaken ElTebin ElShaabeyah",
+          "ar": "قسم التبين - مساكن التبين الشعبيه",
           "en": "ElTibbin - Masaken ElTebin ElShaabeyah"
         }
       },
       {
         "value": "ElWaili - Abbaseya",
         "label": {
-          "ar": "ElWaili - Abbaseya",
+          "ar": "الوايلي - العباسيه",
           "en": "ElWaili - Abbaseya"
         }
       },
       {
         "value": "ElWaili - ElDemerdash",
         "label": {
-          "ar": "ElWaili - ElDemerdash",
+          "ar": "الوايلي - الدمرداش",
           "en": "ElWaili - ElDemerdash"
         }
       },
       {
         "value": "ElWaili - ElMohamady",
         "label": {
-          "ar": "ElWaili - ElMohamady",
+          "ar": "الوايلي - المحمدي",
           "en": "ElWaili - ElMohamady"
         }
       },
       {
         "value": "ElWaili - ElSarayat",
         "label": {
-          "ar": "ElWaili - ElSarayat",
+          "ar": "الوايلي - السرايات",
           "en": "ElWaili - ElSarayat"
         }
       },
       {
         "value": "ElZamalek",
         "label": {
-          "ar": "ElZamalek",
+          "ar": "الزمالك",
           "en": "ElZamalek"
         }
       },
       {
         "value": "ElZawya ElHamra",
         "label": {
-          "ar": "ElZawya ElHamra",
+          "ar": "الزاويه الحمراء",
           "en": "ElZawya ElHamra"
         }
       },
       {
         "value": "ElZeytoun",
         "label": {
-          "ar": "ElZeytoun",
+          "ar": "الزيتون",
           "en": "ElZeytoun"
         }
       },
       {
         "value": "ElZeytoun - Amiriya El-Balad",
         "label": {
-          "ar": "ElZeytoun - Amiriya El-Balad",
+          "ar": "الزيتون - اميريه البلد",
           "en": "ElZeytoun - Amiriya El-Balad"
         }
       },
       {
         "value": "ElZeytoun - ElAmireyah",
         "label": {
-          "ar": "ElZeytoun - ElAmireyah",
+          "ar": "الزيتون - الاميريه",
           "en": "ElZeytoun - ElAmireyah"
         }
       },
       {
         "value": "ElZeytoun - ElZeytoun ElBahareya",
         "label": {
-          "ar": "ElZeytoun - ElZeytoun ElBahareya",
+          "ar": "الزيتون - الزيتون البحريه",
           "en": "ElZeytoun - ElZeytoun ElBahareya"
         }
       },
       {
         "value": "ElZeytoun - ElZeytoun ElGharbeyah",
         "label": {
-          "ar": "ElZeytoun - ElZeytoun ElGharbeyah",
+          "ar": "الزيتون - الزيتون الغربيه",
           "en": "ElZeytoun - ElZeytoun ElGharbeyah"
         }
       },
       {
         "value": "ElZeytoun - ElZeytoun ElQebleyah",
         "label": {
-          "ar": "ElZeytoun - ElZeytoun ElQebleyah",
+          "ar": "الزيتون - الزيتون القبليه",
           "en": "ElZeytoun - ElZeytoun ElQebleyah"
         }
       },
       {
         "value": "ElZeytoun - ElZeytoun Sharkeya",
         "label": {
-          "ar": "ElZeytoun - ElZeytoun Sharkeya",
+          "ar": "الزيتون - الزيتون الشرقيه",
           "en": "ElZeytoun - ElZeytoun Sharkeya"
         }
       },
       {
         "value": "ElZeytoun - Hadayeq El Zeitoun",
         "label": {
-          "ar": "ElZeytoun - Hadayeq El Zeitoun",
+          "ar": "الزيتون - حداءق الزيتون",
           "en": "ElZeytoun - Hadayeq El Zeitoun"
         }
       },
       {
         "value": "ElZeytoun - Helmeyat ElZeitoun",
         "label": {
-          "ar": "ElZeytoun - Helmeyat ElZeitoun",
+          "ar": "الزيتون - حلميه الزيتون",
           "en": "ElZeytoun - Helmeyat ElZeitoun"
         }
       },
       {
         "value": "Elsahel",
         "label": {
-          "ar": "Elsahel",
+          "ar": "الساحل",
           "en": "Elsahel"
         }
       },
       {
         "value": "Elsahel - Asad",
         "label": {
-          "ar": "Elsahel - Asad",
+          "ar": "الساحل - اسعد",
           "en": "Elsahel - Asad"
         }
       },
       {
         "value": "Elsahel - Borham",
         "label": {
-          "ar": "Elsahel - Borham",
+          "ar": "الساحل - برهام",
           "en": "Elsahel - Borham"
         }
       },
       {
         "value": "Elsahel - ElBarad",
         "label": {
-          "ar": "Elsahel - ElBarad",
+          "ar": "الساحل - البراد",
           "en": "Elsahel - ElBarad"
         }
       },
       {
         "value": "Elsahel - ElKhazendarah",
         "label": {
-          "ar": "Elsahel - ElKhazendarah",
+          "ar": "الساحل - الخازنداره",
           "en": "Elsahel - ElKhazendarah"
         }
       },
       {
         "value": "Elsahel - Menyat ElSerg",
         "label": {
-          "ar": "Elsahel - Menyat ElSerg",
+          "ar": "الساحل - منيه السيرج",
           "en": "Elsahel - Menyat ElSerg"
         }
       },
       {
         "value": "Elsahel - Sherif",
         "label": {
-          "ar": "Elsahel - Sherif",
+          "ar": "الساحل - شريف",
           "en": "Elsahel - Sherif"
         }
       },
       {
         "value": "Gesr ElSuez - Alf Maskan Square",
         "label": {
-          "ar": "Gesr ElSuez - Alf Maskan Square",
+          "ar": "جسر السويس - الف مسكن",
           "en": "Gesr ElSuez - Alf Maskan Square"
         }
       },
       {
         "value": "Gesr ElSuez - Badr Park",
         "label": {
-          "ar": "Gesr ElSuez - Badr Park",
+          "ar": "جسر السويس - حديقه بدر",
           "en": "Gesr ElSuez - Badr Park"
         }
       },
       {
         "value": "Gesr ElSuez - Bertie",
         "label": {
-          "ar": "Gesr ElSuez - Bertie",
+          "ar": "جسر السويس - بيرتي",
           "en": "Gesr ElSuez - Bertie"
         }
       },
       {
         "value": "Gesr ElSuez - El Tagneed",
         "label": {
-          "ar": "Gesr ElSuez - El Tagneed",
+          "ar": "جسر السويس - التجنيد",
           "en": "Gesr ElSuez - El Tagneed"
         }
       },
       {
         "value": "Gesr ElSuez - ElArab (Gesr ElSuez)",
         "label": {
-          "ar": "Gesr ElSuez - ElArab (Gesr ElSuez)",
+          "ar": "جسر السويس - العرب (جسر السويس)",
           "en": "Gesr ElSuez - ElArab (Gesr ElSuez)"
         }
       },
       {
         "value": "Gesr ElSuez - ElHerafieen",
         "label": {
-          "ar": "Gesr ElSuez - ElHerafieen",
+          "ar": "جسر السويس - الحرفيين",
           "en": "Gesr ElSuez - ElHerafieen"
         }
       },
       {
         "value": "Gesr ElSuez - ElNozha 02 (Gesr Elsuez)",
         "label": {
-          "ar": "Gesr ElSuez - ElNozha 02 (Gesr Elsuez)",
+          "ar": "جسر السويس - النزهه 02 (جسر السويس)",
           "en": "Gesr ElSuez - ElNozha 02 (Gesr Elsuez)"
         }
       },
       {
         "value": "Gesr ElSuez - Ibn Sender",
         "label": {
-          "ar": "Gesr ElSuez - Ibn Sender",
+          "ar": "جسر السويس - ابن سندر",
           "en": "Gesr ElSuez - Ibn Sender"
         }
       },
       {
         "value": "Gesr ElSuez - Qubaa",
         "label": {
-          "ar": "Gesr ElSuez - Qubaa",
+          "ar": "جسر السويس - قباء",
           "en": "Gesr ElSuez - Qubaa"
         }
       },
       {
         "value": "Hadaiq ElQobbah",
         "label": {
-          "ar": "Hadaiq ElQobbah",
+          "ar": "حداءق القبه",
           "en": "Hadaiq ElQobbah"
         }
       },
       {
         "value": "Hadaiq ElQobbah - Diar ElMalak (Hadaiq ElQobbah)",
         "label": {
-          "ar": "Hadaiq ElQobbah - Diar ElMalak (Hadaiq ElQobbah)",
+          "ar": "حداءق القبه - دير الملاك (حدائق القبه)",
           "en": "Hadaiq ElQobbah - Diar ElMalak (Hadaiq ElQobbah)"
         }
       },
       {
         "value": "Hadaiq ElQobbah - ElKhassah",
         "label": {
-          "ar": "Hadaiq ElQobbah - ElKhassah",
+          "ar": "حداءق القبه - الخاصه",
           "en": "Hadaiq ElQobbah - ElKhassah"
         }
       },
       {
         "value": "Hadaiq ElQobbah - ElSheikh Ghorab (Hadaiq ElQobbah)",
         "label": {
-          "ar": "Hadaiq ElQobbah - ElSheikh Ghorab (Hadaiq ElQobbah)",
+          "ar": "حداءق القبه - الشيخ غراب (حدائق القبه)",
           "en": "Hadaiq ElQobbah - ElSheikh Ghorab (Hadaiq ElQobbah)"
         }
       },
       {
         "value": "Hadaiq ElQobbah - ElWaili (Hadaiq ElQobbah)",
         "label": {
-          "ar": "Hadaiq ElQobbah - ElWaili (Hadaiq ElQobbah)",
+          "ar": "حداءق القبه - الوايلى (حدائق القبه)",
           "en": "Hadaiq ElQobbah - ElWaili (Hadaiq ElQobbah)"
         }
       },
       {
         "value": "Hadaiq ElQobbah - Kobry ElQobbah",
         "label": {
-          "ar": "Hadaiq ElQobbah - Kobry ElQobbah",
+          "ar": "حداءق القبه - كوبري القبه",
           "en": "Hadaiq ElQobbah - Kobry ElQobbah"
         }
       },
       {
         "value": "Hadaiq ElQobbah - Mansheyat ElSadr",
         "label": {
-          "ar": "Hadaiq ElQobbah - Mansheyat ElSadr",
+          "ar": "حداءق القبه - منشيه الصدر",
           "en": "Hadaiq ElQobbah - Mansheyat ElSadr"
         }
       },
       {
         "value": "Hadaiq ElQobbah - Masaken ElAmireyah ElGanoubeyah",
         "label": {
-          "ar": "Hadaiq ElQobbah - Masaken ElAmireyah ElGanoubeyah",
+          "ar": "حداءق القبه - مساكن الاميريه الجنوبيه",
           "en": "Hadaiq ElQobbah - Masaken ElAmireyah ElGanoubeyah"
         }
       },
       {
         "value": "Hadaiq ElQobbah - Saraya ElQobbah",
         "label": {
-          "ar": "Hadaiq ElQobbah - Saraya ElQobbah",
+          "ar": "حداءق القبه - سرايا القبه",
           "en": "Hadaiq ElQobbah - Saraya ElQobbah"
         }
       },
       {
         "value": "Helwan",
         "label": {
-          "ar": "Helwan",
+          "ar": "حلوان",
           "en": "Helwan"
         }
       },
       {
         "value": "Helwan - Arab El Walda",
         "label": {
-          "ar": "Helwan - Arab El Walda",
+          "ar": "حلوان - عرب الوالده",
           "en": "Helwan - Arab El Walda"
         }
       },
       {
         "value": "Helwan - Arab Rashed Helwan",
         "label": {
-          "ar": "Helwan - Arab Rashed Helwan",
+          "ar": "حلوان - عرب راشد حلوان",
           "en": "Helwan - Arab Rashed Helwan"
         }
       },
       {
         "value": "Helwan - Armed Forces Housing Project",
         "label": {
-          "ar": "Helwan - Armed Forces Housing Project",
+          "ar": "حلوان - المدرسه الجويه",
           "en": "Helwan - Armed Forces Housing Project"
         }
       },
       {
         "value": "Helwan - Ein Helwan",
         "label": {
-          "ar": "Helwan - Ein Helwan",
+          "ar": "حلوان - عين حلوان",
           "en": "Helwan - Ein Helwan"
         }
       },
       {
         "value": "Helwan - ElArab Sharq - ElKobry",
         "label": {
-          "ar": "Helwan - ElArab Sharq - ElKobry",
+          "ar": "حلوان - العرب شرق - الكوبري",
           "en": "Helwan - ElArab Sharq - ElKobry"
         }
       },
       {
         "value": "Helwan - ElMasaken ElIqtisadeyah",
         "label": {
-          "ar": "Helwan - ElMasaken ElIqtisadeyah",
+          "ar": "حلوان - المساكن الاقتصاديه",
           "en": "Helwan - ElMasaken ElIqtisadeyah"
         }
       },
       {
         "value": "Helwan - ElMasara ElBalad",
         "label": {
-          "ar": "Helwan - ElMasara ElBalad",
+          "ar": "حلوان - المعصره البلد",
           "en": "Helwan - ElMasara ElBalad"
         }
       },
       {
         "value": "Helwan - ElQawmaya Company for Cement",
         "label": {
-          "ar": "Helwan - ElQawmaya Company for Cement",
+          "ar": "حلوان - مصنع القوميه للاسمنت",
           "en": "Helwan - ElQawmaya Company for Cement"
         }
       },
       {
         "value": "Helwan - Hadayk Helwan",
         "label": {
-          "ar": "Helwan - Hadayk Helwan",
+          "ar": "حلوان - حدائق حلوان",
           "en": "Helwan - Hadayk Helwan"
         }
       },
       {
         "value": "Helwan - Helwan ElBalad",
         "label": {
-          "ar": "Helwan - Helwan ElBalad",
+          "ar": "حلوان - حلوان البلد",
           "en": "Helwan - Helwan ElBalad"
         }
       },
       {
         "value": "Helwan - Helwan Gharbia",
         "label": {
-          "ar": "Helwan - Helwan Gharbia",
+          "ar": "حلوان - حلوان الغربيه",
           "en": "Helwan - Helwan Gharbia"
         }
       },
       {
         "value": "Helwan - Helwan Sharkeya",
         "label": {
-          "ar": "Helwan - Helwan Sharkeya",
+          "ar": "حلوان - حلوان الشرقيه",
           "en": "Helwan - Helwan Sharkeya"
         }
       },
       {
         "value": "Helwan - Helwan airfield",
         "label": {
-          "ar": "Helwan - Helwan airfield",
+          "ar": "حلوان - حلوان المطار",
           "en": "Helwan - Helwan airfield"
         }
       },
       {
         "value": "Helwan - Kafr ElOlow",
         "label": {
-          "ar": "Helwan - Kafr ElOlow",
+          "ar": "حلوان - كفر العلو",
           "en": "Helwan - Kafr ElOlow"
         }
       },
       {
         "value": "Helwan - School Aircraft",
         "label": {
-          "ar": "Helwan - School Aircraft",
+          "ar": "حلوان - مشروع اسكان القوات المسلحه",
           "en": "Helwan - School Aircraft"
         }
       },
       {
         "value": "Ismailia Desert Road",
         "label": {
-          "ar": "Ismailia Desert Road",
+          "ar": "طريق اسماعيليه الصحراوي بعد الكارته القاهره",
           "en": "Ismailia Desert Road"
         }
       },
       {
         "value": "Ismailia Desert Road - Before karta",
         "label": {
-          "ar": "Ismailia Desert Road - Before karta",
+          "ar": "طريق الاسماعيليه الصحراوي - قبل الكارته",
           "en": "Ismailia Desert Road - Before karta"
         }
       },
       {
         "value": "Ismailia desert road after Karta, Cairo",
         "label": {
-          "ar": "Ismailia desert road after Karta, Cairo",
+          "ar": "العاصمه الاداريه الجديده",
           "en": "Ismailia desert road after Karta, Cairo"
         }
       },
       {
         "value": "Madinaty - Madinaty - B1",
         "label": {
-          "ar": "Madinaty - Madinaty - B1",
+          "ar": "مدينتي - B1 - مدينتي",
           "en": "Madinaty - Madinaty - B1"
         }
       },
       {
         "value": "Madinaty - Madinaty - B10",
         "label": {
-          "ar": "Madinaty - Madinaty - B10",
+          "ar": "مدينتي - مدينتي - B10",
           "en": "Madinaty - Madinaty - B10"
         }
       },
       {
         "value": "Madinaty - Madinaty - B11",
         "label": {
-          "ar": "Madinaty - Madinaty - B11",
+          "ar": "مدينتي - مدينتي - B11",
           "en": "Madinaty - Madinaty - B11"
         }
       },
       {
         "value": "Madinaty - Madinaty - B12",
         "label": {
-          "ar": "Madinaty - Madinaty - B12",
+          "ar": "مدينتي - B12 - مدينتي",
           "en": "Madinaty - Madinaty - B12"
         }
       },
       {
         "value": "Madinaty - Madinaty - B15",
         "label": {
-          "ar": "Madinaty - Madinaty - B15",
+          "ar": "مدينتي - مدينتي - B15",
           "en": "Madinaty - Madinaty - B15"
         }
       },
       {
         "value": "Madinaty - Madinaty - B2",
         "label": {
-          "ar": "Madinaty - Madinaty - B2",
+          "ar": "مدينتي - B2 - مدينتي",
           "en": "Madinaty - Madinaty - B2"
         }
       },
       {
         "value": "Madinaty - Madinaty - B3",
         "label": {
-          "ar": "Madinaty - Madinaty - B3",
+          "ar": "مدينتي - B3 - مدينتي",
           "en": "Madinaty - Madinaty - B3"
         }
       },
       {
         "value": "Madinaty - Madinaty - B6",
         "label": {
-          "ar": "Madinaty - Madinaty - B6",
+          "ar": "مدينتي - مدينتي - B6",
           "en": "Madinaty - Madinaty - B6"
         }
       },
       {
         "value": "Madinaty - Madinaty - B7",
         "label": {
-          "ar": "Madinaty - Madinaty - B7",
+          "ar": "مدينتي - مدينتي - B7",
           "en": "Madinaty - Madinaty - B7"
         }
       },
       {
         "value": "Madinaty - Madinaty - B8",
         "label": {
-          "ar": "Madinaty - Madinaty - B8",
+          "ar": "مدينتي - مدينتي - B8",
           "en": "Madinaty - Madinaty - B8"
         }
       },
       {
         "value": "Madinaty - Madinaty - VG1",
         "label": {
-          "ar": "Madinaty - Madinaty - VG1",
+          "ar": "مدينتي - مدينتي - VG1",
           "en": "Madinaty - Madinaty - VG1"
         }
       },
       {
         "value": "Madinaty - Madinaty - VG2",
         "label": {
-          "ar": "Madinaty - Madinaty - VG2",
+          "ar": "مدينتي - مدينتي - VG2",
           "en": "Madinaty - Madinaty - VG2"
         }
       },
       {
         "value": "Madinaty - Madinaty - VG3",
         "label": {
-          "ar": "Madinaty - Madinaty - VG3",
+          "ar": "مدينتي - مدينتي - VG3",
           "en": "Madinaty - Madinaty - VG3"
         }
       },
       {
         "value": "Madinaty - Madinaty - VG4",
         "label": {
-          "ar": "Madinaty - Madinaty - VG4",
+          "ar": "مدينتي - مدينتي - VG4",
           "en": "Madinaty - Madinaty - VG4"
         }
       },
       {
         "value": "Madinaty - Madinaty - VG5",
         "label": {
-          "ar": "Madinaty - Madinaty - VG5",
+          "ar": "مدينتي - مدينتي - VG5",
           "en": "Madinaty - Madinaty - VG5"
         }
       },
       {
         "value": "Madinaty - Madinaty: All Seasons Park - The strip Mall",
         "label": {
-          "ar": "Madinaty - Madinaty: All Seasons Park - The strip Mall",
+          "ar": "مدينتي - مدينتي: اوول سيزون - استريب مول",
           "en": "Madinaty - Madinaty: All Seasons Park - The strip Mall"
         }
       },
       {
         "value": "Madinaty - Madinaty: Open Air Mall - Arabesque",
         "label": {
-          "ar": "Madinaty - Madinaty: Open Air Mall - Arabesque",
+          "ar": "مدينتي - مدينتي: ارابيسك - الاوبن اير",
           "en": "Madinaty - Madinaty: Open Air Mall - Arabesque"
         }
       },
       {
         "value": "Madinaty - Madinaty: South Park - Medical - Banks center",
         "label": {
-          "ar": "Madinaty - Madinaty: South Park - Medical - Banks center",
+          "ar": "مدينتي - مدينتي: مجمع البنوك - الساوث بارك - المركز الطبي",
           "en": "Madinaty - Madinaty: South Park - Medical - Banks center"
         }
       },
       {
         "value": "Masaken Sheraton - District 01 (Sheraton Misr LelTameer)",
         "label": {
-          "ar": "Masaken Sheraton - District 01 (Sheraton Misr LelTameer)",
+          "ar": "مساكن شيراتون - (مساكن شيراتون) ذا ديستريكت",
           "en": "Masaken Sheraton - District 01 (Sheraton Misr LelTameer)"
         }
       },
       {
         "value": "Masaken Sheraton - District 02 (Sheraton Misr LelTameer)",
         "label": {
-          "ar": "Masaken Sheraton - District 02 (Sheraton Misr LelTameer)",
+          "ar": "مساكن شيراتون - المنطقه الخامسه (مساكن مصر للتعمير شيراتون)",
           "en": "Masaken Sheraton - District 02 (Sheraton Misr LelTameer)"
         }
       },
       {
         "value": "Masaken Sheraton - District 03 (Sheraton Misr LelTameer)",
         "label": {
-          "ar": "Masaken Sheraton - District 03 (Sheraton Misr LelTameer)",
+          "ar": "مساكن شيراتون - المنطقه التاسعه (مساكن مصر للتعمير شيراتون)",
           "en": "Masaken Sheraton - District 03 (Sheraton Misr LelTameer)"
         }
       },
       {
         "value": "Masaken Sheraton - District 04 (Sheraton Misr LelTameer)",
         "label": {
-          "ar": "Masaken Sheraton - District 04 (Sheraton Misr LelTameer)",
+          "ar": "مساكن شيراتون - المنطقه الرابعه (مساكن مصر للتعمير شيراتون)",
           "en": "Masaken Sheraton - District 04 (Sheraton Misr LelTameer)"
         }
       },
       {
         "value": "Masaken Sheraton - District 05 (Sheraton Misr LelTameer)",
         "label": {
-          "ar": "Masaken Sheraton - District 05 (Sheraton Misr LelTameer)",
+          "ar": "مساكن شيراتون - المنطقه السادسه (مساكن مصر للتعمير شيراتون)",
           "en": "Masaken Sheraton - District 05 (Sheraton Misr LelTameer)"
         }
       },
       {
         "value": "Masaken Sheraton - District 06 (Sheraton Misr LelTameer)",
         "label": {
-          "ar": "Masaken Sheraton - District 06 (Sheraton Misr LelTameer)",
+          "ar": "مساكن شيراتون - المنطقه السابعه (مساكن مصر للتعمير شيراتون)",
           "en": "Masaken Sheraton - District 06 (Sheraton Misr LelTameer)"
         }
       },
       {
         "value": "Masaken Sheraton - District 07 (Sheraton Misr LelTameer)",
         "label": {
-          "ar": "Masaken Sheraton - District 07 (Sheraton Misr LelTameer)",
+          "ar": "مساكن شيراتون - المنطقه الثانيه (مساكن مصر للتعمير شيراتون)",
           "en": "Masaken Sheraton - District 07 (Sheraton Misr LelTameer)"
         }
       },
       {
         "value": "Masaken Sheraton - District 08 (Sheraton Misr LelTameer)",
         "label": {
-          "ar": "Masaken Sheraton - District 08 (Sheraton Misr LelTameer)",
+          "ar": "مساكن شيراتون - المنطقه الاولي (مساكن مصر للتعمير شيراتون)",
           "en": "Masaken Sheraton - District 08 (Sheraton Misr LelTameer)"
         }
       },
       {
         "value": "Masaken Sheraton - District 09 (Sheraton Misr LelTameer)",
         "label": {
-          "ar": "Masaken Sheraton - District 09 (Sheraton Misr LelTameer)",
+          "ar": "مساكن شيراتون - المنطقه الثالثه (مساكن مصر للتعمير شيراتون)",
           "en": "Masaken Sheraton - District 09 (Sheraton Misr LelTameer)"
         }
       },
       {
         "value": "Masaken Sheraton - Ministers Square",
         "label": {
-          "ar": "Masaken Sheraton - Ministers Square",
+          "ar": "مساكن شيراتون - مربع الوزراء",
           "en": "Masaken Sheraton - Ministers Square"
         }
       },
       {
         "value": "Masaken Sheraton - Saqr Korayesh (Masaken Sheraton)",
         "label": {
-          "ar": "Masaken Sheraton - Saqr Korayesh (Masaken Sheraton)",
+          "ar": "مساكن شيراتون - صقر قريش (مساكن شيراتون)",
           "en": "Masaken Sheraton - Saqr Korayesh (Masaken Sheraton)"
         }
       },
       {
         "value": "Masaken Sheraton - Sheraton Squares",
         "label": {
-          "ar": "Masaken Sheraton - Sheraton Squares",
+          "ar": "مساكن شيراتون - مربعات شيراتون",
           "en": "Masaken Sheraton - Sheraton Squares"
         }
       },
       {
         "value": "Masaken Sheraton - The District Vill (Masaken Sheraton)",
         "label": {
-          "ar": "Masaken Sheraton - The District Vill (Masaken Sheraton)",
+          "ar": "مساكن شيراتون - المنطقه الثامنه (مساكن مصر للتعمير شيراتون)",
           "en": "Masaken Sheraton - The District Vill (Masaken Sheraton)"
         }
       },
       {
         "value": "Masr ElGedida - Almazah",
         "label": {
-          "ar": "Masr ElGedida - Almazah",
+          "ar": "مصر الجديده - الماظه",
           "en": "Masr ElGedida - Almazah"
         }
       },
       {
         "value": "Masr ElGedida - Egyptian Military Academy",
         "label": {
-          "ar": "Masr ElGedida - Egyptian Military Academy",
+          "ar": "مصر الجديده - ميدان المحكمه",
           "en": "Masr ElGedida - Egyptian Military Academy"
         }
       },
       {
         "value": "Masr ElGedida - ElHegaz Square (Masr ElGedida)",
         "label": {
-          "ar": "Masr ElGedida - ElHegaz Square (Masr ElGedida)",
+          "ar": "مصر الجديده - ميدان الحجاز (مصر الجديده)",
           "en": "Masr ElGedida - ElHegaz Square (Masr ElGedida)"
         }
       },
       {
         "value": "Masr ElGedida - ElIttihadya",
         "label": {
-          "ar": "Masr ElGedida - ElIttihadya",
+          "ar": "مصر الجديده - الاتحاديه",
           "en": "Masr ElGedida - ElIttihadya"
         }
       },
       {
         "value": "Masr ElGedida - ElKhalifa ElMamoun (Masr ElGedida)",
         "label": {
-          "ar": "Masr ElGedida - ElKhalifa ElMamoun (Masr ElGedida)",
+          "ar": "مصر الجديده - الخليفه المامون (مصر الجديده)",
           "en": "Masr ElGedida - ElKhalifa ElMamoun (Masr ElGedida)"
         }
       },
       {
         "value": "Masr ElGedida - ElKorba (Masr ElGedida)",
         "label": {
-          "ar": "Masr ElGedida - ElKorba (Masr ElGedida)",
+          "ar": "مصر الجديده - الكوربه (مصر الجديده)",
           "en": "Masr ElGedida - ElKorba (Masr ElGedida)"
         }
       },
       {
         "value": "Masr ElGedida - ElMahkama Square",
         "label": {
-          "ar": "Masr ElGedida - ElMahkama Square",
+          "ar": "مصر الجديده - الكليه الحربيه",
           "en": "Masr ElGedida - ElMahkama Square"
         }
       },
       {
         "value": "Masr ElGedida - ElMontazah",
         "label": {
-          "ar": "Masr ElGedida - ElMontazah",
+          "ar": "مصر الجديده - المنتزه",
           "en": "Masr ElGedida - ElMontazah"
         }
       },
       {
         "value": "Masr ElGedida - Haroun ElRashid Square (Masr ElGedida)",
         "label": {
-          "ar": "Masr ElGedida - Haroun ElRashid Square (Masr ElGedida)",
+          "ar": "مصر الجديده - ميدان هارون الرشيد (مصر الجديده)",
           "en": "Masr ElGedida - Haroun ElRashid Square (Masr ElGedida)"
         }
       },
       {
         "value": "Masr ElGedida - Heliopolis Square (Masr ElGedida)",
         "label": {
-          "ar": "Masr ElGedida - Heliopolis Square (Masr ElGedida)",
+          "ar": "مصر الجديده - ميدان هليوبوليس (مصر الجديده)",
           "en": "Masr ElGedida - Heliopolis Square (Masr ElGedida)"
         }
       },
       {
         "value": "Masr ElGedida - Kolleyet ElBanat",
         "label": {
-          "ar": "Masr ElGedida - Kolleyet ElBanat",
+          "ar": "مصر الجديده - كليه البنات",
           "en": "Masr ElGedida - Kolleyet ElBanat"
         }
       },
       {
         "value": "Masr ElGedida - Mansheyet ElBakry",
         "label": {
-          "ar": "Masr ElGedida - Mansheyet ElBakry",
+          "ar": "مصر الجديده - منشيه البكري",
           "en": "Masr ElGedida - Mansheyet ElBakry"
         }
       },
       {
         "value": "Masr ElGedida - Masaken Sheraton",
         "label": {
-          "ar": "Masr ElGedida - Masaken Sheraton",
+          "ar": "مصر الجديده - مساكن شيراتون",
           "en": "Masr ElGedida - Masaken Sheraton"
         }
       },
       {
         "value": "Masr ElGedida - Medan ElGamea (Masr ElGedida)",
         "label": {
-          "ar": "Masr ElGedida - Medan ElGamea (Masr ElGedida)",
+          "ar": "مصر الجديده - ميدان الجامع (مصر الجديده)",
           "en": "Masr ElGedida - Medan ElGamea (Masr ElGedida)"
         }
       },
       {
         "value": "Masr ElGedida - Merryland Park (Roxy)",
         "label": {
-          "ar": "Masr ElGedida - Merryland Park (Roxy)",
+          "ar": "مصر الجديده - حديقه المريلاند (روكسي)",
           "en": "Masr ElGedida - Merryland Park (Roxy)"
         }
       },
       {
         "value": "Masr ElGedida - Obour Buildings (Masr ElGedida)",
         "label": {
-          "ar": "Masr ElGedida - Obour Buildings (Masr ElGedida)",
+          "ar": "مصر الجديده - عمارات العبور (مصر الجديده)",
           "en": "Masr ElGedida - Obour Buildings (Masr ElGedida)"
         }
       },
       {
         "value": "Masr ElGedida - Roxy",
         "label": {
-          "ar": "Masr ElGedida - Roxy",
+          "ar": "مصر الجديده - روكسي",
           "en": "Masr ElGedida - Roxy"
         }
       },
       {
         "value": "Masr ElGedida - Safeer Square",
         "label": {
-          "ar": "Masr ElGedida - Safeer Square",
+          "ar": "مصر الجديده - ميدان سفير",
           "en": "Masr ElGedida - Safeer Square"
         }
       },
       {
         "value": "Masr ElGedida - Saint Fatima Square",
         "label": {
-          "ar": "Masr ElGedida - Saint Fatima Square",
+          "ar": "مصر الجديده - ميدان سانت فاتيما",
           "en": "Masr ElGedida - Saint Fatima Square"
         }
       },
       {
         "value": "Masr ElGedida - Salah ElDin",
         "label": {
-          "ar": "Masr ElGedida - Salah ElDin",
+          "ar": "مصر الجديده - صلاح الدين",
           "en": "Masr ElGedida - Salah ElDin"
         }
       },
       {
         "value": "Masr ElQadimah",
         "label": {
-          "ar": "Masr ElQadimah",
+          "ar": "مصر القديمه",
           "en": "Masr ElQadimah"
         }
       },
       {
         "value": "Masr ElQadimah - Ard ElGemayah",
         "label": {
-          "ar": "Masr ElQadimah - Ard ElGemayah",
+          "ar": "مصر القديمه - ارض الجمعيه",
           "en": "Masr ElQadimah - Ard ElGemayah"
         }
       },
       {
         "value": "Masr ElQadimah - Ein ElSeirah",
         "label": {
-          "ar": "Masr ElQadimah - Ein ElSeirah",
+          "ar": "مصر القديمه - عين الصيره",
           "en": "Masr ElQadimah - Ein ElSeirah"
         }
       },
       {
         "value": "Masr ElQadimah - ElKafour",
         "label": {
-          "ar": "Masr ElQadimah - ElKafour",
+          "ar": "مصر القديمه - الكفور",
           "en": "Masr ElQadimah - ElKafour"
         }
       },
       {
         "value": "Masr ElQadimah - ElManyal",
         "label": {
-          "ar": "Masr ElQadimah - ElManyal",
+          "ar": "مصر القديمه - المنيل",
           "en": "Masr ElQadimah - ElManyal"
         }
       },
       {
         "value": "Masr ElQadimah - ElManyal West",
         "label": {
-          "ar": "Masr ElQadimah - ElManyal West",
+          "ar": "مصر القديمه - المنيل الغربي",
           "en": "Masr ElQadimah - ElManyal West"
         }
       },
       {
         "value": "Masr ElQadimah - ElRodah w ElMeqias",
         "label": {
-          "ar": "Masr ElQadimah - ElRodah w ElMeqias",
+          "ar": "مصر القديمه - الروضه والمقياس",
           "en": "Masr ElQadimah - ElRodah w ElMeqias"
         }
       },
       {
         "value": "Masr ElQadimah - ElSayeda Aesha",
         "label": {
-          "ar": "Masr ElQadimah - ElSayeda Aesha",
+          "ar": "مصر القديمه - السيده عائشه",
           "en": "Masr ElQadimah - ElSayeda Aesha"
         }
       },
       {
         "value": "Masr ElQadimah - Fom ElKhalig w Deir ElNahas",
         "label": {
-          "ar": "Masr ElQadimah - Fom ElKhalig w Deir ElNahas",
+          "ar": "مصر القديمه - فم الخليج ودير النحاس",
           "en": "Masr ElQadimah - Fom ElKhalig w Deir ElNahas"
         }
       },
       {
         "value": "Masr ElQadimah - Fustat",
         "label": {
-          "ar": "Masr ElQadimah - Fustat",
+          "ar": "مصر القديمه - الفسطاط",
           "en": "Masr ElQadimah - Fustat"
         }
       },
       {
         "value": "Masr ElQadimah - Zahraa Masr ElQadimah",
         "label": {
-          "ar": "Masr ElQadimah - Zahraa Masr ElQadimah",
+          "ar": "مصر القديمه - زهراء مصر القديمه",
           "en": "Masr ElQadimah - Zahraa Masr ElQadimah"
         }
       },
       {
         "value": "Middle Way",
         "label": {
-          "ar": "Middle Way",
+          "ar": "طريق الاسماعيليه الصحراوي",
           "en": "Middle Way"
         }
       },
       {
         "value": "Minshat Nasir - ElGamaliya (Nasr City)",
         "label": {
-          "ar": "Minshat Nasir - ElGamaliya (Nasr City)",
+          "ar": "منشاه ناصر - الجماليه (مدينه نصر)",
           "en": "Minshat Nasir - ElGamaliya (Nasr City)"
         }
       },
       {
         "value": "Minshat Nasir - Mansheya Nasir",
         "label": {
-          "ar": "Minshat Nasir - Mansheya Nasir",
+          "ar": "منشاه ناصر - منشيه ناصر",
           "en": "Minshat Nasir - Mansheya Nasir"
         }
       },
       {
         "value": "Nasr City - ElHay 06 (Nasr City)",
         "label": {
-          "ar": "Nasr City - ElHay 06 (Nasr City)",
+          "ar": "مدينه نصر - الحي السادس (مدينه نصر)",
           "en": "Nasr City - ElHay 06 (Nasr City)"
         }
       },
       {
         "value": "Nasr City - ElHay 07 (Nasr City)",
         "label": {
-          "ar": "Nasr City - ElHay 07 (Nasr City)",
+          "ar": "مدينه نصر - الحي السابع (مدينه نصر)",
           "en": "Nasr City - ElHay 07 (Nasr City)"
         }
       },
       {
         "value": "Nasr City - ElHay 08 (Nasr City)",
         "label": {
-          "ar": "Nasr City - ElHay 08 (Nasr City)",
+          "ar": "مدينه نصر - الحي الثامن (مدينه نصر)",
           "en": "Nasr City - ElHay 08 (Nasr City)"
         }
       },
       {
         "value": "Nasr City - ElHay 10 (Nasr City)",
         "label": {
-          "ar": "Nasr City - ElHay 10 (Nasr City)",
+          "ar": "مدينه نصر - الحي العاشر (مدينه نصر)",
           "en": "Nasr City - ElHay 10 (Nasr City)"
         }
       },
       {
         "value": "Nasr City - ElManteqa 01 (Nasr City)",
         "label": {
-          "ar": "Nasr City - ElManteqa 01 (Nasr City)",
+          "ar": "مدينه نصر - المنطقه الاولي (مدينه نصر)",
           "en": "Nasr City - ElManteqa 01 (Nasr City)"
         }
       },
       {
         "value": "Nasr City - ElManteqa 06 (Nasr City)",
         "label": {
-          "ar": "Nasr City - ElManteqa 06 (Nasr City)",
+          "ar": "مدينه نصر - المنطقه السادسه (مدينه نصر)",
           "en": "Nasr City - ElManteqa 06 (Nasr City)"
         }
       },
       {
         "value": "Nasr City - ElManteqa 08 (Nasr City)",
         "label": {
-          "ar": "Nasr City - ElManteqa 08 (Nasr City)",
+          "ar": "مدينه نصر - المنطقه الثامنه (مدينه نصر)",
           "en": "Nasr City - ElManteqa 08 (Nasr City)"
         }
       },
       {
         "value": "Nasr City - ElManteqa 09 (Nasr City)",
         "label": {
-          "ar": "Nasr City - ElManteqa 09 (Nasr City)",
+          "ar": "مدينه نصر - المنطقه التاسعه (مدينه نصر)",
           "en": "Nasr City - ElManteqa 09 (Nasr City)"
         }
       },
       {
         "value": "Nasr City - ElManteqa 10",
         "label": {
-          "ar": "Nasr City - ElManteqa 10",
+          "ar": "مدينه نصر - المنطقه العاشره",
           "en": "Nasr City - ElManteqa 10"
         }
       },
       {
         "value": "Nasr City - ElNadi ElAhli",
         "label": {
-          "ar": "Nasr City - ElNadi ElAhli",
+          "ar": "مدينه نصر - النادي الاهلي",
           "en": "Nasr City - ElNadi ElAhli"
         }
       },
       {
         "value": "Nasr City - ElSharekat",
         "label": {
-          "ar": "Nasr City - ElSharekat",
+          "ar": "مدينه نصر - الشركات",
           "en": "Nasr City - ElSharekat"
         }
       },
       {
         "value": "Nasr City - ElSwissri - ElHay 10",
         "label": {
-          "ar": "Nasr City - ElSwissri - ElHay 10",
+          "ar": "مدينه نصر - السويسرى - الحي العاشر",
           "en": "Nasr City - ElSwissri - ElHay 10"
         }
       },
       {
         "value": "Nasr City - ElTabba - ElHay 10",
         "label": {
-          "ar": "Nasr City - ElTabba - ElHay 10",
+          "ar": "مدينه نصر - التبه - الحي العاشر",
           "en": "Nasr City - ElTabba - ElHay 10"
         }
       },
       {
         "value": "Nasr City - ElTawfik",
         "label": {
-          "ar": "Nasr City - ElTawfik",
+          "ar": "مدينه نصر - التوفيق",
           "en": "Nasr City - ElTawfik"
         }
       },
       {
         "value": "Nasr City - Emtedad Ramsis",
         "label": {
-          "ar": "Nasr City - Emtedad Ramsis",
+          "ar": "مدينه نصر - امتداد رمسيس",
           "en": "Nasr City - Emtedad Ramsis"
         }
       },
       {
         "value": "Nasr City - Ezbet ElArab (Nasr City)",
         "label": {
-          "ar": "Nasr City - Ezbet ElArab (Nasr City)",
+          "ar": "مدينه نصر - عزبه العرب (مدينه نصر)",
           "en": "Nasr City - Ezbet ElArab (Nasr City)"
         }
       },
       {
         "value": "Nasr City - Ezbet ElHaganah",
         "label": {
-          "ar": "Nasr City - Ezbet ElHaganah",
+          "ar": "مدينه نصر - عزبه الهجانه",
           "en": "Nasr City - Ezbet ElHaganah"
         }
       },
       {
         "value": "Nasr City - Gameat ElAzhar",
         "label": {
-          "ar": "Nasr City - Gameat ElAzhar",
+          "ar": "مدينه نصر - جامعه الازهر",
           "en": "Nasr City - Gameat ElAzhar"
         }
       },
       {
         "value": "Nasr City - Gardenia City",
         "label": {
-          "ar": "Nasr City - Gardenia City",
+          "ar": "مدينه نصر - جاردينيا سيتي",
           "en": "Nasr City - Gardenia City"
         }
       },
       {
         "value": "Nasr City - Hay ElSefarat",
         "label": {
-          "ar": "Nasr City - Hay ElSefarat",
+          "ar": "مدينه نصر - حي السفارات",
           "en": "Nasr City - Hay ElSefarat"
         }
       },
       {
         "value": "Nasr City - Manteqet ElCinema - Youssef Abbas",
         "label": {
-          "ar": "Nasr City - Manteqet ElCinema - Youssef Abbas",
+          "ar": "مدينه نصر - منطقه السينما - يوسف عباس",
           "en": "Nasr City - Manteqet ElCinema - Youssef Abbas"
         }
       },
       {
         "value": "Nasr City - Merghany",
         "label": {
-          "ar": "Nasr City - Merghany",
+          "ar": "مدينه نصر - الميرغني",
           "en": "Nasr City - Merghany"
         }
       },
       {
         "value": "Nasr City - Saqr Korayesh Housing (Nasr City)",
         "label": {
-          "ar": "Nasr City - Saqr Korayesh Housing (Nasr City)",
+          "ar": "مدينه نصر - مساكن صقر قريش (مدينه نصر)",
           "en": "Nasr City - Saqr Korayesh Housing (Nasr City)"
         }
       },
       {
         "value": "Nasr City - Tag Sultan",
         "label": {
-          "ar": "Nasr City - Tag Sultan",
+          "ar": "مدينه نصر - تاج سلطان",
           "en": "Nasr City - Tag Sultan"
         }
       },
       {
         "value": "Nasr City - Taj City",
         "label": {
-          "ar": "Nasr City - Taj City",
+          "ar": "مدينه نصر - تاج سيتى",
           "en": "Nasr City - Taj City"
         }
       },
       {
         "value": "Nasr City - Waha District",
         "label": {
-          "ar": "Nasr City - Waha District",
+          "ar": "مدينه نصر - حي الواحه",
           "en": "Nasr City - Waha District"
         }
       },
       {
         "value": "Nasr City - Zahraa Nasr City",
         "label": {
-          "ar": "Nasr City - Zahraa Nasr City",
+          "ar": "مدينه نصر - زهراء مدينه نصر - المرحله الثانيه",
           "en": "Nasr City - Zahraa Nasr City"
         }
       },
       {
         "value": "Nasr City - Zahraa Nasr City - 4000",
         "label": {
-          "ar": "Nasr City - Zahraa Nasr City - 4000",
+          "ar": "مدينه نصر - زهراء مدينه نصر - ٤٠٠٠",
           "en": "Nasr City - Zahraa Nasr City - 4000"
         }
       },
       {
         "value": "Nasr City - Zahraa Nasr City - First",
         "label": {
-          "ar": "Nasr City - Zahraa Nasr City - First",
+          "ar": "مدينه نصر - زهراء مدينه نصر - المرحله الاولى",
           "en": "Nasr City - Zahraa Nasr City - First"
         }
       },
       {
         "value": "Nasr City - Zahraa Nasr City - Second",
         "label": {
-          "ar": "Nasr City - Zahraa Nasr City - Second",
+          "ar": "مدينه نصر - زهراء مدينه نصر - شوارع",
           "en": "Nasr City - Zahraa Nasr City - Second"
         }
       },
       {
         "value": "New Cairo - 1st Settlement",
         "label": {
-          "ar": "New Cairo - 1st Settlement",
+          "ar": "القاهره الجديده - منطقه المدارس والجامعات",
           "en": "New Cairo - 1st Settlement"
         }
       },
       {
         "value": "New Cairo - 1st Settlement - Neighbourhood 01",
         "label": {
-          "ar": "New Cairo - 1st Settlement - Neighbourhood 01",
+          "ar": "القاهره الجديده - كمبوند الديار",
           "en": "New Cairo - 1st Settlement - Neighbourhood 01"
         }
       },
       {
         "value": "New Cairo - 1st Settlement - Neighbourhood 02",
         "label": {
-          "ar": "New Cairo - 1st Settlement - Neighbourhood 02",
+          "ar": "القاهره الجديده - التجمع الاول - الحي 02",
           "en": "New Cairo - 1st Settlement - Neighbourhood 02"
         }
       },
       {
         "value": "New Cairo - 1st Settlement - Neighbourhood 03",
         "label": {
-          "ar": "New Cairo - 1st Settlement - Neighbourhood 03",
+          "ar": "القاهره الجديده - التجمع الاول - الحي 03",
           "en": "New Cairo - 1st Settlement - Neighbourhood 03"
         }
       },
       {
         "value": "New Cairo - 1st Settlement - Neighbourhood 04",
         "label": {
-          "ar": "New Cairo - 1st Settlement - Neighbourhood 04",
+          "ar": "القاهره الجديده - التجمع الاول - الحي 04",
           "en": "New Cairo - 1st Settlement - Neighbourhood 04"
         }
       },
       {
         "value": "New Cairo - 1st Settlement - Neighbourhood 05",
         "label": {
-          "ar": "New Cairo - 1st Settlement - Neighbourhood 05",
+          "ar": "القاهره الجديده - التجمع الاول - الحي 05",
           "en": "New Cairo - 1st Settlement - Neighbourhood 05"
         }
       },
       {
         "value": "New Cairo - 1st Settlement - Neighbourhood 07",
         "label": {
-          "ar": "New Cairo - 1st Settlement - Neighbourhood 07",
+          "ar": "القاهره الجديده - التجمع الاول - الحي 07",
           "en": "New Cairo - 1st Settlement - Neighbourhood 07"
         }
       },
       {
         "value": "New Cairo - 1st Settlement - Neighbourhood 09",
         "label": {
-          "ar": "New Cairo - 1st Settlement - Neighbourhood 09",
+          "ar": "القاهره الجديده - التجمع الاول - الحي 09",
           "en": "New Cairo - 1st Settlement - Neighbourhood 09"
         }
       },
       {
         "value": "New Cairo - 1st Settlement - Neighbourhood 10",
         "label": {
-          "ar": "New Cairo - 1st Settlement - Neighbourhood 10",
+          "ar": "القاهره الجديده - التجمع الاول - الحي 10",
           "en": "New Cairo - 1st Settlement - Neighbourhood 10"
         }
       },
       {
         "value": "New Cairo - 1st Settlement - Services Area",
         "label": {
-          "ar": "New Cairo - 1st Settlement - Services Area",
+          "ar": "القاهره الجديده - التجمع الخامس - شارع التسعين الجنوبي",
           "en": "New Cairo - 1st Settlement - Services Area"
         }
       },
       {
         "value": "New Cairo - 3rd Settlement",
         "label": {
-          "ar": "New Cairo - 3rd Settlement",
+          "ar": "القاهره الجديده - كمبوند طيبه هايتس",
           "en": "New Cairo - 3rd Settlement"
         }
       },
       {
         "value": "New Cairo - 5th Settlement - District 1",
         "label": {
-          "ar": "New Cairo - 5th Settlement - District 1",
+          "ar": "القاهره الجديده - التجمع الاول - منطقه الخدمات",
           "en": "New Cairo - 5th Settlement - District 1"
         }
       },
       {
         "value": "New Cairo - 5th Settlement - District 2",
         "label": {
-          "ar": "New Cairo - 5th Settlement - District 2",
+          "ar": "القاهره الجديده - المنطقه الصناعيه",
           "en": "New Cairo - 5th Settlement - District 2"
         }
       },
       {
         "value": "New Cairo - 5th Settlement - District 3",
         "label": {
-          "ar": "New Cairo - 5th Settlement - District 3",
+          "ar": "القاهره الجديده - التجمع الخامس - الحي ٣",
           "en": "New Cairo - 5th Settlement - District 3"
         }
       },
       {
         "value": "New Cairo - 5th Settlement - District 4",
         "label": {
-          "ar": "New Cairo - 5th Settlement - District 4",
+          "ar": "القاهره الجديده - فيلات الشربتلي",
           "en": "New Cairo - 5th Settlement - District 4"
         }
       },
       {
         "value": "New Cairo - 5th Settlement - District 5",
         "label": {
-          "ar": "New Cairo - 5th Settlement - District 5",
+          "ar": "القاهره الجديده - التجمع الخامس - الحي ٥",
           "en": "New Cairo - 5th Settlement - District 5"
         }
       },
       {
         "value": "New Cairo - 5th Settlement - North 90 St.",
         "label": {
-          "ar": "New Cairo - 5th Settlement - North 90 St.",
+          "ar": "القاهره الجديده - كومبوند جنه",
           "en": "New Cairo - 5th Settlement - North 90 St."
         }
       },
       {
         "value": "New Cairo - 5th Settlement - South 90 St.",
         "label": {
-          "ar": "New Cairo - 5th Settlement - South 90 St.",
+          "ar": "القاهره الجديده - سوديك فيليت",
           "en": "New Cairo - 5th Settlement - South 90 St."
         }
       },
       {
         "value": "New Cairo - Akoya Compound",
         "label": {
-          "ar": "New Cairo - Akoya Compound",
+          "ar": "القاهره الجديده - التجمع الثالث",
           "en": "New Cairo - Akoya Compound"
         }
       },
       {
         "value": "New Cairo - American University in Cairo (AUC)",
         "label": {
-          "ar": "New Cairo - American University in Cairo (AUC)",
+          "ar": "القاهره الجديده - التجمع الاول",
           "en": "New Cairo - American University in Cairo (AUC)"
         }
       },
       {
         "value": "New Cairo - Arabila",
         "label": {
-          "ar": "New Cairo - Arabila",
+          "ar": "القاهره الجديده - ارابيلا",
           "en": "New Cairo - Arabila"
         }
       },
       {
         "value": "New Cairo - Aswar Residence",
         "label": {
-          "ar": "New Cairo - Aswar Residence",
+          "ar": "القاهره الجديده - الجامعه الالمانيه",
           "en": "New Cairo - Aswar Residence"
         }
       },
       {
         "value": "New Cairo - Azzar",
         "label": {
-          "ar": "New Cairo - Azzar",
+          "ar": "القاهره الجديده - ازار",
           "en": "New Cairo - Azzar"
         }
       },
       {
         "value": "New Cairo - Beet ElWatan",
         "label": {
-          "ar": "New Cairo - Beet ElWatan",
+          "ar": "القاهره الجديده - بيت الوطن",
           "en": "New Cairo - Beet ElWatan"
         }
       },
       {
         "value": "New Cairo - Cairo Festival City",
         "label": {
-          "ar": "New Cairo - Cairo Festival City",
+          "ar": "القاهره الجديده - كايرو فستفال سيتي",
           "en": "New Cairo - Cairo Festival City"
         }
       },
       {
         "value": "New Cairo - Dar Masr - ElAndalos",
         "label": {
-          "ar": "New Cairo - Dar Masr - ElAndalos",
+          "ar": "القاهره الجديده - دار مصر - الاندلس",
           "en": "New Cairo - Dar Masr - ElAndalos"
         }
       },
       {
         "value": "New Cairo - Dar Masr - ElKoronfel",
         "label": {
-          "ar": "New Cairo - Dar Masr - ElKoronfel",
+          "ar": "القاهره الجديده - دار مصر - القرنفل",
           "en": "New Cairo - Dar Masr - ElKoronfel"
         }
       },
       {
         "value": "New Cairo - Downtown Katameya",
         "label": {
-          "ar": "New Cairo - Downtown Katameya",
+          "ar": "القاهره الجديده - داون تاون قطاميه",
           "en": "New Cairo - Downtown Katameya"
         }
       },
       {
         "value": "New Cairo - East The Academy",
         "label": {
-          "ar": "New Cairo - East The Academy",
+          "ar": "القاهره الجديده - شرق الاكاديميه",
           "en": "New Cairo - East The Academy"
         }
       },
       {
         "value": "New Cairo - ElBanafseg",
         "label": {
-          "ar": "New Cairo - ElBanafseg",
+          "ar": "القاهره الجديده - البنفسج",
           "en": "New Cairo - ElBanafseg"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 01",
         "label": {
-          "ar": "New Cairo - ElBanafseg 01",
+          "ar": "القاهره الجديده - البنفسج 01",
           "en": "New Cairo - ElBanafseg 01"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 02",
         "label": {
-          "ar": "New Cairo - ElBanafseg 02",
+          "ar": "القاهره الجديده - البنفسج 02",
           "en": "New Cairo - ElBanafseg 02"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 03",
         "label": {
-          "ar": "New Cairo - ElBanafseg 03",
+          "ar": "القاهره الجديده - البنفسج 03",
           "en": "New Cairo - ElBanafseg 03"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 04",
         "label": {
-          "ar": "New Cairo - ElBanafseg 04",
+          "ar": "القاهره الجديده - البنفسج 04",
           "en": "New Cairo - ElBanafseg 04"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 05",
         "label": {
-          "ar": "New Cairo - ElBanafseg 05",
+          "ar": "القاهره الجديده - البنفسج 05",
           "en": "New Cairo - ElBanafseg 05"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 06",
         "label": {
-          "ar": "New Cairo - ElBanafseg 06",
+          "ar": "القاهره الجديده - البنفسج 06",
           "en": "New Cairo - ElBanafseg 06"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 07",
         "label": {
-          "ar": "New Cairo - ElBanafseg 07",
+          "ar": "القاهره الجديده - البنفسج 07",
           "en": "New Cairo - ElBanafseg 07"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 08",
         "label": {
-          "ar": "New Cairo - ElBanafseg 08",
+          "ar": "القاهره الجديده - البنفسج 08",
           "en": "New Cairo - ElBanafseg 08"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 09",
         "label": {
-          "ar": "New Cairo - ElBanafseg 09",
+          "ar": "القاهره الجديده - البنفسج 09",
           "en": "New Cairo - ElBanafseg 09"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 10",
         "label": {
-          "ar": "New Cairo - ElBanafseg 10",
+          "ar": "القاهره الجديده - البنفسج 10",
           "en": "New Cairo - ElBanafseg 10"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 11",
         "label": {
-          "ar": "New Cairo - ElBanafseg 11",
+          "ar": "القاهره الجديده - البنفسج 11",
           "en": "New Cairo - ElBanafseg 11"
         }
       },
       {
         "value": "New Cairo - ElBanafseg 12",
         "label": {
-          "ar": "New Cairo - ElBanafseg 12",
+          "ar": "القاهره الجديده - البنفسج 12",
           "en": "New Cairo - ElBanafseg 12"
         }
       },
       {
         "value": "New Cairo - ElBanafseg Buildings",
         "label": {
-          "ar": "New Cairo - ElBanafseg Buildings",
+          "ar": "القاهره الجديده - اسكان الشباب الشمالي",
           "en": "New Cairo - ElBanafseg Buildings"
         }
       },
       {
         "value": "New Cairo - ElDiplomaseen",
         "label": {
-          "ar": "New Cairo - ElDiplomaseen",
+          "ar": "القاهره الجديده - الدبلوماسيين",
           "en": "New Cairo - ElDiplomaseen"
         }
       },
       {
         "value": "New Cairo - ElDiyar Compound",
         "label": {
-          "ar": "New Cairo - ElDiyar Compound",
+          "ar": "القاهره الجديده - الجامعه الامريكيه",
           "en": "New Cairo - ElDiyar Compound"
         }
       },
       {
         "value": "New Cairo - ElKatameya",
         "label": {
-          "ar": "New Cairo - ElKatameya",
+          "ar": "القاهره الجديده - البنفسج عمارات",
           "en": "New Cairo - ElKatameya"
         }
       },
       {
         "value": "New Cairo - ElKoronfel Villas",
         "label": {
-          "ar": "New Cairo - ElKoronfel Villas",
+          "ar": "القاهره الجديده - القرنفل فيلات",
           "en": "New Cairo - ElKoronfel Villas"
         }
       },
       {
         "value": "New Cairo - ElLotus",
         "label": {
-          "ar": "New Cairo - ElLotus",
+          "ar": "القاهره الجديده - اللوتس",
           "en": "New Cairo - ElLotus"
         }
       },
       {
         "value": "New Cairo - ElMahlyat (3rd Settlement)",
         "label": {
-          "ar": "New Cairo - ElMahlyat (3rd Settlement)",
+          "ar": "القاهره الجديده - المحليات (التجمع الثالث)",
           "en": "New Cairo - ElMahlyat (3rd Settlement)"
         }
       },
       {
         "value": "New Cairo - ElMarasem Compound",
         "label": {
-          "ar": "New Cairo - ElMarasem Compound",
+          "ar": "القاهره الجديده - التجمع الخامس - الحي ٤",
           "en": "New Cairo - ElMarasem Compound"
         }
       },
       {
         "value": "New Cairo - ElNarges 01",
         "label": {
-          "ar": "New Cairo - ElNarges 01",
+          "ar": "القاهره الجديده - النرجس 01",
           "en": "New Cairo - ElNarges 01"
         }
       },
       {
         "value": "New Cairo - ElNarges 02",
         "label": {
-          "ar": "New Cairo - ElNarges 02",
+          "ar": "القاهره الجديده - النرجس 02",
           "en": "New Cairo - ElNarges 02"
         }
       },
       {
         "value": "New Cairo - ElNarges 03",
         "label": {
-          "ar": "New Cairo - ElNarges 03",
+          "ar": "القاهره الجديده - النرجس 03",
           "en": "New Cairo - ElNarges 03"
         }
       },
       {
         "value": "New Cairo - ElNarges 04",
         "label": {
-          "ar": "New Cairo - ElNarges 04",
+          "ar": "القاهره الجديده - النرجس 04",
           "en": "New Cairo - ElNarges 04"
         }
       },
       {
         "value": "New Cairo - ElNarges 05",
         "label": {
-          "ar": "New Cairo - ElNarges 05",
+          "ar": "القاهره الجديده - النرجس 05",
           "en": "New Cairo - ElNarges 05"
         }
       },
       {
         "value": "New Cairo - ElNarges 06",
         "label": {
-          "ar": "New Cairo - ElNarges 06",
+          "ar": "القاهره الجديده - النرجس 06",
           "en": "New Cairo - ElNarges 06"
         }
       },
       {
         "value": "New Cairo - ElNarges 07",
         "label": {
-          "ar": "New Cairo - ElNarges 07",
+          "ar": "القاهره الجديده - النرجس 07",
           "en": "New Cairo - ElNarges 07"
         }
       },
       {
         "value": "New Cairo - ElNarges 08",
         "label": {
-          "ar": "New Cairo - ElNarges 08",
+          "ar": "القاهره الجديده - النرجس 08",
           "en": "New Cairo - ElNarges 08"
         }
       },
       {
         "value": "New Cairo - ElNarges Buildings",
         "label": {
-          "ar": "New Cairo - ElNarges Buildings",
+          "ar": "القاهره الجديده - النرجس عمارات",
           "en": "New Cairo - ElNarges Buildings"
         }
       },
       {
         "value": "New Cairo - ElPatio Oro",
         "label": {
-          "ar": "New Cairo - ElPatio Oro",
+          "ar": "القاهره الجديده - الباتيو اورو",
           "en": "New Cairo - ElPatio Oro"
         }
       },
       {
         "value": "New Cairo - ElSharbatly Villas",
         "label": {
-          "ar": "New Cairo - ElSharbatly Villas",
+          "ar": "القاهره الجديده - التجمع الخامس - شارع التسعين الشمالي",
           "en": "New Cairo - ElSharbatly Villas"
         }
       },
       {
         "value": "New Cairo - ElShouyfat",
         "label": {
-          "ar": "New Cairo - ElShouyfat",
+          "ar": "القاهره الجديده - الشويفات",
           "en": "New Cairo - ElShouyfat"
         }
       },
       {
         "value": "New Cairo - ElYasmeen 01",
         "label": {
-          "ar": "New Cairo - ElYasmeen 01",
+          "ar": "القاهره الجديده - الياسمين 01",
           "en": "New Cairo - ElYasmeen 01"
         }
       },
       {
         "value": "New Cairo - ElYasmeen 02",
         "label": {
-          "ar": "New Cairo - ElYasmeen 02",
+          "ar": "القاهره الجديده - الياسمين 02",
           "en": "New Cairo - ElYasmeen 02"
         }
       },
       {
         "value": "New Cairo - ElYasmeen 03",
         "label": {
-          "ar": "New Cairo - ElYasmeen 03",
+          "ar": "القاهره الجديده - الياسمين 03",
           "en": "New Cairo - ElYasmeen 03"
         }
       },
       {
         "value": "New Cairo - ElYasmeen 04",
         "label": {
-          "ar": "New Cairo - ElYasmeen 04",
+          "ar": "القاهره الجديده - الياسمين 04",
           "en": "New Cairo - ElYasmeen 04"
         }
       },
       {
         "value": "New Cairo - ElYasmeen 05",
         "label": {
-          "ar": "New Cairo - ElYasmeen 05",
+          "ar": "القاهره الجديده - الياسمين 05",
           "en": "New Cairo - ElYasmeen 05"
         }
       },
       {
         "value": "New Cairo - ElYasmeen 06",
         "label": {
-          "ar": "New Cairo - ElYasmeen 06",
+          "ar": "القاهره الجديده - الياسمين 06",
           "en": "New Cairo - ElYasmeen 06"
         }
       },
       {
         "value": "New Cairo - ElYasmeen 07",
         "label": {
-          "ar": "New Cairo - ElYasmeen 07",
+          "ar": "القاهره الجديده - الياسمين 07",
           "en": "New Cairo - ElYasmeen 07"
         }
       },
       {
         "value": "New Cairo - ElYasmeen 08",
         "label": {
-          "ar": "New Cairo - ElYasmeen 08",
+          "ar": "القاهره الجديده - الياسمين 08",
           "en": "New Cairo - ElYasmeen 08"
         }
       },
       {
         "value": "New Cairo - Elkoronfel",
         "label": {
-          "ar": "New Cairo - Elkoronfel",
+          "ar": "القاهره الجديده - القرنفل",
           "en": "New Cairo - Elkoronfel"
         }
       },
       {
         "value": "New Cairo - Fountain Park",
         "label": {
-          "ar": "New Cairo - Fountain Park",
+          "ar": "القاهره الجديده - فاونتين بارك",
           "en": "New Cairo - Fountain Park"
         }
       },
       {
         "value": "New Cairo - Galleria Moon Valley",
         "label": {
-          "ar": "New Cairo - Galleria Moon Valley",
+          "ar": "القاهره الجديده - جاليريا مون فالي",
           "en": "New Cairo - Galleria Moon Valley"
         }
       },
       {
         "value": "New Cairo - Gardenia Heights",
         "label": {
-          "ar": "New Cairo - Gardenia Heights",
+          "ar": "القاهره الجديده - جاردينيا هايتس",
           "en": "New Cairo - Gardenia Heights"
         }
       },
       {
         "value": "New Cairo - German University in Cairo (GUC)",
         "label": {
-          "ar": "New Cairo - German University in Cairo (GUC)",
+          "ar": "القاهره الجديده - تيلي بيرفورمانس",
           "en": "New Cairo - German University in Cairo (GUC)"
         }
       },
       {
         "value": "New Cairo - Gharb ElGolf",
         "label": {
-          "ar": "New Cairo - Gharb ElGolf",
+          "ar": "القاهره الجديده - غرب الجولف",
           "en": "New Cairo - Gharb ElGolf"
         }
       },
       {
         "value": "New Cairo - Hyde Park",
         "label": {
-          "ar": "New Cairo - Hyde Park",
+          "ar": "القاهره الجديده - هايد بارك",
           "en": "New Cairo - Hyde Park"
         }
       },
       {
         "value": "New Cairo - Investor Area Extension",
         "label": {
-          "ar": "New Cairo - Investor Area Extension",
+          "ar": "القاهره الجديده - كمبوند النخيل",
           "en": "New Cairo - Investor Area Extension"
         }
       },
       {
         "value": "New Cairo - Investors Area North",
         "label": {
-          "ar": "New Cairo - Investors Area North",
+          "ar": "القاهره الجديده - المستثمرين الجنوبيه",
           "en": "New Cairo - Investors Area North"
         }
       },
       {
         "value": "New Cairo - Investors Area South",
         "label": {
-          "ar": "New Cairo - Investors Area South",
+          "ar": "القاهره الجديده - المستثمرين الشماليه",
           "en": "New Cairo - Investors Area South"
         }
       },
       {
         "value": "New Cairo - Janna Compound",
         "label": {
-          "ar": "New Cairo - Janna Compound",
+          "ar": "القاهره الجديده - كومبوند ذا سكوير",
           "en": "New Cairo - Janna Compound"
         }
       },
       {
         "value": "New Cairo - Jayd Compound",
         "label": {
-          "ar": "New Cairo - Jayd Compound",
+          "ar": "القاهره الجديده - كمبوند جايد",
           "en": "New Cairo - Jayd Compound"
         }
       },
       {
         "value": "New Cairo - Katameya Dunes Compound",
         "label": {
-          "ar": "New Cairo - Katameya Dunes Compound",
+          "ar": "القاهره الجديده - التجمع الخامس - الحي ٢",
           "en": "New Cairo - Katameya Dunes Compound"
         }
       },
       {
         "value": "New Cairo - Katameya Gardens",
         "label": {
-          "ar": "New Cairo - Katameya Gardens",
+          "ar": "القاهره الجديده - قطاميه جاردنز",
           "en": "New Cairo - Katameya Gardens"
         }
       },
       {
         "value": "New Cairo - Katameya Heights",
         "label": {
-          "ar": "New Cairo - Katameya Heights",
+          "ar": "القاهره الجديده - قطاميه هايتس",
           "en": "New Cairo - Katameya Heights"
         }
       },
       {
         "value": "New Cairo - Katameya Plaza",
         "label": {
-          "ar": "New Cairo - Katameya Plaza",
+          "ar": "القاهره الجديده - قطاميه بلازا",
           "en": "New Cairo - Katameya Plaza"
         }
       },
       {
         "value": "New Cairo - Katameya Residence",
         "label": {
-          "ar": "New Cairo - Katameya Residence",
+          "ar": "القاهره الجديده - قطاميه ريزدنس",
           "en": "New Cairo - Katameya Residence"
         }
       },
       {
         "value": "New Cairo - Lake View",
         "label": {
-          "ar": "New Cairo - Lake View",
+          "ar": "القاهره الجديده - ليك فيو",
           "en": "New Cairo - Lake View"
         }
       },
       {
         "value": "New Cairo - Lake View Residence",
         "label": {
-          "ar": "New Cairo - Lake View Residence",
+          "ar": "القاهره الجديده - ليك فيو ريزدنس",
           "en": "New Cairo - Lake View Residence"
         }
       },
       {
         "value": "New Cairo - Layan Compund",
         "label": {
-          "ar": "New Cairo - Layan Compund",
+          "ar": "القاهره الجديده - كمبوند المراسم",
           "en": "New Cairo - Layan Compund"
         }
       },
       {
         "value": "New Cairo - Marina City",
         "label": {
-          "ar": "New Cairo - Marina City",
+          "ar": "القاهره الجديده - مارينا سيتي",
           "en": "New Cairo - Marina City"
         }
       },
       {
         "value": "New Cairo - Masaken (3rd Settlement)",
         "label": {
-          "ar": "New Cairo - Masaken (3rd Settlement)",
+          "ar": "القاهره الجديده - مساكن (التجمع الثالث)",
           "en": "New Cairo - Masaken (3rd Settlement)"
         }
       },
       {
         "value": "New Cairo - Mirage City",
         "label": {
-          "ar": "New Cairo - Mirage City",
+          "ar": "القاهره الجديده - ميراج سيتي",
           "en": "New Cairo - Mirage City"
         }
       },
       {
         "value": "New Cairo - Mivida",
         "label": {
-          "ar": "New Cairo - Mivida",
+          "ar": "القاهره الجديده - ميفيدا",
           "en": "New Cairo - Mivida"
         }
       },
       {
         "value": "New Cairo - Mountain View 02",
         "label": {
-          "ar": "New Cairo - Mountain View 02",
+          "ar": "القاهره الجديده - ماونتن فيو 02",
           "en": "New Cairo - Mountain View 02"
         }
       },
       {
         "value": "New Cairo - Mountain View 3",
         "label": {
-          "ar": "New Cairo - Mountain View 3",
+          "ar": "القاهره الجديده - ماونتن فيو ٣",
           "en": "New Cairo - Mountain View 3"
         }
       },
       {
         "value": "New Cairo - Nakhil Compound",
         "label": {
-          "ar": "New Cairo - Nakhil Compound",
+          "ar": "القاهره الجديده - كومبوند اكويا",
           "en": "New Cairo - Nakhil Compound"
         }
       },
       {
         "value": "New Cairo - North Youth Housing",
         "label": {
-          "ar": "New Cairo - North Youth Housing",
+          "ar": "القاهره الجديده - قطاميه ديونز",
           "en": "New Cairo - North Youth Housing"
         }
       },
       {
         "value": "New Cairo - Palm Hills Katameya PK1",
         "label": {
-          "ar": "New Cairo - Palm Hills Katameya PK1",
+          "ar": "القاهره الجديده - بالم هيلز قطاميه 01",
           "en": "New Cairo - Palm Hills Katameya PK1"
         }
       },
       {
         "value": "New Cairo - Palm Hills Katameya PK2",
         "label": {
-          "ar": "New Cairo - Palm Hills Katameya PK2",
+          "ar": "القاهره الجديده - بالم هيلز قطاميه 02",
           "en": "New Cairo - Palm Hills Katameya PK2"
         }
       },
       {
         "value": "New Cairo - Police Academy",
         "label": {
-          "ar": "New Cairo - Police Academy",
+          "ar": "القاهره الجديده - جنوب الاكاديميه",
           "en": "New Cairo - Police Academy"
         }
       },
       {
         "value": "New Cairo - Ritaj Compound",
         "label": {
-          "ar": "New Cairo - Ritaj Compound",
+          "ar": "القاهره الجديده - كمبوند ريتاج",
           "en": "New Cairo - Ritaj Compound"
         }
       },
       {
         "value": "New Cairo - SODIC Eastown",
         "label": {
-          "ar": "New Cairo - SODIC Eastown",
+          "ar": "القاهره الجديده - سوديك ايست تاون",
           "en": "New Cairo - SODIC Eastown"
         }
       },
       {
         "value": "New Cairo - SODIC Villette",
         "label": {
-          "ar": "New Cairo - SODIC Villette",
+          "ar": "القاهره الجديده - اكاديميه الشرطه",
           "en": "New Cairo - SODIC Villette"
         }
       },
       {
         "value": "New Cairo - South of Academy",
         "label": {
-          "ar": "New Cairo - South of Academy",
+          "ar": "القاهره الجديده - القطاميه",
           "en": "New Cairo - South of Academy"
         }
       },
       {
         "value": "New Cairo - Stone Park",
         "label": {
-          "ar": "New Cairo - Stone Park",
+          "ar": "القاهره الجديده - ستون بارك",
           "en": "New Cairo - Stone Park"
         }
       },
       {
         "value": "New Cairo - Stone Residence ElKatameya",
         "label": {
-          "ar": "New Cairo - Stone Residence ElKatameya",
+          "ar": "القاهره الجديده - ستون ريزيدنس القطاميه",
           "en": "New Cairo - Stone Residence ElKatameya"
         }
       },
       {
         "value": "New Cairo - Swan Lake",
         "label": {
-          "ar": "New Cairo - Swan Lake",
+          "ar": "القاهره الجديده - سوان ليك",
           "en": "New Cairo - Swan Lake"
         }
       },
       {
         "value": "New Cairo - Tamr Hena",
         "label": {
-          "ar": "New Cairo - Tamr Hena",
+          "ar": "القاهره الجديده - تمر حنه",
           "en": "New Cairo - Tamr Hena"
         }
       },
       {
         "value": "New Cairo - Teleperformance Egypt",
         "label": {
-          "ar": "New Cairo - Teleperformance Egypt",
+          "ar": "القاهره الجديده - كمبوند ليان",
           "en": "New Cairo - Teleperformance Egypt"
         }
       },
       {
         "value": "New Cairo - The Industrial Zone",
         "label": {
-          "ar": "New Cairo - The Industrial Zone",
+          "ar": "القاهره الجديده - التجمع الاول - الحي 01",
           "en": "New Cairo - The Industrial Zone"
         }
       },
       {
         "value": "New Cairo - The Square Compound",
         "label": {
-          "ar": "New Cairo - The Square Compound",
+          "ar": "القاهره الجديده - المستثمرين - امتداد",
           "en": "New Cairo - The Square Compound"
         }
       },
       {
         "value": "New Cairo - Tiba Heights Compound",
         "label": {
-          "ar": "New Cairo - Tiba Heights Compound",
+          "ar": "القاهره الجديده - التجمع الخامس - الحي ١",
           "en": "New Cairo - Tiba Heights Compound"
         }
       },
       {
         "value": "New Cairo - Univ & Schools Area",
         "label": {
-          "ar": "New Cairo - Univ & Schools Area",
+          "ar": "القاهره الجديده - كمبوند اسوار",
           "en": "New Cairo - Univ & Schools Area"
         }
       },
       {
         "value": "New Cairo - VGK Compound",
         "label": {
-          "ar": "New Cairo - VGK Compound",
+          "ar": "القاهره الجديده - كمبوند VGK",
           "en": "New Cairo - VGK Compound"
         }
       },
       {
         "value": "New Cairo - Village Gardens",
         "label": {
-          "ar": "New Cairo - Village Gardens",
+          "ar": "القاهره الجديده - فيلدج جاردنز",
           "en": "New Cairo - Village Gardens"
         }
       },
       {
         "value": "New Cairo - West Arabella",
         "label": {
-          "ar": "New Cairo - West Arabella",
+          "ar": "القاهره الجديده - غرب ارابيلا",
           "en": "New Cairo - West Arabella"
         }
       },
       {
         "value": "New Cairo - Zizinia",
         "label": {
-          "ar": "New Cairo - Zizinia",
+          "ar": "القاهره الجديده - زيزينيا",
           "en": "New Cairo - Zizinia"
         }
       },
       {
         "value": "New Capital",
         "label": {
-          "ar": "New Capital",
+          "ar": "العجوزه - مدينه الاوقاف - الاعلام",
           "en": "New Capital"
         }
       },
       {
         "value": "New Capital - The Military Entity",
         "label": {
-          "ar": "New Capital - The Military Entity",
+          "ar": "العاصمه الاداريه الجديده - الكيان العسكري",
           "en": "New Capital - The Military Entity"
         }
       },
       {
         "value": "Obour - Ahya'a El Obour El Jadida",
         "label": {
-          "ar": "Obour - Ahya'a El Obour El Jadida",
+          "ar": "العبور - احياء العبور الجديده",
           "en": "Obour - Ahya'a El Obour El Jadida"
         }
       },
       {
         "value": "Obour - Dar Masr - ElObour",
         "label": {
-          "ar": "Obour - Dar Masr - ElObour",
+          "ar": "العبور - دار مصر - العبور",
           "en": "Obour - Dar Masr - ElObour"
         }
       },
       {
         "value": "Obour - District 01 (Obour)",
         "label": {
-          "ar": "Obour - District 01 (Obour)",
+          "ar": "العبور - المنطقه 01 (العبور)",
           "en": "Obour - District 01 (Obour)"
         }
       },
       {
         "value": "Obour - District 02 (Obour)",
         "label": {
-          "ar": "Obour - District 02 (Obour)",
+          "ar": "العبور - المنطقه 02 (العبور)",
           "en": "Obour - District 02 (Obour)"
         }
       },
       {
         "value": "Obour - District 03 (Obour)",
         "label": {
-          "ar": "Obour - District 03 (Obour)",
+          "ar": "العبور - المنطقه 03 (العبور)",
           "en": "Obour - District 03 (Obour)"
         }
       },
       {
         "value": "Obour - District 04 (Obour)",
         "label": {
-          "ar": "Obour - District 04 (Obour)",
+          "ar": "العبور - المنطقه 04 (العبور)",
           "en": "Obour - District 04 (Obour)"
         }
       },
       {
         "value": "Obour - District 05 (Obour)",
         "label": {
-          "ar": "Obour - District 05 (Obour)",
+          "ar": "العبور - المنطقه 05 (العبور)",
           "en": "Obour - District 05 (Obour)"
         }
       },
       {
         "value": "Obour - District 06 (Obour)",
         "label": {
-          "ar": "Obour - District 06 (Obour)",
+          "ar": "العبور - المنطقه 06 (العبور)",
           "en": "Obour - District 06 (Obour)"
         }
       },
       {
         "value": "Obour - District 07 (Obour)",
         "label": {
-          "ar": "Obour - District 07 (Obour)",
+          "ar": "العبور - المنطقه 07 (العبور)",
           "en": "Obour - District 07 (Obour)"
         }
       },
       {
         "value": "Obour - District 08 (Obour)",
         "label": {
-          "ar": "Obour - District 08 (Obour)",
+          "ar": "العبور - المنطقه 08 (العبور)",
           "en": "Obour - District 08 (Obour)"
         }
       },
       {
         "value": "Obour - District 09 (Obour)",
         "label": {
-          "ar": "Obour - District 09 (Obour)",
+          "ar": "العبور - المنطقه 09 (العبور)",
           "en": "Obour - District 09 (Obour)"
         }
       },
       {
         "value": "Obour - Entertainment District",
         "label": {
-          "ar": "Obour - Entertainment District",
+          "ar": "مدينه بدر - المنطقه الصناعيه (مدينه بدر)",
           "en": "Obour - Entertainment District"
         }
       },
       {
         "value": "Obour - Family Housing",
         "label": {
-          "ar": "Obour - Family Housing",
+          "ar": "العبور - الاسكان العاءلي",
           "en": "Obour - Family Housing"
         }
       },
       {
         "value": "Obour - Future Housing",
         "label": {
-          "ar": "Obour - Future Housing",
+          "ar": "العبور - اسكان المستقبل",
           "en": "Obour - Future Housing"
         }
       },
       {
         "value": "Obour - Gamaiet Ahmed Orabi",
         "label": {
-          "ar": "Obour - Gamaiet Ahmed Orabi",
+          "ar": "العبور - جمعيه احمد عرابي",
           "en": "Obour - Gamaiet Ahmed Orabi"
         }
       },
       {
         "value": "Obour - Golf City",
         "label": {
-          "ar": "Obour - Golf City",
+          "ar": "العبور - منطقه الترفيه",
           "en": "Obour - Golf City"
         }
       },
       {
         "value": "Obour - Industrial Zone 01",
         "label": {
-          "ar": "Obour - Industrial Zone 01",
+          "ar": "العبور - المنطقه الصناعيه 01",
           "en": "Obour - Industrial Zone 01"
         }
       },
       {
         "value": "Obour - Kiriazi",
         "label": {
-          "ar": "Obour - Kiriazi",
+          "ar": "العبور - كيريازي",
           "en": "Obour - Kiriazi"
         }
       },
       {
         "value": "Obour - National Housing",
         "label": {
-          "ar": "Obour - National Housing",
+          "ar": "المقطم - كمبوند وان قطاميه معمار المرشدي",
           "en": "Obour - National Housing"
         }
       },
       {
         "value": "Obour - New Obour City",
         "label": {
-          "ar": "Obour - New Obour City",
+          "ar": "العبور - مدينه العبور الجديده",
           "en": "Obour - New Obour City"
         }
       },
       {
         "value": "Obour - Youth Housing (Obour)",
         "label": {
-          "ar": "Obour - Youth Housing (Obour)",
+          "ar": "مدينه بدر - الحي الثالث (مدينه بدر)",
           "en": "Obour - Youth Housing (Obour)"
         }
       },
       {
         "value": "Qasr ElNile",
         "label": {
-          "ar": "Qasr ElNile",
+          "ar": "قسم قصر النيل",
           "en": "Qasr ElNile"
         }
       },
       {
         "value": "Qasr ElNile - Garden City",
         "label": {
-          "ar": "Qasr ElNile - Garden City",
+          "ar": "قسم قصر النيل - جاردن سيتي",
           "en": "Qasr ElNile - Garden City"
         }
       },
       {
         "value": "Rod El Farag",
         "label": {
-          "ar": "Rod El Farag",
+          "ar": "رود الفرج",
           "en": "Rod El Farag"
         }
       },
       {
         "value": "Rod El Farag - Al Sabtiah",
         "label": {
-          "ar": "Rod El Farag - Al Sabtiah",
+          "ar": "رود الفرج - السبتيه",
           "en": "Rod El Farag - Al Sabtiah"
         }
       },
       {
         "value": "Rod ElFarag",
         "label": {
-          "ar": "Rod ElFarag",
+          "ar": "روض الفرج",
           "en": "Rod ElFarag"
         }
       },
       {
         "value": "Rod ElFarag - Ebn ElRashid",
         "label": {
-          "ar": "Rod ElFarag - Ebn ElRashid",
+          "ar": "روض الفرج - ابن الرشيد",
           "en": "Rod ElFarag - Ebn ElRashid"
         }
       },
       {
         "value": "Rod ElFarag - ElBalad",
         "label": {
-          "ar": "Rod ElFarag - ElBalad",
+          "ar": "روض الفرج - البلد",
           "en": "Rod ElFarag - ElBalad"
         }
       },
       {
         "value": "Rod ElFarag - ElMabyadah",
         "label": {
-          "ar": "Rod ElFarag - ElMabyadah",
+          "ar": "روض الفرج - المبيضه",
           "en": "Rod ElFarag - ElMabyadah"
         }
       },
       {
         "value": "Rod ElFarag - Gazirat Badran",
         "label": {
-          "ar": "Rod ElFarag - Gazirat Badran",
+          "ar": "روض الفرج - جزيره بدران",
           "en": "Rod ElFarag - Gazirat Badran"
         }
       },
       {
         "value": "Rod ElFarag - Qasouret ElShawam",
         "label": {
-          "ar": "Rod ElFarag - Qasouret ElShawam",
+          "ar": "روض الفرج - قصوره الشوام",
           "en": "Rod ElFarag - Qasouret ElShawam"
         }
       },
       {
         "value": "Rod ElFarag - Toson",
         "label": {
-          "ar": "Rod ElFarag - Toson",
+          "ar": "روض الفرج - طوسون",
           "en": "Rod ElFarag - Toson"
         }
       },
       {
         "value": "Shobra Masr",
         "label": {
-          "ar": "Shobra Masr",
+          "ar": "شبرا مصر",
           "en": "Shobra Masr"
         }
       },
       {
         "value": "Shoubra",
         "label": {
-          "ar": "Shoubra",
+          "ar": "شبرا",
           "en": "Shoubra"
         }
       },
       {
         "value": "Tura",
         "label": {
-          "ar": "Tura",
+          "ar": "طره",
           "en": "Tura"
         }
       },
       {
         "value": "Tura - ElHagarah",
         "label": {
-          "ar": "Tura - ElHagarah",
+          "ar": "طره - الحجاره",
           "en": "Tura - ElHagarah"
         }
       },
       {
         "value": "Tura - ElZahraa",
         "label": {
-          "ar": "Tura - ElZahraa",
+          "ar": "طره - الزهراء",
           "en": "Tura - ElZahraa"
         }
       },
       {
         "value": "Tura - Mansheya ElMasry",
         "label": {
-          "ar": "Tura - Mansheya ElMasry",
+          "ar": "طره - منشيه المصري",
           "en": "Tura - Mansheya ElMasry"
         }
       },
       {
         "value": "Tura - Tora ElAsmant",
         "label": {
-          "ar": "Tura - Tora ElAsmant",
+          "ar": "طره - طره الاسمنت",
           "en": "Tura - Tora ElAsmant"
         }
       },
       {
         "value": "Tura - Torah ElHait Kotseika",
         "label": {
-          "ar": "Tura - Torah ElHait Kotseika",
+          "ar": "طره - طره الحيط كوتسيكا",
           "en": "Tura - Torah ElHait Kotseika"
         }
       },
       {
         "value": "Zahraa ElMaadi - Bicho City (Zahraa ElMaadi)",
         "label": {
-          "ar": "Zahraa ElMaadi - Bicho City (Zahraa ElMaadi)",
+          "ar": "زهراء المعادي - بيتشو سيتي (زهراء المعادي)",
           "en": "Zahraa ElMaadi - Bicho City (Zahraa ElMaadi)"
         }
       },
       {
         "value": "Zahraa ElMaadi - Elkhamseen (Zahraa ElMaadi)",
         "label": {
-          "ar": "Zahraa ElMaadi - Elkhamseen (Zahraa ElMaadi)",
+          "ar": "زهراء المعادي - الخمسين (زهراء المعادي)",
           "en": "Zahraa ElMaadi - Elkhamseen (Zahraa ElMaadi)"
         }
       },
       {
         "value": "Zahraa ElMaadi - Tabarak City (Zahraa ElMaadi)",
         "label": {
-          "ar": "Zahraa ElMaadi - Tabarak City (Zahraa ElMaadi)",
+          "ar": "زهراء المعادي - تبارك سيتي (زهراء المعادي)",
           "en": "Zahraa ElMaadi - Tabarak City (Zahraa ElMaadi)"
         }
       }

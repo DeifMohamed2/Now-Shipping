@@ -1,51 +1,68 @@
-<!-- Area Selection Modal - Reusable Component -->
-<div class="modal fade" id="areaSelectionModal" tabindex="-1" aria-labelledby="areaSelectionModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content" style="border-radius: 16px;">
-      <div class="modal-header" style="border-bottom: 1px solid #e0e0e0;">
-        <h5 class="modal-title" id="areaSelectionModalLabel" style="font-weight: 600;">
-          <i class="ri-map-pin-line me-2"></i>Select Area
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<% 
+  var Am = (typeof translation !== 'undefined' && translation.business && translation.business.shared && translation.business.shared.areaSelectionModal)
+    ? translation.business.shared.areaSelectionModal
+    : {};
+  var _amLang = (typeof currentLang !== 'undefined' && currentLang) ? String(currentLang).toLowerCase().split('-')[0] : 'en';
+  if (_amLang !== 'ar' && _amLang !== 'en') _amLang = 'en';
+  var _amRtl = (typeof isRTL !== 'undefined' && isRTL) || _amLang === 'ar';
+%>
+<!-- Area Selection Modal — RTL-aware layout + scoped design -->
+<div class="modal fade area-selection-modal<%= _amRtl ? ' area-selection-modal--rtl' : ' area-selection-modal--ltr' %>" id="areaSelectionModal" tabindex="-1" aria-labelledby="areaSelectionModalLabel" aria-hidden="true"
+     lang="<%= _amLang %>"
+     dir="<%= _amRtl ? 'rtl' : 'ltr' %>"
+     data-swal-title="<%= Am.swalSelectTitle || 'Please Select' %>"
+     data-swal-text="<%= Am.swalSelectText || 'Please select both a governorate and an area.' %>">
+  <div class="modal-dialog modal-dialog-centered area-selection-modal__dialog">
+    <div class="modal-content area-selection-modal__shell">
+      <div class="modal-header area-selection-modal__header border-0">
+        <% if (_amRtl) { %>
+          <button type="button" class="btn-close btn-close-white area-selection-modal__close" data-bs-dismiss="modal" aria-label="<%= Am.closeAria || 'Close' %>"></button>
+          <h5 class="modal-title area-selection-modal__title mb-0" id="areaSelectionModalLabel">
+            <span class="area-selection-modal__title-icon" aria-hidden="true"><i class="ri-map-pin-line"></i></span>
+            <span class="area-selection-modal__title-text"><%= Am.title || 'Select Area' %></span>
+          </h5>
+        <% } else { %>
+          <h5 class="modal-title area-selection-modal__title mb-0" id="areaSelectionModalLabel">
+            <span class="area-selection-modal__title-icon" aria-hidden="true"><i class="ri-map-pin-line"></i></span>
+            <span class="area-selection-modal__title-text"><%= Am.title || 'Select Area' %></span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white area-selection-modal__close" data-bs-dismiss="modal" aria-label="<%= Am.closeAria || 'Close' %>"></button>
+        <% } %>
       </div>
-      <div class="modal-body" style="padding: 1.5rem;">
-        <!-- Search Bar -->
-        <div class="mb-4">
-          <div class="input-group" style="border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
-            <span class="input-group-text" style="background-color: white; border-right: none !important;">
-              <i class="ri-search-line text-primary"></i>
-            </span>
-            <input type="text" class="form-control border-0" id="areaSearchInput" 
-                   placeholder="Type your area (e.g., Nasr City)" 
-                   style="background-color: white; font-size: 1rem;"
-                   autocomplete="off">
-            <span class="input-group-text" style="background-color: white; border-left: none !important;">
-              <i class="ri-map-pin-line text-muted"></i>
-            </span>
-          </div>
+
+      <div class="modal-body area-selection-modal__body">
+        <label class="visually-hidden" for="areaSearchInput"><%= Am.searchPlaceholder || 'Search area' %></label>
+        <div class="area-selection-modal__search-pill">
+          <span class="area-selection-modal__search-affix" aria-hidden="true"><i class="ri-search-line"></i></span>
+          <input type="search" class="form-control area-selection-modal__search-input" id="areaSearchInput"
+                 placeholder="<%= Am.searchPlaceholder || 'Type your area (e.g., Nasr City)' %>"
+                 autocomplete="off" inputmode="search">
+          <span class="area-selection-modal__search-affix" aria-hidden="true"><i class="ri-map-pin-line"></i></span>
         </div>
-        
-        <!-- Instructional Text -->
-        <div class="alert alert-info d-flex align-items-center mb-3" style="background-color: #e7f3ff; border-color: #b3d9ff; color: #0066cc; padding: 0.75rem 1rem; border-radius: 8px;">
-          <i class="ri-information-line me-2 fs-5"></i>
-          <span style="font-size: 0.9rem; font-weight: 500;">Click on any governorate to view and select available areas</span>
+
+        <div class="area-selection-modal__hint" role="note">
+          <span class="area-selection-modal__hint-icon" aria-hidden="true"><i class="ri-information-line"></i></span>
+          <p class="area-selection-modal__hint-text mb-0"><%= Am.hint || 'Click on any governorate to view and select available areas' %></p>
         </div>
-        
-        <!-- Governorate and Area Selection -->
-        <div style="max-height: 450px; overflow-y: auto;">
-          <!-- Governorate List -->
-          <div id="governorateList">
-            <!-- Will be populated dynamically -->
-          </div>
+
+        <div class="area-selection-modal__list-scroll">
+          <div id="governorateList" class="area-selection-modal__list" data-loading-text="<%= Am.loadingRegions || 'Loading regions…' %>"></div>
         </div>
       </div>
-      <div class="modal-footer" style="border-top: 1px solid #e0e0e0;">
-        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="confirmAreaSelection">
-          Confirm Selection
-        </button>
+
+      <div class="modal-footer area-selection-modal__footer border-0">
+        <% if (_amRtl) { %>
+          <button type="button" class="btn area-selection-modal__btn-primary btn-lg" id="confirmAreaSelection">
+            <%= Am.confirm || 'Confirm Selection' %>
+          </button>
+          <button type="button" class="btn area-selection-modal__btn-secondary btn-lg" data-bs-dismiss="modal"><%= Am.cancel || 'Cancel' %></button>
+        <% } else { %>
+          <button type="button" class="btn area-selection-modal__btn-secondary btn-lg" data-bs-dismiss="modal"><%= Am.cancel || 'Cancel' %></button>
+          <button type="button" class="btn area-selection-modal__btn-primary btn-lg" id="confirmAreaSelection">
+            <%= Am.confirm || 'Confirm Selection' %>
+          </button>
+        <% } %>
       </div>
     </div>
   </div>
 </div>
-

@@ -538,7 +538,8 @@
           if (selectedData && callback) {
             const gov = selectedData.data.governorate;
             const area = selectedData.data.area;
-            const currentLang = document.documentElement.lang || 'en';
+            const rawLang = document.documentElement.lang || 'en';
+            const currentLang = String(rawLang).toLowerCase().split('-')[0] === 'ar' ? 'ar' : 'en';
             callback({ governorate: gov.label[currentLang] || gov.label.en, zone: area.label[currentLang] || area.label.en, governorateValue: selectedData.governorate, zoneValue: selectedData.zone });
           }
         });

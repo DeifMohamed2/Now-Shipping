@@ -9,7 +9,9 @@
     "start": "nodemon app.js",
     "test:notifications": "node scripts/test-business-notifications.js",
     "test:notifications:business": "node scripts/test-business-notifications.js",
-    "verify:dashboard": "node scripts/verify-dashboard-invariants.js"
+    "verify:dashboard": "node scripts/verify-dashboard-invariants.js",
+    "build:bosta-cairo-labels": "node scripts/merge-cairo-bosta-ar-labels.js",
+    "export:cairo-zones-bilingual": "node scripts/export-cairo-zones-bilingual.js"
   },
   "author": "Themesbrand",
   "license": "ISC",

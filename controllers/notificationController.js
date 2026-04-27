@@ -464,6 +464,32 @@ const markNotificationAsRead = async (req, res) => {
 };
 
 /**
+ * Mark all notifications as read for the authenticated recipient (courier or business)
+ */
+const markAllNotificationsAsRead = async (req, res) => {
+  try {
+    const recipientId = req.userId;
+
+    const result = await Notification.updateMany(
+      { recipient: recipientId, isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    return res.status(200).json({
+      success: true,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to mark all notifications as read',
+      error: error.message
+    });
+  }
+};
+
+/**
  * Update FCM token for a courier
  */
 const updateFcmToken = async (req, res) => {
@@ -1239,6 +1265,7 @@ module.exports = {
   getCourierNotifications,
   getBusinessNotifications,
   markNotificationAsRead,
+  markAllNotificationsAsRead,
   updateFcmToken,
   updateBusinessFcmToken,
   getRecentNotifications,

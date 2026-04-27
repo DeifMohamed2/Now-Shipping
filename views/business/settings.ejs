@@ -1601,7 +1601,8 @@
         if (selectedData && callback) {
           const gov = selectedData.data.governorate;
           const area = selectedData.data.area;
-          const currentLang = document.documentElement.lang || 'en';
+          const rawLang = document.documentElement.lang || 'en';
+          const currentLang = String(rawLang).toLowerCase().split('-')[0] === 'ar' ? 'ar' : 'en';
           const govLabel = gov.label[currentLang] || gov.label.en;
           const areaLabel = area.label[currentLang] || area.label.en;
           

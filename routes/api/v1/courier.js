@@ -17,6 +17,7 @@ router.get('/location/status', verifyToken, courierLocationController.getLocatio
 // Add FCM notification routes
 router.post('/update-fcm-token', verifyToken, notificationController.updateFcmToken);
 router.get('/notifications', verifyToken, notificationController.getCourierNotifications);
+router.put('/notifications/read-all', verifyToken, notificationController.markAllNotificationsAsRead);
 router.put('/notifications/:notificationId/read', verifyToken, notificationController.markNotificationAsRead);
 router.get('/language', verifyToken, courierController.getCourierLanguage);
 router.put('/language', verifyToken, courierController.updateCourierLanguage);

@@ -573,6 +573,19 @@
       "language": "اللغة",
       "breadcrumbNav": "مسار التصفح"
     },
+    "shared": {
+      "areaSelectionModal": {
+        "title": "اختر المنطقة",
+        "searchPlaceholder": "ابحث عن المنطقة بالعربية أو الإنجليزية… (مثال: مدينة نصر، المعادي، Nasr City)",
+        "hint": "اضغط على المحافظة لعرض المناطق المتاحة واختيارها",
+        "confirm": "تأكيد الاختيار",
+        "cancel": "إلغاء",
+        "closeAria": "إغلاق",
+        "swalSelectTitle": "يرجى الاختيار",
+        "swalSelectText": "يرجى اختيار المحافظة والمنطقة.",
+        "loadingRegions": "جاري تحميل المناطق…"
+      }
+    },
     "pages": {
       "dashboard": {
         "title": "نظرة عامة",

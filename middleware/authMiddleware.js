@@ -8,15 +8,23 @@ const verifyToken = (req, res, next) => {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !/^Bearer\s/i.test(String(authHeader))) {
       return res.status(401).json({
         success: false,
         message: 'No token provided or invalid token format'
       });
     }
     
-    // Extract the token
-    const token = authHeader.split(' ')[1];
+    // After "Bearer" there must be a non-empty JWT (avoids split edge cases: "Bearer", "Bearer ", "Bearer  ")
+    const token = String(authHeader)
+      .replace(/^Bearer\s+/i, '')
+      .trim();
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided or invalid token format'
+      });
+    }
     
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -53,7 +61,12 @@ const verifyToken = (req, res, next) => {
     
     next();
   } catch (error) {
-    console.error('Token verification error:', error);
+    if (error.name === 'JsonWebTokenError') {
+      // Common when clients send empty/wrong value after Bearer, or a non-JWT string — avoid full stack in logs
+      console.warn('Token verification error:', error.message);
+    } else {
+      console.error('Token verification error:', error);
+    }
     
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
