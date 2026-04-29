@@ -2445,6 +2445,7 @@ const courier_received = async (req, res) => {
       // Send SMS OTP to customer
       const phone = order.orderCustomer?.phoneNumber;
       const brand = order.business?.brandInfo?.brandName || order.business?.name || 'NowShipping';
+      console.log("Delivery OTP Phone: ", otp)
       if (phone) {
         sendSms({
           recipient: phone,
@@ -2755,6 +2756,7 @@ const assignCourierToReturn = async (req, res) => {
       const returnOtpOriginalRef = order.orderShipping?.originalOrderNumber || order.orderNumber;
       const returnOtpPhone = order.orderCustomer?.phoneNumber;
       const returnOtpBrand = order.business?.brandInfo?.brandName || order.business?.name || 'NowShipping';
+      console.log("Return OTP Phone: ", returnOtpPlain)
       if (returnOtpPhone) {
         sendSms({
           recipient: returnOtpPhone,
@@ -2875,6 +2877,7 @@ const resendReturnOtp = async (req, res) => {
     const phone = order.orderCustomer?.phoneNumber;
     const brand = order.business?.brandInfo?.brandName || order.business?.name || 'NowShipping';
 
+    console.log("OTP Plain: ", otpPlain)
     if (phone) {
       sendSms({
         recipient: phone,
