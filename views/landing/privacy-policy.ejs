@@ -29,6 +29,10 @@
         <p><%= PP.informationUseText %></p>
         <h2><i class="fas fa-share-nodes" style="color:var(--lp-primary)"></i> <%= PP.informationSharing %></h2>
         <p><%= PP.informationSharingText %></p>
+        <h2><i class="fas fa-envelope" style="color:var(--lp-primary)"></i> <%= PP.contact %></h2>
+        <p><%= PP.contactText %>
+          <a href="mailto:<%= typeof siteContactEmail !== 'undefined' ? siteContactEmail : 'info@now.com.eg' %>"><%= typeof siteContactEmail !== 'undefined' ? siteContactEmail : 'info@now.com.eg' %></a>.
+        </p>
         <p style="margin-top:2rem;font-size:.9rem"><a href="/"><%= translation.navigation.home %></a> · <a href="/faq"><%= translation.navigation.faq %></a></p>
       </article>
     </div>

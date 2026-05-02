@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const emailTemplates = require('./emailTemplates');
 const { getEmailConfig } = require('./emailConfig');
+const site = require('../config/site');
 
 
 class EmailService {
@@ -64,11 +65,11 @@ class EmailService {
           'X-Mailer': 'Now Shipping Platform',
           'X-Priority': '3',
           'X-MSMail-Priority': 'Normal',
-          'List-Unsubscribe': '<mailto:unsubscribe@ordercompany.com>',
+          'List-Unsubscribe': `<mailto:${site.contactEmail}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
         },
-        // Professional message ID
-        messageId: `<${Date.now()}.${Math.random().toString(36).substr(2, 9)}@nowshipping.com>`
+        // Professional message ID (domain aligned with site email)
+        messageId: `<${Date.now()}.${Math.random().toString(36).substr(2, 9)}@${site.contactEmail.split('@')[1] || 'now.com.eg'}>`
       };
 
       const result = await this.transporter.sendMail(mailOptions);

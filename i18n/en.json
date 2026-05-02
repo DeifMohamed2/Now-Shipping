@@ -508,7 +508,9 @@
       "informationUse": "How We Use Information",
       "informationUseText": "We use your information to provide, maintain, and improve our services.",
       "informationSharing": "Information Sharing",
-      "informationSharingText": "We do not sell, trade, or otherwise transfer your personal information to third parties."
+      "informationSharingText": "We do not sell, trade, or otherwise transfer your personal information to third parties.",
+      "contact": "Contact",
+      "contactText": "Questions about this policy? Email us at"
     },
     "comingSoon": {
       "title": "Coming Soon",

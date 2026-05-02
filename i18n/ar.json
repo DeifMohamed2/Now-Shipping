@@ -508,7 +508,9 @@
       "informationUse": "كيف نستخدم المعلومات",
       "informationUseText": "نستخدم معلوماتك لتقديم وصيانة وتحسين خدماتنا.",
       "informationSharing": "مشاركة المعلومات",
-      "informationSharingText": "نحن لا نبيع أو نتاجر أو ننقل معلوماتك الشخصية لأطراف ثالثة."
+      "informationSharingText": "نحن لا نبيع أو نتاجر أو ننقل معلوماتك الشخصية لأطراف ثالثة.",
+      "contact": "اتصل بنا",
+      "contactText": "للأسئلة المتعلقة بهذه السياسة، راسلنا على"
     },
     "comingSoon": {
       "title": "قريباً",

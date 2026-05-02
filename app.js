@@ -7,6 +7,7 @@ const path = require('path');
 const http = require('http');
 const server = http.createServer(app);
 const socketController = require('./controllers/socketController');
+const siteConfig = require('./config/site');
 
 // Initialize Firebase Admin SDK
 require('./config/firebase');
@@ -136,6 +137,19 @@ app.use(
     textsVarName: 'translation',
   })
 );
+
+// Sidebar/topbar logo: `/index` is not a route (404). Use each area’s dashboard (or `/` for public pages).
+// Site contact email for footers, mailto links, and shared templates (`config/site.js`).
+app.use((req, res, next) => {
+  res.locals.siteContactEmail = siteConfig.contactEmail;
+  const p = req.path || '';
+  if (p.startsWith('/admin')) res.locals.logoHomeHref = '/admin/dashboard';
+  else if (p.startsWith('/business')) res.locals.logoHomeHref = '/business/dashboard';
+  else if (p.startsWith('/manage')) res.locals.logoHomeHref = '/manage/dashboard';
+  else if (p.startsWith('/courier')) res.locals.logoHomeHref = '/mobileApp';
+  else res.locals.logoHomeHref = '/';
+  next();
+});
 
 app.use((err, req, res, next) => {
   let error = {

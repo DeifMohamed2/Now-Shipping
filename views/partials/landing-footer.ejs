@@ -150,7 +150,7 @@
 
           <li><a href="/faq"><i class="fas fa-angle-right"></i> <%= translation.navigation.faq %></a></li>
           <li><a href="/privacypolicy"><i class="fas fa-angle-right"></i> <%= translation.navigation.privacyPolicy %></a></li>
-          <li><a href="/login"><i class="fas fa-angle-right"></i> <%= translation.footer.company.contact %></a></li>
+          <li><a href="mailto:<%= typeof siteContactEmail !== 'undefined' ? siteContactEmail : 'info@now.com.eg' %>"><i class="fas fa-angle-right"></i> <%= translation.footer.company.contact %></a></li>
         </ul>
       </div>
 
@@ -178,6 +178,11 @@
       <div class="footer-column">
         <h3><%= translation.landing.footer.connect %></h3>
         <p><%= translation.landing.footer.connectDescription %></p>
+        <p style="margin-top: 1rem;">
+          <a href="mailto:<%= typeof siteContactEmail !== 'undefined' ? siteContactEmail : 'info@now.com.eg' %>" style="color: rgba(255, 255, 255, 0.85); text-decoration: none;">
+            <i class="fas fa-envelope" style="color: var(--primary); margin-right: 0.5rem;"></i><%= typeof siteContactEmail !== 'undefined' ? siteContactEmail : 'info@now.com.eg' %>
+          </a>
+        </p>
         <div class="social-icons">
           <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
           <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>

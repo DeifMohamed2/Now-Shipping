@@ -9,6 +9,8 @@
  * - Mobile-friendly layouts
  */
 
+const site = require('../config/site');
+
 const getEmailBaseTemplate = (title, content, buttonText = null, buttonLink = null, additionalInfo = null) => {
   return `
 <!DOCTYPE html>
@@ -281,7 +283,7 @@ const getEmailBaseTemplate = (title, content, buttonText = null, buttonLink = nu
         <div class="email-footer">
             <h3>Now Shipping</h3>
             <p>Your trusted delivery partner</p>
-            <p>📧 support@nowshipping.com | 📞 +20 123 456 7890</p>
+            <p>📧 ${site.contactEmail} | 📞 +20 123 456 7890</p>
             <div class="social-links">
                 <a href="#">Facebook</a> | 
                 <a href="#">Twitter</a> | 

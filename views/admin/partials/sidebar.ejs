@@ -11,7 +11,7 @@
   </div>
 
   <div class="navbar-brand-box ns-logo-box">
-    <a href="/index" class="logo ns-logo-link">
+    <a href="<%= typeof logoHomeHref !== 'undefined' ? logoHomeHref : '/admin/dashboard' %>" class="logo ns-logo-link">
       <div class="ns-logo-container">
         <img src="/assets/rImages/app_inside_logo.png" alt="Now Shipping" class="ns-logo-img ns-logo-img--expanded" width="200" height="48" loading="eager" decoding="async">
         <img src="/assets/rImages/mainlogospining.png" alt="" class="ns-logo-img ns-logo-img--collapsed" width="40" height="40" loading="eager" decoding="async" aria-hidden="true">
