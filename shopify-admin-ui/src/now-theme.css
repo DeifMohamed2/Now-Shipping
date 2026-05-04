@@ -1,0 +1,171 @@
+/**
+ * Now Shipping brand — embedded Shopify admin UI
+ * Primary #F39720, hover #e0851a, accent #fdb614, light #FFF8ED
+ */
+:root {
+  --p-color-bg-fill-brand: #f39720;
+  --p-color-bg-fill-brand-hover: #e0851a;
+  --p-color-bg-fill-brand-active: #e0851a;
+  --p-color-bg-fill-brand-selected: #e0851a;
+  --now-accent: #fdb614;
+}
+
+/* Full-width embedded pages: let content use the iframe width */
+.Polaris-Page--fullWidth .Polaris-Page__Content {
+  max-width: 100%;
+}
+.Polaris-Banner--withinPage {
+  border-inline-start-color: var(--now-accent);
+}
+
+/* Shopify orders table — closer to main Now app feel */
+.now-orders-table {
+  border-radius: var(--p-border-radius-300);
+  overflow: hidden;
+  box-shadow: var(--p-shadow-100);
+}
+
+.now-orders-table .Polaris-IndexTable {
+  border-radius: inherit;
+}
+
+.now-orders-table .Polaris-IndexTable__TableHeading {
+  background: var(--p-color-bg-surface-secondary);
+  font-weight: var(--p-font-weight-semibold);
+  border-bottom: 2px solid var(--p-color-bg-fill-brand);
+}
+
+.now-orders-table .Polaris-IndexTable__TableRow:hover {
+  background: rgba(243, 151, 32, 0.07);
+}
+
+.now-orders-table .Polaris-IndexTable__TableRow:nth-child(even) {
+  background: var(--p-color-bg-surface-secondary);
+}
+
+.now-orders-table .Polaris-IndexTable__TableRow:nth-child(even):hover {
+  background: rgba(243, 151, 32, 0.1);
+}
+
+.now-orders-table .Polaris-IndexTable__TableRow--selected {
+  background: rgba(253, 182, 20, 0.18) !important;
+}
+
+.now-orders-table .Polaris-IndexTable__TableRow--selected:hover {
+  background: rgba(243, 151, 32, 0.22) !important;
+}
+
+.now-orders-table .Polaris-IndexTable__TableRow:has(.now-imported-row-marker) {
+  box-shadow: inset 3px 0 0 var(--p-color-bg-fill-brand);
+  background: rgba(255, 248, 237, 0.55);
+}
+
+.now-orders-table .Polaris-IndexTable__TableRow:has(.now-imported-row-marker):nth-child(even) {
+  background: rgba(255, 248, 237, 0.75);
+}
+
+.now-orders-table .Polaris-IndexTable__TableRow:has(.now-imported-row-marker):hover {
+  background: rgba(243, 151, 32, 0.12);
+}
+
+.now-orders-table .Polaris-Badge--toneSuccess {
+  border: 1px solid rgba(22, 163, 74, 0.35);
+}
+
+.now-orders-table .now-edit-import-btn {
+  font-weight: var(--p-font-weight-semibold);
+}
+
+.now-imported-row-marker {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+/* Extra space at bottom of import modals so the zone list popover can anchor below the field */
+.now-zone-combobox-modal-section {
+  padding-bottom: clamp(10rem, 30vh, 18rem);
+}
+
+/* Zone combobox dropdown (Polaris Combobox — only used for zones in this app) */
+.Polaris-Combobox__Listbox {
+  padding-block: var(--p-space-200);
+  padding-inline: var(--p-space-200);
+  box-sizing: border-box;
+  border-radius: var(--p-border-radius-200);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: min(94vw, 42rem);
+}
+
+.Polaris-Combobox__Listbox .Polaris-Listbox-Option {
+  overflow: visible;
+  min-width: min-content;
+}
+
+.Polaris-Combobox__Listbox .Polaris-Listbox-Option .now-zone-option {
+  padding-block: var(--p-space-200);
+  padding-inline: var(--p-space-200);
+  box-sizing: border-box;
+}
+
+.Polaris-Combobox__Listbox .Polaris-Listbox-Option .now-zone-option--empty {
+  padding: var(--p-space-300) var(--p-space-200);
+  white-space: normal;
+}
+
+/* Single full line: English - Arabic (no wrap; scroll list horizontally if needed) */
+.now-zone-option__line {
+  display: block;
+  white-space: nowrap;
+  width: max-content;
+  min-width: 100%;
+  line-height: var(--p-font-line-height-500);
+  font-size: var(--p-font-size-350);
+}
+
+.now-zone-option__en {
+  font-weight: var(--p-font-weight-semibold);
+  color: var(--p-color-text);
+}
+
+.now-zone-option__dash {
+  font-weight: var(--p-font-weight-regular);
+  color: var(--p-color-text-secondary);
+}
+
+.now-zone-option__ar {
+  font-weight: var(--p-font-weight-regular);
+  color: var(--p-color-text-secondary);
+}
+
+/* Full-screen loading while merged AWB PDF is generated */
+.now-print-awb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(3px);
+}
+
+.now-print-awb-overlay__card {
+  padding: var(--p-space-600);
+  border-radius: var(--p-border-radius-300);
+  box-shadow: var(--p-shadow-300);
+  background: var(--p-color-bg-surface);
+  max-width: min(92vw, 22rem);
+}
+
+/* In-app AWB preview when a new tab cannot show the PDF */
+.now-awb-pdf-frame {
+  width: 100%;
+  min-height: min(75vh, 640px);
+  border: 0;
+  border-radius: var(--p-border-radius-200);
+  background: var(--p-color-bg-surface-secondary);
+}

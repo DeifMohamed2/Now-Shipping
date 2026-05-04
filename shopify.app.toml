@@ -1,0 +1,33 @@
+# Shopify app configuration for the Dev platform / CLI (`shopify app deploy`).
+# - `client_id` = Partner Dashboard **Client ID** (same value as `SHOPIFY_API_KEY` in `.env`).
+# - All HTTPS URLs below must match your live `APP_URL` origin (no trailing slash on origin).
+#   **Currently ngrok** for local testing — switch back to `https://now.com.eg` before production `shopify app deploy`.
+#
+# See SHOPIFY-SETUP.md §6.2.
+
+name = "Now Shipping"
+client_id = "bc8079fb16c02748ab06455608643ee3"
+application_url = "https://4f18-2c0f-fc89-108-b7f7-209d-fb79-6eae-f3e6.ngrok-free.app/shopify-app/"
+embedded = true
+
+[access_scopes]
+scopes = "read_customers,read_fulfillments,write_fulfillments,read_orders,write_orders,read_all_orders"
+# Do not set use_legacy_install_flow = true: it blocks app-level webhook subscriptions in this TOML
+# (Shopify CLI error). OAuth still uses your Node callback at [auth].redirect_urls.
+
+[auth]
+redirect_urls = [
+  "https://4f18-2c0f-fc89-108-b7f7-209d-fb79-6eae-f3e6.ngrok-free.app/api/shopify/auth/callback",
+]
+
+[webhooks]
+api_version = "2026-04"
+
+# Same HTTPS path for both blocks; `X-Shopify-Topic` distinguishes events (HMAC verified in Node).
+[[webhooks.subscriptions]]
+topics = ["orders/create", "orders/updated", "app/uninstalled"]
+uri = "https://4f18-2c0f-fc89-108-b7f7-209d-fb79-6eae-f3e6.ngrok-free.app/api/shopify/webhooks"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "https://4f18-2c0f-fc89-108-b7f7-209d-fb79-6eae-f3e6.ngrok-free.app/api/shopify/webhooks"

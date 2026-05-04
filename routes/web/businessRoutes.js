@@ -8,6 +8,7 @@ const jwtSecret = process.env.JWT_SECRET;
 const multer = require('multer');
 const businessController = require('../../controllers/businessController.js');
 const assistantController = require('../../controllers/assistantController.js');
+const shopifyController = require('../../controllers/shopifyController.js');
 
 const orderImportUpload = multer({
   storage: multer.memoryStorage(),
@@ -75,7 +76,7 @@ async function authenticateUser(req, res, next) {
     const normalizedRole = (user && user.role ? String(user.role).toLowerCase() : '');
     const isCompleted = Boolean(user && user.isCompleted);
     if (normalizedRole === 'business' && !isCompleted) {
-      const allowedWhenIncomplete = new Set(['/dashboard', '/dashboard-data', '/completionConfirm', '/request-verification']);
+      const allowedWhenIncomplete = new Set(['/dashboard', '/dashboard-data', '/completionConfirm', '/request-verification', '/settings', '/shopify/install', '/shopify/disconnect']);
 
       if (!allowedWhenIncomplete.has(req.path)) {
         // Expose flag to templates if needed
@@ -105,6 +106,9 @@ async function authenticateUser(req, res, next) {
 router.get('/logout', businessController.logOut);
 
 router.use(authenticateUser);
+
+router.get('/shopify/install', shopifyController.redirectToShopifyOAuth);
+router.post('/shopify/disconnect', shopifyController.disconnectShopify);
 
 // Define routes
 //dashboard

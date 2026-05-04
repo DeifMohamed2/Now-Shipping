@@ -5,6 +5,8 @@
   "scripts": {
     "clean": "rimraf public/assets",
     "build": "npm run clean && webpack --mode production",
+    "build:shopify-ui": "npm install --prefix shopify-admin-ui && npm run build --prefix shopify-admin-ui",
+    "shopify:deploy": "shopify app deploy --allow-updates",
     "dev": "webpack --mode development --watch",
     "start": "nodemon app.js",
     "test:notifications": "node scripts/test-business-notifications.js",
@@ -55,6 +57,7 @@
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^44.3.0",
     "@google-cloud/translate": "^9.3.0",
+    "@shopify/shopify-api": "^13.0.0",
     "@simonwep/pickr": "^1.9.1",
     "@tarekraafat/autocomplete.js": "^10.2.9",
     "@vitalets/google-translate-api": "^9.2.1",
@@ -105,6 +108,7 @@
     "node-waves": "^0.7.6",
     "nouislider": "^15.8.1",
     "particles.js": "^2.0.0",
+    "pdf-lib": "^1.17.1",
     "pdfkit": "^0.16.0",
     "prismjs": "^1.29.0",
     "puppeteer": "^24.28.0",

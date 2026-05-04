@@ -446,6 +446,20 @@ const orderSchema = new mongoose.Schema(
       ref: 'users',
       required: true,
     },
+    /** External commerce platform sync (e.g. Shopify order id) */
+    externalSource: {
+      type: String,
+      enum: ['shopify'],
+      required: false,
+    },
+    externalOrderId: {
+      type: String,
+      required: false,
+    },
+    externalOrderNumber: {
+      type: String,
+      required: false,
+    },
     // Selected pickup address for express shipping orders
     selectedPickupAddressId: {
       type: String,
@@ -716,6 +730,17 @@ orderSchema.post('save', async function () {
     }
   }
 });
+
+orderSchema.index(
+  { business: 1, externalSource: 1, externalOrderId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      externalSource: 'shopify',
+      externalOrderId: { $exists: true, $type: 'string' },
+    },
+  }
+);
 
 const Order = mongoose.model('order', orderSchema);
 

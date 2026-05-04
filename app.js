@@ -33,9 +33,11 @@ const uploadRouterApi = require('./routes/api/v1/upload');
 
 // Import jobs
 const { initPayoutProcessing } = require('./jobs/payoutProcessing');
+const { initShopifySyncRetry } = require('./jobs/shopifySyncRetry');
 
 // Start the Wednesday payout cron
 initPayoutProcessing();
+initShopifySyncRetry();
 
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
@@ -67,6 +69,9 @@ function shouldSkipExpressFileUpload(req) {
   if (req.method === 'POST' && /^\/api\/v1\/tickets\/[^/]+\/upload$/.test(p)) {
     return true;
   }
+  if (p.startsWith('/api/shopify/webhooks')) {
+    return true;
+  }
   return false;
 }
 app.use((req, res, next) => {
@@ -76,12 +81,24 @@ app.use((req, res, next) => {
   return upload()(req, res, next);
 });
 
+const shopifyWebhooksRouter = require('./routes/shopifyWebhooks');
+const shopifyAppRouter = require('./routes/shopifyAppRoutes');
+const shopifyController = require('./controllers/shopifyController');
+
+// Shopify Admin webhooks: must use raw body for HMAC verification (before express.json).
+app.use(
+  '/api/shopify/webhooks',
+  express.raw({ type: 'application/json' }),
+  shopifyWebhooksRouter
+);
+
 app.use(express.json());
+app.use('/api/shopify/app', shopifyAppRouter);
 app.use(
   session({
     resave: false,
     saveUninitialized: true,
-    secret: 'nodedemo',
+    secret: process.env.SESSION_SECRET || 'nodedemo',
   })
 );
 app.use(cookieParser());
@@ -196,6 +213,28 @@ app.use('/api/v1/assistant', assistantRouterApi);
 app.use('/api/v1/courier', courierRouterApi);
 app.use('/api/v1/tickets', ticketRouterApi);
 app.use('/api/v1/upload', uploadRouterApi);
+
+app.get('/api/shopify/auth/callback', shopifyController.oauthCallback);
+
+// Embedded Shopify Admin UI (Vite build → public/shopify-app)
+// If Partner "App URL" was set to /shopify by mistake, redirect to the real SPA (preserve query e.g. host=).
+app.get(/^\/shopify\/?$/, (req, res) => {
+  const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  res.redirect(302, `/shopify-app/${q}`);
+});
+
+// Express 5 / path-to-regexp: do not use app.get('/shopify-app/*') — bare * is invalid.
+const shopifySpaDir = path.join(__dirname, 'public', 'shopify-app');
+app.use('/shopify-app', express.static(shopifySpaDir));
+app.get(/^\/shopify-app\/?$/, (req, res) => {
+  res.sendFile(path.join(shopifySpaDir, 'index.html'));
+});
+app.use('/shopify-app', (req, res, next) => {
+  if (/\.[a-zA-Z0-9]+$/.test(req.path)) return next();
+  res.sendFile(path.join(shopifySpaDir, 'index.html'), (err) => {
+    if (err) next(err);
+  });
+});
 
 // Catch-all 404 handler — uses the business dashboard layout for /business/* routes,
 // the auth layout for everything else.

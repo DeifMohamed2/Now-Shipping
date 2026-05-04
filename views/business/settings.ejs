@@ -40,6 +40,10 @@
         <i class="ri-settings-line"></i>
         <span><%= St.tabPreferences || 'Preferences' %></span>
       </button>
+      <button class="nav-tab" data-tab="integrations">
+        <i class="ri-links-line"></i>
+        <span><%= St.tabIntegrations || 'Integrations' %></span>
+      </button>
       <button class="nav-tab" data-tab="security">
         <i class="ri-shield-check-line"></i>
         <span><%= St.tabSecurity || 'Security' %></span>
@@ -646,6 +650,69 @@
     </form>
   </div>
 
+  <!-- Integrations Tab (Shopify) -->
+  <div id="integrations" class="settings-content">
+    <div id="shopifyPartnerWarningBanner" class="alert alert-warning alert-dismissible fade d-none mb-3" role="alert">
+      <strong><%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'مطلوب من لوحة Shopify Partners' : 'Shopify Partner action required' %>:</strong>
+      <%= typeof currentLang !== 'undefined' && currentLang === 'ar'
+        ? 'تم الربط، لكن لم يُسمح بتسجيل webhooks للطلبات لأن Shopify يتطلب الوصول إلى «بيانات العملاء المحمية».'
+        : 'Your store is connected, but Shopify blocked registering <code>orders/create</code> and <code>orders/updated</code> webhooks until the app is approved for <strong>protected customer data</strong>.' %>
+      <a href="https://shopify.dev/docs/apps/store/data-protection/protected-customer-data" target="_blank" rel="noopener"><%= typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'التوثيق' : 'Docs' %></a>.
+      <%= typeof currentLang !== 'undefined' && currentLang === 'ar'
+        ? 'في Partners → Apps → تطبيقك → API access → Protected customer data access، فعّل الطلب ثم أعد تثبيت التطبيق من الإعدادات.'
+        : 'Go to <strong>Partners → Apps → your app → API access → Protected customer data access</strong>, complete all steps (including Name, Address, Phone, Email justifications), then <strong>uninstall the app in Shopify Admin and reconnect</strong> from this page.' %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div class="settings-card">
+      <div class="card-header">
+        <i class="ri-shopping-cart-line"></i>
+        <h3><%= St.shopifyTitle || 'Shopify' %></h3>
+      </div>
+      <p class="text-muted mb-3"><%= St.shopifyLead || 'Connect your Shopify store so new delivery orders sync into your Now dashboard (Egypt shipping addresses; standard and express rates follow your pickup settings).' %></p>
+
+      <% const shopifyConnected = typeof shopifyInstallation !== 'undefined' && shopifyInstallation && shopifyInstallation.shopDomain; %>
+      <% if (shopifyConnected) { %>
+        <div class="alert alert-success d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <strong><%= St.shopifyConnectedLabel || 'Connected' %></strong>
+            <span class="ms-2 font-monospace"><%= shopifyInstallation.shopDomain %></span>
+          </div>
+          <form method="post" action="/business/shopify/disconnect" class="m-0">
+            <button type="submit" class="btn btn-outline-danger btn-sm"><%= St.shopifyDisconnect || 'Disconnect' %></button>
+          </form>
+        </div>
+        <% if (shopifyInstallation.installedAt) { %>
+          <p class="text-muted small mt-2 mb-0"><%= St.shopifyInstalledAt || 'Installed' %>: <%= new Date(shopifyInstallation.installedAt).toLocaleString(typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar-EG' : 'en-US') %></p>
+        <% } %>
+      <% } else { %>
+        <form method="get" action="/business/shopify/install" id="shopifyConnectForm" class="row g-2 align-items-end"
+          onsubmit="(function(btn){btn.disabled=true;btn.innerHTML='<span class=\'spinner-border spinner-border-sm me-1\' role=\'status\'></span> Redirecting…';})(this.querySelector('button[type=submit]'))">
+          <div class="col-md-8">
+            <label class="form-label fw-semibold" for="shopifyShopDomain">
+              <i class="ri-store-2-line me-1"></i><%= St.shopifyStoreLabel || 'Your Shopify store domain' %>
+            </label>
+            <input type="text" class="form-control" id="shopifyShopDomain" name="shop" required
+              placeholder="your-store.myshopify.com" autocomplete="off"
+              pattern="[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com"
+              title="Enter your .myshopify.com domain (e.g. my-store.myshopify.com)">
+            <div class="form-text"><%= St.shopifyStoreHint || 'Find this in Shopify Admin → Settings → Domains. It ends in .myshopify.com.' %></div>
+          </div>
+          <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100 mt-md-4" id="shopifyConnectBtn">
+              <i class="ri-shopify-line me-1"></i> <%= St.shopifyConnectBtn || 'Connect Shopify' %>
+            </button>
+          </div>
+          <div class="col-12">
+            <p class="text-muted small mb-0">
+              <i class="ri-lock-line me-1"></i>
+              You will be redirected to Shopify to authorise this app. No data is shared until you approve.
+            </p>
+          </div>
+        </form>
+      <% } %>
+    </div>
+  </div>
+
   <!-- Security Tab -->
   <div id="security" class="settings-content">
     <div class="settings-card">
@@ -770,6 +837,33 @@
       tab.addEventListener('click', handleTabSwitch);
       tab.addEventListener('touchend', handleTabSwitch);
     });
+
+    const qs = new URLSearchParams(window.location.search);
+    const shopifyWarn = qs.get('shopifyWarning');
+    const shopifyErr = qs.get('shopifyError');
+    if (qs.get('shopifyConnected') === '1' || shopifyErr || qs.get('shopifyDisconnected') === '1' || shopifyWarn) {
+      const integrationsTab = document.querySelector('.nav-tab[data-tab="integrations"]');
+      if (integrationsTab) integrationsTab.click();
+    }
+    if (shopifyWarn === 'protected_data_pending') {
+      const b = document.getElementById('shopifyPartnerWarningBanner');
+      if (b) {
+        b.classList.remove('d-none');
+        b.classList.add('show');
+      }
+    }
+    if (qs.get('shopifyConnected') === '1' && typeof Swal !== 'undefined') {
+      Swal.fire({ icon: 'success', title: 'Shopify connected', timer: 2800, showConfirmButton: false });
+      window.history.replaceState({}, '', '/business/settings');
+    }
+    if (qs.get('shopifyDisconnected') === '1' && typeof Swal !== 'undefined') {
+      Swal.fire({ icon: 'info', title: 'Shopify disconnected', timer: 2800, showConfirmButton: false });
+      window.history.replaceState({}, '', '/business/settings');
+    }
+    if (shopifyErr && typeof Swal !== 'undefined') {
+      Swal.fire({ icon: 'error', title: decodeURIComponent(shopifyErr).slice(0, 240) });
+      window.history.replaceState({}, '', '/business/settings');
+    }
 
   // Profile photo upload + placeholder
   const profileImageInput = document.getElementById('profileImageInput');
