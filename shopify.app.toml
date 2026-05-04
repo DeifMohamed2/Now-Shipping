@@ -7,7 +7,7 @@
 
 name = "Now Shipping"
 client_id = "bc8079fb16c02748ab06455608643ee3"
-application_url = "https://4f18-2c0f-fc89-108-b7f7-209d-fb79-6eae-f3e6.ngrok-free.app/shopify-app/"
+application_url = "https://now.com.eg/shopify-app/"
 embedded = true
 
 [access_scopes]
@@ -17,7 +17,7 @@ scopes = "read_customers,read_fulfillments,write_fulfillments,read_orders,write_
 
 [auth]
 redirect_urls = [
-  "https://4f18-2c0f-fc89-108-b7f7-209d-fb79-6eae-f3e6.ngrok-free.app/api/shopify/auth/callback",
+  "https://now.com.eg/api/shopify/auth/callback",
 ]
 
 [webhooks]
@@ -26,8 +26,8 @@ api_version = "2026-04"
 # Same HTTPS path for both blocks; `X-Shopify-Topic` distinguishes events (HMAC verified in Node).
 [[webhooks.subscriptions]]
 topics = ["orders/create", "orders/updated", "app/uninstalled"]
-uri = "https://4f18-2c0f-fc89-108-b7f7-209d-fb79-6eae-f3e6.ngrok-free.app/api/shopify/webhooks"
+uri = "https://now.com.eg/api/shopify/webhooks"
 
 [[webhooks.subscriptions]]
 compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
-uri = "https://4f18-2c0f-fc89-108-b7f7-209d-fb79-6eae-f3e6.ngrok-free.app/api/shopify/webhooks"
+uri = "https://now.com.eg/api/shopify/webhooks"
