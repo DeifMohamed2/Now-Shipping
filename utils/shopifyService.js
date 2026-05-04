@@ -152,9 +152,28 @@ async function shopifyRestGetOrder(shopDomain, accessToken, orderId) {
   return json.order || null;
 }
 
+/** Matches production host in [shopify.app.toml]; used only when APP_URL/HOST are unset in production. */
+const DEFAULT_PRODUCTION_APP_ORIGIN = 'https://now.com.eg';
+
+function resolveAppUrlString() {
+  const fromEnv = process.env.APP_URL || process.env.HOST;
+  if (fromEnv) {
+    return String(fromEnv).trim().replace(/\/$/, '');
+  }
+  if (process.env.NODE_ENV === 'production') {
+    console.warn(
+      '[Shopify] APP_URL is unset; using',
+      DEFAULT_PRODUCTION_APP_ORIGIN,
+      '(set APP_URL in .env to your public origin, no trailing slash)'
+    );
+    return DEFAULT_PRODUCTION_APP_ORIGIN;
+  }
+  const port = process.env.PORT || 3000;
+  return `http://localhost:${port}`.replace(/\/$/, '');
+}
+
 function getAppHostnameAndScheme() {
-  const u = process.env.APP_URL || process.env.HOST || `http://localhost:${process.env.PORT || 3000}`;
-  const normalized = String(u).replace(/\/$/, '');
+  const normalized = resolveAppUrlString();
   try {
     const parsed = new URL(normalized.includes('://') ? normalized : `https://${normalized}`);
     return {
@@ -166,9 +185,13 @@ function getAppHostnameAndScheme() {
   }
 }
 
+/**
+ * Public origin (no path, no trailing slash) for OAuth redirect_base, webhook registration, and SDK host.
+ * Must match [shopify.app.toml] application_url host and Partner Dashboard.
+ * Set APP_URL in .env (e.g. https://now.com.eg). In production, falls back to now.com.eg if unset.
+ */
 function getAppUrl() {
-  const u = process.env.APP_URL || process.env.HOST || `http://localhost:${process.env.PORT || 3000}`;
-  return u.replace(/\/$/, '');
+  return resolveAppUrlString();
 }
 
 /**

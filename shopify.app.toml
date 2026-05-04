@@ -1,7 +1,7 @@
 # Shopify app configuration for the Dev platform / CLI (`shopify app deploy`).
 # - `client_id` = Partner Dashboard **Client ID** (same value as `SHOPIFY_API_KEY` in `.env`).
 # - All HTTPS URLs below must match your live `APP_URL` origin (no trailing slash on origin).
-#   **Currently ngrok** for local testing — switch back to `https://now.com.eg` before production `shopify app deploy`.
+# - For local tunnel testing, temporarily set URIs to your ngrok host, then `shopify app deploy` with production values again.
 #
 # See SHOPIFY-SETUP.md §6.2.
 
