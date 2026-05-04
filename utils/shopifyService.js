@@ -1,6 +1,7 @@
 /**
  * Shopify Admin integration using @shopify/shopify-api (HMAC + webhook validation).
  * OAuth token exchange stays as fetch — our dashboard-first flow uses signed `state`, not SDK cookies.
+ * Adapter must load before shopifyApi(); app.js also requires it early — duplicate require is cached.
  */
 require('@shopify/shopify-api/adapters/node');
 

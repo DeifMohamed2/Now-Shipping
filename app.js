@@ -1,4 +1,14 @@
 require('dotenv').config();
+
+// Web Crypto: some libs assume `globalThis.crypto`; Node 18+ usually provides it — polyfill for older/edge runtimes.
+const nodeCrypto = require('node:crypto');
+if (typeof globalThis.crypto === 'undefined' && nodeCrypto.webcrypto) {
+  globalThis.crypto = nodeCrypto.webcrypto;
+}
+
+// @shopify/shopify-api Node adapter — load before any route/module calls shopifyApi() / validateHmac.
+require('@shopify/shopify-api/adapters/node');
+
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
 const express = require('express');

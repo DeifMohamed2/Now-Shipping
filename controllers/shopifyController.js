@@ -167,7 +167,7 @@ const oauthCallback = async (req, res) => {
     }
     res.redirect(redirectUrl);
   } catch (err) {
-    console.error('oauthCallback:', err);
+    console.error('oauthCallback:', err && err.stack ? err.stack : err);
     res.redirect('/business/settings?shopifyError=' + encodeURIComponent(err.message || 'callback_failed'));
   }
 };
