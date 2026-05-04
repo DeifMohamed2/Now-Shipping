@@ -7,6 +7,9 @@ export default defineConfig({
   build: {
     outDir: '../public/shopify-app',
     emptyOutDir: true,
+    // Polaris ships CSS with custom media queries; esbuild/lightningcss minifiers reject `and print` after them.
+    cssMinify: false,
+    chunkSizeWarningLimit: 900,
   },
   server: {
     port: 5173,
