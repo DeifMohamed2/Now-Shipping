@@ -1041,6 +1041,8 @@ const completeOrder = async (req, res) => {
             email: business.email,
             subject: `Exchange: item collected at customer — ${order.orderNumber}`,
             html: `<p>Order <strong>${order.orderNumber}</strong> (Exchange): the courier delivered the replacement and collected the original item at the customer.</p><p>The original item is in <strong>return stock</strong>. Assign a courier from Stock Returns to return it to your business.</p>`,
+            text: `Order ${order.orderNumber} (Exchange): the courier delivered the replacement and collected the original item at the customer.\n\nThe original item is in return stock. Assign a courier from Stock Returns to return it to your business.`,
+            category: 'transactional',
           });
           console.log(
             `📧 Exchange phase-1 email sent to business ${business._id} for order ${order.orderNumber}`

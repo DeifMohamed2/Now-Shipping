@@ -8,7 +8,10 @@
 ## Environment
 
 - Set **`APP_URL=https://now.com.eg`** (no trailing slash) on the public server. This must match **`shopify.app.toml`** webhook and OAuth URLs; [`utils/shopifyService.js`](../utils/shopifyService.js) uses it to register REST webhooks after install. If unset in production, the app falls back to `https://now.com.eg` and logs a warning.
+- Optional: **`TRACKING_BASE_URL`** — same origin as **`APP_URL`** for customer tracking links in WhatsApp ([`utils/whatsapp.js`](../utils/whatsapp.js)). Uses **`APP_URL`** when unset. Links are always **`{origin}/t/{orderNumber}`**; search UI is **`/tracking?q=`**.
+- WhatsApp **compliance** (Wasender warm-up, optional send spacing, opt-out footer): see **[deploy/whatsapp-compliance.md](whatsapp-compliance.md)**.
 - Copy **`.env`** from `.env.example` / your secrets manager; never commit real secrets.
+- **Transactional email** (SPF/DKIM/DMARC, From/reply-to, footer variables): see **[deploy/email-deliverability.md](email-deliverability.md)**.
 - For Shopify token encryption at rest, prefer **`SHOPIFY_TOKEN_ENCRYPTION_KEY`** (64 hex chars).
 
 ## Shopify webhooks (404 / ngrok in Partner logs)

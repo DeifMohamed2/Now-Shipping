@@ -1,8 +1,76 @@
 const wasender = require('./wasenderClient');
 const { toJid } = require('./phoneUtils');
 
-const SESSION_API_KEY = process.env.WHATSAPP_SESSION_API_KEY || '68296773f7ccbc4a5d955d31ba00863eaf9a0e2fe193b493a18c76c257fb4a5d';
-const TRACKING_BASE_URL = process.env.TRACKING_BASE_URL || 'https://nowshipping.com/t';
+const SESSION_API_KEY = process.env.WHATSAPP_SESSION_API_KEY || '7efbc4b2e82b35696e8715783f7ccb42bee14ac206e300e6874dab263b058961';
+
+/** Timestamp (ms) when the previous queued WhatsApp send finished; used for spacing. */
+let lastSendCompletedAt = 0;
+/** Serialize outbound sends so throttle + jitter apply in order (FIFO). */
+let sendQueueTail = Promise.resolve();
+
+function parseEnvMs(key, defaultMs) {
+  const raw = process.env[key];
+  if (raw == null || String(raw).trim() === '') return defaultMs;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : defaultMs;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Optional footer for opt-out / compliance (Wasender guidance). Unset = unchanged behavior.
+ */
+function appendOptOutFooter(text) {
+  const footer = process.env.WHATSAPP_OPT_OUT_FOOTER;
+  if (footer == null || String(footer).trim() === '') return text;
+  const f = String(footer).trim();
+  return `${String(text).trimEnd()}\n\n${f}`;
+}
+
+async function applyOutboundThrottle() {
+  const minMs = parseEnvMs('WHATSAPP_MIN_SEND_INTERVAL_MS', 30000);
+  const jitterMax = parseEnvMs('WHATSAPP_SEND_JITTER_MS_MAX', 2000);
+  const now = Date.now();
+  const eligibleAt = lastSendCompletedAt + minMs;
+  const waitGap = Math.max(0, eligibleAt - now);
+  if (waitGap > 0) await sleep(waitGap);
+  const jitter = jitterMax > 0 ? Math.floor(Math.random() * (jitterMax + 1)) : 0;
+  if (jitter > 0) await sleep(jitter);
+}
+
+/**
+ * Public shipment tracking (see routes/web/authRoutes.js → authController.trackingPage):
+ * - Search: GET /tracking?q=...
+ * - Direct / WhatsApp: GET /t/:orderNumber
+ *
+ * WhatsApp uses: {origin}/t/{orderNumber}
+ * Origin: TRACKING_BASE_URL (only origin is used if you pass a full URL with path), else APP_URL, else HOST,
+ * else default https://now.com.eg (correct TLD is .com.eg, not .co.eg).
+ */
+const DEFAULT_TRACKING_SITE_ORIGIN = 'https://now.com.eg';
+
+function getTrackingOrigin() {
+  const raw =
+    process.env.TRACKING_BASE_URL ||
+    process.env.APP_URL ||
+    process.env.HOST ||
+    DEFAULT_TRACKING_SITE_ORIGIN;
+  const trimmed = String(raw).trim();
+  try {
+    const u = new URL(trimmed.includes('://') ? trimmed : `https://${trimmed}`);
+    return u.origin;
+  } catch {
+    return DEFAULT_TRACKING_SITE_ORIGIN;
+  }
+}
+
+/** Full URL for sharing tracking (orderNumber = Now order ref). */
+function trackingUrlForOrder(orderNumber) {
+  const num = String(orderNumber || '').trim();
+  return `${getTrackingOrigin()}/t/${encodeURIComponent(num)}`;
+}
 
 function formatDate(date) {
   if (!date) return 'غير محدد';
@@ -21,34 +89,46 @@ function isPopulated(field) {
 }
 
 /**
- * Send a WhatsApp text message to a phone number
+ * Send a WhatsApp text message to a phone number.
+ * Outbound sends are queued (FIFO), spaced by WHATSAPP_MIN_SEND_INTERVAL_MS + random jitter,
+ * and optionally append WHATSAPP_OPT_OUT_FOOTER. See deploy/whatsapp-compliance.md.
  */
 async function sendWhatsAppMessage(phone, message) {
-  try {
-    if (!SESSION_API_KEY || SESSION_API_KEY === 'YOUR_SESSION_API_KEY') {
-      console.error('WhatsApp: Missing session API key');
-      return { success: false, message: 'Missing WhatsApp session API key' };
+  const body = appendOptOutFooter(message);
+
+  const run = sendQueueTail.then(async () => {
+    await applyOutboundThrottle();
+    try {
+      if (!SESSION_API_KEY || SESSION_API_KEY === 'YOUR_SESSION_API_KEY') {
+        console.error('WhatsApp: Missing session API key');
+        return { success: false, message: 'Missing WhatsApp session API key' };
+      }
+
+      const jid = toJid(phone, '20');
+      if (!jid) {
+        console.error('WhatsApp: Invalid phone number', phone);
+        return { success: false, message: 'Invalid phone number' };
+      }
+
+      const result = await wasender.sendTextMessage(SESSION_API_KEY, jid, body);
+
+      if (result.success) {
+        console.log(`✅ WhatsApp sent to ${phone}`);
+      } else {
+        console.error(`❌ WhatsApp failed for ${phone}:`, result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('WhatsApp send error:', error.message);
+      return { success: false, message: error.message };
+    } finally {
+      lastSendCompletedAt = Date.now();
     }
+  });
 
-    const jid = toJid(phone, '20');
-    if (!jid) {
-      console.error('WhatsApp: Invalid phone number', phone);
-      return { success: false, message: 'Invalid phone number' };
-    }
-
-    const result = await wasender.sendTextMessage(SESSION_API_KEY, jid, message);
-
-    if (result.success) {
-      console.log(`✅ WhatsApp sent to ${phone}`);
-    } else {
-      console.error(`❌ WhatsApp failed for ${phone}:`, result.message);
-    }
-
-    return result;
-  } catch (error) {
-    console.error('WhatsApp send error:', error.message);
-    return { success: false, message: error.message };
-  }
+  sendQueueTail = run.catch(() => {});
+  return run;
 }
 
 /**
@@ -82,7 +162,7 @@ async function sendOrderPickedUpNotification(order) {
     const populatedOrder = await ensurePopulated(order);
 
     const businessName = populatedOrder.business?.brandInfo?.brandName || populatedOrder.business?.name || 'المتجر';
-    const trackingUrl = `${TRACKING_BASE_URL}/${populatedOrder.orderNumber}`;
+    const trackingUrl = trackingUrlForOrder(populatedOrder.orderNumber);
     const canOpen = populatedOrder.isOrderAvailableForPreview ? 'نعم' : 'لا';
     const amount = populatedOrder.orderShipping?.amount || 0;
     const description = populatedOrder.orderShipping?.productDescription || 'شحنة';
@@ -117,8 +197,104 @@ ${trackingUrl}`;
 }
 
 /**
+ * Arabic body for "heading to customer" WhatsApp.
+ *
+ * Server paths that set `headingToCustomer` and call `sendHeadingToCustomerNotification`:
+ * - `POST /api/v1/courier/orders/:orderNumber/scan-fast-shipping` (express) — see `scanFastShippingOrder`
+ * - Admin `courier_received` (bulk `inProgress` → `headingToCustomer`) — see `courier_received` in adminController
+ *
+ * If you add a new transition to `headingToCustomer`, call `sendHeadingToCustomerNotification` there too.
+ */
+function buildHeadingToCustomerBody(populatedOrder, customer) {
+  const fullName = customer.fullName || '';
+  const businessName =
+    populatedOrder.business?.brandInfo?.brandName || populatedOrder.business?.name || 'المتجر';
+  const courierName = populatedOrder.deliveryMan?.name || 'المندوب';
+  const courierPhone = populatedOrder.deliveryMan?.phoneNumber || '';
+  const trackingUrl = trackingUrlForOrder(populatedOrder.orderNumber);
+  const amount = populatedOrder.orderShipping?.amount || 0;
+  const orderType = populatedOrder.orderShipping?.orderType || 'Deliver';
+  const isExpress = Boolean(populatedOrder.orderShipping?.isExpressShipping);
+  const flyerBarcode = populatedOrder.smartFlyerBarcode
+    ? `\n🏷️ باركود الفلاير: *${populatedOrder.smartFlyerBarcode}*`
+    : '';
+
+  const courierBlock = `👤 اسم المندوب: *${courierName}*
+
+📞 رقم المندوب: *${courierPhone}*
+
+💰 مبلغ التحصيل: *${amount}*
+📋 نوع الطلب: *${orderType}*${flyerBarcode}`;
+
+  const trackingBlock = `📍 لتتبع حالة الشحنة، اضغط هنا:
+*${trackingUrl}*`;
+
+  if (orderType === 'Exchange') {
+    return `👋 *مرحبًا ${fullName}*
+
+📦 *استبدال* — المنتج البديل من *${businessName}* في الطريق إليك مع المندوب 🚚
+
+🕒 الوقت المتوقع للوصول: *من 11ص إلى 6م*
+
+${courierBlock}
+
+📝 عند التسليم: استلم المنتج البديل وسلِّم الأصلي للمندوب حسب سياسة الاستبدال. يمكنك التواصل مع المندوب لأي استفسار.
+
+${trackingBlock}
+
+من فضلك تواصل معنا في حالة عدم تواجدك أو تغيير في موعد التوصيل.`;
+  }
+
+  if (orderType === 'Return') {
+    return `👋 *مرحبًا ${fullName}*
+
+↩️ شحنة *الإرجاع* من *${businessName}* في الطريق إليك مع المندوب لاستلام المرتجع 🚚
+
+🕒 الوقت المتوقع للوصول: *من 11ص إلى 6م*
+
+${courierBlock}
+
+${trackingBlock}
+
+يرجى تجهيز المرتجع حسب تعليمات المتجر والتواصل مع المندوب عند الحاجة.`;
+  }
+
+  // Deliver + express
+  if (isExpress) {
+    return `👋 *مرحبًا ${fullName}*
+
+⚡ *توصيل سريع* — شحنتك من *${businessName}* خرجت مع المندوب للتوصيل في أقرب وقت 🚚
+
+🕒 الوقت المتوقع للوصول: *اليوم — من 11ص إلى 6م*
+
+${courierBlock}
+
+يمكنك التواصل مع المندوب لمزيد من التفاصيل حول التوصيل.
+
+${trackingBlock}
+
+من فضلك تواصل معنا في حالة عدم تواجدك أو رغبتك في رفض الشحنة.`;
+  }
+
+  // Deliver (standard)
+  return `👋 *مرحبًا ${fullName}*
+
+شحنتك من *${businessName}* خرجت مع المندوب للتوصيل 🚚
+
+🕒 الوقت المتوقع للوصول: *من 11ص إلى 6م*
+
+${courierBlock}
+
+يمكنك التواصل مع المندوب لمزيد من التفاصيل حول التوصيل.
+
+${trackingBlock}
+
+من فضلك تواصل معنا في حالة عدم تواجدك أو رغبتك في رفض الشحنة.`;
+}
+
+/**
  * Notification 2: Heading to Customer
- * Sent when courier is on the way to deliver
+ * Sent when courier is on the way to deliver (copy varies by order type / express).
  */
 async function sendHeadingToCustomerNotification(order) {
   try {
@@ -128,36 +304,7 @@ async function sendHeadingToCustomerNotification(order) {
     }
 
     const populatedOrder = await ensurePopulated(order);
-
-    const businessName = populatedOrder.business?.brandInfo?.brandName || populatedOrder.business?.name || 'المتجر';
-    const courierName = populatedOrder.deliveryMan?.name || 'المندوب';
-    const courierPhone = populatedOrder.deliveryMan?.phoneNumber || '';
-    const trackingUrl = `${TRACKING_BASE_URL}/${populatedOrder.orderNumber}`;
-    const amount = populatedOrder.orderShipping?.amount || 0;
-    const orderType = populatedOrder.orderShipping?.orderType || 'Deliver';
-    const flyerBarcode = populatedOrder.smartFlyerBarcode
-      ? `\n🏷️ باركود الفلاير: *${populatedOrder.smartFlyerBarcode}*`
-      : '';
-
-    const message = `👋 *مرحبًا ${customer.fullName}*
-
-شحنتك من *${businessName}* خرجت مع المندوب للتوصيل 🚚
-
-🕒 الوقت المتوقع للوصول: *من 11ص إلى 6م*
-
-👤 اسم المندوب: *${courierName}*
-
-📞 رقم المندوب: *${courierPhone}*
-
-💰 مبلغ التحصيل: *${amount}*
-📋 نوع الطلب: *${orderType}*${flyerBarcode}
-
-يمكنك التواصل مع المندوب لمزيد من التفاصيل حول التوصيل.
-
-📍 لتتبع حالة الشحنة، اضغط هنا:
-*${trackingUrl}*
-
-من فضلك تواصل معنا في حالة عدم تواجدك أو رغبتك في رفض الشحنة.`;
+    const message = buildHeadingToCustomerBody(populatedOrder, customer);
 
     return await sendWhatsAppMessage(customer.phoneNumber, message);
   } catch (error) {
@@ -182,7 +329,7 @@ async function sendExchangePickupNotification(order) {
       populatedOrder.business?.brandInfo?.brandName ||
       populatedOrder.business?.name ||
       'المتجر';
-    const trackingUrl = `${TRACKING_BASE_URL}/${populatedOrder.orderNumber}`;
+    const trackingUrl = trackingUrlForOrder(populatedOrder.orderNumber);
     const orderType = populatedOrder.orderShipping?.orderType || 'Exchange';
     const flyerBarcode = populatedOrder.smartFlyerBarcode
       ? `\n🏷️ باركود الفلاير: *${populatedOrder.smartFlyerBarcode}*`

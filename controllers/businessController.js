@@ -10,6 +10,8 @@ const nodemailer = require('nodemailer');
 const statusHelper = require('../utils/statusHelper');
 const ExcelJS = require('exceljs');
 const { emailService } = require('../utils/email');
+const emailTemplates = require('../utils/emailTemplates');
+const site = require('../config/site');
 const { uploadFile, deleteFile } = require('../utils/fileUpload');
 const { calculateOrderFee, calculatePickupFee: calcPickupFee, orderBaseFees } = require('../utils/fees');
 const fs = require('fs');
@@ -3257,7 +3259,6 @@ const sendEmailOtp = async (req, res) => {
   try {
     const { email } = req.body;
     const crypto = require('crypto');
-    const { emailService } = require('../utils/email');
 
     // Check if user is authenticated
     if (!req.userData || !req.userData._id) {
@@ -3320,21 +3321,24 @@ const sendEmailOtp = async (req, res) => {
 
     // Send OTP via email
     try {
-      const emailContent = `
-        <h2>🔐 Email Verification Code</h2>
-        <p>Your verification code to change your email address is:</p>
-        <div style="font-size: 32px; font-weight: bold; color: #F39720; text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px; margin: 20px 0;">
-          ${otp}
-        </div>
-        <p>This code will expire in 6 minutes.</p>
-        <p>If you did not request this code, please ignore this email.</p>
-      `;
-      
-      await emailService.sendCustomEmail(
-        emailTrimmed,
-        'Email Verification Code - Now Shipping',
-        emailContent
-      );
+      const display =
+        (req.userData.brandInfo &&
+          req.userData.brandInfo.brandName &&
+          String(req.userData.brandInfo.brandName).trim()) ||
+        (req.userData.name && String(req.userData.name).trim()) ||
+        site.legalEntityName;
+
+      const html = emailTemplates.getEmailSettingsOtpTemplate(display, otp);
+      const text = emailTemplates.getEmailSettingsOtpPlainText(display, otp);
+
+      await emailService.sendEmail({
+        email: emailTrimmed,
+        subject: 'Email verification code — Now Shipping',
+        html,
+        text,
+        fromName: display,
+        category: 'transactional',
+      });
 
       return res.status(200).json({ message: 'OTP sent successfully to ' + emailTrimmed });
     } catch (err) {

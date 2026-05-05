@@ -1,0 +1,319 @@
+<%- contentFor('HeaderCss') %>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+  .wa-connect-card {
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+  .wa-sessions-table-wrap {
+    overflow-x: auto;
+  }
+  .wa-status-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .wa-qr-box {
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    border: 1px dashed #cbd5e1;
+  }
+  .wa-qr-box img {
+    max-width: 100%;
+    height: auto;
+  }
+</style>
+<%- contentFor('body') %>
+
+<div class="row">
+  <div class="col-12 mb-3">
+    <h4 class="mb-1">Connect WhatsApp</h4>
+    <p class="text-muted mb-0">
+      List Wasender sessions, start a connection, and scan the QR code in WhatsApp (Linked devices).
+      <strong>Personal token</strong> (<code>WASENDER_ACCESS_TOKEN</code>) powers this page (list / connect / QR).
+      <strong>Session API key</strong> (<code>WHATSAPP_SESSION_API_KEY</code>) is used only for sending order notifications from the app.
+    </p>
+  </div>
+</div>
+
+<% if (!hasWasenderToken) { %>
+<div class="alert alert-warning border-0 shadow-sm" role="alert">
+  <i class="ri-alert-line me-1"></i>
+  Set <strong>WASENDER_ACCESS_TOKEN</strong> (Wasender personal token) to load sessions and QR codes, or ensure the app’s built-in development fallback is present.
+  Do not use <code>WHATSAPP_SESSION_API_KEY</code> here — that key is for sending messages only.
+  Optional: <strong>WASENDER_API_URL</strong> if your API base differs from <code>https://wasenderapi.com/api</code>.
+</div>
+<% } %>
+
+<div class="row g-4">
+  <div class="col-xl-7">
+    <div class="card wa-connect-card">
+      <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h5 class="card-title mb-0"><i class="ri-stack-line me-2 text-success"></i>Sessions</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="waReloadSessions">
+          <i class="ri-refresh-line me-1"></i> Refresh
+        </button>
+      </div>
+      <div class="card-body">
+        <div id="waSessionsLoading" class="text-muted small py-4 text-center d-none">
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span> Loading sessions…
+        </div>
+        <div id="waSessionsError" class="alert alert-danger d-none mb-0"></div>
+        <div class="wa-sessions-table-wrap">
+          <table class="table table-hover table-striped mb-0 align-middle" id="waSessionsTable">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="waSessionsBody">
+              <tr><td colspan="5" class="text-muted py-4 text-center">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-5">
+    <div class="card wa-connect-card">
+      <div class="card-header">
+        <h5 class="card-title mb-0"><i class="ri-qr-code-line me-2 text-primary"></i> QR code</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small">
+          <strong>Connect</strong> and <strong>Refresh QR</strong> use the highlighted session in the table (click <strong>Use</strong> on a row; if you don’t, the first session is used).
+          If status is <span class="badge bg-warning text-dark wa-status-badge">need scan</span>, open WhatsApp → Settings → Linked devices → Link a device.
+          QR expires quickly (~45s). Click <strong>Refresh QR</strong> when you need a new code (no automatic polling).
+        </p>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <button type="button" class="btn btn-success" id="waBtnConnect" <%= hasWasenderToken ? '' : 'disabled' %>>
+            <i class="ri-plug-line me-1"></i> Connect
+          </button>
+          <button type="button" class="btn btn-outline-secondary" id="waBtnRefreshQr" <%= hasWasenderToken ? '' : 'disabled' %>>
+            <i class="ri-refresh-line me-1"></i> Refresh QR
+          </button>
+        </div>
+        <div class="wa-qr-box mb-3" id="waQrBox">
+          <span class="text-muted small px-3 text-center">QR will appear here after Connect.</span>
+        </div>
+        <div id="waQrMeta" class="small text-muted"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const sessionsBody = document.getElementById('waSessionsBody');
+  const sessionsLoading = document.getElementById('waSessionsLoading');
+  const sessionsError = document.getElementById('waSessionsError');
+  const qrBox = document.getElementById('waQrBox');
+  const qrMeta = document.getElementById('waQrMeta');
+  /** Numeric Wasender session id for Connect / QR (set by Use click or default to first row). */
+  let selectedSessionId = null;
+
+  function statusBadgeClass(status) {
+    var s = (status == null ? '' : String(status)).toLowerCase();
+    if (s.indexOf('connect') !== -1 && s.indexOf('dis') === -1) return 'bg-success';
+    if (s.indexOf('need') !== -1 || s.indexOf('scan') !== -1) return 'bg-warning text-dark';
+    if (s.indexOf('disc') !== -1 || s.indexOf('logout') !== -1) return 'bg-secondary';
+    return 'bg-info text-dark';
+  }
+
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function setQr(htmlOrImg, metaText) {
+    qrBox.innerHTML = htmlOrImg;
+    qrMeta.textContent = metaText || '';
+  }
+
+  function highlightSelectedSession() {
+    sessionsBody.querySelectorAll('tr[data-session-id]').forEach(function (tr) {
+      var id = tr.getAttribute('data-session-id');
+      var match =
+        selectedSessionId != null &&
+        id !== '' &&
+        String(selectedSessionId) === String(id);
+      tr.classList.toggle('table-active', match);
+    });
+  }
+
+  function syncSelectedSessionFromRows(rows) {
+    if (!rows || !rows.length) {
+      selectedSessionId = null;
+      return;
+    }
+    var ids = rows
+      .map(function (r) {
+        return r.id != null ? Number(r.id) : NaN;
+      })
+      .filter(function (n) {
+        return Number.isFinite(n) && n >= 1;
+      });
+    if (!ids.length) {
+      selectedSessionId = null;
+      return;
+    }
+    var cur = selectedSessionId;
+    if (cur != null && ids.indexOf(Number(cur)) !== -1) {
+      return;
+    }
+    selectedSessionId = ids[0];
+  }
+
+  function renderSessions(rows) {
+    if (!rows || !rows.length) {
+      sessionsBody.innerHTML = '<tr><td colspan="5" class="text-muted py-4 text-center">No sessions returned.</td></tr>';
+      selectedSessionId = null;
+      return;
+    }
+    syncSelectedSessionFromRows(rows);
+    sessionsBody.innerHTML = rows.map(function (row) {
+      var id = row.id != null ? row.id : '';
+      var name = row.name != null ? row.name : '—';
+      var phone = row.phone_number != null ? row.phone_number : '—';
+      var st = row.status != null ? row.status : '—';
+      var badge = '<span class="badge wa-status-badge ' + statusBadgeClass(st) + '">' + escapeHtml(st) + '</span>';
+      return (
+        '<tr data-session-id="' + escapeHtml(id) + '">' +
+        '<td><code>' + escapeHtml(id) + '</code></td>' +
+        '<td>' + escapeHtml(name) + '</td>' +
+        '<td>' + escapeHtml(phone) + '</td>' +
+        '<td>' + badge + '</td>' +
+        '<td class="text-end">' +
+        '<button type="button" class="btn btn-sm btn-outline-primary wa-pick-session">Use</button>' +
+        '</td></tr>'
+      );
+    }).join('');
+
+    sessionsBody.querySelectorAll('.wa-pick-session').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var tr = btn.closest('tr');
+        var sid = tr && tr.getAttribute('data-session-id');
+        if (sid) {
+          var n = parseInt(sid, 10);
+          if (n >= 1) {
+            selectedSessionId = n;
+            highlightSelectedSession();
+          }
+        }
+      });
+    });
+    highlightSelectedSession();
+  }
+
+  async function loadSessions() {
+    sessionsError.classList.add('d-none');
+    sessionsLoading.classList.remove('d-none');
+    try {
+      var r = await fetch('/admin/api/whatsapp-sessions', { credentials: 'same-origin' });
+      var j = await r.json();
+      sessionsLoading.classList.add('d-none');
+      if (!j.success) {
+        sessionsError.textContent = j.message || 'Failed to load sessions';
+        sessionsError.classList.remove('d-none');
+        sessionsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-3">Could not load sessions.</td></tr>';
+        selectedSessionId = null;
+        return;
+      }
+      var data = j.data || [];
+      renderSessions(data);
+    } catch (e) {
+      sessionsLoading.classList.add('d-none');
+      sessionsError.textContent = e.message || 'Network error';
+      sessionsError.classList.remove('d-none');
+      sessionsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-3">Network error.</td></tr>';
+      selectedSessionId = null;
+    }
+  }
+
+  async function postConnect() {
+    var sid = selectedSessionId != null ? Number(selectedSessionId) : NaN;
+    if (!Number.isFinite(sid) || sid < 1) {
+      setQr('<span class="text-danger small px-3">No session available. Refresh the sessions list.</span>', '');
+      return;
+    }
+    setQr('<span class="spinner-border text-primary" role="status"></span><span class="visually-hidden">Loading…</span>', 'Starting connection…');
+    try {
+      var r = await fetch('/admin/api/whatsapp-sessions/' + sid + '/connect', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      var j = await r.json();
+      if (!j.success) {
+        setQr('<span class="text-danger small px-3">' + escapeHtml(j.message || 'Connect failed') + '</span>', '');
+        return;
+      }
+      var d = j.data || {};
+      var status = d.status != null ? String(d.status) : '';
+      if (d.qrDataUrl) {
+        setQr('<img src="' + escapeHtml(d.qrDataUrl) + '" alt="WhatsApp QR" width="280" height="280" />',
+          'Status: ' + status + ' · Scan with WhatsApp Linked devices');
+      } else {
+        setQr('<span class="text-success small px-3"><i class="ri-checkbox-circle-line"></i> ' +
+          escapeHtml(status || 'Connected or no QR needed.') + '</span>', '');
+      }
+      loadSessions();
+    } catch (e) {
+      setQr('<span class="text-danger small px-3">' + escapeHtml(e.message) + '</span>', '');
+    }
+  }
+
+  async function getQr() {
+    var sid = selectedSessionId != null ? Number(selectedSessionId) : NaN;
+    if (!Number.isFinite(sid) || sid < 1) {
+      setQr('<span class="text-danger small px-3">No session available. Refresh the sessions list.</span>', '');
+      return;
+    }
+    setQr('<span class="spinner-border text-primary" role="status"></span>', 'Refreshing QR…');
+    try {
+      var r = await fetch('/admin/api/whatsapp-sessions/' + sid + '/qrcode', { credentials: 'same-origin' });
+      var j = await r.json();
+      if (!j.success) {
+        var errMsg = j.message || 'QR request failed';
+        if (errMsg.indexOf('does not need scanning') !== -1 || errMsg.indexOf('initialize the session') !== -1) {
+          setQr('<span class="text-success small px-3"><i class="ri-checkbox-circle-line"></i> This session does not need a QR code right now (already connected or run <strong>Connect</strong> first).</span>', '');
+        } else {
+          setQr('<span class="text-danger small px-3">' + escapeHtml(errMsg) + '</span>', '');
+        }
+        return;
+      }
+      var d = j.data || {};
+      if (d.qrDataUrl) {
+        setQr('<img src="' + escapeHtml(d.qrDataUrl) + '" alt="WhatsApp QR" width="280" height="280" />',
+          'Fresh QR · Scan before it expires');
+      } else {
+        setQr('<span class="text-muted small px-3">No QR in response (session may already be connected).</span>', '');
+      }
+      loadSessions();
+    } catch (e) {
+      setQr('<span class="text-danger small px-3">' + escapeHtml(e.message) + '</span>', '');
+    }
+  }
+
+  document.getElementById('waReloadSessions').addEventListener('click', loadSessions);
+  document.getElementById('waBtnConnect').addEventListener('click', postConnect);
+  document.getElementById('waBtnRefreshQr').addEventListener('click', getQr);
+
+  loadSessions();
+})();
+</script>

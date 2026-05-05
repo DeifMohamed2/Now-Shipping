@@ -5,6 +5,7 @@ const Admin = require('../../models/admin.js');
 const Notification = require('../../models/notification.js');
 
 const adminController = require('../../controllers/adminController.js');
+const adminWhatsAppController = require('../../controllers/adminWhatsAppController.js');
 const notificationController = require('../../controllers/notificationController.js');
 
 const jwtSecret = process.env.JWT_SECRET;
@@ -304,5 +305,17 @@ router.get('/shop/orders/:id', adminController.getShopOrderDetailsPage);
 // Smart Flyers Management
 router.get('/print-smart-flyers', adminController.getPrintSmartFlyersPage);
 router.post('/generate-smart-flyers', adminController.generateSmartFlyers);
+
+// Wasender: WhatsApp sessions & QR (personal access token)
+router.get('/connect-whatsapp', adminWhatsAppController.getConnectWhatsAppPage);
+router.get('/api/whatsapp-sessions', adminWhatsAppController.apiListSessions);
+router.post(
+  '/api/whatsapp-sessions/:sessionId/connect',
+  adminWhatsAppController.apiConnectSession
+);
+router.get(
+  '/api/whatsapp-sessions/:sessionId/qrcode',
+  adminWhatsAppController.apiGetQr
+);
 
 module.exports = router;
