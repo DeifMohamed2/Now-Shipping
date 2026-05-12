@@ -222,7 +222,7 @@ if (typeof userData !== 'undefined' && userData) {
                   <option value=""><%= Sp.selectGovernment || 'Select' %></option>
                   <option value="Cairo"><%= Sp.governmentCairo || 'Cairo' %></option>
                   <option value="Giza"><%= Sp.governmentGiza || 'Giza' %></option>
-                  <option value="Alexandria"><%= Sp.governmentAlex || 'Alexandria' %></option>
+                  <option value="Qalyubia"><%= Sp.governmentQalyubia || 'Qalyubia' %></option>
                 </select>
               </div>
               <div class="col-md-6">
@@ -560,25 +560,22 @@ if (typeof userData !== 'undefined' && userData) {
     window.cartManager = new CartManager();
   });
 
-  const zoneOptions = {
-    'Cairo': [
-      { group: 'Cairo - Downtown & Central', zones: ['Downtown', 'Garden City', 'Zamalek', 'Dokki', 'Mohandessin', 'Agouza', 'Bulaq', 'Azbakeya', 'Abdeen', 'Attaba', 'Ramses', 'Qasr El Nil', 'Talaat Harb', 'Tahrir Square'] },
-      { group: 'Cairo - East', zones: ['Nasr City', 'Nasr City - First Zone', 'Nasr City - Second Zone', 'Nasr City - Third Zone', 'Nasr City - Fourth Zone', 'Nasr City - Seventh Zone', 'Nasr City - Eighth Zone', 'Nasr City - Tenth Zone', 'Heliopolis', 'Heliopolis - Korba', 'Heliopolis - Triumph', 'Heliopolis - Cleopatra', 'Heliopolis - Almaza', 'Masr El Gedida', 'El Nozha', 'El Nozha El Gedida', 'El Zeitoun', 'Ain Shams', 'Ain Shams - Ezbet El Nakhl', 'El Marg', 'El Marg El Gedida'] },
-      { group: 'Cairo - South & New Cairo', zones: ['Maadi', 'New Cairo', 'Fifth Settlement', 'First Settlement', 'Katameya', 'El Mokattam', 'El Basateen', 'Dar El Salam', 'El Rehab', 'El Tagamoa', 'El Shorouk', 'Badr City', 'Helwan', '15th of May City', 'Hadayek Helwan'] },
-      { group: 'Cairo - West', zones: ['Mohandessin', 'Dokki', 'Boulaq El Dakrour', 'Imbaba', 'Agouza', 'Warraq', 'Rod El Farag', 'Shobra', 'Shobra El Kheima'] }
-    ],
-    'Giza': [
-      { group: 'Giza - Central & East', zones: ['Giza Square', 'Dokki', 'Mohandessin', 'Agouza', 'Haram', 'Faisal', 'Imbaba', 'Kit Kat', 'El Manial', 'Boulaq El Dakrour', 'El Saff', 'El Hawamdeya'] },
-      { group: 'Giza - West & 6th October', zones: ['Sheikh Zayed', '6th of October', 'Hadayek Al Ahram', 'Al Wahat Road', 'Smart Village', 'Egyptian Media Production City'] }
-    ],
-    'Alexandria': [
-      { group: 'Alexandria - East', zones: ['Sidi Gaber', 'Sporting', 'Camp Caesar', 'Smouha', 'Victoria', 'Bolkly', 'Ibrahimia', 'Laurent', 'Loran'] },
-      { group: 'Alexandria - Central & West', zones: ['Bahary', 'Anfushi', 'Manshiya', 'Attarin', 'Gomrok', 'Karmouz', 'Moharam Bek', 'Dekhela', 'Agami', 'Amreya', 'Borg El Arab', 'King Mariout', 'Wardian', 'Bacos'] },
-      { group: 'Alexandria - East & Montaza', zones: ['Sidi Bishr', 'Miami', 'Asafra', 'Mandara', 'Montaza', 'Abu Qir', 'El Maamoura', 'El Max', 'Aboukir', 'Semouha', 'Fleming', 'El Zahria', 'Gianaclis'] }
-    ]
-  };
+  let shopBostaRegionsCache = null;
 
-  function updateShopDeliveryZones() {
+  function shopBostaLang() {
+    const raw = (document.documentElement.lang || 'en').toLowerCase().split('-')[0];
+    return raw === 'ar' ? 'ar' : 'en';
+  }
+
+  async function fetchShopBostaRegions() {
+    if (shopBostaRegionsCache) return shopBostaRegionsCache;
+    const res = await fetch('/assets/js/bosta-regions-data-processed.json');
+    if (!res.ok) throw new Error('regions_load_failed');
+    shopBostaRegionsCache = await res.json();
+    return shopBostaRegionsCache;
+  }
+
+  async function updateShopDeliveryZones() {
     const governmentSelect = document.getElementById('deliveryGovernment');
     const zoneSelect = document.getElementById('deliveryZone');
     if (!governmentSelect || !zoneSelect) return;
@@ -586,22 +583,27 @@ if (typeof userData !== 'undefined' && userData) {
     const I = window.__SHOP_I18N || {};
     const previousZone = zoneSelect.value;
     zoneSelect.innerHTML = '<option value="">' + (I.selectZone || 'Select zone') + '</option>';
-    if (selectedGovernment && zoneOptions[selectedGovernment]) {
-      zoneOptions[selectedGovernment].forEach((group) => {
-        const optgroup = document.createElement('optgroup');
-        optgroup.label = group.group;
-        group.zones.forEach((zone) => {
-          const option = document.createElement('option');
-          option.value = zone;
-          option.textContent = zone;
-          optgroup.appendChild(option);
-        });
-        zoneSelect.appendChild(optgroup);
+    if (!selectedGovernment) return;
+
+    try {
+      const data = await fetchShopBostaRegions();
+      const gov = data[selectedGovernment];
+      if (!gov || !Array.isArray(gov.areas)) return;
+
+      const lang = shopBostaLang();
+      gov.areas.forEach((area) => {
+        const opt = document.createElement('option');
+        opt.value = area.value;
+        const lab = area.label && (area.label[lang] || area.label.en);
+        opt.textContent = lab || area.value;
+        zoneSelect.appendChild(opt);
       });
-    }
-    if (previousZone) {
-      ensureZoneOptionExists(zoneSelect, previousZone);
-      zoneSelect.value = previousZone;
+      if (previousZone) {
+        ensureZoneOptionExists(zoneSelect, previousZone);
+        zoneSelect.value = previousZone;
+      }
+    } catch (e) {
+      console.error('Shop delivery zones:', e);
     }
   }
 
@@ -898,9 +900,10 @@ if (typeof userData !== 'undefined' && userData) {
     if (presetSel) {
       presetSel.addEventListener('change', applyShopDeliveryPreset);
     }
+    fetchShopBostaRegions().catch(function() {});
     const govSel = document.getElementById('deliveryGovernment');
     if (govSel) {
-      govSel.addEventListener('change', () => {
+      govSel.addEventListener('change', function () {
         const zoneSelect = document.getElementById('deliveryZone');
         if (zoneSelect) zoneSelect.value = '';
         updateShopDeliveryZones();

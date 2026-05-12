@@ -1,5 +1,5 @@
 /**
- * Cairo-only delivery zones (same source as Create order / bosta-regions-data-processed.json).
+ * Greater Cairo metro delivery zones (same source as Create order / bosta-regions-data-processed.json).
  */
 const path = require('path');
 const bostaRegions = require(path.join(
@@ -7,10 +7,35 @@ const bostaRegions = require(path.join(
   '../public/assets/js/bosta-regions-data-processed.json'
 ));
 
+/** Top-level keys in bosta-regions-data-processed.json for fee metro + Bosta zones */
+const METRO_GOVERNORATE_KEYS = Object.freeze(['Cairo', 'Giza', 'Qalyubia']);
+
+/** Input string → canonical key in bostaRegions (case-insensitive + Bosta alias for Qalyubia). */
+const GOVERNORATE_INPUT_ALIASES = new Map([
+  ['elkalioubia', 'Qalyubia'],
+  ['kalioubia', 'Qalyubia'],
+  ['qalyoubia', 'Qalyubia'],
+  ['qalyubia', 'Qalyubia'],
+  ['alqalyubia', 'Qalyubia'],
+  ['cairo', 'Cairo'],
+  ['giza', 'Giza'],
+]);
+
+function compactGovKey(s) {
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z]/g, '');
+}
+
 function normalizeGovKey(input) {
   if (input == null || String(input).trim() === '') return null;
   const t = String(input).trim();
   const lower = t.toLowerCase();
+  const compact = compactGovKey(t);
+  const alias = GOVERNORATE_INPUT_ALIASES.get(compact);
+  if (alias) return alias;
+
   for (const key of Object.keys(bostaRegions)) {
     if (key.toLowerCase() === lower) return key;
     const gov = bostaRegions[key];
@@ -42,10 +67,10 @@ function resolveZoneForGovernorate(governmentKey, zoneInput) {
  */
 function validateGovernmentAndZone(government, zone) {
   const govKey = normalizeGovKey(government);
-  if (!govKey) {
+  if (!govKey || !METRO_GOVERNORATE_KEYS.includes(govKey)) {
     return {
       ok: false,
-      error: `Governorate must be Cairo (got "${government}").`,
+      error: `Governorate must be one of: ${METRO_GOVERNORATE_KEYS.join(', ')} (got "${government}").`,
     };
   }
 
@@ -53,7 +78,7 @@ function validateGovernmentAndZone(government, zone) {
   if (!canonicalZone) {
     return {
       ok: false,
-      error: `Area / zone "${zone}" is not valid. Use the same zone as Create order.`,
+      error: `Area / zone "${zone}" is not valid for ${govKey}. Use the same zone as Create order.`,
     };
   }
 
@@ -65,21 +90,28 @@ function validateGovernmentAndZone(government, zone) {
 }
 
 function getGovernorateNamesSorted() {
-  return Object.keys(bostaRegions).sort((a, b) => a.localeCompare(b));
+  return [...METRO_GOVERNORATE_KEYS].filter((k) => bostaRegions[k]).sort((a, b) => a.localeCompare(b));
 }
 
-/** Cairo-only zone values (same list as area-selection modal for Cairo). */
+/** Zone values for a metro governorate (Bosta English `value`). */
+function getZoneValuesForGovernorate(governmentKey) {
+  const key = normalizeGovKey(governmentKey);
+  if (!key || !bostaRegions[key] || !bostaRegions[key].areas) return [];
+  return bostaRegions[key].areas.map((a) => a.value);
+}
+
+/** Cairo-only zone values (backward compat; same as Create order for Cairo). */
 function getCairoZoneValues() {
-  const cairo = bostaRegions.Cairo;
-  if (!cairo || !cairo.areas) return [];
-  return cairo.areas.map((a) => a.value);
+  return getZoneValuesForGovernorate('Cairo');
 }
 
 module.exports = {
+  METRO_GOVERNORATE_KEYS,
   bostaRegions,
   normalizeGovKey,
   resolveZoneForGovernorate,
   validateGovernmentAndZone,
   getGovernorateNamesSorted,
+  getZoneValuesForGovernorate,
   getCairoZoneValues,
 };

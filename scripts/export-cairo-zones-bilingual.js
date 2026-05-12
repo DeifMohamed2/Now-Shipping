@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 /**
- * Exports Cairo zones as bilingual JSON (AR + EN) from the same source the app uses:
+ * Exports Cairo, Giza, and Qalyubia zones as bilingual JSON from:
  * public/assets/js/bosta-regions-data-processed.json
  *
  * Run: node scripts/export-cairo-zones-bilingual.js
- * Or:  npm run export:cairo-zones-bilingual
  */
 
 'use strict';
@@ -14,44 +13,56 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const SOURCE = path.join(ROOT, 'public/assets/js/bosta-regions-data-processed.json');
-const DEST = path.join(ROOT, 'data/cairo-zones-ar-en.json');
+const DEST = path.join(ROOT, 'data/metro-zones-ar-en.json');
+const METRO_KEYS = ['Cairo', 'Giza', 'Qalyubia'];
 
-function main() {
-  const raw = JSON.parse(fs.readFileSync(SOURCE, 'utf8'));
-  const cairo = raw.Cairo;
-  if (!cairo || !Array.isArray(cairo.areas)) {
-    console.error('Expected raw.Cairo.areas in', SOURCE);
-    process.exit(1);
-  }
-
-  const govEn = (cairo.label && cairo.label.en) || cairo.value || 'Cairo';
-  const govAr = (cairo.label && cairo.label.ar) || govEn;
-
-  const areas = cairo.areas.map((a) => ({
+function exportGovernorate(raw, key) {
+  const gov = raw[key];
+  if (!gov || !Array.isArray(gov.areas)) return null;
+  const govEn = (gov.label && gov.label.en) || gov.value || key;
+  const govAr = (gov.label && gov.label.ar) || govEn;
+  const areas = gov.areas.map((a) => ({
     value: a.value,
     en: (a.label && a.label.en) || a.value,
     ar: (a.label && a.label.ar) || (a.label && a.label.en) || a.value,
   }));
+  return {
+    value: gov.value || key,
+    en: govEn,
+    ar: govAr,
+    areas,
+  };
+}
+
+function main() {
+  const raw = JSON.parse(fs.readFileSync(SOURCE, 'utf8'));
+  const governorates = {};
+  for (const key of METRO_KEYS) {
+    const block = exportGovernorate(raw, key);
+    if (!block) {
+      console.error('Expected', key, 'with areas in', SOURCE);
+      process.exit(1);
+    }
+    governorates[key] = block;
+  }
 
   const out = {
     meta: {
-      description: 'Cairo delivery zones — English value (API / validation) + display labels EN/AR',
+      description:
+        'Greater Cairo metro Bosta zones — English value (API / validation) + display labels EN/AR',
       sourceFile: 'public/assets/js/bosta-regions-data-processed.json',
       exportedAt: new Date().toISOString(),
-      governorateKey: 'Cairo',
-      zoneCount: areas.length,
+      governorateKeys: METRO_KEYS,
     },
-    governorate: {
-      value: cairo.value || 'Cairo',
-      en: govEn,
-      ar: govAr,
-    },
-    areas,
+    governorates,
   };
 
   fs.mkdirSync(path.dirname(DEST), { recursive: true });
   fs.writeFileSync(DEST, JSON.stringify(out, null, 2) + '\n', 'utf8');
-  console.log('Wrote', DEST, `(${areas.length} zones)`);
+  console.log('Wrote', DEST);
+  for (const k of METRO_KEYS) {
+    console.log(`  ${k}: ${governorates[k].areas.length} zones`);
+  }
 }
 
 main();

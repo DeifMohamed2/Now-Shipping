@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Merges Arabic display labels from bosta_regionsAR.json into
- * public/assets/js/bosta-regions-data-processed.json for Cairo only.
- * Keeps English `value` fields unchanged (API / validation).
+ * public/assets/js/bosta-regions-data-processed.json for metro governorates:
+ * Cairo, Giza, Qalyubia (Bosta ENG: El Kalioubia → app key Qalyubia).
+ * English `value` fields follow Bosta ENG (API / validation).
  *
  * Re-run when Bosta updates either source file.
  */
@@ -15,8 +16,20 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const PROCESSED_PATH = path.join(ROOT, 'public/assets/js/bosta-regions-data-processed.json');
 const AR_SOURCE_PATH = path.join(ROOT, 'bosta_regionsAR.json');
-const GOV_AR = 'القاهره';
-const CAIRO_GOV_LABEL_AR = 'القاهرة';
+const ENG_SOURCE_PATH = path.join(ROOT, 'bosta_regionsENG.json');
+
+/** Metro: app JSON key, Bosta English governorate name, Arabic file governorate string, display labels */
+const METRO_GOVERNORATES = [
+  { key: 'Cairo', engGov: 'Cairo', arGov: 'القاهره', labelEn: 'Cairo', labelAr: 'القاهرة' },
+  { key: 'Giza', engGov: 'Giza', arGov: 'الجيزه', labelEn: 'Giza', labelAr: 'الجيزة' },
+  {
+    key: 'Qalyubia',
+    engGov: 'El Kalioubia',
+    arGov: 'القليوبيه',
+    labelEn: 'Qalyubia',
+    labelAr: 'القليوبية',
+  },
+];
 
 /** Basic Arabic → Latin transliteration (aligned with scripts/convert-bosta-regions.js) */
 function transliterate(arabic) {
@@ -283,8 +296,32 @@ function regionHintAdjustment(enValue, arArea) {
   return Math.max(-0.45, Math.min(0.45, adj));
 }
 
+/**
+ * High-confidence EN↔AR hints for Giza / Qalyubia (Bosta lists are same length but not row-aligned).
+ * @type {Array<[RegExp, RegExp, number]>}
+ */
+const GIZA_QALY_AR_HINTS = [
+  [/^Dokki(\s|-|$)/i, /الدقي|دقي|دقى/, 0.42],
+  [/^Agouza(\s|-|$)/i, /العجوز|عجوزه|عجوزة/, 0.42],
+  [/^Faisal$/i, /فيصل/, 0.38],
+  [/^Haram$/i, /الهرم|هرم/, 0.35],
+  [/^Warraq$/i, /وراق/, 0.35],
+  [/^Imbaba$/i, /امبابه|إمبابة|امبابة/, 0.35],
+  [/^Mohandessin$/i, /مهندسين|المهندسين/, 0.38],
+  [/^Omrania$/i, /عمرانيه|عمرانية/, 0.35],
+  [/^Manial$/i, /منيل|المنيل/, 0.35],
+  [/^Boulaq El Dakrour$/i, /بولاق|الدكرور|دكرور/, 0.35],
+  [/^Hadayek El Ahram$/i, /حدايق|الاهرام|أهرام/, 0.32],
+  [/^ElSaff$/i, /الصف|صف/, 0.32],
+  [/^Atfeeh$/i, /اطفيح|أطفيح/, 0.32],
+  [/^Abu Nomros$/i, /ابو النمرس|أبو النمرس/, 0.32],
+  [/^Oaseem$/i, /اويسم|أوسيم|عويسم/, 0.3],
+  [/^Barageel$/i, /برجيل|البرجيل/, 0.3],
+  [/desert road/i, /طريق|صحراو|اسكند|اسكندر|مطار|سفنكس|فايد|اسماعيل|اسماعيلي/, 0.22],
+];
+
 /** Higher = better match. Row = English zone index, Col = Arabic area index. */
-function similarityScore(enValue, arArea) {
+function similarityScore(enValue, arArea, metroKey) {
   const enNorm = enValue.toLowerCase().trim();
   const arTr = transliterate(arArea).toLowerCase();
   const lev = levenshteinRatio(enNorm, arTr);
@@ -294,171 +331,183 @@ function similarityScore(enValue, arArea) {
   const base = 0.5 * lev + 0.18 * d1 + 0.14 * d2 + 0.1 * d3;
   const dist = districtNumberAgreementBonus(enValue, arArea);
   const hint = regionHintAdjustment(enValue, arArea);
-  return Math.max(0, Math.min(1, base + dist + hint));
+  let score = Math.max(0, Math.min(1, base + dist + hint));
+
+  if (metroKey === 'Giza' || metroKey === 'Qalyubia') {
+    const first = enValue.split(/\s*-\s*/)[0].trim();
+    const fNorm = first.toLowerCase();
+    if (fNorm.length >= 3 && fNorm.length <= 48) {
+      const fj = Math.max(tokenJaccard(fNorm, arTr), tokenJaccard(fNorm, arArea.toLowerCase()));
+      if (fj > 0.08) score += 0.08 * Math.min(1.5, fj / 0.25);
+    }
+    for (const [enRe, arRe, bump] of GIZA_QALY_AR_HINTS) {
+      if (enRe.test(enValue.trim()) && arRe.test(arArea)) {
+        score += bump;
+        break;
+      }
+    }
+  }
+
+  return Math.max(0, Math.min(1, score));
 }
 
 /**
- * Min-cost assignment for square cost matrix (Hungarian / Kuhn).
- * cost[i][j] = cost of assigning row i to column j.
- * Returns array assign[i] = j.
+ * Greedy maximum-similarity bipartite matching (n iterations).
+ * Avoids Hungarian pathologies where one very bad pair lowers total cost.
  */
-function hungarianMin(cost) {
-  const n = cost.length;
-  if (n === 0) return [];
-  const m = cost[0].length;
-  if (n !== m) throw new Error('Expected square matrix');
-  const INF = 1e12;
-  const a = cost.map((row) => row.map((x) => x | 0));
-  const u = new Array(n + 1).fill(0);
-  const v = new Array(m + 1).fill(0);
-  const p = new Array(m + 1).fill(0);
-  const way = new Array(m + 1).fill(0);
-
-  for (let i = 1; i <= n; i++) {
-    p[0] = i;
-    let j0 = 0;
-    const minv = new Array(m + 1).fill(INF);
-    const used = new Array(m + 1).fill(false);
-    do {
-      used[j0] = true;
-      const i0 = p[j0];
-      let delta = INF;
-      let j1 = 0;
-      for (let j = 1; j <= m; j++) {
-        if (!used[j]) {
-          const cur = a[i0 - 1][j - 1] - u[i0] - v[j];
-          if (cur < minv[j]) {
-            minv[j] = cur;
-            way[j] = j0;
-          }
-          if (minv[j] < delta) {
-            delta = minv[j];
-            j1 = j;
-          }
-        }
-      }
-      for (let j = 0; j <= m; j++) {
-        if (used[j]) {
-          u[p[j]] += delta;
-          v[j] -= delta;
-        } else {
-          minv[j] -= delta;
-        }
-      }
-      j0 = j1;
-    } while (p[j0] !== 0);
-    do {
-      const j1 = way[j0];
-      p[j0] = p[j1];
-      j0 = j1;
-    } while (j0);
+function greedyMaxSimAssignment(enZones, arAreas, simFn) {
+  const n = enZones.length;
+  const sim = [];
+  for (let i = 0; i < n; i++) {
+    const row = [];
+    for (let j = 0; j < n; j++) row.push(simFn(enZones[i], arAreas[j]));
+    sim.push(row);
   }
-
-  const assignment = new Array(n).fill(-1);
-  for (let j = 1; j <= m; j++) {
-    if (p[j] !== 0) {
-      assignment[p[j] - 1] = j - 1;
+  const rowUsed = new Array(n).fill(false);
+  const colUsed = new Array(n).fill(false);
+  /** assign[i] = j */
+  const assign = new Array(n).fill(-1);
+  for (let step = 0; step < n; step++) {
+    let best = -1;
+    let bi = -1;
+    let bj = -1;
+    for (let i = 0; i < n; i++) {
+      if (rowUsed[i]) continue;
+      for (let j = 0; j < n; j++) {
+        if (colUsed[j]) continue;
+        const s = sim[i][j];
+        if (s > best) {
+          best = s;
+          bi = i;
+          bj = j;
+        }
+      }
     }
+    if (bi < 0 || bj < 0) throw new Error('greedy matching stalled');
+    assign[bi] = bj;
+    rowUsed[bi] = true;
+    colUsed[bj] = true;
   }
-  return assignment;
+  return { assign, sim };
 }
 
-function main() {
-  const processed = JSON.parse(fs.readFileSync(PROCESSED_PATH, 'utf8'));
-  const cairo = processed.Cairo;
-  if (!cairo || !Array.isArray(cairo.areas)) {
-    console.error('Invalid processed JSON: missing Cairo.areas');
-    process.exit(1);
-  }
-
-  const arRows = JSON.parse(fs.readFileSync(AR_SOURCE_PATH, 'utf8'));
-  if (!Array.isArray(arRows)) {
-    console.error('bosta_regionsAR.json must be an array');
-    process.exit(1);
-  }
-
-  const cairoAr = arRows.filter((r) => r && r.governorate === GOV_AR).map((r) => r.area);
-  const enZones = cairo.areas.map((a) => a.value);
-
-  if (cairoAr.length !== enZones.length) {
+/**
+ * @param {string} metroKey
+ * @param {string[]} enZones
+ * @param {string[]} arAreas
+ * @returns {{ areas: Array<{value:string,label:{en:string,ar:string}}>, stats: object }}
+ */
+function mergeGovernorateZones(metroKey, enZones, arAreas) {
+  if (enZones.length !== arAreas.length) {
     console.error(
-      `Count mismatch: Cairo areas in processed=${enZones.length}, Arabic Cairo rows=${cairoAr.length}`
+      `Count mismatch for ${metroKey}: EN zones=${enZones.length}, Arabic rows=${arAreas.length}`
     );
     process.exit(1);
   }
 
   const n = enZones.length;
-  const SCALE = 1e6;
-  const cost = [];
-  for (let i = 0; i < n; i++) {
-    const row = [];
-    for (let j = 0; j < n; j++) {
-      const sim = similarityScore(enZones[i], cairoAr[j]);
-      row.push(Math.round(SCALE * (1 - sim)));
-    }
-    cost.push(row);
-  }
-
-  const assign = hungarianMin(cost);
-  const usedCols = new Set();
-  let totalCost = 0;
-  for (let i = 0; i < n; i++) {
-    const j = assign[i];
-    if (j < 0 || j >= n) {
-      console.error('Invalid assignment at row', i);
-      process.exit(1);
-    }
-    if (usedCols.has(j)) {
-      console.error('Duplicate column assignment — not a permutation');
-      process.exit(1);
-    }
-    usedCols.add(j);
-    totalCost += cost[i][j];
-  }
-  if (usedCols.size !== n) {
-    console.error('Assignment incomplete');
+  if (n === 0) {
+    console.error(`No zones for ${metroKey}`);
     process.exit(1);
   }
 
-  const meanCost = totalCost / n;
+  const { assign, sim } = greedyMaxSimAssignment(enZones, arAreas, (e, a) =>
+    similarityScore(e, a, metroKey)
+  );
+
+  let sumSim = 0;
   let minSim = 1;
   let worstI = 0;
   for (let i = 0; i < n; i++) {
-    const sim = similarityScore(enZones[i], cairoAr[assign[i]]);
-    if (sim < minSim) {
-      minSim = sim;
+    const j = assign[i];
+    const s = sim[i][j];
+    sumSim += s;
+    if (s < minSim) {
+      minSim = s;
       worstI = i;
     }
   }
-  const minSimThreshold = 0.08;
+  const meanSim = sumSim / n;
+
+  const minSimThreshold =
+    metroKey === 'Cairo' ? 0.08 : metroKey === 'Giza' ? 0.035 : metroKey === 'Qalyubia' ? 0.05 : 0.06;
   if (minSim < minSimThreshold) {
     console.error(
-      `Worst assigned pair similarity ${minSim.toFixed(4)} < ${minSimThreshold} — check cost model or data. Mean cost ratio=${(meanCost / SCALE).toFixed(4)}`,
-      `\n  worst EN: ${enZones[worstI]}\n  worst AR: ${cairoAr[assign[worstI]]}`
+      `[${metroKey}] Worst assigned pair similarity ${minSim.toFixed(4)} < ${minSimThreshold} — check data. meanSim=${meanSim.toFixed(4)}`,
+      `\n  worst EN: ${enZones[worstI]}\n  worst AR: ${arAreas[assign[worstI]]}`
     );
     process.exit(1);
   }
 
+  const areas = [];
   for (let i = 0; i < n; i++) {
     const j = assign[i];
-    cairo.areas[i].label = cairo.areas[i].label || {};
-    cairo.areas[i].label.en = enZones[i];
-    cairo.areas[i].label.ar = cairoAr[j];
+    const value = enZones[i];
+    areas.push({
+      value,
+      label: {
+        en: value,
+        ar: arAreas[j],
+      },
+    });
   }
 
-  cairo.label = cairo.label || {};
-  cairo.label.en = cairo.label.en || 'Cairo';
-  cairo.label.ar = CAIRO_GOV_LABEL_AR;
+  return {
+    areas,
+    stats: { n, meanSim, minSim },
+  };
+}
+
+function main() {
+  const engRows = JSON.parse(fs.readFileSync(ENG_SOURCE_PATH, 'utf8'));
+  const arRows = JSON.parse(fs.readFileSync(AR_SOURCE_PATH, 'utf8'));
+  if (!Array.isArray(engRows) || !Array.isArray(arRows)) {
+    console.error('bosta_regionsENG.json and bosta_regionsAR.json must be arrays');
+    process.exit(1);
+  }
+
+  const processed = {};
+
+  for (const m of METRO_GOVERNORATES) {
+    const enZones = engRows
+      .filter((r) => r && r.governorate === m.engGov)
+      .map((r) => String(r.area || '').trim())
+      .filter(Boolean);
+    const arAreas = arRows
+      .filter((r) => r && r.governorate === m.arGov)
+      .map((r) => String(r.area || '').trim())
+      .filter(Boolean);
+
+    const { areas, stats } = mergeGovernorateZones(m.key, enZones, arAreas);
+
+    processed[m.key] = {
+      value: m.key,
+      label: {
+        en: m.labelEn,
+        ar: m.labelAr,
+      },
+      areas,
+    };
+
+    console.log(
+      `merge-metro-bosta-ar-labels: ${m.key} OK — zones=${stats.n}, meanSim=${stats.meanSim.toFixed(4)}, minSim=${stats.minSim.toFixed(4)}`
+    );
+  }
 
   fs.writeFileSync(PROCESSED_PATH, JSON.stringify(processed, null, 2) + '\n', 'utf8');
 
+  const cairo = processed.Cairo;
   const spot = ['15 May', 'Nasr City - ElHay 06 (Nasr City)', 'Abdeen'];
-  console.log('merge-cairo-bosta-ar-labels: OK');
-  console.log(`  zones=${n}, totalCost=${totalCost}, meanCost=${(meanCost / SCALE).toFixed(4)}`);
   for (const v of spot) {
     const a = cairo.areas.find((x) => x.value === v);
-    if (a) console.log(`  ${v} -> ar: ${a.label.ar}`);
+    if (a) console.log(`  sample Cairo ${v} -> ar: ${a.label.ar}`);
   }
+  const gizaSample = processed.Giza.areas[0];
+  if (gizaSample) console.log(`  sample Giza ${gizaSample.value} -> ar: ${gizaSample.label.ar}`);
+  const qSample = processed.Qalyubia.areas[0];
+  if (qSample) console.log(`  sample Qalyubia ${qSample.value} -> ar: ${qSample.label.ar}`);
+
+  console.log('merge-cairo-bosta-ar-labels: wrote', PROCESSED_PATH);
 }
 
 main();

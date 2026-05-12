@@ -121,6 +121,17 @@
       });
   }
 
+  /** Greater Cairo metro keys in bosta-regions-data-processed.json */
+  var METRO_GOVERNORATE_KEYS = ['Cairo', 'Giza', 'Qalyubia'];
+
+  function pickMetroSubset(data) {
+    var out = {};
+    METRO_GOVERNORATE_KEYS.forEach(function(k) {
+      if (data[k]) out[k] = data[k];
+    });
+    return out;
+  }
+
   // Render governorates in the modal
   function renderGovernorates(data) {
     const governorateList = document.getElementById('governorateList');
@@ -128,17 +139,17 @@
 
     governorateList.innerHTML = '';
 
-    const cairoData = data['Cairo'] ? { 'Cairo': data['Cairo'] } : {};
+    const metroData = pickMetroSubset(data);
     const currentLang = getCurrentLanguage();
 
-    const sortedGovernorates = Object.keys(cairoData).sort(function(a, b) {
-      const la = (cairoData[a].label[currentLang] || cairoData[a].label.en || a).toLowerCase();
-      const lb = (cairoData[b].label[currentLang] || cairoData[b].label.en || b).toLowerCase();
+    const sortedGovernorates = Object.keys(metroData).sort(function(a, b) {
+      const la = (metroData[a].label[currentLang] || metroData[a].label.en || a).toLowerCase();
+      const lb = (metroData[b].label[currentLang] || metroData[b].label.en || b).toLowerCase();
       return la.localeCompare(lb, currentLang === 'ar' ? 'ar' : 'en');
     });
 
     sortedGovernorates.forEach(function(govValue) {
-      const gov = cairoData[govValue];
+      const gov = metroData[govValue];
       const governorateItem = document.createElement('div');
       governorateItem.className = 'governorate-item';
       governorateItem.dataset.governorate = govValue;
@@ -233,31 +244,32 @@
         item.classList.remove('active');
       });
 
-      const cairoData = bostaRegionsData['Cairo'];
-      if (!cairoData) return;
+      METRO_GOVERNORATE_KEYS.forEach(function(govKey) {
+        const gov = bostaRegionsData[govKey];
+        if (!gov) return;
 
-      const gov = cairoData;
-      const govMatches = matchesGovernorate(gov, queryRaw);
-      const matchingAreas = gov.areas.filter(function(area) {
-        return matchesArea(area, queryRaw);
-      });
+        const govMatches = matchesGovernorate(gov, queryRaw);
+        const matchingAreas = gov.areas.filter(function(area) {
+          return matchesArea(area, queryRaw);
+        });
 
-      if (govMatches || matchingAreas.length > 0) {
-        const governorateItem = document.querySelector('[data-governorate="Cairo"]');
-        if (governorateItem) {
-          governorateItem.style.display = 'block';
-          const showAllAreas = govMatches && matchingAreas.length === 0;
-          if (matchingAreas.length > 0) {
-            governorateItem.classList.add('active');
-          }
+        if (!govMatches && matchingAreas.length === 0) return;
 
-          governorateItem.querySelectorAll('.area-item').forEach(function(item) {
-            const areaValue = item.dataset.areaValue;
-            const isMatch = matchingAreas.some(function(area) { return area.value === areaValue; });
-            item.style.display = (showAllAreas || isMatch) ? 'block' : 'none';
-          });
+        const governorateItem = document.querySelector('[data-governorate="' + govKey + '"]');
+        if (!governorateItem) return;
+
+        governorateItem.style.display = 'block';
+        const showAllAreas = govMatches && matchingAreas.length === 0;
+        if (matchingAreas.length > 0) {
+          governorateItem.classList.add('active');
         }
-      }
+
+        governorateItem.querySelectorAll('.area-item').forEach(function(item) {
+          const areaValue = item.dataset.areaValue;
+          const isMatch = matchingAreas.some(function(area) { return area.value === areaValue; });
+          item.style.display = (showAllAreas || isMatch) ? 'block' : 'none';
+        });
+      });
     });
   }
 

@@ -1,11 +1,12 @@
 /**
- * Map Shopify shipping_address + province/city strings to Now fee governorates and Cairo Bosta zones.
+ * Map Shopify shipping_address + province/city strings to Now fee governorates and metro Bosta zones.
  */
 const { governmentCategories } = require('./fees');
 const {
   normalizeGovKey,
   resolveZoneForGovernorate,
-  getCairoZoneValues,
+  getZoneValuesForGovernorate,
+  METRO_GOVERNORATE_KEYS,
   bostaRegions,
 } = require('./deliveryZonesBosta');
 
@@ -20,15 +21,31 @@ function allGovernorateLabels() {
 
 const LABELS = allGovernorateLabels();
 
-/** Safe default when no Cairo area can be inferred (avoid `zones[0]` — JSON order starts with "15 May"). */
-const DEFAULT_CAIRO_ZONE = 'Nasr City - Tag Sultan';
+function compactAlpha(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z]/g, '');
+}
+
+/** Safe default when no metro area can be inferred (avoid `zones[0]` — JSON order varies). */
+function defaultZoneForGovernorate(govKey) {
+  const zones = getZoneValuesForGovernorate(govKey);
+  if (!zones.length) return '';
+  const prefs = {
+    Cairo: 'Nasr City - Tag Sultan',
+    Giza: '6 October - Abu Rawash',
+    Qalyubia: 'Benha',
+  };
+  const p = prefs[govKey];
+  if (p && zones.includes(p)) return p;
+  return zones[0];
+}
 
 /**
  * Best-effort resolve Shopify province/city to a fee-table governorate name.
  */
 function resolveGovernmentFromShopify(addr) {
   if (!addr || typeof addr !== 'object') return 'Cairo';
-  // Province first (Shopify Egypt often maps governorate here), then city, then country label.
   const candidates = [addr.province, addr.city, addr.country].filter(Boolean).map((s) => String(s).trim());
   for (const raw of candidates) {
     const lower = raw.toLowerCase();
@@ -36,9 +53,18 @@ function resolveGovernmentFromShopify(addr) {
     for (const [k, v] of LABELS.entries()) {
       if (lower.includes(k) || k.includes(lower)) return v;
     }
-    const compact = lower.replace(/[^a-z]/gi, '');
+    const compact = compactAlpha(raw);
     if (compact === 'cairo' || compact === 'alqahira') return 'Cairo';
     if (compact === 'giza' || compact === 'gizah') return 'Giza';
+    if (
+      compact === 'qalyubia' ||
+      compact === 'qalyoubia' ||
+      compact === 'elkalioubia' ||
+      compact === 'kalioubia' ||
+      compact === 'alqalyubia'
+    ) {
+      return 'Qalyubia';
+    }
     if (compact === 'alexandria') return 'Alexandria';
   }
   return 'Cairo';
@@ -53,15 +79,15 @@ function normText(s) {
 }
 
 /**
- * Match a Cairo Bosta zone from free text (Shopify city / address / province).
+ * Match a Bosta zone from free text for a given metro governorate.
  * Tries substring on zone value, then EN/AR labels (longest first).
  */
-function matchCairoZoneFromFreeText(combinedRaw) {
+function matchMetroZoneFromFreeText(govKey, combinedRaw) {
   const combined = normText(combinedRaw);
   if (!combined) return null;
 
-  const cairo = bostaRegions.Cairo;
-  const areas = cairo && Array.isArray(cairo.areas) ? cairo.areas : [];
+  const gov = bostaRegions[govKey];
+  const areas = gov && Array.isArray(gov.areas) ? gov.areas : [];
   if (!areas.length) return null;
 
   const byLen = [...areas].sort((a, b) => String(b.value || '').length - String(a.value || '').length);
@@ -81,8 +107,7 @@ function matchCairoZoneFromFreeText(combinedRaw) {
 }
 
 /**
- * Score Cairo Bosta zones by overlap with Shopify **City** (customer types district there).
- * Picks the zone whose `value` contains the most / longest matching tokens.
+ * Score Bosta zones by overlap with Shopify **City** (customer types district there).
  */
 function scoreBestZoneFromShopifyCity(addr, areas) {
   const cityOnly = normText(addr && addr.city);
@@ -110,14 +135,17 @@ function scoreBestZoneFromShopifyCity(addr, areas) {
 }
 
 /**
- * Resolve Cairo zone from free-text (district / address lines).
- * Shopify Egypt checkout: customers type the area in "City" — prioritize that field.
+ * Resolve Bosta zone from free-text for Cairo, Giza, or Qalyubia.
  */
-function resolveCairoZone(addr, hints = []) {
-  const govKey = normalizeGovKey('Cairo');
-  const cairo = bostaRegions.Cairo;
-  const areas = cairo && Array.isArray(cairo.areas) ? cairo.areas : [];
-  const zones = getCairoZoneValues();
+function resolveMetroZone(govKey, addr, hints = []) {
+  const key = normalizeGovKey(govKey);
+  if (!key || !METRO_GOVERNORATE_KEYS.includes(key)) {
+    return defaultZoneForGovernorate('Cairo');
+  }
+
+  const gov = bostaRegions[key];
+  const areas = gov && Array.isArray(gov.areas) ? gov.areas : [];
+  const zones = getZoneValuesForGovernorate(key);
 
   const chunks = [];
   if (addr && typeof addr === 'object') {
@@ -126,10 +154,10 @@ function resolveCairoZone(addr, hints = []) {
   for (const h of hints) chunks.push(h);
   const combined = chunks.filter(Boolean).join(' ');
   if (!combined.trim()) {
-    return DEFAULT_CAIRO_ZONE;
+    return defaultZoneForGovernorate(key);
   }
 
-  const fuzzy = matchCairoZoneFromFreeText(combined);
+  const fuzzy = matchMetroZoneFromFreeText(key, combined);
   if (fuzzy) return fuzzy;
 
   const fromCity = scoreBestZoneFromShopifyCity(addr, areas);
@@ -139,7 +167,7 @@ function resolveCairoZone(addr, hints = []) {
   for (let len = Math.min(8, words.length); len >= 1; len--) {
     for (let start = 0; start <= words.length - len; start++) {
       const slice = words.slice(start, start + len).join(' ');
-      const z = resolveZoneForGovernorate(govKey, slice);
+      const z = resolveZoneForGovernorate(key, slice);
       if (z) return z;
     }
   }
@@ -149,7 +177,7 @@ function resolveCairoZone(addr, hints = []) {
     if (lower.includes(z.toLowerCase().slice(0, 12))) return z;
   }
 
-  return DEFAULT_CAIRO_ZONE;
+  return defaultZoneForGovernorate(key);
 }
 
 /**
@@ -158,14 +186,13 @@ function resolveCairoZone(addr, hints = []) {
 function mapShopifyShippingToNowGovernorateZone(shippingAddress) {
   const government = resolveGovernmentFromShopify(shippingAddress);
   const govKey = normalizeGovKey(government);
-  if (govKey === 'Cairo') {
-    return { government: 'Cairo', zone: resolveCairoZone(shippingAddress) };
+  if (govKey && METRO_GOVERNORATE_KEYS.includes(govKey)) {
+    return { government: govKey, zone: resolveMetroZone(govKey, shippingAddress) };
   }
   const city =
     shippingAddress && shippingAddress.city ? String(shippingAddress.city).trim() : '';
   const addr1 =
     shippingAddress && shippingAddress.address1 ? String(shippingAddress.address1).trim() : '';
-  // Outside Cairo, Now uses governorate for fees; zone = customer-entered city/district (Shopify "City").
   const zone = city || addr1 || government;
   return { government, zone };
 }

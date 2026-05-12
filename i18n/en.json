@@ -1762,6 +1762,7 @@
         "governmentCairo": "Cairo",
         "governmentGiza": "Giza",
         "governmentAlex": "Alexandria",
+        "governmentQalyubia": "Qalyubia",
         "labelDeliverToPreset": "Deliver to",
         "optionManualAddress": "Different address…",
         "legacyPickupLabel": "Primary pickup address",

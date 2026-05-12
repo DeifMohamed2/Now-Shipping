@@ -290,19 +290,39 @@ async function validateImportRows(_businessId, parsed) {
 
 async function buildImportTemplateWorkbook() {
   const workbook = new ExcelJS.Workbook();
-  const cairoZones = deliveryZonesBosta.getCairoZoneValues();
-  const cairoCount = cairoZones.length;
+  const { METRO_GOVERNORATE_KEYS, getZoneValuesForGovernorate } = deliveryZonesBosta;
+
+  const zonesByGov = {};
+  const counts = {};
+  for (const gov of METRO_GOVERNORATE_KEYS) {
+    const list = getZoneValuesForGovernorate(gov);
+    zonesByGov[gov] = list;
+    counts[gov] = list.length;
+  }
+
+  const cairoZones = zonesByGov.Cairo || [];
   const sampleZone = cairoZones[0] || '';
 
   const govHidden = workbook.addWorksheet('Gov');
-  govHidden.getCell(1, 1).value = 'Cairo';
+  METRO_GOVERNORATE_KEYS.forEach((g, i) => {
+    govHidden.getCell(i + 1, 1).value = g;
+  });
   govHidden.state = 'hidden';
 
-  const areasHidden = workbook.addWorksheet('Areas');
-  cairoZones.forEach((z, i) => {
-    areasHidden.getCell(i + 1, 1).value = z;
+  const areaCounts = workbook.addWorksheet('AreaCounts');
+  METRO_GOVERNORATE_KEYS.forEach((g, i) => {
+    areaCounts.getCell(i + 1, 1).value = g;
+    areaCounts.getCell(i + 1, 2).value = counts[g] || 0;
   });
-  areasHidden.state = 'hidden';
+  areaCounts.state = 'hidden';
+
+  for (const gov of METRO_GOVERNORATE_KEYS) {
+    const ws = workbook.addWorksheet(`Areas_${gov}`);
+    (zonesByGov[gov] || []).forEach((z, i) => {
+      ws.getCell(i + 1, 1).value = z;
+    });
+    ws.state = 'hidden';
+  }
 
   const orders = workbook.addWorksheet('Orders');
 
@@ -347,25 +367,30 @@ async function buildImportTemplateWorkbook() {
   });
 
   const maxDataRows = 500;
+  const govLast = METRO_GOVERNORATE_KEYS.length;
   orders.dataValidations.add(`E2:E${maxDataRows + 1}`, {
     type: 'list',
     allowBlank: false,
-    formulae: ['Gov!$A$1:$A$1'],
+    formulae: [`Gov!$A$1:$A$${govLast}`],
     showInputMessage: true,
     promptTitle: 'Governorate',
-    prompt: 'Cairo only.',
+    prompt: 'Cairo, Giza, or Qalyubia (same as Create order).',
     showErrorMessage: true,
     errorStyle: 'warning',
     errorTitle: 'Governorate',
-    error: 'Must be Cairo.',
+    error: 'Must be Cairo, Giza, or Qalyubia.',
   });
+  const zoneIndirectFormula =
+    '=INDIRECT("Areas_"&$E2&"!$A$1:$A$"&VLOOKUP($E2,AreaCounts!$A$1:$B$' +
+    govLast +
+    ',2,FALSE))';
   orders.dataValidations.add(`F2:F${maxDataRows + 1}`, {
     type: 'list',
     allowBlank: false,
-    formulae: [`Areas!$A$1:$A$${cairoCount}`],
+    formulae: [zoneIndirectFormula],
     showInputMessage: true,
     promptTitle: 'Area / zone',
-    prompt: 'Pick from the list (same as Create order).',
+    prompt: 'Pick from the list for the selected governorate (same as Create order).',
     showErrorMessage: true,
     errorStyle: 'warning',
     errorTitle: 'Area / zone',
@@ -390,7 +415,7 @@ async function buildImportTemplateWorkbook() {
     ['', ''],
     [
       'Governorate & zone',
-      'Governorate is Cairo. Area must match the dropdown (same zones as Create order).',
+      'Choose Governorate (Cairo, Giza, or Qalyubia) first, then Area / zone — the list matches Create order for that governorate.',
     ],
     ['', ''],
     [
@@ -421,7 +446,13 @@ async function buildImportTemplateWorkbook() {
     if (i === 0) instr.getRow(i + 1).font = { bold: true, size: 14 };
   });
 
-  const tabOrder = ['Orders', 'Instructions', 'Gov', 'Areas'];
+  const tabOrder = [
+    'Orders',
+    'Instructions',
+    'Gov',
+    'AreaCounts',
+    ...METRO_GOVERNORATE_KEYS.map((g) => `Areas_${g}`),
+  ];
   tabOrder.forEach((name, i) => {
     const ws = workbook.getWorksheet(name);
     if (ws) ws.orderNo = i + 1;
