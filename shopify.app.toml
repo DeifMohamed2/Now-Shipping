@@ -3,7 +3,13 @@
 # - All HTTPS URLs below must match your live `APP_URL` origin (no trailing slash on origin).
 # - For local tunnel testing, temporarily set URIs to your ngrok host, then `shopify app deploy` with production values again.
 #
-# See SHOPIFY-SETUP.md §6.2.
+# Embedded admin UI (same origin as `application_url`): the SPA calls
+#   GET /api/shopify/app/session
+# with `Authorization: Bearer <App Bridge session token>` before rendering the merchant UI.
+# That route is not declared here (no Partner URL field); it is served by the same Node app as
+# `application_url`. Rebuild with `npm run build:shopify-ui` before release so checks see the latest UI.
+#
+# See SHOPIFY-SETUP.md §6.2 and §8.
 
 name = "Now Shipping"
 client_id = "bc8079fb16c02748ab06455608643ee3"

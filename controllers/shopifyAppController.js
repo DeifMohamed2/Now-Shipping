@@ -27,6 +27,16 @@ function portalLinks() {
 }
 
 /**
+ * GET /api/shopify/app/session — lightweight bootstrap; session token + installation only.
+ */
+function getSession(req, res) {
+  return res.json({
+    ok: true,
+    shopDomain: req.shopifyShopDomain,
+  });
+}
+
+/**
  * GET /api/shopify/app/status
  */
 async function getStatus(req, res) {
@@ -476,6 +486,7 @@ async function postPrintAwb(req, res) {
 }
 
 module.exports = {
+  getSession,
   getStatus,
   putToggleSync,
   getSyncLogs,

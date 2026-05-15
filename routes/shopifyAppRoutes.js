@@ -3,6 +3,7 @@ const router = express.Router();
 const { verifyShopifySessionToken } = require('../middleware/shopifySessionToken');
 const shopifyAppController = require('../controllers/shopifyAppController');
 
+router.get('/session', verifyShopifySessionToken, shopifyAppController.getSession);
 router.get('/status', verifyShopifySessionToken, shopifyAppController.getStatus);
 router.put('/toggle-sync', verifyShopifySessionToken, shopifyAppController.putToggleSync);
 router.get('/sync-logs', verifyShopifySessionToken, shopifyAppController.getSyncLogs);

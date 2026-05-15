@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Provider } from '@shopify/app-bridge-react';
+import { EmbeddedAuthGate } from './EmbeddedAuthGate.jsx';
 
 /**
  * Shopify Admin passes `host` (and optionally `shop`) in the iframe URL.
@@ -34,5 +35,9 @@ export function AppBridgeWrapper({ children }) {
     );
   }
 
-  return <Provider config={config}>{children}</Provider>;
+  return (
+    <Provider config={config}>
+      <EmbeddedAuthGate>{children}</EmbeddedAuthGate>
+    </Provider>
+  );
 }
