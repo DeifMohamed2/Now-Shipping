@@ -4,7 +4,7 @@ Tags: shipping, woocommerce, egypt, delivery, now
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,11 @@ Features:
 WooCommerce → Settings → Advanced → REST API. Create a key with **Read** permission.
 
 == Changelog ==
+
+= 1.0.1 =
+* Fix Plugin Check warnings (input sanitization, nonce verification, prefixed globals).
+* Remove self-hosted updater for WordPress.org compatibility.
+* Update Tested up to 6.9.
 
 = 1.0.0 =
 * Initial release.

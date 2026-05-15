@@ -3,7 +3,7 @@
  * Plugin Name:       Now Shipping for WooCommerce
  * Plugin URI:        https://now.com.eg/faq
  * Description:       Sync Egypt delivery orders from WooCommerce into your Now Shipping dashboard. Requires a Now business account and pairing code.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 6.0
  * Tested up to:      6.9
  * Requires PHP:      7.4
@@ -22,7 +22,7 @@ defined( 'ABSPATH' ) || exit;
 /** Default Now API origin (no trailing slash). Override per site in WooCommerce → Now Shipping, or set `APP_URL` on the Node app. */
 define( 'NOW_SHIPPING_WOO_DEFAULT_ORIGIN', 'https://now.com.eg' );
 
-define( 'NOW_SHIPPING_WOO_VERSION', '1.0.0' );
+define( 'NOW_SHIPPING_WOO_VERSION', '1.0.1' );
 define( 'NOW_SHIPPING_WOO_FILE', __FILE__ );
 define( 'NOW_SHIPPING_WOO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'NOW_SHIPPING_WOO_URL', plugin_dir_url( __FILE__ ) );

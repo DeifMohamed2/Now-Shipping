@@ -98,7 +98,7 @@ final class Now_Shipping_Woo_Settings {
 		}
 
 		if ( isset( $_POST['now_shipping_woo_save'] ) && check_admin_referer( 'now_shipping_woo_save', 'now_shipping_woo_nonce' ) ) {
-			update_option( 'now_shipping_api_base', $this->sanitize_url( wp_unslash( $_POST['now_shipping_api_base'] ?? '' ) ) );
+			update_option( 'now_shipping_api_base', $this->sanitize_url( sanitize_text_field( wp_unslash( $_POST['now_shipping_api_base'] ?? '' ) ) ) );
 			update_option( 'now_shipping_installation_token', sanitize_text_field( wp_unslash( $_POST['now_shipping_installation_token'] ?? '' ) ) );
 			update_option( 'now_shipping_shared_secret', sanitize_text_field( wp_unslash( $_POST['now_shipping_shared_secret'] ?? '' ) ) );
 			update_option( 'now_shipping_rest_ck', sanitize_text_field( wp_unslash( $_POST['now_shipping_rest_ck'] ?? '' ) ) );
@@ -210,10 +210,13 @@ final class Now_Shipping_Woo_Settings {
 	}
 
 	private function handle_connect() {
+		if ( ! isset( $_POST['now_shipping_woo_connect_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['now_shipping_woo_connect_nonce'] ) ), 'now_shipping_woo_connect' ) ) {
+			return;
+		}
 		$public = sanitize_text_field( wp_unslash( $_POST['ns_public_code'] ?? '' ) );
-		$secret = (string) wp_unslash( $_POST['ns_pairing_secret'] ?? '' );
-		$store  = esc_url_raw( trim( (string) wp_unslash( $_POST['ns_store_url'] ?? '' ) ) );
-		$base   = rtrim( (string) wp_unslash( $_POST['ns_api_base'] ?? get_option( 'now_shipping_api_base', NOW_SHIPPING_WOO_DEFAULT_ORIGIN ) ), '/' );
+		$secret = sanitize_text_field( wp_unslash( $_POST['ns_pairing_secret'] ?? '' ) );
+		$store  = esc_url_raw( sanitize_text_field( wp_unslash( $_POST['ns_store_url'] ?? '' ) ) );
+		$base   = rtrim( sanitize_text_field( wp_unslash( $_POST['ns_api_base'] ?? get_option( 'now_shipping_api_base', NOW_SHIPPING_WOO_DEFAULT_ORIGIN ) ) ), '/' );
 
 		$res = wp_remote_post(
 			$base . '/api/woocommerce/connect',

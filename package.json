@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run build:shopify-ui",
     "build:shopify-ui": "npm install --prefix shopify-admin-ui && npm run build --prefix shopify-admin-ui",
-    "build:woo-plugin": "mkdir -p public/downloads && rm -f public/downloads/now-shipping-for-woocommerce-1.0.0.zip && cd wp-plugin && zip -r ../public/downloads/now-shipping-for-woocommerce-1.0.0.zip now-shipping-for-woocommerce -x '*.DS_Store'",
+    "build:woo-plugin": "mkdir -p public/downloads && rm -f public/downloads/now-shipping-for-woocommerce-1.0.1.zip && cd wp-plugin && zip -r ../public/downloads/now-shipping-for-woocommerce-1.0.1.zip now-shipping-for-woocommerce -x '*.DS_Store'",
     "shopify:deploy": "shopify app deploy --allow-updates",
     "start": "nodemon app.js",
     "dev": "nodemon app.js",

@@ -1,7 +1,7 @@
 {
   "name": "Now Shipping for WooCommerce",
-  "version": "1.0.0",
-  "download_url": "https://now.com.eg/downloads/now-shipping-for-woocommerce-1.0.0.zip",
+  "version": "1.0.1",
+  "download_url": "https://now.com.eg/downloads/now-shipping-for-woocommerce-1.0.1.zip",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
