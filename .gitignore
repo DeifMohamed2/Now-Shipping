@@ -7,3 +7,6 @@ serviceAccountKey.json
 serviceAccountKey-Courier.json
 
 public/uploads/
+
+# Built WooCommerce plugin ZIP (run `npm run build:woo-plugin`)
+public/downloads/*.zip

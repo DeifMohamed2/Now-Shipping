@@ -711,6 +711,32 @@
         </form>
       <% } %>
     </div>
+
+    <div class="settings-card mt-4">
+      <div class="card-header">
+        <i class="ri-wordpress-line"></i>
+        <h3>WooCommerce</h3>
+      </div>
+      <p class="text-muted mb-3">Install the Now Shipping plugin on your WordPress store, then generate a pairing code below. Paste the code and secret into the plugin (one time).</p>
+      <% const wooConnected = typeof woocommerceInstallation !== 'undefined' && woocommerceInstallation && woocommerceInstallation.storeUrl; %>
+      <% if (wooConnected) { %>
+        <div class="alert alert-success d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <strong>Connected</strong>
+            <span class="ms-2 font-monospace text-break"><%= woocommerceInstallation.storeUrl %></span>
+          </div>
+          <form method="post" action="/business/woocommerce/disconnect" class="m-0">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Disconnect WooCommerce</button>
+          </form>
+        </div>
+      <% } %>
+      <div id="wooPairingResult" class="alert alert-secondary d-none mt-3" role="status"></div>
+      <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+        <button type="button" class="btn btn-primary" id="wooGeneratePairingBtn">Generate pairing code</button>
+        <a href="<%= typeof wooPluginDownloadUrl !== 'undefined' ? wooPluginDownloadUrl : '#' %>" class="btn btn-outline-secondary" id="wooPluginDownloadLink" target="_blank" rel="noopener">Download plugin</a>
+      </div>
+      <p class="text-muted small mt-2 mb-0">The secret is shown only once. Pairing codes expire in 24 hours.</p>
+    </div>
   </div>
 
   <!-- Security Tab -->
@@ -841,7 +867,7 @@
     const qs = new URLSearchParams(window.location.search);
     const shopifyWarn = qs.get('shopifyWarning');
     const shopifyErr = qs.get('shopifyError');
-    if (qs.get('shopifyConnected') === '1' || shopifyErr || qs.get('shopifyDisconnected') === '1' || shopifyWarn) {
+    if (qs.get('shopifyConnected') === '1' || shopifyErr || qs.get('shopifyDisconnected') === '1' || shopifyWarn || qs.get('wooDisconnected') === '1') {
       const integrationsTab = document.querySelector('.nav-tab[data-tab="integrations"]');
       if (integrationsTab) integrationsTab.click();
     }
@@ -863,6 +889,46 @@
     if (shopifyErr && typeof Swal !== 'undefined') {
       Swal.fire({ icon: 'error', title: decodeURIComponent(shopifyErr).slice(0, 240) });
       window.history.replaceState({}, '', '/business/settings');
+    }
+
+    if (qs.get('wooDisconnected') === '1' && typeof Swal !== 'undefined') {
+      Swal.fire({ icon: 'info', title: 'WooCommerce disconnected', timer: 2800, showConfirmButton: false });
+      window.history.replaceState({}, '', '/business/settings');
+    }
+
+    const wooPairBtn = document.getElementById('wooGeneratePairingBtn');
+    const wooPairOut = document.getElementById('wooPairingResult');
+    if (wooPairBtn && wooPairOut) {
+      wooPairBtn.addEventListener('click', async function () {
+        wooPairBtn.disabled = true;
+        try {
+          const res = await fetch('/business/woocommerce/pairing', {
+            method: 'POST',
+            headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+            body: '{}',
+            credentials: 'same-origin',
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(data.error || res.statusText);
+          }
+          wooPairOut.classList.remove('d-none');
+          wooPairOut.innerHTML =
+            '<strong>Public code</strong><br><code class="user-select-all">' +
+            (data.publicCode || '') +
+            '</code><br><br><strong>Secret (copy now)</strong><br><code class="user-select-all">' +
+            (data.secret || '') +
+            '</code><br><small class="text-muted">Expires: ' +
+            (data.expiresAt || '') +
+            '</small>';
+        } catch (e) {
+          wooPairOut.classList.remove('d-none', 'alert-secondary');
+          wooPairOut.classList.add('alert-danger');
+          wooPairOut.textContent = e.message || 'Failed to generate pairing code';
+        } finally {
+          wooPairBtn.disabled = false;
+        }
+      });
     }
 
   // Profile photo upload + placeholder

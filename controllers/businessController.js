@@ -27,6 +27,10 @@ const {
   generateUniqueOrderNumber,
 } = require('../utils/orderCreationHelper');
 const orderBulkImport = require('../utils/orderBulkImport');
+const {
+  getMetroDeliveryZonesCatalog,
+  getMetroDeliveryZonesCatalogWeakEtag,
+} = require('../utils/deliveryZonesBosta');
 const { resolvePickupAddressForOrder } = require('../utils/pickupAddressResolve');
 const {
   canBusinessCancelPickupStatus,
@@ -3239,6 +3243,15 @@ const getSettingsPage = async (req, res) => {
       uninstalledAt: null,
     }).lean();
 
+    const WoocommerceInstallation = require('../models/woocommerceInstallation');
+    const woocommerceInstallation = await WoocommerceInstallation.findOne({
+      business: user._id,
+      uninstalledAt: null,
+    }).lean();
+
+    const rawBase = process.env.APP_URL || process.env.HOST || 'https://now.com.eg';
+    const wooPluginDownloadUrl = `${String(rawBase).replace(/\/$/, '')}/api/woocommerce/plugin/download`;
+
     res.render('business/settings', {
       title: req.translations.business.pages.settings.title,
       page_title: req.translations.business.pages.settings.title,
@@ -3246,6 +3259,8 @@ const getSettingsPage = async (req, res) => {
       user: user,
       userData: user,
       shopifyInstallation: shopifyInstallation || null,
+      woocommerceInstallation: woocommerceInstallation || null,
+      wooPluginDownloadUrl,
     });
   } catch (error) {
     console.error('Error in getSettingsPage:', error);
@@ -4680,6 +4695,21 @@ const getBusinessLanguage = async (req, res) => {
   }
 };
 
+const getDeliveryZonesCatalog = (req, res) => {
+  try {
+    const etag = getMetroDeliveryZonesCatalogWeakEtag();
+    if (req.headers['if-none-match'] === etag) {
+      res.setHeader('ETag', etag);
+      return res.status(304).end();
+    }
+    res.setHeader('ETag', etag);
+    return res.json(getMetroDeliveryZonesCatalog());
+  } catch (error) {
+    console.error('Error in getDeliveryZonesCatalog:', error);
+    return res.status(500).json({ message: 'Failed to load delivery zones' });
+  }
+};
+
 const updateBusinessLanguage = async (req, res) => {
   try {
     const businessId = req.userId || req.userData?._id;
@@ -4721,7 +4751,7 @@ module.exports = {
   getDashboardData,
   completionConfirm,
   requestVerification,
-
+  getDeliveryZonesCatalog,
 
   // Orders
   get_ordersPage,

@@ -1,0 +1,21 @@
+name: Release WooCommerce plugin ZIP
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'woo-v*'
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ZIP
+        run: |
+          cd wp-plugin
+          zip -r "../now-shipping-for-woocommerce.zip" "now-shipping-for-woocommerce" -x "*.git*"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: now-shipping-for-woocommerce-zip
+          path: now-shipping-for-woocommerce.zip

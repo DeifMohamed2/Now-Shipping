@@ -9,6 +9,7 @@ const multer = require('multer');
 const businessController = require('../../controllers/businessController.js');
 const assistantController = require('../../controllers/assistantController.js');
 const shopifyController = require('../../controllers/shopifyController.js');
+const woocommerceBusinessController = require('../../controllers/woocommerceBusinessController.js');
 
 const orderImportUpload = multer({
   storage: multer.memoryStorage(),
@@ -40,6 +41,7 @@ async function authenticateUser(req, res, next) {
   // Check if this is a JSON API request
   const isApiRequest = 
     req.path.startsWith('/api/') ||
+    req.path.includes('/woocommerce/') ||
     req.path.includes('-data') ||  // Includes dashboard-data, order-data, etc.
     req.path.includes('orders-import') ||
     req.headers['content-type'] === 'application/json' ||
@@ -76,7 +78,7 @@ async function authenticateUser(req, res, next) {
     const normalizedRole = (user && user.role ? String(user.role).toLowerCase() : '');
     const isCompleted = Boolean(user && user.isCompleted);
     if (normalizedRole === 'business' && !isCompleted) {
-      const allowedWhenIncomplete = new Set(['/dashboard', '/dashboard-data', '/completionConfirm', '/request-verification', '/settings', '/shopify/install', '/shopify/disconnect']);
+      const allowedWhenIncomplete = new Set(['/dashboard', '/dashboard-data', '/completionConfirm', '/request-verification', '/settings', '/shopify/install', '/shopify/disconnect', '/woocommerce/pairing', '/woocommerce/disconnect']);
 
       if (!allowedWhenIncomplete.has(req.path)) {
         // Expose flag to templates if needed
@@ -109,6 +111,9 @@ router.use(authenticateUser);
 
 router.get('/shopify/install', shopifyController.redirectToShopifyOAuth);
 router.post('/shopify/disconnect', shopifyController.disconnectShopify);
+
+router.post('/woocommerce/pairing', woocommerceBusinessController.postPairing);
+router.post('/woocommerce/disconnect', woocommerceBusinessController.postDisconnect);
 
 // Define routes
 //dashboard

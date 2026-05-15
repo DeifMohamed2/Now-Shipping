@@ -75,6 +75,7 @@ router.get('/user-data', async (req, res) => {
     }
 });
 
+router.get('/delivery-zones', businessController.getDeliveryZonesCatalog);
 
 //dashboard
 

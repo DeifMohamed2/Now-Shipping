@@ -449,7 +449,7 @@ const orderSchema = new mongoose.Schema(
     /** External commerce platform sync (e.g. Shopify order id) */
     externalSource: {
       type: String,
-      enum: ['shopify'],
+      enum: ['shopify', 'woocommerce'],
       required: false,
     },
     externalOrderId: {
@@ -736,7 +736,7 @@ orderSchema.index(
   {
     unique: true,
     partialFilterExpression: {
-      externalSource: 'shopify',
+      externalSource: { $in: ['shopify', 'woocommerce'] },
       externalOrderId: { $exists: true, $type: 'string' },
     },
   }

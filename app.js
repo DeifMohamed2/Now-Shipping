@@ -44,10 +44,12 @@ const uploadRouterApi = require('./routes/api/v1/upload');
 // Import jobs
 const { initPayoutProcessing } = require('./jobs/payoutProcessing');
 const { initShopifySyncRetry } = require('./jobs/shopifySyncRetry');
+const { initWoocommerceSyncRetry } = require('./jobs/woocommerceSyncRetry');
 
 // Start the Wednesday payout cron
 initPayoutProcessing();
 initShopifySyncRetry();
+initWoocommerceSyncRetry();
 
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
@@ -82,6 +84,9 @@ function shouldSkipExpressFileUpload(req) {
   if (p.startsWith('/api/shopify/webhooks')) {
     return true;
   }
+  if (p.startsWith('/api/woocommerce/webhooks')) {
+    return true;
+  }
   return false;
 }
 app.use((req, res, next) => {
@@ -94,6 +99,10 @@ app.use((req, res, next) => {
 const shopifyWebhooksRouter = require('./routes/shopifyWebhooks');
 const shopifyAppRouter = require('./routes/shopifyAppRoutes');
 const shopifyController = require('./controllers/shopifyController');
+const woocommerceWebhooksRouter = require('./routes/woocommerceWebhooks');
+const woocommerceAppRouter = require('./routes/woocommerceAppRoutes');
+const woocommercePublicRouter = require('./routes/woocommercePublicRoutes');
+const woocommercePluginController = require('./controllers/woocommercePluginController');
 
 // Shopify Admin webhooks: must use raw body for HMAC verification (before express.json).
 app.use(
@@ -102,8 +111,28 @@ app.use(
   shopifyWebhooksRouter
 );
 
+// WooCommerce plugin → Now webhooks (HMAC, raw body).
+app.use(
+  '/api/woocommerce/webhooks',
+  express.raw({ type: 'application/json' }),
+  woocommerceWebhooksRouter
+);
+
+// WooCommerce app API: raw body string for HMAC on POST/PUT.
+const woocommerceAppJson = express.json({
+  limit: '2mb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString('utf8');
+  },
+});
+app.use('/api/woocommerce/app', woocommerceAppJson, woocommerceAppRouter);
+
 app.use(express.json());
 app.use('/api/shopify/app', shopifyAppRouter);
+
+app.get('/api/woocommerce/plugin/latest', woocommercePluginController.getPluginLatest);
+app.get('/api/woocommerce/plugin/download', woocommercePluginController.getPluginDownload);
+app.use('/api/woocommerce', woocommercePublicRouter);
 app.use(
   session({
     resave: false,

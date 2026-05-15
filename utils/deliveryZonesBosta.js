@@ -1,6 +1,7 @@
 /**
  * Greater Cairo metro delivery zones (same source as Create order / bosta-regions-data-processed.json).
  */
+const crypto = require('node:crypto');
 const path = require('path');
 const bostaRegions = require(path.join(
   __dirname,
@@ -105,6 +106,73 @@ function getCairoZoneValues() {
   return getZoneValuesForGovernorate('Cairo');
 }
 
+const METRO_CATALOG_SCHEMA_VERSION = 1;
+
+/** @param {{ value: string, label?: { en?: string, ar?: string } }} area */
+function areaLabelPair(area) {
+  const en = (area.label && area.label.en) || area.value;
+  const ar = (area.label && area.label.ar) || en;
+  return { en, ar };
+}
+
+/** @param {{ value?: string, label?: { en?: string, ar?: string } }} gov */
+function governorateLabelPair(gov, key) {
+  const en = (gov.label && gov.label.en) || gov.value || key;
+  const ar = (gov.label && gov.label.ar) || en;
+  return { en, ar };
+}
+
+function buildMetroDeliveryZonesCatalog() {
+  const governorates = [...METRO_GOVERNORATE_KEYS]
+    .filter((k) => bostaRegions[k] && Array.isArray(bostaRegions[k].areas))
+    .map((key) => {
+      const gov = bostaRegions[key];
+      const label = governorateLabelPair(gov, key);
+      const areas = [...gov.areas]
+        .map((a) => ({
+          value: a.value,
+          label: areaLabelPair(a),
+        }))
+        .sort((a, b) => (a.label.en || a.value).localeCompare(b.label.en || b.value, 'en'));
+      return {
+        key,
+        value: gov.value || key,
+        label,
+        areas,
+      };
+    })
+    .sort((a, b) => a.label.en.localeCompare(b.label.en, 'en'));
+
+  return {
+    meta: {
+      schemaVersion: METRO_CATALOG_SCHEMA_VERSION,
+      governorateKeys: [...METRO_GOVERNORATE_KEYS],
+    },
+    governorates,
+  };
+}
+
+let metroCatalogCache;
+let metroCatalogWeakEtag;
+
+/**
+ * Bilingual metro catalog for mobile / API (canonical `key` + `value` strings match order validation).
+ * Cached in-process; same data as `bostaRegions` require.
+ */
+function getMetroDeliveryZonesCatalog() {
+  if (!metroCatalogCache) {
+    metroCatalogCache = buildMetroDeliveryZonesCatalog();
+    const h = crypto.createHash('sha256').update(JSON.stringify(metroCatalogCache)).digest('hex').slice(0, 16);
+    metroCatalogWeakEtag = `W/"${h}"`;
+  }
+  return metroCatalogCache;
+}
+
+function getMetroDeliveryZonesCatalogWeakEtag() {
+  getMetroDeliveryZonesCatalog();
+  return metroCatalogWeakEtag;
+}
+
 module.exports = {
   METRO_GOVERNORATE_KEYS,
   bostaRegions,
@@ -114,4 +182,6 @@ module.exports = {
   getGovernorateNamesSorted,
   getZoneValuesForGovernorate,
   getCairoZoneValues,
+  getMetroDeliveryZonesCatalog,
+  getMetroDeliveryZonesCatalogWeakEtag,
 };
