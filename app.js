@@ -14,36 +14,6 @@ mongoose.set('strictQuery', false);
 const express = require('express');
 const app = express();
 const path = require('path');
-
-// TLS is often terminated at nginx; trust X-Forwarded-* in production (or when explicitly enabled).
-if (process.env.TRUST_PROXY === '1' || process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
-}
-
-function forceHttps(req, res, next) {
-  if (process.env.FORCE_HTTPS === 'false') return next();
-  const enabled =
-    process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true';
-  if (!enabled) return next();
-
-  const hostRaw = req.get('host') || '';
-  const host = hostRaw.toLowerCase();
-  if (!host || host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
-    return next();
-  }
-
-  const xfProto = (req.get('x-forwarded-proto') || '').split(',')[0].trim().toLowerCase();
-  const secure = xfProto ? xfProto === 'https' : !!req.secure;
-  if (!secure) {
-    const apex = host.replace(/^www\./, '');
-    return res.redirect(301, `https://${apex}${req.originalUrl || req.url}`);
-  }
-  if (host === 'www.now.com.eg') {
-    return res.redirect(301, `https://now.com.eg${req.originalUrl || req.url}`);
-  }
-  next();
-}
-app.use(forceHttps);
 const http = require('http');
 const server = http.createServer(app);
 const socketController = require('./controllers/socketController');

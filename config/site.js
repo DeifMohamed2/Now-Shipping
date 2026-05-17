@@ -2,9 +2,6 @@
  * Public site identity — contact email, footers, transactional email metadata.
  * Override with SITE_* environment variables in production.
  */
-/** Canonical origin for Open Graph, canonical links, and absolute asset URLs (no trailing slash). */
-const publicBaseUrl = (process.env.PUBLIC_BASE_URL || 'https://now.com.eg').replace(/\/$/, '');
-
 const contactEmail = 'info@now.com.eg';
 
 /** Public support phone shown in email footers (avoid fake placeholders). */
@@ -22,7 +19,6 @@ const socialInstagramUrl ='https://www.instagram.com/now.co.eg?igsh=MWcxYzUzaG4w
 const socialLinkedInUrl ='https://www.linkedin.com/company/now-shipping/';
 
 module.exports = {
-  publicBaseUrl,
   contactEmail,
   publicPhone,
   physicalAddress,

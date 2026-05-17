@@ -4,26 +4,10 @@
 <head>
 
   <meta charset="utf-8" />
-  <% if (typeof documentTitle !== 'undefined' && documentTitle) { %>
-  <title><%= documentTitle %></title>
-  <% } else { %>
   <title> <%-title%> | Now Shipping</title>
-  <% } %>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<% if (typeof publicSeo !== 'undefined' && publicSeo && publicSeo.ogDescription) { %>
-<meta content="<%= publicSeo.ogDescription %>" name="description" />
-<% } else { %>
 <meta content="Professional shipping services - fast and reliable delivery for your cargo." name="description" />
-<% } %>
 <meta content="Now Shipping" name="author" />
-<% if (typeof publicSeo !== 'undefined' && publicSeo) { %>
-<link rel="canonical" href="<%= publicSeo.canonicalUrl %>" />
-<meta property="og:url" content="<%= publicSeo.ogUrl %>" />
-<meta property="og:type" content="<%= publicSeo.ogType || 'website' %>" />
-<meta property="og:title" content="<%= publicSeo.ogTitle %>" />
-<meta property="og:description" content="<%= publicSeo.ogDescription %>" />
-<meta property="og:image" content="<%= publicSeo.ogImage %>" />
-<% } %>
 
   <!-- App favicon -->
 
