@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken');
 const sms = require('../utils/sms');
 const { emailService } = require('../utils/email');
 const Order = require('../models/order');
+const siteConfig = require('../config/site');
 
 // Transporter moved to centralized emailService
 
@@ -19,10 +20,20 @@ const Order = require('../models/order');
 //================================================= Landing Page =========================================================
 const index = (req, res) => {
   const lang = req.query.lang || req.cookies.language || 'en';
-  res.render('landing/index', { 
-    title: 'Home', 
+  const base = siteConfig.publicBaseUrl;
+  res.render('landing/index', {
+    title: 'Home',
     layout: 'layouts/layout-without-nav',
-    currentLang: lang
+    currentLang: lang,
+    documentTitle: 'NOW Shipping',
+    publicSeo: {
+      canonicalUrl: `${base}/`,
+      ogUrl: `${base}/`,
+      ogTitle: 'NOW Shipping',
+      ogDescription: 'Fast and reliable shipping solutions.',
+      ogImage: `${base}/assets/rImages/app_inside_logo.png`,
+      ogType: 'website',
+    },
   });
 };
 

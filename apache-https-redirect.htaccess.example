@@ -1,0 +1,8 @@
+# Copy to .htaccess on Apache / cPanel when the site is served directly by Apache (not Node-only).
+# If nginx proxies to Node, configure redirect there instead (or rely on Express forceHttps in app.js).
+
+RewriteEngine On
+
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\.now\.com\.eg$ [NC]
+RewriteRule ^(.*)$ https://now.com.eg/$1 [L,R=301]
