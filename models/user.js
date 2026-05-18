@@ -190,23 +190,41 @@ const UserSchema = new mongoose.Schema(
       details: {
         type: mongoose.Schema.Types.Mixed,
         required: function () {
+          const choice = this.paymentMethod?.paymentChoice;
+          if (!choice) return false;
           return (
-            this.paymentMethod.paymentChoice === 'instaPay' ||
-            this.paymentMethod.paymentChoice === 'mobileWallet' ||
-            this.paymentMethod.paymentChoice === 'bankTransfer'
+            choice === 'instaPay' ||
+            choice === 'mobileWallet' ||
+            choice === 'bankTransfer'
           );
         },
         validate: {
           validator: function (value) {
-            if (this.paymentMethod.paymentChoice === 'instaPay') {
-              return value.hasOwnProperty('IPAorPhoneNumber');
-            } else if (this.paymentMethod.paymentChoice === 'mobileWallet') {
-              return value.hasOwnProperty('mobileWalletNumber');
-            } else if (this.paymentMethod.paymentChoice === 'bankTransfer') {
+            if (value == null || typeof value !== 'object') return false;
+            let choice = this.paymentMethod?.paymentChoice;
+            // findByIdAndUpdate + runValidators: parent subdoc may be missing on `this`
+            if (!choice) {
+              if (Object.prototype.hasOwnProperty.call(value, 'IPAorPhoneNumber')) {
+                choice = 'instaPay';
+              } else if (Object.prototype.hasOwnProperty.call(value, 'mobileWalletNumber')) {
+                choice = 'mobileWallet';
+              } else if (Object.prototype.hasOwnProperty.call(value, 'bankName')) {
+                choice = 'bankTransfer';
+              } else {
+                return false;
+              }
+            }
+            if (choice === 'instaPay') {
+              return Object.prototype.hasOwnProperty.call(value, 'IPAorPhoneNumber');
+            }
+            if (choice === 'mobileWallet') {
+              return Object.prototype.hasOwnProperty.call(value, 'mobileWalletNumber');
+            }
+            if (choice === 'bankTransfer') {
               return (
-                value.hasOwnProperty('bankName') &&
-                value.hasOwnProperty('accountNumber') &&
-                value.hasOwnProperty('accountName')
+                Object.prototype.hasOwnProperty.call(value, 'bankName') &&
+                Object.prototype.hasOwnProperty.call(value, 'accountNumber') &&
+                Object.prototype.hasOwnProperty.call(value, 'accountName')
               );
             }
             return false;
@@ -226,14 +244,23 @@ const UserSchema = new mongoose.Schema(
         required: false,
         validate: {
           validator: function (value) {
-            if (this.brandType.brandChoice === 'personal') {
+            if (value == null || typeof value !== 'object') return false;
+            let choice = this.brandType?.brandChoice;
+            if (!choice) {
+              if (Object.prototype.hasOwnProperty.call(value, 'nationalId')) choice = 'personal';
+              else if (Object.prototype.hasOwnProperty.call(value, 'taxNumber')) choice = 'company';
+              else return false;
+            }
+            if (choice === 'personal') {
               return (
-                value.hasOwnProperty('nationalId') &&
+                Object.prototype.hasOwnProperty.call(value, 'nationalId') &&
                 Array.isArray(value.photos)
               );
-            } else if (this.brandType.brandChoice === 'company') {
+            }
+            if (choice === 'company') {
               return (
-                value.hasOwnProperty('taxNumber') && Array.isArray(value.photos)
+                Object.prototype.hasOwnProperty.call(value, 'taxNumber') &&
+                Array.isArray(value.photos)
               );
             }
             return false;
