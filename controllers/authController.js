@@ -18,58 +18,33 @@ const Order = require('../models/order');
 
 //================================================= Landing Page =========================================================
 const index = (req, res) => {
-  const lang = req.query.lang || req.cookies.language || 'en';
+  const lang = req.query.lang || req.cookies.language || 'ar';
   res.render('landing/index', { 
-    title: 'Home', 
-    layout: 'layouts/layout-without-nav',
+    title: 'Now Shipping — الشريك اللوجستي لـ ecommerce في القاهرة', 
+    layout: 'layouts/layout-landing',
     currentLang: lang
   });
 };
 
 
 const mobileAppPage = (req, res) => {
-  const lang = req.query.lang || req.cookies.language || 'en';
-  res.render('landing/mobileApp', { 
-    title: 'Mobile App', 
-    layout: 'layouts/layout-without-nav',
-    currentLang: lang
-  });
+  res.redirect(302, '/#features');
 };
 
 const pricingPage = (req, res) => {
-  const lang = req.query.lang || req.cookies.language || 'en';
-  res.render('landing/pricing', { 
-    title: 'Pricing', 
-    layout: 'layouts/layout-without-nav',
-    currentLang: lang
-  });
+  res.redirect(302, '/');
 };
 
 const aboutusPage = (req, res) => {
-  const lang = req.query.lang || req.cookies.language || 'en';
-  res.render('landing/aboutus', { 
-    title: 'About Us', 
-    layout: 'layouts/layout-without-nav',
-    currentLang: lang
-  });
+  res.redirect(302, '/#about');
 };
 
 const faqPage = (req, res) => {
-  const lang = req.query.lang || req.cookies.language || 'en';
-  res.render('landing/faq', { 
-    title: 'FAQ', 
-    layout: 'layouts/layout-without-nav',
-    currentLang: lang
-  });
+  res.redirect(302, '/#faq');
 };
 
 const privacyPolicyPage = (req, res) => {
-  const lang = req.query.lang || req.cookies.language || 'en';
-  res.render('landing/privacy-policy', { 
-    title: 'Privacy Policy', 
-    layout: 'layouts/layout-without-nav',
-    currentLang: lang
-  });
+  res.redirect(302, '/');
 };
 
 /** Public order tracking (search + /t/:orderNumber for WhatsApp links) */
@@ -158,7 +133,7 @@ const trackingPage = async (req, res) => {
 
   return res.render('landing/tracking', {
     title: 'Track Order',
-    layout: 'layouts/layout-without-nav',
+    layout: 'layouts/layout-landing',
     currentLang: lang,
     orderData,
     trackingError,
@@ -168,12 +143,7 @@ const trackingPage = async (req, res) => {
 };
 
 const comingSoonPage = (req, res) => {
-  const lang = req.query.lang || req.cookies.language || 'en';
-  res.render('landing/comingsoon', {
-    title: 'Coming Soon',
-    layout: 'layouts/layout-without-nav',
-    currentLang: lang,
-  });
+  res.redirect(302, '/');
 };
 
 

@@ -1,0 +1,218 @@
+.admin-applications-page {
+  --app-brand: #f39720;
+  --app-brand-dark: #c97d12;
+  --app-brand-soft: rgba(243, 151, 32, 0.15);
+}
+
+.admin-applications-page .app-hero {
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #f39720 0%, #c97d12 55%, #a86a0f 100%);
+  color: #fff;
+  padding: 1.25rem 1.5rem;
+}
+
+.admin-applications-page .app-hero__title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.admin-applications-page .app-hero__icon {
+  margin-inline-end: 0.35rem;
+}
+
+.admin-applications-page .app-hero__lead {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.92rem;
+}
+
+.admin-applications-page .btn-app-primary {
+  background: var(--app-brand);
+  border-color: var(--app-brand);
+  color: #fff;
+}
+
+.admin-applications-page .btn-app-primary:hover,
+.admin-applications-page .btn-app-primary:focus {
+  background: var(--app-brand-dark);
+  border-color: var(--app-brand-dark);
+  color: #fff;
+}
+
+.admin-applications-page .app-stat-card {
+  box-shadow: 0 0.15rem 0.75rem rgba(0, 0, 0, 0.06);
+  border-left: 4px solid var(--app-brand) !important;
+}
+
+.admin-applications-page .app-stat-card--new {
+  border-left-color: #0d6efd !important;
+}
+
+.admin-applications-page .app-stat-card--contacted {
+  border-left-color: #17a2b8 !important;
+}
+
+.admin-applications-page .app-stat-card--qualified {
+  border-left-color: #6f42c1 !important;
+}
+
+.admin-applications-page .app-stat-card--converted {
+  border-left-color: #28a745 !important;
+}
+
+.admin-applications-page .app-panel,
+.admin-applications-page .app-detail-card {
+  box-shadow: 0 0.2rem 1rem rgba(16, 42, 79, 0.08);
+  border-radius: 0.5rem;
+}
+
+.admin-applications-page .app-panel__head,
+.admin-applications-page .app-detail-head {
+  background: #fff;
+  padding: 1rem 1.25rem;
+}
+
+.admin-applications-page .app-panel__title,
+.admin-applications-page .app-detail-head__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.admin-applications-page .app-count-badge {
+  background: var(--app-brand-soft);
+  color: var(--app-brand-dark);
+  font-weight: 600;
+}
+
+.admin-applications-page .app-panel__body {
+  min-height: 520px;
+}
+
+.admin-applications-page .app-list {
+  max-height: 420px;
+}
+
+.admin-applications-page .app-card {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-applications-page .app-card:hover {
+  background: rgba(243, 151, 32, 0.06);
+}
+
+.admin-applications-page .app-card.is-active {
+  background: var(--app-brand-soft);
+  border-inline-start: 3px solid var(--app-brand);
+}
+
+.admin-applications-page .app-card__store {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.15rem;
+}
+
+.admin-applications-page .app-card__meta {
+  font-size: 0.82rem;
+  color: #6c757d;
+}
+
+.admin-applications-page .app-card__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: 0.45rem;
+}
+
+.admin-applications-page .app-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #eef2f7;
+  color: #495057;
+}
+
+.admin-applications-page .app-badge--product {
+  background: rgba(243, 151, 32, 0.15);
+  color: #a86a0f;
+}
+
+.admin-applications-page .app-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.admin-applications-page .app-status--new { background: #e7f1ff; color: #0d6efd; }
+.admin-applications-page .app-status--contacted { background: #e7f6f8; color: #117a8b; }
+.admin-applications-page .app-status--qualified { background: #f0ebff; color: #6f42c1; }
+.admin-applications-page .app-status--rejected { background: #fdecea; color: #dc3545; }
+.admin-applications-page .app-status--converted { background: #e8f5e9; color: #28a745; }
+
+.admin-applications-page .app-empty__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-brand-soft);
+  color: var(--app-brand);
+  font-size: 2rem;
+}
+
+.admin-applications-page .app-empty__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.admin-applications-page .app-field {
+  background: #f8f9fa;
+  border-radius: 0.45rem;
+  padding: 0.75rem 0.9rem;
+  height: 100%;
+}
+
+.admin-applications-page .app-field__label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #878a99;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.admin-applications-page .app-field__value {
+  display: block;
+  font-weight: 600;
+  color: #212529;
+  word-break: break-word;
+}
+
+.admin-applications-page .app-list-empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: #878a99;
+}
+
+@media (max-width: 991.98px) {
+  .admin-applications-page .app-panel__body {
+    min-height: auto;
+  }
+
+  .admin-applications-page .app-list {
+    max-height: 320px;
+  }
+}

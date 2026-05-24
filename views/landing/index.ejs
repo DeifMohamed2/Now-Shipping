@@ -1,1836 +1,632 @@
 <%- contentFor('HeaderCss') %>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta name="description" content="ارفع أرباحك ونسب تسليماتك مع Now Shipping — Same Day Delivery، Dashboard، وتكامل مع Shopify و WooCommerce و Salla">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Arabic Font Support -->
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-<!-- RTL Support CSS -->
-<link rel="stylesheet" href="/assets/css/rtl-support.css">
-<style>
-  /* Reset and Base Styles */
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  :root {
-    --primary: #F39720;
-    --secondary: #FDB614;
-    --accent: #8FCAES;
-    --accent-dark: #3D9BC5;
-    --accent-light: #C5E8F7;
-    --dark: #1E293B;
-    --dark-secondary: #334155;
-    --light: #F8FAFC;
-    --light-secondary: #F1F5F9;
-    --gray: #64748B;
-    --light-gray: #E2E8F0;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --info: #3B82F6;
-    --font-primary: 'Poppins', sans-serif;
-    --font-secondary: 'Montserrat', sans-serif;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --transition: all 0.3s ease;
-    --border-radius-sm: 0.25rem;
-    --border-radius: 0.5rem;
-    --border-radius-md: 0.75rem;
-    --border-radius-lg: 1rem;
-    --border-radius-xl: 1.5rem;
-    --border-radius-2xl: 2rem;
-    --border-radius-full: 9999px;
-  }
-
-  body {
-    overflow-x: hidden;
-    background-color: var(--light);
-    color: var(--dark);
-    font-family: var(--font-primary);
-    line-height: 1.6;
-    font-size: 16px;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: var(--font-secondary);
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 1rem;
-    color: var(--dark);
-  }
-
-  h1 {
-    font-size: 3.5rem;
-  }
-
-  h2 {
-    font-size: 2.5rem;
-  }
-
-  h3 {
-    font-size: 1.75rem;
-  }
-
-  h4 {
-    font-size: 1.5rem;
-  }
-
-  h5 {
-    font-size: 1.25rem;
-  }
-
-  h6 {
-    font-size: 1rem;
-  }
-
-  p {
-    margin-bottom: 1rem;
-    color: var(--gray);
-  }
-
-  a {
-    text-decoration: none;
-    color: var(--primary);
-    transition: var(--transition);
-  }
-
-  a:hover {
-    color: var(--secondary);
-  }
-
-  .container {
-    width: 100%;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
-
-  /* Utility Classes */
-  .text-center {
-    text-align: center;
-  }
-
-  .text-right {
-    text-align: right;
-  }
-
-  .text-left {
-    text-align: left;
-  }
-
-  .flex {
-    display: flex;
-  }
-
-  .flex-col {
-    flex-direction: column;
-  }
-
-  .items-center {
-    align-items: center;
-  }
-
-  .justify-center {
-    justify-content: center;
-  }
-
-  .justify-between {
-    justify-content: space-between;
-  }
-
-  .justify-around {
-    justify-content: space-around;
-  }
-
-  .justify-evenly {
-    justify-content: space-evenly;
-  }
-
-  .gap-1 {
-    gap: 0.25rem;
-  }
-
-  .gap-2 {
-    gap: 0.5rem;
-  }
-
-  .gap-3 {
-    gap: 0.75rem;
-  }
-
-  .gap-4 {
-    gap: 1rem;
-  }
-
-  .gap-5 {
-    gap: 1.25rem;
-  }
-
-  .gap-6 {
-    gap: 1.5rem;
-  }
-
-  .gap-8 {
-    gap: 2rem;
-  }
-
-  .gap-10 {
-    gap: 2.5rem;
-  }
-
-  .gap-12 {
-    gap: 3rem;
-  }
-
-  .w-full {
-    width: 100%;
-  }
-
-  .h-full {
-    height: 100%;
-  }
-
-  .relative {
-    position: relative;
-  }
-
-  .absolute {
-    position: absolute;
-  }
-
-  .z-10 {
-    z-index: 10;
-  }
-
-  .z-20 {
-    z-index: 20;
-  }
-
-  .z-30 {
-    z-index: 30;
-  }
-
-  .z-40 {
-    z-index: 40;
-  }
-
-  .z-50 {
-    z-index: 50;
-  }
-
-  .overflow-hidden {
-    overflow: hidden;
-  }
-
-  .rounded-sm {
-    border-radius: var(--border-radius-sm);
-  }
-
-  .rounded {
-    border-radius: var(--border-radius);
-  }
-
-  .rounded-md {
-    border-radius: var(--border-radius-md);
-  }
-
-  .rounded-lg {
-    border-radius: var(--border-radius-lg);
-  }
-
-  .rounded-xl {
-    border-radius: var(--border-radius-xl);
-  }
-
-  .rounded-2xl {
-    border-radius: var(--border-radius-2xl);
-  }
-
-  .rounded-full {
-    border-radius: var(--border-radius-full);
-  }
-
-  .shadow-sm {
-    box-shadow: var(--shadow-sm);
-  }
-
-  .shadow {
-    box-shadow: var(--shadow);
-  }
-
-  .shadow-md {
-    box-shadow: var(--shadow-md);
-  }
-
-  .shadow-lg {
-    box-shadow: var(--shadow-lg);
-  }
-
-  .transition {
-    transition: var(--transition);
-  }
-
-  .hover-scale {
-    transition: transform 0.3s ease;
-  }
-
-  .hover-scale:hover {
-    transform: scale(1.05);
-  }
-
-  .hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-md);
-  }
-
-  /* Animation Canvas */
-  #animationCanvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    opacity: 0.05;
-  }
-
-  /* Top Bar */
-  .top-bar {
-    background-color: var(--dark);
-    color: white;
-    padding: 0.5rem 0;
-    font-size: 0.85rem;
-  }
-
-  .top-bar-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .top-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .top-bar-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .top-bar-item i {
-    color: var(--primary);
-    font-size: 0.9rem;
-  }
-
-  .top-bar-right {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .top-bar-social {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .top-bar-social a {
-    color: white;
-    font-size: 0.9rem;
-    transition: var(--transition);
-  }
-
-  .top-bar-social a:hover {
-    color: var(--primary);
-    transform: translateY(-2px);
-  }
-
-  /* Button Styles */
-  .btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--border-radius-full);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    text-align: center;
-    font-size: 0.95rem;
-    border: none;
-    outline: none;
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-  }
-
-  .btn::after {
-    content: '';
-    position: absolute;
-    bottom: -50%;
-    left: -10%;
-    width: 120%;
-    height: 200%;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 40%;
-    transform: scale(0);
-    transition: transform 0.6s ease;
-    z-index: -1;
-  }
-
-  .btn:hover::after {
-    transform: scale(1);
-  }
-
-  .btn i {
-    font-size: 1rem;
-    transition: transform 0.3s ease;
-  }
-
-  .btn:hover i {
-    transform: translateY(-3px);
-  }
-
-  .btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-  }
-
-  .btn-lg {
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
-  }
-
-  .btn-outline {
-    border: 2px solid var(--primary);
-    color: var(--primary);
-    background: transparent;
-    box-shadow: 0 4px 15px rgba(243, 151, 32, 0.1);
-  }
-
-  .btn-outline:hover {
-    background-color: var(--primary);
-    color: white;
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(243, 151, 32, 0.3);
-  }
-
-  .btn-primary {
-    background-color: var(--primary);
-    color: white;
-    border: 2px solid var(--primary);
-    box-shadow: 0 4px 15px rgba(243, 151, 32, 0.2);
-  }
-
-  .btn-primary:hover {
-    background-color: var(--secondary);
-    border-color: var(--secondary);
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(243, 151, 32, 0.4);
-  }
-
-  .btn-secondary {
-    background-color: var(--accent);
-    color: white;
-    border: 2px solid var(--accent);
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--accent-dark);
-    border-color: var(--accent-dark);
-    transform: translateY(-5px);
-    box-shadow: var(--shadow);
-  }
-
-  .btn-light {
-    background-color: white;
-    color: var(--primary);
-    border: 2px solid white;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-  }
-
-  .btn-light:hover {
-    background-color: transparent;
-    color: white;
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.3);
-  }
-
-  .btn-dark {
-    background-color: var(--dark);
-    color: white;
-    border: 2px solid var(--dark);
-  }
-
-  .btn-dark:hover {
-    background-color: var(--dark-secondary);
-    border-color: var(--dark-secondary);
-    transform: translateY(-5px);
-    box-shadow: var(--shadow);
-  }
-
-  /* ENHANCED PROFESSIONAL HERO SECTION */
-  .hero {
-    background-color: white;
-    padding: 7rem 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: -10%;
-    right: -10%;
-    width: 600px;
-    height: 600px;
-    background-color: rgba(243, 151, 32, 0.03);
-    border-radius: 50%;
-    z-index: 0;
-  }
-
-  .hero::after {
-    content: '';
-    position: absolute;
-    bottom: -15%;
-    left: -15%;
-    width: 500px;
-    height: 500px;
-    background-color: rgba(143, 202, 232, 0.03);
-    border-radius: 50%;
-    z-index: 0;
-  }
-
-  .hero-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
-    z-index: 1;
-  }
-
-  .hero-content {
-    flex: 1;
-    max-width: 600px;
-    padding-right: 3rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--primary);
-    margin-bottom: 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    position: relative;
-  }
-
-  .hero-subtitle i {
-    font-size: 1.5rem;
-  }
-
-  .hero-subtitle::after {
-    content: '';
-    position: absolute;
-    bottom: -0.5rem;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background-color: var(--primary);
-    border-radius: var(--border-radius-full);
-  }
-
-  .hero-title {
-    font-size: 3.75rem;
-    font-weight: 800;
-    color: var(--dark);
-    margin-bottom: 1.75rem;
-    line-height: 1.1;
-  }
-
-  .hero-title span {
-    color: var(--primary);
-    position: relative;
-    display: inline-block;
-  }
-
-  .hero-title span::after {
-    content: '';
-    position: absolute;
-    bottom: 5px;
-    left: 0;
-    width: 100%;
-    height: 10px;
-    background-color: rgba(243, 151, 32, 0.15);
-    z-index: -1;
-    border-radius: var(--border-radius-sm);
-  }
-
-  .hero-description {
-    font-size: 1.15rem;
-    color: var(--gray);
-    margin-bottom: 2.75rem;
-    line-height: 1.8;
-  }
-
-  .hero-stats {
-    display: flex;
-    gap: 3rem;
-    margin-top: 3.5rem;
-    position: relative;
-  }
-
-  .hero-stats::before {
-    content: '';
-    position: absolute;
-    top: -1.5rem;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(to right, var(--light-gray), transparent);
-  }
-
-  .hero-stat {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .hero-stat-number {
-    font-size: 2.75rem;
-    font-weight: 800;
-    color: var(--primary);
-    line-height: 1;
-    margin-bottom: 0.5rem;
-    font-family: var(--font-secondary);
-  }
-
-  .hero-stat-label {
-    font-size: 0.95rem;
-    color: var(--gray);
-    font-weight: 500;
-  }
-
-  .hero-buttons {
-    display: flex;
-    gap: 1.25rem;
-  }
-
-  .hero-image {
-    flex: 1;
-    position: relative;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .hero-image img {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-lg);
-    position: relative;
-    z-index: 1;
-  }
-
-  .hero-image::before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    right: -20px;
-    width: 100%;
-    height: 100%;
-    border: 4px solid var(--primary);
-    border-radius: var(--border-radius-lg);
-    z-index: 0;
-  }
-
-  .hero-image::after {
-    content: '';
-    position: absolute;
-    bottom: -20px;
-    left: -20px;
-    width: 80%;
-    height: 80%;
-    background-color: rgba(143, 202, 232, 0.1);
-    border-radius: var(--border-radius-lg);
-    z-index: -1;
-  }
-
-  .hero-truck {
-    position: absolute;
-    bottom: -50px;
-    left: -80px;
-    width: 120px;
-    height: auto;
-    animation: truckMove 8s ease-in-out infinite;
-  }
-
-  @keyframes truckMove {
-
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(-15px);
-    }
-  }
-
-  .hero-box {
-    position: absolute;
-    top: -30px;
-    right: 30%;
-    width: 60px;
-    height: auto;
-    animation: boxMove 6s ease-in-out infinite;
-  }
-
-  @keyframes boxMove {
-
-    0%,
-    100% {
-      transform: translateY(0) rotate(0);
-    }
-
-    50% {
-      transform: translateY(-10px) rotate(5deg);
-    }
-  }
-
-  /* Services Section */
-  .services {
-    background-color: var(--light);
-    padding: 6rem 0;
-  }
-
-  .section-title {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: var(--dark);
-    text-align: center;
-    position: relative;
-    padding-bottom: 1rem;
-  }
-
-  .section-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 4px;
-    background-color: var(--primary);
-    border-radius: var(--border-radius-full);
-  }
-
-  .section-subtitle {
-    font-size: 1.2rem;
-    margin-bottom: 4rem;
-    color: var(--gray);
-    text-align: center;
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .section-header {
-    margin-bottom: 4rem;
-  }
-
-  .features {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 2rem;
-  }
-
-  .feature-card {
-    background-color: white;
-    border-radius: var(--border-radius-lg);
-    padding: 2.5rem;
-    box-shadow: var(--shadow);
-    flex: 1;
-    min-width: 300px;
-    max-width: 350px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border-bottom: 4px solid transparent;
-  }
-
-  .feature-card:hover {
-    transform: translateY(-15px);
-    box-shadow: var(--shadow-lg);
-    border-bottom: 4px solid var(--primary);
-  }
-
-  .feature-icon {
-    font-size: 2.5rem;
-    color: var(--primary);
-    margin-bottom: 1.5rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 80px;
-    height: 80px;
-    border-radius: 20px;
-    background-color: rgba(243, 151, 32, 0.1);
-  }
-
-  .feature-title {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--dark);
-  }
-
-  .feature-description {
-    color: var(--gray);
-    line-height: 1.6;
-  }
-
-  /* How It Works Section */
-  .how-it-works {
-    background-color: white;
-    position: relative;
-    overflow: hidden;
-    padding: 6rem 0;
-  }
-
-  .how-it-works::before {
-    content: '';
-    position: absolute;
-    top: -100px;
-    right: -100px;
-    width: 300px;
-    height: 300px;
-    background-color: rgba(143, 202, 232, 0.1);
-    border-radius: 50%;
-    z-index: 0;
-  }
-
-  .how-it-works::after {
-    content: '';
-    position: absolute;
-    bottom: -100px;
-    left: -100px;
-    width: 300px;
-    height: 300px;
-    background-color: rgba(243, 151, 32, 0.1);
-    border-radius: 50%;
-    z-index: 0;
-  }
-
-  .steps {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin-top: 3rem;
-    position: relative;
-    z-index: 1;
-  }
-
-  .step {
-    flex: 1;
-    min-width: 250px;
-    text-align: center;
-    position: relative;
-    background-color: white;
-    padding: 2.5rem 1.5rem;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .step:hover {
-    transform: translateY(-10px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .step:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    top: 3rem;
-    right: -1.5rem;
-    width: 3rem;
-    height: 2px;
-    background-color: var(--primary);
-    display: none;
-    z-index: 2;
-  }
-
-  @media (min-width: 992px) {
-    .step:not(:last-child)::after {
-      display: block;
-    }
-  }
-
-  .step-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 70px;
-    height: 70px;
-    background-color: var(--primary);
-    color: white;
-    font-size: 1.75rem;
-    font-weight: bold;
-    border-radius: 20px;
-    margin-bottom: 1.5rem;
-    position: relative;
-    z-index: 1;
-    box-shadow: 0 10px 20px rgba(243, 151, 32, 0.3);
-  }
-
-  .step-number::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
-    background-color: rgba(243, 151, 32, 0.3);
-    border-radius: 25px;
-    z-index: -1;
-  }
-
-  .step-title {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--dark);
-    font-weight: 700;
-  }
-
-  .step-description {
-    color: var(--gray);
-    line-height: 1.6;
-  }
-
-  /* Statistics Section */
-  .statistics {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    color: white;
-    padding: 5rem 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .statistics::before {
-    content: '';
-    position: absolute;
-    top: -50px;
-    left: -50px;
-    width: 200px;
-    height: 200px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-  }
-
-  .statistics::after {
-    content: '';
-    position: absolute;
-    bottom: -50px;
-    right: -50px;
-    width: 200px;
-    height: 200px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-  }
-
-  .stats-container {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    gap: 3rem;
-    position: relative;
-    z-index: 1;
-  }
-
-  .stat {
-    text-align: center;
-    flex: 1;
-    min-width: 200px;
-    padding: 2rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: var(--border-radius-lg);
-    backdrop-filter: blur(5px);
-    transition: transform 0.3s ease;
-  }
-
-  .stat:hover {
-    transform: translateY(-10px);
-  }
-
-  .stat-number {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    font-family: var(--font-secondary);
-    position: relative;
-    display: inline-block;
-  }
-
-  .stat-number::after {
-    content: '+';
-    position: absolute;
-    top: 0;
-    right: -20px;
-    font-size: 2rem;
-    color: var(--accent);
-  }
-
-  .stat-label {
-    font-size: 1.25rem;
-    opacity: 0.9;
-    font-weight: 500;
-  }
-
-  /* Business Solutions Section */
-  .business-solutions {
-    background-color: white;
-    position: relative;
-    overflow: hidden;
-    padding: 6rem 0;
-  }
-
-  .business-solutions::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 300px;
-    height: 300px;
-    background-color: rgba(143, 202, 232, 0.1);
-    border-radius: 50%;
-    z-index: 0;
-  }
-
-  .solutions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3rem;
-    position: relative;
-    z-index: 1;
-  }
-
-  .solution {
-    flex: 1;
-    min-width: 300px;
-    display: flex;
-    gap: 1.5rem;
-    padding: 2rem;
-    background-color: white;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .solution:hover {
-    transform: translateY(-10px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .solution-icon {
-    font-size: 2rem;
-    color: var(--primary);
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    border-radius: 15px;
-    background-color: rgba(243, 151, 32, 0.1);
-  }
-
-  .solution-content h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--dark);
-    font-weight: 700;
-  }
-
-  .solution-content p {
-    color: var(--gray);
-    line-height: 1.6;
-  }
-
-  /* Responsive Styles */
-  @media (max-width: 1280px) {
-    .container {
-      padding: 0 2rem;
-    }
-
-    .hero-title {
-      font-size: 3rem;
-    }
-
-    .hero-image img {
-      max-width: 90%;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    html {
-      font-size: 14px;
-    }
-
-    .hero {
-      padding: 4rem 0;
-    }
-
-    .hero-container {
-      flex-direction: column;
-      text-align: center;
-    }
-
-    .hero-content {
-      max-width: 100%;
-      padding-right: 0;
-      margin-bottom: 3rem;
-    }
-
-    .hero-subtitle {
-      justify-content: center;
-    }
-
-    .hero-subtitle::after {
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .hero-buttons {
-      justify-content: center;
-    }
-
-    .hero-stats {
-      justify-content: center;
-    }
-
-    .hero-image {
-      justify-content: center;
-    }
-
-    .hero-image img {
-      max-width: 80%;
-    }
-
-    .hero-image::before,
-    .hero-image::after {
-      display: none;
-    }
-
-    .hero-truck,
-    .hero-box {
-      display: none;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .container {
-      padding: 0 1.5rem;
-    }
-
-    .header-container {
-      padding: 0.75rem 0;
-    }
-
-    .logo img {
-      height: 50px;
-    }
-
-    .nav-container {
-      position: fixed;
-      top: 0;
-      right: -100%;
-      width: 80%;
-      height: 100vh;
-      background-color: white;
-      flex-direction: column;
-      padding: 5rem 2rem 2rem;
-      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-      transition: right 0.3s ease;
-      z-index: 100;
-      overflow-y: auto;
-      justify-content: flex-start;
-    }
-
-    .nav-container.active {
-      right: 0;
-    }
-
-    .mobile-menu-btn {
-      display: flex;
-    }
-
-    nav {
-      margin-right: 0;
-      margin-bottom: 2rem;
-      width: 100%;
-    }
-
-    nav ul {
-      flex-direction: column;
-      align-items: flex-start;
-      width: 100%;
-      gap: 0.5rem;
-    }
-
-    nav ul li {
-      width: 100%;
-    }
-
-    nav ul li a {
-      width: 100%;
-      padding: 1rem;
-      justify-content: flex-start;
-    }
-
-    nav ul li a::before {
-      bottom: auto;
-      top: 0;
-      left: 0;
-      transform: none;
-      width: 3px;
-      height: 0;
-    }
-
-    nav ul li a:hover::before,
-    nav ul li.active a::before {
-      width: 3px;
-      height: 70%;
-    }
-
-    .auth-buttons {
-      width: 100% !important;
-      flex-direction: column;
-    }
-
-    .hero-title {
-      font-size: 2.5rem;
-    }
-
-    .hero-description {
-      font-size: 1rem;
-    }
-
-    .hero-stats {
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-
-    .hero-buttons {
-      flex-direction: column;
-    }
-
-    .hero-image img {
-      max-width: 100%;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .container {
-      padding: 0 1rem;
-    }
-
-    .hero {
-      padding: 3rem 0;
-    }
-
-    .hero-title {
-      font-size: 2rem;
-    }
-
-    .hero-subtitle {
-      font-size: 1rem;
-    }
-
-    .hero-description {
-      margin-bottom: 2rem;
-    }
-
-    .hero-stats {
-      margin-top: 2rem;
-    }
-
-    .hero-stat-number {
-      font-size: 2rem;
-    }
-
-    .hero-buttons .btn {
-      width: 100%;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-    }
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/assets/rCSS/landing.css">
 
 <%- contentFor('body') %>
+<%- include('../partials/landing-nav', { page: 'landing' }) %>
 
-<!-- Top Bar -->
-<!-- <div class="top-bar">
-  <div class="container top-bar-container">
-    <div class="top-bar-left">
-      <div class="top-bar-item">
-        <i class="fas fa-phone"></i>
-        <span>+1 (555) 123-4567</span>
-      </div>
-      <div class="top-bar-item">
-        <i class="fas fa-envelope"></i>
-        <span><%= typeof siteContactEmail !== 'undefined' ? siteContactEmail : 'info@now.com.eg' %></span>
-      </div>
-      <div class="top-bar-item">
-        <i class="fas fa-clock"></i>
-        <span>Mon-Fri: 8:00 AM - 8:00 PM</span>
-      </div>
-    </div>
-    <div class="top-bar-right">
-      <div class="top-bar-social">
-        <a href="#"><i class="fab fa-facebook-f"></i></a>
-        <a href="#"><i class="fab fa-twitter"></i></a>
-        <a href="#"><i class="fab fa-instagram"></i></a>
-        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-      </div>
-    </div>
-  </div>
-</div> -->
-
-<!-- Animation Canvas for Moving Trucks -->
-<canvas id="animationCanvas"></canvas>
-
-<!-- Professional Navbar -->
-<%- include('../partials/navbar', { activePage: 'home' }) %>
-
-<!-- Enhanced Professional Hero Section -->
-<section class="hero">
-     <div class="container hero-container">
-    <div class="hero-content">
-      <div class="hero-subtitle">
-        <i class="fas fa-truck"></i>
-        <span><%= translation.landing.hero.subtitle %></span>
-      </div>
-      <h1 class="hero-title"><%= translation.landing.hero.title %></h1>
-      <p class="hero-description"><%= translation.landing.hero.description %></p>
-
-      <div class="hero-buttons">
-        <a href="/register" class="btn btn-primary btn-lg">
-          <i class="fas fa-rocket"></i>
-          <span><%= translation.landing.hero.cta %></span>
+  <!-- ========== HERO ========== -->
+  <section class="hero" id="hero">
+    <div class="container hero__grid">
+      <div class="hero__content">
+        <span class="hero__chip">
+          <span class="hero__chip-dot" aria-hidden="true"></span>
+        الشريك اللوجستي المتخصص لـ<span class="ltr">E-commerce</span>في القاهرة
+        </span>
+        <h1 class="hero__title">
+          <span class="hero__title-line">ارفع أرباحك ونسب</span>
+          <span class="hero__title-line">تسليماتك <span class="text-orange">مع Now</span></span>
+        </h1>
+        <p class="hero__desc">
+          سلّم في نفس اليوم، قلّل <span class="ltr">failed deliveries</span>، وادير شحناتك من
+          <span class="ltr">dashboard</span> واحد، بكورييرز Now نفسهم — مش <span class="ltr">aggregator</span>.
+        </p>
+        <a href="#register" class="btn btn--orange btn--lg hero__cta">
+          اعرف لو Now يناسب متجرك
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
         </a>
-        <a href="/login" class="btn btn-outline btn-lg">
-          <i class="fas fa-sign-in-alt"></i>
-          <span><%= translation.navigation.login %></span>
+        <div class="hero__checks">
+          <p class="hero__checks-line">
+            <span class="hero__check-group">
+              <i class="fa-solid fa-check hero__check-icon" aria-hidden="true"></i>
+              <span>محافظات قريباً</span>
+              <span class="hero__checks-sep" aria-hidden="true">•</span>
+              <span>القاهرة الآن</span>
+            </span>
+            <span class="hero__check-item hero__check-item--ltr">
+              <span class="ltr">Same Day Delivery</span>
+              <i class="fa-solid fa-check hero__check-icon" aria-hidden="true"></i>
+            </span>
+          </p>
+          <p class="hero__checks-line">
+            <span class="hero__check-item hero__check-item--ltr">
+              <span class="ltr">Shopify / WooCommerce / Salla</span>
+              <i class="fa-solid fa-check hero__check-icon" aria-hidden="true"></i>
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <div class="hero__visual">
+        <div class="dash-preview">
+          <span class="dash-preview__badge">Dashboard Preview</span>
+          <div class="dash-preview__topbar">
+            <div class="dash-preview__dots" aria-hidden="true">
+              <span class="dash-preview__dot dash-preview__dot--green"></span>
+              <span class="dash-preview__dot dash-preview__dot--yellow"></span>
+              <span class="dash-preview__dot dash-preview__dot--red"></span>
+            </div>
+          </div>
+          <div class="dash-preview__stats">
+            <div class="dash-preview__stat">
+              <span class="dash-preview__stat-label">Wallet</span>
+              <span class="dash-preview__stat-value">42K</span>
+              <span class="dash-preview__stat-meta">جنيه</span>
+            </div>
+            <div class="dash-preview__stat">
+              <span class="dash-preview__stat-label">نسبة التسليم</span>
+              <span class="dash-preview__stat-value">98%</span>
+              <span class="dash-preview__stat-meta">3% <span aria-hidden="true">▲</span></span>
+            </div>
+            <div class="dash-preview__stat">
+              <span class="dash-preview__stat-label">أوردرات اليوم</span>
+              <span class="dash-preview__stat-value">247</span>
+              <span class="dash-preview__stat-meta">12% <span aria-hidden="true">▲</span></span>
+            </div>
+          </div>
+          <div class="dash-preview__chart">
+            <div class="dash-preview__chart-head">
+              <span class="dash-preview__chart-title">Deliveries</span>
+              <span class="dash-preview__chart-sep" aria-hidden="true">—</span>
+              <span class="dash-preview__chart-sub">آخر 7 أيام</span>
+            </div>
+            <div class="bar-chart" id="barChart" aria-hidden="true">
+              <div class="bar-chart__bar" data-height="88"></div>
+              <div class="bar-chart__bar" data-height="80"></div>
+              <div class="bar-chart__bar" data-height="70"></div>
+              <div class="bar-chart__bar" data-height="40"></div>
+              <div class="bar-chart__bar" data-height="65"></div>
+              <div class="bar-chart__bar" data-height="52"></div>
+              <div class="bar-chart__bar" data-height="42"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PROBLEMS ========== -->
+  <section class="section problems" id="about">
+    <div class="container">
+      <div class="problems__header">
+        <span class="eyebrow">المشاكل اللي بتعيشها</span>
+        <h2 class="section-title problems__title">
+          بتدير <span class="ltr">ecommerce</span> في القاهرة؟<br>
+          خليني أحكيلك يومك
+        </h2>
+      </div>
+
+      <div class="problems__grid">
+        <article class="problem-card">
+          <span class="problem-card__num" aria-hidden="true">01</span>
+          <div class="problem-card__content">
+            <h3 class="problem-card__title">شحنت 100 أوردر، رجعلك 30</h3>
+            <p class="problem-card__text">30 ضعف شحن، 30 بضاعة محبوسة في <span class="ltr">return cycle</span>، و 30 عميل قلبه قفل عليك. الكوريير مش متدرب، مكلمش العميل قبل الوصول، وصل في غير معاده — وأنت بتدفع التمن.</p>
+          </div>
+        </article>
+        <article class="problem-card">
+          <span class="problem-card__num" aria-hidden="true">02</span>
+          <div class="problem-card__content">
+            <h3 class="problem-card__title">عميلك طلب الساعة 11، عايز يستلم قبل العشا</h3>
+            <p class="problem-card__text">السوق بقى <span class="ltr">Same Day</span>. بتقول لعميلك &ldquo;بكره&rdquo;؟ هو مش هيستنى، هيشتري من اللي يقدر يسلم النهاردة. كل ساعة تأخير = <span class="ltr">sale</span> ضايعة.</p>
+          </div>
+        </article>
+        <article class="problem-card">
+          <span class="problem-card__num" aria-hidden="true">03</span>
+          <div class="problem-card__content">
+            <h3 class="problem-card__title">مفيش <span class="ltr">control</span> على اللي بيمثلك قدام عميلك</h3>
+            <p class="problem-card__text">اليوم كوريير، بكره تاني، بعده تالت. مفيش <span class="ltr">uniform</span>، مفيش بروتوكول. عميلك بيحكم على بزنسك من أول جملة الكوريير قالها — وأنت مش حتى عارف اسمه.</p>
+          </div>
+        </article>
+        <article class="problem-card">
+          <span class="problem-card__num" aria-hidden="true">04</span>
+          <div class="problem-card__content">
+            <h3 class="problem-card__title">بتدير شحناتك على إكسل وواتساب</h3>
+            <p class="problem-card__text">بترد على &ldquo;فين أوردرى؟&rdquo; يدوي. مفيش <span class="ltr">dashboard</span>، مفيش أرقام، مفيش <span class="ltr">data</span>. بزنسك بيتحرك بالـ <span class="ltr">guessing</span> بدل ما بيتحرك بالأرقام.</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="quote-banner quote-banner--problems">
+        <span class="quote-banner__glyph" aria-hidden="true">&ldquo;</span>
+        <h3 class="quote-banner__title quote-banner__title--orange">&ldquo;طب <span class="text-orange">Now</span> شركة لسه <span class="ltr">launching</span>، إزاي أثق فيها؟&rdquo;</h3>
+        <p class="quote-banner__text">دي بالظبط ميزتها. بنبني الجودة من اليوم الأول، مش بنرقع من تحت 10 سنين تراكم. بدأنا بالقاهرة عشان نبني أعلى مستوى تشغيل، وبنفتح بـ 50 متجر بس في الـ <span class="ltr">Launch Partners Program</span>.</p>
+      </div>
+
+      <div class="problems__cta">
+        <a href="#solution" class="btn btn--navy btn--pill">
+          Now بياخد عنك الحمل ده
+          <i class="fa-solid fa-arrow-down"></i>
         </a>
       </div>
-      </div>
-    <!-- Hero Image with AI-generated photo -->
-    <div class="hero-image">
-      <img src="assets/rImages/Courier.png" alt="AI Generated Logistics" class="ai-image">
     </div>
+  </section>
 
-    <!-- Animated Trucks -->
-    <div class="truck truck-1"></div>
-    <div class="truck truck-2"></div>
-    <div class="truck truck-3"></div>
-
-    <!-- Animated Packages -->
-    <div class="package package-1"></div>
-    <div class="package package-2"></div>
-    <div class="package package-3"></div>
-    <div class="package package-4"></div>
-  </div>
-</section>
-
-<style>
- .hero {
-    background-color: white;
-    padding: 4rem 0; /* Reduce padding */
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-    flex-wrap: wrap; /* Ensure responsiveness */
-  }
-
-  .hero-content {
-    flex: 1;
-    max-width: 50%;
-  }
-
-  .hero-image {
-    flex: 1;
-    display: flex;
-    justify-content: flex-end;
-    max-width: 40%; /* Limit the image width */
-  }
-
-  .hero-image img {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-lg);
-    object-fit: contain; /* Ensure the image fits well */
-  }
-
-  @media (max-width: 768px) {
-    .hero-container {
-      flex-direction: column; /* Stack content on smaller screens */
-      text-align: center;
-    }
-
-    .hero-image {
-      max-width: 60%; /* Adjust image size for smaller screens */
-      margin: 0 auto;
-    }
-  }
-  .hero-title {
-    font-size: 3rem;
-    font-weight: 800;
-    color: var(--dark);
-    margin-bottom: 1.5rem;
-    line-height: 1.2;
-  }
-
-  .hero-description {
-    font-size: 1.2rem;
-    color: var(--gray);
-    margin-bottom: 2rem;
-    line-height: 1.6;
-  }
-
-  .btn-primary {
-    background-color: var(--primary);
-    color: white;
-    padding: 1rem 1rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: var(--border-radius-full);
-    text-decoration: none;
-    transition: all 0.3s ease;
-  }
-
-  .btn-primary:hover {
-    background-color: var(--secondary);
-    box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
-  }
-
-.btn-secondary {
-background-color: transparent;
-color: var(--secondary);
-padding: 1rem 1rem;
-font-size: 1rem;
-font-weight: 600;
-border: 2px solid var(--secondary);
-border-radius: 10px;
-text-decoration: none;
-transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-background-color: var(--secondary);
-color: white;
-box-shadow: 0 8px 20px rgba(243, 151, 32, 0.3);
-}
-  /* Truck animations */
-  .truck {
-    position: absolute;
-    width: 120px;
-    height: 60px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'%3E%3Cpath fill='%232B71B9' d='M50.7 58.5L0 160H208V32H93.7C75.5 32 58.9 42.3 50.7 58.5zM240 160H448L397.3 58.5C389.1 42.3 372.5 32 354.3 32H240V160zm208 32H0V416c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V192z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-size: contain;
-    opacity: 0.1;
-  }
-
-  .truck-1 {
-    top: 10%;
-    left: -120px;
-    animation: truckMove1 20s linear infinite;
-  }
-
-  .truck-2 {
-    top: 30%;
-    right: -120px;
-    transform: scaleX(-1);
-    animation: truckMove2 25s linear infinite;
-  }
-
-  .truck-3 {
-    bottom: 15%;
-    left: -120px;
-    animation: truckMove1 22s linear infinite 5s;
-  }
-
-  @keyframes truckMove1 {
-    0% {
-      left: -120px;
-    }
-
-    100% {
-      left: 100%;
-    }
-  }
-
-  @keyframes truckMove2 {
-    0% {
-      right: -120px;
-    }
-
-    100% {
-      right: 100%;
-    }
-  }
-
-  /* Package animations */
-  .package {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512'%3E%3Cpath fill='%23F39720' d='M50.7 58.5L0 160H208V32H93.7C75.5 32 58.9 42.3 50.7 58.5zM240 160H448L397.3 58.5C389.1 42.3 372.5 32 354.3 32H240V160zm208 32H0V416c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V192z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-size: contain;
-    opacity: 0.15;
-  }
-
-  .package-1 {
-    top: 20%;
-    left: 10%;
-    animation: packageFloat 10s ease-in-out infinite;
-  }
-
-  .package-2 {
-    top: 60%;
-    right: 15%;
-    animation: packageFloat 12s ease-in-out infinite 2s;
-  }
-
-  .package-3 {
-    bottom: 30%;
-    left: 30%;
-    animation: packageFloat 14s ease-in-out infinite 1s;
-  }
-
-  .package-4 {
-    top: 40%;
-    right: 40%;
-    animation: packageFloat 11s ease-in-out infinite 3s;
-  }
-
-  @keyframes packageFloat {
-
-    0%,
-    100% {
-      transform: translateY(0) rotate(0deg);
-    }
-
-    50% {
-      transform: translateY(-20px) rotate(5deg);
-    }
-  }
-</style>
-
-<!-- Services Section -->
-<section class="services">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title"><%= translation.landing.services.title %></h2>
-      <p class="section-subtitle"><%= translation.landing.descriptions.services %></p>
+  <!-- ========== SOLUTION ========== -->
+  <section class="section solution" id="solution">
+    <div class="container">
+      <article class="solution-card">
+        <span class="solution-card__eyebrow">الحل</span>
+        <h2 class="solution-card__title">
+          <span class="solution-card__title-navy"><span class="ltr">Now</span> مش شركة شحن.</span>
+          <span class="solution-card__title-orange"><span class="ltr">Operating System</span> كامل لـ</span><br>
+          <span class="solution-card__title-orange"><span class="ltr">ecommerce</span> القاهرة.</span>
+        </h2>
+        <p class="solution-card__desc">اخترنا نبدأ بالقاهرة عشان نبني أعلى مستوى جودة قبل ما نوسع. من ساعة ما العميل يضغط &ldquo;اطلب الآن&rdquo;، <span class="ltr">Now</span> بياخدها — <span class="ltr">Pickup</span> من مخزنك، شحن بكوريير <span class="ltr">Now</span> موظف عندنا، <span class="ltr">tracking</span> لحظي للعميل، <span class="ltr">Same Day</span> لو طلبت، كله من <span class="ltr">dashboard</span> واحد، بتأمين على كل شحنة، وأسعار شفافة 100%.</p>
+      </article>
     </div>
+  </section>
 
-    <div class="features">
-      <div class="feature-card">
-        <div class="feature-icon">
-          <i class="fas fa-truck-fast"></i>
-        </div>
-        <h3 class="feature-title"><%= translation.landing.services.overnight.title %></h3>
-        <p class="feature-description"><%= translation.landing.descriptions.overnight %></p>
+  <!-- ========== FEATURES ========== -->
+  <section class="section features" id="features">
+    <div class="container">
+      <div class="features__header">
+        <span class="eyebrow">المميزات</span>
+        <h2 class="section-title">ليه <span class="text-orange">Now</span> تحديداً؟</h2>
+        <p class="section-sub">6 أسباب الـ <span class="ltr">ecommerce</span> في القاهرة بتختار Now من اليوم الأول</p>
       </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">
-          <i class="fas fa-chart-line"></i>
-        </div>
-        <h3 class="feature-title"><%= translation.landing.services.visibility.title %></h3>
-        <p class="feature-description"><%= translation.landing.descriptions.visibility %></p>
+      <div class="features__grid features__grid--large">
+        <!-- Top-right (RTL col 1) -->
+        <article class="feature-card feature-card--large">
+          <div class="feature-card__head">
+            <div class="feature-card__icon-tab" aria-hidden="true">
+              <i class="fa-solid fa-truck-fast"></i>
+            </div>
+          </div>
+          <div class="feature-card__body">
+            <h3 class="feature-card__title"><span class="ltr">Same Day Delivery</span> حقيقي</h3>
+            <p class="feature-card__text">Pickup قبل 12 ظهراً = تسليم نفس اليوم قبل 9 مساءً. مش &ldquo;نحاول&rdquo;. ده commitment موثق على كل أوردر داخل النطاق.</p>
+            <span class="feature-card__chip"><span class="ltr">Commitment: قبل 9 مساءً</span></span>
+          </div>
+        </article>
+        <!-- Top-left (RTL col 2) -->
+        <article class="feature-card feature-card--large">
+          <div class="feature-card__head">
+            <div class="feature-card__icon-tab" aria-hidden="true">
+              <i class="fa-solid fa-user-group"></i>
+            </div>
+          </div>
+          <div class="feature-card__body">
+            <h3 class="feature-card__title">كورييرز Now موظفين Now</h3>
+            <p class="feature-card__text">كل كوريير بدوام كامل، uniform، و +40 ساعة تدريب على بروتوكول التواصل والتسليم. مش aggregator، مش freelancers.</p>
+            <span class="feature-card__chip">+40 ساعة تدريب</span>
+          </div>
+        </article>
+        <!-- Bottom-right (RTL col 1) -->
+        <article class="feature-card feature-card--large">
+          <div class="feature-card__head">
+            <div class="feature-card__icon-tab" aria-hidden="true">
+              <i class="fa-solid fa-bullseye"></i>
+            </div>
+          </div>
+          <div class="feature-card__body">
+            <h3 class="feature-card__title">98% نسبة تسليم من أول محاولة</h3>
+            <p class="feature-card__text">اتصال مسبق بالعميل، توقيت دقيق، كوريير متدرب = أقل failed deliveries، أقل returns، أرباح أعلى من نفس الـ inventory.</p>
+            <span class="feature-card__chip"><span class="ltr">Success Rate 98%</span></span>
+          </div>
+        </article>
+        <!-- Bottom-left (RTL col 2) -->
+        <article class="feature-card feature-card--large">
+          <div class="feature-card__head">
+            <div class="feature-card__icon-tab" aria-hidden="true">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+          </div>
+          <div class="feature-card__body">
+            <h3 class="feature-card__title">Dashboard بيدير شغلك</h3>
+            <p class="feature-card__text"><span class="ltr">12+ metric live:</span> أوردرات، deliveries، returns، earnings، performance per courier، forecasting. بزنسك بيتحرك بـ data مش بـ guessing.</p>
+            <span class="feature-card__chip"><span class="ltr">Live Metrics +12</span></span>
+          </div>
+        </article>
       </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">
-          <i class="fas fa-globe"></i>
-        </div>
-        <h3 class="feature-title"><%= translation.landing.services.coverage.title %></h3>
-        <p class="feature-description"><%= translation.landing.descriptions.coverage %></p>
+      <div class="features__grid features__grid--compact">
+        <!-- Bottom-right (RTL col 1) -->
+        <article class="feature-card feature-card--compact">
+          <div class="feature-card__icon-square" aria-hidden="true">
+            <i class="fa-solid fa-plug-circle-check"></i>
+          </div>
+          <div class="feature-card__compact-body">
+            <h3 class="feature-card__title"><span class="ltr">Native Integration</span></h3>
+            <p class="feature-card__text">Sync مع <span class="ltr">Salla / Zid / WooCommerce / Shopify</span> في أقل من 10 دقايق. كل أوردر بيدخل Now أوتوماتيك.</p>
+          </div>
+        </article>
+        <!-- Bottom-left (RTL col 2) -->
+        <article class="feature-card feature-card--compact">
+          <div class="feature-card__icon-square" aria-hidden="true">
+            <i class="fa-solid fa-mobile-screen"></i>
+          </div>
+          <div class="feature-card__compact-body">
+            <h3 class="feature-card__title"><span class="ltr">Mobile App</span> لـ Business</h3>
+            <p class="feature-card__text"><span class="ltr">Approve، track، withdraw، contact courier.</span> <span class="ltr">Android + iOS</span> — كله من تليفونك.</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="cta-center features__cta">
+        <a href="#register" class="btn btn--orange btn--pill btn--lg">ابدأ مع Now اليوم <i class="fa-solid fa-arrow-left"></i></a>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- How It Works Section -->
-<section class="how-it-works">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title"><%= translation.landing.howItWorks.title %></h2>
-      <p class="section-subtitle"><%= translation.landing.descriptions.howItWorks %></p>
-    </div>
-
-    <div class="steps">
-      <div class="step">
-        <div class="step-number">1</div>
-        <h3 class="step-title"><%= translation.landing.steps.createAccount %></h3>
-        <p class="step-description"><%= translation.landing.descriptions.createAccount %></p>
+  <!-- ========== STEPS ========== -->
+  <section class="section steps" id="steps">
+    <div class="container">
+      <div class="steps__header">
+        <span class="eyebrow eyebrow--light">إزاي تبدأ</span>
+        <h2 class="section-title section-title--light">ابدأ في 4 خطوات (وأقل من يوم)</h2>
       </div>
-
-      <div class="step">
-        <div class="step-number">2</div>
-        <h3 class="step-title"><%= translation.landing.steps.bookShipment %></h3>
-        <p class="step-description"><%= translation.landing.descriptions.bookShipment %></p>
-      </div>
-
-      <div class="step">
-        <div class="step-number">3</div>
-        <h3 class="step-title"><%= translation.landing.howItWorks.step1.title %></h3>
-        <p class="step-description">Our courier will pick up your package from your specified location.</p>
-      </div>
-
-      <div class="step">
-        <div class="step-number">4</div>
-        <h3 class="step-title"><%= translation.landing.steps.trackDeliver %></h3>
-        <p class="step-description"><%= translation.landing.descriptions.trackDeliver %></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Statistics Section -->
-<section class="statistics">
-  <div class="container">
-    <div class="stats-container">
-      <div class="stat">
-        <div class="stat-number" data-count="5000">0</div>
-        <div class="stat-label"><%= translation.landing.statistics.dailyShipments %></div>
-      </div>
-
-      <div class="stat">
-        <div class="stat-number" data-count="98">0</div>
-        <div class="stat-label"><%= translation.landing.statistics.successRate %></div>
-      </div>
-
-      <div class="stat">
-        <div class="stat-number" data-count="250">0</div>
-        <div class="stat-label"><%= translation.landing.statistics.citiesCovered %></div>
-      </div>
-
-      <div class="stat">
-        <div class="stat-number" data-count="1500">0</div>
-        <div class="stat-label"><%= translation.landing.statistics.businessPartners %></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Business Solutions Section -->
-<section class="business-solutions">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title"><%= translation.landing.businessSolutions.title %></h2>
-      <p class="section-subtitle"><%= translation.landing.businessSolutions.subtitle %></p>
-    </div>
-
-    <div class="solutions">
-      <div class="solution">
-        <div class="solution-icon">
-          <i class="fas fa-store"></i>
+      <div class="steps__grid">
+        <div class="step">
+          <div class="step__circle">1</div>
+          <h3 class="step__title">سجل بياناتك</h3>
+          <p class="step__text">أدخل بيانات بزنسك في أقل من 3 دقايق</p>
         </div>
-        <div class="solution-content">
-          <h3><%= translation.landing.businessSolutions.ecommerce.title %></h3>
-          <p><%= translation.landing.businessSolutions.ecommerce.description %></p>
+        <div class="step">
+          <div class="step__circle">2</div>
+          <h3 class="step__title">اربط متجرك</h3>
+          <p class="step__text"><span class="ltr">Native integration</span> أو ارفع أوردراتك يدوي</p>
         </div>
-      </div>
-
-      <div class="solution">
-        <div class="solution-icon">
-          <i class="fas fa-warehouse"></i>
+        <div class="step">
+          <div class="step__circle">3</div>
+          <h3 class="step__title">كوريير Now بيستلم</h3>
+          <p class="step__text">Pickup من مخزنك في الوقت اللي بتحدده</p>
         </div>
-        <div class="solution-content">
-          <h3><%= translation.landing.businessSolutions.warehousing.title %></h3>
-          <p><%= translation.landing.businessSolutions.warehousing.description %></p>
-        </div>
-      </div>
-
-
-      <div class="solution">
-        <div class="solution-icon">
-          <i class="fas fa-box"></i>
-        </div>
-        <div class="solution-content">
-          <h3><%= translation.landing.businessSolutions.bulkShipping.title %></h3>
-          <p><%= translation.landing.businessSolutions.bulkShipping.description %></p>
+        <div class="step">
+          <div class="step__circle">4</div>
+          <h3 class="step__title">تابع التسليم لحظياً</h3>
+          <p class="step__text"><span class="ltr">Real-time tracking</span> لحد ما توصل لعميلك</p>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<%- include('../partials/landing-footer') %>
+  <!-- ========== COMPARISON ========== -->
+  <section class="section comparison" id="comparison">
+    <div class="container">
+      <span class="eyebrow">المقارنة</span>
+      <h2 class="section-title comparison__title">الفرق بين <span class="text-orange">Now</span> وأي شركة شحن تانية</h2>
 
+      <div class="compare-table">
+        <div class="compare-table__header">
+          <div class="compare-table__cell compare-table__cell--criteria-h">المعيار</div>
+          <div class="compare-table__cell compare-table__cell--traditional-h">شركات الشحن التقليدية</div>
+          <div class="compare-table__cell compare-table__cell--now-h">Now Shipping</div>
+        </div>
+        <div class="compare-table__row">
+          <div class="compare-table__cell compare-table__cell--label"><span class="ltr">Same Day Delivery</span></div>
+          <div class="compare-table__cell compare-table__cell--neg">محدود / مش متاح</div>
+          <div class="compare-table__cell compare-table__cell--pos"><span class="compare-table__check">✓</span> متاح في القاهرة</div>
+        </div>
+        <div class="compare-table__row">
+          <div class="compare-table__cell compare-table__cell--label">الكورييرز</div>
+          <div class="compare-table__cell compare-table__cell--neg"><span class="ltr">3PL Aggregators</span></div>
+          <div class="compare-table__cell compare-table__cell--pos"><span class="compare-table__check">✓</span> موظفين Now</div>
+        </div>
+        <div class="compare-table__row">
+          <div class="compare-table__cell compare-table__cell--label"><span class="ltr">First-Attempt Delivery</span></div>
+          <div class="compare-table__cell compare-table__cell--neg">متوسط منخفض</div>
+          <div class="compare-table__cell compare-table__cell--pos"><span class="compare-table__check">✓</span> 98% نسبة نجاح</div>
+        </div>
+        <div class="compare-table__row">
+          <div class="compare-table__cell compare-table__cell--label">التكامل مع المتجر</div>
+          <div class="compare-table__cell compare-table__cell--neg">يدوي / APIs ضعيفة</div>
+          <div class="compare-table__cell compare-table__cell--pos"><span class="compare-table__check">✓</span> <span class="ltr">Native Automation</span></div>
+        </div>
+        <div class="compare-table__row">
+          <div class="compare-table__cell compare-table__cell--label"><span class="ltr">Tracking</span></div>
+          <div class="compare-table__cell compare-table__cell--neg"><span class="ltr"> Status updates </span> عامة </div>
+          <div class="compare-table__cell compare-table__cell--pos"><span class="compare-table__check">✓</span> <span class="ltr">Real-time Live</span></div>
+        </div>
+        <div class="compare-table__row">
+          <div class="compare-table__cell compare-table__cell--label"><span class="ltr">Pricing</span></div>
+          <div class="compare-table__cell compare-table__cell--neg">عمولات خفية</div>
+          <div class="compare-table__cell compare-table__cell--pos"><span class="compare-table__check">✓</span> شفاف 100%</div>
+        </div>
+        <div class="compare-table__row">
+          <div class="compare-table__cell compare-table__cell--label"><span class="ltr">Fulfillment + Shipping</span></div>
+          <div class="compare-table__cell compare-table__cell--neg">شركتين مختلفتين</div>
+          <div class="compare-table__cell compare-table__cell--pos"><span class="compare-table__check">✓</span> منصة واحدة</div>
+        </div>
+      </div>
+
+      <div class="comparison__quote quote-banner quote-banner--comparison">
+        <span class="quote-banner__glyph" aria-hidden="true">"</span>
+        <h3 class="quote-banner__title quote-banner__title--orange">بشتغل مع شركة شحن دلوقتي، إيه اللي يخليني أبدّل؟</h3>
+        <p class="quote-banner__text">مش لازم تبدّل كل شحناتك مرة واحدة. ابدأ بجزء من أوردراتك وقارن النتائج بنفسك. Launch Partners Program — بدون عقود، بدون رسوم تسجيل، وأسعار خاصة لأول 50 متجر.</p>
+      </div>
+
+      <div class="comparison__cta">
+        <a href="#register" class="btn btn--navy btn--pill btn--comparison">اعرف الفرق على متجرك <i class="fa-solid fa-arrow-left"></i></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== TRUST ========== -->
+  <section class="section trust">
+    <div class="container">
+      <span class="eyebrow">الثقة</span>
+      <h2 class="section-title">ليه تثق في <span class="text-orange">Now</span> من اليوم الأول؟</h2>
+      <div class="trust__grid">
+        <article class="trust-card">
+          <div class="trust-card__icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></div>
+          <div class="trust-card__body">
+            <h3 class="trust-card__title">تأمين على كل شحنة</h3>
+            <p class="trust-card__text">بضاعتك متغطية من <span class="ltr">Pickup</span> لـ <span class="ltr">Delivery</span>. ضرر أو فقدان؟ بنعوضك في أقل من 24 ساعة.</p>
+          </div>
+        </article>
+        <article class="trust-card">
+          <div class="trust-card__icon" aria-hidden="true"><i class="fa-solid fa-users"></i></div>
+          <div class="trust-card__body">
+            <h3 class="trust-card__title">فريق <span class="ltr">Now</span> موظفين <span class="ltr">Now</span></h3>
+            <p class="trust-card__text">كل كوريير، <span class="ltr">support</span>، <span class="ltr">operations</span> — موظفين عندنا. الجودة تحت سيطرتنا 100%.</p>
+          </div>
+        </article>
+        <article class="trust-card">
+          <div class="trust-card__icon" aria-hidden="true"><i class="fa-solid fa-door-open"></i></div>
+          <div class="trust-card__body">
+            <h3 class="trust-card__title">ابدأ من غير <span class="ltr">commitment</span></h3>
+            <p class="trust-card__text">مفيش <span class="ltr">contract</span> سنوي، مفيش <span class="ltr">setup fees</span>. بياناتك ترجعلك ساعة ما تحب.</p>
+          </div>
+        </article>
+        <article class="trust-card">
+          <div class="trust-card__icon" aria-hidden="true"><i class="fa-solid fa-phone"></i></div>
+          <div class="trust-card__body">
+            <h3 class="trust-card__title"><span class="ltr">Support</span> 7 أيام في الأسبوع</h3>
+            <p class="trust-card__text">فريقنا بيرد في دقايق، مش ساعات. بزنسك مش بيقف يوم الجمعة، إحنا كمان.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== LAUNCH PARTNERS ========== -->
+  <section class="section launch" id="launch">
+    <div class="launch__neon" aria-hidden="true"></div>
+    <div class="container launch__container">
+      <header class="launch__hero">
+        <span class="launch__chip">
+          <i class="fa-solid fa-gift"></i>
+          العرض المحدود — لأول 50 متجر
+        </span>
+        <h2 class="launch__title">
+          <span class="launch__title-white ltr">Now Launch Partners</span>
+          <span class="launch__title-orange">Program</span>
+        </h2>
+        <p class="launch__desc">إنت بتبني بزنسك في وقت <span class="ltr">Now</span> بيبني <span class="ltr">infrastructure</span>. ابدأ معانا من اليوم الأول واخد امتيازات <span class="ltr">Founding Member</span> مش هتتاحلك تاني.</p>
+      </header>
+
+      <div class="launch__divider" aria-hidden="true"></div>
+
+      <div class="launch__body">
+        <div class="launch__progress-row">
+          <div class="launch__progress">
+            <span class="launch__progress-label">9 / 50 شركاء انضموا</span>
+            <div class="launch__progress-track">
+              <div class="launch__progress-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="launch__grid">
+          <article class="launch-card">
+            <span class="launch-card__emoji" aria-hidden="true">🚚</span>
+            <h3 class="launch-card__title">Pickup مجاني</h3>
+            <p class="launch-card__text">أول 100 شحنة <span class="ltr">Pickup</span> مجاني. توفير مباشر في تكلفة كل أوردر.</p>
+          </article>
+          <article class="launch-card">
+            <span class="launch-card__emoji" aria-hidden="true">👨‍💼</span>
+            <h3 class="launch-card__title"><span class="ltr">Account Manager</span> مخصص</h3>
+            <p class="launch-card__text"><span class="ltr">Onboarding</span> يدوي مع <span class="ltr">mentor</span>. سؤال؟ <span class="ltr">Slack</span>، <span class="ltr">call</span>، اجتماع — <span class="ltr">Anytime</span>.</p>
+          </article>
+          <article class="launch-card">
+            <span class="launch-card__emoji" aria-hidden="true">💰</span>
+            <h3 class="launch-card__title"><span class="ltr">Founding Member Pricing</span></h3>
+            <p class="launch-card__text">أسعارك مثبتة 12 شهر كامل. حتى لو السوق رفع، إنت ثابت.</p>
+          </article>
+          <article class="launch-card">
+            <span class="launch-card__emoji" aria-hidden="true">🏆</span>
+            <h3 class="launch-card__title"><span class="ltr">Featured Case Study</span></h3>
+            <p class="launch-card__text">اسم متجرك يبقى ضمن أول <span class="ltr">success stories</span> على الموقع — ميزة مجانية (اختياري).</p>
+          </article>
+        </div>
+
+        <div class="launch__cta">
+          <a href="#register" class="btn btn--launch">سجّل في Launch Partners الآن <i class="fa-solid fa-arrow-left"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FAQ ========== -->
+  <section class="section faq" id="faq">
+    <div class="container">
+      <div class="faq__header">
+        <span class="eyebrow">الأسئلة الشائعة</span>
+        <h2 class="section-title">أسئلة بتسألها قبل ما تبدأ</h2>
+      </div>
+
+      <div class="faq-list" id="faqList">
+        <div class="faq-item is-open">
+          <button class="faq-item__trigger" aria-expanded="true">
+            <span class="faq-item__question">إزاي بتشتغل عملية التوصيل؟</span>
+            <span class="faq-item__icon">−</span>
+          </button>
+          <div class="faq-item__answer">
+            <p>سجل أوردورك على المنصة، اختار نوع الخدمة، وتابع شحنتك لحظياً لحد ما توصل لعميلك.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-item__trigger" aria-expanded="false">
+            <span class="faq-item__question">إيه أسعار الشحن؟</span>
+            <span class="faq-item__icon">+</span>
+          </button>
+          <div class="faq-item__answer">
+            <p>أسعارنا تنافسية وشفافة بالكامل، مفيش رسوم خفية. تقدر تشوف التسعير التفصيلي مع فريق المبيعات بعد التسجيل.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-item__trigger" aria-expanded="false">
+            <span class="faq-item__question">إيه نطاق التغطية حالياً؟</span>
+            <span class="faq-item__icon">+</span>
+          </button>
+          <div class="faq-item__answer">
+            <p><span class="ltr">Now</span> حالياً بيخدم القاهرة الكبرى بكل أحيائها. اخترنا نبدأ بالقاهرة عشان نبني جودة عالية قبل التوسع، والمحافظات قريباً.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-item__trigger" aria-expanded="false">
+            <span class="faq-item__question">هل بتتعاملوا مع أوردرات <span class="ltr">COD</span>؟</span>
+            <span class="faq-item__icon">+</span>
+          </button>
+          <div class="faq-item__answer">
+            <p>حالياً <span class="ltr">Now</span> بيخدم المتاجر اللي بتقبل دفع أونلاين (<span class="ltr">prepaid</span>). خدمة <span class="ltr">COD</span> في الخطة وقريباً بنطلقها — اتواصل مع فريقنا عشان نعرفك إمتى تقدر تنضم.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-item__trigger" aria-expanded="false">
+            <span class="faq-item__question">بتدمجوا مع متجري على <span class="ltr">Shopify/WooCommerce/Salla</span>؟</span>
+            <span class="faq-item__icon">+</span>
+          </button>
+          <div class="faq-item__answer">
+            <p>أه، التكامل <span class="ltr">native</span> ومجاني. بتربط متجرك في أقل من 10 دقايق وكل أوردر بيدخل <span class="ltr">Now</span> أوتوماتيك.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-item__trigger" aria-expanded="false">
+            <span class="faq-item__question">هل لازم أوقع <span class="ltr">Contract</span> سنوي؟</span>
+            <span class="faq-item__icon">+</span>
+          </button>
+          <div class="faq-item__answer">
+            <p>لأ، نظام مرن من غير <span class="ltr">commitment</span>. ابدأ بأوردراتك الحالية، ولو قررت توقف هتسحب بياناتك ساعة ما تحب.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-item__trigger" aria-expanded="false">
+            <span class="faq-item__question">إزاي أتابع شحنتي؟</span>
+            <span class="faq-item__icon">+</span>
+          </button>
+          <div class="faq-item__answer">
+            <p>من خلال موبايل أبليكيشن <span class="ltr">Now</span> أو الموقع، بـ تحديثات <span class="ltr">live</span> على كل خطوة من الـ <span class="ltr">pickup</span> للتسليم.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-item__trigger" aria-expanded="false">
+            <span class="faq-item__question">لو الشحنة اتضررت؟</span>
+            <span class="faq-item__icon">+</span>
+          </button>
+          <div class="faq-item__answer">
+            <p>كل شحنة عندنا متأمنة. كلم <span class="ltr">Support</span> وفريقنا هيتعامل مع الحالة في أقل من 24 ساعة.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== REGISTER / FORM ========== -->
+  <section class="section register" id="register">
+    <div class="container register__grid">
+      <div class="register__info">
+        <span class="register__eyebrow">ابدأ الآن</span>
+        <h2 class="register__title">جاهز ترفع أرباحك مع Now؟</h2>
+        <p class="register__desc">املأ بياناتك دلوقتي وفريق Now هيتواصل معاك خلال 24 ساعة بـ عرض مخصص لحجم بزنسك.</p>
+
+        <h3 class="register__subhead">إيه اللي بيحصل بعد ما تملأ الفورم؟</h3>
+        <ol class="register-steps">
+          <li>
+            <span class="register-steps__num">1</span>
+            <span>فريق <span class="ltr">Sales</span> بيراجع بياناتك خلال 24 ساعة</span>
+          </li>
+          <li>
+            <span class="register-steps__num">2</span>
+            <span>بنحدد ميتنج 30 دقيقة (<span class="ltr">Zoom</span> أو زيارة لمقرك)</span>
+          </li>
+          <li>
+            <span class="register-steps__num">3</span>
+            <span>بنطلعلك عرض سعر + خطة <span class="ltr">integration</span> كاملة على متجرك</span>
+          </li>
+        </ol>
+        <p class="register__note"><i class="fa-solid fa-lock" aria-hidden="true"></i> مفيش commitment • مفيش رسوم • رد خلال 24 ساعة</p>
+      </div>
+
+      <div class="form-card" id="formCard">
+        <h3 class="form-card__title">سجّل بياناتك</h3>
+        <p class="form-card__sub">فريقنا هيتواصل معاك خلال 24 ساعة</p>
+
+        <form class="register-form" id="registerForm" novalidate>
+          <div class="form-group">
+            <label for="fullName">الاسم بالكامل</label>
+            <input type="text" id="fullName" name="fullName" placeholder="محمد أحمد" required>
+            <span class="form-error" data-for="fullName"></span>
+          </div>
+          <div class="form-group">
+            <label for="phone">رقم الموبايل</label>
+            <input type="tel" id="phone" name="phone" placeholder="01XXXXXXXXX" required>
+            <span class="form-error" data-for="phone"></span>
+          </div>
+          <div class="form-group">
+            <label for="storeName">اسم البيزنس / المتجر</label>
+            <input type="text" id="storeName" name="storeName" placeholder="اسم متجرك أو بيزنسك" required>
+            <span class="form-error" data-for="storeName"></span>
+          </div>
+          <div class="form-group">
+            <label for="productType">نوع المنتجات</label>
+            <select id="productType" name="productType" required>
+              <option value="">اختر من القائمة</option>
+              <option value="fashion">أزياء وموضة</option>
+              <option value="electronics">إلكترونيات</option>
+              <option value="beauty">تجميل وعناية</option>
+              <option value="food">أغذية ومشروبات</option>
+              <option value="home">منزل وديكور</option>
+              <option value="other">أخرى</option>
+            </select>
+            <span class="form-error" data-for="productType"></span>
+          </div>
+          <div class="form-group">
+            <label for="monthlyOrders">عدد الأوردرات الشهرية</label>
+            <select id="monthlyOrders" name="monthlyOrders" required>
+              <option value="">اختر النطاق</option>
+              <option value="1-50">1 - 50</option>
+              <option value="51-200">51 - 200</option>
+              <option value="201-500">201 - 500</option>
+              <option value="501-1000">501 - 1,000</option>
+              <option value="1000+">أكثر من 1,000</option>
+            </select>
+            <span class="form-error" data-for="monthlyOrders"></span>
+          </div>
+          <button type="submit" class="btn btn--orange btn--full form-card__submit">ابدأ مع Now <i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+          <p class="form-card__secure"><i class="fa-solid fa-lock" aria-hidden="true"></i> بياناتك آمنة 100% • مفيش commitment</p>
+        </form>
+
+        <div class="form-card__contact">
+          <p class="form-card__contact-lead">أو كلمنا مباشرة:</p>
+          <p class="form-card__contact-wa">واتساب: <a href="https://wa.me/201119177677">01119177677</a></p>
+          <p class="form-card__contact-email"><a href="mailto:info@now.com.eg">info@now.com.eg</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="container">
+      <p>Now Shipping. All rights reserved. — <a href="mailto:info@now.com.eg">info@now.com.eg</a> 2026 ©</p>
+    </div>
+  </footer>
 <%- contentFor('FooterJs') %>
-
-<!-- JavaScript -->
-<script>
-
-  // Animated Trucks Background
-  const canvas = document.getElementById('animationCanvas');
-  const ctx = canvas.getContext('2d');
-
-  // Set canvas size to match window
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
-  // Truck class
-  class Truck {
-    constructor() {
-      this.width = 100;
-      this.height = 50;
-      this.x = Math.random() * canvas.width;
-      this.y = Math.random() * canvas.height;
-      this.speed = 0.3 + Math.random() * 0.7; // Slower speed
-      this.direction = Math.random() * Math.PI * 2; // Random direction in radians
-      this.color = Math.random() > 0.5 ? '#F39720' : '#FDB614';
-    }
-
-    update() {
-      // Move truck
-      this.x += Math.cos(this.direction) * this.speed;
-      this.y += Math.sin(this.direction) * this.speed;
-
-      // Bounce off edges
-      if (this.x < 0 || this.x > canvas.width - this.width) {
-        this.direction = Math.PI - this.direction;
-      }
-
-      if (this.y < 0 || this.y > canvas.height - this.height) {
-        this.direction = -this.direction;
-      }
-    }
-
-    draw() {
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.direction);
-
-      // Draw truck body
-      ctx.fillStyle = this.color;
-      ctx.fillRect(-this.width / 2, -this.height / 2, this.width * 0.7, this.height);
-
-      // Draw truck cabin
-      ctx.fillStyle = this.color === '#F39720' ? '#FDB614' : '#F39720';
-      ctx.fillRect(-this.width / 2 + this.width * 0.7, -this.height / 2, this.width * 0.3, this.height * 0.8);
-
-      // Draw wheels
-      ctx.fillStyle = '#333';
-      ctx.beginPath();
-      ctx.arc(-this.width / 2 + this.width * 0.2, this.height / 2, this.height * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(-this.width / 2 + this.width * 0.8, this.height / 2, this.height * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
-    }
-  }
-
-  // Create trucks
-  const trucks = [];
-  for (let i = 0; i < 2; i++) {
-    trucks.push(new Truck());
-  }
-
-  // Animation loop
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    trucks.forEach(truck => {
-      truck.update();
-      truck.draw();
-    });
-
-    requestAnimationFrame(animate);
-  }
-
-  animate();
-
-  // Animated Statistics
-  function animateStats() {
-    const stats = document.querySelectorAll('.stat-number');
-
-    stats.forEach(stat => {
-      const target = parseInt(stat.getAttribute('data-count'));
-      const duration = 2000; // 2 seconds
-      const step = target / (duration / 16); // 60fps
-      let current = 0;
-
-      const updateStat = () => {
-        current += step;
-        if (current < target) {
-          stat.textContent = Math.floor(current);
-          requestAnimationFrame(updateStat);
-        } else {
-          stat.textContent = target;
-        }
-      };
-
-      updateStat();
-    });
-  }
-
-  // Trigger animation when the element is in view
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animateStats();
-        observer.unobserve(entry.target);
-      }
-    });
-  });
-
-  const statsSection = document.querySelector('.statistics');
-  if (statsSection) {
-    observer.observe(statsSection);
-  }
-
-</script>
-
-<!-- Multilingual Support Scripts -->
-<script src="/assets/rJS/multilingual.js"></script>
+<script src="/assets/rJS/landing.js"></script>

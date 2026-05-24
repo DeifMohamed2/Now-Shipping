@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const authController = require('../../controllers/authController.js');
+const applicationController = require('../../controllers/applicationController.js');
 
 // Timeout middleware for login routes
 const loginTimeout = (req, res, next) => {
@@ -38,6 +39,8 @@ router.get('/tracking', authController.trackingPage);
 router.get('/t/:orderNumber', authController.trackingPage);
 
 router.get('/comingsoon', authController.comingSoonPage);
+
+router.post('/api/landing/applications', applicationController.submitLandingApplication);
 
 // Authentication routes
 

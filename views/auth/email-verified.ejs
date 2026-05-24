@@ -175,7 +175,7 @@
 <% const isOk = st === 'success'; %>
 <% const isExpired = st === 'expired'; %>
 <% const isError = st === 'error'; %>
-<%- include('../partials/navbar', { activePage: '' }) %>
+<%- include('../partials/landing-nav', { page: '' }) %>
 
 <div class="animated-background"></div>
 
@@ -228,3 +228,7 @@
     </div>
   </div>
 </div>
+
+<%- contentFor('FooterJs') %>
+<link rel="stylesheet" href="/assets/rCSS/landing.css">
+<script src="/assets/rJS/landing.js"></script>

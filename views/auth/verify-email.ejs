@@ -454,7 +454,7 @@
 
 <%- contentFor('body') %>
 <!-- Marketing navbar (same as landing pages) -->
-<%- include('../partials/navbar', { activePage: '' }) %>
+<%- include('../partials/landing-nav', { page: '' }) %>
 
 <!-- Animated Background -->
 <div class="animated-background">
@@ -531,6 +531,8 @@
 </div>
 
 <%- contentFor('FooterJs') %>
+<link rel="stylesheet" href="/assets/rCSS/landing.css">
+<script src="/assets/rJS/landing.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // Mobile menu toggle

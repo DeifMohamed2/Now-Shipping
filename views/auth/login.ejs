@@ -263,6 +263,7 @@
     font-weight: 500;
     color: var(--gray-800);
     margin-bottom: 8px;
+    text-align: left;
   }
 
   /* RTL form label styles */
@@ -279,6 +280,8 @@
     border-radius: 8px;
     background-color: var(--white);
     transition: all 0.2s ease;
+    text-align: left;
+    direction: ltr;
   }
 
   /* RTL form control styles */
@@ -596,7 +599,7 @@
 
 <%- contentFor('body') %>
 <!-- Marketing navbar (same as landing pages) -->
-<%- include('../partials/navbar', { activePage: '' }) %>
+<%- include('../partials/landing-nav', { page: 'login' }) %>
 
 <!-- Animated Background -->
 <div class="animated-background">
@@ -682,6 +685,39 @@
 </div>
 
 <%- contentFor('FooterJs') %>
+<link rel="stylesheet" href="/assets/rCSS/landing.css">
+<style>
+  html[dir="ltr"] .login-container,
+  html[dir="ltr"] .login-card {
+    direction: ltr;
+    text-align: left;
+  }
+
+  html[dir="ltr"] .login-card .form-label,
+  html[dir="ltr"] .login-card .form-control {
+    text-align: left;
+    direction: ltr;
+  }
+
+  html[dir="ltr"] .login-card .password-toggle {
+    right: 12px;
+    left: auto;
+  }
+
+  html[dir="ltr"] .login-card .form-options {
+    flex-direction: row;
+  }
+
+  html[dir="ltr"] .login-card .form-check {
+    flex-direction: row;
+  }
+
+  html[dir="ltr"] .login-card .form-check-input {
+    margin-right: 8px;
+    margin-left: 0;
+  }
+</style>
+<script src="/assets/rJS/landing.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="/assets/rJS/login.js"></script>
 

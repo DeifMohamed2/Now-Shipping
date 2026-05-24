@@ -59,6 +59,10 @@ class MultilingualManager {
         if (document.getElementById('languageSwitcher')) {
             return;
         }
+        // Marketing landing pages (Arabic-only nav)
+        if (document.querySelector('[data-marketing-lang="off"]')) {
+            return;
+        }
         // Marketing pages: navbar partial already has <select id="ns-marketing-lang">
         if (document.getElementById('ns-marketing-lang')) {
             return;
@@ -112,6 +116,10 @@ class MultilingualManager {
         let targetElement = null;
         for (const selector of selectors) {
             targetElement = document.querySelector(selector);
+            if (targetElement && targetElement.classList.contains('navbar__inner')) {
+                targetElement = null;
+                continue;
+            }
             if (targetElement) {
                 break;
             }

@@ -5,6 +5,7 @@ const Admin = require('../../models/admin.js');
 const Notification = require('../../models/notification.js');
 
 const adminController = require('../../controllers/adminController.js');
+const applicationController = require('../../controllers/applicationController.js');
 const adminWhatsAppController = require('../../controllers/adminWhatsAppController.js');
 const notificationController = require('../../controllers/notificationController.js');
 
@@ -208,6 +209,12 @@ router.get(
 
 // tickets
 router.get('/tickets', adminController.get_ticketsPage);
+
+// landing partner applications
+router.get('/applications', applicationController.getApplicationsPage);
+router.get('/get-applications', applicationController.getApplications);
+router.get('/applications/:id', applicationController.getApplicationById);
+router.patch('/applications/:id', applicationController.updateApplication);
 
 //logout
 router.get('/logout', adminController.logOut);

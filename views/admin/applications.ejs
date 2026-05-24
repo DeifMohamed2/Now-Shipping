@@ -1,0 +1,222 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/rCSS/admin-applications.css">
+
+<%- contentFor('body') %>
+<div class="admin-applications-page">
+  <div class="container-fluid py-2">
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="app-hero d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>
+            <h1 class="app-hero__title mb-1">
+              <i class="ri-file-list-3-line app-hero__icon" aria-hidden="true"></i>
+              Launch Partner Applications
+            </h1>
+            <p class="app-hero__lead mb-0">Review landing page sign-ups, update status, and add internal notes.</p>
+          </div>
+          <button type="button" class="btn btn-app-primary btn-sm" id="refreshBtn" title="Refresh">
+            <i class="ri-refresh-line me-1" aria-hidden="true"></i>Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-4 col-sm-6">
+        <div class="card app-stat-card h-100 border-0">
+          <div class="card-body">
+            <p class="text-muted mb-1 small fw-semibold text-uppercase">Total</p>
+            <h3 class="mb-0 fw-bold" id="statTotal">0</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6">
+        <div class="card app-stat-card app-stat-card--new h-100 border-0">
+          <div class="card-body">
+            <p class="text-muted mb-1 small fw-semibold text-uppercase">New</p>
+            <h3 class="mb-0 fw-bold" id="statNew">0</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6">
+        <div class="card app-stat-card app-stat-card--contacted h-100 border-0">
+          <div class="card-body">
+            <p class="text-muted mb-1 small fw-semibold text-uppercase">Contacted</p>
+            <h3 class="mb-0 fw-bold" id="statContacted">0</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6">
+        <div class="card app-stat-card app-stat-card--qualified h-100 border-0">
+          <div class="card-body">
+            <p class="text-muted mb-1 small fw-semibold text-uppercase">Qualified</p>
+            <h3 class="mb-0 fw-bold" id="statQualified">0</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-6">
+        <div class="card app-stat-card app-stat-card--converted h-100 border-0">
+          <div class="card-body">
+            <p class="text-muted mb-1 small fw-semibold text-uppercase">Converted</p>
+            <h3 class="mb-0 fw-bold" id="statConverted">0</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-5">
+        <div class="card app-panel h-100 border-0">
+          <div class="app-panel__head card-header border-0">
+            <div class="d-flex align-items-center justify-content-between">
+              <h2 class="app-panel__title mb-0">
+                <i class="ri-list-check me-2" aria-hidden="true"></i>Applications
+              </h2>
+              <span class="badge app-count-badge" id="appCount">0</span>
+            </div>
+          </div>
+          <div class="card-body p-0 d-flex flex-column app-panel__body">
+            <div class="p-3 border-bottom bg-light">
+              <div class="input-group mb-2">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="ri-search-line text-muted" aria-hidden="true"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" id="searchInput" placeholder="Search name, phone, or store…">
+              </div>
+              <div class="row g-2">
+                <div class="col-6">
+                  <label class="form-label small fw-semibold mb-1" for="statusFilter">Status</label>
+                  <select class="form-select form-select-sm" id="statusFilter">
+                    <option value="">All statuses</option>
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="converted">Converted</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <label class="form-label small fw-semibold mb-1" for="productFilter">Product type</label>
+                  <select class="form-select form-select-sm" id="productFilter">
+                    <option value="">All types</option>
+                    <option value="fashion">Fashion</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="beauty">Beauty</option>
+                    <option value="food">Food</option>
+                    <option value="home">Home</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div id="appList" class="flex-grow-1 overflow-auto app-list"></div>
+            <div class="p-2 border-top d-flex justify-content-between align-items-center" id="paginationBar">
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="prevPageBtn" disabled>Previous</button>
+              <span class="small text-muted" id="pageInfo">Page 1</span>
+              <button type="button" class="btn btn-sm btn-outline-secondary" id="nextPageBtn" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="card app-detail-card border-0 h-100">
+          <div id="emptyState" class="app-empty h-100 d-flex flex-column align-items-center justify-content-center p-4 p-md-5">
+            <div class="app-empty__icon mb-3" aria-hidden="true">
+              <i class="ri-file-user-line"></i>
+            </div>
+            <h2 class="app-empty__title mb-2">No application selected</h2>
+            <p class="app-empty__text text-muted text-center mb-0">Choose an application from the list to view details and update status.</p>
+          </div>
+
+          <div id="detailContainer" class="h-100 d-none flex-column">
+            <div class="app-detail-head card-header border-0">
+              <div class="d-flex flex-wrap gap-3 justify-content-between align-items-start">
+                <div class="flex-grow-1 min-w-0">
+                  <h2 id="detailStoreName" class="app-detail-head__title mb-1">Store name</h2>
+                  <div id="detailMeta" class="app-detail-head__meta small text-muted"></div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                  <a href="#" class="btn btn-sm btn-success" id="whatsappBtn" target="_blank" rel="noopener noreferrer">
+                    <i class="ri-whatsapp-line me-1"></i>WhatsApp
+                  </a>
+                  <a href="#" class="btn btn-sm btn-outline-secondary" id="telBtn">
+                    <i class="ri-phone-line me-1"></i>Call
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex-grow-1 overflow-auto p-4">
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <div class="app-field">
+                    <span class="app-field__label">Contact name</span>
+                    <span class="app-field__value" id="detailFullName">—</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="app-field">
+                    <span class="app-field__label">Phone</span>
+                    <span class="app-field__value" id="detailPhone">—</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="app-field">
+                    <span class="app-field__label">Product type</span>
+                    <span class="app-field__value" id="detailProductType">—</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="app-field">
+                    <span class="app-field__label">Monthly orders</span>
+                    <span class="app-field__value" id="detailMonthlyOrders">—</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="app-field">
+                    <span class="app-field__label">Submitted</span>
+                    <span class="app-field__value" id="detailSubmitted">—</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="app-field">
+                    <span class="app-field__label">Source</span>
+                    <span class="app-field__value" id="detailSource">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold" for="detailStatus">Status</label>
+                <select class="form-select" id="detailStatus">
+                  <option value="new">New</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="qualified">Qualified</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="converted">Converted</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold" for="detailNotes">Admin notes</label>
+                <textarea class="form-control" id="detailNotes" rows="4" placeholder="Internal notes (not visible to applicant)…"></textarea>
+              </div>
+
+              <div id="reviewInfo" class="small text-muted mb-3"></div>
+
+              <button type="button" class="btn btn-app-primary" id="saveBtn">
+                <i class="ri-save-line me-1"></i>Save changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script src="/assets/rJS/admin-applications.js"></script>

@@ -1,439 +1,19 @@
 <%- contentFor('HeaderCss') %>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta name="description" content="Track your Now Shipping order — live status and delivery history">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/rCSS/landing-pages.css">
-<style>
-  .track-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-
-  /* ── Search hero (no results) ── */
-  .track-hero {
-    padding: 3rem 0 2.5rem;
-    text-align: center;
-    background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
-    border-bottom: 1px solid rgba(26,26,46,0.06);
-  }
-  .track-hero h1 {
-    font-size: clamp(1.85rem, 4vw, 2.35rem);
-    color: var(--lp-navy);
-    margin: 0 0 0.5rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-  }
-  .track-hero p {
-    color: var(--lp-muted);
-    margin: 0 auto;
-    max-width: 520px;
-    font-size: 1.02rem;
-    line-height: 1.55;
-  }
-  .track-search {
-    max-width: 560px;
-    margin: 2rem auto 0;
-    display: flex;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: stretch;
-  }
-  .track-search input {
-    flex: 1;
-    min-width: 220px;
-    padding: 0.95rem 1.25rem;
-    border-radius: 999px;
-    border: 2px solid rgba(26,26,46,0.1);
-    font-size: 1rem;
-    font-family: inherit;
-    background: #fff;
-    box-shadow: 0 2px 12px rgba(26,26,46,0.04);
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .track-search input:focus {
-    outline: none;
-    border-color: var(--lp-primary);
-    box-shadow: 0 0 0 4px rgba(243,151,32,0.12);
-  }
-  .track-search .lp-btn { padding-left: 1.5rem; padding-right: 1.5rem; white-space: nowrap; }
-
-  .track-alert {
-    max-width: 560px;
-    margin: 1.25rem auto 0;
-    padding: 1rem 1.25rem;
-    border-radius: var(--lp-radius);
-    background: #fef3c7;
-    color: #92400e;
-    font-size: 0.92rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    text-align: left;
-  }
-  .track-alert--err { background: #fee2e2; color: #991b1b; }
-
-  /* ── Compact bar when results are shown (no search form) ── */
-  .track-hero--results {
-    text-align: left;
-    padding: 1.35rem 0;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border-bottom: none;
-    color: #fff;
-  }
-  .track-hero--results h1 {
-    color: #fff;
-    font-size: clamp(1.45rem, 1.2rem + 1.8vw, 2.1rem);
-    margin: 0 0 0.25rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-  }
-  .track-hero-results__row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem 1.5rem;
-  }
-  .track-hero-results__meta {
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.55);
-    margin: 0 0 0.35rem;
-  }
-  .track-hero-results__sub {
-    margin: 0;
-    font-size: clamp(0.9rem, 0.85rem + 0.25vw, 1.02rem);
-    color: rgba(255,255,255,0.72);
-    max-width: min(72ch, 100%);
-    line-height: 1.45;
-  }
-  .track-hero--results .lp-btn--ghost {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.22);
-    color: #fff;
-    flex-shrink: 0;
-  }
-  .track-hero--results .lp-btn--ghost:hover {
-    background: rgba(255,255,255,0.18);
-    border-color: rgba(255,255,255,0.35);
-    color: #fff;
-  }
-
-  /* Full-width content band (breaks out of narrow lp-container feel) */
-  .track-page-wide {
-    width: 100%;
-    max-width: min(96vw, 1680px);
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: clamp(1rem, 3.5vw, 3rem);
-    padding-right: clamp(1rem, 3.5vw, 3rem);
-    box-sizing: border-box;
-  }
-
-  /* ── Two-card dashboard ── */
-  .track-dashboard {
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    gap: clamp(1.25rem, 2.2vw, 2.25rem);
-    align-items: stretch;
-    margin: 0 auto;
-    padding: 2rem 0 3.75rem;
-  }
-  @media (max-width: 992px) {
-    .track-dashboard { grid-template-columns: 1fr; }
-  }
-
-  .track-panel {
-    background: #fff;
-    border-radius: 1.15rem;
-    box-shadow: 0 4px 28px rgba(26,26,46,0.08), 0 1px 0 rgba(26,26,46,0.04);
-    border: 1px solid rgba(26,26,46,0.07);
-    padding: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 320px;
-  }
-  .track-panel__bar {
-    height: 4px;
-    background: linear-gradient(90deg, var(--lp-primary), var(--lp-secondary));
-    flex-shrink: 0;
-  }
-  .track-panel__inner {
-    padding: 1.65rem 1.75rem 1.75rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-  @media (min-width: 900px) {
-    .track-panel__inner {
-      padding: 1.9rem 2.15rem 2.1rem;
-    }
-  }
-  @media (min-width: 1200px) {
-    .track-panel__inner {
-      padding: 2.1rem 2.5rem 2.25rem;
-    }
-  }
-  .track-panel__label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--lp-muted);
-    margin: 0 0 0.35rem;
-  }
-  .track-panel__title {
-    margin: 0 0 1.25rem;
-    font-size: clamp(1.1rem, 1.1rem + 0.35vw, 1.35rem);
-    font-weight: 800;
-    color: var(--lp-navy);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .track-panel__title i { color: var(--lp-primary); font-size: 1.05rem; }
-
-  .track-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1.35rem;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid rgba(26,26,46,0.07);
-  }
-  .track-head__ref {
-    font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.15rem);
-    font-weight: 800;
-    color: var(--lp-navy);
-    letter-spacing: -0.02em;
-    margin: 0.2rem 0 0;
-    line-height: 1.1;
-  }
-  .track-head__biz {
-    margin: 0.35rem 0 0;
-    font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.05rem);
-    color: var(--lp-muted);
-  }
-
-  .track-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 1rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: capitalize;
-    background: rgba(243,151,32,0.12);
-    color: #b45309;
-    flex-shrink: 0;
-  }
-  .track-badge--return { background: rgba(59,130,246,0.12); color: #1d4ed8; }
-  .track-badge--done { background: rgba(16,185,129,0.14); color: #047857; }
-  .track-badge--bad { background: rgba(239,68,68,0.12); color: #b91c1c; }
-
-  .track-steps {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    gap: 0.25rem;
-    position: relative;
-    margin: 0 0 1.5rem;
-    padding: 0 0.25rem;
-  }
-  .track-steps::before {
-    content: '';
-    position: absolute;
-    left: 8%;
-    right: 8%;
-    top: 17px;
-    height: 3px;
-    background: #e2e8f0;
-    border-radius: 2px;
-    z-index: 0;
-  }
-  .track-step {
-    flex: 1;
-    min-width: 0;
-    text-align: center;
-    position: relative;
-    z-index: 1;
-  }
-  .track-step__dot {
-    width: clamp(34px, 32px + 0.8vw, 42px);
-    height: clamp(34px, 32px + 0.8vw, 42px);
-    border-radius: 50%;
-    margin: 0 auto 0.45rem;
-    background: #e2e8f0;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: 700;
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 2px #e2e8f0;
-  }
-  .track-step--active .track-step__dot {
-    background: var(--lp-primary);
-    color: #fff;
-    box-shadow: 0 0 0 2px var(--lp-primary);
-  }
-  .track-step--done .track-step__dot {
-    background: #10b981;
-    color: #fff;
-    box-shadow: 0 0 0 2px #10b981;
-  }
-  .track-step span {
-    font-size: clamp(0.62rem, 0.55rem + 0.25vw, 0.74rem);
-    color: var(--lp-muted);
-    font-weight: 600;
-    line-height: 1.2;
-    display: block;
-    padding: 0 0.1rem;
-  }
-
-  .track-details {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.15rem 1.5rem;
-  }
-  @media (min-width: 1100px) {
-    .track-details {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1.25rem 1.75rem;
-    }
-  }
-  @media (max-width: 520px) {
-    .track-details { grid-template-columns: 1fr; }
-  }
-  .track-kv { font-size: clamp(0.9rem, 0.85rem + 0.2vw, 1rem); }
-  .track-kv dt {
-    color: var(--lp-muted);
-    font-weight: 600;
-    margin-bottom: 0.3rem;
-    font-size: clamp(0.68rem, 0.62rem + 0.15vw, 0.76rem);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .track-kv dd {
-    margin: 0;
-    font-weight: 700;
-    color: var(--lp-navy);
-    line-height: 1.4;
-    font-size: clamp(0.95rem, 0.9rem + 0.25vw, 1.08rem);
-  }
-
-  .track-details-note {
-    margin: 1.25rem 0 0;
-    padding: 1rem 1.1rem;
-    border-radius: 0.75rem;
-    background: #f8fafc;
-    border: 1px solid rgba(26,26,46,0.06);
-    font-size: 0.9rem;
-    color: var(--lp-muted);
-    line-height: 1.55;
-  }
-  .track-details-note strong { color: var(--lp-navy); font-weight: 700; }
-
-  .track-courier {
-    margin-top: 1.25rem;
-    padding: 1.15rem 1.2rem;
-    border-radius: 0.85rem;
-    background: linear-gradient(135deg, rgba(243,151,32,0.1), rgba(22,33,62,0.06));
-    border: 1px solid rgba(243,151,32,0.15);
-  }
-  .track-courier strong { color: var(--lp-navy); font-size: 0.92rem; }
-  .track-courier p { margin: 0.35rem 0 0; font-size: 0.95rem; color: var(--lp-navy); }
-  .track-courier a { color: var(--lp-primary); font-weight: 700; text-decoration: none; }
-  .track-courier a:hover { text-decoration: underline; }
-
-  .track-share {
-    margin-top: auto;
-    padding-top: 1.35rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.55rem;
-    align-items: center;
-    border-top: 1px solid rgba(26,26,46,0.06);
-  }
-  .track-share > span {
-    font-size: 0.82rem;
-    color: var(--lp-muted);
-    font-weight: 600;
-    margin-right: 0.25rem;
-  }
-  .track-share button {
-    font-family: inherit;
-    font-weight: 600;
-    font-size: 0.85rem;
-    padding: 0.55rem 1.05rem;
-    border-radius: 999px;
-    border: 1px solid rgba(26,26,46,0.12);
-    background: #fff;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    transition: border-color 0.2s, color 0.2s, background 0.2s;
-  }
-  .track-share button:hover {
-    border-color: var(--lp-primary);
-    color: var(--lp-primary);
-    background: rgba(243,151,32,0.06);
-  }
-
-  .track-timeline-wrap {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    max-height: min(62vh, 640px);
-    margin: 0 -0.25rem;
-    padding-right: 0.35rem;
-  }
-  .track-timeline { margin: 0; padding: 0; list-style: none; }
-  .track-timeline li {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 1rem;
-    padding: 1rem 0;
-    border-bottom: 1px solid rgba(26,26,46,0.06);
-  }
-  .track-timeline li:last-child { border-bottom: none; }
-  .track-timeline__icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(243,151,32,0.18), rgba(253,182,20,0.12));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--lp-primary);
-    flex-shrink: 0;
-  }
-  .track-timeline__meta {
-    font-size: 0.76rem;
-    color: var(--lp-muted);
-    margin-top: 0.3rem;
-  }
-  .track-timeline strong {
-    color: var(--lp-navy);
-    font-size: clamp(0.95rem, 0.88rem + 0.25vw, 1.08rem);
-    text-transform: capitalize;
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/assets/rCSS/landing.css">
+<link rel="stylesheet" href="/assets/rCSS/tracking.css">
 
 <%- contentFor('body') %>
-<div class="lp-page track-wrap">
-  <%- include('../partials/navbar', { activePage: 'tracking' }) %>
+<div class="track-page">
+  <%- include('../partials/landing-nav', { page: 'tracking' }) %>
 
   <% 
     const T = translation.pages && translation.pages.tracking ? translation.pages.tracking : {};
+    const isAr = typeof currentLang !== 'undefined' && currentLang === 'ar';
     const stepLabels = [
       (T.stepPlaced || 'Placed'),
       (T.stepPickedUp || 'Picked up'),
@@ -459,170 +39,230 @@
     const searched = typeof searchedNumber !== 'undefined' ? searchedNumber : '';
   %>
 
-  <% if (!od) { %>
-  <section class="track-hero">
-    <div class="lp-container">
-      <h1><%= T.title || 'Track your shipment' %></h1>
-      <p><%= T.subtitle || 'Enter your order or flyer number for live status and history.' %></p>
+  <main class="track-page__main">
 
-      <form class="track-search" method="get" action="/tracking" role="search" aria-label="Track order">
-        <input type="text" name="q" value="<%= searched || '' %>" placeholder="<%= T.trackingPlaceholder || 'Order or barcode number' %>" autocomplete="off" maxlength="64" />
-        <button type="submit" class="lp-btn lp-btn--primary"><i class="fas fa-search"></i> <%= T.track || 'Track' %></button>
-      </form>
-
-      <% if (terr === 'not_found' && searched) { %>
-        <div class="track-alert track-alert--err" role="alert">
-          <i class="fas fa-circle-exclamation"></i>
-          <span><%= T.notFound || 'No shipment found for this number. Check the code and try again.' %></span>
-        </div>
-      <% } else if (terr === 'server') { %>
-        <div class="track-alert track-alert--err" role="alert">
-          <i class="fas fa-server"></i>
-          <span><%= T.serverError || 'Something went wrong. Please try again shortly.' %></span>
-        </div>
-      <% } %>
-    </div>
-  </section>
-  <% } else { %>
-  <section class="track-hero track-hero--results" aria-label="<%= T.title || 'Tracking' %>">
-    <div class="track-page-wide track-hero-results__row">
-      <div>
-        <p class="track-hero-results__meta"><%= T.trackingNumber || 'Reference' %></p>
-        <h1><%= od.orderNumber %></h1>
-        <p class="track-hero-results__sub"><%= T.resultsSubtitle || 'Live status and delivery details for this shipment.' %></p>
+    <% if (!od) { %>
+    <section class="track-search-hero">
+      <div class="track-search-hero__decor" aria-hidden="true">
+        <span class="track-decor track-decor--1"></span>
+        <span class="track-decor track-decor--2"></span>
+        <span class="track-decor track-decor--3"></span>
+        <span class="track-decor track-decor--4"></span>
       </div>
-      <a href="/tracking" class="lp-btn lp-btn--ghost"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> <%= T.trackAnother || 'Track another shipment' %></a>
-    </div>
-  </section>
-  <% } %>
-
-  <% if (od) {
-    const idx = trackingStepIndex(od.orderStatus);
-    const returnFlow = isReturnFlow(od.orderStatus);
-    const shareUrl = typeof trackingShareUrl !== 'undefined' && trackingShareUrl ? trackingShareUrl : ('/t/' + encodeURIComponent(od.orderNumber));
-  %>
-  <div class="track-dashboard track-page-wide">
-    <!-- Left: overview -->
-    <article class="track-panel">
-      <div class="track-panel__bar" aria-hidden="true"></div>
-      <div class="track-panel__inner">
-        <h2 class="track-panel__title" style="margin-bottom:1.1rem;"><i class="fas fa-box-open" aria-hidden="true"></i> <%= T.cardOverview || 'Shipment overview' %></h2>
-
-        <div class="track-head">
-          <div>
-            <div style="font-size:0.72rem;color:var(--lp-muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;"><%= T.status || 'Status' %></div>
-            <p class="track-head__ref"><%= od.orderNumber %></p>
-            <% if (od.businessName) { %><p class="track-head__biz"><%= od.businessName %></p><% } %>
+      <div class="track-search-hero__inner">
+        <div class="track-search-hero__icon-wrap">
+          <span class="track-search-hero__icon-ring"></span>
+          <div class="track-search-hero__icon" aria-hidden="true">
+            <i class="fa-solid fa-location-dot"></i>
           </div>
-          <div>
-            <% if (returnFlow && !['completed','returnCompleted'].includes(od.orderStatus)) { %>
-              <span class="track-badge track-badge--return"><i class="fas fa-rotate-left"></i> <%= T.returnFlow || 'Return / special flow' %></span>
-            <% } else if (['completed','returnCompleted'].includes(od.orderStatus)) { %>
-              <span class="track-badge track-badge--done"><i class="fas fa-circle-check"></i> <%= T.completed || 'Completed' %></span>
-            <% } else if (['canceled','rejected','terminated','deliveryFailed'].includes(od.orderStatus)) { %>
-              <span class="track-badge track-badge--bad"><i class="fas fa-circle-xmark"></i> <%= od.orderStatus %></span>
+        </div>
+        <span class="track-search-hero__eyebrow">
+          <i class="fa-solid fa-truck-fast"></i>
+          <%= isAr ? 'تتبع الشحنة' : 'Track shipment' %>
+        </span>
+        <h1 class="track-search-hero__title"><%= T.title || (isAr ? 'تابع شحنتك لحظياً' : 'Track your shipment') %></h1>
+        <p class="track-search-hero__desc"><%= (T.subtitle || (isAr ? 'أدخل رقم الأوردر أو الباركود لمتابعة الحالة والتاريخ الكامل للتوصيل.' : 'Enter your order or flyer number for live status and history.')).replace(/^\.\s*/, '') %></p>
+
+        <div class="track-search-card">
+          <form class="track-search-form" method="get" action="/tracking" role="search" aria-label="<%= T.title || 'Track order' %>">
+            <div class="track-search-bar">
+              <input type="text" id="trackQuery" name="q" value="<%= searched || '' %>" placeholder="<%= T.trackingPlaceholder || (isAr ? 'رقم الأوردر أو الباركود' : 'Order or barcode number') %>" autocomplete="off" maxlength="64" autofocus />
+              <button type="submit" class="btn btn--orange">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <%= T.track || (isAr ? 'تتبع' : 'Track') %>
+              </button>
+            </div>
+            <p class="track-search-form__hint">
+              <i class="fa-solid fa-circle-info"></i>
+              <%= isAr ? 'مثال: ORD-12345 أو الباركود المطبوع على بوليصة الشحن' : 'Example: ORD-12345 or the barcode on your shipping label' %>
+            </p>
+          </form>
+
+          <% if (terr === 'not_found' && searched) { %>
+            <div class="track-alert track-alert--err" role="alert">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              <span><%= T.notFound || (isAr ? 'لم يتم العثور على شحنة بهذا الرقم. تحقق من الكود وحاول مرة أخرى.' : 'No shipment found for this number. Check the code and try again.') %></span>
+            </div>
+          <% } else if (terr === 'server') { %>
+            <div class="track-alert track-alert--err" role="alert">
+              <i class="fa-solid fa-server"></i>
+              <span><%= T.serverError || (isAr ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'Something went wrong. Please try again shortly.') %></span>
+            </div>
+          <% } %>
+
+          <div class="track-search-hints">
+            <div class="track-hint">
+              <span class="track-hint__icon"><i class="fa-solid fa-bolt"></i></span>
+              <span><%= isAr ? 'تحديثات لحظية' : 'Live updates' %></span>
+            </div>
+            <div class="track-hint">
+              <span class="track-hint__icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+              <span><%= isAr ? 'تاريخ كامل للشحنة' : 'Full shipment history' %></span>
+            </div>
+            <div class="track-hint">
+              <span class="track-hint__icon"><i class="fa-solid fa-share-nodes"></i></span>
+              <span><%= isAr ? 'مشاركة الرابط بسهولة' : 'Easy link sharing' %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <% } else { %>
+    <section class="track-results-hero" aria-label="<%= T.title || 'Tracking' %>">
+      <div class="track-results-hero__inner">
+        <div>
+          <p class="track-results-hero__label"><%= T.trackingNumber || (isAr ? 'رقم المرجع' : 'Reference') %></p>
+          <h1 class="track-results-hero__title"><%= od.orderNumber %></h1>
+          <p class="track-results-hero__sub"><%= T.resultsSubtitle || (isAr ? 'حالة الشحنة وتفاصيل التوصيل لحظياً.' : 'Live status and delivery details for this shipment.') %></p>
+        </div>
+        <a href="/tracking" class="btn btn--ghost">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <%= T.trackAnother || (isAr ? 'تتبع شحنة أخرى' : 'Track another shipment') %>
+        </a>
+      </div>
+    </section>
+
+    <% 
+      const idx = trackingStepIndex(od.orderStatus);
+      const returnFlow = isReturnFlow(od.orderStatus);
+      const shareUrl = typeof trackingShareUrl !== 'undefined' && trackingShareUrl ? trackingShareUrl : ('/t/' + encodeURIComponent(od.orderNumber));
+    %>
+    <div class="track-dashboard">
+      <article class="track-card">
+        <div class="track-card__accent" aria-hidden="true"></div>
+        <div class="track-card__body">
+          <h2 class="track-card__heading">
+            <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+            <%= T.cardOverview || (isAr ? 'نظرة عامة' : 'Shipment overview') %>
+          </h2>
+
+          <div class="track-status-row">
+            <div>
+              <div class="track-results-hero__label" style="color:var(--text-muted);text-transform:uppercase;"><%= T.status || (isAr ? 'الحالة' : 'Status') %></div>
+              <p class="track-status-row__ref"><%= od.orderNumber %></p>
+              <% if (od.businessName) { %><p class="track-status-row__biz"><%= od.businessName %></p><% } %>
+            </div>
+            <div>
+              <% if (returnFlow && !['completed','returnCompleted'].includes(od.orderStatus)) { %>
+                <span class="track-badge track-badge--return"><i class="fa-solid fa-rotate-left"></i> <%= T.returnFlow || (isAr ? 'مرتجع' : 'Return flow') %></span>
+              <% } else if (['completed','returnCompleted'].includes(od.orderStatus)) { %>
+                <span class="track-badge track-badge--done"><i class="fa-solid fa-circle-check"></i> <%= T.completed || (isAr ? 'مكتمل' : 'Completed') %></span>
+              <% } else if (['canceled','rejected','terminated','deliveryFailed'].includes(od.orderStatus)) { %>
+                <span class="track-badge track-badge--bad"><i class="fa-solid fa-circle-xmark"></i> <%= od.orderStatus %></span>
+              <% } else { %>
+                <span class="track-badge"><i class="fa-solid fa-truck-fast"></i> <%= od.orderStatus %></span>
+              <% } %>
+            </div>
+          </div>
+
+          <% if (!returnFlow || ['completed','returnCompleted','headingToCustomer','pickedUp','new','pendingPickup','inStock','inProgress'].includes(od.orderStatus)) { %>
+          <div class="track-steps" aria-hidden="true">
+            <% for (var ti = 0; ti < 5; ti++) {
+              var stepNum = ti + 1;
+              var allDone = idx === 6;
+              var done = allDone || stepNum < idx;
+              var active = !allDone && stepNum === idx;
+              var cls = done ? 'track-step track-step--done' : active ? 'track-step track-step--active' : 'track-step';
+            %>
+            <div class="<%= cls %>">
+              <div class="track-step__dot"><% if (done) { %><i class="fa-solid fa-check"></i><% } else { %><%= stepNum %><% } %></div>
+              <span><%= stepLabels[ti] %></span>
+            </div>
+            <% } %>
+          </div>
+          <% } %>
+
+          <dl class="track-details">
+            <div class="track-kv"><dt><%= T.trackingNumber || (isAr ? 'المرجع' : 'Reference') %></dt><dd><%= od.orderNumber %></dd></div>
+            <% if (od.smartFlyerBarcode) { %><div class="track-kv"><dt><%= T.barcode || (isAr ? 'الباركود' : 'Barcode') %></dt><dd><%= od.smartFlyerBarcode %></dd></div><% } %>
+            <div class="track-kv"><dt><%= T.orderType || (isAr ? 'النوع' : 'Type') %></dt><dd><%= od.orderShipping.orderType %></dd></div>
+            <div class="track-kv"><dt><%= T.codAmount || (isAr ? 'المبلغ' : 'Amount') %></dt><dd><%= od.orderShipping.amountType || '—' %> · <%= od.orderShipping.amount != null ? od.orderShipping.amount : '—' %></dd></div>
+            <div class="track-kv"><dt><%= T.estimatedDelivery || (isAr ? 'القطع' : 'Items') %></dt><dd><%= od.orderShipping.numberOfItems != null ? od.orderShipping.numberOfItems : '—' %> · <%= od.orderShipping.isExpressShipping ? 'Express' : 'Standard' %></dd></div>
+            <div class="track-kv"><dt><%= T.location || (isAr ? 'المنطقة' : 'Area') %></dt><dd><%= [od.orderCustomer.zone, od.orderCustomer.government].filter(Boolean).join(' · ') || '—' %></dd></div>
+          </dl>
+
+          <% if (od.orderShipping.productDescription) { %>
+            <p class="track-note"><strong><%= T.shipmentDetails || (isAr ? 'تفاصيل الشحنة' : 'Shipment details') %>:</strong> <%= od.orderShipping.productDescription %></p>
+          <% } %>
+
+          <% if (od.deliveryMan) { %>
+          <div class="track-courier">
+            <strong><i class="fa-solid fa-motorcycle" aria-hidden="true"></i> <%= T.courier || (isAr ? 'الكوريير' : 'Your courier') %></strong>
+            <p><%= od.deliveryMan.name %></p>
+            <% if (od.deliveryMan.phoneNumber) { %>
+              <p><a href="tel:<%= od.deliveryMan.phoneNumber %>"><%= od.deliveryMan.phoneNumber %></a></p>
+            <% } %>
+          </div>
+          <% } %>
+
+          <div class="track-share">
+            <span class="track-share__label"><%= T.share || (isAr ? 'مشاركة' : 'Share') %>:</span>
+            <button type="button" class="track-share__btn" id="copyTrackLink" data-url="<%= shareUrl %>" data-copied="<%= isAr ? 'تم النسخ' : 'Copied' %>">
+              <i class="fa-solid fa-link"></i> <%= isAr ? 'نسخ الرابط' : 'Copy link' %>
+            </button>
+            <a class="track-share__wa" href="https://wa.me/?text=<%= encodeURIComponent((T.waPrefix || (isAr ? 'تتبع طلبي:' : 'Track my order:')) + ' ' + shareUrl) %>" target="_blank" rel="noopener">
+              <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <article class="track-card">
+        <div class="track-card__accent" aria-hidden="true"></div>
+        <div class="track-card__body" style="display:flex;flex-direction:column;min-height:320px;">
+          <h2 class="track-card__heading">
+            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+            <%= T.history || (isAr ? 'سجل الحالات' : 'Status history') %>
+          </h2>
+
+          <div class="track-timeline-scroll">
+            <% if (od.orderStatusHistory && od.orderStatusHistory.length) { %>
+            <ul class="track-timeline">
+              <% od.orderStatusHistory.forEach(function (h) { %>
+              <li>
+                <div class="track-timeline__icon"><i class="fa-solid fa-circle" style="font-size:0.4rem;"></i></div>
+                <div>
+                  <strong><%= h.status %></strong>
+                  <% if (h.notes) { %><div class="track-timeline__notes"><%= h.notes %></div><% } %>
+                  <div class="track-timeline__meta"><%= h.date ? new Date(h.date).toLocaleString() : '' %><% if (h.category) { %> · <%= h.category %><% } %></div>
+                </div>
+              </li>
+              <% }); %>
+            </ul>
             <% } else { %>
-              <span class="track-badge"><i class="fas fa-truck-fast"></i> <%= od.orderStatus %></span>
+              <p class="track-empty"><%= T.noHistory || (isAr ? 'لا يوجد سجل تفصيلي بعد.' : 'No detailed history yet.') %></p>
             <% } %>
           </div>
         </div>
+      </article>
+    </div>
+    <% } %>
 
-        <% if (!returnFlow || ['completed','returnCompleted','headingToCustomer','pickedUp','new','pendingPickup','inStock','inProgress'].includes(od.orderStatus)) { %>
-        <div class="track-steps" aria-hidden="true">
-          <% for (var ti = 0; ti < 5; ti++) {
-            var stepNum = ti + 1;
-            var allDone = idx === 6;
-            var done = allDone || stepNum < idx;
-            var active = !allDone && stepNum === idx;
-            var cls = done ? 'track-step track-step--done' : active ? 'track-step track-step--active' : 'track-step';
-          %>
-          <div class="<%= cls %>">
-            <div class="track-step__dot"><% if (done) { %><i class="fas fa-check"></i><% } else { %><%= stepNum %><% } %></div>
-            <span><%= stepLabels[ti] %></span>
-          </div>
-          <% } %>
-        </div>
-        <% } %>
-
-        <dl class="track-details">
-          <div class="track-kv"><dt><%= T.trackingNumber || 'Reference' %></dt><dd><%= od.orderNumber %></dd></div>
-          <% if (od.smartFlyerBarcode) { %><div class="track-kv"><dt><%= T.barcode || 'Barcode' %></dt><dd><%= od.smartFlyerBarcode %></dd></div><% } %>
-          <div class="track-kv"><dt><%= T.orderType || 'Type' %></dt><dd><%= od.orderShipping.orderType %></dd></div>
-          <div class="track-kv"><dt><%= T.codAmount || 'COD / amount' %></dt><dd><%= od.orderShipping.amountType || '—' %> · <%= od.orderShipping.amount != null ? od.orderShipping.amount : '—' %></dd></div>
-          <div class="track-kv"><dt><%= T.estimatedDelivery || 'Items' %></dt><dd><%= od.orderShipping.numberOfItems != null ? od.orderShipping.numberOfItems : '—' %> · <%= od.orderShipping.isExpressShipping ? 'Express' : 'Standard' %></dd></div>
-          <div class="track-kv"><dt><%= T.location || 'Area' %></dt><dd><%= [od.orderCustomer.zone, od.orderCustomer.government].filter(Boolean).join(' · ') || '—' %></dd></div>
-        </dl>
-
-        <% if (od.orderShipping.productDescription) { %>
-          <p class="track-details-note"><strong><%= T.shipmentDetails || 'Shipment details' %>:</strong> <%= od.orderShipping.productDescription %></p>
-        <% } %>
-
-        <% if (od.deliveryMan) { %>
-        <div class="track-courier">
-          <strong><i class="fas fa-motorcycle" aria-hidden="true"></i> <%= T.courier || 'Your courier' %></strong>
-          <p><%= od.deliveryMan.name %></p>
-          <% if (od.deliveryMan.phoneNumber) { %>
-            <p><a href="tel:<%= od.deliveryMan.phoneNumber %>"><%= od.deliveryMan.phoneNumber %></a></p>
-          <% } %>
-        </div>
-        <% } %>
-
-        <div class="track-share">
-          <span><%= T.share || 'Share link' %>:</span>
-          <button type="button" id="copyTrackLink" data-url="<%= shareUrl %>"><i class="fas fa-link"></i> Copy</button>
-          <a class="lp-btn lp-btn--ghost" style="font-size:0.85rem;padding:0.55rem 1rem;" href="https://wa.me/?text=<%= encodeURIComponent((T.waPrefix || 'Track my order:') + ' ' + shareUrl) %>" target="_blank" rel="noopener"><i class="fab fa-whatsapp" style="color:#25D366;"></i> WhatsApp</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- Right: timeline -->
-    <article class="track-panel">
-      <div class="track-panel__bar" aria-hidden="true"></div>
-      <div class="track-panel__inner" style="flex:1;display:flex;flex-direction:column;">
-        <h2 class="track-panel__title" style="margin-bottom:1rem;"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> <%= T.history || 'Status history' %></h2>
-
-        <div class="track-timeline-wrap">
-          <% if (od.orderStatusHistory && od.orderStatusHistory.length) { %>
-          <ul class="track-timeline">
-            <% od.orderStatusHistory.forEach(function (h) { %>
-            <li>
-              <div class="track-timeline__icon"><i class="fas fa-circle" style="font-size:0.42rem;"></i></div>
-              <div>
-                <strong><%= h.status %></strong>
-                <% if (h.notes) { %><div style="font-size:0.88rem;color:var(--lp-muted);margin-top:0.25rem;line-height:1.45;"><%= h.notes %></div><% } %>
-                <div class="track-timeline__meta"><%= h.date ? new Date(h.date).toLocaleString() : '' %><% if (h.category) { %> · <%= h.category %><% } %></div>
-              </div>
-            </li>
-            <% }); %>
-          </ul>
-          <% } else { %>
-            <p style="margin:0;color:var(--lp-muted);font-size:0.92rem;"><%= T.noHistory || 'No detailed history yet.' %></p>
-          <% } %>
-        </div>
-      </div>
-    </article>
-  </div>
-  <% } %>
-
-  <%- include('../partials/landing-footer') %>
+  </main>
 </div>
 
 <%- contentFor('FooterJs') %>
+<script src="/assets/rJS/landing.js"></script>
 <script>
-(function(){
+(function () {
   var btn = document.getElementById('copyTrackLink');
   if (!btn) return;
-  btn.addEventListener('click', function(){
+  var copiedLabel = btn.getAttribute('data-copied') || 'Copied';
+  var defaultHtml = btn.innerHTML;
+  btn.addEventListener('click', function () {
     var u = btn.getAttribute('data-url');
     if (!u) return;
     var full = u.indexOf('http') === 0 ? u : (window.location.origin + u);
     function done() {
-      btn.innerHTML = '<i class="fas fa-check"></i> Copied';
-      setTimeout(function(){ btn.innerHTML = '<i class="fas fa-link"></i> Copy'; }, 2000);
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> ' + copiedLabel;
+      setTimeout(function () { btn.innerHTML = defaultHtml; }, 2000);
     }
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(full).then(done).catch(function(){ tryFallback(); });
-    } else tryFallback();
+      navigator.clipboard.writeText(full).then(done).catch(tryFallback);
+    } else {
+      tryFallback();
+    }
     function tryFallback() {
       var ta = document.createElement('textarea');
       ta.value = full;

@@ -1,0 +1,54 @@
+<% 
+  const onLanding = typeof page !== 'undefined' && page === 'landing';
+  const homeHref = '/';
+  const aboutHref = onLanding ? '#about' : '/#about';
+  const faqHref = onLanding ? '#faq' : '/#faq';
+  const trackingHref = '/tracking';
+  const loginHref = '/login';
+  const active = typeof page !== 'undefined' ? page : '';
+  const showLogin = active !== 'login';
+  const showLang = !onLanding && active !== 'tracking';
+  const __navLang = typeof currentLang !== 'undefined' && currentLang === 'ar' ? 'ar' : 'en';
+%>
+<header class="navbar" id="top"<%= showLang ? '' : ' data-marketing-lang="off"' %>>
+  <div class="container navbar__inner">
+    <a href="<%= homeHref %>" class="logo">
+      <img src="/assets/rImages/logo.png" alt="Now Shipping" class="logo__img">
+    </a>
+
+    <button class="nav-toggle" id="navToggle" aria-label="فتح القائمة" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="nav" id="mainNav">
+      <a href="<%= onLanding ? '#top' : homeHref %>" class="nav__link<%= active === 'landing' ? ' is-active' : '' %>">الرئيسية</a>
+      <a href="<%= aboutHref %>" class="nav__link">عن نحن</a>
+      <a href="<%= faqHref %>" class="nav__link">الأسئلة الشائعة</a>
+      <a href="<%= trackingHref %>" class="nav__link<%= active === 'tracking' ? ' is-active' : '' %>">تابع شحنتك</a>
+    </nav>
+
+    <div class="navbar__actions">
+      <% if (showLang) { %>
+      <label for="ns-marketing-lang" class="navbar__lang-label">Language</label>
+      <select id="ns-marketing-lang" class="navbar__lang-select" aria-label="Language" autocomplete="off">
+        <option value="en" <%= __navLang === 'en' ? 'selected' : '' %>>🇺🇸 English</option>
+        <option value="ar" <%= __navLang === 'ar' ? 'selected' : '' %>>🇪🇬 العربية</option>
+      </select>
+      <% } %>
+      <% if (showLogin) { %>
+      <a href="<%= loginHref %>" class="btn btn--navy btn--sm navbar__login">دخول التاجر</a>
+      <% } %>
+    </div>
+  </div>
+</header>
+<script>
+(function () {
+  var sel = document.getElementById('ns-marketing-lang');
+  if (!sel || sel.tagName !== 'SELECT') return;
+  sel.addEventListener('change', function () {
+    var url = new URL(window.location.href);
+    url.searchParams.set('lang', sel.value);
+    window.location.href = url.toString();
+  });
+})();
+</script>
