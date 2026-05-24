@@ -41,6 +41,19 @@ class MultilingualManager {
     }
 
     setInitialDirection() {
+        // Marketing landing (/ and /tracking): always RTL layout
+        if (
+            document.documentElement.classList.contains('landing-layout') ||
+            document.documentElement.getAttribute('data-landing-layout') === 'true' ||
+            document.querySelector('[data-marketing-lang="off"]')
+        ) {
+            document.documentElement.setAttribute('dir', 'rtl');
+            document.documentElement.setAttribute('lang', 'ar');
+            document.body.classList.remove('lang-en', 'lang-ar', 'rtl', 'ltr');
+            document.body.classList.add('lang-ar', 'rtl');
+            return;
+        }
+
         const isRTL = this.currentLang === 'ar';
         document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
         document.documentElement.setAttribute('lang', this.currentLang);

@@ -78,6 +78,14 @@ html[dir="ltr"] body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
+/* Marketing landing pages — always RTL; not affected by global language preference */
+html.landing-layout,
+html.landing-layout body {
+  direction: rtl !important;
+  font-family: var(--font-body) !important;
+  text-align: right;
+}
+
 h1,
 h2,
 h3,
