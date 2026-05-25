@@ -1389,9 +1389,47 @@ ol {
 }
 
 .quote-banner--comparison {
-  background: linear-gradient(180deg, var(--navy) 0%, var(--navy-dark) 100%);
+  background: linear-gradient(180deg, #0d214a 0%, #081635 100%);
   border-radius: 16px;
-  padding: 40px 48px 40px 100px;
+  padding: 40px 44px 40px 110px;
+  position: relative;
+  overflow: hidden;
+}
+
+.quote-banner--comparison::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 12px,
+    rgba(255, 255, 255, 0.02) 12px,
+    rgba(255, 255, 255, 0.02) 24px
+  );
+  pointer-events: none;
+}
+
+.quote-banner--comparison .quote-banner__glyph {
+  font-size: 140px;
+  color: rgba(255, 255, 255, 0.06);
+  left: 24px;
+  top: 10px;
+}
+
+.quote-banner--comparison .quote-banner__title--orange {
+  color: #ff7c33 !important;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.quote-banner--comparison .quote-banner__text {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 15px;
+  line-height: 1.85;
+  max-width: 900px;
 }
 
 .quote-banner__title--orange {
@@ -1405,10 +1443,21 @@ ol {
   text-align: center;
 }
 
+.comparison__cta .btn--pill {
+  padding: 14px 32px;
+  box-shadow: 0 6px 20px rgba(8, 22, 53, 0.28);
+}
+
 .btn--comparison {
+  background: #0d214a;
   padding: 16px 36px;
   font-size: 16px;
-  box-shadow: 0 6px 20px rgba(14, 42, 92, 0.25);
+  box-shadow: 0 6px 20px rgba(8, 22, 53, 0.28);
+}
+
+.btn--comparison:hover {
+  background: #081635;
+  box-shadow: 0 8px 24px rgba(8, 22, 53, 0.35);
 }
 
 /* ============================================
@@ -2265,7 +2314,12 @@ ol {
   }
 
   .quote-banner--comparison {
-    padding: 32px 24px;
+    padding: 32px 24px 32px 24px;
+  }
+
+  .quote-banner--comparison .quote-banner__glyph {
+    font-size: 80px;
+    left: 12px;
   }
 
   .quote-banner {
