@@ -287,6 +287,7 @@ ol {
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   padding-block: 16px;
+  --navbar-height: 84px;
 }
 
 .navbar__inner {
@@ -422,7 +423,13 @@ ol {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 10px;
+  margin: -10px;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .nav-toggle span {
@@ -2243,13 +2250,46 @@ ol {
 }
 
 @media (max-width: 900px) {
+  .navbar {
+    padding-block: 12px;
+    --navbar-height: 68px;
+  }
+
+  .logo__img {
+    height: 44px;
+  }
+
+  .navbar__inner {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
   .nav-toggle {
     display: flex;
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .navbar__actions {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    margin-inline-start: 0;
+    gap: 8px;
   }
 
   .nav {
     position: fixed;
-    top: 73px;
+    top: var(--navbar-height);
     right: 0;
     left: 0;
     background: var(--white);
@@ -2272,11 +2312,10 @@ ol {
   }
 
   .navbar .navbar__login {
-    display: none;
-  }
-
-  .navbar__actions {
-    gap: 8px;
+    display: inline-flex;
+    padding: 8px 16px;
+    font-size: 13px;
+    white-space: nowrap;
   }
 
   .navbar__lang-select {
