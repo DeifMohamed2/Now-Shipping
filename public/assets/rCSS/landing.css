@@ -512,7 +512,7 @@ ol {
 /* Top chip */
 .hero__chip {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   font-family: var(--font-body);
   font-size: 13px;
@@ -524,6 +524,12 @@ ol {
   padding: 8px 18px;
   margin-bottom: 24px;
   box-shadow: 0 1px 4px rgba(14, 42, 92, 0.04);
+  max-width: 100%;
+}
+
+.hero__chip-text {
+  line-height: 1.55;
+  text-wrap: pretty;
 }
 
 .hero__chip-dot {
@@ -532,6 +538,7 @@ ol {
   border-radius: 50%;
   background: var(--orange);
   flex-shrink: 0;
+  margin-top: 0.45em;
 }
 
 .hero__title {
