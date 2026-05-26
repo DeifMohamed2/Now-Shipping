@@ -19,6 +19,9 @@ const Order = require('../models/order');
 //================================================= Landing Page =========================================================
 const index = (req, res) => {
   const lang = req.query.lang || req.cookies.language || 'ar';
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
   res.render('landing/index', { 
     title: 'Now Shipping — الشريك اللوجستي لـ ecommerce في القاهرة', 
     layout: 'layouts/layout-landing',
@@ -130,6 +133,10 @@ const trackingPage = async (req, res) => {
       : orderData
         ? `/t/${encodeURIComponent(orderData.orderNumber)}`
         : null;
+
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
 
   return res.render('landing/tracking', {
     title: 'Track Order',

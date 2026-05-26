@@ -18,6 +18,7 @@ const http = require('http');
 const server = http.createServer(app);
 const socketController = require('./controllers/socketController');
 const siteConfig = require('./config/site');
+const { assetVersion } = require('./config/assetVersion');
 
 // Initialize Firebase Admin SDK
 require('./config/firebase');
@@ -70,6 +71,7 @@ app.use(urlencodeParser);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.locals.assetVersion = assetVersion;
 
 // express-fileupload and multer both parse multipart bodies; running both on the same
 // request consumes the stream and breaks the second parser ("Unexpected end of form", 400).
@@ -171,6 +173,7 @@ mongoose
   .connect(DB)
   .then((con) => {
     console.log('DB connection successfully..!');
+    console.log(`Asset version: ${assetVersion}`);
 
     // Start server after successful database connection
     server.listen(process.env.PORT, () =>
