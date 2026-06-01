@@ -79,7 +79,7 @@ async function shopifyRestListOrders(shopDomain, accessToken, opts = {}) {
   const limit = Math.min(250, Math.max(1, Number(opts.limit) || 50));
   const fields =
     opts.fields ||
-    'id,name,created_at,financial_status,fulfillment_status,shipping_address,line_items,shipping_lines,total_price,currency,customer,tags,payment_gateway_names,cancelled_at,total_outstanding';
+    'id,name,note,created_at,financial_status,fulfillment_status,shipping_address,line_items,shipping_lines,total_price,currency,customer,tags,payment_gateway_names,cancelled_at,total_outstanding';
 
   const qs = new URLSearchParams();
   qs.set('limit', String(limit));

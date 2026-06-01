@@ -18,11 +18,6 @@ const {
   updateShopifySyncLog,
 } = require('./shopifySyncLogHelper');
 
-function stripShopifyMetaFields(fields) {
-  const { _shopifyNote, _shopifyOrderNumber, ...rest } = fields;
-  return { clean: rest, note: _shopifyNote, orderName: _shopifyOrderNumber };
-}
-
 /**
  * @param {string} shopDomain
  * @param {object} orderPayload
@@ -99,8 +94,7 @@ async function syncOrderCreate(shopDomain, orderPayload, options = {}) {
       return await finalizeCreateLog({ skipped: true, reason: decide.reason }, installation.business);
     }
 
-    const rawFields = shopifyOrderToNormalizedFields(orderPayload, installation);
-    const { clean: fields, note: shopifyNote } = stripShopifyMetaFields(rawFields);
+    const fields = shopifyOrderToNormalizedFields(orderPayload, installation);
 
     const userData = await User.findById(installation.business);
     if (!userData) {
@@ -139,9 +133,6 @@ async function syncOrderCreate(shopDomain, orderPayload, options = {}) {
     doc.externalSource = 'shopify';
     doc.externalOrderId = String(orderPayload.id);
     doc.externalOrderNumber = orderPayload.name || '';
-    if (shopifyNote) {
-      doc.orderNotes = [shopifyNote, doc.orderNotes].filter(Boolean).join('\n').slice(0, 5000);
-    }
 
     try {
       await doc.save();
@@ -258,8 +249,7 @@ async function manualImportShopifyOrder(shopDomain, orderPayload, zonePick = {})
       return { ok: false, error: 'no_installation' };
     }
 
-    const rawFields = shopifyOrderToNormalizedFields(orderPayload, installation);
-    const { clean: fields, note: shopifyNote } = stripShopifyMetaFields(rawFields);
+    const fields = shopifyOrderToNormalizedFields(orderPayload, installation);
     applyCustomerOverrides(fields, customerOverrides);
     fields.government = String(government).trim();
     fields.zone = String(zone).trim();
@@ -300,14 +290,6 @@ async function manualImportShopifyOrder(shopDomain, orderPayload, zonePick = {})
     doc.externalSource = 'shopify';
     doc.externalOrderId = String(orderPayload.id);
     doc.externalOrderNumber = orderPayload.name || '';
-    const metaNote = `Shopify manual import ${orderPayload.name || ''} — financial_status: ${
-      orderPayload.financial_status || ''
-    }. Zone: ${fields.government} / ${fields.zone}.`;
-    if (shopifyNote) {
-      doc.orderNotes = [metaNote, shopifyNote, doc.orderNotes].filter(Boolean).join('\n').slice(0, 5000);
-    } else {
-      doc.orderNotes = [metaNote, doc.orderNotes].filter(Boolean).join('\n').slice(0, 5000);
-    }
 
     try {
       await doc.save();

@@ -895,7 +895,7 @@ async function buildPolicyHtmlForOrder(order) {
       order.business?.businessName ||
       order.business?.fullName ||
       'Business',
-    orderRef: order.referralNumber || null,
+    orderRef: order.referralNumber || order.externalOrderNumber || null,
     createdOn: order.orderDate ? new Date(order.orderDate).toLocaleDateString('en-GB') : '',
     numPieces: order.orderShipping?.numberOfItems?.toString() || '1',
     openShipment: 'NO',

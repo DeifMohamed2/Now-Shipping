@@ -153,8 +153,8 @@ function shopifyOrderToNormalizedFields(orderPayload, installation) {
     CashDifference: false,
     amountCashDifference: null,
     previewPermission: false,
-    referralNumber: '',
-    Notes: '',
+    referralNumber: String(orderPayload.name || '').trim().slice(0, 200),
+    Notes: String(orderPayload.note || '').trim().slice(0, 5000),
     isExpressShipping: isExpress,
     selectedPickupAddressId: null,
     originalOrderNumber: null,
@@ -163,10 +163,6 @@ function shopifyOrderToNormalizedFields(orderPayload, installation) {
     isPartialReturn: false,
     originalOrderItemCount: null,
     partialReturnItemCount: null,
-    _shopifyOrderNumber: orderPayload.name || '',
-    _shopifyNote:
-      `Shopify ${orderPayload.name || ''} — financial_status: ${orderPayload.financial_status || ''}. ` +
-      `Mapped: government=${government}, zone=${zone} (Shopify city: ${addr.city || '-'}, province: ${addr.province || '-'})`,
   };
 }
 
