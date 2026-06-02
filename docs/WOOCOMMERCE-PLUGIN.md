@@ -11,7 +11,7 @@
 
 ## Update manifest
 
-Edit [public/woocommerce-plugin-latest.json](public/woocommerce-plugin-latest.json) (or set env `WOOCOMMERCE_PLUGIN_LATEST_JSON`) and upload the matching ZIP to `public/downloads/` on your CDN/server.
+Edit [public/woocommerce-plugin-latest.json](public/woocommerce-plugin-latest.json) (or set env `WOOCOMMERCE_PLUGIN_LATEST_JSON`). Production downloads use the WordPress.org ZIP URL (e.g. `https://downloads.wordpress.org/plugin/now-shipping-for-woocommerce.1.0.1.zip`). For local dev you can still build with `npm run build:woo-plugin` and install from `public/downloads/`.
 
 ## REST tracking endpoint
 
