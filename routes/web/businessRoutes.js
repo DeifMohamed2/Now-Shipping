@@ -74,6 +74,17 @@ async function authenticateUser(req, res, next) {
       return res.status(401).redirect('/login');
     }
 
+    if (user.isDeleted) {
+      res.clearCookie('token');
+      if (isApiRequest) {
+        return res.status(403).json({
+          error: 'Account removed',
+          message: 'This business account has been removed. Contact support if you believe this is an error.',
+        });
+      }
+      return res.status(403).redirect('/login?removed=1');
+    }
+
     // If the business account is not completed, restrict access to everything except dashboard pages
     const normalizedRole = (user && user.role ? String(user.role).toLowerCase() : '');
     const isCompleted = Boolean(user && user.isCompleted);

@@ -733,6 +733,14 @@ const login = async (req, res) => {
       });
     }
 
+    if (businessUser && businessUser.isDeleted) {
+      return res.status(403).json({
+        status: 'error',
+        message:
+          'This business account has been removed. Contact support if you need assistance.',
+      });
+    }
+
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, role },

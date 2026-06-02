@@ -3,7 +3,15 @@ const Order = require('../models/order');
 const Courier = require('../models/courier');
 const Pickup = require('../models/pickup');
 const User = require('../models/user');
-const { businessRoleFilter } = require('../utils/businessRoleQuery');
+const {
+  businessRoleFilter,
+  activeBusinessRoleFilter,
+} = require('../utils/businessRoleQuery');
+const {
+  getBusinessDisplayName,
+  attachBusinessDisplayName,
+} = require('../utils/businessDisplayName');
+const businessDeletionService = require('../utils/businessDeletionService');
 const ShopProduct = require('../models/shopProduct');
 const ShopOrder = require('../models/shopOrder');
 const ledgerService = require('../utils/ledgerService');
@@ -687,8 +695,7 @@ const getAdminDashboardData = async (req, res) => {
       orderStatus: o.orderStatus,
       createdAt: o.createdAt,
       businessName:
-        o.business?.brandInfo?.brandName ||
-        o.business?.name ||
+        getBusinessDisplayName(o.business) ||
         o.orderBusiness?.name ||
         null,
     }));
@@ -811,7 +818,7 @@ const get_ordersFilterBusinesses = async (req, res) => {
   try {
     const raw = (req.query.q || '').trim();
     const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const mongoQuery = { ...businessRoleFilter(), isCompleted: true };
+    const mongoQuery = { ...activeBusinessRoleFilter(), isCompleted: true };
     if (raw) {
       const searchRegex = new RegExp(escapeRegex(raw), 'i');
       mongoQuery.$or = [
@@ -903,7 +910,7 @@ const get_orders = async (req, res) => {
         { 'orderShipping.productDescription': searchRegex },
       ];
       const businessUsers = await User.find({
-        ...businessRoleFilter(),
+        ...activeBusinessRoleFilter(),
         isCompleted: true,
         $or: [
           { name: searchRegex },
@@ -925,7 +932,10 @@ const get_orders = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const orders = await Order.find(query)
-      .populate('business', 'brandInfo')
+      .populate(
+        'business',
+        'name brandInfo isDeleted originalName originalBrandName'
+      )
       .populate('deliveryMan')
       .sort({ orderDate: -1, createdAt: -1 })
       .skip(skip)
@@ -964,6 +974,7 @@ const get_orders = async (req, res) => {
           replacementCount: order.orderShipping.numberOfItemsReplacement,
         };
       }
+      attachBusinessDisplayName(orderObj);
       return orderObj;
     });
 
@@ -3422,7 +3433,7 @@ const search_businessesForPayout = async (req, res) => {
       orClauses.unshift({ businessAccountCode: q });
     }
 
-    const users = await User.find({ ...businessRoleFilter(), $or: orClauses })
+    const users = await User.find({ ...activeBusinessRoleFilter(), $or: orClauses })
       .select('_id name email phoneNumber brandInfo businessAccountCode profileImage')
       .limit(25)
       .lean();
@@ -3625,10 +3636,13 @@ const get_businessLedgerPage = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id)
-      .select('name email brandInfo businessAccountCode profileImage')
+      .select(
+        'name email brandInfo businessAccountCode profileImage isDeleted originalName originalBrandName'
+      )
       .lean();
     if (!user) return res.status(404).render('404', { message: 'Business not found' });
-    const displayName = user.brandInfo?.brandName || user.name || 'Business';
+    const displayName =
+      getBusinessDisplayName(user) || user.brandInfo?.brandName || user.name || 'Business';
     res.render('admin/business-ledger', {
       businessId: id,
       businessName: displayName,
@@ -3707,114 +3721,300 @@ const get_businessesPage = (req, res) => {
   });
 };
 
+const BUSINESS_LIST_SELECT =
+  '-password -verificationToken -verificationTokenExpires -verificationOTP -verificationOTPExpires';
+
+const COMPUTED_BUSINESS_SORT_FIELDS = new Set([
+  'balance',
+  'totalOrders',
+  'successRate',
+]);
+
+function buildAdminBusinessListQuery({
+  search,
+  status,
+  onboarding = 'all',
+  dateFrom,
+  dateTo,
+}) {
+  const query = { ...activeBusinessRoleFilter() };
+
+  if (onboarding === 'completed') {
+    query.isCompleted = true;
+  } else if (onboarding === 'incomplete') {
+    query.isCompleted = { $ne: true };
+  }
+
+  if (search && String(search).trim() !== '') {
+    const searchRegex = new RegExp(String(search).trim(), 'i');
+    query.$or = [
+      { name: searchRegex },
+      { email: searchRegex },
+      { phoneNumber: searchRegex },
+      { 'brandInfo.brandName': searchRegex },
+      { 'brandInfo.industry': searchRegex },
+    ];
+  }
+
+  if (status === 'verified') {
+    query.isVerified = true;
+  } else if (status === 'unverified') {
+    query.isVerified = false;
+  }
+
+  if (dateFrom || dateTo) {
+    query.createdAt = {};
+    if (dateFrom) {
+      query.createdAt.$gte = new Date(dateFrom);
+    }
+    if (dateTo) {
+      const end = new Date(dateTo);
+      end.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = end;
+    }
+  }
+
+  return query;
+}
+
+async function enrichBusinessesWithStats(businesses) {
+  if (!businesses.length) return [];
+
+  const balanceMap = await getBalances(businesses.map((b) => b._id));
+
+  return Promise.all(
+    businesses.map(async (business) => {
+      const [
+        totalOrders,
+        completedOrders,
+        totalPickups,
+        totalShopOrders,
+        totalLedgerEntries,
+      ] = await Promise.all([
+        Order.countDocuments({ business: business._id }),
+        Order.countDocuments({
+          business: business._id,
+          statusCategory: 'SUCCESSFUL',
+        }),
+        Pickup.countDocuments({ business: business._id }),
+        ShopOrder.countDocuments({ business: business._id }),
+        LedgerEntry.countDocuments({ business: business._id }),
+      ]);
+
+      const successRate =
+        totalOrders > 0
+          ? parseFloat(((completedOrders / totalOrders) * 100).toFixed(1))
+          : 0;
+
+      const balance = balanceMap.get(business._id.toString()) || 0;
+
+      return {
+        ...business,
+        balance,
+        stats: {
+          totalOrders,
+          completedOrders,
+          totalPickups,
+          totalShopOrders,
+          totalLedgerEntries,
+          successRate,
+        },
+      };
+    })
+  );
+}
+
+function sortEnrichedBusinesses(list, sortBy, sortOrder) {
+  const dir = sortOrder === 'asc' ? 1 : -1;
+  const sorted = [...list];
+
+  sorted.sort((a, b) => {
+    let av;
+    let bv;
+
+    if (sortBy === 'balance') {
+      av = a.balance ?? 0;
+      bv = b.balance ?? 0;
+    } else if (sortBy === 'totalOrders') {
+      av = a.stats?.totalOrders ?? 0;
+      bv = b.stats?.totalOrders ?? 0;
+    } else if (sortBy === 'successRate') {
+      av = parseFloat(a.stats?.successRate) || 0;
+      bv = parseFloat(b.stats?.successRate) || 0;
+    } else if (sortBy === 'name') {
+      av = (
+        a.brandInfo?.brandName ||
+        a.name ||
+        ''
+      ).toLowerCase();
+      bv = (
+        b.brandInfo?.brandName ||
+        b.name ||
+        ''
+      ).toLowerCase();
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    } else {
+      av = new Date(a.createdAt || 0).getTime();
+      bv = new Date(b.createdAt || 0).getTime();
+    }
+
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+
+  return sorted;
+}
+
+async function fetchAdminBusinessSummary() {
+  const baseQuery = { ...activeBusinessRoleFilter() };
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const [total, verified, pending, thisMonth] = await Promise.all([
+    User.countDocuments(baseQuery),
+    User.countDocuments({ ...baseQuery, isVerified: true }),
+    User.countDocuments({ ...baseQuery, isVerified: { $ne: true } }),
+    User.countDocuments({ ...baseQuery, createdAt: { $gte: startOfMonth } }),
+  ]);
+
+  return { total, verified, pending, thisMonth };
+}
+
+async function fetchAdminBusinessLeaderboard() {
+  const lbAgg = await Order.aggregate([
+    {
+      $group: {
+        _id: '$business',
+        total: { $sum: 1 },
+        successful: {
+          $sum: {
+            $cond: [{ $eq: ['$statusCategory', 'SUCCESSFUL'] }, 1, 0],
+          },
+        },
+      },
+    },
+    { $match: { total: { $gte: 1 } } },
+    {
+      $addFields: {
+        successRate: {
+          $multiply: [{ $divide: ['$successful', '$total'] }, 100],
+        },
+      },
+    },
+    { $match: { successRate: { $gt: 0 } } },
+    { $sort: { successRate: -1, total: -1 } },
+    { $limit: 5 },
+  ]);
+
+  if (!lbAgg.length) return [];
+
+  const lbIds = lbAgg.map((x) => x._id);
+  const lbBusinesses = await User.find({
+    _id: { $in: lbIds },
+    ...activeBusinessRoleFilter(),
+  })
+    .select('name brandInfo.brandName profileImage isVerified')
+    .lean();
+
+  const lbMap = new Map(lbBusinesses.map((b) => [String(b._id), b]));
+
+  return lbAgg
+    .filter((x) => lbMap.has(String(x._id)))
+    .map((x) => {
+      const b = lbMap.get(String(x._id));
+      const brandName = (b.brandInfo?.brandName || '').trim();
+      const accountName = (b.name || '').trim();
+      const displayName = brandName || accountName || 'Business';
+      return {
+        _id: x._id,
+        brandName: displayName,
+        displayName,
+        accountName: accountName || null,
+        profileImage: b.profileImage,
+        isVerified: b.isVerified,
+        stats: {
+          totalOrders: x.total,
+          successRate: parseFloat(x.successRate.toFixed(1)),
+        },
+      };
+    });
+}
+
 const get_businesses = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 12,
+      limit = 50,
       search,
       status,
+      onboarding = 'all',
       sortBy = 'createdAt',
       sortOrder = 'desc',
       dateFrom,
       dateTo,
     } = req.query;
 
-    const query = { ...businessRoleFilter(), isCompleted: true };
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+    const query = buildAdminBusinessListQuery({
+      search,
+      status,
+      onboarding,
+      dateFrom,
+      dateTo,
+    });
 
-    // Search functionality
-    if (search && search.trim() !== '') {
-      const searchRegex = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { name: searchRegex },
-        { email: searchRegex },
-        { phoneNumber: searchRegex },
-        { 'brandInfo.brandName': searchRegex },
-        { 'brandInfo.industry': searchRegex },
-      ];
+    const [summary, leaderboard, totalCount] = await Promise.all([
+      fetchAdminBusinessSummary(),
+      fetchAdminBusinessLeaderboard(),
+      User.countDocuments(query),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(totalCount / limitNum));
+    const skip = (pageNum - 1) * limitNum;
+    const useComputedSort = COMPUTED_BUSINESS_SORT_FIELDS.has(sortBy);
+
+    let businessesWithStats;
+
+    if (useComputedSort) {
+      const allMatching = await User.find(query)
+        .select(BUSINESS_LIST_SELECT)
+        .lean();
+      const enriched = await enrichBusinessesWithStats(allMatching);
+      const sorted = sortEnrichedBusinesses(enriched, sortBy, sortOrder);
+      businessesWithStats = sorted.slice(skip, skip + limitNum);
+    } else {
+      const sort = {};
+      if (sortBy === 'name') {
+        sort['brandInfo.brandName'] = sortOrder === 'desc' ? -1 : 1;
+        sort.name = sortOrder === 'desc' ? -1 : 1;
+      } else {
+        sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+      }
+
+      const businesses = await User.find(query)
+        .select(BUSINESS_LIST_SELECT)
+        .sort(sort)
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
+
+      businessesWithStats = await enrichBusinessesWithStats(businesses);
     }
-
-    // Filter by verification status
-    if (status === 'verified') {
-      query.isVerified = true;
-    } else if (status === 'unverified') {
-      query.isVerified = false;
-    }
-
-    // Date range filter
-    if (dateFrom || dateTo) {
-      query.createdAt = {};
-      if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
-      if (dateTo) query.createdAt.$lte = new Date(dateTo);
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const sort = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
-    const businesses = await User.find(query)
-      .select(
-        '-password -verificationToken -verificationTokenExpires -verificationOTP -verificationOTPExpires'
-      )
-      .sort(sort)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .lean();
-
-    const balanceMap = await getBalances(businesses.map((b) => b._id));
-
-    // Get statistics for each business
-    const businessesWithStats = await Promise.all(
-      businesses.map(async (business) => {
-        const [
-          totalOrders,
-          completedOrders,
-          totalPickups,
-          totalShopOrders,
-          totalLedgerEntries,
-        ] = await Promise.all([
-          Order.countDocuments({ business: business._id }),
-          Order.countDocuments({
-            business: business._id,
-            statusCategory: 'SUCCESSFUL',
-          }),
-          Pickup.countDocuments({ business: business._id }),
-          ShopOrder.countDocuments({ business: business._id }),
-          LedgerEntry.countDocuments({ business: business._id }),
-        ]);
-
-        const successRate =
-          totalOrders > 0
-            ? ((completedOrders / totalOrders) * 100).toFixed(1)
-            : 0;
-
-        const balance = balanceMap.get(business._id.toString()) || 0;
-
-        return {
-          ...business,
-          balance,
-          stats: {
-            totalOrders,
-            completedOrders,
-            totalPickups,
-            totalShopOrders,
-            totalLedgerEntries,
-            successRate,
-          },
-        };
-      })
-    );
-
-    const totalCount = await User.countDocuments(query);
-    const totalPages = Math.ceil(totalCount / parseInt(limit));
 
     res.status(200).json({
       businesses: businessesWithStats,
+      summary,
+      leaderboard,
       pagination: {
-        currentPage: parseInt(page),
+        currentPage: pageNum,
         totalPages,
         totalCount,
-        limit: parseInt(limit),
+        limit: limitNum,
       },
     });
   } catch (error) {
@@ -3992,8 +4192,14 @@ const get_businessDetails = async (req, res) => {
         ? { income: revenueAgg[0].income || 0, expenses: revenueAgg[0].expenses || 0 }
         : { income: 0, expenses: 0 };
 
+    const businessDisplayName = getBusinessDisplayName(business);
+
     res.status(200).json({
-      business: { ...business, balance: unsettledBalance },
+      business: {
+        ...business,
+        balance: unsettledBalance,
+        businessDisplayName,
+      },
       stats,
       revenueBreakdown,
       recentOrders: orders,
@@ -4005,6 +4211,93 @@ const get_businessDetails = async (req, res) => {
   } catch (error) {
     console.error('Error fetching business details:', error);
     res.status(500).json({ error: 'Failed to fetch business details' });
+  }
+};
+
+const get_businessDeletionImpact = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const impact = await businessDeletionService.getDeletionImpact(businessId);
+    res.status(200).json({ success: true, impact });
+  } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).json({ success: false, error: error.message });
+    }
+    if (error.code === 'ALREADY_DELETED') {
+      return res.status(409).json({ success: false, error: error.message });
+    }
+    console.error('get_businessDeletionImpact:', error);
+    res.status(500).json({ success: false, error: 'Failed to load deletion impact' });
+  }
+};
+
+const delete_business = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const mode = (req.body?.mode || '').toLowerCase();
+    const reason = (req.body?.reason || '').trim();
+
+    if (!['soft', 'cascade'].includes(mode)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid mode. Use "soft" or "cascade".',
+      });
+    }
+    if (!reason || reason.length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'A deletion reason of at least 10 characters is required.',
+      });
+    }
+
+    const impact = await businessDeletionService.getDeletionImpact(businessId);
+    if (impact.hardBlock) {
+      return res.status(409).json({
+        success: false,
+        error: 'Cannot remove this business until financial issues are resolved.',
+        blockReasons: impact.blockReasons,
+        impact,
+      });
+    }
+
+    const adminId = req.adminId;
+    const result =
+      mode === 'soft'
+        ? await businessDeletionService.softDeleteBusiness(
+            businessId,
+            adminId,
+            reason
+          )
+        : await businessDeletionService.cascadeDeleteBusiness(
+            businessId,
+            adminId,
+            reason
+          );
+
+    res.status(200).json({
+      success: true,
+      message:
+        mode === 'soft'
+          ? 'Business removed (soft delete). Orders and financial records are preserved.'
+          : 'Business and operational data removed. Ledger and payouts are preserved for accounting.',
+      result,
+    });
+  } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).json({ success: false, error: error.message });
+    }
+    if (error.code === 'ALREADY_DELETED') {
+      return res.status(409).json({ success: false, error: error.message });
+    }
+    if (error.code === 'HARD_BLOCK') {
+      return res.status(409).json({
+        success: false,
+        error: error.message,
+        blockReasons: error.blockReasons,
+      });
+    }
+    console.error('delete_business:', error);
+    res.status(500).json({ success: false, error: 'Failed to remove business' });
   }
 };
 
@@ -5272,6 +5565,8 @@ module.exports = {
   get_businesses,
   get_businessDetailsPage,
   get_businessDetails,
+  get_businessDeletionImpact,
+  delete_business,
 
   // Tickets
   get_ticketsPage,

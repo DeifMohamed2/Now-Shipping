@@ -34,6 +34,13 @@ async function authenticateUser(req, res, next) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
+        if (user.isDeleted) {
+            return res.status(403).json({
+                error: 'Account removed',
+                message: 'This business account has been removed.',
+            });
+        }
+
         // Match web businessRoutes: incomplete business accounts may only use onboarding + dashboard
         const normalizedRole = (user.role ? String(user.role).toLowerCase() : '');
         const isCompleted = Boolean(user.isCompleted);

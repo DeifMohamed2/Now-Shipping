@@ -306,6 +306,34 @@ const UserSchema = new mongoose.Schema(
       sparse: true,
       trim: true,
     },
+    /** Soft-delete: account removed by admin; operational data may remain for audit. */
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'admin',
+      default: null,
+    },
+    deletionReason: {
+      type: String,
+      default: null,
+    },
+    /** Preserved at deletion for ledger/order display when PII is anonymized. */
+    originalName: {
+      type: String,
+      default: null,
+    },
+    originalBrandName: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

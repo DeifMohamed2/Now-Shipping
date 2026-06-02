@@ -278,6 +278,14 @@
     gap: 0.5rem;
     margin-top: 0.5rem;
   }
+  .bd-removed-banner {
+    border-radius: 0.5rem;
+    border: 1px solid rgba(220, 53, 69, 0.35);
+    background: rgba(220, 53, 69, 0.08);
+    color: #842029;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+  }
 </style>
 
 <%- contentFor('body') %>
@@ -291,8 +299,16 @@
       <a class="btn btn-soft-info" id="waBusinessBtn" href="#" target="_blank" rel="noopener" style="display: none">
         <i class="ri-whatsapp-line me-1"></i> WhatsApp
       </a>
+      <button type="button" class="btn btn-soft-danger" id="btnDeleteBusiness" style="display: none">
+        <i class="ri-delete-bin-line me-1"></i> Remove business
+      </button>
     </div>
   </div>
+</div>
+
+<div class="bd-removed-banner" id="bdRemovedBanner" style="display: none" role="alert">
+  <strong><i class="ri-error-warning-line me-1"></i> Business removed</strong>
+  <span class="d-block small mt-1" id="bdRemovedBannerText">This account was removed by an administrator. Orders and financial records may still exist for audit.</span>
 </div>
 
 <div class="bd-hero" id="bdHero">
@@ -600,6 +616,7 @@
 
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script src="/assets/rJS/admin-business-delete.js"></script>
 <script>
   const businessId = '<%= businessId %>';
 
@@ -697,8 +714,31 @@
   }
 
   function renderBusinessProfile(business) {
+    const removedBanner = document.getElementById('bdRemovedBanner');
+    const deleteBtn = document.getElementById('btnDeleteBusiness');
+    if (business.isDeleted) {
+      removedBanner.style.display = 'block';
+      const preserved =
+        business.businessDisplayName ||
+        business.originalBrandName ||
+        business.originalName ||
+        business.brandInfo?.brandName ||
+        business.name;
+      document.getElementById('bdRemovedBannerText').textContent =
+        (preserved ? preserved + '. ' : '') +
+        'Operational and financial history may still be visible for audit.';
+      if (deleteBtn) deleteBtn.style.display = 'none';
+    } else {
+      removedBanner.style.display = 'none';
+      if (deleteBtn) deleteBtn.style.display = 'inline-block';
+    }
+
     const avatar = document.getElementById('profileAvatar');
-    const display = business.brandInfo?.brandName || business.name || '—';
+    const display =
+      business.businessDisplayName ||
+      business.brandInfo?.brandName ||
+      business.name ||
+      '—';
     const letter = escapeHtml(display.charAt(0).toUpperCase());
     const url = business.profileImage && String(business.profileImage).trim();
     if (!url) {
@@ -1228,5 +1268,17 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', loadBusinessDetails);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadBusinessDetails();
+    const deleteBtn = document.getElementById('btnDeleteBusiness');
+    if (deleteBtn && window.AdminBusinessDelete) {
+      deleteBtn.addEventListener('click', () => {
+        const name =
+          document.getElementById('businessName')?.textContent?.trim() || 'Business';
+        AdminBusinessDelete.openDeletionFlow(businessId, name, {
+          redirectAfter: '/admin/businesses',
+        });
+      });
+    }
+  });
 </script>

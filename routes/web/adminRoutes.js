@@ -206,6 +206,11 @@ router.get(
   '/get-business-details/:businessId',
   adminController.get_businessDetails
 );
+router.get(
+  '/business/:businessId/deletion-impact',
+  adminController.get_businessDeletionImpact
+);
+router.post('/business/:businessId/delete', adminController.delete_business);
 
 // tickets
 router.get('/tickets', adminController.get_ticketsPage);

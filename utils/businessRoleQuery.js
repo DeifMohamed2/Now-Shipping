@@ -7,4 +7,12 @@ function businessRoleFilter() {
   return { role: { $in: ['business', 'Business'] } };
 }
 
-module.exports = { businessRoleFilter };
+/** Active (non-deleted) business accounts for listings and login. */
+function activeBusinessRoleFilter() {
+  return {
+    ...businessRoleFilter(),
+    isDeleted: { $ne: true },
+  };
+}
+
+module.exports = { businessRoleFilter, activeBusinessRoleFilter };
