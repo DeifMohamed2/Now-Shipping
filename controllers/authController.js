@@ -519,14 +519,15 @@ const signup = async (req, res) => {
         phoneNumber,
         role: 'Business',
         isNeedStorage: !!storageCheck,
+        isVerified: true, // TODO: remove when email verification is re-enabled
       });
 
-      const verificationToken = user.generateVerificationToken();
+      // const verificationToken = user.generateVerificationToken();
 
       await user.save(); // ✅ only once
 
-      // 📧 Send verification email after successful save
-      sendVerificationEmail(user, verificationToken);
+      // // 📧 Send verification email after successful save
+      // sendVerificationEmail(user, verificationToken);
 
       res.status(201).json({
         status: 'success',

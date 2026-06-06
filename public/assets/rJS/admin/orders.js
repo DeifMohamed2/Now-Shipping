@@ -572,6 +572,12 @@
                   : ''
               }
               <li>
+                <button type="button" class="dropdown-item" data-act="print-awb" data-order="${order.orderNumber}">
+                  <i class="ri-printer-fill text-primary"></i>
+                  <span>Download AWB</span>
+                </button>
+              </li>
+              <li>
                 <a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
                   <i class="ri-edit-2-fill text-warning"></i>
                   <span>Edit Order</span>
@@ -616,6 +622,11 @@
       row.querySelectorAll('[data-act="cancel"]').forEach((btn) => {
         btn.addEventListener('click', () =>
           cancelOrder(btn.getAttribute('data-id'))
+        );
+      });
+      row.querySelectorAll('[data-act="print-awb"]').forEach((btn) => {
+        btn.addEventListener('click', () =>
+          handlePrintPolicy(btn.getAttribute('data-order'))
         );
       });
 
@@ -842,6 +853,19 @@
     if (match) match.classList.add('selected');
   }
 
+  function handlePrintPolicy(orderNumber) {
+    document.querySelectorAll('.orders-table-dropdown.show').forEach((d) => {
+      if (window.AdminTableDropdowns) window.AdminTableDropdowns.close(d);
+    });
+    document.getElementById('printPolicyOrderId').value = orderNumber;
+    document.getElementById('paperSize').value = '';
+    document.querySelectorAll('.paper-size-option').forEach((option) => {
+      option.classList.remove('selected');
+    });
+    const modal = new bootstrap.Modal(document.getElementById('printPolicyModal'));
+    modal.show();
+  }
+
   async function printPolicy() {
     const orderId = document.getElementById('printPolicyOrderId').value;
     const paperSize = document.getElementById('paperSize').value;
@@ -851,19 +875,42 @@
     }
     try {
       const response = await fetch(
-        `/business/orders/print-policy/${orderId}/${paperSize}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paperSize }),
-        }
+        `/admin/print-policy/${orderId}?paperSize=${encodeURIComponent(paperSize)}`,
+        { method: 'GET' }
       );
+      if (!response.ok) {
+        let msg = 'Failed to generate AWB document';
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.error) msg = errorData.error;
+        } catch (_) {
+          /* non-JSON body */
+        }
+        throw new Error(msg);
+      }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `delivery-policy-${orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      const modalEl = document.getElementById('printPolicyModal');
+      const modalInstance = bootstrap.Modal.getInstance(modalEl);
+      if (modalInstance) modalInstance.hide();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Downloaded',
+        text: 'Delivery policy (AWB) has been downloaded.',
+      });
     } catch (e) {
       console.error(e);
-      Swal.fire({ icon: 'error', text: 'Could not print policy.' });
+      Swal.fire({ icon: 'error', text: e.message || 'Could not download AWB.' });
     }
   }
 
@@ -1085,5 +1132,6 @@
   window.cancelOrder = cancelOrder;
   window.deleteMultiple = deleteMultiple;
   window.selectPaperSize = selectPaperSize;
+  window.handlePrintPolicy = handlePrintPolicy;
   window.printPolicy = printPolicy;
 })();

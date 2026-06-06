@@ -41,6 +41,7 @@ const {
   getDefaultPickupAddressId,
 } = require('../utils/pickupAddressResolve');
 const { generateUniqueOrderNumber } = require('../utils/orderCreationHelper');
+const { renderDeliveryPolicyPdfBuffer } = require('../utils/deliveryPolicyPdf');
 
 /** `range` query: all | today | 7d | 30d | 90d | ytd — filters orders by `orderDate` (inclusive end-of-day). */
 function parseAdminDashboardOrderRange(req) {
@@ -1055,6 +1056,43 @@ const get_orderDetailsPage = async (req, res) => {
     console.log(error);
     req.flash('error', 'Internal Server Error');
     res.redirect('/admin/orders');
+  }
+};
+
+const printPolicy = async (req, res) => {
+  try {
+    const { orderNumber, pageSize } = req.params;
+    const order = await Order.findOne({ orderNumber }).populate('business');
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const rawPaper = pageSize || req.query.paperSize || req.query.size || 'A4';
+    const pdfBuffer = await renderDeliveryPolicyPdfBuffer(order, rawPaper);
+
+    const orderType = order.orderShipping?.orderType || 'Deliver';
+    let filenamePrefix = 'delivery';
+    if (orderType === 'Return') filenamePrefix = 'return';
+    else if (orderType === 'Exchange') filenamePrefix = 'exchange';
+
+    const awb = order.orderNumber != null ? String(order.orderNumber) : '';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${filenamePrefix}-policy-${awb}.pdf"`
+    );
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.end(pdfBuffer, 'binary');
+  } catch (error) {
+    console.error('[admin printPolicy] Error generating document:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to generate PDF document',
+      });
+    }
   }
 };
 
@@ -5506,6 +5544,7 @@ module.exports = {
   get_orders,
   get_ordersFilterBusinesses,
   get_orderDetailsPage,
+  printPolicy,
 
   get_couriersPage,
   get_couriers,

@@ -87,6 +87,9 @@
         <div class="d-sm-flex align-items-center">
           <h5 class="card-title flex-grow-1 mb-0">Order Status - <span style="color: #007bff;"><strong><%= order.orderNumber %></strong></span></h5>
           <div class="flex-shrink-0 mt-2 mt-sm-0">
+            <button type="button" class="btn btn-soft-primary material-shadow-none btn-sm mt-2 mt-sm-0" onclick="handlePrintPolicy('<%= order.orderNumber %>')">
+              <i class="ri-printer-fill align-middle me-1"></i> Download AWB
+            </button>
             <% if (canCancelOrderResolved) { %>
             <button class="btn btn-soft-danger material-shadow-none btn-sm mt-2 mt-sm-0" onclick="cancelOrder('<%= order._id %>')"><i class="mdi mdi-archive-remove-outline align-middle me-1"></i> Cancel Order</button>
             <% } %>
@@ -987,12 +990,107 @@
 </div>
 
 <% } %>
+
+<% if (order) { %>
+<div class="modal fade" id="printPolicyModal" tabindex="-1" aria-labelledby="printPolicyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="printPolicyModalLabel">Download AWB (Delivery Policy)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Select the paper size for the delivery policy (AWB):</p>
+        <form id="printPolicyForm" onsubmit="return false;">
+          <input type="hidden" id="printPolicyOrderId" name="orderId" value="<%= order.orderNumber %>">
+          <div class="d-flex justify-content-around">
+            <div class="paper-size-option" onclick="selectPaperSize('A4')" style="cursor:pointer;text-align:center;padding:8px;border-radius:8px;">
+              <img src="/assets/images/a4.png" alt="A4" style="width: 100px; height: 100px;">
+              <p class="mb-0">A4</p>
+            </div>
+            <div class="paper-size-option" onclick="selectPaperSize('A6')" style="cursor:pointer;text-align:center;padding:8px;border-radius:8px;">
+              <img src="/assets/images/a6.png" alt="A6" style="width: 100px; height: 100px;">
+              <p class="mb-0">A6</p>
+            </div>
+          </div>
+          <input type="hidden" id="paperSize" name="paperSize" value="">
+          <div class="d-flex justify-content-end mt-3">
+            <button type="button" class="btn btn-primary" onclick="printPolicy()">Download</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
 <!--end row-->
 <%- contentFor('FooterJs') %>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+function selectPaperSize(size) {
+  document.getElementById('paperSize').value = size;
+  document.querySelectorAll('.paper-size-option').forEach(function (option) {
+    option.classList.remove('selected');
+    option.style.border = '';
+  });
+  var match = document.querySelector('.paper-size-option[onclick="selectPaperSize(\'' + size + '\')"]');
+  if (match) {
+    match.classList.add('selected');
+    match.style.border = '2px solid #0d6efd';
+  }
+}
+
+function handlePrintPolicy(orderNumber) {
+  var el = document.getElementById('printPolicyOrderId');
+  if (el) el.value = orderNumber;
+  document.getElementById('paperSize').value = '';
+  document.querySelectorAll('.paper-size-option').forEach(function (option) {
+    option.classList.remove('selected');
+    option.style.border = '';
+  });
+  var modal = new bootstrap.Modal(document.getElementById('printPolicyModal'));
+  modal.show();
+}
+
+async function printPolicy() {
+  var orderId = document.getElementById('printPolicyOrderId').value;
+  var paperSize = document.getElementById('paperSize').value;
+  if (!paperSize) {
+    Swal.fire({ icon: 'warning', text: 'Please select a paper size.' });
+    return;
+  }
+  try {
+    var response = await fetch('/admin/print-policy/' + orderId + '?paperSize=' + encodeURIComponent(paperSize), { method: 'GET' });
+    if (!response.ok) {
+      var msg = 'Failed to generate AWB document';
+      try {
+        var errorData = await response.json();
+        if (errorData && errorData.error) msg = errorData.error;
+      } catch (_) {}
+      throw new Error(msg);
+    }
+    var blob = await response.blob();
+    var url = window.URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'delivery-policy-' + orderId + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    var modalEl = document.getElementById('printPolicyModal');
+    var modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+    Swal.fire({ icon: 'success', title: 'Downloaded', text: 'Delivery policy (AWB) has been downloaded.' });
+  } catch (e) {
+    Swal.fire({ icon: 'error', text: e.message || 'Could not download AWB.' });
+  }
+}
+
 async function cancelOrder(orderId) {
   const confirm = await Swal.fire({
     title: 'Cancel this order?',

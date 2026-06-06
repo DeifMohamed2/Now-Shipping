@@ -52,6 +52,11 @@ router.get(
   adminController.get_ordersFilterBusinesses
 );
 router.get('/order-details/:orderNumber', adminController.get_orderDetailsPage);
+router.get('/print-policy/:orderNumber', adminController.printPolicy);
+router.post(
+  '/orders/print-policy/:orderNumber/:pageSize',
+  adminController.printPolicy
+);
 
 // couriers
 
