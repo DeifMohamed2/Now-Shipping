@@ -243,6 +243,12 @@ router.post(
   adminController.adminReturnToWarehouseFromWaiting
 );
 router.post('/orders/cancel-order/:orderId', adminController.adminCancelOrder);
+router.post('/orders/complete-order/:orderId', adminController.adminCompleteOrder);
+router.post('/orders/complete-multiple', adminController.adminCompleteMultiple);
+router.delete('/orders/delete-order/:orderId', adminController.adminDeleteOrder);
+router.post('/orders/delete-multiple', adminController.adminDeleteMultiple);
+router.get('/edit-order/:orderNumber', adminController.get_adminEditOrderPage);
+router.put('/orders/edit-order/:orderId', adminController.adminEditOrder);
 router.post('/orders/:orderId/cancel', adminController.adminCancelFromWaiting);
 router.post(
   '/orders/:orderId/change-return-courier',

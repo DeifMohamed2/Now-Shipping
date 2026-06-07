@@ -356,14 +356,27 @@
       }
       if (!data.success) throw new Error(data.error || data.message);
 
-      const icon = data.errors?.length ? 'warning' : 'success';
+      const nothingCreated =
+        (data.businessesProcessed ?? 0) === 0 && (data.businessesSkipped ?? 0) === 0;
+      const icon = data.errors?.length
+        ? 'warning'
+        : nothingCreated && data.noPayoutReason === 'non_positive_balance'
+          ? 'info'
+          : nothingCreated
+            ? 'info'
+            : 'success';
+      const title = nothingCreated
+        ? data.noPayoutReason === 'non_positive_balance'
+          ? 'No payout due'
+          : 'No payout created'
+        : 'Done!';
       const skippedNote = data.businessesSkipped ? ` ${data.businessesSkipped} already paid this week.` : '';
       Swal.fire({
         icon,
-        title: 'Done!',
+        title,
         text: data.message + skippedNote,
-        timer: data.errors?.length ? undefined : 2500,
-        showConfirmButton: !!data.errors?.length,
+        timer: data.errors?.length ? undefined : nothingCreated ? undefined : 2500,
+        showConfirmButton: nothingCreated || !!data.errors?.length,
       });
       loadPayouts();
     } catch (err) {

@@ -78,11 +78,11 @@ async function runPayoutProcessing(options = {}) {
       matchStage.business = new mongoose.Types.ObjectId(businessId);
     }
 
-    const unsettledAgg = await LedgerEntry.aggregate([
+    const unsettledAggRaw = await LedgerEntry.aggregate([
       { $match: matchStage },
       { $group: { _id: '$business', total: { $sum: '$amount' } } },
-      { $match: { total: { $gt: 0 } } },
     ]);
+    const unsettledAgg = unsettledAggRaw.filter((row) => row.total > 0);
 
     console.log(`[payoutProcessing] ${unsettledAgg.length} business(es) eligible${businessId ? ` (filtered to ${businessId})` : ''}.`);
 
@@ -144,14 +144,45 @@ async function runPayoutProcessing(options = {}) {
       }
     }
 
+    const singleBusinessRaw =
+      businessId && unsettledAggRaw.length === 1 ? unsettledAggRaw[0] : null;
+    const unsettledBalance =
+      singleBusinessRaw != null ? singleBusinessRaw.total : null;
+
+    let idleMessage = 'No businesses had an unsettled positive balance.';
+    if (businessId && unsettledBalance != null) {
+      if (unsettledBalance <= 0) {
+        idleMessage =
+          `No payout created: unsettled balance is ${unsettledBalance} EGP. ` +
+          'Payouts only run when the net unsettled balance is positive (e.g. COD collected exceeds fees). ' +
+          'Unsettled ledger rows can still show fees or partial credits.';
+      } else {
+        idleMessage = `No payout created despite positive balance (${unsettledBalance} EGP). Check logs.`;
+      }
+    }
+
     const summary = {
       businessesProcessed,
       businessesSkipped,
       errors,
       success: errors.length === 0,
-      message: businessesProcessed === 0 && businessesSkipped === 0
-        ? 'No businesses had an unsettled positive balance.'
-        : `${businessesProcessed} payout(s) created${businessesSkipped ? `, ${businessesSkipped} already paid this week` : ''}${errors.length ? `, ${errors.length} error(s) — check logs` : ''}.`,
+      unsettledBalance,
+      unsettledEntryCount:
+        businessId && unsettledBalance != null
+          ? await LedgerEntry.countDocuments(matchStage)
+          : null,
+      noPayoutReason:
+        businessesProcessed === 0 && businessesSkipped === 0 && unsettledBalance != null
+          ? unsettledBalance <= 0
+            ? 'non_positive_balance'
+            : 'unknown'
+          : businessesProcessed === 0 && businessesSkipped === 0
+            ? 'no_eligible_businesses'
+            : null,
+      message:
+        businessesProcessed === 0 && businessesSkipped === 0
+          ? idleMessage
+          : `${businessesProcessed} payout(s) created${businessesSkipped ? `, ${businessesSkipped} already paid this week` : ''}${errors.length ? `, ${errors.length} error(s) — check logs` : ''}.`,
     };
 
     await JobLog.findOneAndUpdate(

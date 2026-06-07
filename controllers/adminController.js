@@ -42,6 +42,204 @@ const {
 } = require('../utils/pickupAddressResolve');
 const { generateUniqueOrderNumber } = require('../utils/orderCreationHelper');
 const { renderDeliveryPolicyPdfBuffer } = require('../utils/deliveryPolicyPdf');
+const { calculateOrderFee } = require('../utils/fees');
+
+const TERMINAL_COMPLETE_STATUSES = new Set(['completed', 'returnCompleted']);
+
+async function findOrderByIdOrNumber(orderId) {
+  if (orderId == null || String(orderId).trim() === '') return null;
+  const raw = String(orderId).trim();
+  let order = null;
+  if (mongoose.Types.ObjectId.isValid(raw)) {
+    order = await Order.findById(raw);
+  }
+  if (!order) {
+    order = await Order.findOne({ orderNumber: raw });
+  }
+  return order;
+}
+
+function markAllUpstreamStagesComplete(order) {
+  const stages = order.orderStages || {};
+  const keys = [
+    'orderPlaced',
+    'packed',
+    'shipping',
+    'inProgress',
+    'outForDelivery',
+    'delivered',
+  ];
+  keys.forEach((key) => {
+    if (stages[key]) {
+      stages[key].isCompleted = true;
+      if (!stages[key].completedAt) stages[key].completedAt = new Date();
+    }
+  });
+}
+
+/**
+ * Force-complete an order (admin override). Mutates order in memory; caller saves.
+ * @returns {{ result: 'skipped'|'completed'|'return_completed', message: string, previousStatus?: string }}
+ */
+function applyAdminForceComplete(order) {
+  if (TERMINAL_COMPLETE_STATUSES.has(order.orderStatus)) {
+    return {
+      result: 'skipped',
+      message: `Order ${order.orderNumber} is already ${order.orderStatus}.`,
+    };
+  }
+
+  const previousStatus = order.orderStatus;
+  const adminNote = 'Force-completed by admin';
+  order.$locals = order.$locals || {};
+  order.$locals.nextStatusHistoryNote = adminNote;
+
+  const orderType = order.orderShipping?.orderType || 'Deliver';
+  const targetReturnCompleted =
+    order.orderStatus === 'headingToYou' ||
+    (orderType === 'Return' &&
+      ['returnToBusiness', 'headingToYou', 'returnPickedUp'].includes(
+        order.orderStatus
+      ));
+
+  if (targetReturnCompleted) {
+    order.orderStatus = 'returnCompleted';
+    order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+    order.scheduledRetryAt = null;
+    order.completedDate = order.completedDate || new Date();
+    if (!order.orderStages.delivered?.isCompleted) {
+      order.orderStages.delivered = order.orderStages.delivered || {};
+      order.orderStages.delivered.isCompleted = true;
+      order.orderStages.delivered.completedAt = new Date();
+      order.orderStages.delivered.notes = adminNote;
+    }
+    if (!order.orderStages.returnCompleted?.isCompleted) {
+      order.orderStages.returnCompleted = {
+        isCompleted: true,
+        completedAt: new Date(),
+        notes: adminNote,
+        completedBy: order.deliveryMan || null,
+        deliveryLocation: null,
+        businessSignature: null,
+      };
+    }
+  } else {
+    order.orderStatus = 'completed';
+    order.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
+    order.scheduledRetryAt = null;
+    order.completedDate = order.completedDate || new Date();
+    markAllUpstreamStagesComplete(order);
+    if (!order.orderStages.delivered?.isCompleted) {
+      order.orderStages.delivered = order.orderStages.delivered || {};
+      order.orderStages.delivered.isCompleted = true;
+      order.orderStages.delivered.completedAt = new Date();
+      order.orderStages.delivered.notes = adminNote;
+    }
+  }
+
+  if (order.Attemps < 2) order.Attemps += 1;
+
+  if (order.deliveryMan) {
+    order.courierHistory = order.courierHistory || [];
+    order.courierHistory.push({
+      courier: order.deliveryMan,
+      assignedAt: new Date(),
+      action: 'completed',
+      notes: `Admin force-completed from status ${previousStatus}`,
+    });
+  }
+
+  return {
+    result: targetReturnCompleted ? 'return_completed' : 'completed',
+    message: `Order ${order.orderNumber} marked as ${order.orderStatus}.`,
+    previousStatus,
+  };
+}
+
+async function detachOrderLinksBeforeDelete(order) {
+  const orderId = order._id;
+  if (order.orderShipping?.linkedReturnOrder) {
+    await Order.updateOne(
+      { _id: order.orderShipping.linkedReturnOrder },
+      { $unset: { 'orderShipping.linkedDeliverOrder': '' } }
+    );
+  }
+  if (order.orderShipping?.linkedDeliverOrder) {
+    await Order.updateOne(
+      { _id: order.orderShipping.linkedDeliverOrder },
+      { $unset: { 'orderShipping.linkedReturnOrder': '' } }
+    );
+  }
+  await Order.updateMany(
+    { 'orderShipping.linkedReturnOrder': orderId },
+    { $unset: { 'orderShipping.linkedReturnOrder': '' } }
+  );
+  await Order.updateMany(
+    { 'orderShipping.linkedDeliverOrder': orderId },
+    { $unset: { 'orderShipping.linkedDeliverOrder': '' } }
+  );
+}
+
+/**
+ * @returns {{ ok: boolean, status: number, message: string, code?: string, payoutId?: string }}
+ */
+async function performAdminOrderDelete(orderId) {
+  const order = await findOrderByIdOrNumber(orderId);
+  if (!order) {
+    return { ok: false, status: 404, message: 'Order not found' };
+  }
+
+  const ledgerEntries = await LedgerEntry.find({ orderId: order._id });
+  const settled = ledgerEntries.filter((e) => e.payoutId != null);
+  if (settled.length > 0) {
+    const payoutIds = [
+      ...new Set(settled.map((e) => String(e.payoutId)).filter(Boolean)),
+    ];
+    return {
+      ok: false,
+      status: 409,
+      code: 'SETTLED_IN_PAYOUT',
+      message: `Order ${order.orderNumber} cannot be deleted — financial entries are included in payout(s): ${payoutIds.join(', ')}.`,
+      payoutId: payoutIds[0],
+      orderNumber: order.orderNumber,
+    };
+  }
+
+  if (ledgerEntries.length > 0) {
+    await LedgerEntry.deleteMany({ orderId: order._id });
+  }
+
+  await detachOrderLinksBeforeDelete(order);
+
+  if (order.deliveryMan) {
+    try {
+      await firebase.sendOrderStatusNotification(
+        order.deliveryMan,
+        order.orderNumber,
+        'canceled',
+        {
+          cancelledBy: 'Admin',
+          cancelledAt: new Date(),
+          reason: 'Order permanently deleted by admin',
+        }
+      );
+    } catch (notificationError) {
+      console.error(
+        `Failed to notify courier about order delete ${order.orderNumber}:`,
+        notificationError
+      );
+    }
+  }
+
+  await Order.deleteOne({ _id: order._id });
+
+  return {
+    ok: true,
+    status: 200,
+    message: `Order ${order.orderNumber} permanently deleted.`,
+    orderNumber: order.orderNumber,
+  };
+}
 
 /** `range` query: all | today | 7d | 30d | 90d | ytd — filters orders by `orderDate` (inclusive end-of-day). */
 function parseAdminDashboardOrderRange(req) {
@@ -851,7 +1049,7 @@ const get_orders = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 30,
+      limit = 250,
       orderType,
       status,
       statusCategory,
@@ -860,6 +1058,9 @@ const get_orders = async (req, res) => {
       dateTo,
       search,
       businessId,
+      government,
+      zone,
+      isExpress,
     } = req.query;
 
     const query = {};
@@ -882,6 +1083,22 @@ const get_orders = async (req, res) => {
 
     if (paymentType && paymentType !== 'all') {
       query['orderShipping.amountType'] = paymentType;
+    }
+
+    if (government && String(government).trim() !== '') {
+      const govEsc = String(government).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query['orderCustomer.government'] = new RegExp(`^${govEsc}$`, 'i');
+    }
+
+    if (zone && String(zone).trim() !== '') {
+      const zoneEsc = String(zone).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query['orderCustomer.zone'] = new RegExp(`^${zoneEsc}$`, 'i');
+    }
+
+    if (isExpress === 'true' || isExpress === true) {
+      query['orderShipping.isExpressShipping'] = true;
+    } else if (isExpress === 'false' || isExpress === false) {
+      query['orderShipping.isExpressShipping'] = false;
     }
 
     if (dateFrom || dateTo) {
@@ -930,7 +1147,9 @@ const get_orders = async (req, res) => {
       query.$or = searchOr;
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 250, 1), 250);
+    const skip = (pageNum - 1) * limitNum;
 
     const orders = await Order.find(query)
       .populate(
@@ -940,7 +1159,7 @@ const get_orders = async (req, res) => {
       .populate('deliveryMan')
       .sort({ orderDate: -1, createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(limitNum);
 
     const totalCount = await Order.countDocuments(query);
 
@@ -982,11 +1201,12 @@ const get_orders = async (req, res) => {
     res.status(200).json({
       orders: enhancedOrders || [],
       pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        currentPage: pageNum,
+        totalPages: Math.ceil(totalCount / limitNum) || 1,
         totalCount,
+        limit: limitNum,
         hasNext: skip + orders.length < totalCount,
-        hasPrev: parseInt(page) > 1,
+        hasPrev: pageNum > 1,
       },
     });
   } catch (error) {
@@ -3737,6 +3957,9 @@ const runPayoutProcessing = async (req, res) => {
       message: result?.message || 'Payout processing completed.',
       businessesProcessed: result?.businessesProcessed ?? 0,
       businessesSkipped: result?.businessesSkipped ?? 0,
+      unsettledBalance: result?.unsettledBalance ?? null,
+      unsettledEntryCount: result?.unsettledEntryCount ?? null,
+      noPayoutReason: result?.noPayoutReason ?? null,
       errors: result?.errors ?? [],
     });
   } catch (err) {
@@ -4430,6 +4653,341 @@ const adminCancelFromWaiting = async (req, res) => {
     return res.status(200).json({ message: 'Order canceled' });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to cancel order' });
+  }
+};
+
+const adminCompleteOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await findOrderByIdOrNumber(orderId);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const outcome = applyAdminForceComplete(order);
+    if (outcome.result === 'skipped') {
+      return res.status(200).json({ message: outcome.message, skipped: true });
+    }
+
+    await order.save();
+
+    return res.status(200).json({
+      message: outcome.message,
+      orderStatus: order.orderStatus,
+      previousStatus: outcome.previousStatus,
+    });
+  } catch (error) {
+    console.error('Error in adminCompleteOrder:', error);
+    return res.status(500).json({ error: 'Failed to complete order' });
+  }
+};
+
+const adminCompleteMultiple = async (req, res) => {
+  try {
+    const orderIds = Array.isArray(req.body?.orderIds) ? req.body.orderIds : [];
+    if (!orderIds.length) {
+      return res.status(400).json({ error: 'No orders selected' });
+    }
+
+    const results = { completed: 0, skipped: 0, failed: 0, details: [] };
+
+    for (const id of orderIds) {
+      try {
+        const order = await findOrderByIdOrNumber(id);
+        if (!order) {
+          results.failed += 1;
+          results.details.push({ orderId: id, ok: false, error: 'Order not found' });
+          continue;
+        }
+
+        const outcome = applyAdminForceComplete(order);
+        if (outcome.result === 'skipped') {
+          results.skipped += 1;
+          results.details.push({
+            orderId: id,
+            orderNumber: order.orderNumber,
+            ok: true,
+            skipped: true,
+            message: outcome.message,
+          });
+          continue;
+        }
+
+        await order.save();
+        results.completed += 1;
+        results.details.push({
+          orderId: id,
+          orderNumber: order.orderNumber,
+          ok: true,
+          orderStatus: order.orderStatus,
+          message: outcome.message,
+        });
+      } catch (err) {
+        results.failed += 1;
+        results.details.push({
+          orderId: id,
+          ok: false,
+          error: err.message || 'Failed to complete',
+        });
+      }
+    }
+
+    return res.status(200).json({
+      message: `${results.completed} completed, ${results.skipped} skipped, ${results.failed} failed.`,
+      ...results,
+    });
+  } catch (error) {
+    console.error('Error in adminCompleteMultiple:', error);
+    return res.status(500).json({ error: 'Failed to complete orders' });
+  }
+};
+
+const adminDeleteOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const result = await performAdminOrderDelete(orderId);
+    if (!result.ok) {
+      return res.status(result.status).json({
+        error: result.message,
+        code: result.code,
+        payoutId: result.payoutId,
+      });
+    }
+    return res.status(200).json({ message: result.message });
+  } catch (error) {
+    console.error('Error in adminDeleteOrder:', error);
+    return res.status(500).json({ error: 'Failed to delete order' });
+  }
+};
+
+const adminDeleteMultiple = async (req, res) => {
+  try {
+    const orderIds = Array.isArray(req.body?.orderIds) ? req.body.orderIds : [];
+    if (!orderIds.length) {
+      return res.status(400).json({ error: 'No orders selected' });
+    }
+
+    const results = { deleted: 0, blocked: 0, failed: 0, details: [] };
+
+    for (const id of orderIds) {
+      try {
+        const result = await performAdminOrderDelete(id);
+        if (result.ok) {
+          results.deleted += 1;
+          results.details.push({
+            orderId: id,
+            orderNumber: result.orderNumber,
+            ok: true,
+            message: result.message,
+          });
+        } else if (result.status === 409) {
+          results.blocked += 1;
+          results.details.push({
+            orderId: id,
+            orderNumber: result.orderNumber,
+            ok: false,
+            blocked: true,
+            code: result.code,
+            error: result.message,
+          });
+        } else {
+          results.failed += 1;
+          results.details.push({
+            orderId: id,
+            ok: false,
+            error: result.message,
+          });
+        }
+      } catch (err) {
+        results.failed += 1;
+        results.details.push({
+          orderId: id,
+          ok: false,
+          error: err.message || 'Failed to delete',
+        });
+      }
+    }
+
+    return res.status(200).json({
+      message: `${results.deleted} deleted, ${results.blocked} blocked (payout), ${results.failed} failed.`,
+      ...results,
+    });
+  } catch (error) {
+    console.error('Error in adminDeleteMultiple:', error);
+    return res.status(500).json({ error: 'Failed to delete orders' });
+  }
+};
+
+const get_adminEditOrderPage = async (req, res) => {
+  const { orderNumber } = req.params;
+  try {
+    const order = await Order.findOne({ orderNumber }).populate('business');
+    if (!order) {
+      req.flash('error', 'Order not found');
+      return res.redirect('/admin/orders');
+    }
+
+    if (!canAdminChangeAddress(order)) {
+      req.flash(
+        'error',
+        'This order cannot be edited — a courier may already be assigned, or it is past the editable stage.'
+      );
+      return res.redirect(`/admin/order-details/${order.orderNumber}`);
+    }
+
+    const businessLabel =
+      order.business?.brandInfo?.brandName ||
+      order.business?.name ||
+      'Business';
+
+    res.render('admin/edit-order', {
+      title: `Edit Order — ${order.orderNumber}`,
+      page_title: 'Edit Order',
+      folder: 'Orders',
+      order,
+      businessLabel,
+    });
+  } catch (error) {
+    console.error('Error in get_adminEditOrderPage:', error);
+    req.flash('error', 'Internal server error');
+    res.redirect('/admin/orders');
+  }
+};
+
+const adminEditOrder = async (req, res) => {
+  const { orderId } = req.params;
+  const {
+    fullName,
+    phoneNumber,
+    otherPhoneNumber,
+    address,
+    government,
+    zone,
+    deliverToWorkAddress,
+    orderType,
+    productDescription,
+    numberOfItems,
+    COD,
+    amountCOD,
+    currentPD,
+    numberOfItemsCurrentPD,
+    newPD,
+    numberOfItemsNewPD,
+    CashDifference,
+    amountCashDifference,
+    previewPermission,
+    referralNumber,
+    Notes,
+    isExpressShipping,
+  } = req.body;
+
+  try {
+    const order = await findOrderByIdOrNumber(orderId);
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (!canAdminChangeAddress(order)) {
+      return res.status(403).json({
+        error:
+          'This order cannot be edited — a courier may already be assigned, or it is past the editable stage.',
+        orderStatus: order.orderStatus,
+      });
+    }
+
+    const updatedOrderType = orderType || order.orderShipping.orderType;
+
+    if (!fullName || !phoneNumber || !address || !government || !zone) {
+      return res.status(400).json({ error: 'All customer info fields are required' });
+    }
+
+    const orderCreationTime = new Date(order.createdAt).getTime();
+    const currentTime = Date.now();
+    const sixHoursInMs = 6 * 60 * 60 * 1000;
+    const isOrderOlderThanSixHours =
+      currentTime - orderCreationTime > sixHoursInMs;
+
+    const requestedExpressShipping =
+      isExpressShipping === true ||
+      isExpressShipping === 'true' ||
+      isExpressShipping === 'on';
+    const currentExpressShipping = order.orderShipping.isExpressShipping;
+
+    if (
+      isOrderOlderThanSixHours &&
+      requestedExpressShipping !== currentExpressShipping
+    ) {
+      return res.status(403).json({
+        error:
+          'Express shipping option cannot be changed for orders older than 6 hours.',
+        orderAge: 'old',
+      });
+    }
+
+    const expressShippingValue = requestedExpressShipping;
+    const calculatedOrderFees = calculateOrderFee(
+      government,
+      updatedOrderType,
+      expressShippingValue
+    );
+
+    let amountFromConditions = 0;
+    let amountType = 'NA';
+
+    if (COD === 'on' || COD === true) {
+      amountType = 'COD';
+      amountFromConditions = parseFloat(amountCOD) || 0;
+    } else if (CashDifference === 'on' || CashDifference === true) {
+      amountType = 'CD';
+      amountFromConditions = parseFloat(amountCashDifference) || 0;
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      order._id,
+      {
+        orderCustomer: {
+          fullName,
+          phoneNumber,
+          otherPhoneNumber: otherPhoneNumber || null,
+          address,
+          government,
+          zone,
+          deliverToWorkAddress:
+            deliverToWorkAddress === 'on' || deliverToWorkAddress === true,
+        },
+        orderFees: calculatedOrderFees,
+        orderShipping: {
+          productDescription: productDescription || currentPD || '',
+          numberOfItems: numberOfItems || numberOfItemsCurrentPD || 0,
+          productDescriptionReplacement: newPD || '',
+          numberOfItemsReplacement: numberOfItemsNewPD || 0,
+          orderType: updatedOrderType,
+          amountType,
+          amount: amountFromConditions,
+          isExpressShipping: expressShippingValue,
+          returnReason: order.orderShipping.returnReason,
+          originalOrderNumber: order.orderShipping.originalOrderNumber,
+          linkedDeliverOrder: order.orderShipping.linkedDeliverOrder,
+          linkedReturnOrder: order.orderShipping.linkedReturnOrder,
+        },
+        isOrderAvailableForPreview: previewPermission === 'on',
+        orderNotes: Notes || '',
+        referralNumber: referralNumber || '',
+      },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
+    return res.status(200).json({
+      message: 'Order updated successfully.',
+      order: updatedOrder,
+    });
+  } catch (error) {
+    console.error('Error in adminEditOrder:', error);
+    return res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 };
 
@@ -5620,6 +6178,12 @@ module.exports = {
   adminReturnToWarehouseFromWaiting,
   adminCancelFromWaiting,
   adminCancelOrder,
+  adminCompleteOrder,
+  adminCompleteMultiple,
+  adminDeleteOrder,
+  adminDeleteMultiple,
+  get_adminEditOrderPage,
+  adminEditOrder,
   changeReturnCourier,
   assignCourierToReturnToBusiness,
   // Shop Product Management

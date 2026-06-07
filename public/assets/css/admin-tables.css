@@ -164,6 +164,23 @@ table.admin-data-table tbody td:last-child {
   display: block !important;
 }
 
+/* Portaled to body — escapes overflow:auto table scroll regions */
+.orders-table-dropdown-menu--fixed {
+  position: fixed !important;
+  z-index: 1080 !important;
+  display: block !important;
+  margin: 0 !important;
+  min-width: 13.5rem;
+  max-width: min(18rem, 85vw);
+  padding: 0.35rem 0;
+  font-size: 0.8125rem;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.12);
+  list-style: none;
+}
+
 .orders-table-dropdown.dropdown-up .dropdown-menu {
   top: auto !important;
   bottom: 100% !important;
@@ -171,7 +188,8 @@ table.admin-data-table tbody td:last-child {
   margin-bottom: 0.35rem !important;
 }
 
-.orders-table-dropdown .dropdown-item {
+.orders-table-dropdown .dropdown-item,
+.orders-table-dropdown-menu--fixed .dropdown-item {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -191,24 +209,29 @@ table.admin-data-table tbody td:last-child {
 }
 
 .orders-table-dropdown .dropdown-item:hover,
-.orders-table-dropdown .dropdown-item:focus {
+.orders-table-dropdown .dropdown-item:focus,
+.orders-table-dropdown-menu--fixed .dropdown-item:hover,
+.orders-table-dropdown-menu--fixed .dropdown-item:focus {
   color: #212529;
   background-color: #f3f6f9;
 }
 
-.orders-table-dropdown .dropdown-item i {
+.orders-table-dropdown .dropdown-item i,
+.orders-table-dropdown-menu--fixed .dropdown-item i {
   flex-shrink: 0;
   width: 1.15rem;
   text-align: center;
   font-size: 0.95rem;
 }
 
-.orders-table-dropdown .dropdown-item span {
+.orders-table-dropdown .dropdown-item span,
+.orders-table-dropdown-menu--fixed .dropdown-item span {
   flex: 1;
   min-width: 0;
 }
 
-.orders-table-dropdown .dropdown-toggle {
+.orders-table-dropdown .dropdown-toggle,
+.orders-table-dropdown [data-dropdown-toggle] {
   background: transparent;
   border: none;
   padding: 0.25rem 0.5rem;
@@ -220,17 +243,26 @@ table.admin-data-table tbody td:last-child {
   line-height: 1;
 }
 
-.orders-table-dropdown .dropdown-toggle:hover {
+/* Avoid Bootstrap caret on custom admin row menus */
+.orders-table-dropdown .dropdown-toggle::after,
+.orders-table-dropdown [data-dropdown-toggle]::after {
+  display: none !important;
+}
+
+.orders-table-dropdown .dropdown-toggle:hover,
+.orders-table-dropdown [data-dropdown-toggle]:hover {
   background-color: rgba(0, 0, 0, 0.05);
   color: #405189;
 }
 
-.orders-table-dropdown .dropdown-toggle:focus-visible {
+.orders-table-dropdown .dropdown-toggle:focus-visible,
+.orders-table-dropdown [data-dropdown-toggle]:focus-visible {
   outline: 2px solid rgba(10, 179, 156, 0.35);
   outline-offset: 2px;
 }
 
-.orders-table-dropdown.show .dropdown-toggle {
+.orders-table-dropdown.show .dropdown-toggle,
+.orders-table-dropdown.show [data-dropdown-toggle] {
   background-color: rgba(10, 179, 156, 0.12);
   color: #0ab39c;
 }

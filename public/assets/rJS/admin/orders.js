@@ -4,10 +4,13 @@
 (function () {
   'use strict';
 
-  const ORDERS_PER_PAGE_ADMIN = 30;
+  const ORDERS_PER_PAGE_ADMIN = 250;
+  const TABLE_COL_COUNT = 12;
+  const METRO_GOVERNORATE_KEYS = ['Cairo', 'Giza', 'Qalyubia'];
   let currentPageAdmin = 1;
   let paginationAdmin = { currentPage: 1, totalPages: 1, totalCount: 0 };
   let businessSearchTimer = null;
+  let bostaRegionsData = {};
 
   function escHtml(s) {
     if (s == null || s === undefined) return '';
@@ -87,6 +90,9 @@
       document.getElementById('idStatusCategory')?.value || 'all';
     const payment = document.getElementById('idPayment')?.value || 'all';
     const businessId = document.getElementById('filterBusinessId')?.value || '';
+    const government = document.getElementById('filterGovernment')?.value || '';
+    const zone = document.getElementById('filterZone')?.value || '';
+    const isExpress = document.getElementById('filterIsExpress')?.value || 'all';
     const dateInput = document.getElementById('demo-datepicker');
     let dateFrom = '';
     let dateTo = '';
@@ -107,9 +113,260 @@
       statusCategory,
       paymentType: payment,
       businessId,
+      government,
+      zone,
+      isExpress,
       dateFrom,
       dateTo,
     };
+  }
+
+  function govLabel(govKey) {
+    const gov = bostaRegionsData[govKey];
+    if (!gov) return govKey;
+    return (gov.label && gov.label.en) || gov.value || govKey;
+  }
+
+  async function loadBostaRegions() {
+    try {
+      const res = await fetch('/assets/js/bosta-regions-data-processed.json');
+      const data = await res.json();
+      bostaRegionsData = {};
+      METRO_GOVERNORATE_KEYS.forEach((k) => {
+        if (data[k]) bostaRegionsData[k] = data[k];
+      });
+      populateGovernorateSelect();
+    } catch (e) {
+      console.error('loadBostaRegions', e);
+    }
+  }
+
+  function populateGovernorateSelect() {
+    const sel = document.getElementById('filterGovernment');
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All governorates</option>';
+    METRO_GOVERNORATE_KEYS.filter((k) => bostaRegionsData[k]).forEach((key) => {
+      const opt = document.createElement('option');
+      opt.value = bostaRegionsData[key].value || key;
+      opt.textContent = govLabel(key);
+      opt.dataset.govKey = key;
+      sel.appendChild(opt);
+    });
+    if (current && [...sel.options].some((o) => o.value === current)) {
+      sel.value = current;
+    }
+    populateZoneOptions(sel.value);
+  }
+
+  function populateZoneOptions(governmentValue) {
+    const zoneSel = document.getElementById('filterZone');
+    if (!zoneSel) return;
+    const current = zoneSel.value;
+    zoneSel.innerHTML = '<option value="">All zones</option>';
+
+    if (!governmentValue) {
+      zoneSel.disabled = true;
+      zoneSel.value = '';
+      return;
+    }
+
+    let govData = null;
+    for (const key of METRO_GOVERNORATE_KEYS) {
+      const g = bostaRegionsData[key];
+      if (g && (g.value === governmentValue || key === governmentValue)) {
+        govData = g;
+        break;
+      }
+    }
+
+    if (!govData || !Array.isArray(govData.areas)) {
+      zoneSel.disabled = true;
+      return;
+    }
+
+    zoneSel.disabled = false;
+    const areas = [...govData.areas].sort((a, b) =>
+      String(a.value).localeCompare(String(b.value), 'en')
+    );
+    areas.forEach((area) => {
+      const opt = document.createElement('option');
+      opt.value = area.value;
+      const lbl = area.label && area.label.en ? area.label.en : area.value;
+      opt.textContent = lbl;
+      zoneSel.appendChild(opt);
+    });
+    if (current && [...zoneSel.options].some((o) => o.value === current)) {
+      zoneSel.value = current;
+    } else {
+      zoneSel.value = '';
+    }
+  }
+
+  function hasAdvancedFiltersActive() {
+    const filters = getAdminFilters();
+    return !!(
+      filters.government ||
+      filters.zone ||
+      filters.businessId ||
+      (filters.status && filters.status !== 'all') ||
+      (filters.statusCategory && filters.statusCategory !== 'all') ||
+      (filters.paymentType && filters.paymentType !== 'all') ||
+      (filters.isExpress && filters.isExpress !== 'all')
+    );
+  }
+
+  function setAdvancedFiltersOpen(open) {
+    const panel = document.getElementById('adminOrdersAdvancedPanel');
+    const btn = document.getElementById('adminOrdersAdvancedToggle');
+    if (!panel || !btn) return;
+    const isOpen = !!open;
+    panel.hidden = !isOpen;
+    panel.classList.toggle('is-open', isOpen);
+    btn.classList.toggle('is-open', isOpen);
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+
+  function toggleAdvancedFilters() {
+    const panel = document.getElementById('adminOrdersAdvancedPanel');
+    if (!panel) return;
+    setAdvancedFiltersOpen(!panel.classList.contains('is-open'));
+  }
+
+  function syncAdvancedFiltersPanel() {
+    const btn = document.getElementById('adminOrdersAdvancedToggle');
+    const active = hasAdvancedFiltersActive();
+    if (btn) btn.classList.toggle('has-active', active);
+    if (active) setAdvancedFiltersOpen(true);
+  }
+
+  function renderActiveFilterChips() {
+    const bar = document.getElementById('adminOrdersFilterChips');
+    if (!bar) return;
+
+    const filters = getAdminFilters();
+    const chips = [];
+    const orderType = getActiveOrderType();
+
+    if (filters.search) {
+      chips.push({ key: 'search', label: `Search: ${filters.search}` });
+    }
+    if (filters.dateFrom) {
+      const range =
+        filters.dateTo && filters.dateTo !== filters.dateFrom
+          ? `${filters.dateFrom} → ${filters.dateTo}`
+          : filters.dateFrom;
+      chips.push({ key: 'date', label: `Date: ${range}` });
+    }
+    if (filters.government) {
+      chips.push({ key: 'government', label: `Governorate: ${filters.government}` });
+    }
+    if (filters.zone) {
+      chips.push({ key: 'zone', label: `Zone: ${filters.zone}` });
+    }
+    if (filters.businessId) {
+      const bizSel = document.getElementById('filterBusinessId');
+      const bizLabel =
+        bizSel && bizSel.selectedOptions[0]
+          ? bizSel.selectedOptions[0].textContent
+          : 'Business';
+      chips.push({ key: 'businessId', label: `Business: ${bizLabel}` });
+    }
+    if (filters.status && filters.status !== 'all') {
+      const st = getStatusDetails(filters.status);
+      chips.push({ key: 'status', label: `Status: ${st.statusText}` });
+    }
+    if (filters.statusCategory && filters.statusCategory !== 'all') {
+      chips.push({ key: 'statusCategory', label: `Category: ${filters.statusCategory}` });
+    }
+    if (filters.paymentType && filters.paymentType !== 'all') {
+      chips.push({ key: 'paymentType', label: `Payment: ${filters.paymentType}` });
+    }
+    if (filters.isExpress && filters.isExpress !== 'all') {
+      chips.push({
+        key: 'isExpress',
+        label: filters.isExpress === 'true' ? 'Fast shipping' : 'Standard shipping',
+      });
+    }
+    if (orderType && orderType !== 'All') {
+      chips.push({ key: 'orderType', label: `Type: ${orderType}` });
+    }
+
+    bar.innerHTML = '';
+    chips.forEach((chip) => {
+      const el = document.createElement('span');
+      el.className = 'admin-orders-chip';
+      el.innerHTML = `${escHtml(chip.label)} <button type="button" aria-label="Remove filter" data-chip-key="${chip.key}"><i class="ri-close-line"></i></button>`;
+      el.querySelector('button').addEventListener('click', () => clearFilterByKey(chip.key));
+      bar.appendChild(el);
+    });
+
+    if (chips.length) {
+      const clearAll = document.createElement('button');
+      clearAll.type = 'button';
+      clearAll.className = 'admin-orders-chip admin-orders-chip--clear';
+      clearAll.textContent = 'Clear all';
+      clearAll.addEventListener('click', clearAdminFilters);
+      bar.appendChild(clearAll);
+    }
+
+    syncAdvancedFiltersPanel();
+  }
+
+  function clearFilterByKey(key) {
+    if (key === 'search') {
+      const s = document.querySelector('.admin-orders-filters .search');
+      if (s) s.value = '';
+    } else if (key === 'date') {
+      const dp = document.getElementById('demo-datepicker');
+      if (dp) dp.value = '';
+    } else if (key === 'government') {
+      const g = document.getElementById('filterGovernment');
+      if (g) g.value = '';
+      populateZoneOptions('');
+    } else if (key === 'zone') {
+      const z = document.getElementById('filterZone');
+      if (z) z.value = '';
+    } else if (key === 'businessId') {
+      const fb = document.getElementById('filterBusinessId');
+      if (fb) fb.value = '';
+    } else if (key === 'status') {
+      const st = document.getElementById('orderStatus');
+      if (st) st.value = 'all';
+    } else if (key === 'statusCategory') {
+      const sc = document.getElementById('idStatusCategory');
+      if (sc) sc.value = 'all';
+    } else if (key === 'paymentType') {
+      const pay = document.getElementById('idPayment');
+      if (pay) pay.value = 'all';
+    } else if (key === 'isExpress') {
+      const ex = document.getElementById('filterIsExpress');
+      if (ex) ex.value = 'all';
+    } else if (key === 'orderType') {
+      setActiveOrderTypeTab('All');
+    }
+    currentPageAdmin = 1;
+    renderActiveFilterChips();
+    fetchOrders(getActiveOrderType(), 1);
+  }
+
+  function updateResultsSummary() {
+    const top = document.getElementById('adminOrdersResultsSummary');
+    const bottom = document.getElementById('adminOrdersPaginationSummary');
+    const { currentPage, totalPages, totalCount } = paginationAdmin;
+    if (!totalCount) {
+      const empty = 'No orders to display';
+      if (top) top.innerHTML = empty;
+      if (bottom) bottom.textContent = '';
+      return;
+    }
+    const start = (currentPage - 1) * ORDERS_PER_PAGE_ADMIN + 1;
+    const end = Math.min(currentPage * ORDERS_PER_PAGE_ADMIN, totalCount);
+    const text = `Showing ${start}–${end} of ${totalCount} order${totalCount === 1 ? '' : 's'}`;
+    if (top) {
+      top.innerHTML = `${text} <span class="admin-orders-per-page-badge">${ORDERS_PER_PAGE_ADMIN} per page</span>`;
+    }
+    if (bottom) bottom.textContent = text;
   }
 
   async function loadBusinessFilterOptions(q) {
@@ -212,21 +469,32 @@
     return { badgeClass, statusText };
   }
 
-  /** Swap Import vs Cancel selected in header (same slot as Import). */
+  const TERMINAL_COMPLETE_STATUSES = new Set(['completed', 'returnCompleted']);
+
+  function getSelectedOrderIds() {
+    return [...document.querySelectorAll("input[name='checkAll[]']:checked")]
+      .map((cb) => cb.getAttribute('data-order-id'))
+      .filter(Boolean);
+  }
+
+  /** Swap Import vs bulk actions when rows are selected. */
   function updateOrdersBulkToolbar() {
     const n = document.querySelectorAll(
       '#orderTable input[name="checkAll[]"]:checked'
     ).length;
     const importBtn = document.getElementById('orders-import-btn');
+    const completeBtn = document.getElementById('orders-bulk-complete-btn');
     const cancelBtn = document.getElementById('orders-bulk-cancel-btn');
+    const deleteBtn = document.getElementById('orders-bulk-delete-btn');
     if (importBtn) {
       importBtn.style.display = n > 0 ? 'none' : '';
       importBtn.setAttribute('aria-hidden', n > 0 ? 'true' : 'false');
     }
-    if (cancelBtn) {
-      cancelBtn.style.display = n === 0 ? 'none' : '';
-      cancelBtn.setAttribute('aria-hidden', n === 0 ? 'true' : 'false');
-    }
+    [completeBtn, cancelBtn, deleteBtn].forEach((btn) => {
+      if (!btn) return;
+      btn.style.display = n === 0 ? 'none' : '';
+      btn.setAttribute('aria-hidden', n === 0 ? 'true' : 'false');
+    });
   }
 
   /**
@@ -321,7 +589,7 @@
 
     try {
       tableBody.innerHTML =
-        '<tr><td colspan="11" class="text-center py-4">' +
+        `<tr><td colspan="${TABLE_COL_COUNT}" class="text-center py-4">` +
         '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>' +
         '</td></tr>';
 
@@ -348,6 +616,11 @@
       if (filters.search) params.append('search', filters.search);
       if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
       if (filters.dateTo) params.append('dateTo', filters.dateTo);
+      if (filters.government) params.append('government', filters.government);
+      if (filters.zone) params.append('zone', filters.zone);
+      if (filters.isExpress && filters.isExpress !== 'all') {
+        params.append('isExpress', filters.isExpress);
+      }
 
       const response = await fetch(`/admin/get-orders?${params.toString()}`);
       const data = await response.json();
@@ -359,6 +632,8 @@
         NoResult.style.display = data.orders.length === 0 ? 'block' : 'none';
         if (data.orders.length) populateOrdersTable(data.orders);
         updateAdminPagination();
+        updateResultsSummary();
+        renderActiveFilterChips();
         updateOrdersBulkToolbar();
       } else {
         Swal.fire({
@@ -446,10 +721,6 @@
       const gov = order.orderCustomer ? order.orderCustomer.government || 'N/A' : 'N/A';
       const govEsc = escHtml(gov);
       const zoneEsc = escHtml(zone);
-      const zoneLine = zone
-        ? `${govEsc} <span class="text-muted">·</span> <span class="cell-muted">${zoneEsc}</span>`
-        : govEsc;
-
       const shortDate = new Date(order.orderDate).toLocaleString(undefined, {
         year: 'numeric',
         month: 'short',
@@ -499,6 +770,8 @@
           order.orderShipping.orderType === 'Return' &&
           order.orderStatus === 'new');
 
+      const showComplete = !TERMINAL_COMPLETE_STATUSES.has(order.orderStatus);
+
       row.innerHTML = `
         <th scope="row">
           <div class="form-check">
@@ -531,7 +804,12 @@
               : ''
           }
         </td>
-        <td class="cell-compact">${zoneLine}</td>
+        <td class="cell-compact admin-orders-col-gov">
+          <span class="cell-truncate" title="${govEsc}">${govEsc}</span>
+        </td>
+        <td class="cell-compact admin-orders-col-zone">
+          <span class="cell-truncate" title="${zoneEsc || '—'}">${zoneEsc || '<span class="text-muted">—</span>'}</span>
+        </td>
         <td class="cell-compact">
           <div class="fw-medium">${orderAmount} EGP</div>
           <div class="cell-muted">${getAmountTypeLabel(orderAmountType, order.orderShipping && order.orderShipping.orderType)}</div>
@@ -541,7 +819,7 @@
         </td>
         <td class="cell-compact">${assignBlock}</td>
         <td class="cell-compact text-nowrap"><span title="${new Date(order.orderDate).toISOString()}">${shortDate}</span></td>
-        <td class="text-nowrap">
+        <td class="text-nowrap admin-orders-col-actions">
           <div class="orders-table-dropdown" data-order-id="${order.orderNumber}">
             <button class="dropdown-toggle" type="button" aria-expanded="false" data-dropdown-toggle aria-label="Order actions">
               <i class="ri-more-fill" aria-hidden="true"></i>
@@ -578,22 +856,38 @@
                 </button>
               </li>
               <li>
-                <a class="dropdown-item" href="/business/edit-order/${order.orderNumber}">
+                <a class="dropdown-item" href="/admin/edit-order/${order.orderNumber}">
                   <i class="ri-edit-2-fill text-warning"></i>
                   <span>Edit Order</span>
                 </a>
               </li>
+              ${
+                showComplete
+                  ? `<li>
+                <button type="button" class="dropdown-item text-success" data-act="complete" data-id="${order._id}">
+                  <i class="ri-checkbox-circle-line"></i>
+                  <span>Complete Order</span>
+                </button>
+              </li>`
+                  : ''
+              }
               <li><hr class="dropdown-divider my-1" /></li>
               <li>
-                <button type="button" class="dropdown-item text-danger" data-act="cancel" data-id="${order._id}">
-                  <i class="ri-delete-bin-6-fill"></i>
+                <button type="button" class="dropdown-item text-warning" data-act="cancel" data-id="${order._id}">
+                  <i class="ri-close-circle-line"></i>
                   <span>Cancel Order</span>
                 </button>
               </li>
               <li>
-                <a class="dropdown-item" href="/business/order-details/${order.orderNumber}">
-                  <i class="ri-truck-line text-info"></i>
-                  <span>Track Order</span>
+                <button type="button" class="dropdown-item text-danger" data-act="force-delete" data-id="${order._id}" data-order-number="${escHtml(String(order.orderNumber))}">
+                  <i class="ri-delete-bin-6-fill"></i>
+                  <span>Delete Permanently</span>
+                </button>
+              </li>
+              <li>
+                <a class="dropdown-item" href="/admin/order-details/${order.orderNumber}">
+                  <i class="ri-eye-line text-info"></i>
+                  <span>View Details</span>
                 </a>
               </li>
             </ul>
@@ -619,9 +913,22 @@
           );
         });
       });
+      row.querySelectorAll('[data-act="complete"]').forEach((btn) => {
+        btn.addEventListener('click', () =>
+          completeOrder(btn.getAttribute('data-id'))
+        );
+      });
       row.querySelectorAll('[data-act="cancel"]').forEach((btn) => {
         btn.addEventListener('click', () =>
           cancelOrder(btn.getAttribute('data-id'))
+        );
+      });
+      row.querySelectorAll('[data-act="force-delete"]').forEach((btn) => {
+        btn.addEventListener('click', () =>
+          forceDeleteOrder(
+            btn.getAttribute('data-id'),
+            btn.getAttribute('data-order-number')
+          )
         );
       });
       row.querySelectorAll('[data-act="print-awb"]').forEach((btn) => {
@@ -668,13 +975,21 @@
     if (sc) sc.value = 'all';
     const pay = document.getElementById('idPayment');
     if (pay) pay.value = 'all';
+    const ex = document.getElementById('filterIsExpress');
+    if (ex) ex.value = 'all';
+    const fg = document.getElementById('filterGovernment');
+    if (fg) fg.value = '';
+    populateZoneOptions('');
     const fb = document.getElementById('filterBusinessId');
     if (fb) fb.value = '';
     const bq = document.getElementById('businessFilterSearch');
     if (bq) bq.value = '';
+    setActiveOrderTypeTab('All');
     loadBusinessFilterOptions('');
     currentPageAdmin = 1;
-    fetchOrders(getActiveOrderType(), 1);
+    setAdvancedFiltersOpen(false);
+    renderActiveFilterChips();
+    fetchOrders('All', 1);
   }
 
   async function assignDeliveryMan(orderId, zone) {
@@ -802,6 +1117,170 @@
           text: 'There was an error. Please try again later.',
           icon: 'error',
         });
+      }
+    });
+  }
+
+  async function completeOrder(orderId) {
+    Swal.fire({
+      title: 'Complete this order?',
+      html: '<p class="text-muted mb-0">This will <strong>force-complete</strong> the order regardless of its current status. Financial ledger entries are written automatically (idempotent).</p>',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0ab39c',
+      confirmButtonText: 'Yes, complete',
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+      try {
+        const response = await fetch(`/admin/orders/complete-order/${orderId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok) {
+          Swal.fire({
+            icon: data.skipped ? 'info' : 'success',
+            title: data.skipped ? 'Already complete' : 'Completed',
+            text: data.message || 'Order updated.',
+          }).then(() => fetchOrders(getActiveOrderType(), currentPageAdmin));
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.error || 'Could not complete order.',
+          });
+        }
+      } catch (error) {
+        console.error('completeOrder:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Request failed.' });
+      }
+    });
+  }
+
+  async function completeMultiple() {
+    const orderIds = getSelectedOrderIds();
+    if (!orderIds.length) {
+      Swal.fire({ icon: 'info', title: 'No orders selected' });
+      return;
+    }
+    Swal.fire({
+      title: `Complete ${orderIds.length} order(s)?`,
+      html: '<p class="text-muted mb-0">Selected orders will be <strong>force-completed</strong>. Already-completed orders are skipped.</p>',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0ab39c',
+      confirmButtonText: 'Yes, complete all',
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+      try {
+        const response = await fetch('/admin/orders/complete-multiple', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderIds }),
+        });
+        const data = await response.json().catch(() => ({}));
+        Swal.fire({
+          icon: response.ok ? 'success' : 'warning',
+          title: response.ok ? 'Bulk complete' : 'Partial failure',
+          html: `<p class="mb-0">${escHtml(data.message || 'Done')}</p>`,
+        }).then(() => fetchOrders(getActiveOrderType(), 1));
+      } catch (error) {
+        console.error('completeMultiple:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Request failed.' });
+      }
+    });
+  }
+
+  async function forceDeleteOrder(orderId, orderNumber) {
+    const label = orderNumber ? `order #${orderNumber}` : 'this order';
+    Swal.fire({
+      title: 'Delete permanently?',
+      html: `<p class="text-muted mb-2">You are about to <strong>permanently delete</strong> ${escHtml(label)}. This cannot be undone.</p><p class="text-muted small mb-0">Orders already included in a <strong>payout</strong> cannot be deleted.</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete permanently',
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+      try {
+        const response = await fetch(`/admin/orders/delete-order/${orderId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Deleted',
+            text: data.message || 'Order deleted.',
+          }).then(() => fetchOrders(getActiveOrderType(), currentPageAdmin));
+        } else if (response.status === 409) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Cannot delete — financial lock',
+            html: `<p class="mb-0">${escHtml(data.error || 'This order is settled in a payout.')}</p>`,
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.error || 'Could not delete order.',
+          });
+        }
+      } catch (error) {
+        console.error('forceDeleteOrder:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Request failed.' });
+      }
+    });
+  }
+
+  async function forceDeleteMultiple() {
+    const orderIds = getSelectedOrderIds();
+    if (!orderIds.length) {
+      Swal.fire({ icon: 'info', title: 'No orders selected' });
+      return;
+    }
+    Swal.fire({
+      title: `Delete ${orderIds.length} order(s) permanently?`,
+      html: '<p class="text-muted mb-2">This <strong>cannot be undone</strong>. Orders settled in payouts will be skipped.</p>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete all',
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+      try {
+        const response = await fetch('/admin/orders/delete-multiple', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderIds }),
+        });
+        const data = await response.json().catch(() => ({}));
+        let detailHtml = '';
+        if (Array.isArray(data.details) && data.details.length) {
+          const blocked = data.details.filter((d) => d.blocked);
+          if (blocked.length) {
+            detailHtml =
+              '<ul class="text-start small mt-2 mb-0">' +
+              blocked
+                .slice(0, 5)
+                .map(
+                  (d) =>
+                    `<li>${escHtml(d.orderNumber || d.orderId)}: ${escHtml(d.error || 'blocked')}</li>`
+                )
+                .join('') +
+              (blocked.length > 5 ? `<li>…and ${blocked.length - 5} more</li>` : '') +
+              '</ul>';
+          }
+        }
+        Swal.fire({
+          icon: response.ok ? 'success' : 'warning',
+          title: 'Bulk delete',
+          html: `<p class="mb-0">${escHtml(data.message || 'Done')}</p>${detailHtml}`,
+        }).then(() => fetchOrders(getActiveOrderType(), 1));
+      } catch (error) {
+        console.error('forceDeleteMultiple:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Request failed.' });
       }
     });
   }
@@ -965,6 +1444,12 @@
     const clearBtn = document.getElementById('adminOrdersClearFilters');
     if (clearBtn) clearBtn.addEventListener('click', clearAdminFilters);
 
+    const advancedToggle = document.getElementById('adminOrdersAdvancedToggle');
+    if (advancedToggle) {
+      advancedToggle.addEventListener('click', toggleAdvancedFilters);
+    }
+    setAdvancedFiltersOpen(false);
+
     const bSearch = document.getElementById('businessFilterSearch');
     if (bSearch) {
       bSearch.addEventListener('input', () => {
@@ -983,15 +1468,26 @@
       });
     }
 
-    ['orderStatus', 'idStatusCategory', 'idPayment'].forEach((id) => {
+    ['orderStatus', 'idStatusCategory', 'idPayment', 'filterIsExpress', 'filterZone'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) {
         el.addEventListener('change', () => {
           currentPageAdmin = 1;
+          renderActiveFilterChips();
           fetchOrders(getActiveOrderType(), 1);
         });
       }
     });
+
+    const govSel = document.getElementById('filterGovernment');
+    if (govSel) {
+      govSel.addEventListener('change', () => {
+        populateZoneOptions(govSel.value);
+        currentPageAdmin = 1;
+        renderActiveFilterChips();
+        fetchOrders(getActiveOrderType(), 1);
+      });
+    }
 
     const searchInput = document.querySelector('.admin-orders-filters .search');
     if (searchInput) {
@@ -1010,6 +1506,7 @@
       });
     }
 
+    loadBostaRegions();
     loadBusinessFilterOptions('');
     fetchOrders('All', 1);
 
@@ -1130,6 +1627,10 @@
   window.SearchData = SearchData;
   window.clearAdminFilters = clearAdminFilters;
   window.cancelOrder = cancelOrder;
+  window.completeOrder = completeOrder;
+  window.completeMultiple = completeMultiple;
+  window.forceDeleteOrder = forceDeleteOrder;
+  window.forceDeleteMultiple = forceDeleteMultiple;
   window.deleteMultiple = deleteMultiple;
   window.selectPaperSize = selectPaperSize;
   window.handlePrintPolicy = handlePrintPolicy;

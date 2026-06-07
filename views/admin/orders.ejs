@@ -3,6 +3,7 @@
 
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/rCSS/admin-orders.css" rel="stylesheet" type="text/css" />
 <%- contentFor('body') %>
 
 <div class="row">
@@ -12,127 +13,195 @@
         <div class="row align-items-center gy-3">
           <div class="col-sm">
             <h5 class="card-title mb-0">Orders</h5>
-            <p class="text-muted small mb-0 mt-1">Filter by business, status, payment, and date. Search includes business names.</p>
+            <p class="text-muted small mb-0 mt-1">Search, filter by zone, business, status, and payment. Manage deliveries across governorates.</p>
           </div>
           <div class="col-sm-auto">
             <div class="d-flex gap-1 flex-wrap align-items-center justify-content-end" id="orders-header-actions">
               <button type="button" class="btn btn-info" id="orders-import-btn"><i class="ri-file-download-line align-bottom me-1"></i> Import</button>
-              <button type="button" class="btn btn-soft-danger" id="orders-bulk-cancel-btn" style="display: none;" onclick="deleteMultiple()"><i class="ri-delete-bin-2-line me-1"></i> Cancel selected</button>
+              <button type="button" class="btn btn-success" id="orders-bulk-complete-btn" style="display: none;" onclick="completeMultiple()"><i class="ri-checkbox-circle-line me-1"></i> Complete selected</button>
+              <button type="button" class="btn btn-soft-warning" id="orders-bulk-cancel-btn" style="display: none;" onclick="deleteMultiple()"><i class="ri-close-circle-line me-1"></i> Cancel selected</button>
+              <button type="button" class="btn btn-danger" id="orders-bulk-delete-btn" style="display: none;" onclick="forceDeleteMultiple()"><i class="ri-delete-bin-2-line me-1"></i> Delete selected</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card-body border border-dashed border-end-0 border-start-0">
+      <div class="card-body border border-dashed border-end-0 border-start-0 admin-orders-filters-wrap py-2">
         <form class="admin-orders-filters" id="adminOrdersFilters" onsubmit="return false;">
-          <div class="row g-3 align-items-end">
-            <div class="col-xxl-4 col-lg-6">
-              <label class="form-label mb-1">Search</label>
-              <div class="search-box">
-                <input type="text" class="form-control search" placeholder="Order #, customer, phone, product, business name…" autocomplete="off">
-                <i class="ri-search-line search-icon"></i>
+          <div class="admin-orders-filter-block admin-orders-filter-block--quick">
+            <div class="admin-orders-filter-block__head admin-orders-filter-block__head--compact">
+              <span class="admin-orders-filter-block__icon"><i class="ri-search-line"></i></span>
+              <span class="admin-orders-filter-block__title">Quick search</span>
+            </div>
+            <div class="row g-2 align-items-end">
+              <div class="col-lg-5 col-md-6">
+                <label class="form-label" for="adminOrdersSearch">Search</label>
+                <div class="search-box">
+                  <input type="text" id="adminOrdersSearch" class="form-control form-control-sm search" placeholder="Order #, customer, phone…" autocomplete="off">
+                  <i class="ri-search-line search-icon"></i>
+                </div>
               </div>
-            </div>
-            <div class="col-xxl-3 col-md-6">
-              <label class="form-label mb-1">Date range</label>
-              <input type="text" class="form-control" id="demo-datepicker" placeholder="Select range or single day" autocomplete="off">
-            </div>
-            <div class="col-xxl-5 col-md-6 d-flex flex-wrap gap-2 align-items-end">
-              <button type="button" class="btn btn-primary" id="adminOrdersApplyFilters">
-                <i class="ri-filter-3-line me-1 align-bottom"></i> Apply
-              </button>
-              <button type="button" class="btn btn-soft-secondary" id="adminOrdersClearFilters">
-                <i class="ri-close-line me-1 align-bottom"></i> Clear
-              </button>
+              <div class="col-lg-4 col-md-6">
+                <label class="form-label" for="demo-datepicker">Date range</label>
+                <div class="admin-orders-input-icon">
+                  <i class="ri-calendar-line"></i>
+                  <input type="text" class="form-control form-control-sm" id="demo-datepicker" placeholder="Range or single day" autocomplete="off">
+                </div>
+              </div>
+              <div class="col-lg-3 col-12">
+                <div class="admin-orders-filter-actions">
+                  <button type="button" class="btn btn-primary btn-sm" id="adminOrdersApplyFilters">
+                    <i class="ri-filter-3-line me-1"></i> Apply
+                  </button>
+                  <button type="button" class="btn btn-soft-secondary btn-sm" id="adminOrdersClearFilters">
+                    <i class="ri-refresh-line me-1"></i> Clear
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="row g-3 mt-1">
-            <div class="col-xl-3 col-md-6">
-              <label class="form-label mb-1">Business</label>
-              <input type="text" class="form-control mb-2" id="businessFilterSearch" placeholder="Type to search businesses…" autocomplete="off">
-              <select class="form-select" id="filterBusinessId">
-                <option value="">All businesses</option>
-              </select>
+          <button type="button" class="admin-orders-advanced-toggle" id="adminOrdersAdvancedToggle" aria-expanded="false" aria-controls="adminOrdersAdvancedPanel">
+            <span class="admin-orders-advanced-toggle__label">
+              <i class="ri-equalizer-2-line"></i> Advanced search
+            </span>
+            <span class="admin-orders-advanced-toggle__hint">Zone, business, status &amp; payment</span>
+            <i class="ri-arrow-down-s-line admin-orders-advanced-toggle__chevron" aria-hidden="true"></i>
+          </button>
+
+          <div class="admin-orders-advanced-panel" id="adminOrdersAdvancedPanel" hidden>
+          <div class="admin-orders-filter-block">
+            <div class="admin-orders-filter-block__head admin-orders-filter-block__head--compact">
+              <span class="admin-orders-filter-block__icon"><i class="ri-map-pin-line"></i></span>
+              <span class="admin-orders-filter-block__title">Zone &amp; business</span>
             </div>
-            <div class="col-xl-2 col-md-6">
-              <label class="form-label mb-1">Delivery status</label>
-              <select class="form-select" id="orderStatus">
-                <option value="all" selected>All</option>
-                <option value="new">New</option>
-                <option value="pickedUp">Picked Up</option>
-                <option value="inStock">In Stock</option>
-                <option value="inProgress">In Progress</option>
-                <option value="headingToCustomer">Heading To Customer</option>
-                <option value="headingToYou">Heading To You</option>
-                <option value="completed">Completed</option>
-                <option value="canceled">Canceled</option>
-                <option value="rejected">Customer refused</option>
-                <option value="returned">Returned</option>
-                <option value="terminated">Terminated</option>
-                <option value="waitingAction">Waiting Action</option>
-                <option value="returnInitiated">Return Initiated</option>
-                <option value="returnAssigned">Return Assigned</option>
-                <option value="returnPickedUp">Return Picked Up</option>
-                <option value="returnAtWarehouse">At Warehouse</option>
-                <option value="returnToBusiness">Returning to Business</option>
-                <option value="inReturnStock">In Return Stock</option>
-                <option value="returnCompleted">Return Completed</option>
-                <option value="exchangePickup">Exchange Pickup (legacy)</option>
-                <option value="deliveryFailed">Delivery Failed</option>
-                <option value="rescheduled">Rescheduled</option>
-              </select>
+            <div class="row g-2">
+              <div class="col-xl-2 col-md-4">
+                <label class="form-label" for="filterGovernment">Governorate</label>
+                <select class="form-select form-select-sm" id="filterGovernment">
+                  <option value="">All governorates</option>
+                </select>
+              </div>
+              <div class="col-xl-2 col-md-4">
+                <label class="form-label" for="filterZone">Zone</label>
+                <select class="form-select form-select-sm" id="filterZone" disabled>
+                  <option value="">All zones</option>
+                </select>
+              </div>
+              <div class="col-xl-5 col-md-8">
+                <label class="form-label" for="businessFilterSearch">Business</label>
+                <div class="admin-orders-business-filter">
+                  <div class="search-box mb-1">
+                    <input type="text" class="form-control form-control-sm" id="businessFilterSearch" placeholder="Search businesses…" autocomplete="off">
+                    <i class="ri-store-2-line search-icon"></i>
+                  </div>
+                  <select class="form-select form-select-sm" id="filterBusinessId">
+                    <option value="">All businesses</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div class="col-xl-2 col-md-6">
-              <label class="form-label mb-1">Status category</label>
-              <select class="form-select" id="idStatusCategory">
-                <option value="all" selected>All</option>
-                <option value="NEW">New</option>
-                <option value="PROCESSING">Processing</option>
-                <option value="PAUSED">Paused</option>
-                <option value="SUCCESSFUL">Successful</option>
-                <option value="UNSUCCESSFUL">Unsuccessful</option>
-              </select>
+          </div>
+
+          <div class="admin-orders-filter-block admin-orders-filter-block--last">
+            <div class="admin-orders-filter-block__head admin-orders-filter-block__head--compact">
+              <span class="admin-orders-filter-block__icon"><i class="ri-equalizer-line"></i></span>
+              <span class="admin-orders-filter-block__title">Status &amp; payment</span>
             </div>
-            <div class="col-xl-2 col-md-6">
-              <label class="form-label mb-1">Payment type</label>
-              <select class="form-select" id="idPayment">
-                <option value="all" selected>All</option>
-                <option value="COD">COD</option>
-                <option value="CD">CD</option>
-                <option value="NA">NA</option>
-              </select>
+            <div class="row g-2">
+              <div class="col-xl-3 col-md-6">
+                <label class="form-label" for="orderStatus">Delivery status</label>
+                <select class="form-select form-select-sm" id="orderStatus">
+                  <option value="all" selected>All</option>
+                  <option value="new">New</option>
+                  <option value="pickedUp">Picked Up</option>
+                  <option value="inStock">In Stock</option>
+                  <option value="inProgress">In Progress</option>
+                  <option value="headingToCustomer">Heading To Customer</option>
+                  <option value="headingToYou">Heading To You</option>
+                  <option value="completed">Completed</option>
+                  <option value="canceled">Canceled</option>
+                  <option value="rejected">Customer refused</option>
+                  <option value="returned">Returned</option>
+                  <option value="terminated">Terminated</option>
+                  <option value="waitingAction">Waiting Action</option>
+                  <option value="returnInitiated">Return Initiated</option>
+                  <option value="returnAssigned">Return Assigned</option>
+                  <option value="returnPickedUp">Return Picked Up</option>
+                  <option value="returnAtWarehouse">At Warehouse</option>
+                  <option value="returnToBusiness">Returning to Business</option>
+                  <option value="inReturnStock">In Return Stock</option>
+                  <option value="returnCompleted">Return Completed</option>
+                  <option value="exchangePickup">Exchange Pickup (legacy)</option>
+                  <option value="deliveryFailed">Delivery Failed</option>
+                  <option value="rescheduled">Rescheduled</option>
+                </select>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <label class="form-label" for="idStatusCategory">Status category</label>
+                <select class="form-select form-select-sm" id="idStatusCategory">
+                  <option value="all" selected>All</option>
+                  <option value="NEW">New</option>
+                  <option value="PROCESSING">Processing</option>
+                  <option value="PAUSED">Paused</option>
+                  <option value="SUCCESSFUL">Successful</option>
+                  <option value="UNSUCCESSFUL">Unsuccessful</option>
+                </select>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <label class="form-label" for="idPayment">Payment type</label>
+                <select class="form-select form-select-sm" id="idPayment">
+                  <option value="all" selected>All</option>
+                  <option value="COD">COD</option>
+                  <option value="CD">CD</option>
+                  <option value="NA">NA</option>
+                </select>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <label class="form-label" for="filterIsExpress">Shipping speed</label>
+                <select class="form-select form-select-sm" id="filterIsExpress">
+                  <option value="all" selected>All</option>
+                  <option value="true">Fast only</option>
+                  <option value="false">Standard only</option>
+                </select>
+              </div>
             </div>
+          </div>
           </div>
         </form>
       </div>
 
       <div class="card-body pt-0">
-        <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3 flex-wrap" role="tablist">
-          <li class="nav-item">
-            <button type="button" class="btn orderType btn-link nav-link active py-3" data-order-type="All" role="tab" aria-selected="true" onclick="filterOrders('All')">
-              <i class="ri-store-2-fill me-1 align-bottom"></i> All Orders
-            </button>
-          </li>
-          <li class="nav-item">
-            <button type="button" class="btn orderType btn-link nav-link py-3" data-order-type="Deliver" role="tab" aria-selected="false" onclick="filterOrders('Deliver')">
-              <i class="ri-truck-line me-1 align-bottom"></i> Deliver
-            </button>
-          </li>
-          <li class="nav-item">
-            <button type="button" class="btn orderType btn-link nav-link py-3" data-order-type="Return" role="tab" aria-selected="false" onclick="filterOrders('Return')">
-              <i class="ri-arrow-left-right-fill me-1 align-bottom"></i> Returns
-            </button>
-          </li>
-          <li class="nav-item">
-            <button type="button" class="btn orderType btn-link nav-link py-3" data-order-type="Exchange" role="tab" aria-selected="false" onclick="filterOrders('Exchange')">
-              <i class="ri-exchange-line me-1 align-bottom"></i> Exchange
-            </button>
-          </li>
-        </ul>
+        <div class="admin-orders-chips-bar" id="adminOrdersFilterChips" aria-live="polite"></div>
+
+        <div class="admin-orders-toolbar">
+          <p class="admin-orders-results-summary mb-0" id="adminOrdersResultsSummary"></p>
+          <ul class="nav nav-tabs nav-tabs-custom nav-success admin-orders-tabs flex-wrap mb-0" role="tablist">
+            <li class="nav-item">
+              <button type="button" class="btn orderType btn-link nav-link active" data-order-type="All" role="tab" aria-selected="true" onclick="filterOrders('All')">
+                <i class="ri-store-2-fill me-1 align-bottom"></i> All Orders
+              </button>
+            </li>
+            <li class="nav-item">
+              <button type="button" class="btn orderType btn-link nav-link" data-order-type="Deliver" role="tab" aria-selected="false" onclick="filterOrders('Deliver')">
+                <i class="ri-truck-line me-1 align-bottom"></i> Deliver
+              </button>
+            </li>
+            <li class="nav-item">
+              <button type="button" class="btn orderType btn-link nav-link" data-order-type="Return" role="tab" aria-selected="false" onclick="filterOrders('Return')">
+                <i class="ri-arrow-left-right-fill me-1 align-bottom"></i> Returns
+              </button>
+            </li>
+            <li class="nav-item">
+              <button type="button" class="btn orderType btn-link nav-link" data-order-type="Exchange" role="tab" aria-selected="false" onclick="filterOrders('Exchange')">
+                <i class="ri-exchange-line me-1 align-bottom"></i> Exchange
+              </button>
+            </li>
+          </ul>
+        </div>
 
         <div class="admin-table-scroll admin-orders-table-wrap mb-1">
-          <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table" id="orderTable">
+          <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table admin-orders-table" id="orderTable">
             <thead class="text-muted">
               <tr>
                 <th scope="col" style="width: 42px;">
@@ -144,12 +213,13 @@
                 <th>Business</th>
                 <th>Customer</th>
                 <th>Order type</th>
-                <th>Location</th>
+                <th>Governorate</th>
+                <th>Zone</th>
                 <th>Amount</th>
                 <th>Status</th>
                 <th>Courier</th>
                 <th>Order date</th>
-                <th style="width: 56px;">Action</th>
+                <th class="admin-orders-col-actions">Actions</th>
               </tr>
             </thead>
             <tbody class="list form-check-all" id="ordersTable"></tbody>
@@ -164,7 +234,8 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-end mt-2">
+        <div class="admin-orders-pagination-bar">
+          <span class="admin-orders-results-summary" id="adminOrdersPaginationSummary"></span>
           <div class="pagination-wrap hstack gap-2">
             <a class="page-item pagination-prev disabled" href="javascript:void(0);">Previous</a>
             <ul class="pagination listjs-pagination mb-0"></ul>
