@@ -841,28 +841,30 @@
       cleanupTimeout = setTimeout(ensurePageUnlocked, 500);
     }, { passive: true });
     
+    function activateSettingsTab(tabName) {
+      if (!tabName || !document.getElementById(tabName)) return;
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      const tab = document.querySelector('.nav-tab[data-tab="' + tabName + '"]');
+      if (tab) tab.classList.add('active');
+      document.querySelectorAll('.settings-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      const targetContent = document.getElementById(tabName);
+      if (targetContent) targetContent.classList.add('active');
+    }
+
     // Navigation Tabs with Touch Support
     document.querySelectorAll('.nav-tab').forEach(tab => {
       function handleTabSwitch(e) {
         if (e) e.preventDefault();
-        const tabName = tab.getAttribute('data-tab');
-        
-        // Update active tab
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // Show active content
-        document.querySelectorAll('.settings-content').forEach(content => {
-          content.classList.remove('active');
-        });
-        const targetContent = document.getElementById(tabName);
-        if (targetContent) {
-          targetContent.classList.add('active');
-        }
+        activateSettingsTab(tab.getAttribute('data-tab'));
       }
       tab.addEventListener('click', handleTabSwitch);
       tab.addEventListener('touchend', handleTabSwitch);
     });
+
+    const hashTab = window.location.hash.replace('#', '');
+    if (hashTab) activateSettingsTab(hashTab);
 
     const qs = new URLSearchParams(window.location.search);
     const shopifyWarn = qs.get('shopifyWarning');

@@ -78,8 +78,8 @@
   <script src="/assets/rJS/business/main.js" defer></script>
   <%- typeof FooterJs !== 'undefined' ? FooterJs : '' %>
 
-  <!-- Add the assistant floating button and container before the closing body tag -->
-  <!-- TODO: AI Assistant - Temporary implementation for now -->
+  <%# AINOW floating widget disabled for now — uncomment include to re-enable %>
+  <% if (false) { %><%- include('../partials/ainow-widget') %><% } %>
 
   <!-- AI Assistant Floating Button -->
   <!-- <div class="assistant-floating-button" id="assistant-floating-button" style="display: none;">

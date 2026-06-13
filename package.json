@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@google-cloud/translate": "^9.3.0",
+    "@google/genai": "^2.8.0",
     "@shopify/shopify-api": "^13.0.0",
     "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.16.0",

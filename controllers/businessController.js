@@ -33,6 +33,11 @@ const {
 } = require('../utils/deliveryZonesBosta');
 const { resolvePickupAddressForOrder } = require('../utils/pickupAddressResolve');
 const {
+  isValidPickupDate,
+  getPickupDateTooEarlyApiError,
+  getEarliestPickupDateIso,
+} = require('../utils/pickupDatePolicy');
+const {
   canBusinessCancelPickupStatus,
   canBusinessEditPickupStatus,
   canBusinessHardDeletePickupStatus,
@@ -2090,7 +2095,8 @@ const get_pickupPage = (req, res) => {
     title: req.translations.business.pages.pickup.title,
     page_title: req.translations.business.pages.pickup.title,
     folder: req.translations.business.breadcrumb.pages,
-    userData: req.userData
+    userData: req.userData,
+    pickupMinDateIso: getEarliestPickupDateIso(),
   });
   
 }
@@ -2342,6 +2348,9 @@ const createPickup = async (req, res) => {
         .status(400)
         .json({ error: 'All pickup info fields are required.' });
     }
+    if (!isValidPickupDate(pickupDate)) {
+      return res.status(400).json({ error: getPickupDateTooEarlyApiError() });
+    }
     console.log(req.body);
     // ✅ 2. Compute pickup fee based on business zone/city and number of picked orders rule
     const business = await User.findById(req.userData._id);
@@ -2422,6 +2431,7 @@ const get_pickupDetailsPage = async(req, res) => {
         page_title: req.translations.business.pages.pickupDetails.title,
         folder: req.translations.business.breadcrumb.pages,
         pickup: null,
+        pickupMinDateIso: getEarliestPickupDateIso(),
       });
       return;
     }
@@ -2440,7 +2450,8 @@ const get_pickupDetailsPage = async(req, res) => {
       page_title: req.translations.business.pages.pickupDetails.title,
       folder: req.translations.business.breadcrumb.pages,
       pickup,
-      selectedPickupAddress: selectedPickupAddress
+      selectedPickupAddress: selectedPickupAddress,
+      pickupMinDateIso: getEarliestPickupDateIso(),
     });
   }
 };
@@ -2663,6 +2674,9 @@ const updatePickup = async (req, res) => {
 
     if (!numberOfOrders || !pickupDate || !phoneNumber) {
       return res.status(400).json({ error: 'numberOfOrders, pickupDate and phoneNumber are required.' });
+    }
+    if (!isValidPickupDate(pickupDate)) {
+      return res.status(400).json({ error: getPickupDateTooEarlyApiError() });
     }
 
     // Re-resolve address and recompute fee

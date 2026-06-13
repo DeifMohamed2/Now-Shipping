@@ -1047,7 +1047,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">${t.pickupDate || 'Pickup date'}</label>
-            <input id="swal-date" type="date" class="form-control swal2-input w-100" value="${pickup.pickupDate}">
+            <input id="swal-date" type="date" class="form-control swal2-input w-100" min="<%= typeof pickupMinDateIso !== 'undefined' ? pickupMinDateIso : '' %>" value="${pickup.pickupDate}">
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">${t.pickupNotes || 'Notes'}</label>

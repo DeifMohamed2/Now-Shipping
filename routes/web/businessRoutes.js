@@ -11,6 +11,27 @@ const assistantController = require('../../controllers/assistantController.js');
 const shopifyController = require('../../controllers/shopifyController.js');
 const woocommerceBusinessController = require('../../controllers/woocommerceBusinessController.js');
 
+const ainowVoiceUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ok =
+      (file.mimetype && file.mimetype.startsWith('audio/')) ||
+      file.mimetype === 'application/octet-stream';
+    if (ok) cb(null, true);
+    else cb(new Error('Only audio files are allowed.'));
+  },
+});
+
+function ainowVoiceUploadSingle(req, res, next) {
+  ainowVoiceUpload.single('audio')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message || 'Audio upload failed.' });
+    }
+    next();
+  });
+}
+
 const orderImportUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -44,6 +65,7 @@ async function authenticateUser(req, res, next) {
     req.path.includes('/woocommerce/') ||
     req.path.includes('-data') ||  // Includes dashboard-data, order-data, etc.
     req.path.includes('orders-import') ||
+    req.path.includes('/ainow/') ||
     req.headers['content-type'] === 'application/json' ||
     req.xhr ||
     (req.headers['accept'] && req.headers['accept'].includes('application/json'));
@@ -314,12 +336,22 @@ router.put('/pickup-addresses/:addressId', businessController.updatePickupAddres
 router.delete('/pickup-addresses/:addressId', businessController.deletePickupAddress);
 router.post('/pickup-addresses/:addressId/set-default', businessController.setDefaultPickupAddress);
 
-// AI Assistant routes
+// AINOW AI Assistant routes
 router.get('/assistant', assistantController.getAssistantPage);
 router.get('/assistant/preferences', assistantController.getPreferences);
 router.post('/assistant/preferences', assistantController.updatePreferences);
 router.get('/assistant/conversation', assistantController.getConversation);
 router.post('/assistant/send', assistantController.sendMessage);
 router.post('/assistant/clear', assistantController.clearConversation);
+
+router.get('/ainow/status', assistantController.getAinowStatus);
+router.get('/ainow/greeting', assistantController.getAinowGreeting);
+router.get('/ainow/conversation', assistantController.getAinowConversation);
+router.post('/ainow/message', assistantController.sendAinowMessage);
+router.post('/ainow/voice', ainowVoiceUploadSingle, assistantController.sendAinowVoice);
+router.post('/ainow/confirm-order', assistantController.confirmAinowOrder);
+router.post('/ainow/confirm-pickup', assistantController.confirmAinowPickup);
+router.post('/ainow/cancel-draft', assistantController.cancelAinowDraft);
+router.post('/ainow/clear', assistantController.clearAinowConversation);
 
 module.exports = router;

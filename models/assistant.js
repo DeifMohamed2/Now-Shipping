@@ -17,6 +17,33 @@ const AssistantMessageSchema = new Schema({
   }
 });
 
+const ActiveDraftSchema = new Schema({
+  type: {
+    type: String,
+    default: null,
+  },
+  fields: {
+    type: Schema.Types.Mixed,
+    default: {},
+  },
+  missingFields: {
+    type: [String],
+    default: [],
+  },
+  regionOptions: {
+    type: [Schema.Types.Mixed],
+    default: undefined,
+  },
+  pendingField: {
+    type: String,
+    default: null,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+}, { _id: false });
+
 const AssistantConversationSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
@@ -24,6 +51,10 @@ const AssistantConversationSchema = new Schema({
     required: true
   },
   messages: [AssistantMessageSchema],
+  activeDraft: {
+    type: ActiveDraftSchema,
+    default: () => ({ type: null, fields: {}, missingFields: [] }),
+  },
   isActive: {
     type: Boolean,
     default: true

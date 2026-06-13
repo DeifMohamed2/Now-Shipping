@@ -1,0 +1,491 @@
+/* AINOW landing page — business dashboard */
+.ainow-page {
+  --ainow-navy: #0f172a;
+  --ainow-navy-mid: #162032;
+  --ainow-gold: #f5a623;
+  --ainow-gold-soft: rgba(245, 166, 35, 0.14);
+  --ainow-gold-glow: rgba(245, 166, 35, 0.35);
+  --ainow-surface: #ffffff;
+  --ainow-border: rgba(15, 23, 42, 0.08);
+  --ainow-muted: #64748b;
+  --ainow-text: #1e293b;
+  padding-bottom: 2rem;
+}
+
+/* ── Hero ─────────────────────────────────────── */
+.ainow-page__hero {
+  position: relative;
+  border-radius: 20px;
+  padding: 2.25rem 2.5rem;
+  margin-bottom: 1.75rem;
+  color: #f8fafc;
+  background: linear-gradient(135deg, var(--ainow-navy-mid) 0%, var(--ainow-navy) 55%, #0a101f 100%);
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+}
+
+.ainow-page__hero::before,
+.ainow-page__hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ainow-page__hero::before {
+  width: 320px;
+  height: 320px;
+  top: -120px;
+  inset-inline-end: -80px;
+  background: radial-gradient(circle, rgba(245, 166, 35, 0.18) 0%, transparent 70%);
+}
+
+.ainow-page__hero::after {
+  width: 200px;
+  height: 200px;
+  bottom: -60px;
+  inset-inline-start: -40px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ainow-page__hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
+}
+
+.ainow-page__hero-copy {
+  flex: 1 1 320px;
+  max-width: 640px;
+}
+
+.ainow-page__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  margin-bottom: 1rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ainow-gold);
+  background: rgba(245, 166, 35, 0.12);
+  border: 1px solid rgba(245, 166, 35, 0.28);
+}
+
+.ainow-page__hero h1 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.ainow-page__hero-lead {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #cbd5e1;
+  max-width: 52ch;
+}
+
+.ainow-page__hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.ainow-page__btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.35rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ainow-navy);
+  background: linear-gradient(135deg, #f5a623 0%, #fdb614 100%);
+  box-shadow: 0 8px 24px var(--ainow-gold-glow);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ainow-page__btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px var(--ainow-gold-glow);
+}
+
+.ainow-page__btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ainow-page__hero-visual {
+  flex: 0 0 auto;
+  width: min(280px, 100%);
+}
+
+.ainow-page__hero-mock {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1rem;
+  backdrop-filter: blur(8px);
+}
+
+.ainow-page__mock-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ainow-page__mock-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ainow-gold);
+  box-shadow: 0 0 8px var(--ainow-gold-glow);
+}
+
+.ainow-page__mock-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.ainow-page__mock-bubble {
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.ainow-page__mock-bubble--user {
+  margin-inline-start: 1.5rem;
+  background: rgba(245, 166, 35, 0.2);
+  color: #fde68a;
+  border-end-end-radius: 4px;
+}
+
+.ainow-page__mock-bubble--bot {
+  margin-inline-end: 1.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-end-start-radius: 4px;
+}
+
+/* ── Workflow steps ───────────────────────────── */
+.ainow-page__workflow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.ainow-page__step {
+  position: relative;
+  padding: 1.25rem 1.35rem;
+  border-radius: 16px;
+  background: var(--ainow-surface);
+  border: 1px solid var(--ainow-border);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.ainow-page__step:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.ainow-page__step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ainow-gold);
+  background: var(--ainow-gold-soft);
+}
+
+.ainow-page__step h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ainow-text);
+}
+
+.ainow-page__step p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ainow-muted);
+}
+
+/* ── Cards ────────────────────────────────────── */
+.ainow-page__card {
+  background: var(--ainow-surface);
+  border: 1px solid var(--ainow-border);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.05);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.ainow-page__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.35rem;
+  border-bottom: 1px solid var(--ainow-border);
+}
+
+.ainow-page__card-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ainow-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ainow-page__card-head h2 i {
+  color: var(--ainow-gold);
+  font-size: 1.2rem;
+}
+
+.ainow-page__card-body {
+  padding: 1.35rem;
+}
+
+/* ── Quick prompts ────────────────────────────── */
+.ainow-page__prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.ainow-page__prompt {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  text-align: start;
+  border: 1px solid var(--ainow-border);
+  border-radius: 14px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.ainow-page__prompt:hover {
+  border-color: rgba(245, 166, 35, 0.45);
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(245, 166, 35, 0.1);
+}
+
+.ainow-page__prompt-icon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  color: var(--ainow-gold);
+  background: var(--ainow-gold-soft);
+}
+
+.ainow-page__prompt-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ainow-page__prompt-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ainow-muted);
+  margin-bottom: 0.2rem;
+}
+
+.ainow-page__prompt-value {
+  display: block;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ainow-text);
+}
+
+[dir='rtl'] .ainow-page__prompt-value {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+}
+
+/* ── Feature grid ─────────────────────────────── */
+.ainow-page__features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+}
+
+.ainow-page__feature {
+  padding: 1.1rem 1.15rem;
+  border-radius: 14px;
+  border: 1px solid var(--ainow-border);
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  transition: border-color 0.2s;
+}
+
+.ainow-page__feature:hover {
+  border-color: rgba(245, 166, 35, 0.35);
+}
+
+.ainow-page__feature i {
+  display: inline-flex;
+  font-size: 1.35rem;
+  color: var(--ainow-gold);
+  margin-bottom: 0.55rem;
+}
+
+.ainow-page__feature h4 {
+  margin: 0 0 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ainow-text);
+}
+
+.ainow-page__feature p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ainow-muted);
+}
+
+/* ── Sidebar cards ────────────────────────────── */
+.ainow-page__settings-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--ainow-border);
+}
+
+.ainow-page__settings-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ainow-page__settings-item:first-child {
+  padding-top: 0;
+}
+
+.ainow-page__settings-copy strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ainow-text);
+  margin-bottom: 0.2rem;
+}
+
+.ainow-page__settings-copy span {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ainow-muted);
+}
+
+.ainow-page__settings-item .form-check-input {
+  width: 2.5rem;
+  height: 1.35rem;
+  margin-top: 0.15rem;
+  cursor: pointer;
+}
+
+.ainow-page__settings-item .form-check-input:checked {
+  background-color: var(--ainow-gold);
+  border-color: var(--ainow-gold);
+}
+
+.ainow-page__tip {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--ainow-gold-soft) 0%, rgba(245, 166, 35, 0.06) 100%);
+  border: 1px solid rgba(245, 166, 35, 0.2);
+}
+
+.ainow-page__tip i {
+  flex-shrink: 0;
+  font-size: 1.4rem;
+  color: var(--ainow-gold);
+  margin-top: 0.1rem;
+}
+
+.ainow-page__tip p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--ainow-text);
+}
+
+/* ── Responsive ─────────────────────────────── */
+@media (max-width: 991.98px) {
+  .ainow-page__workflow {
+    grid-template-columns: 1fr;
+  }
+
+  .ainow-page__hero-visual {
+    width: 100%;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .ainow-page__hero {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .ainow-page__features {
+    grid-template-columns: 1fr;
+  }
+
+  .ainow-page__hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ainow-page__btn-primary,
+  .ainow-page__btn-ghost {
+    justify-content: center;
+  }
+}

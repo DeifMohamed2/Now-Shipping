@@ -279,6 +279,22 @@ async function findBusinessUserByEmailInput(emailInput) {
   });
 }
 
+function normalizePhoneKey(raw) {
+  const digits = String(raw || '').replace(/\D/g, '');
+  if (/^0\d{10}$/.test(digits)) return digits;
+  if (/^20\d{10}$/.test(digits)) return `0${digits.slice(2)}`;
+  return digits;
+}
+
+async function findBusinessUserByPhoneInput(phoneInput) {
+  const phoneKey = normalizePhoneKey(phoneInput);
+  if (!phoneKey || !/^\d{11}$/.test(phoneKey)) return null;
+  return User.findOne({
+    phoneNumber: phoneKey,
+    role: { $regex: /^business$/i },
+  });
+}
+
 const forgotPasswordPage = (req, res) => {
   const lang = req.query.lang || req.cookies.language || 'en';
   return res.render('auth/forgot-password', {
@@ -290,24 +306,22 @@ const forgotPasswordPage = (req, res) => {
 };
 
 const forgotPasswordSendOtp = async (req, res) => {
-  const rawEmail = req.body && req.body.email;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!rawEmail || !emailRegex.test(String(rawEmail).trim())) {
+  const phoneKey = normalizePhoneKey(req.body && req.body.phoneNumber);
+  if (!phoneKey || !/^\d{11}$/.test(phoneKey)) {
     return res.status(400).json({
       status: 'error',
-      message: 'Please enter a valid email address',
+      message: 'Please enter a valid phone number',
     });
   }
 
-  const emailKey = normalizeEmailKey(rawEmail);
   const genericOk = {
     status: 'success',
     message:
-      'If an account exists for this email, a verification code has been sent.',
+      'If an account exists for this phone number, a verification code has been sent.',
   };
 
   try {
-    const user = await findBusinessUserByEmailInput(rawEmail);
+    const user = await findBusinessUserByPhoneInput(phoneKey);
     if (!user) {
       return res.status(200).json(genericOk);
     }
@@ -315,53 +329,51 @@ const forgotPasswordSendOtp = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
 
-    await PasswordResetOtp.deleteMany({ email: emailKey });
-    await PasswordResetOtp.create({ email: emailKey, otpHash });
+    await PasswordResetOtp.deleteMany({ phoneNumber: phoneKey });
+    await PasswordResetOtp.create({ phoneNumber: phoneKey, otpHash });
 
-    const businessName =
-      (user.brandInfo && user.brandInfo.brandName && String(user.brandInfo.brandName).trim()) ||
-      (user.name && String(user.name).trim()) ||
-      'Now Shipping';
-
-    await emailService.sendPasswordResetOtp(user.email, otp, businessName);
+    const internationalNumber = `20${phoneKey.slice(1)}`;
+    const smsMessage = `Your NowShipping password reset code is: ${otp}`;
+    await sms.sendSms({
+      recipient: internationalNumber,
+      message: smsMessage,
+    });
 
     return res.status(200).json(genericOk);
   } catch (err) {
     console.error('forgotPasswordSendOtp:', err);
     try {
-      await PasswordResetOtp.deleteMany({ email: emailKey });
+      await PasswordResetOtp.deleteMany({ phoneNumber: phoneKey });
     } catch (_) {
       /* ignore */
     }
     return res.status(500).json({
       status: 'error',
-      message: 'Could not send email. Please try again later.',
+      message: 'Could not send SMS. Please try again later.',
     });
   }
 };
 
 const forgotPasswordVerifyOtp = async (req, res) => {
-  const { email, otp } = req.body || {};
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const { otp } = req.body || {};
+  const phoneKey = normalizePhoneKey(req.body && req.body.phoneNumber);
 
-  if (!email || !otp) {
+  if (!phoneKey || !otp) {
     return res.status(400).json({
       status: 'error',
       message: 'Please fill all the fields',
     });
   }
 
-  if (!emailRegex.test(String(email).trim())) {
+  if (!/^\d{11}$/.test(phoneKey)) {
     return res.status(400).json({
       status: 'error',
-      message: 'Please enter a valid email address',
+      message: 'Please enter a valid phone number',
     });
   }
 
-  const emailKey = normalizeEmailKey(email);
-
   try {
-    const record = await PasswordResetOtp.findOne({ email: emailKey });
+    const record = await PasswordResetOtp.findOne({ phoneNumber: phoneKey });
     if (!record) {
       return res.status(400).json({
         status: 'error',
@@ -377,7 +389,7 @@ const forgotPasswordVerifyOtp = async (req, res) => {
       });
     }
 
-    const user = await findBusinessUserByEmailInput(email);
+    const user = await findBusinessUserByPhoneInput(phoneKey);
     if (!user) {
       await PasswordResetOtp.deleteOne({ _id: record._id });
       return res.status(400).json({
@@ -387,11 +399,11 @@ const forgotPasswordVerifyOtp = async (req, res) => {
     }
 
     await PasswordResetOtp.deleteOne({ _id: record._id });
-    await PasswordResetSession.deleteMany({ email: emailKey });
+    await PasswordResetSession.deleteMany({ phoneNumber: phoneKey });
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-    await PasswordResetSession.create({ email: emailKey, tokenHash });
+    await PasswordResetSession.create({ phoneNumber: phoneKey, tokenHash });
 
     return res.status(200).json({
       status: 'success',
@@ -435,7 +447,7 @@ const forgotPasswordReset = async (req, res) => {
       });
     }
 
-    const user = await findBusinessUserByEmailInput(session.email);
+    const user = await findBusinessUserByPhoneInput(session.phoneNumber);
     if (!user) {
       await PasswordResetSession.deleteOne({ _id: session._id });
       return res.status(400).json({

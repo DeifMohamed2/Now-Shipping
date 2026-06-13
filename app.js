@@ -80,6 +80,10 @@ function shouldSkipExpressFileUpload(req) {
   if (p === '/business/orders-import-validate' || p === '/business/orders-import-commit') {
     return true;
   }
+  // Multer handles these; express-fileupload must not parse the same multipart body.
+  if (p === '/business/ainow/voice' || p === '/api/v1/assistant/ainow/voice') {
+    return true;
+  }
   if (req.method === 'POST' && /^\/api\/v1\/tickets\/[^/]+\/upload$/.test(p)) {
     return true;
   }

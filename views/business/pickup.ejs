@@ -482,6 +482,27 @@
     return (window.__NS_BUSINESS_I18N && window.__NS_BUSINESS_I18N.pickup) || {};
   }
 
+  const PICKUP_MIN_DATE_ISO = '<%= typeof pickupMinDateIso !== "undefined" ? pickupMinDateIso : "" %>';
+
+  function getDefaultPickupDate() {
+    if (PICKUP_MIN_DATE_ISO) {
+      const parts = PICKUP_MIN_DATE_ISO.split('-');
+      if (parts.length === 3) {
+        const d = new Date(
+          parseInt(parts[0], 10),
+          parseInt(parts[1], 10) - 1,
+          parseInt(parts[2], 10),
+          12, 0, 0, 0
+        );
+        if (!Number.isNaN(d.getTime())) return d;
+      }
+    }
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(12, 0, 0, 0);
+    return d;
+  }
+
   const tableBody = document.getElementById('TBody');
   const NoResult = document.querySelector('.noresult');
   const checkAll = document.getElementById('checkAll');
@@ -721,21 +742,32 @@
     (function initModalPickupDate() {
       const I = __pickupI18n();
       const loc = I.locale === 'ar-EG' ? 'ar-EG' : 'en-US';
+      const defaultPickupDate = getDefaultPickupDate();
       const fpOpts = {
         dateFormat: 'D, d M Y',
-        minDate: 'today',
+        minDate: defaultPickupDate,
+        defaultDate: defaultPickupDate,
         altInput: true,
         altFormat: 'D, d M Y',
         disableMobile: true,
         onChange: function(selectedDates) {
           if (!selectedDates || !selectedDates[0]) return;
-          const today = new Date();
+          const selected = selectedDates[0];
           const tomorrow = new Date();
-          tomorrow.setDate(today.getDate() + 1);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          tomorrow.setHours(12, 0, 0, 0);
+          const dayAfter = new Date();
+          dayAfter.setDate(dayAfter.getDate() + 2);
+          dayAfter.setHours(12, 0, 0, 0);
           const I2 = __pickupI18n();
-          if (selectedDates[0].toDateString() === tomorrow.toDateString()) {
-            const prefix = (I2.tomorrowPrefix || 'Tomorrow') + ', ';
-            this.altInput.value = prefix + selectedDates[0].toLocaleDateString(loc, { day: 'numeric', month: 'short' });
+          let prefix = '';
+          if (selected.toDateString() === tomorrow.toDateString()) {
+            prefix = (I2.tomorrowPrefix || (I2.locale === 'ar-EG' ? 'بكرة' : 'Tomorrow')) + ', ';
+          } else if (selected.toDateString() === dayAfter.toDateString()) {
+            prefix = (I2.afterTomorrowPrefix || (I2.locale === 'ar-EG' ? 'بعد بكرة' : 'Day after tomorrow')) + ', ';
+          }
+          if (prefix) {
+            this.altInput.value = prefix + selected.toLocaleDateString(loc, { day: 'numeric', month: 'short' });
           }
         }
       };
@@ -764,7 +796,13 @@
           // Reset form fields
           document.querySelector('.tablelist-form').reset();
           const fp = window._pickupFlatpickr;
-          if (fp) { fp.clear(); fp.config.minDate = 'today'; fp.redraw && fp.redraw(); }
+          if (fp) {
+            const def = getDefaultPickupDate();
+            fp.clear();
+            fp.set('minDate', def);
+            fp.setDate(def, true);
+            fp.redraw && fp.redraw();
+          }
         }
       });
     }
@@ -1098,8 +1136,8 @@ async function openEditPickup(pickupId, pickupNumber) {
     if (addrSel && p.pickupAddressId) addrSel.value = p.pickupAddressId;
 
     if (fp && p.pickupDate) {
+      fp.set('minDate', getDefaultPickupDate());
       fp.setDate(new Date(p.pickupDate), true);
-      fp.config.minDate = null; // allow existing past/today date for edit
     }
 
     const bsModal = bootstrap.Modal.getOrCreateInstance(modal);

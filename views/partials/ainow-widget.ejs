@@ -1,0 +1,94 @@
+<% var _ainowRtl = (typeof isRTL !== 'undefined' && isRTL) || (typeof currentLang !== 'undefined' && currentLang === 'ar'); %>
+<% var _ainowAp = (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.assistant) ? translation.business.pages.assistant : {}; %>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" />
+<link rel="stylesheet" href="/assets/libs/flatpickr/flatpickr.min.css" />
+<link rel="stylesheet" href="/assets/rCSS/ainow.css?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '1' %>" />
+<% if (_ainowRtl) { %>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<% } %>
+
+<div class="ainow-fab" id="ainow-fab" aria-label="AINOW Assistant">
+  <span class="ainow-fab__label"><%= _ainowAp.fabLabel || 'AINOW' %></span>
+  <button type="button" class="ainow-fab__btn" aria-label="<%= _ainowAp.openAssistant || 'Open AINOW' %>">
+    <i class="ri-sparkling-2-fill" aria-hidden="true"></i>
+  </button>
+</div>
+
+<div class="ainow-panel" id="ainow-panel" role="dialog" aria-label="AINOW">
+  <div class="ainow-panel__header">
+    <div class="ainow-panel__brand">
+      <div class="ainow-panel__avatar" aria-hidden="true">
+        <i class="ri-sparkling-2-fill"></i>
+      </div>
+      <div>
+        <h2 class="ainow-panel__title"><span><%= _ainowAp.brandName || 'AINOW' %></span></h2>
+        <p class="ainow-panel__subtitle"><%= _ainowAp.subtitle || 'Your intelligent shipping assistant' %></p>
+      </div>
+    </div>
+    <div class="ainow-panel__actions">
+      <button type="button" id="ainow-expand" title="<%= _ainowAp.expand || 'Expand' %>" aria-label="<%= _ainowAp.expand || 'Expand' %>" aria-expanded="false">
+        <i class="ri-fullscreen-line" aria-hidden="true"></i>
+      </button>
+      <button type="button" id="ainow-clear" title="<%= _ainowAp.clearChat || 'Clear chat' %>" aria-label="<%= _ainowAp.clearChat || 'Clear chat' %>">
+        <i class="ri-delete-bin-line" aria-hidden="true"></i>
+      </button>
+      <button type="button" id="ainow-close" title="<%= _ainowAp.close || 'Close' %>" aria-label="<%= _ainowAp.close || 'Close' %>">
+        <i class="ri-close-line" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="ainow-panel__body" id="ainow-messages" aria-live="polite">
+    <div class="d-flex justify-content-center mt-4">
+      <div class="ainow-spinner" role="status" aria-label="<%= _ainowAp.loading || 'Loading…' %>"></div>
+    </div>
+  </div>
+
+  <div class="ainow-suggestions" id="ainow-suggestions"></div>
+
+  <div class="ainow-voice-bar ainow-voice-bar--hidden" id="ainow-voice-bar" aria-hidden="true">
+    <div class="ainow-voice-bar__top">
+      <div class="ainow-voice-bar__status">
+        <span class="ainow-voice-bar__dot" id="ainow-voice-dot"></span>
+        <span class="ainow-voice-bar__label" id="ainow-voice-status"><%= _ainowAp.voiceRecording || 'Recording' %></span>
+        <span class="ainow-voice-bar__timer" id="ainow-voice-timer">00:00</span>
+      </div>
+      <div class="ainow-voice-wave" id="ainow-voice-wave" aria-hidden="true"></div>
+    </div>
+    <div class="ainow-voice-bar__actions">
+      <button type="button" class="ainow-voice-btn ainow-voice-btn--ghost" id="ainow-voice-pause" title="<%= _ainowAp.voicePause || 'Pause' %>">
+        <i class="ri-pause-line" id="ainow-voice-pause-icon"></i>
+        <span id="ainow-voice-pause-label"><%= _ainowAp.voicePause || 'Pause' %></span>
+      </button>
+      <button type="button" class="ainow-voice-btn ainow-voice-btn--ghost" id="ainow-voice-cancel">
+        <%= _ainowAp.voiceCancel || 'Cancel' %>
+      </button>
+      <button type="button" class="ainow-voice-btn ainow-voice-btn--send" id="ainow-voice-send">
+        <i class="ri-send-plane-fill"></i>
+        <%= _ainowAp.voiceSend || 'Send' %>
+      </button>
+    </div>
+  </div>
+
+  <div class="ainow-panel__footer" id="ainow-footer">
+    <div class="ainow-input-row" id="ainow-input-row">
+      <button type="button" class="ainow-btn-icon ainow-btn-mic" id="ainow-mic" title="<%= _ainowAp.tapToRecord || 'Tap to record' %>" aria-label="<%= _ainowAp.tapToRecord || 'Tap to record' %>">
+        <i class="ri-mic-line" aria-hidden="true"></i>
+      </button>
+      <textarea id="ainow-input" rows="1" placeholder="<%= _ainowAp.inputPlaceholder || 'Type or speak to create an order…' %>" autocomplete="off"></textarea>
+      <button type="button" class="ainow-btn-icon ainow-btn-send" id="ainow-send" title="<%= _ainowAp.send || 'Send' %>" aria-label="<%= _ainowAp.send || 'Send' %>">
+        <i class="ri-send-plane-fill" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/libs/flatpickr/flatpickr.min.js"></script>
+<% if (_ainowRtl) { %>
+<script src="/assets/libs/flatpickr/l10n/ar.js"></script>
+<% } %>
+<script src="/assets/rJS/business/ainow-voice.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '1' %>" defer></script>
+<script src="/assets/rJS/business/ainow-widget.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '1' %>" defer></script>

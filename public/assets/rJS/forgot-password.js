@@ -5,7 +5,7 @@
   const alertErr = el('alertError');
   const steps = [el('step1'), el('step2'), el('step3')];
   const bars = document.querySelectorAll('.fp-steps-bar .seg');
-  const emailInput = el('fp-email');
+  const phoneInput = el('fp-phone');
   const otpInput = el('fp-otp');
   const newPass = el('fp-new');
   const confirmPass = el('fp-confirm');
@@ -35,9 +35,19 @@
     btn.classList.toggle('btn-loading', !!on);
   }
 
-  function validEmail(v) {
-    const s = String(v || '').trim();
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+  function normalizePhone(raw) {
+    const digits = String(raw || '').replace(/\D/g, '');
+    if (/^0\d{10}$/.test(digits)) return digits;
+    if (/^20\d{10}$/.test(digits)) return `0${digits.slice(2)}`;
+    return digits;
+  }
+
+  function validPhone(v) {
+    return /^\d{11}$/.test(normalizePhone(v));
+  }
+
+  function getPhoneValue() {
+    return normalizePhone(phoneInput.value);
   }
 
   function showStep(n) {
@@ -57,8 +67,8 @@
 
   btnSend.addEventListener('click', async function () {
     showAlert(null, '');
-    if (!validEmail(emailInput.value)) {
-      showAlert('err', i18n.invalidEmail || 'Please enter a valid email address.');
+    if (!validPhone(phoneInput.value)) {
+      showAlert('err', i18n.invalidPhone || 'Please enter a valid 11-digit phone number.');
       return;
     }
     setLoading(btnSend, true);
@@ -66,11 +76,11 @@
       const res = await fetch('/forgot-password/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailInput.value.trim() }),
+        body: JSON.stringify({ phoneNumber: getPhoneValue() }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        showAlert('err', data.message || i18n.sendFailed || 'Could not send email.');
+        showAlert('err', data.message || i18n.sendFailed || 'Could not send SMS.');
         return;
       }
       showAlert('ok', data.message || '');
@@ -85,13 +95,13 @@
 
   btnVerify.addEventListener('click', async function () {
     showAlert(null, '');
-    if (!validEmail(emailInput.value)) {
-      showAlert('err', i18n.invalidEmail || 'Invalid email.');
+    if (!validPhone(phoneInput.value)) {
+      showAlert('err', i18n.invalidPhone || 'Invalid phone number.');
       return;
     }
     const otp = String(otpInput.value || '').trim();
     if (!/^\d{6}$/.test(otp)) {
-      showAlert('err', i18n.invalidOtp || 'Enter the 6-digit code from your email.');
+      showAlert('err', i18n.invalidOtp || 'Enter the 6-digit code from your SMS.');
       return;
     }
     setLoading(btnVerify, true);
@@ -100,7 +110,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: emailInput.value.trim(),
+          phoneNumber: getPhoneValue(),
           otp,
         }),
       });
