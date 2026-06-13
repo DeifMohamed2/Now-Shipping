@@ -314,16 +314,13 @@ const forgotPasswordSendOtp = async (req, res) => {
     });
   }
 
-  const genericOk = {
-    status: 'success',
-    message:
-      'If an account exists for this phone number, a verification code has been sent.',
-  };
-
   try {
     const user = await findBusinessUserByPhoneInput(phoneKey);
     if (!user) {
-      return res.status(200).json(genericOk);
+      return res.status(404).json({
+        status: 'error',
+        message: 'No business account found with this phone number.',
+      });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -339,7 +336,10 @@ const forgotPasswordSendOtp = async (req, res) => {
       message: smsMessage,
     });
 
-    return res.status(200).json(genericOk);
+    return res.status(200).json({
+      status: 'success',
+      message: 'A verification code has been sent to your phone number.',
+    });
   } catch (err) {
     console.error('forgotPasswordSendOtp:', err);
     try {

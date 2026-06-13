@@ -248,6 +248,7 @@
       "resetPassword": "Update password",
       "backToLogin": "Back to sign in",
       "invalidPhone": "Please enter a valid 11-digit phone number.",
+      "phoneNotFound": "No business account found with this phone number.",
       "passwordMin": "Password must be at least 8 characters.",
       "passwordMismatch": "Passwords do not match.",
       "networkError": "Network error. Please try again.",
