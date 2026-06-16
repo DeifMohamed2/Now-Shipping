@@ -1,5 +1,5 @@
 const { GoogleGenAI } = require('@google/genai');
-const { ASSISTANT_RESPONSE_SCHEMA } = require('./schemas');
+const { ASSISTANT_RESPONSE_SCHEMA, TRANSCRIPT_ONLY_SCHEMA } = require('./schemas');
 const { buildSystemPrompt } = require('./prompts');
 
 let client = null;
@@ -49,6 +49,11 @@ function parseJsonResponse(text) {
   }
 }
 
+function isQuotaError(err) {
+  const msg = String(err?.message || '');
+  return err?.status === 429 || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota');
+}
+
 async function callWithRetry(fn, retries = 2) {
   let lastError;
   for (let i = 0; i <= retries; i++) {
@@ -56,8 +61,7 @@ async function callWithRetry(fn, retries = 2) {
       return await fn();
     } catch (err) {
       lastError = err;
-      const is429 = err.status === 429 || (err.message && err.message.includes('429'));
-      if (is429 && i < retries) {
+      if (isQuotaError(err) && i < retries) {
         await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
         continue;
       }
@@ -84,6 +88,22 @@ function buildHistoryContents(messages) {
         }
         if (parsed.draft && parsed.draft.missingFields && parsed.draft.missingFields.length) {
           parts.push(`[Missing: ${parsed.draft.missingFields.join(', ')}]`);
+        }
+        if (parsed.draft && parsed.draft.fields && Object.keys(parsed.draft.fields).length) {
+          const f = parsed.draft.fields;
+          const collected = [];
+          if (f.fullName) collected.push(`name=${f.fullName}`);
+          if (f.phoneNumber) collected.push(`phone=${f.phoneNumber}`);
+          if (f.address) collected.push(`address=${f.address}`);
+          if (f.zone || f.zoneQuery) collected.push(`zone=${f.zone || f.zoneQuery}`);
+          if (f.productDescription) collected.push(`product=${f.productDescription}`);
+          if (collected.length) parts.push(`[Collected: ${collected.join('; ')}]`);
+        }
+        if (parsed.chips && parsed.chips.length) {
+          const chipSummary = parsed.chips
+            .map((c) => `${c.label || c.key}=${c.value}`)
+            .join('; ');
+          if (chipSummary) parts.push(`[Saved chips: ${chipSummary}]`);
         }
         text = parts.length ? parts.join('\n') : (parsed.replyText || msg.content);
       } catch {
@@ -154,7 +174,7 @@ async function extractAssistantResponse({
   try {
     return await generateParsedResponse({ model, contents, systemInstruction });
   } catch (error) {
-    if (!useLite && (error.code === 'PARSE_ERROR' || error.status >= 500)) {
+    if (!useLite && (error.code === 'PARSE_ERROR' || error.status >= 500 || isQuotaError(error))) {
       console.warn('Gemini primary model failed, retrying with lite:', error.message);
       return extractAssistantResponse({
         userMessage,
@@ -171,6 +191,56 @@ async function extractAssistantResponse({
 }
 
 /**
+ * Lite-model voice transcription only (separate quota, no full extraction).
+ */
+async function transcribeAudioOnly({ audioBuffer, mimeType, preferredLang }) {
+  const ai = getClient();
+  const model = getLiteModel();
+  const audioBase64 = audioBuffer.toString('base64');
+  const langHint = preferredLang === 'ar' ? 'ar' : 'en';
+
+  const systemInstruction =
+    `Transcribe Egyptian Arabic (عامية مصرية) or English voice accurately. ` +
+    `Return JSON with transcript (exact words) and language (ar or en). ` +
+    `UI preference: ${langHint}.`;
+
+  const response = await callWithRetry(() =>
+    ai.models.generateContent({
+      model,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                mimeType: mimeType || 'audio/webm',
+                data: audioBase64,
+              },
+            },
+            { text: 'Transcribe this voice message exactly.' },
+          ],
+        },
+      ],
+      config: {
+        systemInstruction,
+        temperature: 0.2,
+        maxOutputTokens: 1024,
+        responseMimeType: 'application/json',
+        responseSchema: TRANSCRIPT_ONLY_SCHEMA,
+      },
+    })
+  );
+
+  const parsed = parseJsonResponse(response.text);
+  if (!parsed?.transcript) {
+    const err = new Error('Failed to parse lite voice transcript');
+    err.code = 'PARSE_ERROR';
+    throw err;
+  }
+  return parsed;
+}
+
+/**
  * Transcribe audio and extract order intent in one multimodal call.
  */
 async function transcribeAndExtract({
@@ -181,9 +251,10 @@ async function transcribeAndExtract({
   draftFields,
   regionHints,
   draftMeta,
+  useLite = false,
 }) {
   const ai = getClient();
-  const model = getChatModel();
+  const model = useLite ? getLiteModel() : getChatModel();
   const systemInstruction =
     buildSystemPrompt(userContext, draftFields, regionHints, draftMeta) +
     '\n\nVOICE INPUT: Transcribe Egyptian Arabic (عامية مصرية) accurately. Preserve names, addresses, and Arabic-Indic phone digits in transcript. Set transcript field, then extract order fields. Understand colloquial shipping phrases in context of the conversation and active draft.';
@@ -231,9 +302,18 @@ async function transcribeAndExtract({
     if (!parsed.extractedFields) parsed.extractedFields = {};
     return parsed;
   } catch (error) {
-    if (error.code === 'PARSE_ERROR' || error.status >= 500) {
-      console.warn('Gemini voice primary failed, retrying text-only lite on transcript hint');
-      throw error;
+    if (!useLite && (error.code === 'PARSE_ERROR' || error.status >= 500 || isQuotaError(error))) {
+      console.warn('Gemini voice primary failed, retrying with lite model:', error.message);
+      return transcribeAndExtract({
+        audioBuffer,
+        mimeType,
+        history,
+        userContext,
+        draftFields,
+        regionHints,
+        draftMeta,
+        useLite: true,
+      });
     }
     throw error;
   }
@@ -249,6 +329,8 @@ module.exports = {
   getLiteModel,
   extractAssistantResponse,
   transcribeAndExtract,
+  transcribeAudioOnly,
   isConfigured,
+  isQuotaError,
   parseJsonResponse,
 };

@@ -10,10 +10,23 @@ const EXTRACTED_FIELDS_SCHEMA = {
       type: Type.STRING,
       description: 'Alternate/second phone (رقم تاني / رقم آخر / other number)',
     },
-    address: { type: Type.STRING },
+    address: {
+      type: Type.STRING,
+      description:
+        'Street/building/landmark only — strip meta labels like العنوان بالتفصيل or العنوان هو. Never include prompt filler.',
+    },
     government: { type: Type.STRING, description: 'Leave empty — server resolves from zoneQuery' },
     zone: { type: Type.STRING, description: 'Leave empty — server resolves from zoneQuery' },
-    zoneQuery: { type: Type.STRING, description: 'Raw area/neighborhood from user speech e.g. المعادي، اوبيرا' },
+    zoneQuery: {
+      type: Type.STRING,
+      description:
+        'Raw area/neighborhood from user speech (e.g. المعادي، اوبيرا). Set when user mentions area OR when address implies a different area than current draft zone.',
+    },
+    replaceZone: {
+      type: Type.BOOLEAN,
+      description:
+        'Set true when latest message contradicts the draft zone (e.g. draft has Maadi but address says Opera). Server will re-resolve zone.',
+    },
     isExpressShipping: { type: Type.BOOLEAN },
     productDescription: { type: Type.STRING },
     numberOfItems: { type: Type.NUMBER },
@@ -81,4 +94,12 @@ const ASSISTANT_RESPONSE_SCHEMA = {
 module.exports = {
   ASSISTANT_RESPONSE_SCHEMA,
   EXTRACTED_FIELDS_SCHEMA,
+  TRANSCRIPT_ONLY_SCHEMA: {
+    type: Type.OBJECT,
+    properties: {
+      transcript: { type: Type.STRING, description: 'Exact transcription of the voice message' },
+      language: { type: Type.STRING, description: 'ar or en based on spoken language' },
+    },
+    required: ['transcript', 'language'],
+  },
 };

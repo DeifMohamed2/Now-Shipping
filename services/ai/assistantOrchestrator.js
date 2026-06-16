@@ -12,12 +12,15 @@ const {
   generateUniqueOrderNumber,
   buildOrderDocumentFromFields,
 } = require('../../utils/orderCreationHelper');
-const { extractAssistantResponse, transcribeAndExtract, isConfigured } = require('../gemini/geminiClient');
+const { extractAssistantResponse, transcribeAndExtract, transcribeAudioOnly, isConfigured } = require('../gemini/geminiClient');
+const { isZoneLikeMessage } = require('../../utils/zoneReplyDetection');
 const {
   applyRegionResolution,
   resolveZoneQuery,
   splitAddressAndZoneFromText,
+  formatZoneForDisplay,
 } = require('./regionResolver');
+const { detectMessageZoneConflict } = require('./draftContextEngine');
 const {
   mergeDraft,
   enforcePostStructuralOrder,
@@ -39,11 +42,13 @@ const {
   mergeClarifyingText,
   splitAckFromGeminiReply,
   looksLikeAddressReply,
+  buildZoneCorrectionAck,
 } = require('./clarificationEngine');
 const { normalizeDraftFields } = require('./textNormalizer');
 const { shouldRefuse, buildScopeRefusal } = require('./scopeGuard');
 const {
   isHelpQuestion,
+  isActionableShippingRequest,
   detectPlatformHelp,
   buildPlatformHelpResponse,
   buildHelpTopicSuggestion,
@@ -291,6 +296,170 @@ function shouldStartPickupDraft(message, geminiResult, conversation) {
   );
 }
 
+const MEANINGFUL_EXTRACT_KEYS = new Set([
+  'fullName', 'phoneNumber', 'otherPhoneNumber', 'address', 'government', 'zone', 'zoneQuery',
+  'productDescription', 'numberOfItems', 'orderType', 'originalOrderNumber', 'returnReason',
+  'numberOfOrders', 'pickupDate', 'pickupNotes', 'pickupAddressId', 'selectedPickupAddressId',
+  'COD', 'amountCOD', 'isExpressShipping', 'Notes',
+]);
+
+function hasMeaningfulExtracts(geminiResult) {
+  const fields = geminiResult?.extractedFields;
+  if (!fields || typeof fields !== 'object') return false;
+  return Object.keys(fields).some(function (key) {
+    if (!MEANINGFUL_EXTRACT_KEYS.has(key)) return false;
+    const val = fields[key];
+    return val !== null && val !== undefined && String(val).trim() !== '';
+  });
+}
+
+const ACTION_INTENTS = new Set([
+  'create_order', 'clarify_order', 'create_pickup', 'clarify_pickup',
+  'order_status', 'wallet', 'pickup_status', 'pickup',
+]);
+
+function shouldRoutePlatformHelp(message, geminiResult, conversation, userData) {
+  if (isActionableShippingRequest(message)) return false;
+  if (isZoneLikeMessage(message)) return false;
+  if (geminiResult?.intent && ACTION_INTENTS.has(geminiResult.intent)) return false;
+  if (hasMeaningfulExtracts(geminiResult)) return false;
+
+  if (conversation?.activeDraft?.type && !isHelpQuestion(message)) {
+    return false;
+  }
+
+  if (
+    geminiResult?.intent === 'platform_help' &&
+    geminiResult?.helpTopic === 'zones_areas' &&
+    !isHelpQuestion(message) &&
+    (conversation?.activeDraft?.type || isZoneLikeMessage(message))
+  ) {
+    return false;
+  }
+
+  if (isHelpQuestion(message)) {
+    return !!detectPlatformHelp(message, conversation, userData);
+  }
+
+  if (geminiResult?.intent === 'platform_help' || geminiResult?.helpTopic) {
+    return true;
+  }
+
+  return false;
+}
+
+const SERVER_VOICE_FIELDS = new Set([
+  'phoneNumber',
+  'numberOfItems',
+  'productDescription',
+  'codConfirmation',
+  'amountCOD',
+  'shippingSpeed',
+  'originalOrderNumber',
+  'returnReason',
+  'currentPD',
+  'newPD',
+  'numberOfItemsCurrentPD',
+  'numberOfItemsNewPD',
+]);
+
+function shouldUseLiteVoiceTranscribe(conversation) {
+  const pending = conversation.activeDraft?.pendingField;
+  return !!(pending && SERVER_VOICE_FIELDS.has(pending));
+}
+
+/**
+ * Infer conversation language from draft content and recent messages (not UI pref alone).
+ */
+function resolveConversationLang(conversation, preferredLang, textHint) {
+  if (textHint && /[\u0600-\u06FF]/.test(textHint)) return 'ar';
+  if (textHint && !/[\u0600-\u06FF]/.test(textHint) && /[a-zA-Z]/.test(textHint)) {
+    return preferredLang === 'ar' ? 'ar' : 'en';
+  }
+
+  const fields = conversation?.activeDraft?.fields || {};
+  const fieldBlob = [
+    fields.fullName,
+    fields.address,
+    fields.productDescription,
+    fields.zoneQuery,
+    fields.zone,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  if (/[\u0600-\u06FF]/.test(fieldBlob)) return 'ar';
+
+  const messages = conversation?.messages || [];
+  for (let i = messages.length - 1; i >= 0 && i >= messages.length - 8; i--) {
+    const m = messages[i];
+    if (m.sender === 'user' && /[\u0600-\u06FF]/.test(String(m.content || ''))) {
+      return 'ar';
+    }
+    if (m.sender === 'assistant') {
+      try {
+        const parsed = JSON.parse(m.content);
+        if (parsed.text && /[\u0600-\u06FF]/.test(parsed.text)) return 'ar';
+        if (parsed.clarifyingQuestion && /[\u0600-\u06FF]/.test(parsed.clarifyingQuestion)) {
+          return 'ar';
+        }
+      } catch {
+        if (/[\u0600-\u06FF]/.test(String(m.content || ''))) return 'ar';
+      }
+    }
+  }
+
+  return preferredLang === 'ar' ? 'ar' : 'en';
+}
+
+function shouldAnswerOrderDraftServerSide(conversation, message) {
+  if (conversation.activeDraft?.type !== 'order') return false;
+  if (isHelpQuestion(message)) return false;
+  if (isCancelDraftPhrase(message)) return false;
+  if ((conversation.activeDraft.regionOptions || []).length > 0) return false;
+
+  const fields = conversation.activeDraft.fields || {};
+  if (detectMessageZoneConflict(message, fields)) return false;
+
+  const pending = conversation.activeDraft.pendingField;
+  const GEMINI_PARSE_FIELDS = new Set([
+    'address',
+    'zone',
+    'fullName',
+    'originalOrderNumber',
+    'returnReason',
+    'currentPD',
+    'newPD',
+  ]);
+  if (pending && GEMINI_PARSE_FIELDS.has(pending)) return false;
+
+  if (pending) return true;
+  if (isZoneLikeMessage(message) && Object.keys(fields).length > 0) return true;
+  return false;
+}
+
+function resolvePlatformHelpTopic(message, geminiResult, conversation, userData) {
+  return (
+    geminiResult?.helpTopic ||
+    detectPlatformHelp(message, conversation, userData)?.topicId ||
+    'create_order'
+  );
+}
+
+function shouldStartOrderDraft(message, geminiResult, conversation) {
+  if (conversation.activeDraft?.type === 'order') return false;
+  if (geminiResult?.intent === 'create_order' || geminiResult?.intent === 'clarify_order') {
+    return true;
+  }
+  const m = String(message || '').trim();
+  if (/(حالة|status|فين|where).*(اوردر|أوردر|طلب|order)/i.test(m) && /\d{5,}/.test(m)) {
+    return false;
+  }
+  return (
+    /(اعمل|عايز|عاوز|محتاج|انشاء|انشئ|create|make|new).*(اوردر|أوردر|طلب|order)/i.test(m)
+    || /^(إنشاء أوردر|انشاء اوردر|إنشاء طلب|create order|new order|make order)$/i.test(m)
+  );
+}
+
 function isPickupStatusQuery(message, geminiResult) {
   if (geminiResult?.intent === 'pickup_status') return true;
   if (geminiResult?.pickupNumberQuery) return true;
@@ -418,6 +587,15 @@ function buildZonePickQuestion({ query, lang, reason }) {
     : `Several areas are close to "${q}". Pick the best match:`;
 }
 
+function buildZonePickMessage(draftFields, zoneClarifying, lang) {
+  const isAr = lang === 'ar';
+  const name = draftFields.fullName;
+  const prefix = name
+    ? (isAr ? `تمام ${name}. ` : `Got it, ${name}. `)
+    : (isAr ? 'تمام. ' : 'Got it. ');
+  return `${prefix}${zoneClarifying}`;
+}
+
 function buildZonePickResponse({
   suggestions,
   query,
@@ -426,40 +604,37 @@ function buildZonePickResponse({
   draftFields,
   userData,
   conversation,
-  geminiResult,
-  serverOnly,
-  prevPendingField,
+  regionHints,
 }) {
-  const isAr = lang === 'ar';
   const zoneClarifying = buildZonePickQuestion({ query, lang, reason });
   const quickReplies = buildZoneQuickReplies(suggestions, lang);
   const pickReason = reason || 'ambiguous';
+  const missingFields = getClarificationQueue(draftFields, userData);
+  let text = buildZonePickMessage(draftFields, zoneClarifying, lang);
+  const zoneCorrection = buildZoneCorrectionAck(regionHints, draftFields, lang);
+  if (zoneCorrection) {
+    text = `${zoneCorrection} ${text}`.trim();
+  }
 
   conversation.activeDraft = {
     type: 'order',
     fields: draftFields,
-    missingFields: ['zone'],
+    missingFields,
     pendingField: 'zone',
     regionOptions: suggestions,
     updatedAt: new Date(),
   };
 
-  const ack =
-    serverOnly && prevPendingField
-      ? buildAcknowledgment(prevPendingField, lang)
-      : splitAckFromGeminiReply(geminiResult?.replyText, zoneClarifying);
-
   return {
-    text: ack,
+    text,
     suggestions: [],
     intent: 'clarify_order',
-    draft: { fields: draftFields, missingFields: ['zone'], complete: false },
+    draft: { fields: draftFields, missingFields, complete: false },
     progress: getDraftProgress(draftFields, userData),
     pendingField: 'zone',
     regionOptions: suggestions,
     zonePickReason: pickReason,
     chips: buildCollectedChips(draftFields, ['zone'], lang),
-    clarifyingQuestion: zoneClarifying,
     quickReplies,
   };
 }
@@ -618,9 +793,9 @@ async function processOrderDraftFlow({
   const lang =
     geminiResult?.language === 'ar'
       ? 'ar'
-      : userContext.preferredLang === 'ar'
-        ? 'ar'
-        : 'en';
+      : geminiResult?.language === 'en'
+        ? 'en'
+        : resolveConversationLang(conversation, userContext.preferredLang === 'ar' ? 'ar' : 'en');
 
   let draftFields = mergeDraft(
     conversation.activeDraft?.fields || {},
@@ -632,6 +807,8 @@ async function processOrderDraftFlow({
 
   const { fields: resolvedFields, regionHints: newHints } = applyRegionResolution(draftFields, {
     splitAddress: true,
+    lang,
+    replaceZone: geminiResult?.extractedFields?.replaceZone === true,
   });
   draftFields = normalizeDraftFields(resolvedFields, lang);
   draftFields = enforcePostStructuralOrder(draftFields, userData);
@@ -639,8 +816,10 @@ async function processOrderDraftFlow({
 
   draftFields = applyDefaultPickupIfSingle(draftFields, userData);
 
+  const missingFields = getClarificationQueue(draftFields, userData);
+  const activeField = missingFields[0] || null;
   const zoneSuggestions = mergedHints.zoneSuggestions || mergedHints.ambiguousOptions;
-  if (zoneSuggestions && zoneSuggestions.length && !draftFields.zone) {
+  if (zoneSuggestions && zoneSuggestions.length && !draftFields.zone && activeField === 'zone') {
     const zoneQuery =
       draftFields.zoneQuery ||
       mergedHints.invalidZone ||
@@ -663,13 +842,10 @@ async function processOrderDraftFlow({
       draftFields,
       userData,
       conversation,
-      geminiResult,
-      serverOnly,
-      prevPendingField,
+      regionHints: mergedHints,
     });
   }
 
-  const missingFields = getClarificationQueue(draftFields, userData);
   const complete = missingFields.length === 0;
   const nextField = complete ? null : missingFields[0];
   const clarifying = nextField
@@ -713,12 +889,21 @@ async function processOrderDraftFlow({
 
   const quickReplies = buildQuickReplies(nextField, lang);
   const fieldSuggestions = buildSuggestionsForField(nextField, lang, userContext);
-  const question = quickReplies.length > 0
-    ? clarifying
-    : (clarifying || geminiResult?.clarifyingQuestion);
-  const ack = serverOnly && prevPendingField
-    ? buildAcknowledgment(prevPendingField, lang)
-    : splitAckFromGeminiReply(geminiResult?.replyText, question);
+  const question = clarifying || geminiResult?.clarifyingQuestion;
+  let text;
+  if (serverOnly && prevPendingField) {
+    const ack = buildAcknowledgment(prevPendingField, lang);
+    text = question ? `${ack} ${question}`.trim() : ack;
+  } else if (nextField && clarifying) {
+    text = clarifying;
+  } else {
+    text = splitAckFromGeminiReply(geminiResult?.replyText, question);
+  }
+
+  const zoneCorrection = buildZoneCorrectionAck(mergedHints, draftFields, lang);
+  if (zoneCorrection) {
+    text = text ? `${zoneCorrection} ${text}`.trim() : zoneCorrection;
+  }
 
   const suggestions =
     quickReplies.length > 0
@@ -728,13 +913,13 @@ async function processOrderDraftFlow({
         : fieldSuggestions;
 
   return {
-    text: ack,
+    text,
     intent: 'clarify_order',
     draft: { fields: draftFields, missingFields, complete: false },
     progress,
     pendingField: nextField,
     chips: buildCollectedChips(draftFields, missingFields, lang),
-    clarifyingQuestion: question,
+    clarifyingQuestion: text === clarifying ? undefined : question,
     quickReplies,
     suggestions,
   };
@@ -751,9 +936,9 @@ async function processPickupDraftFlow({
   const lang =
     geminiResult?.language === 'ar'
       ? 'ar'
-      : userContext.preferredLang === 'ar'
-        ? 'ar'
-        : 'en';
+      : geminiResult?.language === 'en'
+        ? 'en'
+        : resolveConversationLang(conversation, userContext.preferredLang === 'ar' ? 'ar' : 'en');
 
   const wasComplete = conversation.activeDraft?.type === 'pickup'
     && isPickupDraftComplete(conversation.activeDraft.fields || {}, userData);
@@ -939,11 +1124,18 @@ async function processDraftWithoutGemini({
 
   const extracted = extractFromUserReply(message, pendingField, draftFields, userContext);
 
-  if (pendingField === 'address' || looksLikeAddressReply(message, draftFields)) {
+  if (
+    pendingField === 'zone' ||
+    pendingField === 'address' ||
+    looksLikeAddressReply(message, draftFields)
+  ) {
     const split = splitAddressAndZoneFromText(message);
-    if (split.address) extracted.address = split.address;
     if (split.zoneQuery) extracted.zoneQuery = split.zoneQuery;
-    if (!split.address && !split.zoneQuery && message.trim()) {
+    if (split.address) extracted.address = split.address;
+    if (pendingField === 'zone' && !split.zoneQuery && message.trim()) {
+      extracted.zoneQuery = message.trim();
+    }
+    if (pendingField === 'address' && !split.address && !split.zoneQuery && message.trim()) {
       extracted.address = message.trim();
     }
   }
@@ -1017,6 +1209,42 @@ async function resolveZoneFromUserReply(message, conversation, lang) {
   return null;
 }
 
+async function continueOrderDraftAfterZonePick({
+  userId,
+  userData,
+  userContext,
+  conversation,
+  draftFields,
+  lang,
+}) {
+  const { fields: preResolved, regionHints } = applyRegionResolution(draftFields, {
+    splitAddress: true,
+    lang,
+  });
+  conversation.activeDraft = {
+    ...conversation.activeDraft,
+    fields: preResolved,
+    regionOptions: null,
+  };
+  return processOrderDraftFlow({
+    userId,
+    userData,
+    userContext,
+    conversation,
+    geminiResult: {
+      language: lang,
+      intent: 'clarify_order',
+      extractedFields: {},
+      clarifyingQuestion: null,
+      replyText: null,
+      suggestions: [],
+    },
+    regionHints,
+    serverOnly: true,
+    prevPendingField: 'zone',
+  });
+}
+
 /**
  * Process a text message through AINOW.
  */
@@ -1048,12 +1276,52 @@ async function processTextMessage(userId, message, conversation, options = {}) {
     return intercepted;
   }
 
+  if (
+    !conversation.activeDraft?.type &&
+    isZoneLikeMessage(message) &&
+    !isHelpQuestion(message) &&
+    !isActionableShippingRequest(message)
+  ) {
+    conversation.activeDraft = {
+      type: 'order',
+      fields: { orderType: 'Deliver', zoneQuery: message.trim() },
+      missingFields: [],
+      pendingField: null,
+    };
+    const seeded = await processDraftWithoutGemini({
+      userData,
+      userContext,
+      conversation,
+      message: '',
+      regionHints: {},
+      lang: msgLang,
+    });
+    return seeded;
+  }
+
+  if (shouldAnswerOrderDraftServerSide(conversation, message)) {
+    const { fields: preResolved, regionHints } = applyRegionResolution(
+      conversation.activeDraft?.fields || {},
+      { splitAddress: true, lang: msgLang }
+    );
+    conversation.activeDraft.fields = preResolved;
+    return processDraftWithoutGemini({
+      userData,
+      userContext,
+      conversation,
+      message,
+      regionHints,
+      lang: msgLang,
+    });
+  }
+
   const helpDetected = detectPlatformHelp(message, conversation, userData);
-  if (helpDetected) {
+  if (helpDetected && !isActionableShippingRequest(message)) {
     return buildPlatformHelpResponse(helpDetected.topicId, msgLang, { conversation, userData });
   }
 
   const zonePick = await resolveZoneFromUserReply(message, conversation, msgLang);
+  const hadRegionOptions = (conversation.activeDraft?.regionOptions || []).length > 0;
   let draftFields = conversation.activeDraft?.fields || {};
   if (zonePick) {
     draftFields = mergeDraft(
@@ -1070,9 +1338,22 @@ async function processTextMessage(userId, message, conversation, options = {}) {
       fields: draftFields,
       regionOptions: null,
     };
+    if (hadRegionOptions && conversation.activeDraft?.type === 'order') {
+      return continueOrderDraftAfterZonePick({
+        userId,
+        userData,
+        userContext,
+        conversation,
+        draftFields,
+        lang: msgLang,
+      });
+    }
   }
 
-  const { fields: preResolved, regionHints } = applyRegionResolution(draftFields, { splitAddress: true });
+  const { fields: preResolved, regionHints } = applyRegionResolution(draftFields, {
+    splitAddress: true,
+    lang: msgLang,
+  });
 
   let geminiResult;
   try {
@@ -1104,16 +1385,9 @@ async function processTextMessage(userId, message, conversation, options = {}) {
 
   const lang = geminiResult.language === 'ar' ? 'ar' : preferredLang;
 
-  if (geminiResult.intent === 'platform_help' || geminiResult.helpTopic) {
-    const topicId = geminiResult.helpTopic || detectPlatformHelp(message, conversation, userData)?.topicId;
+  if (shouldRoutePlatformHelp(message, geminiResult, conversation, userData)) {
+    const topicId = resolvePlatformHelpTopic(message, geminiResult, conversation, userData);
     return buildPlatformHelpResponse(topicId, lang, { conversation, userData });
-  }
-
-  if (isHelpQuestion(message)) {
-    const helpFromGemini = detectPlatformHelp(message, conversation, userData);
-    if (helpFromGemini) {
-      return buildPlatformHelpResponse(helpFromGemini.topicId, lang, { conversation, userData });
-    }
   }
 
   if (shouldRefuse(message, geminiResult)) {
@@ -1159,7 +1433,8 @@ async function processTextMessage(userId, message, conversation, options = {}) {
     (
       geminiResult.intent === 'create_order' ||
       geminiResult.intent === 'clarify_order' ||
-      conversation.activeDraft?.type === 'order'
+      conversation.activeDraft?.type === 'order' ||
+      shouldStartOrderDraft(message, geminiResult, conversation)
     )
   ) {
     return processOrderDraftFlow({
@@ -1177,6 +1452,82 @@ async function processTextMessage(userId, message, conversation, options = {}) {
     suggestions: geminiResult.suggestions || [],
     intent: geminiResult.intent || 'general_chat',
   };
+}
+
+async function processVoiceDraftFallback({
+  userId,
+  userData,
+  userContext,
+  conversation,
+  audioBuffer,
+  mimeType,
+  regionHints,
+  preferredLang,
+}) {
+  const draftLang = resolveConversationLang(conversation, preferredLang);
+  let transcript = '';
+
+  try {
+    const lite = await transcribeAudioOnly({
+      audioBuffer,
+      mimeType,
+      preferredLang: draftLang,
+    });
+    transcript = String(lite.transcript || '').trim();
+    const lang =
+      lite.language === 'ar'
+        ? 'ar'
+        : lite.language === 'en'
+          ? 'en'
+          : resolveConversationLang(conversation, preferredLang, transcript);
+
+    if (transcript) {
+      if (shouldAnswerOrderDraftServerSide(conversation, transcript)) {
+        const { fields: preResolved, regionHints: zoneHints } = applyRegionResolution(
+          conversation.activeDraft?.fields || {},
+          { splitAddress: true, lang }
+        );
+        conversation.activeDraft.fields = preResolved;
+        const result = await processDraftWithoutGemini({
+          userData,
+          userContext,
+          conversation,
+          message: transcript,
+          regionHints: { ...regionHints, ...zoneHints },
+          lang,
+        });
+        result.transcript = transcript;
+        return result;
+      }
+    }
+  } catch (liteErr) {
+    console.warn('Lite voice fallback failed:', liteErr.message);
+  }
+
+  if (shouldUseDraftFallback(conversation)) {
+    const isAr = draftLang === 'ar';
+    return {
+      text: isAr
+        ? 'مش قادر أسمع الصوت دلوقتي بسبب ضغط على الخدمة. اكتب إجابتك في الشات أو حاول بعد شوية.'
+        : 'Voice is temporarily unavailable. Type your answer in chat or try again shortly.',
+      intent: 'clarify_order',
+      draft: conversation.activeDraft
+        ? {
+            fields: conversation.activeDraft.fields,
+            missingFields: conversation.activeDraft.missingFields || [],
+            complete: false,
+          }
+        : undefined,
+      progress: conversation.activeDraft?.fields
+        ? getDraftProgress(conversation.activeDraft.fields, userData)
+        : undefined,
+      pendingField: conversation.activeDraft?.pendingField,
+      transcript: transcript || '',
+      suggestions: isAr ? ['اكتب في الشات'] : ['Type in chat'],
+    };
+  }
+
+  return buildGeminiErrorResponse(draftLang);
 }
 
 /**
@@ -1202,8 +1553,48 @@ async function processVoiceMessage(userId, audioBuffer, mimeType, conversation, 
   const userData = await User.findById(userId);
   const userContext = await getUserContext(userId, preferredLang);
   const draftFields = conversation.activeDraft?.fields || {};
-  const { fields: preResolved, regionHints } = applyRegionResolution(draftFields, { splitAddress: true });
-  const voiceLang = preferredLang === 'ar' ? 'ar' : 'en';
+  const { fields: preResolved, regionHints } = applyRegionResolution(draftFields, {
+    splitAddress: true,
+    lang: preferredLang,
+  });
+  const voiceLang = resolveConversationLang(conversation, preferredLang);
+
+  if (shouldUseLiteVoiceTranscribe(conversation)) {
+    try {
+      const lite = await transcribeAudioOnly({
+        audioBuffer,
+        mimeType,
+        preferredLang: voiceLang,
+      });
+      const transcript = String(lite.transcript || '').trim();
+      if (transcript) {
+        const lang =
+          lite.language === 'ar'
+            ? 'ar'
+            : lite.language === 'en'
+              ? 'en'
+              : resolveConversationLang(conversation, preferredLang, transcript);
+
+        const { fields: preResolved, regionHints: zoneHints } = applyRegionResolution(
+          conversation.activeDraft?.fields || {},
+          { splitAddress: true, lang }
+        );
+        conversation.activeDraft.fields = preResolved;
+        const result = await processDraftWithoutGemini({
+          userData,
+          userContext,
+          conversation,
+          message: transcript,
+          regionHints: { ...regionHints, ...zoneHints },
+          lang,
+        });
+        result.transcript = transcript;
+        return result;
+      }
+    } catch (liteErr) {
+      console.warn('Lite voice transcribe for scalar field failed:', liteErr.message);
+    }
+  }
 
   let geminiResult;
   try {
@@ -1218,23 +1609,25 @@ async function processVoiceMessage(userId, audioBuffer, mimeType, conversation, 
     });
   } catch (error) {
     console.error('Gemini voice error:', error.message);
-    if (shouldUseDraftFallback(conversation)) {
-      const result = await processDraftWithoutGemini({
-        userData,
-        userContext,
-        conversation,
-        message: '',
-        regionHints,
-        lang: voiceLang,
-      });
-      result.transcript = '';
-      return result;
-    }
-    return buildFallbackResponse(voiceLang);
+    return processVoiceDraftFallback({
+      userId,
+      userData,
+      userContext,
+      conversation,
+      audioBuffer,
+      mimeType,
+      regionHints,
+      preferredLang,
+    });
   }
 
   const transcript = geminiResult.transcript || '';
-  const lang = geminiResult.language === 'ar' ? 'ar' : preferredLang;
+  const lang =
+    geminiResult.language === 'ar'
+      ? 'ar'
+      : geminiResult.language === 'en'
+        ? 'en'
+        : resolveConversationLang(conversation, preferredLang, transcript);
 
   const intercepted = await tryInterceptDraftCommand(
     userId,
@@ -1248,27 +1641,89 @@ async function processVoiceMessage(userId, audioBuffer, mimeType, conversation, 
     return intercepted;
   }
 
+  if (
+    !conversation.activeDraft?.type &&
+    isZoneLikeMessage(transcript) &&
+    !isHelpQuestion(transcript) &&
+    !isActionableShippingRequest(transcript)
+  ) {
+    conversation.activeDraft = {
+      type: 'order',
+      fields: { orderType: 'Deliver', zoneQuery: transcript.trim() },
+      missingFields: [],
+      pendingField: null,
+    };
+    const seeded = await processDraftWithoutGemini({
+      userData,
+      userContext,
+      conversation,
+      message: '',
+      regionHints: {},
+      lang,
+    });
+    seeded.transcript = transcript;
+    return seeded;
+  }
+
+  if (shouldAnswerOrderDraftServerSide(conversation, transcript)) {
+    const { fields: preResolved, regionHints: zoneHints } = applyRegionResolution(
+      conversation.activeDraft?.fields || {},
+      { splitAddress: true, lang }
+    );
+    conversation.activeDraft.fields = preResolved;
+    const result = await processDraftWithoutGemini({
+      userData,
+      userContext,
+      conversation,
+      message: transcript,
+      regionHints: zoneHints,
+      lang,
+    });
+    result.transcript = transcript;
+    return result;
+  }
+
   const helpDetected = detectPlatformHelp(transcript, conversation, userData);
-  if (helpDetected) {
+  if (helpDetected && !isActionableShippingRequest(transcript)) {
     const helpRes = buildPlatformHelpResponse(helpDetected.topicId, lang, { conversation, userData });
     helpRes.transcript = transcript;
     return helpRes;
   }
 
-  if (geminiResult.intent === 'platform_help' || geminiResult.helpTopic) {
-    const topicId = geminiResult.helpTopic || detectPlatformHelp(transcript, conversation, userData)?.topicId;
+  const hadRegionOptions = (conversation.activeDraft?.regionOptions || []).length > 0;
+  const zonePickFromList = await resolveZoneFromUserReply(transcript, conversation, lang);
+  if (zonePickFromList && hadRegionOptions && conversation.activeDraft?.type === 'order') {
+    const mergedFields = mergeDraft(
+      conversation.activeDraft.fields || {},
+      {
+        government: zonePickFromList.government,
+        zone: zonePickFromList.zone,
+      },
+      lang,
+      { userData }
+    );
+    conversation.activeDraft = {
+      ...conversation.activeDraft,
+      fields: mergedFields,
+      regionOptions: null,
+    };
+    const result = await continueOrderDraftAfterZonePick({
+      userId,
+      userData,
+      userContext,
+      conversation,
+      draftFields: mergedFields,
+      lang,
+    });
+    result.transcript = transcript;
+    return result;
+  }
+
+  if (shouldRoutePlatformHelp(transcript, geminiResult, conversation, userData)) {
+    const topicId = resolvePlatformHelpTopic(transcript, geminiResult, conversation, userData);
     const helpRes = buildPlatformHelpResponse(topicId, lang, { conversation, userData });
     helpRes.transcript = transcript;
     return helpRes;
-  }
-
-  if (isHelpQuestion(transcript)) {
-    const helpFromVoice = detectPlatformHelp(transcript, conversation, userData);
-    if (helpFromVoice) {
-      const helpRes = buildPlatformHelpResponse(helpFromVoice.topicId, lang, { conversation, userData });
-      helpRes.transcript = transcript;
-      return helpRes;
-    }
   }
 
   if (shouldRefuse(transcript, geminiResult)) {
@@ -1326,7 +1781,8 @@ async function processVoiceMessage(userId, audioBuffer, mimeType, conversation, 
     (
       geminiResult.intent === 'create_order' ||
       geminiResult.intent === 'clarify_order' ||
-      conversation.activeDraft?.type === 'order'
+      conversation.activeDraft?.type === 'order' ||
+      shouldStartOrderDraft(transcript, geminiResult, conversation)
     )
   ) {
     const result = await processOrderDraftFlow({
@@ -1494,5 +1950,12 @@ module.exports = {
   getGreeting,
   checkRateLimit,
   shouldStartPickupDraft,
+  shouldStartOrderDraft,
   isPickupStatusQuery,
+  shouldRoutePlatformHelp,
+  shouldAnswerOrderDraftServerSide,
+  resolveConversationLang,
+  shouldUseLiteVoiceTranscribe,
+  buildZonePickResponse,
+  buildZonePickMessage,
 };

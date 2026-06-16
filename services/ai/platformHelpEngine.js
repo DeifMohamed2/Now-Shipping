@@ -2,6 +2,7 @@
  * Context-aware NowShipping platform help for AINOW.
  */
 const { hasUsablePickupAddress } = require('../../utils/pickupAddressValidation');
+const { isZoneLikeMessage } = require('../../utils/zoneReplyDetection');
 
 const HELP_PHRASES = [
   'ازاي', 'ازاى', 'إزاي', 'ازى', 'كيف', 'فين', 'ايه الخطوات', 'الخطوات',
@@ -13,27 +14,25 @@ const HELP_PHRASES = [
 ];
 
 const TOPIC_KEYWORDS = [
-  { topic: 'add_pickup_address', patterns: ['عنوان استلام', 'عنوان الاستلام', 'pickup address', 'add address', 'اضافة عنوان'] },
-  { topic: 'create_order', patterns: ['انشاء اوردر', 'إنشاء أوردر', 'اعمل اوردر', 'create order', 'new order'] },
-  { topic: 'schedule_pickup', patterns: ['جدول استلام', 'جدولة استلام', 'schedule pickup', 'book pickup'] },
-  { topic: 'order_status', patterns: ['حالة الطلب', 'حالة الاوردر', 'تتبع', 'track order', 'order status'] },
-  { topic: 'wallet_balance', patterns: ['رصيد', 'محفظ', 'wallet', 'balance', 'payout'] },
-  { topic: 'import_orders', patterns: ['استيراد', 'import', 'excel', 'اكسل'] },
-  { topic: 'return_order', patterns: ['مرتجع', 'ارجاع', 'return order', 'returns'] },
-  { topic: 'express_shipping', patterns: ['توصيل سريع', 'express', 'سريع'] },
-  { topic: 'shop_orders', patterns: ['المتجر', 'shop order', 'shop'] },
-  { topic: 'tickets_support', patterns: ['تذكرة', 'دعم', 'ticket', 'support'] },
-  { topic: 'integrations', patterns: ['شوبيفاي', 'shopify', 'woocommerce', 'ربط', 'integration'] },
-  { topic: 'profile_settings', patterns: ['الملف الشخصي', 'البروفايل', 'profile', 'brand info'] },
-  { topic: 'account_completion', patterns: ['اكمال الحساب', 'complete account', 'verification'] },
-  { topic: 'zones_areas', patterns: ['منطقة', 'محافظة', 'zone', 'area', 'governorate'] },
+  { topic: 'add_pickup_address', patterns: ['ازاي اضيف عنوان', 'كيف اضيف عنوان', 'where to add address', 'how to add pickup address', 'عنوان الاستلام فين', 'اضافة عنوان استلام'] },
+  { topic: 'create_order', patterns: ['ازاي اعمل اوردر', 'ازاي انشئ اوردر', 'كيف انشئ اوردر', 'كيف اعمل اوردر', 'how to create order', 'how do i create order', 'where to create order'] },
+  { topic: 'schedule_pickup', patterns: ['ازاي اجدول استلام', 'كيف اجدول استلام', 'how to schedule pickup', 'how do i schedule pickup', 'where to schedule pickup'] },
+  { topic: 'order_status', patterns: ['ازاي اتتبع', 'كيف اتتبع', 'how to track order', 'how do i track', 'حالة الطلب فين', 'order status where'] },
+  { topic: 'wallet_balance', patterns: ['ازاي اشوف رصيد', 'كيف اشوف رصيد', 'how to check balance', 'how do i check wallet'] },
+  { topic: 'import_orders', patterns: ['ازاي استورد', 'كيف استورد', 'how to import', 'how do i import excel'] },
+  { topic: 'return_order', patterns: ['ازاي اعمل مرتجع', 'كيف ارجع اوردر', 'how to return order', 'how do i return'] },
+  { topic: 'express_shipping', patterns: ['ازاي اشحن سريع', 'how to use express', 'how does express work'] },
+  { topic: 'shop_orders', patterns: ['ازاي استخدم المتجر', 'how to use shop'] },
+  { topic: 'tickets_support', patterns: ['ازاي افتح تذكرة', 'how to open ticket', 'how do i contact support'] },
+  { topic: 'integrations', patterns: ['ازاي اربط شوبيفاي', 'how to connect shopify', 'how to integrate woocommerce'] },
+  { topic: 'profile_settings', patterns: ['ازاي اعدل البروفايل', 'how to edit profile', 'how to change brand'] },
+  { topic: 'account_completion', patterns: ['ازاي اكمل الحساب', 'how to complete account'] },
+  { topic: 'zones_areas', patterns: ['ازاي اختار منطقة', 'how to pick zone', 'what is zone', 'ايه المنطقة'] },
 ];
 
 const PENDING_FIELD_TOPIC = {
   pickupAddressId: 'add_pickup_address',
   selectedPickupAddressId: 'add_pickup_address',
-  zone: 'zones_areas',
-  government: 'zones_areas',
   originalOrderNumber: 'return_order',
   returnReason: 'return_order',
   codConfirmation: 'create_order',
@@ -364,6 +363,23 @@ function isHelpQuestion(message) {
   });
 }
 
+const ACTION_VERBS = /(اعمل|عمل|انشاء|انشئ|نشئ|جدول|جدولة|create|make|schedule|book|new)/i;
+const SHIPPING_NOUNS = /(اوردر|أوردر|طلب|طلبات|استلام|pickup|order|orders|shipment)/i;
+const ENTITY_HINTS = /(باسم|اسم|عنوان|رايح|رايحة|في |فى |موبايل|تليفون|phone|٠|١|٢|٣|٤|٥|٦|٧|٨|٩|\d{10,11})/i;
+
+function isActionableShippingRequest(message) {
+  const n = normalizeText(message);
+  if (!n) return false;
+  if (isHelpQuestion(message)) return false;
+
+  const hasActionAndNoun = ACTION_VERBS.test(n) && SHIPPING_NOUNS.test(n);
+  const hasEntityData = ENTITY_HINTS.test(n);
+  const isDetailedRequest = n.length > 20 && SHIPPING_NOUNS.test(n);
+  const isShortActionCommand = /^(إنشاء أوردر|انشاء اوردر|إنشاء طلب|جدولة استلام|جدول استلام|create order|schedule pickup|new order|new pickup)$/i.test(n.trim());
+
+  return hasActionAndNoun || (hasEntityData && SHIPPING_NOUNS.test(n)) || isDetailedRequest || isShortActionCommand;
+}
+
 function matchTopicByKeywords(message) {
   const n = normalizeText(message);
   for (const entry of TOPIC_KEYWORDS) {
@@ -398,22 +414,32 @@ function inferTopicFromDraft(conversation, userData) {
 }
 
 function detectPlatformHelp(message, conversation, userData) {
+  if (isActionableShippingRequest(message)) {
+    return null;
+  }
+
+  if (isZoneLikeMessage(message)) {
+    return null;
+  }
+
   const helpLike = isHelpQuestion(message);
-  const keywordTopic = matchTopicByKeywords(message);
   const draftTopic = inferTopicFromDraft(conversation, userData);
 
-  if (keywordTopic) {
-    return { topicId: keywordTopic, reason: 'keyword' };
-  }
-
   if (helpLike) {
-    const topicId = draftTopic || 'create_order';
-    return { topicId, reason: 'help_phrase' };
+    const keywordTopic = matchTopicByKeywords(message);
+    let topicId = keywordTopic || draftTopic || 'create_order';
+    if (topicId === 'zones_areas' && conversation?.activeDraft?.type) {
+      topicId = 'create_order';
+    }
+    return { topicId, reason: keywordTopic ? 'help_keyword' : 'help_phrase' };
   }
 
-  if (draftTopic && normalizeText(message).length < 30) {
-    const vague = ['اعملها', 'how', 'do it', 'كده', 'دي'];
+  if (draftTopic && normalizeText(message).length < 40) {
+    const vague = ['اعملها', 'how', 'do it', 'كده', 'دي', 'ده'];
     if (vague.some(function (v) { return normalizeText(message).includes(v); })) {
+      if (draftTopic === 'zones_areas' && conversation?.activeDraft?.pendingField === 'zone') {
+        return null;
+      }
       return { topicId: draftTopic, reason: 'vague_with_draft' };
     }
   }
@@ -494,6 +520,7 @@ function buildHelpTopicSuggestion(lang, topicId) {
 module.exports = {
   HELP_TOPICS,
   isHelpQuestion,
+  isActionableShippingRequest,
   detectPlatformHelp,
   buildPlatformHelpResponse,
   buildHelpTopicSuggestion,

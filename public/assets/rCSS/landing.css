@@ -1310,7 +1310,8 @@ ol {
 
 .comparison__title {
   margin-bottom: 36px;
-  font-size: clamp(26px, 3.5vw, 38px);
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1.45;
 }
 
 .compare-table {
@@ -1414,13 +1415,11 @@ ol {
   content: '';
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 12px,
-    rgba(255, 255, 255, 0.02) 12px,
-    rgba(255, 255, 255, 0.02) 24px
-  );
+  background: repeating-linear-gradient(-45deg,
+      transparent,
+      transparent 12px,
+      rgba(255, 255, 255, 0.02) 12px,
+      rgba(255, 255, 255, 0.02) 24px);
   pointer-events: none;
 }
 
@@ -1675,7 +1674,7 @@ ol {
   top: 0;
   right: 0;
   height: 100%;
-  width: 18%;
+  width: 42%;
   background: linear-gradient(90deg, var(--orange), var(--orange-light));
   border-radius: var(--radius-pill);
 }

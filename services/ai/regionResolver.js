@@ -6,6 +6,7 @@ const {
   isValidGovernmentAndZone,
 } = require('../../utils/bostaRegionsServer');
 const { ZONE_LANDMARK_BOOSTS } = require('../../utils/zoneMatchUtils');
+const { reconcileDraftContext } = require('./draftContextEngine');
 
 const LANDMARK_ZONE_HINTS = [
   { pattern: /اوبيرا|اوبرا|opera/i, zoneValue: 'Abdeen - Downtown Cairo' },
@@ -71,6 +72,31 @@ function pickPreferredAmbiguousZone(options, fields) {
       const match = options.find((o) => o.zone === hint.zoneValue);
       if (match) return match;
     }
+  }
+
+  let best = null;
+  let bestScore = 0;
+  let secondScore = 0;
+  for (const opt of options) {
+    const label = normalizeText(`${opt.labelAr || ''} ${opt.labelEn || ''} ${opt.zone || ''}`);
+    let score = 0;
+    if (haystack && label && (haystack.includes(label) || label.includes(haystack))) {
+      score += 85;
+    }
+    const words = haystack.split(' ').filter((w) => w.length >= 3);
+    for (const w of words) {
+      if (label.includes(w)) score += 18;
+    }
+    if (score > bestScore) {
+      secondScore = bestScore;
+      bestScore = score;
+      best = opt;
+    } else if (score > secondScore) {
+      secondScore = score;
+    }
+  }
+  if (best && bestScore >= 55 && bestScore - secondScore >= 12) {
+    return best;
   }
 
   if (options.length === 1) return options[0];
@@ -142,13 +168,28 @@ function applyRegionResolution(fields, opts) {
     next.otherPhoneNumber = normalizeArabicDigitsToLatin(String(next.otherPhoneNumber)).replace(/\D/g, '');
   }
 
+  const reconciled = reconcileDraftContext(next, {
+    lang: opts?.lang || 'ar',
+    replaceZone: opts?.replaceZone === true || next.replaceZone === true,
+  });
+  next = reconciled.fields;
+  Object.assign(regionHints, reconciled.hints);
+  if (next.replaceZone !== undefined) delete next.replaceZone;
+
   next = mergeLandmarkQuery(next);
 
-  if (opts?.splitAddress && next.address && !next.zoneQuery && (!next.government || !next.zone)) {
+  const needsAddressSplit =
+    opts?.splitAddress &&
+    next.address &&
+    (!next.zoneQuery || !next.government || !next.zone || regionHints.zoneCorrectedFromAddress);
+
+  if (needsAddressSplit) {
     const split = splitAddressAndZoneFromText(next.address);
     if (split.zoneQuery) {
       next.zoneQuery = split.zoneQuery;
       if (split.address) next.address = split.address;
+    } else if (split.address && !next.zoneQuery) {
+      next.address = split.address;
     }
   }
 

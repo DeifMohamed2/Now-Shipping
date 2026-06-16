@@ -2,6 +2,7 @@
  * Normalize spoken Arabizi / mixed AR-EN text into clean draft field values.
  */
 const { normalizeArabicDigitsToLatin, normalizeText } = require('../../utils/bostaRegionsServer');
+const { sanitizeAddressText } = require('./draftContextEngine');
 
 const LEADING_NUMBER_WORDS = {
   واحد: '1',
@@ -158,7 +159,8 @@ function normalizeDraftFields(fields, lang) {
   const isAr = lang === 'ar';
 
   if (next.address) {
-    next.address = normalizeLeadingAddressNumber(String(next.address), isAr ? 'ar' : 'en');
+    next.address = sanitizeAddressText(String(next.address), isAr ? 'ar' : 'en');
+    next.address = normalizeLeadingAddressNumber(next.address, isAr ? 'ar' : 'en');
   }
 
   if (next.productDescription) {

@@ -107,7 +107,7 @@ function mergeDraft(existing, extracted, lang, opts = {}) {
 
   const keys = [
     'orderType', 'fullName', 'phoneNumber', 'otherPhoneNumber', 'address',
-    'government', 'zone', 'zoneQuery', 'isExpressShipping', 'shippingSpeedConfirmed',
+    'government', 'zone', 'zoneQuery', 'replaceZone', 'isExpressShipping', 'shippingSpeedConfirmed',
     'productDescription', 'numberOfItems',
     'COD', 'codConfirmed', 'amountCOD', 'Notes', 'originalOrderNumber', 'returnReason',
     'selectedPickupAddressId', 'currentPD', 'numberOfItemsCurrentPD', 'newPD', 'numberOfItemsNewPD',

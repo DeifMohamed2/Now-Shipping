@@ -520,6 +520,15 @@
     );
   }
 
+  function isConflictingZoneStepText(parsed) {
+    if (parsed.pendingField !== 'zone' || !parsed.quickReplies || !parsed.quickReplies.length) {
+      return false;
+    }
+    const t = String(parsed.text || '');
+    return /رقم|تليفون|موبايل|phone|mobile|كاش|cod/i.test(t)
+      && !/منطقة|area|zone|اختر|اختيار/i.test(t);
+  }
+
   function renderMessage(sender, content) {
     let parsed = content;
     if (typeof content === 'string') {
@@ -538,7 +547,7 @@
       if (parsed.progress) {
         html += renderProgress(parsed.progress, parsed.pendingField);
       }
-      if (parsed.text) {
+      if (parsed.text && !isConflictingZoneStepText(parsed)) {
         const textContent = parsed.helpGuide ? formatInlineBold(parsed.text) : escHtml(parsed.text);
         html += isDraftStep
           ? '<p class="ainow-msg__ack">' + textContent + '</p>'

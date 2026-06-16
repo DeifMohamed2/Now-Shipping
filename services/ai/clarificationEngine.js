@@ -3,6 +3,8 @@
  */
 const { getFieldLabel } = require('../gemini/prompts');
 const { normalizeArabicDigitsToLatin } = require('../../utils/bostaRegionsServer');
+const { sanitizeAddressText } = require('./draftContextEngine');
+const { formatZoneForDisplay } = require('./regionResolver');
 
 const EG_MOBILE_RE = /01[0125]\d{8}/g;
 const SECONDARY_PHONE_MARKERS = [
@@ -292,7 +294,7 @@ function extractFromUserReply(message, pendingField, draft, userContext) {
   } else if (pendingField === 'phoneNumber') {
     extracted.phoneNumber = text.replace(/\s/g, '');
   } else if (pendingField === 'address') {
-    extracted.address = text;
+    extracted.address = sanitizeAddressText(text, /[\u0600-\u06FF]/.test(text) ? 'ar' : 'en');
   } else if (pendingField === 'productDescription') {
     extracted.productDescription = text;
   } else if (pendingField === 'zone') {
@@ -338,6 +340,27 @@ function looksLikeAddressReply(text, draft) {
   return hasCore && missingAddr && (hasStreetSignal || text.length > 8);
 }
 
+function buildZoneCorrectionAck(regionHints, draftFields, lang) {
+  if (!regionHints?.zoneCorrectedFromAddress) return '';
+  const isAr = lang === 'ar';
+  let label = '';
+  if (draftFields?.government && draftFields?.zone) {
+    label = formatZoneForDisplay(draftFields.government, draftFields.zone, lang);
+  } else if (regionHints.suggestedZone) {
+    label = formatZoneForDisplay(
+      regionHints.suggestedZone.government,
+      regionHints.suggestedZone.zone,
+      lang
+    );
+  }
+  if (!label) {
+    return isAr ? 'عدّلت المنطقة حسب العنوان.' : 'Updated the area based on the address.';
+  }
+  return isAr
+    ? `عدّلت المنطقة لـ ${label} حسب العنوان.`
+    : `Updated the area to ${label} based on the address.`;
+}
+
 function buildAcknowledgment(field, lang) {
   const isAr = lang === 'ar';
   switch (field) {
@@ -351,6 +374,12 @@ function buildAcknowledgment(field, lang) {
       return isAr ? 'تمام، سجلت مبلغ التحصيل.' : 'Got it, COD amount saved.';
     case 'shippingSpeed':
       return isAr ? 'تمام، سجلت نوع التوصيل.' : 'Got it, shipping speed saved.';
+    case 'zone':
+      return isAr ? 'تمام، سجلت المنطقة.' : 'Got it, area saved.';
+    case 'productDescription':
+      return isAr ? 'تمام، سجلت المنتج.' : 'Got it, product saved.';
+    case 'fullName':
+      return isAr ? 'تمام، سجلت الاسم.' : 'Got it, name saved.';
     default:
       return isAr ? 'تمام.' : 'Got it.';
   }
@@ -372,6 +401,7 @@ module.exports = {
   scrubPhoneFromNotes,
   looksLikeAddressReply,
   buildAcknowledgment,
+  buildZoneCorrectionAck,
   mergeClarifyingText,
   splitAckFromGeminiReply,
   detectShippingSpeed,

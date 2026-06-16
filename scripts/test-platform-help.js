@@ -7,6 +7,7 @@ const {
   detectPlatformHelp,
   buildPlatformHelpResponse,
   isHelpQuestion,
+  isActionableShippingRequest,
 } = require('../services/ai/platformHelpEngine');
 const { shouldRefuse } = require('../services/ai/scopeGuard');
 
@@ -75,6 +76,18 @@ function run() {
     (response.suggestions || []).some(function (s) { return /كمّل|continue/i.test(s); }),
     'resume pickup suggestion offered after help'
   );
+
+  console.log('\n=== Do-first routing (action over help) ===\n');
+
+  const orderActionMsg = 'كنت عاوز اعمل اوردر باسم ضيف محمد رايح المعادي';
+  assert(isActionableShippingRequest(orderActionMsg), 'order with name/area is actionable');
+  assert(!detectPlatformHelp(orderActionMsg, {}, userDataNoAddress), 'actionable order message does not trigger help');
+
+  assert(isActionableShippingRequest('جدولة استلام'), 'schedule pickup chip is actionable');
+  assert(!detectPlatformHelp('جدولة استلام', {}, userDataNoAddress), '"جدولة استلام" does not trigger help guide');
+
+  assert(isActionableShippingRequest('إنشاء أوردر'), 'create order chip is actionable');
+  assert(!detectPlatformHelp('إنشاء أوردر', {}, userDataNoAddress), '"إنشاء أوردر" does not trigger help guide');
 
   console.log('\n=== Done ===');
   console.log('Passed:', passed, '| Failed:', failed);
