@@ -1,127 +1,261 @@
 <%- contentFor('HeaderCss') %>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
 <%- contentFor('body') %>
 <style>
-  .stats-card {
-    transition: all 0.3s ease;
-    border-radius: 10px;
-    overflow: hidden;
+  .stock-page .stats-card {
+    border: 1px solid rgba(64, 81, 137, 0.08);
+    border-radius: 12px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
 
-  .stats-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  .stock-page .stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(64, 81, 137, 0.1);
   }
 
-  .stats-icon {
-    width: 48px;
-    height: 48px;
+  .stock-page .stats-icon {
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-  }
-
-  .quick-add-form {
-    background-color: #f8f9fa;
     border-radius: 10px;
+  }
+
+  .stock-page .quick-add-form {
+    background: linear-gradient(135deg, #f8f9fc 0%, #f3f6fb 100%);
+    border: 1px solid rgba(64, 81, 137, 0.08);
+    border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
-  .status-badge {
-    padding: 6px 12px;
-    border-radius: 50px;
+  .stock-page .status-badge {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+
+  .stock-advanced-filters {
+    background: #fafbfe;
+    border: 1px solid rgba(64, 81, 137, 0.1);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0;
+  }
+
+  .stock-advanced-filters .filter-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #878a99;
+    margin-bottom: 0.35rem;
+  }
+
+  .stock-advanced-filters .search-box {
+    position: relative;
+  }
+
+  .stock-advanced-filters .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #878a99;
+    pointer-events: none;
+  }
+
+  .stock-advanced-filters .search-box input {
+    padding-left: 2.25rem;
+    border-radius: 8px;
+    border-color: #e9ebec;
+  }
+
+  .stock-advanced-filters .form-control,
+  .stock-advanced-filters .form-select {
+    border-radius: 8px;
+    border-color: #e9ebec;
+    font-size: 0.875rem;
+  }
+
+  .filter-meta-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(64, 81, 137, 0.08);
+  }
+
+  .filter-results-count {
+    font-size: 0.8125rem;
+    color: #495057;
     font-weight: 500;
-    font-size: 0.85rem;
   }
 
-  .return-action-btn {
-    width: 32px;
-    height: 32px;
+  .filter-results-count strong {
+    color: #405189;
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    flex: 1;
+  }
+
+  .filter-chip {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    margin-right: 5px;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    background: #fff;
+    border: 1px solid #d0d5dd;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    color: #405189;
   }
 
-  .nav-tabs-custom .nav-link.active {
-    color: #fff;
-    background-color: #405189;
-    border-radius: 30px;
+  .filter-chip button {
+    border: none;
+    background: none;
+    padding: 0;
+    line-height: 1;
+    color: #878a99;
+    cursor: pointer;
   }
 
-  .nav-tabs-custom .nav-link {
-    border-radius: 30px;
-    padding: 5px 15px;
+  .filter-chip button:hover {
+    color: #f06548;
   }
 
-  .zone-header {
-    background-color: #f8f9fa;
-    border-left: 4px solid #405189;
-    padding: 10px 15px;
-    margin-bottom: 15px;
-    border-radius: 0 4px 4px 0;
+  .stock-page .nav-tabs-custom {
+    border-bottom: 2px solid #eef0f4;
+    gap: 0.25rem;
+  }
+
+  .stock-page .nav-tabs-custom .nav-link {
+    border: none;
+    border-radius: 8px 8px 0 0;
+    padding: 0.5rem 1rem;
+    color: #878a99;
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  .stock-page .nav-tabs-custom .nav-link.active {
+    color: #405189;
+    background: #fff;
+    box-shadow: inset 0 -2px 0 #405189;
+  }
+
+  .stock-page .zone-container {
+    margin-bottom: 1.25rem;
+    border: 1px solid rgba(64, 81, 137, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .stock-page .zone-header {
+    background: linear-gradient(90deg, #f8f9fc 0%, #fff 100%);
+    border-bottom: 1px solid rgba(64, 81, 137, 0.08);
+    padding: 0.85rem 1.25rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
   }
 
-  .zone-title {
-    font-size: 1.1rem;
+  .stock-page .zone-header:hover {
+    background: #f3f6fb;
+  }
+
+  .stock-page .zone-header.collapsed .zone-chevron {
+    transform: rotate(-90deg);
+  }
+
+  .stock-page .zone-chevron {
+    transition: transform 0.2s ease;
+    color: #405189;
+    font-size: 1.25rem;
+  }
+
+  .stock-page .zone-title {
+    font-size: 0.9375rem;
     font-weight: 600;
     margin-bottom: 0;
     display: flex;
     align-items: center;
+    gap: 0.5rem;
+    color: #212529;
   }
 
-  .zone-badge {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    border-radius: 50px;
-    margin-left: 10px;
+  .stock-page .zone-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-weight: 600;
   }
 
-  .zone-actions {
+  .stock-page .zone-actions {
     display: flex;
-    gap: 8px;
+    gap: 0.5rem;
   }
 
-  .zone-container {
-    margin-bottom: 30px;
+  .stock-page .admin-data-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f3f6f9 !important;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    border-bottom: 1px solid #e9ebec;
   }
 
-  .zone-container:last-child {
-    margin-bottom: 0;
+  .stock-page .admin-data-table tbody tr:hover {
+    background-color: rgba(64, 81, 137, 0.03);
   }
 
-  .bulk-actions {
+  .stock-page .bulk-actions {
     display: none;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(90deg, #405189 0%, #364574 100%);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    color: #fff;
   }
 
-  .bulk-actions.show {
+  .stock-page .bulk-actions.show {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
 
-  .bulk-actions-title {
+  .stock-page .bulk-actions-title {
     font-weight: 500;
     margin-bottom: 0;
+    color: #fff;
   }
 
-  .bulk-actions-buttons {
+  .stock-page .bulk-actions-buttons {
     display: flex;
-    gap: 8px;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .return-reason-badge {
@@ -130,9 +264,178 @@
     border-radius: 4px;
   }
 
+  .stock-advanced-filters .choices {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+  }
+
+  .stock-advanced-filters .choices__inner {
+    min-height: 38px;
+    border-radius: 8px;
+    border-color: #e9ebec;
+    padding: 4px 8px;
+    background: #fff;
+  }
+
+  .stock-advanced-filters .choices__list--multiple .choices__item {
+    background: #405189;
+    border: 1px solid #405189;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    margin-bottom: 2px;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .stock-advanced-filters .choices__input {
+    background: transparent;
+    margin-bottom: 0;
+    font-size: 0.8125rem;
+  }
+
+  .stock-advanced-filters .choices__list--dropdown {
+    z-index: 1060;
+    border-radius: 8px;
+    border-color: #e9ebec;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(64, 81, 137, 0.12);
+  }
+
+  .stock-advanced-filters .choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background: #f3f6fb;
+  }
+
+  .stock-advanced-filters .choices.is-open .choices__inner {
+    border-color: #405189;
+    box-shadow: 0 0 0 3px rgba(64, 81, 137, 0.1);
+  }
+
+  .stock-advanced-filters .choices[data-type*="select-multiple"] .choices__inner {
+    min-height: 42px;
+    padding: 6px 10px;
+  }
+
+  .stock-advanced-filters .choices__list--dropdown .choices__item {
+    font-size: 0.8125rem;
+    padding: 8px 12px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .unified-stock-table-wrap {
+    border: 1px solid rgba(64, 81, 137, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .unified-stock-table-wrap .admin-table-scroll {
+    max-height: 68vh;
+    overflow: auto;
+  }
+
+  .zone-cell-badge {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.3rem;
+    max-width: 260px;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.35;
+    white-space: normal;
+    word-break: break-word;
+    text-align: left;
+  }
+
+  .zone-cell-badge i { flex-shrink: 0; font-size: 0.8rem; }
+  .zone-badge-0 { background: #e8eeff; color: #405189; }
+  .zone-badge-1 { background: #e6f4f1; color: #0ab39c; }
+  .zone-badge-2 { background: #fff4e6; color: #f7b84b; }
+  .zone-badge-3 { background: #fde8e4; color: #f06548; }
+  .zone-badge-4 { background: #ebeff2; color: #495057; }
+  .zone-badge-5 { background: #f3e8fd; color: #6559cc; }
+
+  .stock-page .admin-data-table tbody tr.zone-group-start td {
+    border-top: 2px solid rgba(64, 81, 137, 0.12);
+  }
+
+  .sortable-th { cursor: pointer; user-select: none; }
+  .sortable-th:hover { color: #405189; }
+  .sortable-th .sort-icon { font-size: 0.85rem; opacity: 0.5; }
+  .sortable-th.sorted .sort-icon { opacity: 1; color: #405189; }
 </style>
 
-<div class="row">
+<div class="row stock-page">
+  <!-- Stats Cards -->
+  <div class="col-lg-12 mb-4">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="card stats-card border-0 shadow-sm">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-primary-subtle text-primary">
+                <i class="ri-arrow-go-back-line fs-5"></i>
+              </div>
+              <div class="ms-3">
+                <h6 class="mb-0 text-muted small">Total Returns</h6>
+                <h4 class="mt-1 mb-0 fw-semibold" id="totalReturns">0</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card stats-card border-0 shadow-sm">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-warning-subtle text-warning">
+                <i class="ri-building-2-line fs-5"></i>
+              </div>
+              <div class="ms-3">
+                <h6 class="mb-0 text-muted small">At Warehouse</h6>
+                <h4 class="mt-1 mb-0 fw-semibold" id="atWarehouseCount">0</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card stats-card border-0 shadow-sm">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-success-subtle text-success">
+                <i class="ri-archive-line fs-5"></i>
+              </div>
+              <div class="ms-3">
+                <h6 class="mb-0 text-muted small">In Return Stock</h6>
+                <h4 class="mt-1 mb-0 fw-semibold" id="inReturnStockCount">0</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card stats-card border-0 shadow-sm">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center">
+              <div class="stats-icon bg-info-subtle text-info">
+                <i class="ri-map-pin-line fs-5"></i>
+              </div>
+              <div class="ms-3">
+                <h6 class="mb-0 text-muted small">Zones</h6>
+                <h4 class="mt-1 mb-0 fw-semibold" id="returnZonesCount">0</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Quick Add Return -->
   <div class="col-lg-6 mb-4">
     <div class="card">
@@ -188,71 +491,69 @@
           </div>
           <div class="col-sm-auto">
             <div class="d-flex gap-1 flex-wrap align-items-center">
-              <button type="button" class="btn btn-info" id="exportReturnsBtn">
-                <i class="ri-file-download-line align-bottom me-1"></i> Export
-              </button>
-              <div id="returns-header-remove-toolbar" class="d-none gap-2 align-items-center flex-wrap" aria-live="polite">
-                <button type="button" class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()">
-                  <i class="ri-delete-bin-2-line me-1"></i> Remove selected
+              <div class="dropdown">
+                <button type="button" class="btn btn-primary dropdown-toggle" id="exportReturnsBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="ri-file-download-line align-bottom me-1"></i> Export
                 </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                  <li><button type="button" class="dropdown-item" onclick="exportReturnData('excel')"><i class="ri-file-excel-2-line me-2 text-success"></i>Excel (.xls)</button></li>
+                  <li><button type="button" class="dropdown-item" onclick="exportReturnData('csv')"><i class="ri-file-text-line me-2 text-primary"></i>CSV</button></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><button type="button" class="dropdown-item" onclick="exportReturnData('print')"><i class="ri-printer-line me-2 text-secondary"></i>Print / PDF</button></li>
+                </ul>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Search and Filter Section -->
+      <!-- Advanced Filter Section -->
       <div class="card-body border border-dashed border-end-0 border-start-0">
-        <form id="returnsSearchForm">
-          <div class="row g-3">
-            <div class="col-xxl-5 col-sm-6">
-              <div class="search-box">
-                <input type="text" class="form-control search" id="returnsSearch" placeholder="Search for order ID, product, status or something...">
-                <i class="ri-search-line search-icon"></i>
+        <div class="stock-advanced-filters">
+          <form id="returnsSearchForm" onsubmit="return false;">
+            <div class="row g-3 align-items-end">
+              <div class="col-lg-4 col-md-6">
+                <label class="filter-label" for="returnsSearch">Search</label>
+                <div class="search-box">
+                  <input type="text" class="form-control" id="returnsSearch" placeholder="Order ID, customer, phone, address...">
+                  <i class="ri-search-line search-icon"></i>
+                </div>
               </div>
-            </div>
-            <div class="col-xxl-2 col-sm-6">
-              <div>
-                <input type="text" class="form-control" data-provider="flatpickr" data-date-format="d M, Y" data-range-date="true" id="returnsDateRange" placeholder="Select date range">
+              <div class="col-lg-3 col-md-4 col-sm-6">
+                <label class="filter-label" for="zoneFilter">Zones</label>
+                <select class="form-control" id="zoneFilter" multiple></select>
               </div>
-            </div>
-            <div class="col-xxl-2 col-sm-4">
-              <div>
-                <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="returnsStatusFilter">
-                  <option value="">Status</option>
-                  <option value="all" selected>All</option>
-                  <option value="pendingPickup">Pending Pickup</option>
-                  <option value="inWarehouse">In Warehouse</option>
-                  <option value="processing">Processing</option>
-                  <option value="readyForProcessing">Ready For Processing</option>
-                  <option value="processed">Processed</option>
-                  <option value="damaged">Damaged</option>
+              <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="filter-label" for="returnsStatusFilter">Status</label>
+                <select class="form-select" id="returnsStatusFilter">
+                  <option value="all" selected>All Statuses</option>
+                  <option value="returnAtWarehouse">At Warehouse</option>
+                  <option value="inReturnStock">In Return Stock</option>
+                  <option value="returnToBusiness">Returning to Business</option>
+                  <option value="returnAssigned">Return Assigned</option>
                 </select>
               </div>
-            </div>
-            <div class="col-xxl-2 col-sm-4">
-              <div>
-                <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="zoneFilter">
-                  <option value="">Zone</option>
-                  <option value="all" selected>All Zones</option>
-                  <option value="Nasr City">Nasr City</option>
-                  <option value="Maadi">Maadi</option>
-                  <option value="Heliopolis">Heliopolis</option>
-                  <option value="Downtown">Downtown</option>
-                  <option value="New Cairo">New Cairo</option>
-                  <option value="6th October">6th October</option>
-                </select>
+              <div class="col-lg-2 col-md-4 col-sm-6">
+                <label class="filter-label" for="returnsDateRange">Return Date</label>
+                <input type="text" class="form-control" id="returnsDateRange" placeholder="Select return date range" autocomplete="off">
+              </div>
+              <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="d-flex gap-2">
+                  <button type="button" class="btn btn-primary flex-grow-1" onclick="applyReturnFilters()">
+                    <i class="ri-filter-3-line me-1"></i> Apply
+                  </button>
+                  <button type="button" class="btn btn-soft-secondary" onclick="clearReturnFilters()" title="Clear all filters">
+                    <i class="ri-close-circle-line"></i>
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="col-xxl-1 col-sm-4">
-              <div>
-                <button type="button" class="btn btn-primary w-100" onclick="searchReturns()">
-                  <i class="ri-equalizer-fill me-1 align-bottom"></i> Filter
-                </button>
-              </div>
-            </div>
+          </form>
+          <div class="filter-meta-bar">
+            <span class="filter-results-count" id="returnsResultsCount">Showing <strong>0</strong> of <strong>0</strong> returns</span>
+            <div class="filter-chips" id="returnsFilterChips"></div>
           </div>
-        </form>
+        </div>
       </div>
 
       <!-- Returns Table Section -->
@@ -260,8 +561,18 @@
         <div>
           <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
             <li class="nav-item">
-              <button class="btn returnFilter btn-link nav-link active All py-2 px-3" data-bs-toggle="tab" id="All" role="tab" aria-selected="true" onClick="filterReturns('all')">
+              <button class="btn returnFilter btn-link nav-link active All py-2 px-3" type="button" id="tabAllReturns" onClick="filterReturns('all')">
                 <i class="ri-store-2-fill me-1 align-bottom"></i> All Returns
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn returnFilter btn-link nav-link py-2 px-3 AtWarehouse" type="button" id="tabAtWarehouse" onClick="filterReturns('returnAtWarehouse')">
+                <i class="ri-building-2-line me-1 align-bottom"></i> At Warehouse
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn returnFilter btn-link nav-link py-2 px-3 InReturnStock" type="button" id="tabInReturnStock" onClick="filterReturns('inReturnStock')">
+                <i class="ri-archive-line me-1 align-bottom"></i> In Return Stock
               </button>
             </li>
           </ul>
@@ -294,9 +605,10 @@
             </div>
           </div>
 
-          <!-- Returns Items Grouped by Zone -->
-          <div id="returnItemsByZone">
-            <!-- Zone groups will be inserted here dynamically -->
+
+          <!-- Unified returns table -->
+          <div id="returnItemsByZone" class="unified-stock-table-wrap">
+            <!-- Table rendered here -->
           </div>
 
           <div class="noresult" id="NoResult" style="display: none">
@@ -514,6 +826,8 @@
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/list.js/list.min.js"></script>
 <script src="/assets/libs/list.pagination.js/list.pagination.min.js"></script>
+<script src="/assets/libs/flatpickr/flatpickr.min.js"></script>
+<script src="/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
 <script>
@@ -523,6 +837,13 @@
   const bulkActionsBar = document.getElementById("bulkActionsBar");
   const selectedItemsCount = document.getElementById("selectedItemsCount");
   let selectedItems = [];
+  let allReturnOrders = [];
+  let activeReturnTab = 'all';
+  let returnSearchDebounce = null;
+  let returnZoneChoices = null;
+  let returnsDatePicker = null;
+  let returnSortField = 'zone';
+  let returnSortDir = 'asc';
 
   // Quick Add Form Submission
   document.getElementById("quickAddForm").addEventListener("submit", async function(e) {
@@ -590,47 +911,29 @@
   });
 
   // Fetch return items from server
-  async function fetchReturnItems(status = "all") {
+  async function fetchReturnItems() {
     try {
-      // Show loading spinner
       returnItemsByZone.innerHTML = `
-        <div class="text-center py-4">
+        <div class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
-          <p class="mt-2">Loading return items...</p>
+          <p class="mt-2 text-muted mb-0">Loading return items...</p>
         </div>
       `;
 
-      // In a real implementation, you would fetch from your API
-      const response = await fetch(`/admin/get-return-orders?status=${status}`);
+      const response = await fetch('/admin/get-return-orders');
       const returnItems = await response.json();
-      if (response.ok) {
-        console.log('returnItems', returnItems);
-
-        // Group items by zone
-        const itemsByZone = groupItemsByZone(returnItems);
-
-        // Populate zones
-        returnItemsByZone.innerHTML = ""; // Clear existing content
-        NoResult.style.display = "none";
-
-        if (returnItems.length === 0) {
-          NoResult.style.display = "block";
-          return;
-        }
-
-        console.log('inProgressReturns');
-        populateZoneGroups(itemsByZone);
-
-        inProgressReturns(returnItems.filter(item => (item.orderStatus == 'returnAtWarehouse' || item.orderStatus == 'returnAtWarehouse') && item.deliveryMan));
-      } else {
-        NoResult.style.display = "block";
-        returnItemsByZone.innerHTML = "";
+      if (!response.ok) {
+        throw new Error(returnItems.error || 'Failed to load return orders');
       }
+
+      allReturnOrders = Array.isArray(returnItems) ? returnItems : [];
+      populateReturnZoneFilter(allReturnOrders);
+      applyReturnFilters();
     } catch (error) {
+      returnItemsByZone.innerHTML = '';
       NoResult.style.display = "block";
-      returnItemsByZone.innerHTML = "";
       console.error("Error fetching return items:", error);
       Swal.fire({
         icon: 'error',
@@ -640,185 +943,494 @@
     }
   }
 
-  // Group items by zone
-  function groupItemsByZone(items) {
-    const zones = {};
-
-    items.forEach(item => {
-      const zone = item.orderCustomer.zone || 'Unassigned';
-      if (!zones[zone]) {
-        zones[zone] = [];
-      }
-      zones[zone].push(item);
-    });
-
-    return zones;
+  function getReturnOrderZone(item) {
+    const zone = item.orderCustomer?.zone;
+    return zone && String(zone).trim() ? String(zone).trim() : 'Unassigned';
   }
 
-  // Populate zone groups
-  function populateZoneGroups(itemsByZone) {
-    console.log('itemsByZone', itemsByZone);
-    // Sort zones alphabetically
-    const sortedZones = Object.keys(itemsByZone).sort();
+  function getReturnDate(item) {
+    const raw = item.orderStages?.returnAtWarehouse?.completedAt
+      || item.orderStages?.inReturnStock?.completedAt
+      || item.updatedAt
+      || item.orderDate
+      || item.createdAt;
+    return raw ? new Date(raw) : null;
+  }
 
-    sortedZones.forEach(zone => {
-      const items = itemsByZone[zone];
-      const zoneContainer = document.createElement('div');
-      zoneContainer.className = 'zone-container';
+  function getReturnsDateRangeValue() {
+    if (returnsDatePicker && returnsDatePicker.selectedDates.length > 0) {
+      return returnsDatePicker.input.value || '';
+    }
+    return document.getElementById('returnsDateRange')?.value || '';
+  }
 
-      // Create zone header
-      const zoneHeader = document.createElement('div');
-      zoneHeader.className = 'zone-header';
-      zoneHeader.innerHTML = `
-        <div class="zone-title">
-          <i class="ri-map-pin-line me-2"></i>
-          ${zone}
-          <span class="badge bg-primary-subtle text-primary zone-badge">${items.length} returns</span>
-        </div>
-        <div class="zone-actions">
-          <button class="btn btn-sm btn-success" onclick="assignZoneToCourier('${zone}')">
-            <i class="ri-user-add-line me-1"></i> Assign to Courier
-          </button>
-          <button class="btn btn-sm btn-info" onclick="printZoneLabels('${zone}')">
-            <i class="ri-printer-line me-1"></i> Print Labels
-          </button>
-        </div>
-      `;
+  function parseReturnsDateRange(dateRange) {
+    if (!dateRange || !dateRange.trim()) return null;
+    const parts = dateRange.split(/\s+to\s+/i).map((s) => s.trim()).filter(Boolean);
+    const parseOne = (s) => {
+      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+      const d = new Date(s);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+    const from = parseOne(parts[0]);
+    if (!from) return null;
+    from.setHours(0, 0, 0, 0);
+    let to = new Date(from);
+    if (parts[1]) {
+      const parsedTo = parseOne(parts[1]);
+      if (parsedTo) {
+        to = parsedTo;
+        to.setHours(23, 59, 59, 999);
+      } else {
+        to.setHours(23, 59, 59, 999);
+      }
+    } else {
+      to.setHours(23, 59, 59, 999);
+    }
+    return { from, to };
+  }
 
-      zoneContainer.appendChild(zoneHeader);
-
-      // Create zone table
-      const tableContainer = document.createElement('div');
-      tableContainer.className = 'admin-table-scroll mb-3';
-
-      const table = document.createElement('table');
-      table.className = 'table table-nowrap table-striped align-middle admin-data-table';
-
-      // Table header
-      const thead = document.createElement('thead');
-      thead.className = 'text-muted table-light';
-      thead.innerHTML = `
-        <tr class="text-uppercase">
-          <th scope="col" style="width: 25px;">
-            <div class="form-check">
-              <input class="form-check-input zone-check-all" type="checkbox" data-zone="${zone}" value="option">
-            </div>
-          </th>
-          <th>Order ID</th>
-          <th>Customer & Location</th>
-          <th>Return Reason</th>
-          <th>Return Status</th>
-          <th>Amount Details</th>
-          <th>Return Date</th>
-          <th>Days in System</th>
-          <th>Action</th>
-        </tr>
-      `;
-
-      // Table body
-      const tbody = document.createElement('tbody');
-      tbody.className = 'list form-check-all';
-
-      items.forEach((item, index) => {
-        console.log('item', item);
-        const row = document.createElement('tr');
-
-        // Calculate days in system
-        const returnDate = new Date(item.updatedAt);
-        const today = new Date();
-        const daysInSystem = Math.floor((today - returnDate) / (1000 * 60 * 60 * 24));
-        console.log('daysInSystem', daysInSystem);
-
-        // Get status badge class
-        const statusDetails = getReturnStatusDetails(item.orderStatus);
-        console.log('statusDetails', statusDetails);
-
-        // Get return reason badge class or handle Exchange/Cash Collection
-        let reasonDetails;
-        let returnReasonDisplay = '';
-        
-        if (item.orderShipping.orderType === 'Exchange') {
-          reasonDetails = { badgeClass: 'bg-warning-subtle text-warning', reasonText: 'Exchange' };
-          returnReasonDisplay = `
-            <div><strong>Exchange:</strong> ${item.orderShipping.productDescription || ''} → ${item.orderShipping.productDescriptionReplacement || ''}</div>
-          `;
-        } else {
-          reasonDetails = getReturnReasonDetails(item.UnavailableReason[0] || 'other');
-          returnReasonDisplay = `
-            <span class="badge ${reasonDetails.badgeClass} return-reason-badge">
-              ${reasonDetails.reasonText}
-            </span>
-          `;
-        }
-
-        // Handle product description
-        const productDesc = item.orderShipping.productDescription;
-        const shouldShowMoreProduct = productDesc && productDesc.length > 30;
-        const truncatedDesc = shouldShowMoreProduct ? productDesc.substring(0, 30) + '...' : productDesc || '';
-        const showMoreProductBtn = shouldShowMoreProduct ?
-          `<button class="btn btn-link btn-sm p-0" onclick="showFullDescription('${productDesc}')">Show More</button>` : '';
-
-        // Handle location
-        const address = item.orderCustomer.address;
-        const shouldShowMoreAddress = address && address.length > 20;
-        const truncatedLocation = shouldShowMoreAddress ? address.substring(0, 20) + '...' : address || '';
-        const showMoreAddressBtn = shouldShowMoreAddress ?
-          `<button class="btn btn-link btn-sm p-0" onclick="showFullAddress('${address}')">Show More</button>` : '';
-
-        row.innerHTML = `
-          <th scope="row">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" name="checkAll[]" data-order-id="${item.orderNumber}" data-zone="${zone}" value="${item.orderNumber}">
-            </div>
-          </th>
-          <td class="id"><a href="/admin/order-details/${item.orderNumber}" class="fw-medium link-primary">#${item.orderNumber}</a></td>
-   
-          <td class="customer_details">
-            <div>${item.orderCustomer.fullName}</div>
-            <small class="text-muted">
-              ${truncatedLocation}
-              ${showMoreAddressBtn}
-            </small>
-          </td>
-          <td class="return_reason">
-            ${returnReasonDisplay}
-          </td>
-          <td class="return_status">
-            <span class="badge ${statusDetails.badgeClass} status-badge">
-              ${statusDetails.statusText}
-            </span>
-          </td>
-          <td class="amount_details">
-            <div><strong>${item.orderShipping.amountType}:</strong> ${item.orderShipping.amount} EGP</div>
-          </td>
-          <td class="return_date">${returnDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-          <td class="days_in_system">
-            <span class="${daysInSystem > 7 ? 'text-danger fw-medium' : ''}">${daysInSystem} days</span>
-          </td>
-          <td>
-            <div class="orders-table-dropdown">
-              <button type="button" class="dropdown-toggle" data-dropdown-toggle aria-expanded="false" aria-label="Row actions">
-                <i class="ri-more-fill"></i>
-              </button>
-              <ul class="dropdown-menu">
-                <li><button type="button" class="dropdown-item" onclick="updateReturnStatus('${item.orderNumber}')"><i class="ri-edit-2-fill text-warning"></i><span>Update Status</span></button></li>
-                <li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${zone}')"><i class="ri-user-add-line text-success"></i><span>Assign to Courier</span></button></li>
-                <li><button type="button" class="dropdown-item" onclick="removeFromReturns('${item.orderNumber}')"><i class="ri-delete-bin-6-fill text-danger"></i><span>Remove</span></button></li>
-              </ul>
-            </div>
-          </td>
-        `;
-
-        tbody.appendChild(row);
-      });
-
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      tableContainer.appendChild(table);
-      zoneContainer.appendChild(tableContainer);
-
-      returnItemsByZone.appendChild(zoneContainer);
+  function initReturnsDatePicker() {
+    const el = document.getElementById('returnsDateRange');
+    if (!el || typeof flatpickr === 'undefined') return;
+    if (returnsDatePicker) {
+      returnsDatePicker.destroy();
+      returnsDatePicker = null;
+    }
+    returnsDatePicker = flatpickr(el, {
+      mode: 'range',
+      dateFormat: 'Y-m-d',
+      altInput: true,
+      altFormat: 'd M, Y',
+      disableMobile: true,
+      allowInput: false,
+      onChange: function () {
+        clearTimeout(returnSearchDebounce);
+        returnSearchDebounce = setTimeout(applyReturnFilters, 200);
+      },
+      onClose: function (selectedDates) {
+        if (selectedDates.length > 0) applyReturnFilters();
+      },
     });
+  }
+
+  function matchesReturnSearch(item, search) {
+    if (!search) return true;
+    const haystack = [
+      item.orderNumber,
+      item.orderShipping?.productDescription,
+      item.orderCustomer?.fullName,
+      item.orderCustomer?.phoneNumber,
+      item.orderCustomer?.address,
+      item.orderCustomer?.zone,
+      item.orderStatus,
+      item.orderShipping?.returnReason,
+      ...(item.UnavailableReason || []),
+    ].filter(Boolean).join(' ').toLowerCase();
+    return haystack.includes(search);
+  }
+
+  function matchesReturnDateRange(item, dateRange) {
+    const range = parseReturnsDateRange(dateRange);
+    if (!range) return true;
+    const returnDate = getReturnDate(item);
+    if (!returnDate || Number.isNaN(returnDate.getTime())) return false;
+    return returnDate >= range.from && returnDate <= range.to;
+  }
+
+  function matchesReturnTab(item, tab) {
+    if (tab === 'all') return true;
+    return item.orderStatus === tab;
+  }
+
+  function getSelectedReturnZones() {
+    const el = document.getElementById('zoneFilter');
+    if (returnZoneChoices) {
+      const val = returnZoneChoices.getValue(true);
+      if (val) {
+        const arr = Array.isArray(val) ? val : [val];
+        return arr
+          .map((v) => (typeof v === 'object' && v != null ? v.value : v))
+          .filter(Boolean);
+      }
+    }
+    if (el) {
+      return Array.from(el.selectedOptions || []).map((o) => o.value).filter(Boolean);
+    }
+    return [];
+  }
+
+  function initReturnZoneChoices() {
+    const el = document.getElementById('zoneFilter');
+    if (!el || returnZoneChoices || typeof Choices === 'undefined') return;
+    returnZoneChoices = new Choices(el, {
+      removeItemButton: true,
+      searchEnabled: true,
+      searchPlaceholderValue: 'Type to search zones...',
+      placeholder: true,
+      placeholderValue: 'Select zones (empty = all)',
+      itemSelectText: '',
+      shouldSort: false,
+      position: 'bottom',
+      searchResultLimit: 200,
+      renderChoiceLimit: 200,
+      searchFloor: 1,
+      fuseOptions: { threshold: 0.3, ignoreLocation: true },
+      closeDropdownOnSelect: false,
+      resetScrollPosition: false,
+    });
+
+    const onZoneSelectionChange = () => {
+      clearTimeout(returnZoneChoices._filterDebounce);
+      returnZoneChoices._filterDebounce = setTimeout(applyReturnFilters, 150);
+    };
+
+    el.addEventListener('addItem', onZoneSelectionChange);
+    el.addEventListener('removeItem', onZoneSelectionChange);
+    el.addEventListener('change', onZoneSelectionChange);
+  }
+
+  function getReturnFilterState() {
+    return {
+      search: (document.getElementById('returnsSearch')?.value || '').trim().toLowerCase(),
+      zones: getSelectedReturnZones(),
+      status: document.getElementById('returnsStatusFilter')?.value || 'all',
+      dateRange: getReturnsDateRangeValue(),
+      tab: activeReturnTab,
+    };
+  }
+
+  function populateReturnZoneFilter(orders) {
+    initReturnZoneChoices();
+    if (!returnZoneChoices) return;
+    const selected = getSelectedReturnZones();
+    const counts = {};
+    orders.forEach((item) => {
+      const zone = getReturnOrderZone(item);
+      counts[zone] = (counts[zone] || 0) + 1;
+    });
+    const sortedZones = Object.keys(counts).sort((a, b) => {
+      if (a === 'Unassigned') return 1;
+      if (b === 'Unassigned') return -1;
+      return a.localeCompare(b);
+    });
+    const choiceItems = sortedZones.map((zone) => ({
+      value: zone,
+      label: `${zone} (${counts[zone]})`,
+      selected: selected.includes(zone),
+      disabled: false,
+    }));
+    returnZoneChoices.setChoices(choiceItems, 'value', 'label', true);
+  }
+
+  function updateReturnResultsCount(filteredCount, totalCount) {
+    const el = document.getElementById('returnsResultsCount');
+    if (!el) return;
+    el.innerHTML = `Showing <strong>${filteredCount}</strong> of <strong>${totalCount}</strong> returns`;
+  }
+
+  function updateReturnFilterChips(filters) {
+    const chipsEl = document.getElementById('returnsFilterChips');
+    if (!chipsEl) return;
+    chipsEl.innerHTML = '';
+    const statusLabels = {
+      returnAtWarehouse: 'At Warehouse',
+      inReturnStock: 'In Return Stock',
+      returnToBusiness: 'Returning to Business',
+      returnAssigned: 'Return Assigned',
+    };
+    const chips = [];
+    if (filters.search) chips.push({ key: 'search', label: `Search: ${filters.search}` });
+    if (filters.zones && filters.zones.length === 1) {
+      chips.push({ key: 'zones', label: `Zone: ${filters.zones[0]}` });
+    } else if (filters.zones && filters.zones.length > 1) {
+      chips.push({ key: 'zones', label: `Zones: ${filters.zones.length} selected` });
+    }
+    if (filters.status && filters.status !== 'all') {
+      chips.push({ key: 'status', label: `Status: ${statusLabels[filters.status] || filters.status}` });
+    }
+    if (filters.dateRange) {
+      const dateLabel = (returnsDatePicker && returnsDatePicker.altInput && returnsDatePicker.altInput.value)
+        ? returnsDatePicker.altInput.value
+        : filters.dateRange;
+      chips.push({ key: 'dateRange', label: `Return date: ${dateLabel}` });
+    }
+    if (filters.tab && filters.tab !== 'all') {
+      chips.push({ key: 'tab', label: `Tab: ${statusLabels[filters.tab] || filters.tab}` });
+    }
+    chips.forEach((chip) => {
+      const span = document.createElement('span');
+      span.className = 'filter-chip';
+      span.innerHTML = `${chip.label} <button type="button" aria-label="Remove filter" data-chip="${chip.key}"><i class="ri-close-line"></i></button>`;
+      span.querySelector('button').addEventListener('click', () => removeReturnFilterChip(chip.key));
+      chipsEl.appendChild(span);
+    });
+  }
+
+  function removeReturnFilterChip(key) {
+    if (key === 'search') document.getElementById('returnsSearch').value = '';
+    if (key === 'zones' && returnZoneChoices) returnZoneChoices.removeActiveItems();
+    if (key === 'status') document.getElementById('returnsStatusFilter').value = 'all';
+    if (key === 'dateRange') {
+      if (returnsDatePicker) returnsDatePicker.clear();
+      else document.getElementById('returnsDateRange').value = '';
+    }
+    if (key === 'tab') {
+      activeReturnTab = 'all';
+      setActiveReturnTab('all');
+    }
+    applyReturnFilters();
+  }
+
+  function setActiveReturnTab(tab) {
+    document.querySelectorAll('.returnFilter.nav-link').forEach((btn) => btn.classList.remove('active'));
+    const tabMap = {
+      all: 'tabAllReturns',
+      returnAtWarehouse: 'tabAtWarehouse',
+      inReturnStock: 'tabInReturnStock',
+    };
+    const tabEl = document.getElementById(tabMap[tab]);
+    if (tabEl) tabEl.classList.add('active');
+  }
+
+  function updateReturnStatsCards(orders) {
+    const zoneSet = new Set(orders.map((item) => getReturnOrderZone(item)));
+    const totalEl = document.getElementById('totalReturns');
+    const warehouseEl = document.getElementById('atWarehouseCount');
+    const stockEl = document.getElementById('inReturnStockCount');
+    const zonesEl = document.getElementById('returnZonesCount');
+    if (totalEl) totalEl.textContent = orders.length;
+    if (warehouseEl) warehouseEl.textContent = orders.filter((item) => item.orderStatus === 'returnAtWarehouse').length;
+    if (stockEl) stockEl.textContent = orders.filter((item) => item.orderStatus === 'inReturnStock').length;
+    if (zonesEl) zonesEl.textContent = zoneSet.size;
+  }
+
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function buildShowMoreButton(kind, text) {
+    const cls = kind === 'address' ? 'js-show-full-address' : 'js-show-full-text';
+    const encoded = encodeURIComponent(text || '');
+    return `<button type="button" class="btn btn-link btn-sm p-0 ${cls}" data-full="${encoded}">Show More</button>`;
+  }
+
+  function getZoneBadgeClass(zone) {
+    let hash = 0;
+    const s = zone || 'Unassigned';
+    for (let i = 0; i < s.length; i++) hash = ((hash << 5) - hash) + s.charCodeAt(i);
+    return `zone-badge-${Math.abs(hash) % 6}`;
+  }
+
+  function getZoneBadgeHtml(zone) {
+    const label = escapeHtml(zone || 'Unassigned');
+    const cls = getZoneBadgeClass(zone);
+    return `<span class="zone-cell-badge ${cls}" title="${label}"><i class="ri-map-pin-2-fill"></i>${label}</span>`;
+  }
+
+  function sortReturnItems(items) {
+    const sorted = [...items];
+    const dir = returnSortDir === 'desc' ? -1 : 1;
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (returnSortField === 'zone') {
+        const za = getReturnOrderZone(a);
+        const zb = getReturnOrderZone(b);
+        if (za === 'Unassigned' && zb !== 'Unassigned') cmp = 1;
+        else if (zb === 'Unassigned' && za !== 'Unassigned') cmp = -1;
+        else cmp = za.localeCompare(zb);
+      } else if (returnSortField === 'orderNumber') {
+        cmp = String(a.orderNumber).localeCompare(String(b.orderNumber), undefined, { numeric: true });
+      } else if (returnSortField === 'date') {
+        const da = getReturnDate(a)?.getTime() || 0;
+        const db = getReturnDate(b)?.getTime() || 0;
+        cmp = da - db;
+      }
+      return cmp * dir;
+    });
+    return sorted;
+  }
+
+  function renderReturnZoneQuickFilters() {
+    /* zone pills removed — multi-select dropdown used instead */
+  }
+
+  function toggleReturnSort(field) {
+    if (returnSortField === field) {
+      returnSortDir = returnSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      returnSortField = field;
+      returnSortDir = 'asc';
+    }
+    applyReturnFilters();
+  }
+
+  function buildReturnOrderRow(item, prevZone) {
+    const zone = getReturnOrderZone(item);
+    const row = document.createElement('tr');
+    if (zone !== prevZone) row.classList.add('zone-group-start');
+
+    const returnDate = getReturnDate(item) || new Date();
+    const today = new Date();
+    const daysInSystem = Math.floor((today - returnDate) / (1000 * 60 * 60 * 24));
+    const statusDetails = getReturnStatusDetails(item.orderStatus);
+
+    let returnReasonDisplay = '';
+    if (item.orderShipping?.orderType === 'Exchange') {
+      returnReasonDisplay = `<div><strong>Exchange:</strong> ${escapeHtml(item.orderShipping.productDescription || '')} → ${escapeHtml(item.orderShipping.productDescriptionReplacement || '')}</div>`;
+    } else {
+      const reasonDetails = getReturnReasonDetails(item.UnavailableReason?.[0] || 'other');
+      returnReasonDisplay = `<span class="badge ${reasonDetails.badgeClass} return-reason-badge">${reasonDetails.reasonText}</span>`;
+    }
+
+    const address = item.orderCustomer?.address || '';
+    const shouldShowMoreAddress = address.length > 20;
+    const truncatedLocation = shouldShowMoreAddress ? escapeHtml(address.substring(0, 20)) + '...' : escapeHtml(address);
+    const showMoreAddressBtn = shouldShowMoreAddress
+      ? buildShowMoreButton('address', address) : '';
+
+    const rawZone = item.orderCustomer?.zone || '';
+    row.innerHTML = `
+      <th scope="row">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="checkAll[]" data-order-id="${item.orderNumber}" data-zone="${escapeHtml(zone)}" value="${item.orderNumber}">
+        </div>
+      </th>
+      <td class="zone_col">${getZoneBadgeHtml(zone)}</td>
+      <td class="id"><a href="/admin/order-details/${item.orderNumber}" class="fw-medium link-primary">#${item.orderNumber}</a></td>
+      <td class="customer_details">
+        <div>${escapeHtml(item.orderCustomer?.fullName)}</div>
+        <small class="text-muted">${truncatedLocation} ${showMoreAddressBtn}</small>
+      </td>
+      <td class="return_reason">${returnReasonDisplay}</td>
+      <td class="return_status"><span class="badge ${statusDetails.badgeClass} status-badge">${statusDetails.statusText}</span></td>
+      <td class="amount_details"><div><strong>${escapeHtml(item.orderShipping?.amountType)}:</strong> ${item.orderShipping?.amount} EGP</div></td>
+      <td class="return_date">${returnDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+      <td class="days_in_system"><span class="${daysInSystem > 7 ? 'text-danger fw-medium' : ''}">${daysInSystem} days</span></td>
+      <td>
+        <div class="orders-table-dropdown">
+          <button type="button" class="dropdown-toggle" data-dropdown-toggle aria-expanded="false" aria-label="Row actions"><i class="ri-more-fill"></i></button>
+          <ul class="dropdown-menu">
+            <li><button type="button" class="dropdown-item" onclick="updateReturnStatus('${item.orderNumber}')"><i class="ri-edit-2-fill text-warning"></i><span>Update Status</span></button></li>
+            <li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', ${JSON.stringify(rawZone)})"><i class="ri-user-add-line text-success"></i><span>Assign to Courier</span></button></li>
+            <li><button type="button" class="dropdown-item" onclick="removeFromReturns('${item.orderNumber}')"><i class="ri-delete-bin-6-fill text-danger"></i><span>Remove</span></button></li>
+          </ul>
+        </div>
+      </td>
+    `;
+    return row;
+  }
+
+  function renderReturnTable(items) {
+    const container = returnItemsByZone;
+    const sorted = sortReturnItems(items);
+    const sortIcon = (field) => {
+      if (returnSortField !== field) return '<i class="ri-arrow-up-down-line sort-icon"></i>';
+      return returnSortDir === 'asc'
+        ? '<i class="ri-arrow-up-s-line sort-icon"></i>'
+        : '<i class="ri-arrow-down-s-line sort-icon"></i>';
+    };
+
+    container.innerHTML = `
+      <div class="admin-table-scroll">
+        <table class="table table-nowrap table-hover align-middle admin-data-table mb-0" id="unifiedReturnTable">
+          <thead class="text-muted table-light">
+            <tr class="text-uppercase">
+              <th scope="col" style="width:25px">
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="tableCheckAll" title="Select all"></div>
+              </th>
+              <th class="sortable-th${returnSortField === 'zone' ? ' sorted' : ''}" onclick="toggleReturnSort('zone')" style="min-width:200px">Zone ${sortIcon('zone')}</th>
+              <th class="sortable-th${returnSortField === 'orderNumber' ? ' sorted' : ''}" onclick="toggleReturnSort('orderNumber')">Order ID ${sortIcon('orderNumber')}</th>
+              <th>Customer & Location</th>
+              <th>Return Reason</th>
+              <th>Status</th>
+              <th>Amount</th>
+              <th class="sortable-th${returnSortField === 'date' ? ' sorted' : ''}" onclick="toggleReturnSort('date')">Return Date ${sortIcon('date')}</th>
+              <th>Days</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody class="list form-check-all" id="returnTableBody"></tbody>
+        </table>
+      </div>
+    `;
+
+    const tbody = container.querySelector('#returnTableBody');
+    let prevZone = null;
+    sorted.forEach((item) => {
+      const zone = getReturnOrderZone(item);
+      tbody.appendChild(buildReturnOrderRow(item, prevZone));
+      prevZone = zone;
+    });
+
+    const tableCheckAll = container.querySelector('#tableCheckAll');
+    const globalCheckAll = document.getElementById('checkAll');
+    if (tableCheckAll && globalCheckAll) {
+      tableCheckAll.addEventListener('change', () => {
+        globalCheckAll.checked = tableCheckAll.checked;
+        globalCheckAll.indeterminate = false;
+        document.querySelectorAll('input[name="checkAll[]"]').forEach((cb) => {
+          cb.checked = tableCheckAll.checked;
+          handleCheckboxChange(cb);
+        });
+      });
+    }
+  }
+
+  function getFilteredReturnOrders() {
+    const filters = getReturnFilterState();
+    return allReturnOrders.filter((item) => {
+      if (!matchesReturnSearch(item, filters.search)) return false;
+      if (filters.zones.length > 0 && !filters.zones.includes(getReturnOrderZone(item))) return false;
+      if (filters.status !== 'all' && item.orderStatus !== filters.status) return false;
+      if (!matchesReturnDateRange(item, filters.dateRange)) return false;
+      if (!matchesReturnTab(item, filters.tab)) return false;
+      return true;
+    });
+  }
+
+  function applyReturnFilters() {
+    if (returnZoneChoices && typeof returnZoneChoices.hideDropdown === 'function') {
+      returnZoneChoices.hideDropdown(true);
+    }
+    const filters = getReturnFilterState();
+    const filtered = getFilteredReturnOrders();
+
+    updateReturnStatsCards(allReturnOrders);
+    updateReturnResultsCount(filtered.length, allReturnOrders.length);
+    updateReturnFilterChips(filters);
+
+    returnItemsByZone.innerHTML = '';
+    NoResult.style.display = filtered.length === 0 ? 'block' : 'none';
+
+    if (filtered.length > 0) {
+      renderReturnTable(filtered);
+    }
+
+    inProgressReturns(filtered.filter((item) => item.orderStatus === 'returnAtWarehouse' && item.deliveryMan));
+    clearSelection();
+  }
+
+  function clearReturnFilters() {
+    document.getElementById('returnsSearch').value = '';
+    if (returnZoneChoices) returnZoneChoices.removeActiveItems();
+    document.getElementById('returnsStatusFilter').value = 'all';
+    if (returnsDatePicker) returnsDatePicker.clear();
+    else document.getElementById('returnsDateRange').value = '';
+    activeReturnTab = 'all';
+    setActiveReturnTab('all');
+    applyReturnFilters();
+  }
+
+  function searchReturns() {
+    applyReturnFilters();
   }
 
   // Display in progress returns
@@ -1154,37 +1766,11 @@
 
   document.getElementById('returnsList').addEventListener('change', onReturnsListCheckboxChange);
 
-  // Filter return items by status
+  // Filter return items by status tab
   function filterReturns(status) {
-    console.log("Filtering returns by status:", status);
-    fetchReturnItems(status);
-  }
-
-  // Search return items
-  function searchReturns() {
-    const searchTerm = document.getElementById('returnsSearch').value;
-    const statusFilter = document.getElementById('returnsStatusFilter').value;
-    const zoneFilter = document.getElementById('zoneFilter').value;
-    const dateRange = document.getElementById('returnsDateRange').value;
-
-    console.log("Searching returns with filters:", {
-      searchTerm,
-      statusFilter,
-      zoneFilter,
-      dateRange
-    });
-
-    // In a real implementation, you would call your API with these filters
-    // For demo, we'll just show a success message
-    Swal.fire({
-      icon: 'info',
-      title: 'Search Applied',
-      text: 'Search filters have been applied',
-      timer: 1500
-    });
-
-    // Then refresh the data
-    fetchReturnItems(statusFilter !== 'all' ? statusFilter : 'all');
+    activeReturnTab = status;
+    setActiveReturnTab(status);
+    applyReturnFilters();
   }
 
   // Update return status
@@ -1783,38 +2369,169 @@
     }
   });
 
-  // Export returns data
-  document.getElementById('exportReturnsBtn').addEventListener('click', function() {
-    Swal.fire({
-      title: 'Export Returns Data',
-      text: 'Select export format',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Excel',
-      cancelButtonText: 'PDF',
-      showDenyButton: true,
-      denyButtonText: 'CSV'
-    }).then((result) => {
-      let format = '';
-      if (result.isConfirmed) {
-        format = 'Excel';
-      } else if (result.isDenied) {
-        format = 'CSV';
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        format = 'PDF';
-      } else {
+  function exportReturnData(format) {
+    const orders = getFilteredReturnOrders();
+    if (!orders.length) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Nothing to export',
+        text: 'No returns match your current filters.',
+        confirmButtonColor: '#405189',
+      });
+      return;
+    }
+
+    const headers = [
+      'Order ID', 'Zone', 'Customer', 'Phone', 'Address', 'Product', 'Status',
+      'Return Reason', 'Return Date', 'Days Since Return',
+    ];
+    const rows = orders.map((item) => {
+      const returnDate = getReturnDate(item);
+      const returnDateStr = returnDate && !Number.isNaN(returnDate.getTime())
+        ? returnDate.toLocaleDateString('en-GB')
+        : '';
+      const daysSince = returnDate
+        ? Math.floor((new Date() - returnDate) / (1000 * 60 * 60 * 24))
+        : '';
+      const statusDetails = getReturnStatusDetails(item.orderStatus);
+      return {
+        orderId: item.orderNumber,
+        zone: getReturnOrderZone(item),
+        customer: item.orderCustomer?.fullName || '',
+        phone: item.orderCustomer?.phoneNumber || '',
+        address: item.orderCustomer?.address || '',
+        product: item.orderShipping?.productDescription || '',
+        status: statusDetails.statusText,
+        returnReason: item.orderShipping?.returnReason || '',
+        returnDate: returnDateStr,
+        daysSince,
+      };
+    });
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    const baseName = `stock_returns_${stamp}_${orders.length}_orders`;
+
+    const escapeCsvCell = (value) => {
+      const str = value == null ? '' : String(value);
+      if (/[",\n\r]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+      return str;
+    };
+
+    const downloadBlob = (content, filename, mimeType) => {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+
+    if (format === 'csv') {
+      const lines = [
+        headers.map(escapeCsvCell).join(','),
+        ...rows.map((r) => [
+          r.orderId, r.zone, r.customer, r.phone, r.address, r.product,
+          r.status, r.returnReason, r.returnDate, r.daysSince,
+        ].map(escapeCsvCell).join(',')),
+      ];
+      downloadBlob('\uFEFF' + lines.join('\r\n'), `${baseName}.csv`, 'text/csv;charset=utf-8');
+      Swal.fire({ icon: 'success', title: 'Export ready', text: `${orders.length} returns exported as CSV.`, timer: 2200, showConfirmButton: false });
+      return;
+    }
+
+    if (format === 'excel') {
+      const tableRows = rows.map((r) => `
+        <tr>
+          <td>${escapeHtml(r.orderId)}</td>
+          <td>${escapeHtml(r.zone)}</td>
+          <td>${escapeHtml(r.customer)}</td>
+          <td>${escapeHtml(r.phone)}</td>
+          <td>${escapeHtml(r.address)}</td>
+          <td>${escapeHtml(r.product)}</td>
+          <td>${escapeHtml(r.status)}</td>
+          <td>${escapeHtml(r.returnReason)}</td>
+          <td>${escapeHtml(r.returnDate)}</td>
+          <td>${escapeHtml(r.daysSince)}</td>
+        </tr>`).join('');
+      const html = `<html><head><meta charset="UTF-8"></head><body><table border="1">
+        <thead><tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+        <tbody>${tableRows}</tbody></table></body></html>`;
+      downloadBlob(html, `${baseName}.xls`, 'application/vnd.ms-excel;charset=utf-8');
+      Swal.fire({ icon: 'success', title: 'Export ready', text: `${orders.length} returns exported for Excel.`, timer: 2200, showConfirmButton: false });
+      return;
+    }
+
+    if (format === 'print') {
+      const printRows = rows.map((r) => `
+        <tr>
+          <td>#${escapeHtml(r.orderId)}</td>
+          <td>${escapeHtml(r.zone)}</td>
+          <td>${escapeHtml(r.customer)}</td>
+          <td>${escapeHtml(r.phone)}</td>
+          <td>${escapeHtml(r.product)}</td>
+          <td>${escapeHtml(r.status)}</td>
+          <td>${escapeHtml(r.returnDate)}</td>
+          <td>${escapeHtml(r.daysSince)}</td>
+        </tr>`).join('');
+      const printWin = window.open('', '_blank');
+      if (!printWin) {
+        Swal.fire({ icon: 'error', title: 'Popup blocked', text: 'Allow popups to print or save as PDF.' });
         return;
       }
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Exported!',
-        text: `Returns data has been exported as ${format}`,
-        timer: 2000
-      });
-    });
-  });
+      printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Returns Export</title>
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 11px; padding: 24px; }
+          h1 { font-size: 18px; margin: 0 0 4px; }
+          .meta { color: #555; margin-bottom: 16px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+          th { background: #f3f4f6; font-size: 10px; text-transform: uppercase; }
+        </style></head><body>
+        <h1>Stock Management — Returns</h1>
+        <div class="meta">Exported ${new Date().toLocaleString()} · ${orders.length} returns</div>
+        <table><thead><tr>
+          <th>Order</th><th>Zone</th><th>Customer</th><th>Phone</th><th>Product</th>
+          <th>Status</th><th>Return Date</th><th>Days</th>
+        </tr></thead><tbody>${printRows}</tbody></table></body></html>`);
+      printWin.document.close();
+      printWin.focus();
+      setTimeout(() => { printWin.print(); }, 350);
+    }
+  }
 
   // Fetch return items on page load
-  document.addEventListener("DOMContentLoaded", () => fetchReturnItems());
+  document.addEventListener("DOMContentLoaded", () => {
+    initReturnsDatePicker();
+    initReturnZoneChoices();
+    fetchReturnItems();
+
+    document.getElementById('returnsList').addEventListener('click', (e) => {
+      const textBtn = e.target.closest('.js-show-full-text');
+      if (textBtn) {
+        e.preventDefault();
+        showFullDescription(decodeURIComponent(textBtn.getAttribute('data-full') || ''));
+        return;
+      }
+      const addrBtn = e.target.closest('.js-show-full-address');
+      if (addrBtn) {
+        e.preventDefault();
+        showFullAddress(decodeURIComponent(addrBtn.getAttribute('data-full') || ''));
+      }
+    });
+
+    const returnsSearchInput = document.getElementById('returnsSearch');
+    if (returnsSearchInput) {
+      returnsSearchInput.addEventListener('input', () => {
+        clearTimeout(returnSearchDebounce);
+        returnSearchDebounce = setTimeout(applyReturnFilters, 300);
+      });
+    }
+
+    const statusFilter = document.getElementById('returnsStatusFilter');
+    if (statusFilter) statusFilter.addEventListener('change', applyReturnFilters);
+  });
 </script>

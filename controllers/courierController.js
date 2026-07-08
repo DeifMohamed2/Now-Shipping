@@ -4,7 +4,7 @@ const Pickup = require('../models/pickup');
 const User = require('../models/user');
 const ShopOrder = require('../models/shopOrder');
 const statusHelper = require('../utils/statusHelper');
-const { calculatePickupFee } = require('../utils/fees');
+const { calculatePickupFee, resolveBusinessPricing } = require('../utils/fees');
 const { emailService } = require('../utils/email');
 const firebase = require('../config/firebase');
 const { sendSms } = require('../utils/sms');
@@ -2050,7 +2050,7 @@ const getAndSet_order_To_Pickup = async (req, res) => {
     // Recalculate pickup fee based on picked orders count and business city
     const businessCity = pickup?.business?.pickUpAdress?.city || '';
     const pickedCount = countUniquePicked(pickup.ordersPickedUp);
-    pickup.pickupFees = calculatePickupFee(businessCity, pickedCount);
+    pickup.pickupFees = calculatePickupFee(businessCity, pickedCount, resolveBusinessPricing(pickup.business));
     await pickup.save();
     const populatedPickup = await Pickup.findOne({ pickupNumber: pickupNumber })
       .populate('assignedDriver')

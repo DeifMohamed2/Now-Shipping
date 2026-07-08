@@ -19,6 +19,8 @@ const {
   resolveZoneQuery,
   splitAddressAndZoneFromText,
   formatZoneForDisplay,
+  matchZoneFromUserReply,
+  resolveZonePickFromMessage,
 } = require('./regionResolver');
 const { detectMessageZoneConflict } = require('./draftContextEngine');
 const {
@@ -44,7 +46,11 @@ const {
   looksLikeAddressReply,
   buildZoneCorrectionAck,
 } = require('./clarificationEngine');
+const { sanitizePhoneFields, parsePhoneFieldsFromText } = require('./phoneFieldUtils');
 const { normalizeDraftFields } = require('./textNormalizer');
+const { resolveConversationLang } = require('./conversationLang');
+const { runOrderTurn, isOrderPipelineEnabled } = require('./order/runOrderTurn');
+const { routeMessage, isPickupStatusMessage } = require('./order/messageRouter');
 const { shouldRefuse, buildScopeRefusal } = require('./scopeGuard');
 const {
   isHelpQuestion,
@@ -368,49 +374,6 @@ function shouldUseLiteVoiceTranscribe(conversation) {
   return !!(pending && SERVER_VOICE_FIELDS.has(pending));
 }
 
-/**
- * Infer conversation language from draft content and recent messages (not UI pref alone).
- */
-function resolveConversationLang(conversation, preferredLang, textHint) {
-  if (textHint && /[\u0600-\u06FF]/.test(textHint)) return 'ar';
-  if (textHint && !/[\u0600-\u06FF]/.test(textHint) && /[a-zA-Z]/.test(textHint)) {
-    return preferredLang === 'ar' ? 'ar' : 'en';
-  }
-
-  const fields = conversation?.activeDraft?.fields || {};
-  const fieldBlob = [
-    fields.fullName,
-    fields.address,
-    fields.productDescription,
-    fields.zoneQuery,
-    fields.zone,
-  ]
-    .filter(Boolean)
-    .join(' ');
-  if (/[\u0600-\u06FF]/.test(fieldBlob)) return 'ar';
-
-  const messages = conversation?.messages || [];
-  for (let i = messages.length - 1; i >= 0 && i >= messages.length - 8; i--) {
-    const m = messages[i];
-    if (m.sender === 'user' && /[\u0600-\u06FF]/.test(String(m.content || ''))) {
-      return 'ar';
-    }
-    if (m.sender === 'assistant') {
-      try {
-        const parsed = JSON.parse(m.content);
-        if (parsed.text && /[\u0600-\u06FF]/.test(parsed.text)) return 'ar';
-        if (parsed.clarifyingQuestion && /[\u0600-\u06FF]/.test(parsed.clarifyingQuestion)) {
-          return 'ar';
-        }
-      } catch {
-        if (/[\u0600-\u06FF]/.test(String(m.content || ''))) return 'ar';
-      }
-    }
-  }
-
-  return preferredLang === 'ar' ? 'ar' : 'en';
-}
-
 function shouldAnswerOrderDraftServerSide(conversation, message) {
   if (conversation.activeDraft?.type !== 'order') return false;
   if (isHelpQuestion(message)) return false;
@@ -461,10 +424,72 @@ function shouldStartOrderDraft(message, geminiResult, conversation) {
 }
 
 function isPickupStatusQuery(message, geminiResult) {
-  if (geminiResult?.intent === 'pickup_status') return true;
-  if (geminiResult?.pickupNumberQuery) return true;
-  const m = String(message || '');
-  return /\d{5,}/.test(m) && /(حالة|status|فين|where|استلام|pickup)/i.test(m);
+  return isPickupStatusMessage(message, geminiResult);
+}
+
+async function dispatchRoutedIntent({
+  userId,
+  userData,
+  userContext,
+  conversation,
+  message,
+  geminiResult,
+  regionHints,
+  lang,
+  transcript,
+}) {
+  const route = routeMessage({ message, conversation, geminiResult });
+
+  switch (route.route) {
+    case 'order_status':
+      return handleOrderStatusIntent(
+        userId,
+        route.orderNumberQuery || geminiResult.orderNumberQuery,
+        lang
+      );
+    case 'wallet':
+      return handleWalletIntent(userId, lang);
+    case 'pickup_status':
+      return handlePickupStatusIntent(userId, route.pickupNumberQuery, lang);
+    case 'pickup_create':
+    case 'pickup_continue':
+      if (!isHelpQuestion(message)) {
+        return processPickupDraftFlow({
+          userId,
+          userData,
+          userContext,
+          conversation,
+          geminiResult,
+        });
+      }
+      break;
+    case 'pickup_list':
+      return handlePickupListIntent(userId, lang);
+    case 'order_create':
+    case 'order_continue':
+      if (!isHelpQuestion(message)) {
+        return processOrderDraftFlow({
+          userId,
+          userData,
+          userContext,
+          conversation,
+          geminiResult,
+          regionHints,
+          message,
+          history: conversation.messages || [],
+        });
+      }
+      break;
+    default:
+      break;
+  }
+
+  return {
+    text: geminiResult.replyText,
+    suggestions: geminiResult.suggestions || [],
+    intent: geminiResult.intent || 'general_chat',
+    ...(transcript != null ? { transcript } : {}),
+  };
 }
 
 async function handlePickupListIntent(userId, lang) {
@@ -789,13 +814,33 @@ async function processOrderDraftFlow({
   regionHints,
   serverOnly = false,
   prevPendingField = null,
+  message = '',
+  history = [],
 }) {
+  const preferred = userContext.preferredLang === 'ar' ? 'ar' : 'en';
   const lang =
-    geminiResult?.language === 'ar'
-      ? 'ar'
-      : geminiResult?.language === 'en'
-        ? 'en'
-        : resolveConversationLang(conversation, userContext.preferredLang === 'ar' ? 'ar' : 'en');
+    conversation.activeDraft?.type === 'order'
+      ? resolveConversationLang(conversation, preferred, message)
+      : geminiResult?.language === 'ar'
+        ? 'ar'
+        : geminiResult?.language === 'en'
+          ? 'en'
+          : resolveConversationLang(conversation, preferred, message);
+
+  if (isOrderPipelineEnabled()) {
+    return runOrderTurn({
+      userId,
+      userData,
+      userContext,
+      conversation,
+      message,
+      regionHints,
+      lang,
+      skipLlm: serverOnly,
+      prevPendingField,
+      history,
+    });
+  }
 
   let draftFields = mergeDraft(
     conversation.activeDraft?.fields || {},
@@ -804,6 +849,7 @@ async function processOrderDraftFlow({
     { userData }
   );
   draftFields = scrubPhoneFromNotes(draftFields);
+  draftFields = sanitizePhoneFields(draftFields);
 
   const { fields: resolvedFields, regionHints: newHints } = applyRegionResolution(draftFields, {
     splitAddress: true,
@@ -1124,16 +1170,15 @@ async function processDraftWithoutGemini({
 
   const extracted = extractFromUserReply(message, pendingField, draftFields, userContext);
 
-  if (
-    pendingField === 'zone' ||
-    pendingField === 'address' ||
-    looksLikeAddressReply(message, draftFields)
-  ) {
+  if (pendingField === 'zone' || pendingField === 'address' || looksLikeAddressReply(message, draftFields)) {
     const split = splitAddressAndZoneFromText(message);
     if (split.zoneQuery) extracted.zoneQuery = split.zoneQuery;
     if (split.address) extracted.address = split.address;
     if (pendingField === 'zone' && !split.zoneQuery && message.trim()) {
-      extracted.zoneQuery = message.trim();
+      const phoneOnly = parsePhoneFieldsFromText(message, draftFields, pendingField);
+      if (!phoneOnly.phoneNumber && !phoneOnly.otherPhoneNumber) {
+        extracted.zoneQuery = message.trim();
+      }
     }
     if (pendingField === 'address' && !split.address && !split.zoneQuery && message.trim()) {
       extracted.address = message.trim();
@@ -1145,6 +1190,7 @@ async function processDraftWithoutGemini({
     userData,
   });
   draftFields = scrubPhoneFromNotes(draftFields);
+  draftFields = sanitizePhoneFields(draftFields);
   draftFields = normalizeDraftFields(draftFields, lang);
   draftFields = enforcePostStructuralOrder(draftFields, userData);
 
@@ -1169,6 +1215,7 @@ async function processDraftWithoutGemini({
   };
 
   return processOrderDraftFlow({
+    userId: userData?._id,
     userData,
     userContext,
     conversation,
@@ -1176,37 +1223,13 @@ async function processDraftWithoutGemini({
     regionHints,
     serverOnly: true,
     prevPendingField: pendingField,
+    message,
+    history: conversation.messages || [],
   });
 }
 
 async function resolveZoneFromUserReply(message, conversation, lang) {
-  const options = conversation.activeDraft?.regionOptions;
-  if (!options || !options.length) return null;
-
-  const trimmed = String(message).trim();
-  const num = parseInt(trimmed, 10);
-  if (Number.isFinite(num) && num >= 1 && num <= options.length) {
-    return options[num - 1];
-  }
-
-  const resolved = resolveZoneQuery(trimmed);
-  if (resolved.match) return resolved.match;
-
-  const trimmedLower = trimmed.toLowerCase();
-  for (const opt of options) {
-    const labelAr = opt.labelAr || '';
-    const labelEn = opt.labelEn || '';
-    if (
-      (labelAr && labelAr.toLowerCase() === trimmedLower) ||
-      (labelEn && labelEn.toLowerCase() === trimmedLower) ||
-      (labelAr && labelAr.toLowerCase().includes(trimmedLower)) ||
-      (labelEn && labelEn.toLowerCase().includes(trimmedLower)) ||
-      (opt.zone && opt.zone.toLowerCase() === trimmedLower)
-    ) {
-      return opt;
-    }
-  }
-  return null;
+  return resolveZonePickFromMessage(message, conversation.activeDraft?.regionOptions);
 }
 
 async function continueOrderDraftAfterZonePick({
@@ -1220,6 +1243,7 @@ async function continueOrderDraftAfterZonePick({
   const { fields: preResolved, regionHints } = applyRegionResolution(draftFields, {
     splitAddress: true,
     lang,
+    trustUserZone: true,
   });
   conversation.activeDraft = {
     ...conversation.activeDraft,
@@ -1240,8 +1264,8 @@ async function continueOrderDraftAfterZonePick({
       suggestions: [],
     },
     regionHints,
-    serverOnly: true,
-    prevPendingField: 'zone',
+    message: '',
+    history: conversation.messages || [],
   });
 }
 
@@ -1251,7 +1275,7 @@ async function continueOrderDraftAfterZonePick({
 async function processTextMessage(userId, message, conversation, options = {}) {
   const preferredLang = options.preferredLang === 'ar' ? 'ar' : 'en';
   if (!checkRateLimit(userId)) {
-    const lang = /[\u0600-\u06FF]/.test(message) ? 'ar' : preferredLang;
+    const lang = resolveConversationLang(conversation, preferredLang, message);
     return {
       text:
         lang === 'ar'
@@ -1269,7 +1293,7 @@ async function processTextMessage(userId, message, conversation, options = {}) {
   const userContext = await getUserContext(userId, preferredLang);
   const history = conversation.messages || [];
 
-  const msgLang = /[\u0600-\u06FF]/.test(message) ? 'ar' : preferredLang;
+  const msgLang = resolveConversationLang(conversation, preferredLang, message);
 
   const intercepted = await tryInterceptDraftCommand(userId, message, conversation, userData, msgLang);
   if (intercepted) {
@@ -1300,11 +1324,23 @@ async function processTextMessage(userId, message, conversation, options = {}) {
   }
 
   if (shouldAnswerOrderDraftServerSide(conversation, message)) {
-    const { fields: preResolved, regionHints } = applyRegionResolution(
-      conversation.activeDraft?.fields || {},
-      { splitAddress: true, lang: msgLang }
-    );
-    conversation.activeDraft.fields = preResolved;
+    const pending = conversation.activeDraft?.pendingField;
+    const postStructural = ['codConfirmation', 'amountCOD', 'shippingSpeed', 'selectedPickupAddressId'];
+    let regionHints = {};
+    if (!postStructural.includes(pending)) {
+      const draft = conversation.activeDraft?.fields || {};
+      const trustUserZone =
+        draft.government &&
+        draft.zone &&
+        require('./regionResolver').isValidGovernmentAndZone(draft.government, draft.zone).ok;
+      const resolved = applyRegionResolution(draft, {
+        splitAddress: true,
+        lang: msgLang,
+        trustUserZone,
+      });
+      conversation.activeDraft.fields = resolved.fields;
+      regionHints = resolved.regionHints;
+    }
     return processDraftWithoutGemini({
       userData,
       userContext,
@@ -1333,6 +1369,7 @@ async function processTextMessage(userId, message, conversation, options = {}) {
       msgLang,
       { userData }
     );
+    delete draftFields.zoneQuery;
     conversation.activeDraft = {
       ...conversation.activeDraft,
       fields: draftFields,
@@ -1394,64 +1431,16 @@ async function processTextMessage(userId, message, conversation, options = {}) {
     return buildScopeRefusal(lang);
   }
 
-  if (geminiResult.intent === 'order_status') {
-    return handleOrderStatusIntent(userId, geminiResult.orderNumberQuery, lang);
-  }
-  if (geminiResult.intent === 'wallet') {
-    return handleWalletIntent(userId, lang);
-  }
-
-  if (isPickupStatusQuery(message, geminiResult)) {
-    const query = geminiResult.pickupNumberQuery || String(message).match(/\d{5,}/)?.[0];
-    return handlePickupStatusIntent(userId, query, lang);
-  }
-
-  if (
-    !isHelpQuestion(message) &&
-    (
-      geminiResult.intent === 'create_pickup' ||
-      geminiResult.intent === 'clarify_pickup' ||
-      conversation.activeDraft?.type === 'pickup' ||
-      shouldStartPickupDraft(message, geminiResult, conversation)
-    )
-  ) {
-    return processPickupDraftFlow({
-      userId,
-      userData,
-      userContext,
-      conversation,
-      geminiResult,
-    });
-  }
-
-  if (geminiResult.intent === 'pickup') {
-    return handlePickupListIntent(userId, lang);
-  }
-
-  if (
-    !isHelpQuestion(message) &&
-    (
-      geminiResult.intent === 'create_order' ||
-      geminiResult.intent === 'clarify_order' ||
-      conversation.activeDraft?.type === 'order' ||
-      shouldStartOrderDraft(message, geminiResult, conversation)
-    )
-  ) {
-    return processOrderDraftFlow({
-      userId,
-      userData,
-      userContext,
-      conversation,
-      geminiResult,
-      regionHints,
-    });
-  }
-
-  return {
-    text: geminiResult.replyText,
-    suggestions: geminiResult.suggestions || [],
-    intent: geminiResult.intent || 'general_chat',
-  };
+  return dispatchRoutedIntent({
+    userId,
+    userData,
+    userContext,
+    conversation,
+    message,
+    geminiResult,
+    regionHints,
+    lang,
+  });
 }
 
 async function processVoiceDraftFallback({
@@ -1732,78 +1721,21 @@ async function processVoiceMessage(userId, audioBuffer, mimeType, conversation, 
     return refusal;
   }
 
-  if (geminiResult.intent === 'order_status') {
-    const result = await handleOrderStatusIntent(userId, geminiResult.orderNumberQuery, lang);
-    result.transcript = transcript;
-    return result;
-  }
-  if (geminiResult.intent === 'wallet') {
-    const result = await handleWalletIntent(userId, lang);
-    result.transcript = transcript;
-    return result;
-  }
-
-  if (isPickupStatusQuery(transcript, geminiResult)) {
-    const query = geminiResult.pickupNumberQuery || String(transcript).match(/\d{5,}/)?.[0];
-    const result = await handlePickupStatusIntent(userId, query, lang);
-    result.transcript = transcript;
-    return result;
-  }
-
-  if (
-    !isHelpQuestion(transcript) &&
-    (
-      geminiResult.intent === 'create_pickup' ||
-      geminiResult.intent === 'clarify_pickup' ||
-      conversation.activeDraft?.type === 'pickup' ||
-      shouldStartPickupDraft(transcript, geminiResult, conversation)
-    )
-  ) {
-    const result = await processPickupDraftFlow({
-      userId,
-      userData,
-      userContext,
-      conversation,
-      geminiResult,
-    });
-    result.transcript = transcript;
-    return result;
-  }
-
-  if (geminiResult.intent === 'pickup') {
-    const result = await handlePickupListIntent(userId, lang);
-    result.transcript = transcript;
-    return result;
-  }
-
-  if (
-    !isHelpQuestion(transcript) &&
-    (
-      geminiResult.intent === 'create_order' ||
-      geminiResult.intent === 'clarify_order' ||
-      conversation.activeDraft?.type === 'order' ||
-      shouldStartOrderDraft(transcript, geminiResult, conversation)
-    )
-  ) {
-    const result = await processOrderDraftFlow({
-      userId,
-      userData,
-      userContext,
-      conversation,
-      geminiResult,
-      regionHints,
-    });
-    result.transcript = transcript;
-    return result;
-  }
-
-  const fallback = {
-    text: geminiResult.replyText,
-    suggestions: geminiResult.suggestions || [],
-    intent: geminiResult.intent || 'general_chat',
+  const result = await dispatchRoutedIntent({
+    userId,
+    userData,
+    userContext,
+    conversation,
+    message: transcript,
+    geminiResult,
+    regionHints,
+    lang,
     transcript,
-  };
-  return fallback;
+  });
+  if (transcript != null && result.transcript == null) {
+    result.transcript = transcript;
+  }
+  return result;
 }
 
 async function confirmOrder(userId, conversation) {

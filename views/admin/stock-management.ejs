@@ -1,466 +1,722 @@
 <%- contentFor('HeaderCss') %>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" type="text/css" />
+<link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
 <%- contentFor('body') %>
 <style>
-  /* Fix for dropdown menus in tables */
   .dropdown-fix .dropdown-menu {
     position: fixed !important;
     z-index: 1050 !important;
   }
 
-  .stats-card {
-    transition: all 0.3s ease;
-    border-radius: 10px;
-    overflow: hidden;
+  .stock-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 100%;
   }
-  
-  .stats-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+
+  .stock-page .stats-card {
+    border: 1px solid rgba(64, 81, 137, 0.08);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: none;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
-  
-  .stats-icon {
-    width: 48px;
-    height: 48px;
+
+  .stock-page .stats-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(64, 81, 137, 0.08);
+  }
+
+  .stock-page .stats-icon {
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-  }
-  
-  .quick-add-form {
-    background-color: #f8f9fa;
     border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    flex-shrink: 0;
   }
-  
-  .status-badge {
-    padding: 6px 12px;
-    border-radius: 50px;
+
+  /* Unified main panel — one surface, section dividers only */
+  .stock-panel {
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .stock-panel__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1.25rem 1.5rem 0;
+  }
+
+  .stock-panel__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    color: #212529;
+  }
+
+  .stock-panel__subtitle {
+    font-size: 0.8125rem;
+    margin-top: 0.2rem;
+  }
+
+  .stock-quick-bar {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #eef0f4;
+  }
+
+  .stock-quick-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .stock-quick-form .form-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #878a99;
+    margin-bottom: 0.35rem;
+  }
+
+  .stock-quick-fields {
+    display: flex;
+    align-items: stretch;
+    gap: 0.65rem;
+    flex: 1 1 auto;
+    min-width: min(100%, 420px);
+    max-width: 520px;
+  }
+
+  .stock-quick-fields .input-group {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .stock-quick-fields .form-control,
+  .stock-quick-fields .input-group-text {
+    border-radius: 8px;
+    border-color: #e9ebec;
+    font-size: 0.875rem;
+  }
+
+  .stock-quick-fields .input-group .form-control {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  .stock-quick-fields .input-group-text {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    background: #f8f9fa;
+  }
+
+  .stock-quick-fields .btn {
+    flex-shrink: 0;
+    border-radius: 8px;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    white-space: nowrap;
+  }
+
+  .stock-filter-bar {
+    padding: 1rem 1.5rem 0;
+  }
+
+  .stock-filter-bar .filter-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #878a99;
+    margin-bottom: 0.35rem;
+  }
+
+  .stock-filter-bar .search-box {
+    position: relative;
+  }
+
+  .stock-filter-bar .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #878a99;
+    pointer-events: none;
+  }
+
+  .stock-filter-bar .search-box input {
+    padding-left: 2.25rem;
+    border-radius: 8px;
+    border-color: #e9ebec;
+  }
+
+  .stock-filter-bar .form-control,
+  .stock-filter-bar .form-select {
+    border-radius: 8px;
+    border-color: #e9ebec;
+    font-size: 0.875rem;
+    min-height: 38px;
+  }
+
+  .stock-filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    height: 38px;
+  }
+
+  .stock-filter-actions .btn {
+    border-radius: 8px;
+    min-height: 38px;
+  }
+
+  .filter-meta-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0.85rem 1.5rem 1rem;
+    border-bottom: 1px solid #eef0f4;
+  }
+
+  .filter-results-count {
+    font-size: 0.8125rem;
+    color: #495057;
     font-weight: 500;
-    font-size: 0.85rem;
   }
-  
-  .stock-action-btn {
-    width: 32px;
-    height: 32px;
+
+  .filter-results-count strong {
+    color: #405189;
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    flex: 1;
+  }
+
+  .filter-chip {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    background: #f3f6f9;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    color: #405189;
+  }
+
+  .filter-chip button {
+    border: none;
+    background: none;
+    padding: 0;
+    line-height: 1;
+    color: #878a99;
+    cursor: pointer;
+  }
+
+  .filter-chip button:hover {
+    color: #f06548;
+  }
+
+  .stock-panel__body {
+    padding: 0 1.5rem 1.25rem;
+  }
+
+  .stock-page .status-badge {
+    padding: 5px 10px;
     border-radius: 6px;
-    margin-right: 5px;
-  }
-  
-  .nav-tabs-custom .nav-link.active {
-    color: #fff;
-    background-color: #405189;
-    border-radius: 30px;
-  }
-  
-  .nav-tabs-custom .nav-link {
-    border-radius: 30px;
-    padding: 5px 15px;
-  }
-  
-  .zone-header {
-    background-color: #f8f9fa;
-    border-left: 4px solid #405189;
-    padding: 10px 15px;
-    margin-bottom: 15px;
-    border-radius: 0 4px 4px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .zone-title {
-    font-size: 1.1rem;
     font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+
+  .stock-page .nav-tabs-custom {
+    border-bottom: 1px solid #eef0f4;
+    gap: 0.15rem;
+    margin: 0 -0.25rem 1rem;
+  }
+
+  .stock-page .nav-tabs-custom .nav-link {
+    border: none;
+    border-radius: 8px 8px 0 0;
+    padding: 0.55rem 0.85rem;
+    color: #878a99;
+    font-weight: 500;
+    font-size: 0.8125rem;
+  }
+
+  .stock-page .nav-tabs-custom .nav-link.active {
+    color: #405189;
+    background: transparent;
+    box-shadow: inset 0 -2px 0 #405189;
+  }
+
+  .unified-stock-table-wrap {
+    border: 1px solid #eef0f4;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .stock-page .admin-table-scroll {
+    max-height: min(68vh, 720px);
+    overflow: auto;
+  }
+
+  .stock-page .admin-data-table {
     margin-bottom: 0;
-    display: flex;
-    align-items: center;
   }
-  
-  .zone-badge {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    border-radius: 50px;
-    margin-left: 10px;
+
+  .stock-page .admin-data-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f8f9fb !important;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    border-bottom: 1px solid #e9ebec;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
   }
-  
-  .zone-actions {
-    display: flex;
-    gap: 8px;
+
+  .stock-page .admin-data-table tbody tr:hover {
+    background-color: rgba(64, 81, 137, 0.03);
   }
-  
-  .zone-container {
-    margin-bottom: 30px;
-  }
-  
-  .zone-container:last-child {
-    margin-bottom: 0;
-  }
-  
-  .bulk-actions {
+
+  .stock-page .bulk-actions {
     display: none;
-    background-color: #f8f9fa;
+    background: #405189;
     border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 0.65rem 1rem;
+    margin-bottom: 0.85rem;
+    color: #fff;
   }
-  
-  .bulk-actions.show {
+
+  .stock-page .bulk-actions.show {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
-  
-  .bulk-actions-title {
+
+  .stock-page .bulk-actions-title {
     font-weight: 500;
     margin-bottom: 0;
+    color: #fff;
   }
-  
-  .bulk-actions-buttons {
+
+  .stock-page .bulk-actions-buttons {
     display: flex;
-    gap: 8px;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .stock-subpanel {
+    border-radius: 14px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .stock-subpanel__header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #eef0f4;
+  }
+
+  .stock-subpanel__header .card-title {
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .stock-subpanel__body {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .zone-pills-bar {
+    display: none;
+  }
+
+  .stock-filter-bar .choices {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+  }
+
+  .stock-filter-bar .choices__inner {
+    min-height: 38px;
+    border-radius: 8px;
+    border-color: #e9ebec;
+    padding: 4px 8px;
+    background: #fff;
+  }
+
+  .stock-filter-bar .choices__list--multiple .choices__item {
+    background: #405189;
+    border: 1px solid #405189;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    margin-bottom: 2px;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .stock-filter-bar .choices__input {
+    background: transparent;
+    margin-bottom: 0;
+    font-size: 0.8125rem;
+  }
+
+  .stock-filter-bar .choices__list--dropdown {
+    z-index: 1060;
+    border-radius: 8px;
+    border-color: #e9ebec;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(64, 81, 137, 0.12);
+  }
+
+  .stock-filter-bar .choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background: #f3f6fb;
+  }
+
+  .stock-filter-bar .choices.is-open .choices__inner {
+    border-color: #405189;
+    box-shadow: 0 0 0 3px rgba(64, 81, 137, 0.1);
+  }
+
+  .stock-filter-bar .choices[data-type*="select-multiple"] .choices__inner {
+    min-height: 42px;
+    padding: 6px 10px;
+  }
+
+  .stock-filter-bar .choices__list--dropdown .choices__item {
+    font-size: 0.8125rem;
+    padding: 8px 12px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .zone-cell-badge {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 0.3rem;
+    max-width: 260px;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.35;
+    white-space: normal;
+    word-break: break-word;
+    text-align: left;
+  }
+
+  .zone-cell-badge i {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+  }
+
+  .zone-badge-0 { background: #e8eeff; color: #405189; }
+  .zone-badge-1 { background: #e6f4f1; color: #0ab39c; }
+  .zone-badge-2 { background: #fff4e6; color: #f7b84b; }
+  .zone-badge-3 { background: #fde8e4; color: #f06548; }
+  .zone-badge-4 { background: #ebeff2; color: #495057; }
+  .zone-badge-5 { background: #f3e8fd; color: #6559cc; }
+
+  .stock-page .admin-data-table tbody tr.zone-group-start td {
+    border-top: 2px solid rgba(64, 81, 137, 0.12);
+  }
+
+  .sortable-th {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .sortable-th:hover {
+    color: #405189;
+  }
+
+  .sortable-th .sort-icon {
+    font-size: 0.85rem;
+    opacity: 0.5;
+  }
+
+  .sortable-th.sorted .sort-icon {
+    opacity: 1;
+    color: #405189;
+  }
+
+  @media (max-width: 767.98px) {
+    .stock-panel__top,
+    .stock-quick-bar,
+    .stock-filter-bar,
+    .filter-meta-bar,
+    .stock-panel__body,
+    .stock-subpanel__header,
+    .stock-subpanel__body {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .stock-quick-fields {
+      max-width: none;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .stock-quick-fields .btn {
+      width: 100%;
+    }
+
+    .stock-filter-actions {
+      height: auto;
+    }
   }
 </style>
 
-<div class="row">
-  <!-- Stats Cards Row -->
-  <div class="col-lg-12">
-    <div class="row g-3 mb-4">
-      <!-- Total Orders in Stock -->
-      <div class="col-md-3">
-        <div class="card stats-card border-0">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="stats-icon bg-primary-subtle text-primary">
-                <i class="ri-store-2-line fs-4"></i>
-              </div>
-              <div class="ms-3">
-                <h6 class="mb-0 text-muted">Total in Stock</h6>
-                <h4 class="mt-2 mb-0 fw-semibold" id="totalInStock">128</h4>
-              </div>
+<div class="stock-page">
+  <!-- Stats -->
+  <div class="row g-3">
+    <div class="col-md-3 col-sm-6">
+      <div class="card stats-card border-0">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-center">
+            <div class="stats-icon bg-primary-subtle text-primary">
+              <i class="ri-store-2-line fs-5"></i>
             </div>
-            <div class="mt-3">
-              <span class="badge bg-success-subtle text-success">
-                <i class="ri-arrow-up-line"></i> 8.2%
-              </span>
-              <span class="text-muted ms-1">from last week</span>
+            <div class="ms-3">
+              <h6 class="mb-0 text-muted small">Total Orders</h6>
+              <h4 class="mt-1 mb-0 fw-semibold" id="totalInStock">0</h4>
             </div>
           </div>
         </div>
       </div>
-      
-      <!-- Pending Arrivals -->
-      <div class="col-md-3">
-        <div class="card stats-card border-0">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="stats-icon bg-warning-subtle text-warning">
-                <i class="ri-truck-line fs-4"></i>
-              </div>
-              <div class="ms-3">
-                <h6 class="mb-0 text-muted">Pending Arrivals</h6>
-                <h4 class="mt-2 mb-0 fw-semibold" id="pendingArrivals">42</h4>
-              </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stats-card border-0">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-center">
+            <div class="stats-icon bg-success-subtle text-success">
+              <i class="ri-archive-line fs-5"></i>
             </div>
-            <div class="mt-3">
-              <span class="badge bg-danger-subtle text-danger">
-                <i class="ri-arrow-down-line"></i> 3.1%
-              </span>
-              <span class="text-muted ms-1">from last week</span>
+            <div class="ms-3">
+              <h6 class="mb-0 text-muted small">In Stock</h6>
+              <h4 class="mt-1 mb-0 fw-semibold" id="readyForDispatch">0</h4>
             </div>
           </div>
         </div>
       </div>
-      
-      <!-- Ready for Dispatch -->
-      <div class="col-md-3">
-        <div class="card stats-card border-0">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="stats-icon bg-success-subtle text-success">
-                <i class="ri-takeaway-line fs-4"></i>
-              </div>
-              <div class="ms-3">
-                <h6 class="mb-0 text-muted">Ready for Dispatch</h6>
-                <h4 class="mt-2 mb-0 fw-semibold" id="readyForDispatch">56</h4>
-              </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stats-card border-0">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-center">
+            <div class="stats-icon bg-warning-subtle text-warning">
+              <i class="ri-truck-line fs-5"></i>
             </div>
-            <div class="mt-3">
-              <span class="badge bg-success-subtle text-success">
-                <i class="ri-arrow-up-line"></i> 12.3%
-              </span>
-              <span class="text-muted ms-1">from last week</span>
+            <div class="ms-3">
+              <h6 class="mb-0 text-muted small">With Courier</h6>
+              <h4 class="mt-1 mb-0 fw-semibold" id="processingOrders">0</h4>
             </div>
           </div>
         </div>
       </div>
-      
-      <!-- Processing Orders -->
-      <div class="col-md-3">
-        <div class="card stats-card border-0">
-          <div class="card-body">
-            <div class="d-flex align-items-center">
-              <div class="stats-icon bg-info-subtle text-info">
-                <i class="ri-loader-4-line fs-4"></i>
-              </div>
-              <div class="ms-3">
-                <h6 class="mb-0 text-muted">Processing</h6>
-                <h4 class="mt-2 mb-0 fw-semibold" id="processingOrders">30</h4>
-              </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card stats-card border-0">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-center">
+            <div class="stats-icon bg-info-subtle text-info">
+              <i class="ri-map-pin-line fs-5"></i>
             </div>
-            <div class="mt-3">
-              <span class="badge bg-success-subtle text-success">
-                <i class="ri-arrow-up-line"></i> 5.7%
-              </span>
-              <span class="text-muted ms-1">from last week</span>
+            <div class="ms-3">
+              <h6 class="mb-0 text-muted small">Zones</h6>
+              <h4 class="mt-1 mb-0 fw-semibold" id="pendingArrivals">0</h4>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  
-  <!-- Quick Add Order to Stock -->
-  <div class="col-lg-6 mb-4">
-    <div class="card">
-      <div class="card-header border-0 bg-light">
-        <h5 class="card-title mb-0">Quick Add to Stock</h5>
+
+  <!-- Main panel -->
+  <div class="card stock-panel border-0 shadow-sm" id="stockList">
+    <div class="stock-panel__top">
+      <div>
+        <h5 class="stock-panel__title">Stock Management</h5>
+        <p class="stock-panel__subtitle">Warehouse pickups and courier dispatch</p>
       </div>
-      <div class="card-body">
-        <form id="quickAddForm" class="quick-add-form">
-          <div class="row g-3 align-items-end">
-            <div class="col-md-6">
-              <label for="orderNumber" class="form-label">Order Number</label>
-              <div class="input-group">
-                <span class="input-group-text">#</span>
-                <input type="text" class="form-control" id="orderNumber" placeholder="Enter order number" required>
-              </div>
-            </div>
-            <!-- <div class="col-md-3">
-              <label for="stockStatus" class="form-label">Stock Status</label>
-              <select class="form-select" id="stockStatus" required>
-                <option value="">Select status</option>
-                <option value="inStock">In Stock</option>
-                <option value="processing">Processing</option>
-                <option value="readyForDispatch">Ready for Dispatch</option>
-                <option value="damaged">Damaged</option>
-              </select>
-            </div> -->
-            <!-- <div class="col-md-4">
-              <label for="stockNotes" class="form-label">Notes</label>
-              <input type="text" class="form-control" id="stockNotes" placeholder="Add notes (optional)">
-            </div> -->
-            <div class="col-md-6">
-              <button type="submit" class="btn btn-primary w-100">
-                <i class="ri-add-line me-1"></i> Add to Stock
-              </button>
-            </div>
-          </div>
-        </form>
+      <div class="dropdown">
+        <button type="button" class="btn btn-primary btn-sm dropdown-toggle" id="exportStockBtn" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="ri-file-download-line align-bottom me-1"></i> Export
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+          <li><button type="button" class="dropdown-item" onclick="exportStockData('excel')"><i class="ri-file-excel-2-line me-2 text-success"></i>Excel (.xls)</button></li>
+          <li><button type="button" class="dropdown-item" onclick="exportStockData('csv')"><i class="ri-file-text-line me-2 text-primary"></i>CSV</button></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button type="button" class="dropdown-item" onclick="exportStockData('print')"><i class="ri-printer-line me-2 text-secondary"></i>Print / PDF</button></li>
+        </ul>
       </div>
     </div>
-  </div>
 
-
-  
-  <!-- Main Stock Management Card -->
-  <div class="col-lg-12">
-    <div class="card" id="stockList">
-      <div class="card-header border-0">
-        <div class="row align-items-center gy-3">
-          <div class="col-sm">
-            <h5 class="card-title mb-0">Stock Management</h5>
-          </div>
-          <div class="col-sm-auto">
-            <div class="d-flex gap-1 flex-wrap align-items-center">
-              <button type="button" class="btn btn-info" id="exportStockBtn">
-                <i class="ri-file-download-line align-bottom me-1"></i> Export
-              </button>
-              <div id="stock-header-remove-toolbar" class="d-none gap-2 align-items-center flex-wrap" aria-live="polite">
-                <button type="button" class="btn btn-soft-danger" id="remove-actions" onClick="deleteMultiple()">
-                  <i class="ri-delete-bin-2-line me-1"></i> Remove selected
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Search and Filter Section -->
-      <div class="card-body border border-dashed border-end-0 border-start-0">
-        <form id="stockSearchForm">
-          <div class="row g-3">
-            <div class="col-xxl-5 col-sm-6">
-              <div class="search-box">
-                <input type="text" class="form-control search" id="stockSearch" placeholder="Search for order ID, product, status or something...">
-                <i class="ri-search-line search-icon"></i>
-              </div>
-            </div>
-            <div class="col-xxl-2 col-sm-6">
-              <div>
-                <input type="text" class="form-control" data-provider="flatpickr" data-date-format="d M, Y" data-range-date="true" id="stockDateRange" placeholder="Select date range">
-              </div>
-            </div>
-            <div class="col-xxl-2 col-sm-4">
-              <div>
-                <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="stockStatusFilter">
-                  <option value="">Status</option>
-                  <option value="all" selected>All</option>
-                  <option value="inStock">In Stock</option>
-                  <option value="pendingArrival">Pending Arrival</option>
-                  <option value="processing">Processing</option>
-                  <option value="readyForDispatch">Ready for Dispatch</option>
-                  <option value="dispatched">Dispatched</option>
-                  <option value="damaged">Damaged</option>
-                  <option value="returned">Returned</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-xxl-2 col-sm-4">
-              <div>
-                <select class="form-control" data-choices data-choices-search-false name="choices-single-default" id="zoneFilter">
-                  <option value="">Zone</option>
-                  <option value="all" selected>All Zones</option>
-                  <option value="Nasr City">Nasr City</option>
-                  <option value="Maadi">Maadi</option>
-                  <option value="Heliopolis">Heliopolis</option>
-                  <option value="Downtown">Downtown</option>
-                  <option value="New Cairo">New Cairo</option>
-                  <option value="6th October">6th October</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-xxl-1 col-sm-4">
-              <div>
-                <button type="button" class="btn btn-primary w-100" onclick="searchStock()">
-                  <i class="ri-equalizer-fill me-1 align-bottom"></i> Filter
-                </button>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-      
-      <!-- Stock Table Section -->
-      <div class="card-body pt-0">
+    <div class="stock-quick-bar">
+      <form id="quickAddForm" class="stock-quick-form">
         <div>
-          <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
-            <li class="nav-item">
-              <button class="btn stockFilter btn-link nav-link active All py-2 px-3" data-bs-toggle="tab" id="All" role="tab" aria-selected="true" onClick="filterStock('all')">
-                <i class="ri-store-2-fill me-1 align-bottom"></i> All Items
-              </button>
-            </li>
-            <li class="nav-item">
-              <button class="btn stockFilter btn-link nav-link py-2 px-3 ReadyForDispatch" data-bs-toggle="tab" id="ReadyForDispatch" role="tab" aria-selected="false" onClick="filterStock('readyForDispatch')">
-                <i class="ri-takeaway-line me-1 align-bottom"></i> Ready for Dispatch
-              </button>
-            </li>
-            <li class="nav-item">
-              <button class="btn stockFilter btn-link nav-link py-2 px-3 InStock" data-bs-toggle="tab" id="InStock" role="tab" aria-selected="false" onClick="filterStock('inStock')">
-                <i class="ri-archive-line me-1 align-bottom"></i> In Stock
-              </button>
-            </li>
-            <li class="nav-item">
-              <button class="btn stockFilter btn-link nav-link py-2 px-3 PendingArrival" data-bs-toggle="tab" id="PendingArrival" role="tab" aria-selected="false" onClick="filterStock('pendingArrival')">
-                <i class="ri-truck-line me-1 align-bottom"></i> Pending Arrival
-              </button>
-            </li>
-            <!-- <li class="nav-item">
-              <button class="btn stockFilter btn-link nav-link py-2 px-3 Processing" data-bs-toggle="tab" id="Processing" role="tab" aria-selected="false" onClick="filterStock('processing')">
-                <i class="ri-loader-4-line me-1 align-bottom"></i> Processing
-              </button>
-            </li> -->
-            <!-- <li class="nav-item">
-              <button class="btn stockFilter btn-link nav-link py-2 px-3 Damaged" data-bs-toggle="tab" id="Damaged" role="tab" aria-selected="false" onClick="filterStock('damaged')">
-                <i class="ri-error-warning-line me-1 align-bottom"></i> Damaged
-              </button>
-            </li> -->
-          </ul>
+          <label for="orderNumber" class="form-label">Quick add to stock</label>
+          <div class="stock-quick-fields">
+            <div class="input-group">
+              <span class="input-group-text">#</span>
+              <input type="text" class="form-control" id="orderNumber" placeholder="Order number" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <i class="ri-add-line me-1"></i> Add
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
 
-          <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-            <div class="form-check mb-0">
-              <input class="form-check-input" type="checkbox" id="checkAll" title="Select all visible items">
-              <label class="form-check-label small text-muted mb-0" for="checkAll">Select all</label>
+    <div class="stock-filter-bar">
+      <form id="stockSearchForm" onsubmit="return false;">
+        <div class="row g-3 align-items-end">
+          <div class="col-xl-3 col-lg-4 col-md-6">
+            <label class="filter-label" for="stockSearch">Search</label>
+            <div class="search-box">
+              <input type="text" class="form-control" id="stockSearch" placeholder="Order, product, customer, phone…">
+              <i class="ri-search-line search-icon"></i>
             </div>
           </div>
+          <div class="col-xl-3 col-lg-3 col-md-6">
+            <label class="filter-label" for="zoneFilter">Zones</label>
+            <select class="form-control" id="zoneFilter" multiple></select>
+          </div>
+          <div class="col-xl-2 col-lg-2 col-md-4 col-sm-6">
+            <label class="filter-label" for="stockStatusFilter">Status</label>
+            <select class="form-select" id="stockStatusFilter">
+              <option value="all" selected>All Statuses</option>
+              <option value="inStock">In Stock</option>
+              <option value="inProgress">With Courier</option>
+            </select>
+          </div>
+          <div class="col-xl-2 col-lg-2 col-md-4 col-sm-6">
+            <label class="filter-label" for="stockDateRange">Exit Date</label>
+            <input type="text" class="form-control" id="stockDateRange" placeholder="Date range" autocomplete="off">
+          </div>
+          <div class="col-xl-2 col-lg-1 col-md-4 col-sm-6">
+            <label class="filter-label d-none d-md-block">&nbsp;</label>
+            <div class="stock-filter-actions">
+              <button type="button" class="btn btn-primary flex-grow-1" onclick="applyFilters()">
+                <i class="ri-filter-3-line me-1"></i> Apply
+              </button>
+              <button type="button" class="btn btn-light" onclick="clearStockFilters()" title="Clear filters">
+                <i class="ri-close-circle-line"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
 
-          <!-- Bulk Actions Bar (Initially Hidden) -->
-          <div id="bulkActionsBar" class="bulk-actions mb-3">
-            <div class="bulk-actions-title">
-              <span id="selectedItemsCount">0</span> items selected
-            </div>
-            <div class="bulk-actions-buttons">
-              <button class="btn btn-sm btn-success" onclick="assignMultipleOrders()">
-                <i class="ri-user-add-line me-1"></i> Assign to Courier
-              </button>
-              <button class="btn btn-sm btn-info" onclick="printMultipleLabels()">
-                <i class="ri-printer-line me-1"></i> Print Labels
-              </button>
-              <button class="btn btn-sm btn-danger" onclick="deleteMultiple()">
-                <i class="ri-delete-bin-2-line me-1"></i> Remove
-              </button>
-              <button class="btn btn-sm btn-light" onclick="clearSelection()">
-                <i class="ri-close-line me-1"></i> Clear Selection
-              </button>
-            </div>
-          </div>
+    <div class="filter-meta-bar">
+      <span class="filter-results-count" id="stockResultsCount">Showing <strong>0</strong> of <strong>0</strong> orders</span>
+      <div class="filter-chips" id="stockFilterChips"></div>
+    </div>
 
-          <!-- Stock Items Grouped by Zone -->
-          <div id="stockItemsByZone">
-            <!-- Zone groups will be inserted here dynamically -->
-          </div>
+    <div class="stock-panel__body">
+      <ul class="nav nav-tabs nav-tabs-custom nav-success" role="tablist">
+        <li class="nav-item">
+          <button class="btn stockFilter btn-link nav-link active All py-2 px-3" type="button" id="tabAll" onClick="filterStock('all')">
+            <i class="ri-store-2-fill me-1 align-bottom"></i> All Items
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="btn stockFilter btn-link nav-link py-2 px-3 ReadyForDispatch" type="button" id="tabReady" onClick="filterStock('readyForDispatch')">
+            <i class="ri-takeaway-line me-1 align-bottom"></i> Ready for Dispatch
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="btn stockFilter btn-link nav-link py-2 px-3 InStock" type="button" id="tabInStock" onClick="filterStock('inStock')">
+            <i class="ri-archive-line me-1 align-bottom"></i> In Stock
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="btn stockFilter btn-link nav-link py-2 px-3 WithCourier" type="button" id="tabWithCourier" onClick="filterStock('inProgress')">
+            <i class="ri-truck-line me-1 align-bottom"></i> With Courier
+          </button>
+        </li>
+      </ul>
 
-          <div class="noresult" id="NoResult" style="display: none">
-            <div class="text-center">
-              <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-              <h5 class="mt-2">Sorry! No Result Found</h5>
-            </div>
-          </div>
-          
-          <!-- Pagination -->
-          <div class="d-flex justify-content-end mt-3">
-            <div class="pagination-wrap hstack gap-2">
-              <a class="page-item pagination-prev disabled" href="javascript:void(0);">
-                Previous
-              </a>
-              <ul class="pagination listjs-pagination mb-0"></ul>
-              <a class="page-item pagination-next" href="javascript:void(0);">
-                Next
-              </a>
-            </div>
-          </div>
+      <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+        <div class="form-check mb-0">
+          <input class="form-check-input" type="checkbox" id="checkAll" title="Select all visible items">
+          <label class="form-check-label small text-muted mb-0" for="checkAll">Select all</label>
+        </div>
+      </div>
+
+      <div id="bulkActionsBar" class="bulk-actions mb-3">
+        <div class="bulk-actions-title">
+          <span id="selectedItemsCount">0</span> items selected
+        </div>
+        <div class="bulk-actions-buttons">
+          <button class="btn btn-sm btn-success" onclick="assignMultipleOrders()">
+            <i class="ri-user-add-line me-1"></i> Assign to Courier
+          </button>
+          <button class="btn btn-sm btn-info" onclick="printMultipleLabels()">
+            <i class="ri-printer-line me-1"></i> Print Labels
+          </button>
+          <button class="btn btn-sm btn-light" onclick="clearSelection()">
+            <i class="ri-close-line me-1"></i> Clear Selection
+          </button>
+        </div>
+      </div>
+
+      <div id="stockItemsByZone" class="unified-stock-table-wrap"></div>
+
+      <div class="noresult" id="NoResult" style="display: none">
+        <div class="text-center py-4">
+          <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
+          <h5 class="mt-2">Sorry! No Result Found</h5>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end mt-3">
+        <div class="pagination-wrap hstack gap-2">
+          <a class="page-item pagination-prev disabled" href="javascript:void(0);">Previous</a>
+          <ul class="pagination listjs-pagination mb-0"></ul>
+          <a class="page-item pagination-next" href="javascript:void(0);">Next</a>
         </div>
       </div>
     </div>
   </div>
 
-
-
-
-    <!-- Orders in Progress Cards -->
-  <div class="col-lg-12 mb-4">
-    <div class="card">
-      <div class="card-header border-0 bg-light">
-        <h5 class="card-title mb-0">Orders in Progress</h5>
-      </div>
-      <div class="card-body">
-        <div class="row g-3" id="inProgressOrdersCards">
-          <!-- Cards will be populated dynamically -->
-        </div>
-      </div>
+  <!-- Orders in Progress -->
+  <div class="card stock-subpanel border-0 shadow-sm">
+    <div class="stock-subpanel__header">
+      <h5 class="card-title">Orders in Progress</h5>
+    </div>
+    <div class="stock-subpanel__body">
+      <div class="row g-3" id="inProgressOrdersCards"></div>
     </div>
   </div>
-
-
 </div>
 
 <!-- Update Stock Status Modal -->
@@ -643,6 +899,8 @@
 <%- contentFor('FooterJs') %>
 <script src="/assets/libs/list.js/list.min.js"></script>
 <script src="/assets/libs/list.pagination.js/list.pagination.min.js"></script>
+<script src="/assets/libs/flatpickr/flatpickr.min.js"></script>
+<script src="/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
 <script>
@@ -652,6 +910,12 @@
   const bulkActionsBar = document.getElementById("bulkActionsBar");
   const selectedItemsCount = document.getElementById("selectedItemsCount");
   let selectedItems = [];
+  let allStockOrders = [];
+  let activeTab = 'all';
+  let stockZoneChoices = null;
+  let stockDatePicker = null;
+  let stockSortField = 'zone';
+  let stockSortDir = 'asc';
 
   // Quick Add Form Submission
   document.getElementById("quickAddForm").addEventListener("submit",async function(e) {
@@ -723,44 +987,30 @@
   });
 
   // Fetch stock items from server
-  async function fetchStockItems(status = "all") {
+  async function fetchStockItems() {
     try {
-      // Show loading spinner
       stockItemsByZone.innerHTML = `
-        <div class="text-center py-4">
+        <div class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
-          <p class="mt-2">Loading stock items...</p>
+          <p class="mt-2 text-muted mb-0">Loading stock items...</p>
         </div>
       `;
 
-      // In a real implementation, you would fetch from your API
-      const response = await fetch(`/admin/get-stock-orders?status=${status}`);
+      const response = await fetch('/admin/get-stock-orders');
       const stockItems = await response.json();
-      console.log('stockItems' , stockItems); 
-      // For demo purposes, we'll use mock data
-    //   const stockItems = getMockStockData();
-      
-      // Update stats cards
-      updateStatsCards(stockItems);
-      
-      // Group items by zone
-      const itemsByZone = groupItemsByZone(stockItems);
-      
-      // Populate zones
-      stockItemsByZone.innerHTML = ""; // Clear existing content
-      NoResult.style.display = "none";
-      
-      if (stockItems.length === 0) {
-        NoResult.style.display = "block";
-        return;
+      if (!response.ok) {
+        throw new Error(stockItems.error || 'Failed to load stock orders');
       }
-      
-      populateZoneGroups(itemsByZone);
-      InProgressOrders(stockItems.filter(item => item.orderStatus === 'inProgress'));
+
+      allStockOrders = Array.isArray(stockItems) ? stockItems : [];
+      populateZoneFilter(allStockOrders);
+      applyFilters();
     } catch (error) {
       console.error("Error fetching stock items:", error);
+      stockItemsByZone.innerHTML = '';
+      NoResult.style.display = "block";
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
@@ -769,217 +1019,545 @@
     }
   }
 
+  function getOrderZone(item) {
+    const zone = item.orderCustomer?.zone;
+    return zone && String(zone).trim() ? String(zone).trim() : 'Unassigned';
+  }
 
-  // Group items by zone
-  function groupItemsByZone(items) {
-    const zones = {};
-    
-    items.forEach(item => {
-      const zone = item.orderCustomer.zone || 'Unassigned';
-      if (!zones[zone]) {
-        zones[zone] = [];
+  function getStockExitDate(item) {
+    const dispatchRaw = item.orderStages?.inProgress?.completedAt
+      || item.orderStages?.shipping?.completedAt;
+    if (dispatchRaw) return new Date(dispatchRaw);
+    const intakeRaw = item.orderStages?.packed?.completedAt;
+    if (intakeRaw) return new Date(intakeRaw);
+    return item.createdAt ? new Date(item.createdAt) : null;
+  }
+
+  function getStockExitMeta(item) {
+    const dispatched = item.orderStages?.inProgress?.completedAt
+      || item.orderStages?.shipping?.completedAt;
+    if (dispatched) {
+      return { date: new Date(dispatched), kind: 'exit' };
+    }
+    const intake = item.orderStages?.packed?.completedAt;
+    if (intake) {
+      return { date: new Date(intake), kind: 'intake' };
+    }
+    return { date: item.createdAt ? new Date(item.createdAt) : null, kind: 'unknown' };
+  }
+
+  function formatStockExitCell(item) {
+    const meta = getStockExitMeta(item);
+    if (!meta.date || Number.isNaN(meta.date.getTime())) {
+      return '<span class="text-muted">—</span>';
+    }
+    const formatted = meta.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    if (meta.kind === 'exit') {
+      return `<div>${formatted}</div><small class="badge bg-warning-subtle text-warning">Dispatched</small>`;
+    }
+    if (meta.kind === 'intake') {
+      return `<div>${formatted}</div><small class="badge bg-primary-subtle text-primary">In stock</small>`;
+    }
+    return formatted;
+  }
+
+  function getStockDateRangeValue() {
+    if (stockDatePicker && stockDatePicker.selectedDates.length > 0) {
+      return stockDatePicker.input.value || '';
+    }
+    return document.getElementById('stockDateRange')?.value || '';
+  }
+
+  function parseStockDateRange(dateRange) {
+    if (!dateRange || !dateRange.trim()) return null;
+    const parts = dateRange.split(/\s+to\s+/i).map((s) => s.trim()).filter(Boolean);
+    const parseOne = (s) => {
+      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+      const d = new Date(s);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+    const from = parseOne(parts[0]);
+    if (!from) return null;
+    from.setHours(0, 0, 0, 0);
+    let to = new Date(from);
+    if (parts[1]) {
+      const parsedTo = parseOne(parts[1]);
+      if (parsedTo) {
+        to = parsedTo;
+        to.setHours(23, 59, 59, 999);
+      } else {
+        to.setHours(23, 59, 59, 999);
       }
-      zones[zone].push(item);
-    });
-    
-    return zones;
+    } else {
+      to.setHours(23, 59, 59, 999);
+    }
+    return { from, to };
   }
 
-  // Populate zone groups
-  function populateZoneGroups(itemsByZone) {
-    // Sort zones alphabetically
-    const sortedZones = Object.keys(itemsByZone).sort();
-    
-    sortedZones.forEach(zone => {
-      const items = itemsByZone[zone];
-      const zoneContainer = document.createElement('div');
-      zoneContainer.className = 'zone-container';
-      
-      // Create zone header
-      const zoneHeader = document.createElement('div');
-      zoneHeader.className = 'zone-header';
-      zoneHeader.innerHTML = `
-        <div class="zone-title">
-          <i class="ri-map-pin-line me-2"></i>
-          ${zone}
-          <span class="badge bg-primary-subtle text-primary zone-badge">${items.length} orders</span>
+  function initStockDatePicker() {
+    const el = document.getElementById('stockDateRange');
+    if (!el || typeof flatpickr === 'undefined') return;
+    if (stockDatePicker) {
+      stockDatePicker.destroy();
+      stockDatePicker = null;
+    }
+    stockDatePicker = flatpickr(el, {
+      mode: 'range',
+      dateFormat: 'Y-m-d',
+      altInput: true,
+      altFormat: 'd M, Y',
+      disableMobile: true,
+      allowInput: false,
+      onChange: function () {
+        clearTimeout(stockSearchDebounce);
+        stockSearchDebounce = setTimeout(applyFilters, 200);
+      },
+      onClose: function (selectedDates) {
+        if (selectedDates.length > 0) applyFilters();
+      },
+    });
+  }
+
+  function matchesStockSearch(item, search) {
+    if (!search) return true;
+    const haystack = [
+      item.orderNumber,
+      item.orderShipping?.productDescription,
+      item.orderShipping?.productDescriptionReplacement,
+      item.orderCustomer?.fullName,
+      item.orderCustomer?.phoneNumber,
+      item.orderCustomer?.address,
+      item.orderCustomer?.zone,
+      item.orderStatus,
+    ].filter(Boolean).join(' ').toLowerCase();
+    return haystack.includes(search);
+  }
+
+  function matchesStockDateRange(item, dateRange) {
+    const range = parseStockDateRange(dateRange);
+    if (!range) return true;
+    const exitDate = getStockExitDate(item);
+    if (!exitDate || Number.isNaN(exitDate.getTime())) return false;
+    return exitDate >= range.from && exitDate <= range.to;
+  }
+
+  function matchesStockTab(item, tab) {
+    if (tab === 'all') return true;
+    if (tab === 'readyForDispatch' || tab === 'inStock') return item.orderStatus === 'inStock';
+    if (tab === 'inProgress') return item.orderStatus === 'inProgress';
+    return item.orderStatus === tab;
+  }
+
+  let stockSearchDebounce = null;
+
+  function getSelectedStockZones() {
+    const el = document.getElementById('zoneFilter');
+    if (stockZoneChoices) {
+      const val = stockZoneChoices.getValue(true);
+      if (val) {
+        const arr = Array.isArray(val) ? val : [val];
+        return arr
+          .map((v) => (typeof v === 'object' && v != null ? v.value : v))
+          .filter(Boolean);
+      }
+    }
+    if (el) {
+      return Array.from(el.selectedOptions || []).map((o) => o.value).filter(Boolean);
+    }
+    return [];
+  }
+
+  function initStockZoneChoices() {
+    const el = document.getElementById('zoneFilter');
+    if (!el || stockZoneChoices || typeof Choices === 'undefined') return;
+    stockZoneChoices = new Choices(el, {
+      removeItemButton: true,
+      searchEnabled: true,
+      searchPlaceholderValue: 'Type to search zones...',
+      placeholder: true,
+      placeholderValue: 'Select zones (empty = all)',
+      itemSelectText: '',
+      shouldSort: false,
+      position: 'bottom',
+      searchResultLimit: 200,
+      renderChoiceLimit: 200,
+      searchFloor: 1,
+      fuseOptions: { threshold: 0.3, ignoreLocation: true },
+      closeDropdownOnSelect: false,
+      resetScrollPosition: false,
+    });
+
+    const onZoneSelectionChange = () => {
+      clearTimeout(stockZoneChoices._filterDebounce);
+      stockZoneChoices._filterDebounce = setTimeout(applyFilters, 150);
+    };
+
+    el.addEventListener('addItem', onZoneSelectionChange);
+    el.addEventListener('removeItem', onZoneSelectionChange);
+    el.addEventListener('change', onZoneSelectionChange);
+  }
+
+  function getStockFilterState() {
+    return {
+      search: (document.getElementById('stockSearch')?.value || '').trim().toLowerCase(),
+      zones: getSelectedStockZones(),
+      status: document.getElementById('stockStatusFilter')?.value || 'all',
+      dateRange: getStockDateRangeValue(),
+      tab: activeTab,
+    };
+  }
+
+  function populateZoneFilter(orders) {
+    initStockZoneChoices();
+    if (!stockZoneChoices) return;
+    const selected = getSelectedStockZones();
+    const counts = {};
+    orders.forEach((item) => {
+      const zone = getOrderZone(item);
+      counts[zone] = (counts[zone] || 0) + 1;
+    });
+    const sortedZones = Object.keys(counts).sort((a, b) => {
+      if (a === 'Unassigned') return 1;
+      if (b === 'Unassigned') return -1;
+      return a.localeCompare(b);
+    });
+    const choiceItems = sortedZones.map((zone) => ({
+      value: zone,
+      label: `${zone} (${counts[zone]})`,
+      selected: selected.includes(zone),
+      disabled: false,
+    }));
+    stockZoneChoices.setChoices(choiceItems, 'value', 'label', true);
+  }
+
+  function updateStockResultsCount(filteredCount, totalCount) {
+    const el = document.getElementById('stockResultsCount');
+    if (!el) return;
+    el.innerHTML = `Showing <strong>${filteredCount}</strong> of <strong>${totalCount}</strong> orders`;
+  }
+
+  function updateStockFilterChips(filters) {
+    const chipsEl = document.getElementById('stockFilterChips');
+    if (!chipsEl) return;
+    chipsEl.innerHTML = '';
+    const chips = [];
+    if (filters.search) chips.push({ key: 'search', label: `Search: ${filters.search}` });
+    if (filters.zones && filters.zones.length === 1) {
+      chips.push({ key: 'zones', label: `Zone: ${filters.zones[0]}` });
+    } else if (filters.zones && filters.zones.length > 1) {
+      chips.push({ key: 'zones', label: `Zones: ${filters.zones.length} selected` });
+    }
+    if (filters.status && filters.status !== 'all') {
+      const statusLabel = filters.status === 'inProgress' ? 'With Courier' : 'In Stock';
+      chips.push({ key: 'status', label: `Status: ${statusLabel}` });
+    }
+    if (filters.dateRange) {
+      const dateLabel = (stockDatePicker && stockDatePicker.altInput && stockDatePicker.altInput.value)
+        ? stockDatePicker.altInput.value
+        : filters.dateRange;
+      chips.push({ key: 'dateRange', label: `Exit date: ${dateLabel}` });
+    }
+    if (filters.tab && filters.tab !== 'all') {
+      const tabLabels = {
+        readyForDispatch: 'Ready for Dispatch',
+        inStock: 'In Stock',
+        inProgress: 'With Courier',
+      };
+      chips.push({ key: 'tab', label: `Tab: ${tabLabels[filters.tab] || filters.tab}` });
+    }
+    chips.forEach((chip) => {
+      const span = document.createElement('span');
+      span.className = 'filter-chip';
+      span.innerHTML = `${chip.label} <button type="button" aria-label="Remove filter" data-chip="${chip.key}"><i class="ri-close-line"></i></button>`;
+      span.querySelector('button').addEventListener('click', () => removeStockFilterChip(chip.key));
+      chipsEl.appendChild(span);
+    });
+  }
+
+  function removeStockFilterChip(key) {
+    if (key === 'search') document.getElementById('stockSearch').value = '';
+    if (key === 'zones' && stockZoneChoices) stockZoneChoices.removeActiveItems();
+    if (key === 'status') document.getElementById('stockStatusFilter').value = 'all';
+    if (key === 'dateRange') {
+      if (stockDatePicker) stockDatePicker.clear();
+      else document.getElementById('stockDateRange').value = '';
+    }
+    if (key === 'tab') {
+      activeTab = 'all';
+      setActiveStockTab('all');
+    }
+    applyFilters();
+  }
+
+  function setActiveStockTab(tab) {
+    document.querySelectorAll('.stockFilter.nav-link').forEach((btn) => btn.classList.remove('active'));
+    const tabMap = {
+      all: 'tabAll',
+      readyForDispatch: 'tabReady',
+      inStock: 'tabInStock',
+      inProgress: 'tabWithCourier',
+    };
+    const tabEl = document.getElementById(tabMap[tab]);
+    if (tabEl) tabEl.classList.add('active');
+  }
+
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function buildShowMoreButton(kind, text) {
+    const cls = kind === 'address' ? 'js-show-full-address' : 'js-show-full-text';
+    const encoded = encodeURIComponent(text || '');
+    return `<button type="button" class="btn btn-link btn-sm p-0 ${cls}" data-full="${encoded}">Show More</button>`;
+  }
+
+  function getZoneBadgeClass(zone) {
+    let hash = 0;
+    const s = zone || 'Unassigned';
+    for (let i = 0; i < s.length; i++) hash = ((hash << 5) - hash) + s.charCodeAt(i);
+    return `zone-badge-${Math.abs(hash) % 6}`;
+  }
+
+  function getZoneBadgeHtml(zone) {
+    const label = escapeHtml(zone || 'Unassigned');
+    const cls = getZoneBadgeClass(zone);
+    return `<span class="zone-cell-badge ${cls}" title="${label}"><i class="ri-map-pin-2-fill"></i>${label}</span>`;
+  }
+
+  function sortStockItems(items) {
+    const sorted = [...items];
+    const dir = stockSortDir === 'desc' ? -1 : 1;
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (stockSortField === 'zone') {
+        const za = getOrderZone(a);
+        const zb = getOrderZone(b);
+        if (za === 'Unassigned' && zb !== 'Unassigned') cmp = 1;
+        else if (zb === 'Unassigned' && za !== 'Unassigned') cmp = -1;
+        else cmp = za.localeCompare(zb);
+      } else if (stockSortField === 'orderNumber') {
+        cmp = String(a.orderNumber).localeCompare(String(b.orderNumber), undefined, { numeric: true });
+      } else if (stockSortField === 'arrival' || stockSortField === 'exit') {
+        const da = getStockExitDate(a)?.getTime() || 0;
+        const db = getStockExitDate(b)?.getTime() || 0;
+        cmp = da - db;
+      } else if (stockSortField === 'days') {
+        const da = getStockExitDate(a)?.getTime() || 0;
+        const db = getStockExitDate(b)?.getTime() || 0;
+        cmp = da - db;
+      }
+      return cmp * dir;
+    });
+    return sorted;
+  }
+
+  function renderZoneQuickFilters() {
+    /* zone pills removed — multi-select dropdown used instead */
+  }
+
+  function toggleStockSort(field) {
+    if (stockSortField === field) {
+      stockSortDir = stockSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      stockSortField = field;
+      stockSortDir = 'asc';
+    }
+    applyFilters();
+  }
+
+  function buildStockOrderRow(item, prevZone) {
+    const zone = getOrderZone(item);
+    const row = document.createElement('tr');
+    if (zone !== prevZone) row.classList.add('zone-group-start');
+
+    const exitMeta = getStockExitMeta(item);
+    const referenceDate = exitMeta.date || new Date();
+    const today = new Date();
+    const daysInStock = Math.floor((today - referenceDate) / (1000 * 60 * 60 * 24));
+    const statusDetails = getStockStatusDetails(item.orderStatus);
+
+    const productDesc = item.orderShipping?.productDescription || '';
+    const shouldShowMoreProduct = productDesc.length > 30;
+    const truncatedDesc = shouldShowMoreProduct ? escapeHtml(productDesc.substring(0, 30)) + '...' : escapeHtml(productDesc);
+    const showMoreProductBtn = shouldShowMoreProduct
+      ? buildShowMoreButton('description', productDesc) : '';
+
+    let replacementDesc = '';
+    if (item.orderShipping?.orderType === 'Exchange' && item.orderShipping.productDescriptionReplacement) {
+      const replDesc = item.orderShipping.productDescriptionReplacement;
+      const shouldShowMoreRepl = replDesc.length > 30;
+      const truncatedRepl = shouldShowMoreRepl ? escapeHtml(replDesc.substring(0, 30)) + '...' : escapeHtml(replDesc);
+      const showMoreReplBtn = shouldShowMoreRepl
+        ? buildShowMoreButton('description', replDesc) : '';
+      replacementDesc = `<div class="mt-1"><small class="text-muted">Replacement:</small><br>${truncatedRepl} ${showMoreReplBtn}</div>`;
+    }
+
+    const address = item.orderCustomer?.address || '';
+    const shouldShowMoreAddress = address.length > 20;
+    const truncatedLocation = shouldShowMoreAddress ? escapeHtml(address.substring(0, 20)) + '...' : escapeHtml(address);
+    const showMoreAddressBtn = shouldShowMoreAddress
+      ? buildShowMoreButton('address', address) : '';
+
+    let orderDetails = `<div><strong>Type:</strong> ${escapeHtml(item.orderShipping?.orderType)}</div>`;
+    if (item.orderShipping?.orderType === 'Exchange') {
+      orderDetails += `<div><strong>Items to Return:</strong> ${item.orderShipping.numberOfItems}</div>`;
+      orderDetails += `<div><strong>Items to Replace:</strong> ${item.orderShipping.numberOfItemsReplacement}</div>`;
+    } else {
+      orderDetails += `<div><strong>Items:</strong> ${item.orderShipping?.numberOfItems || 0}</div>`;
+    }
+    if (item.orderShipping?.orderType === 'Return' && item.orderShipping.returnReason) {
+      orderDetails += `<div><strong>Return Reason:</strong> ${escapeHtml(item.orderShipping.returnReason)}</div>`;
+    }
+
+    let actionButtons = '';
+    const rawZone = item.orderCustomer?.zone || '';
+    if (item.orderStatus === 'inStock' || item.orderStatus === 'inProgress' || item.orderStatus === 'inReturnStock') {
+      actionButtons += `<li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', ${JSON.stringify(rawZone)})"><i class="ri-user-received-2-line text-success"></i><span>Assign courier</span></button></li>`;
+    }
+    actionButtons += `<li><a class="dropdown-item" href="/admin/order/${item.orderNumber}"><i class="ri-eye-line text-primary"></i><span>View Details</span></a></li>`;
+    actionButtons += `<li><button type="button" class="dropdown-item" onclick="printLabel('${item.orderNumber}')"><i class="ri-printer-line text-info"></i><span>Print Label</span></button></li>`;
+
+    row.innerHTML = `
+      <th scope="row">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="checkAll[]" data-order-id="${item.orderNumber}" data-zone="${escapeHtml(zone)}" value="${item.orderNumber}">
         </div>
-        <div class="zone-actions">
-      
+      </th>
+      <td class="zone_col">${getZoneBadgeHtml(zone)}</td>
+      <td class="id"><a href="/admin/order-details/${item.orderNumber}" class="fw-medium link-primary">#${item.orderNumber}</a></td>
+      <td class="product_desc">${truncatedDesc} ${showMoreProductBtn}${replacementDesc}</td>
+      <td class="customer_details">
+        <div>${escapeHtml(item.orderCustomer?.fullName)}</div>
+        <small class="text-muted">${truncatedLocation} ${showMoreAddressBtn}</small>
+      </td>
+      <td class="order_details">${orderDetails}</td>
+      <td class="stock_status"><span class="badge ${statusDetails.badgeClass} status-badge">${statusDetails.statusText}</span></td>
+      <td class="amount_details"><div><strong>${escapeHtml(item.orderShipping?.amountType)}:</strong> ${item.orderShipping?.amount} EGP</div></td>
+      <td class="exit_date">${formatStockExitCell(item)}</td>
+      <td class="days_in_stock"><span class="${daysInStock > 7 ? 'text-danger fw-medium' : ''}">${daysInStock} days</span></td>
+      <td>
+        <div class="orders-table-dropdown">
+          <button type="button" class="dropdown-toggle" data-dropdown-toggle aria-expanded="false" aria-label="Row actions"><i class="ri-more-fill"></i></button>
+          <ul class="dropdown-menu">${actionButtons}</ul>
         </div>
-      `;
-      
-      zoneContainer.appendChild(zoneHeader);
-      
-      // Create zone table
-      const tableContainer = document.createElement('div');
-      tableContainer.className = 'admin-table-scroll mb-3';
-      
-      const table = document.createElement('table');
-      table.className = 'table table-nowrap table-striped align-middle admin-data-table';
-      
-      // Table header
-      const thead = document.createElement('thead');
-      thead.className = 'text-muted table-light';
-      thead.innerHTML = `
-        <tr class="text-uppercase">
-          <th scope="col" style="width: 25px;">
-            <div class="form-check">
-              <input class="form-check-input zone-check-all" type="checkbox" data-zone="${zone}" value="option">
-            </div>
-          </th>
-          <th>Order ID</th>
-          <th>Product</th>
-          <th>Customer & Location</th>
-          <th>Order Details</th>
-          <th>Stock Status</th>
-          <th>Amount Details</th>
-          <th>Arrival Date</th>
-          <th>Days in Stock</th>
-          <th>Action</th>
-        </tr>
-      `;
-      
-      // Table body
-      const tbody = document.createElement('tbody');
-      tbody.className = 'list form-check-all';
-      
-      items.forEach(item => {
-        const row = document.createElement('tr');
-        
-        // Calculate days in stock
-        const arrivalDate = new Date(item.orderStages.packed?.completedAt || item.orderStages.orderPlaced?.completedAt);
-        const today = new Date();
-        const daysInStock = Math.floor((today - arrivalDate) / (1000 * 60 * 60 * 24));
-        
-        // Get status badge class
-        const statusDetails = getStockStatusDetails(item.orderStatus);
+      </td>
+    `;
+    return row;
+  }
 
-        // Handle product description
-        const productDesc = item.orderShipping.productDescription;
-        const shouldShowMoreProduct = productDesc && productDesc.length > 30;
-        const truncatedDesc = shouldShowMoreProduct ? productDesc.substring(0, 30) + '...' : productDesc || '';
-        const showMoreProductBtn = shouldShowMoreProduct ? 
-          `<button class="btn btn-link btn-sm p-0" onclick="showFullDescription('${productDesc}')">Show More</button>` : '';
+  function renderStockTable(items) {
+    const container = stockItemsByZone;
+    const sorted = sortStockItems(items);
+    const sortIcon = (field) => {
+      if (stockSortField !== field) return '<i class="ri-arrow-up-down-line sort-icon"></i>';
+      return stockSortDir === 'asc'
+        ? '<i class="ri-arrow-up-s-line sort-icon"></i>'
+        : '<i class="ri-arrow-down-s-line sort-icon"></i>';
+    };
 
-        // Handle replacement product description for exchange orders
-        let replacementDesc = '';
-        if (item.orderShipping.orderType === 'Exchange' && item.orderShipping.productDescriptionReplacement) {
-          const replDesc = item.orderShipping.productDescriptionReplacement;
-          const shouldShowMoreRepl = replDesc.length > 30;
-          const truncatedRepl = shouldShowMoreRepl ? replDesc.substring(0, 30) + '...' : replDesc;
-          const showMoreReplBtn = shouldShowMoreRepl ?
-            `<button class="btn btn-link btn-sm p-0" onclick="showFullDescription('${replDesc}')">Show More</button>` : '';
-          replacementDesc = `
-            <div class="mt-2">
-              <small class="text-muted">Replacement:</small><br>
-              ${truncatedRepl}
-              ${showMoreReplBtn}
-            </div>
-          `;
-        }
+    container.innerHTML = `
+      <div class="admin-table-scroll">
+        <table class="table table-nowrap table-hover align-middle admin-data-table mb-0" id="unifiedStockTable">
+          <thead class="text-muted table-light">
+            <tr class="text-uppercase">
+              <th scope="col" style="width:25px">
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="tableCheckAll" title="Select all"></div>
+              </th>
+              <th class="sortable-th${stockSortField === 'zone' ? ' sorted' : ''}" onclick="toggleStockSort('zone')" style="min-width:200px">Zone ${sortIcon('zone')}</th>
+              <th class="sortable-th${stockSortField === 'orderNumber' ? ' sorted' : ''}" onclick="toggleStockSort('orderNumber')">Order ID ${sortIcon('orderNumber')}</th>
+              <th>Product</th>
+              <th>Customer & Location</th>
+              <th>Order Details</th>
+              <th>Status</th>
+              <th>Amount</th>
+              <th class="sortable-th${stockSortField === 'exit' || stockSortField === 'arrival' ? ' sorted' : ''}" onclick="toggleStockSort('exit')">Exit Date ${sortIcon('exit')}</th>
+              <th class="sortable-th${stockSortField === 'days' ? ' sorted' : ''}" onclick="toggleStockSort('days')">Days ${sortIcon('days')}</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody class="list form-check-all" id="stockTableBody"></tbody>
+        </table>
+      </div>
+    `;
 
-        // Handle location
-        const address = item.orderCustomer.address;
-        const shouldShowMoreAddress = address.length > 20;
-        const truncatedLocation = shouldShowMoreAddress ? address.substring(0, 20) + '...' : address || '';
-        const showMoreAddressBtn = shouldShowMoreAddress ?
-          `<button class="btn btn-link btn-sm p-0" onclick="showFullAddress('${address}')">Show More</button>` : '';
+    const tbody = container.querySelector('#stockTableBody');
+    let prevZone = null;
+    sorted.forEach((item) => {
+      const zone = getOrderZone(item);
+      tbody.appendChild(buildStockOrderRow(item, prevZone));
+      prevZone = zone;
+    });
 
-        // Get order details based on type
-        let orderDetails = `<div><strong>Type:</strong> ${item.orderShipping.orderType}</div>`;
-        if (item.orderShipping.orderType === 'Exchange') {
-          orderDetails += `
-            <div><strong>Items to Return:</strong> ${item.orderShipping.numberOfItems}</div>
-            <div><strong>Items to Replace:</strong> ${item.orderShipping.numberOfItemsReplacement}</div>
-          `;
-        } else {
-          orderDetails += `<div><strong>Items:</strong> ${item.orderShipping.numberOfItems}</div>`;
-        }
-        
-        // Add return-specific details if it's a return
-        if (item.orderShipping.orderType === 'Return') {
-          if (item.orderShipping.returnReason) {
-            orderDetails += `<div><strong>Return Reason:</strong> ${item.orderShipping.returnReason}</div>`;
-          }
-        }
-        
-        // Same row actions for all order types (Exchange follows Deliver: pickup → add to stock → assign from here)
-        let actionButtons = '';
-        if (item.orderStatus === 'inStock') {
-          actionButtons = `
-            <li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')"><i class="ri-user-received-2-line text-success"></i><span>Assign courier for delivery</span></button></li>
-          `;
-        } else if (item.orderStatus === 'inProgress') {
-          actionButtons = `
-            <li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')"><i class="ri-user-received-2-line text-success"></i><span>Assign / reassign courier</span></button></li>
-          `;
-        } else if (item.orderStatus === 'inReturnStock') {
-          actionButtons = `
-            <li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', '${item.orderCustomer.zone}')"><i class="ri-user-received-2-line text-success"></i><span>Assign to Courier (Return)</span></button></li>
-          `;
-        }
-        
-        actionButtons += `
-          <li><a class="dropdown-item" href="/admin/order/${item.orderNumber}"><i class="ri-eye-line text-primary"></i><span>View Details</span></a></li>
-          <li><button type="button" class="dropdown-item" onclick="printLabel('${item.orderNumber}')"><i class="ri-printer-line text-info"></i><span>Print Label</span></button></li>
-        `;
-
-        row.innerHTML = `
-          <th scope="row">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" name="checkAll[]" data-order-id="${item.orderNumber}" data-zone="${zone}" value="${item.orderNumber}">
-            </div>
-          </th>
-          <td class="id"><a href="/admin/order-details/${item.orderNumber}" class="fw-medium link-primary">${item.orderNumber}</a></td>
-          <td class="product_desc">
-            ${truncatedDesc}
-            ${showMoreProductBtn}
-            ${replacementDesc}
-          </td>
-          <td class="customer_details">
-            <div>${item.orderCustomer.fullName}</div>
-            <small class="text-muted">
-              ${truncatedLocation}
-              ${showMoreAddressBtn}
-            </small>
-          </td>
-          <td class="order_details">${orderDetails}</td>
-          <td class="stock_status">
-            <span class="badge ${statusDetails.badgeClass} status-badge">
-              ${statusDetails.statusText}
-            </span>
-          </td>
-          <td class="amount_details">
-            <div><strong>${item.orderShipping.amountType}:</strong> ${item.orderShipping.amount} EGP</div>
-          </td>
-          <td class="arrival_date">${arrivalDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-          <td class="days_in_stock">
-            <span class="${daysInStock > 7 ? 'text-danger fw-medium' : ''}">${daysInStock} days</span>
-          </td>
-          <td>
-            <div class="orders-table-dropdown">
-              <button type="button" class="dropdown-toggle" data-dropdown-toggle aria-expanded="false" aria-label="Row actions">
-                <i class="ri-more-fill"></i>
-              </button>
-              <ul class="dropdown-menu">
-                ${actionButtons}
-              </ul>
-            </div>
-          </td>
-        `;
-       
-        tbody.appendChild(row);
+    const tableCheckAll = container.querySelector('#tableCheckAll');
+    const globalCheckAll = document.getElementById('checkAll');
+    if (tableCheckAll && globalCheckAll) {
+      tableCheckAll.addEventListener('change', () => {
+        globalCheckAll.checked = tableCheckAll.checked;
+        globalCheckAll.indeterminate = false;
+        document.querySelectorAll('input[name="checkAll[]"]').forEach((cb) => {
+          cb.checked = tableCheckAll.checked;
+          handleCheckboxChange(cb);
+        });
       });
-      
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      tableContainer.appendChild(table);
-      zoneContainer.appendChild(tableContainer);
-      
-      stockItemsByZone.appendChild(zoneContainer);
+    }
+  }
+
+  function getFilteredStockOrders() {
+    const filters = getStockFilterState();
+    return allStockOrders.filter((item) => {
+      if (!matchesStockSearch(item, filters.search)) return false;
+      if (filters.zones.length > 0 && !filters.zones.includes(getOrderZone(item))) return false;
+      if (filters.status !== 'all' && item.orderStatus !== filters.status) return false;
+      if (!matchesStockDateRange(item, filters.dateRange)) return false;
+      if (!matchesStockTab(item, filters.tab)) return false;
+      return true;
     });
   }
+
+  function applyFilters() {
+    if (stockZoneChoices && typeof stockZoneChoices.hideDropdown === 'function') {
+      stockZoneChoices.hideDropdown(true);
+    }
+    const filters = getStockFilterState();
+    const filtered = getFilteredStockOrders();
+
+    updateStatsCards(allStockOrders);
+    updateStockResultsCount(filtered.length, allStockOrders.length);
+    updateStockFilterChips(filters);
+
+    stockItemsByZone.innerHTML = '';
+    NoResult.style.display = filtered.length === 0 ? 'block' : 'none';
+
+    if (filtered.length > 0) {
+      renderStockTable(filtered);
+    }
+
+    InProgressOrders(filtered.filter((item) => item.orderStatus === 'inProgress'));
+    clearSelection();
+  }
+
+  function clearStockFilters() {
+    document.getElementById('stockSearch').value = '';
+    if (stockZoneChoices) stockZoneChoices.removeActiveItems();
+    document.getElementById('stockStatusFilter').value = 'all';
+    if (stockDatePicker) stockDatePicker.clear();
+    else document.getElementById('stockDateRange').value = '';
+    activeTab = 'all';
+    setActiveStockTab('all');
+    applyFilters();
+  }
+
+  function searchStock() {
+    applyFilters();
+  }
+
 
   // fetch in progress orders
     
@@ -1324,32 +1902,11 @@
 
   document.getElementById('stockList').addEventListener('change', onStockListCheckboxChange);
 
-  // Filter stock items by status
+  // Filter stock items by status tab
   function filterStock(status) {
-    console.log("Filtering stock by status:", status);
-    fetchStockItems(status);
-  }
-
-  // Search stock items
-  function searchStock() {
-    const searchTerm = document.getElementById('stockSearch').value;
-    const statusFilter = document.getElementById('stockStatusFilter').value;
-    const zoneFilter = document.getElementById('zoneFilter').value;
-    const dateRange = document.getElementById('stockDateRange').value;
-    
-    console.log("Searching stock with filters:", { searchTerm, statusFilter, zoneFilter, dateRange });
-    
-    // In a real implementation, you would call your API with these filters
-    // For demo, we'll just show a success message
-    Swal.fire({
-      icon: 'info',
-      title: 'Search Applied',
-      text: 'Search filters have been applied',
-      timer: 1500
-    });
-    
-    // Then refresh the data
-    fetchStockItems(statusFilter !== 'all' ? statusFilter : 'all');
+    activeTab = status;
+    setActiveStockTab(status);
+    applyFilters();
   }
 
   // Update stock status
@@ -1595,25 +2152,13 @@
   }
 
  
-  // Update stats cards
+  // Update stats cards from full dataset
   function updateStatsCards(stockItems) {
-    // Calculate stats based on order statuses from order.js model
+    const zoneSet = new Set(stockItems.map((item) => getOrderZone(item)));
     document.getElementById('totalInStock').textContent = stockItems.length;
-    document.getElementById('pendingArrivals').textContent = stockItems.filter(item => item.orderStatus === 'pickedUp').length;
-    document.getElementById('readyForDispatch').textContent = stockItems.filter(item => item.orderStatus === 'inStock').length;
-    document.getElementById('processingOrders').textContent = stockItems.filter(item => 
-      item.orderStatus === 'inProgress' || 
-      item.orderStatus === 'headingToCustomer' ||
-      item.orderStatus === 'returnToBusiness'
-    ).length;
-    
-    // Count Exchange orders
-    const exchangeOrders = stockItems.filter(item => item.orderShipping?.orderType === 'Exchange').length;
-    
-    // Update additional stats if elements exist
-    if (document.getElementById('exchangeOrders')) {
-      document.getElementById('exchangeOrders').textContent = exchangeOrders;
-    }
+    document.getElementById('readyForDispatch').textContent = stockItems.filter((item) => item.orderStatus === 'inStock').length;
+    document.getElementById('processingOrders').textContent = stockItems.filter((item) => item.orderStatus === 'inProgress').length;
+    document.getElementById('pendingArrivals').textContent = zoneSet.size;
   }
 
   // Get stock status details (badge class and text)
@@ -1750,38 +2295,204 @@
   });
 
 
-  // Export stock data
-  document.getElementById('exportStockBtn').addEventListener('click', function() {
-    Swal.fire({
-      title: 'Export Stock Data',
-      text: 'Select export format',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Excel',
-      cancelButtonText: 'PDF',
-      showDenyButton: true,
-      denyButtonText: 'CSV'
-    }).then((result) => {
-      let format = '';
-      if (result.isConfirmed) {
-        format = 'Excel';
-      } else if (result.isDenied) {
-        format = 'CSV';
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        format = 'PDF';
-      } else {
-        return;
-      }
-      
+  function escapeCsvCell(value) {
+    const str = value == null ? '' : String(value);
+    if (/[",\n\r]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+    return str;
+  }
+
+  function buildStockExportRows(orders) {
+    return orders.map((item) => {
+      const meta = getStockExitMeta(item);
+      const exitDate = meta.date && !Number.isNaN(meta.date.getTime())
+        ? meta.date.toLocaleDateString('en-GB')
+        : '';
+      const exitType = meta.kind === 'exit' ? 'Dispatched' : meta.kind === 'intake' ? 'In stock' : '';
+      const referenceDate = meta.date || new Date();
+      const daysInStock = Math.floor((new Date() - referenceDate) / (1000 * 60 * 60 * 24));
+      const statusDetails = getStockStatusDetails(item.orderStatus);
+      return {
+        orderId: item.orderNumber,
+        zone: getOrderZone(item),
+        customer: item.orderCustomer?.fullName || '',
+        phone: item.orderCustomer?.phoneNumber || '',
+        address: item.orderCustomer?.address || '',
+        product: item.orderShipping?.productDescription || '',
+        type: item.orderShipping?.orderType || '',
+        status: statusDetails.statusText,
+        amountType: item.orderShipping?.amountType || '',
+        amount: item.orderShipping?.amount ?? '',
+        exitDate,
+        exitType,
+        daysInStock,
+      };
+    });
+  }
+
+  function downloadStockBlob(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportStockData(format) {
+    const orders = getFilteredStockOrders();
+    if (!orders.length) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Nothing to export',
+        text: 'No orders match your current filters.',
+        confirmButtonColor: '#405189',
+      });
+      return;
+    }
+
+    const rows = buildStockExportRows(orders);
+    const headers = [
+      'Order ID', 'Zone', 'Customer', 'Phone', 'Address', 'Product', 'Type',
+      'Status', 'Amount Type', 'Amount (EGP)', 'Exit Date', 'Exit Type', 'Days in Stock',
+    ];
+    const stamp = new Date().toISOString().slice(0, 10);
+    const baseName = `stock_pickups_${stamp}_${orders.length}_orders`;
+
+    if (format === 'csv') {
+      const lines = [
+        headers.map(escapeCsvCell).join(','),
+        ...rows.map((r) => [
+          r.orderId, r.zone, r.customer, r.phone, r.address, r.product, r.type,
+          r.status, r.amountType, r.amount, r.exitDate, r.exitType, r.daysInStock,
+        ].map(escapeCsvCell).join(',')),
+      ];
+      downloadStockBlob('\uFEFF' + lines.join('\r\n'), `${baseName}.csv`, 'text/csv;charset=utf-8');
       Swal.fire({
         icon: 'success',
-        title: 'Exported!',
-        text: `Stock data has been exported as ${format}`,
-        timer: 2000
+        title: 'Export ready',
+        text: `${orders.length} orders exported as CSV.`,
+        timer: 2200,
+        showConfirmButton: false,
       });
-    });
-  });
+      return;
+    }
+
+    if (format === 'excel') {
+      const tableRows = rows.map((r) => `
+        <tr>
+          <td>${escapeHtml(r.orderId)}</td>
+          <td>${escapeHtml(r.zone)}</td>
+          <td>${escapeHtml(r.customer)}</td>
+          <td>${escapeHtml(r.phone)}</td>
+          <td>${escapeHtml(r.address)}</td>
+          <td>${escapeHtml(r.product)}</td>
+          <td>${escapeHtml(r.type)}</td>
+          <td>${escapeHtml(r.status)}</td>
+          <td>${escapeHtml(r.amountType)}</td>
+          <td>${escapeHtml(r.amount)}</td>
+          <td>${escapeHtml(r.exitDate)}</td>
+          <td>${escapeHtml(r.exitType)}</td>
+          <td>${escapeHtml(r.daysInStock)}</td>
+        </tr>`).join('');
+      const html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head><meta charset="UTF-8"><title>Stock Export</title></head>
+        <body>
+          <table border="1">
+            <thead><tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </body></html>`;
+      downloadStockBlob(html, `${baseName}.xls`, 'application/vnd.ms-excel;charset=utf-8');
+      Swal.fire({
+        icon: 'success',
+        title: 'Export ready',
+        text: `${orders.length} orders exported for Excel.`,
+        timer: 2200,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    if (format === 'print') {
+      const printRows = rows.map((r) => `
+        <tr>
+          <td>#${escapeHtml(r.orderId)}</td>
+          <td>${escapeHtml(r.zone)}</td>
+          <td>${escapeHtml(r.customer)}</td>
+          <td>${escapeHtml(r.phone)}</td>
+          <td>${escapeHtml(r.product)}</td>
+          <td>${escapeHtml(r.status)}</td>
+          <td>${escapeHtml(r.amount)} EGP</td>
+          <td>${escapeHtml(r.exitDate)}</td>
+          <td>${escapeHtml(r.exitType)}</td>
+          <td>${escapeHtml(r.daysInStock)}</td>
+        </tr>`).join('');
+      const printWin = window.open('', '_blank');
+      if (!printWin) {
+        Swal.fire({ icon: 'error', title: 'Popup blocked', text: 'Allow popups to print or save as PDF.' });
+        return;
+      }
+      printWin.document.write(`
+        <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Stock Pickups Export</title>
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 11px; padding: 24px; color: #111; }
+          h1 { font-size: 18px; margin: 0 0 4px; }
+          .meta { color: #555; margin-bottom: 16px; font-size: 12px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; vertical-align: top; }
+          th { background: #f3f4f6; font-size: 10px; text-transform: uppercase; }
+          tr:nth-child(even) td { background: #fafafa; }
+        </style></head><body>
+        <h1>Stock Management — Pickups</h1>
+        <div class="meta">Exported ${new Date().toLocaleString()} · ${orders.length} orders (filtered view)</div>
+        <table>
+          <thead><tr>
+            <th>Order</th><th>Zone</th><th>Customer</th><th>Phone</th><th>Product</th>
+            <th>Status</th><th>Amount</th><th>Exit Date</th><th>Type</th><th>Days</th>
+          </tr></thead>
+          <tbody>${printRows}</tbody>
+        </table>
+        </body></html>`);
+      printWin.document.close();
+      printWin.focus();
+      setTimeout(() => { printWin.print(); }, 350);
+    }
+  }
 
   // Fetch stock items on page load
-  document.addEventListener("DOMContentLoaded", () => fetchStockItems());
+  document.addEventListener("DOMContentLoaded", () => {
+    initStockDatePicker();
+    initStockZoneChoices();
+    fetchStockItems();
+
+    document.getElementById('stockList').addEventListener('click', (e) => {
+      const textBtn = e.target.closest('.js-show-full-text');
+      if (textBtn) {
+        e.preventDefault();
+        showFullDescription(decodeURIComponent(textBtn.getAttribute('data-full') || ''));
+        return;
+      }
+      const addrBtn = e.target.closest('.js-show-full-address');
+      if (addrBtn) {
+        e.preventDefault();
+        showFullAddress(decodeURIComponent(addrBtn.getAttribute('data-full') || ''));
+      }
+    });
+
+    const stockSearchInput = document.getElementById('stockSearch');
+    if (stockSearchInput) {
+      stockSearchInput.addEventListener('input', () => {
+        clearTimeout(stockSearchDebounce);
+        stockSearchDebounce = setTimeout(applyFilters, 300);
+      });
+    }
+
+    const statusFilter = document.getElementById('stockStatusFilter');
+    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+  });
 </script>

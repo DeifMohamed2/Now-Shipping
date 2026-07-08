@@ -738,34 +738,33 @@ html:is([data-layout='vertical'], [data-layout='twocolumn']) .page-content {
   }
 }
 
-/* ── 3. Gap between sidebar and main content ────────────────────────────── */
-/* Page background fills the 1rem gap between dark sidebar and light content */
+/* ── 3. Main content aligns flush with sidebar (no outer gutter strip) ─── */
 body {
   background-color: #F0F2F5 !important;
 }
 
 @media (min-width: 768px) {
   html[data-layout='vertical'] .main-content {
-    margin-left: calc(var(--vz-vertical-menu-width) + 1rem) !important;
+    margin-left: var(--vz-vertical-menu-width) !important;
     transition: margin-left 0.22s ease;
   }
 
   html[data-layout='vertical'][data-sidebar-size='sm'] .main-content,
   html[data-layout='vertical'][data-sidebar-size='sm-hover'] .main-content {
-    margin-left: calc(var(--vz-vertical-menu-width-sm, 70px) + 1rem) !important;
+    margin-left: var(--vz-vertical-menu-width-sm, 70px) !important;
   }
 }
 
 /* RTL gap */
 @media (min-width: 768px) {
   html[dir='rtl'][data-layout='vertical'] .main-content {
-    margin-right: calc(var(--vz-vertical-menu-width) + 1rem) !important;
+    margin-right: var(--vz-vertical-menu-width) !important;
     margin-left: 0 !important;
   }
 
   html[dir='rtl'][data-layout='vertical'][data-sidebar-size='sm'] .main-content,
   html[dir='rtl'][data-layout='vertical'][data-sidebar-size='sm-hover'] .main-content {
-    margin-right: calc(var(--vz-vertical-menu-width-sm, 70px) + 1rem) !important;
+    margin-right: var(--vz-vertical-menu-width-sm, 70px) !important;
     margin-left: 0 !important;
   }
 }

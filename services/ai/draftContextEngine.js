@@ -120,15 +120,18 @@ function reconcileDraftContext(fields, opts = {}) {
   const regionHints = { ...(opts.regionHints || {}) };
   const next = { ...fields };
   const replaceZone = opts.replaceZone === true;
+  const trustUserZone = opts.trustUserZone === true;
 
   if (next.address) {
     next.address = sanitizeAddressText(next.address, lang);
   }
 
   const conflict =
-    replaceZone && next.government && next.zone
-      ? { currentZone: next.zone, signalText: null }
-      : detectAddressZoneConflict(next);
+    trustUserZone
+      ? null
+      : replaceZone && next.government && next.zone
+        ? { currentZone: next.zone, signalText: null }
+        : detectAddressZoneConflict(next);
 
   if (conflict && next.government && next.zone) {
     const previousZone = next.zone;

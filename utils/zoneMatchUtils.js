@@ -119,6 +119,12 @@ function scoreZoneEntry(queryNorm, entry, normalizeFn) {
  */
 function shouldForceParentDisambiguation(best, allScored) {
   if (!best || best.score <= 0) return false;
+
+  const exactChild = (allScored || []).find(
+    (s) => s.reason === 'exact' && String(s.zone).includes(' - ')
+  );
+  if (exactChild) return false;
+
   const isParentOnly = !String(best.zone).includes(' - ');
   if (!isParentOnly) return false;
 

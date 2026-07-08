@@ -178,6 +178,35 @@ function resolveZoneQuery(query) {
     return { ...empty, queryNorm, needsUserPick: false };
   }
 
+  const exactMatches = scored.filter((s) => s.reason === 'exact' && s.score >= 100);
+  if (exactMatches.length === 1) {
+    const candidate = exactMatches[0];
+    const isParentOnly = !String(candidate.zone).includes(' - ');
+    const hasChildMatches = scored.some(
+      (s) =>
+        s.government === candidate.government &&
+        String(s.zone).startsWith(`${candidate.zone} - `) &&
+        s.score >= 60
+    );
+    if (!isParentOnly || !hasChildMatches) {
+      const match = {
+        government: candidate.government,
+        zone: candidate.zone,
+        labelAr: candidate.labelAr,
+        labelEn: candidate.labelEn,
+        confidence: 'high',
+      };
+      return {
+        match,
+        suggestions,
+        needsUserPick: false,
+        queryNorm,
+        options: suggestions,
+        ambiguous: false,
+      };
+    }
+  }
+
   const best = top[0];
   const second = top[1] || null;
   const forceParentPick = shouldForceParentDisambiguation(best, scored);

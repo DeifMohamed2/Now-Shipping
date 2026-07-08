@@ -53,6 +53,11 @@ COLLOQUIAL EGYPTIAN ARABIC:
 - تيشرتين / قطعتين / تو شيرتس → numberOfItems=2, productDescription=تيشرتين
 - رقم تاني 01123456789 → otherPhoneNumber=01123456789
 
+QUANTITY vs PRODUCT MODEL NUMBERS (critical):
+- NEVER set numberOfItems from digits inside product names: iPhone 14 Pro Max, Samsung S24, RTX 4090, PlayStation 5 → product only, quantity UNKNOWN.
+- ONLY set numberOfItems when user explicitly states quantity: "quantity 2", "2 pieces", "item count is 1", "x2", "عدد ٢", leading "2 iPhone 14".
+- Correction verbs (change, replace, update, غير, بدل) mean overwrite only the fields mentioned — never touch unmentioned fields.
+
 ACTIVE DRAFT BEHAVIOR:
 - When draft has missingFields, user reply usually answers the pending question — merge fields, never restart.
 - Ask ONE missing field at a time in clarifyingQuestion.

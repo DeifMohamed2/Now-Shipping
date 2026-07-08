@@ -6,7 +6,8 @@
  */
 
 const LedgerEntry = require('../models/ledgerEntry');
-const { calculateOrderFee } = require('./fees');
+const User = require('../models/user');
+const { calculateOrderFee, resolveBusinessPricing } = require('./fees');
 
 // ─────────────────────────────────────────────────────────────
 // Order events
@@ -31,6 +32,12 @@ async function createOrderEntries(order) {
   const { orderStatus, orderShipping, orderFees, business, _id, orderNumber } = order;
   const entries = [];
 
+  let pricing = null;
+  if (!orderFees || orderFees <= 0) {
+    const businessDoc = await User.findById(business).select('customPricing').lean();
+    pricing = resolveBusinessPricing(businessDoc);
+  }
+
   // ── Compute the fee once, snapshotted at this moment ───────────────
   // orderFees is set by the courier/system before the status flip; fall
   // back to the rate table only if it hasn't been set yet.
@@ -39,7 +46,8 @@ async function createOrderEntries(order) {
     : calculateOrderFee(
         order.orderCustomer.government,
         orderShipping.orderType,
-        orderShipping.isExpressShipping
+        orderShipping.isExpressShipping,
+        pricing
       );
 
   // ── Shared snapshot payload (immutable — never mutated after write) ─
@@ -103,7 +111,7 @@ async function createOrderEntries(order) {
       // Return-type orders always use 'Return' rate, not the original order's fee.
       const returnFee = (orderFees > 0)
         ? orderFees
-        : calculateOrderFee(order.orderCustomer.government, 'Return', false);
+        : calculateOrderFee(order.orderCustomer.government, 'Return', false, pricing);
 
       if (returnFee > 0) {
         entries.push({

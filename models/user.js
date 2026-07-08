@@ -334,6 +334,44 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    /**
+     * Per-business custom fee overrides (admin-managed).
+     * When enabled, unset fields fall back to global rates in utils/fees.js.
+     */
+    customPricing: {
+      enabled: { type: Boolean, default: false },
+      order: {
+        Cairo: {
+          Deliver: { type: Number, default: null },
+          Return: { type: Number, default: null },
+          Exchange: { type: Number, default: null },
+        },
+        Alexandria: {
+          Deliver: { type: Number, default: null },
+          Return: { type: Number, default: null },
+          Exchange: { type: Number, default: null },
+        },
+        'Delta-Canal': {
+          Deliver: { type: Number, default: null },
+          Return: { type: Number, default: null },
+          Exchange: { type: Number, default: null },
+        },
+        'Upper-RedSea': {
+          Deliver: { type: Number, default: null },
+          Return: { type: Number, default: null },
+          Exchange: { type: Number, default: null },
+        },
+      },
+      expressFee: { type: Number, default: null },
+      pickupFee: { type: Number, default: null },
+      updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'admin',
+        default: null,
+      },
+      updatedByName: { type: String, default: null },
+      updatedAt: { type: Date, default: null },
+    },
   },
   {
     timestamps: true,

@@ -24,6 +24,11 @@ html:is([data-layout='vertical'], [data-layout='twocolumn']) .page-content > .co
   padding-right: var(--app-inline-pad);
 }
 
+/* Admin pages: inner content padding without a visible gap beside the sidebar */
+body.admin-app .page-content > .container-fluid {
+  --bs-gutter-x: 1.5rem;
+}
+
 /*
  * Velzon .page-title-box uses margin-left/right: calc(-1 * --vz-grid-gutter-width) to “full bleed”
  * the gray bar. That only matched the old container padding; with a smaller gutter it skews

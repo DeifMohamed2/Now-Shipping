@@ -13,7 +13,7 @@ const { emailService } = require('../utils/email');
 const emailTemplates = require('../utils/emailTemplates');
 const site = require('../config/site');
 const { uploadFile, deleteFile } = require('../utils/fileUpload');
-const { calculateOrderFee, calculatePickupFee: calcPickupFee, orderBaseFees } = require('../utils/fees');
+const { calculateOrderFee, calculatePickupFee: calcPickupFee, orderBaseFees, resolveBusinessPricing } = require('../utils/fees');
 const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
@@ -1221,7 +1221,8 @@ const editOrder = async (req, res) => {
 
     // Calculate fees based on updated information
     const expressShippingValue = requestedExpressShipping;
-    const orderFees = calculateFees(government, updatedOrderType, expressShippingValue);
+    const pricing = resolveBusinessPricing(req.userData);
+    const orderFees = calculateFees(government, updatedOrderType, expressShippingValue, pricing);
 
     // Determine the amount value based on order type
     let amountFromConditions = 0;
@@ -2366,7 +2367,7 @@ const createPickup = async (req, res) => {
     
     const businessCity = selectedAddress?.city || business?.pickUpAdress?.city || 'Cairo';
     const initialPickedCount = 0;
-    const computedPickupFee = calcPickupFee(businessCity, initialPickedCount);
+    const computedPickupFee = calcPickupFee(businessCity, initialPickedCount, resolveBusinessPricing(business));
 
     // ✅ 3. Create Pickup
     // Use selected address phone if available, otherwise use provided phoneNumber
@@ -2691,7 +2692,7 @@ const updatePickup = async (req, res) => {
     }
 
     const businessCity = selectedAddress?.city || business?.pickUpAdress?.city || 'Cairo';
-    const computedPickupFee = calcPickupFee(businessCity, 0);
+    const computedPickupFee = calcPickupFee(businessCity, 0, resolveBusinessPricing(business));
 
     pickup.numberOfOrders = numberOfOrders;
     pickup.pickupDate = pickupDate;
@@ -2900,8 +2901,8 @@ const logOut = (req, res) => {
   res.redirect('/login');
 };
 
-const calculateFees = (government, orderType, isExpressShipping) => {
-  return calculateOrderFee(government, orderType, isExpressShipping);
+const calculateFees = (government, orderType, isExpressShipping, pricing) => {
+  return calculateOrderFee(government, orderType, isExpressShipping, pricing);
 };
 
 const calculateOrderFees = async (req, res) => {
@@ -2913,11 +2914,14 @@ const calculateOrderFees = async (req, res) => {
       return res.status(400).json({ error: 'Government and orderType are required' });
     }
 
+    const pricing = resolveBusinessPricing(req.userData);
+
     // Calculate the fee
     const fee = calculateFees(
       government, 
       orderType, 
-      isExpressShipping === 'true' || isExpressShipping === true
+      isExpressShipping === 'true' || isExpressShipping === true,
+      pricing
     );
 
     // Return the calculated fee
@@ -3022,7 +3026,7 @@ const calculatePickupFee = async (req, res) => {
     const user = await User.findById(req.userData._id);
     const city = user?.pickUpAdress?.city || 'Cairo';
     const count = parseInt(numberOfOrders || '0');
-    const fee = calcPickupFee(city, count);
+    const fee = calcPickupFee(city, count, resolveBusinessPricing(user));
     return res.json({ fee });
   } catch (error) {
     console.error('Error calculating pickup fee:', error);
@@ -4317,11 +4321,12 @@ const createShopOrder = async (req, res) => {
     }
 
     // Calculate delivery fee using the same logic as normal orders
-    const { calculateOrderFee } = require('../utils/fees');
+    const { calculateOrderFee, resolveBusinessPricing } = require('../utils/fees');
     const deliveryFee = calculateOrderFee(
       orderCustomerPayload.government,
       'Deliver',
-      false
+      false,
+      resolveBusinessPricing(business)
     );
 
     // Create shop order

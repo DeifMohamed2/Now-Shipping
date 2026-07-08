@@ -168,13 +168,6 @@ function normalizeDraftFields(fields, lang) {
       next.productDescription,
       detectInputLanguage(next.productDescription)
     );
-    const inferred = inferItemCountFromProduct(next.productDescription);
-    if (
-      inferred != null &&
-      (!Number.isFinite(Number(next.numberOfItems)) || Number(next.numberOfItems) <= 0)
-    ) {
-      next.numberOfItems = inferred;
-    }
   }
 
   if (next.currentPD) {

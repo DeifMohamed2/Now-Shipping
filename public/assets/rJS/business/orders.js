@@ -927,7 +927,7 @@ async function handleDeleteOrder(orderId, orderNumber) {
         icon: 'success',
         confirmButtonText: O.ok || 'OK',
       });
-      loadOrders();
+      fetchOrders(currentOrderType, currentStatusCategory, currentPage);
     } else {
       Swal.fire({
         icon: 'error',

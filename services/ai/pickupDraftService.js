@@ -1,4 +1,4 @@
-const { calculatePickupFee } = require('../../utils/fees');
+const { calculatePickupFee, resolveBusinessPricing } = require('../../utils/fees');
 const Pickup = require('../../models/pickup');
 const {
   isValidPickupDate,
@@ -247,7 +247,7 @@ function buildPickupPreview(fields, userData, lang) {
   const f = applyPickupDraftDefaults(fields, userData);
   const addr = getStrictPickupAddress(userData, f.pickupAddressId);
   const city = addr?.city || userData?.pickUpAdress?.city || 'Cairo';
-  const fee = calculatePickupFee(city, 0);
+  const fee = calculatePickupFee(city, 0, resolveBusinessPricing(userData));
 
   const addressLabel = f.pickupLocation
     || (addr
@@ -375,7 +375,7 @@ async function createPickupFromDraft(userId, userData, fields) {
 
   const addr = getStrictPickupAddress(userData, f.pickupAddressId);
   const businessCity = addr?.city || userData?.pickUpAdress?.city || 'Cairo';
-  const computedPickupFee = calculatePickupFee(businessCity, 0);
+  const computedPickupFee = calculatePickupFee(businessCity, 0, resolveBusinessPricing(userData));
   const pickupPhoneNumber =
     f.phoneNumber || addr?.pickupPhone || userData?.phoneNumber || '';
 

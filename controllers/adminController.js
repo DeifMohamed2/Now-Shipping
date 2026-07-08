@@ -12,6 +12,8 @@ const {
   attachBusinessDisplayName,
 } = require('../utils/businessDisplayName');
 const businessDeletionService = require('../utils/businessDeletionService');
+const businessPricingService = require('../utils/businessPricingService');
+const { sanitizeZoneValues } = require('../utils/deliveryZonesBosta');
 const ShopProduct = require('../models/shopProduct');
 const ShopOrder = require('../models/shopOrder');
 const ledgerService = require('../utils/ledgerService');
@@ -42,7 +44,7 @@ const {
 } = require('../utils/pickupAddressResolve');
 const { generateUniqueOrderNumber } = require('../utils/orderCreationHelper');
 const { renderDeliveryPolicyPdfBuffer } = require('../utils/deliveryPolicyPdf');
-const { calculateOrderFee } = require('../utils/fees');
+const { calculateOrderFee, resolveBusinessPricing } = require('../utils/fees');
 
 const TERMINAL_COMPLETE_STATUSES = new Set(['completed', 'returnCompleted']);
 
@@ -1499,6 +1501,14 @@ const createCourier = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const sanitizedZones = sanitizeZoneValues(Array.isArray(zones) ? zones : []);
+    if (!sanitizedZones.length) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'At least one valid delivery zone is required',
+      });
+    }
+
     const courier = new Courier({
       courierID: String(Math.floor(10000 + Math.random() * 90000)),
       name: fullName,
@@ -1512,7 +1522,7 @@ const createCourier = async (req, res) => {
       email,
       password: hashedPassword,
       address,
-      assignedZones: zones,
+      assignedZones: sanitizedZones,
       allPapers: Array.isArray(allPapers) ? allPapers : [],
     });
 
@@ -1631,6 +1641,14 @@ const updateCourierZones = async (req, res) => {
       });
     }
 
+    const sanitizedZones = sanitizeZoneValues(zones);
+    if (!sanitizedZones.length) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'At least one valid delivery zone is required',
+      });
+    }
+
     // Find the courier
     const courier = await Courier.findOne({ courierID: courierId });
 
@@ -1642,7 +1660,7 @@ const updateCourierZones = async (req, res) => {
     }
 
     // Update assigned zones
-    courier.assignedZones = zones;
+    courier.assignedZones = sanitizedZones;
     await courier.save();
 
     res.status(200).json({
@@ -4492,6 +4510,42 @@ const get_businessDeletionImpact = async (req, res) => {
   }
 };
 
+const get_businessPricing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payload = await businessPricingService.getBusinessPricing(id);
+    res.status(200).json({ success: true, ...payload });
+  } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).json({ success: false, error: error.message });
+    }
+    console.error('get_businessPricing:', error);
+    res.status(500).json({ success: false, error: 'Failed to load business pricing' });
+  }
+};
+
+const update_businessPricing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminData = req.adminData;
+    if (!adminData || !adminData._id) {
+      return res.status(401).json({ success: false, error: 'Admin authentication required' });
+    }
+
+    const result = await businessPricingService.updateBusinessPricing(id, req.body || {}, adminData);
+    res.status(200).json({ success: true, ...result });
+  } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).json({ success: false, error: error.message });
+    }
+    if (error.message && error.message.includes('non-negative')) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+    console.error('update_businessPricing:', error);
+    res.status(500).json({ success: false, error: 'Failed to update business pricing' });
+  }
+};
+
 const delete_business = async (req, res) => {
   try {
     const { businessId } = req.params;
@@ -4925,10 +4979,13 @@ const adminEditOrder = async (req, res) => {
     }
 
     const expressShippingValue = requestedExpressShipping;
+    const businessDoc = await User.findById(order.business).select('customPricing').lean();
+    const pricing = resolveBusinessPricing(businessDoc);
     const calculatedOrderFees = calculateOrderFee(
       government,
       updatedOrderType,
-      expressShippingValue
+      expressShippingValue,
+      pricing
     );
 
     let amountFromConditions = 0;
@@ -6163,6 +6220,8 @@ module.exports = {
   get_businessDetailsPage,
   get_businessDetails,
   get_businessDeletionImpact,
+  get_businessPricing,
+  update_businessPricing,
   delete_business,
 
   // Tickets

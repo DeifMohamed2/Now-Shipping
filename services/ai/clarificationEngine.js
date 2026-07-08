@@ -5,14 +5,14 @@ const { getFieldLabel } = require('../gemini/prompts');
 const { normalizeArabicDigitsToLatin } = require('../../utils/bostaRegionsServer');
 const { sanitizeAddressText } = require('./draftContextEngine');
 const { formatZoneForDisplay } = require('./regionResolver');
+const {
+  extractEgyptianMobiles,
+  hasSecondaryPhoneMarker,
+  parsePhoneFieldsFromText,
+  SECONDARY_PHONE_MARKERS,
+} = require('./phoneFieldUtils');
 
 const EG_MOBILE_RE = /01[0125]\d{8}/g;
-const SECONDARY_PHONE_MARKERS = [
-  /رقم\s*(?:تاني|ثاني|آخر|اخر)/i,
-  /other\s+phone/i,
-  /second\s+phone/i,
-  /alt(?:ernate)?\s+phone/i,
-];
 
 const ARABIC_NUMBER_WORDS = {
   واحد: 1,
@@ -43,8 +43,8 @@ function buildClarifyingMessage(field, draft, userContext, lang) {
       return isAr ? 'تمام. اسم العميل بالكامل إيه؟' : "Sure. What's the customer's full name?";
     case 'phoneNumber':
       return isAr
-        ? `محتاج رقم موبايل ${name} (مثال: 01xxxxxxxxx).`
-        : `I need ${name}'s mobile number (e.g. 01xxxxxxxxx).`;
+        ? `محتاج رقم موبايل ${name} (١١ رقم — 010 / 011 / 012 / 015). لو في رقم تاني اكتبه في رسالة منفصلة أو قول «رقم تاني» مع الرقم.`
+        : `I need ${name}'s mobile (11 digits — 010 / 011 / 012 / 015). For a second number, send it separately or say "other number" with the digits.`;
     case 'zone':
       return isAr
         ? `المنطقة أو الحي فين بالظبط؟ (مثال: المعادي، عابدين، مدينة نصر)`
@@ -184,10 +184,10 @@ function detectShippingSpeed(text) {
 
 function detectCodConfirmation(text) {
   const n = String(text || '').trim().toLowerCase();
-  if (/^(نعم|اه|آه|ايوه|أيوه|yes|yeah|yep|y)\b/i.test(n)) {
+  if (/^(نعم|اه|آه|ايوه|أيوه|yes|yeah|yep|y)$/i.test(n)) {
     return { COD: true, codConfirmed: true };
   }
-  if (/^(لا|لأ|لاء|no|nope|n)\b/i.test(n)) {
+  if (/^(لا|لأ|لاء|no|nope|n)$/i.test(n)) {
     return { COD: false, codConfirmed: true };
   }
   if (/بدون كاش|مش كاش|no cod|without cod/i.test(n)) {
@@ -213,34 +213,12 @@ function detectCODAmount(text) {
 }
 
 function extractEgyptianPhones(text) {
-  const normalized = normalizeArabicDigitsToLatin(String(text || '')).replace(/\s/g, '');
-  const matches = normalized.match(EG_MOBILE_RE);
-  return matches ? [...new Set(matches)] : [];
+  return extractEgyptianMobiles(text);
 }
 
 function extractSecondaryPhone(text, draft) {
-  if (!text || draft?.otherPhoneNumber) return null;
-  const raw = String(text);
-  const hasMarker = SECONDARY_PHONE_MARKERS.some((p) => p.test(raw));
-  const phones = extractEgyptianPhones(raw);
-  if (!phones.length) return null;
-
-  const primary = String(draft?.phoneNumber || '').replace(/\D/g, '');
-
-  if (phones.length >= 2) {
-    const other = phones.find((p) => p !== primary);
-    return other || phones[1];
-  }
-
-  if (hasMarker && phones[0] !== primary) {
-    return phones[0];
-  }
-
-  if (hasMarker && phones.length === 1 && !primary) {
-    return phones[0];
-  }
-
-  return null;
+  const parsed = parsePhoneFieldsFromText(text, draft, null);
+  return parsed.otherPhoneNumber || null;
 }
 
 function scrubPhoneFromNotes(fields) {
@@ -284,21 +262,29 @@ function extractFromUserReply(message, pendingField, draft, userContext) {
     if (speed) Object.assign(extracted, speed);
   }
 
-  if (pendingField === 'numberOfItems' || (!pendingField && !draft.numberOfItems)) {
-    const num = parseArabicNumberFromText(text);
-    if (num != null && num > 0) extracted.numberOfItems = num;
+  if (pendingField === 'numberOfItems') {
+    const norm = normalizeArabicDigitsToLatin(text).trim();
+    if (/^\d{1,3}$/.test(norm)) {
+      const num = parseInt(norm, 10);
+      if (num > 0 && num <= 999) extracted.numberOfItems = num;
+    }
   }
 
   if (pendingField === 'fullName') {
     extracted.fullName = text;
   } else if (pendingField === 'phoneNumber') {
-    extracted.phoneNumber = text.replace(/\s/g, '');
+    Object.assign(extracted, parsePhoneFieldsFromText(text, draft, 'phoneNumber'));
   } else if (pendingField === 'address') {
     extracted.address = sanitizeAddressText(text, /[\u0600-\u06FF]/.test(text) ? 'ar' : 'en');
   } else if (pendingField === 'productDescription') {
     extracted.productDescription = text;
   } else if (pendingField === 'zone') {
-    extracted.zoneQuery = text;
+    const phones = parsePhoneFieldsFromText(text, draft, 'zone');
+    if (phones.otherPhoneNumber) extracted.otherPhoneNumber = phones.otherPhoneNumber;
+    if (phones.phoneNumber) extracted.phoneNumber = phones.phoneNumber;
+    if (!phones.otherPhoneNumber && !phones.phoneNumber) {
+      extracted.zoneQuery = text;
+    }
   } else if (pendingField === 'originalOrderNumber') {
     extracted.originalOrderNumber = text.replace(/\D/g, '');
   } else if (pendingField === 'returnReason') {
@@ -324,9 +310,9 @@ function extractFromUserReply(message, pendingField, draft, userContext) {
     if (!extracted.address) extracted.address = text;
   }
 
-  if (!extracted.otherPhoneNumber && !draft?.otherPhoneNumber && pendingField !== 'phoneNumber') {
-    const secondary = extractSecondaryPhone(text, draft);
-    if (secondary) extracted.otherPhoneNumber = secondary;
+  if (!extracted.otherPhoneNumber && !draft?.otherPhoneNumber) {
+    const parsed = parsePhoneFieldsFromText(text, draft, pendingField);
+    if (parsed.otherPhoneNumber) extracted.otherPhoneNumber = parsed.otherPhoneNumber;
   }
 
   return extracted;

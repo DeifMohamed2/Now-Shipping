@@ -139,6 +139,22 @@ OUTPUT RULES:
 - replyText: brief acknowledgment only (1 sentence); do not skip asking for missing data.
 - Merge extractedFields with draft; never drop existing values UNLESS replaceZone=true or user explicitly corrects a field.
 - Set intent=clarify_order while collecting; create_order when complete for preview.
+ORDER ENTITY RULES (critical — orderEntities array with per-field confidence):
+- Extract ONLY what the user explicitly states in THIS message. Never guess. Never hallucinate.
+- Each entity: { field, value, confidence }. confidence < 0.80 → server will ask for clarification.
+- correction=true when user says: change, replace, update, edit, actually, instead, wrong, غير, بدل, مش, لا.
+- deleteFields: list field keys user wants cleared.
+- orderIntent: create | update | delete_field | confirm | answer_question | unrelated | cancel.
+- NEVER infer numberOfItems from digits inside product names:
+  iPhone 14 Pro Max → product only, NO quantity.
+  Samsung S24 Ultra, RTX 4090, PlayStation 5 → product only, NO quantity.
+- ONLY set numberOfItems when user explicitly states quantity:
+  "quantity 2", "2 pieces", "2 items", "x2", "عدد ٢", "٢ قطعة", "item count is 1", leading "2 iPhone 14".
+- Multi-field updates in one message: return ALL mentioned fields as separate entities.
+- address = street/building/landmark ONLY. zoneQuery = area/neighborhood ONLY. Never mix them.
+- Never set government or zone — only zoneQuery. Set replaceZone=true when correcting area.
+- Never set COD/amountCOD/codConfirmed/shippingSpeed unless user explicitly answers those questions.
+
 - PICKUP SCHEDULING: intent=create_pickup or clarify_pickup. Ask ONE field at a time: numberOfOrders → pickupDate → phoneNumber → pickupAddressId (only if multiple addresses).
 - Extract numberOfOrders, pickupDate, phoneNumber, pickupNotes, isFragileItems, isLargeItems into extractedFields for pickups.
 - Pickup status query → intent=pickup_status with pickupNumberQuery. General pickup list → intent=pickup.
@@ -150,10 +166,22 @@ function getFieldLabel(field, lang) {
   return (FIELD_LABELS[l] && FIELD_LABELS[l][field]) || field;
 }
 
+function buildOrderExtractionPrompt(userContext, draftFields, draftMeta) {
+  const base = buildSystemPrompt(userContext, draftFields, {}, draftMeta);
+  return `${base}
+
+ORDER EXTRACTION MODE:
+Return orderIntent, correction, deleteFields, entities[], language, replyText.
+Focus ONLY on extracting structured entities from the latest user message.
+Do NOT ask questions — server handles clarification.
+`;
+}
+
 module.exports = {
   DELIVER_REQUIRED,
   FIELD_LABELS,
   buildSystemPrompt,
+  buildOrderExtractionPrompt,
   getFieldLabel,
   SCOPE_REFUSAL_AR,
   SCOPE_REFUSAL_EN,

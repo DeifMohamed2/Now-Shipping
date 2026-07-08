@@ -1,6 +1,6 @@
 const { GoogleGenAI } = require('@google/genai');
-const { ASSISTANT_RESPONSE_SCHEMA, TRANSCRIPT_ONLY_SCHEMA } = require('./schemas');
-const { buildSystemPrompt } = require('./prompts');
+const { ASSISTANT_RESPONSE_SCHEMA, ORDER_EXTRACTION_SCHEMA, TRANSCRIPT_ONLY_SCHEMA } = require('./schemas');
+const { buildSystemPrompt, buildOrderExtractionPrompt } = require('./prompts');
 
 let client = null;
 
@@ -115,7 +115,7 @@ function buildHistoryContents(messages) {
   return contents;
 }
 
-async function generateParsedResponse({ model, contents, systemInstruction }) {
+async function generateParsedResponse({ model, contents, systemInstruction, schema }) {
   const ai = getClient();
   const response = await callWithRetry(() =>
     ai.models.generateContent({
@@ -126,7 +126,7 @@ async function generateParsedResponse({ model, contents, systemInstruction }) {
         temperature: 0.35,
         maxOutputTokens: 2048,
         responseMimeType: 'application/json',
-        responseSchema: ASSISTANT_RESPONSE_SCHEMA,
+        responseSchema: schema || ASSISTANT_RESPONSE_SCHEMA,
       },
     })
   );
@@ -140,7 +140,53 @@ async function generateParsedResponse({ model, contents, systemInstruction }) {
   }
   if (!parsed.extractedFields) parsed.extractedFields = {};
   if (!Array.isArray(parsed.missingRequiredFields)) parsed.missingRequiredFields = [];
+  if (!Array.isArray(parsed.orderEntities)) parsed.orderEntities = [];
   return parsed;
+}
+
+/**
+ * Order-pipeline extraction: structured entities with per-field confidence.
+ */
+async function extractOrderEntities({
+  userMessage,
+  history,
+  userContext,
+  draftFields,
+  draftMeta,
+  useLite = false,
+}) {
+  const model = useLite ? getLiteModel() : getChatModel();
+  const systemInstruction = buildOrderExtractionPrompt(userContext, draftFields, draftMeta);
+  const historyContents = buildHistoryContents(history);
+  const contents = [
+    ...historyContents,
+    { role: 'user', parts: [{ text: userMessage }] },
+  ];
+
+  try {
+    const parsed = await generateParsedResponse({
+      model,
+      contents,
+      systemInstruction,
+      schema: ORDER_EXTRACTION_SCHEMA,
+    });
+    if (!Array.isArray(parsed.entities)) parsed.entities = [];
+    if (!Array.isArray(parsed.deleteFields)) parsed.deleteFields = [];
+    if (typeof parsed.correction !== 'boolean') parsed.correction = false;
+    return parsed;
+  } catch (error) {
+    if (!useLite && (error.code === 'PARSE_ERROR' || error.status >= 500 || isQuotaError(error))) {
+      return extractOrderEntities({
+        userMessage,
+        history,
+        userContext,
+        draftFields,
+        draftMeta,
+        useLite: true,
+      });
+    }
+    throw error;
+  }
 }
 
 /**
@@ -328,6 +374,7 @@ module.exports = {
   getChatModel,
   getLiteModel,
   extractAssistantResponse,
+  extractOrderEntities,
   transcribeAndExtract,
   transcribeAudioOnly,
   isConfigured,

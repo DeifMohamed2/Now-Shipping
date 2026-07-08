@@ -3,14 +3,14 @@
  */
 const Order = require('../models/order');
 const statusHelper = require('./statusHelper');
-const { calculateOrderFee } = require('./fees');
+const { calculateOrderFee, resolveBusinessPricing } = require('./fees');
 const {
   getDefaultPickupAddressId,
   findPickupAddressById,
 } = require('./pickupAddressResolve');
 
-function calculateFees(government, orderType, isExpressShipping) {
-  return calculateOrderFee(government, orderType, isExpressShipping);
+function calculateFees(government, orderType, isExpressShipping, pricing) {
+  return calculateOrderFee(government, orderType, isExpressShipping, pricing);
 }
 
 /** Six-digit numeric string (100000–999999), suitable for display as Order ID. */
@@ -364,7 +364,8 @@ function buildOrderDocumentFromFields(userData, fields, orderNumber) {
   const isPartialReturn = fields.isPartialReturn;
   const expressShippingValue = !!fields.isExpressShipping;
 
-  const orderFees = calculateFees(fields.government, orderType, expressShippingValue);
+  const pricing = resolveBusinessPricing(userData);
+  const orderFees = calculateFees(fields.government, orderType, expressShippingValue, pricing);
 
   const amountType = fields.COD
     ? 'COD'

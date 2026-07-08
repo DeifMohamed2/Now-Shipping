@@ -13,6 +13,7 @@
     "test:notifications": "node scripts/test-business-notifications.js",
     "test:notifications:business": "node scripts/test-business-notifications.js",
     "verify:dashboard": "node scripts/verify-dashboard-invariants.js",
+    "test:ainow": "node scripts/test-order-intent.js && node scripts/test-order-validators.js && node scripts/test-order-conflict.js && node scripts/test-order-state.js && node scripts/test-order-regressions.js && node scripts/test-order-zone-understanding.js && node scripts/test-order-routing.js && node scripts/test-ainow-draft-validation.js && node scripts/test-ainow-zone-draft.js && node scripts/test-ainow-context-draft.js && node scripts/test-pickup-draft-flow.js && node scripts/test-platform-help.js && node scripts/test-order-draft-flow.js",
     "build:bosta-cairo-labels": "node scripts/merge-cairo-bosta-ar-labels.js",
     "export:cairo-zones-bilingual": "node scripts/export-cairo-zones-bilingual.js"
   },

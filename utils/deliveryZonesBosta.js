@@ -173,6 +173,46 @@ function getMetroDeliveryZonesCatalogWeakEtag() {
   return metroCatalogWeakEtag;
 }
 
+function getAllValidZoneValuesSet() {
+  const set = new Set();
+  METRO_GOVERNORATE_KEYS.forEach((key) => {
+    const gov = bostaRegions[key];
+    if (gov && Array.isArray(gov.areas)) {
+      gov.areas.forEach((a) => set.add(a.value));
+    }
+  });
+  return set;
+}
+
+/**
+ * Filter zone strings to canonical catalog values (case-insensitive fallback).
+ * @param {string[]} zones
+ * @returns {string[]}
+ */
+function sanitizeZoneValues(zones) {
+  if (!Array.isArray(zones)) return [];
+  const valid = getAllValidZoneValuesSet();
+  const lowerMap = new Map();
+  valid.forEach((v) => lowerMap.set(v.toLowerCase(), v));
+  const out = [];
+  const seen = new Set();
+  zones.forEach((z) => {
+    const raw = String(z || '').trim();
+    if (!raw || seen.has(raw)) return;
+    if (valid.has(raw)) {
+      seen.add(raw);
+      out.push(raw);
+      return;
+    }
+    const canonical = lowerMap.get(raw.toLowerCase());
+    if (canonical && !seen.has(canonical)) {
+      seen.add(canonical);
+      out.push(canonical);
+    }
+  });
+  return out;
+}
+
 module.exports = {
   METRO_GOVERNORATE_KEYS,
   bostaRegions,
@@ -184,4 +224,5 @@ module.exports = {
   getCairoZoneValues,
   getMetroDeliveryZonesCatalog,
   getMetroDeliveryZonesCatalogWeakEtag,
+  sanitizeZoneValues,
 };

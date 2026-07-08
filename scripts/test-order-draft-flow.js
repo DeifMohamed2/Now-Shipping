@@ -114,6 +114,26 @@ console.log('After COD yes, before amount — no shipping chip');
   assert(!fields.shippingSpeedConfirmed, 'shippingSpeedConfirmed stripped');
 }
 
+console.log('\nNo COD — express shipping sticks after selection');
+{
+  const pickupUserData = { pickUpAddresses: [{ addressId: 'pickup-1' }] };
+  const fields = enforcePostStructuralOrder(
+    {
+      ...completeStructural,
+      codConfirmed: true,
+      COD: false,
+      isExpressShipping: true,
+      shippingSpeedConfirmed: true,
+      selectedPickupAddressId: 'pickup-1',
+    },
+    pickupUserData
+  );
+  const queue = getClarificationQueue(fields, pickupUserData);
+  assert(fields.shippingSpeedConfirmed, 'shippingSpeedConfirmed kept when COD is no');
+  assert(fields.isExpressShipping === true, 'isExpressShipping kept when COD is no');
+  assert(queue.length === 0, 'queue empty after express with no COD');
+}
+
 console.log('\n=== Summary ===\n');
 console.log('Passed:', passed, '| Failed:', failed);
 process.exit(failed > 0 ? 1 : 0);

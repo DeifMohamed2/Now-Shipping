@@ -55,6 +55,58 @@ const EXTRACTED_FIELDS_SCHEMA = {
   },
 };
 
+const ORDER_ENTITY_ITEM_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    field: {
+      type: Type.STRING,
+      description:
+        'fullName | phoneNumber | otherPhoneNumber | address | zoneQuery | replaceZone | productDescription | numberOfItems | COD | amountCOD | codConfirmed | Notes | orderType | originalOrderNumber | returnReason | currentPD | newPD',
+    },
+    value: {
+      type: Type.STRING,
+      description: 'String value for the field. Numbers as string digits. Booleans as "true" or "false".',
+    },
+    confidence: {
+      type: Type.NUMBER,
+      description: '0.0–1.0 confidence. Below 0.80 means ask for clarification.',
+    },
+  },
+  required: ['field', 'value', 'confidence'],
+};
+
+const ORDER_EXTRACTION_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    orderIntent: {
+      type: Type.STRING,
+      description:
+        'create | update | delete_field | confirm | answer_question | unrelated | cancel',
+    },
+    correction: {
+      type: Type.BOOLEAN,
+      description: 'True when user explicitly corrects/replaces/changes earlier data.',
+    },
+    deleteFields: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: 'Field keys user wants cleared.',
+    },
+    entities: {
+      type: Type.ARRAY,
+      items: ORDER_ENTITY_ITEM_SCHEMA,
+      description:
+        'ONLY fields explicitly stated in this message. Never infer quantity from product model numbers (iPhone 14, S24, RTX 4090, PS5).',
+    },
+    language: { type: Type.STRING, description: 'ar or en' },
+    replyText: {
+      type: Type.STRING,
+      description: 'Brief professional acknowledgment (one sentence max).',
+    },
+  },
+  required: ['orderIntent', 'correction', 'deleteFields', 'entities', 'language'],
+};
+
 const ASSISTANT_RESPONSE_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -75,6 +127,17 @@ const ASSISTANT_RESPONSE_SCHEMA = {
       description: 'Natural language reply to show the user in their language',
     },
     extractedFields: EXTRACTED_FIELDS_SCHEMA,
+    orderEntities: {
+      type: Type.ARRAY,
+      items: ORDER_ENTITY_ITEM_SCHEMA,
+      description: 'Per-field extractions with confidence (order pipeline).',
+    },
+    orderIntent: {
+      type: Type.STRING,
+      description: 'create | update | delete_field | confirm | answer_question | unrelated | cancel',
+    },
+    correction: { type: Type.BOOLEAN },
+    deleteFields: { type: Type.ARRAY, items: { type: Type.STRING } },
     missingRequiredFields: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
@@ -94,6 +157,8 @@ const ASSISTANT_RESPONSE_SCHEMA = {
 module.exports = {
   ASSISTANT_RESPONSE_SCHEMA,
   EXTRACTED_FIELDS_SCHEMA,
+  ORDER_ENTITY_ITEM_SCHEMA,
+  ORDER_EXTRACTION_SCHEMA,
   TRANSCRIPT_ONLY_SCHEMA: {
     type: Type.OBJECT,
     properties: {

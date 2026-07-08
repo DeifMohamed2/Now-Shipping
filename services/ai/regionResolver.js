@@ -6,7 +6,7 @@ const {
   isValidGovernmentAndZone,
 } = require('../../utils/bostaRegionsServer');
 const { ZONE_LANDMARK_BOOSTS } = require('../../utils/zoneMatchUtils');
-const { reconcileDraftContext } = require('./draftContextEngine');
+const { reconcileDraftContext, extractLandmarkSignals } = require('./draftContextEngine');
 
 const LANDMARK_ZONE_HINTS = [
   { pattern: /اوبيرا|اوبرا|opera/i, zoneValue: 'Abdeen - Downtown Cairo' },
@@ -14,6 +14,23 @@ const LANDMARK_ZONE_HINTS = [
   { pattern: /باب اللوق|bab ellouq/i, zoneValue: 'Abdeen - Bab ElLouq' },
   { pattern: /وسط البلد|downtown cairo/i, zoneValue: 'Abdeen - Downtown Cairo' },
 ];
+
+const ZONE_TAIL_STOPWORDS = /^(?:with|and|the|in|at|cairo|القاهرة|القاهره|number|no|building|bld|buldion|بناية|مبنى)$/i;
+
+/**
+ * Reject bare numbers, stopwords, and building-number tails as zone candidates.
+ */
+function isValidZoneTailCandidate(candidate) {
+  const c = String(candidate || '').trim();
+  if (!c || c.length < 2) return false;
+  if (/^\d+$/.test(c)) return false;
+  if (/^(?:number|no|building|bld|buldion|بناية|مبنى)\s*\d*$/i.test(c)) return false;
+
+  const words = c.split(/\s+/).filter(Boolean);
+  if (words.every((w) => ZONE_TAIL_STOPWORDS.test(w) || /^\d+$/.test(w))) return false;
+
+  return words.some((w) => w.length >= 3 && !/^\d+$/.test(w));
+}
 
 /**
  * Split a user address reply into street (address) and area (zoneQuery).
@@ -27,15 +44,25 @@ function splitAddressAndZoneFromText(text) {
     .replace(/\s+(?:القاهره|القاهرة|cairo)\s*$/i, '')
     .trim();
 
+  const landmark = extractLandmarkSignals(working);
+  if (landmark && landmark.matchText) {
+    return {
+      address: working,
+      zoneQuery: landmark.matchText,
+    };
+  }
+
   const commaParts = working.split(/[،,]/).map((s) => s.trim()).filter(Boolean);
   if (commaParts.length >= 2) {
     const lastPart = commaParts[commaParts.length - 1];
-    const resolved = resolveZoneQuery(lastPart);
-    if (resolved.match || resolved.needsUserPick) {
-      return {
-        address: commaParts.slice(0, -1).join('، ') || trimmed,
-        zoneQuery: lastPart,
-      };
+    if (isValidZoneTailCandidate(lastPart)) {
+      const resolved = resolveZoneQuery(lastPart);
+      if (resolved.match || resolved.needsUserPick) {
+        return {
+          address: commaParts.slice(0, -1).join('، ') || trimmed,
+          zoneQuery: lastPart,
+        };
+      }
     }
   }
 
@@ -43,6 +70,8 @@ function splitAddressAndZoneFromText(text) {
   let bestSplit = null;
   for (let len = 1; len <= Math.min(4, words.length - 1); len++) {
     const candidate = words.slice(-len).join(' ');
+    if (!isValidZoneTailCandidate(candidate)) continue;
+
     const resolved = resolveZoneQuery(candidate);
     if ((resolved.match || resolved.needsUserPick) && len < words.length) {
       const street = words.slice(0, -len).join(' ').trim();
@@ -54,7 +83,11 @@ function splitAddressAndZoneFromText(text) {
   if (bestSplit) return bestSplit;
 
   const fullResolved = resolveZoneQuery(working);
-  if ((fullResolved.match || fullResolved.needsUserPick) && working.length < 30) {
+  if (
+    isValidZoneTailCandidate(working) &&
+    (fullResolved.match || fullResolved.needsUserPick) &&
+    working.length < 30
+  ) {
     return { address: null, zoneQuery: working };
   }
 
@@ -104,6 +137,9 @@ function pickPreferredAmbiguousZone(options, fields) {
 }
 
 function mergeLandmarkQuery(fields) {
+  if (fields.government && fields.zone) {
+    return fields;
+  }
   const haystack = normalizeText(
     `${fields.address || ''} ${fields.zoneQuery || ''}`
   );
@@ -171,6 +207,7 @@ function applyRegionResolution(fields, opts) {
   const reconciled = reconcileDraftContext(next, {
     lang: opts?.lang || 'ar',
     replaceZone: opts?.replaceZone === true || next.replaceZone === true,
+    trustUserZone: opts?.trustUserZone === true,
   });
   next = reconciled.fields;
   Object.assign(regionHints, reconciled.hints);
@@ -186,8 +223,18 @@ function applyRegionResolution(fields, opts) {
   if (needsAddressSplit) {
     const split = splitAddressAndZoneFromText(next.address);
     if (split.zoneQuery) {
-      next.zoneQuery = split.zoneQuery;
-      if (split.address) next.address = split.address;
+      const prevZoneQuery = next.zoneQuery;
+      const existingNorm = normalizeText(prevZoneQuery || '');
+      const splitNorm = normalizeText(split.zoneQuery);
+      const addressNorm = normalizeText(next.address || '');
+      const userChoseDifferentZone =
+        existingNorm &&
+        existingNorm !== splitNorm &&
+        !addressNorm.includes(existingNorm);
+      if (!userChoseDifferentZone) {
+        next.zoneQuery = split.zoneQuery;
+        if (split.address) next.address = split.address;
+      }
     } else if (split.address && !next.zoneQuery) {
       next.address = split.address;
     }
@@ -199,6 +246,7 @@ function applyRegionResolution(fields, opts) {
       next.government = valid.government;
       next.zone = valid.zone;
       regionHints.confirmed = { government: next.government, zone: next.zone };
+      delete next.zoneQuery;
     } else {
       invalidateZoneFields(next, regionHints);
     }
@@ -243,6 +291,84 @@ function formatZoneForDisplay(government, zone, lang) {
   return getZoneLabel(government, zone, lang);
 }
 
+/**
+ * Match user reply to a zone option from the disambiguation list.
+ * Handles full labels, numeric picks, and phrases like "لا المنطقه عابدين".
+ */
+function matchZoneFromUserReply(message, options) {
+  if (!options || !options.length) return null;
+
+  const trimmed = String(message || '').trim();
+  if (!trimmed) return null;
+
+  const num = parseInt(trimmed, 10);
+  if (Number.isFinite(num) && num >= 1 && num <= options.length) {
+    return options[num - 1];
+  }
+
+  const resolved = resolveZoneQuery(trimmed);
+  if (resolved.match) {
+    const exact = options.find(
+      (opt) =>
+        opt.government === resolved.match.government && opt.zone === resolved.match.zone
+    );
+    if (exact) return exact;
+    return resolved.match;
+  }
+
+  const trimmedLower = trimmed.toLowerCase();
+  const trimmedNorm = normalizeText(trimmed).toLowerCase();
+
+  for (const opt of options) {
+    const labelAr = opt.labelAr || '';
+    const labelEn = opt.labelEn || '';
+    if (
+      (labelAr && labelAr.toLowerCase() === trimmedLower) ||
+      (labelEn && labelEn.toLowerCase() === trimmedLower) ||
+      (labelAr && labelAr.toLowerCase().includes(trimmedLower)) ||
+      (labelEn && labelEn.toLowerCase().includes(trimmedLower)) ||
+      (opt.zone && opt.zone.toLowerCase() === trimmedLower)
+    ) {
+      return opt;
+    }
+  }
+
+  for (const opt of options) {
+    const candidates = [
+      opt.labelAr,
+      opt.labelEn,
+      opt.zone,
+      ...(String(opt.labelAr || '').split(/\s*-\s*/)),
+      ...(String(opt.labelEn || '').split(/\s*-\s*/)),
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+      const token = normalizeText(candidate).toLowerCase();
+      if (token.length >= 3 && trimmedNorm.includes(token)) {
+        return opt;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Resolve a zone pick from quick-reply text or catalog (same data as create-order page).
+ */
+function resolveZonePickFromMessage(message, regionOptions) {
+  const fromList = matchZoneFromUserReply(message, regionOptions);
+  if (fromList) return fromList;
+
+  const trimmed = String(message || '').trim();
+  if (!trimmed) return null;
+
+  const resolved = resolveZoneQuery(trimmed);
+  if (resolved.match) return resolved.match;
+
+  return null;
+}
+
 module.exports = {
   applyRegionResolution,
   formatZoneForDisplay,
@@ -250,4 +376,6 @@ module.exports = {
   splitAddressAndZoneFromText,
   pickPreferredAmbiguousZone,
   isValidGovernmentAndZone,
+  matchZoneFromUserReply,
+  resolveZonePickFromMessage,
 };

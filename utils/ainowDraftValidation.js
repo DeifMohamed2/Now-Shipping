@@ -21,7 +21,7 @@ function getPickupDraftHelpers() {
   return require('../services/ai/pickupDraftService');
 }
 
-const EGYPTIAN_MOBILE_REGEX = /01[0125]\d{8}/;
+const EGYPTIAN_MOBILE_REGEX = /^01[0125]\d{8}$/;
 
 function isValidEgyptianMobile(phone) {
   if (!phone) return false;

@@ -538,6 +538,7 @@
     const el = document.createElement('div');
     const isStructuredStep = shouldScrollMessageToTop(parsed, sender);
     el.className = 'ainow-msg ainow-msg--' + sender + (isStructuredStep ? ' ainow-msg--draft-step' : '');
+    el.setAttribute('dir', 'auto');
 
     let html = '';
     if (parsed.transcript && sender === 'user') {
@@ -580,6 +581,10 @@
     }
     if (parsed.actions) html += renderActions(parsed.actions);
     el.innerHTML = html;
+
+    el.querySelectorAll('.ainow-msg__text, .ainow-msg__ack, .ainow-msg__question').forEach(function (node) {
+      node.setAttribute('dir', 'auto');
+    });
 
     if (parsed.preview) {
       const confirmBtn = el.querySelector('.ainow-action-confirm');

@@ -1,0 +1,40 @@
+<!-- Courier zone picker (multi-select + full zone) -->
+<div class="modal fade" id="zoneSelectionModal" tabindex="-1" aria-labelledby="zoneSelectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content courier-modal">
+      <div class="modal-header courier-modal__header">
+        <div>
+          <h5 class="modal-title mb-0" id="zoneSelectionModalLabel">
+            <i class="ri-map-pin-line me-2"></i>Select Delivery Zones
+          </h5>
+          <p class="courier-modal__subtitle mb-0">Choose full zones or individual areas</p>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body courier-modal__body p-0">
+        <div class="zone-picker-search px-3 pt-3 pb-2">
+          <div class="search-box">
+            <input type="search" class="form-control" id="zoneSearchInput" placeholder="Search governorate or zone…" autocomplete="off">
+            <i class="ri-search-line search-icon"></i>
+          </div>
+        </div>
+        <div class="zone-picker-hint px-3 pb-2">
+          <i class="ri-information-line"></i>
+          <span>Expand a governorate, use <strong>Full zone</strong> to assign all sub-areas at once, or pick individual areas.</span>
+        </div>
+        <div class="zone-picker-list" id="governorateZoneList">
+          <div class="zone-picker-loading text-center py-5 text-muted">
+            <i class="ri-loader-4-line ri-spin fs-4"></i>
+            <div class="mt-2 small">Loading zones…</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer courier-modal__footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmZoneSelection">
+          <i class="ri-check-line me-1"></i>Confirm (<span id="pickerConfirmCount">0</span>)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

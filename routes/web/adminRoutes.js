@@ -211,6 +211,8 @@ router.get(
   '/get-business-details/:businessId',
   adminController.get_businessDetails
 );
+router.get('/api/business/:id/pricing', adminController.get_businessPricing);
+router.put('/api/business/:id/pricing', adminController.update_businessPricing);
 router.get(
   '/business/:businessId/deletion-impact',
   adminController.get_businessDeletionImpact

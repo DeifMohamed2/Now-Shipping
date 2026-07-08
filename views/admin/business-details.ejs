@@ -286,6 +286,38 @@
     padding: 0.85rem 1rem;
     margin-bottom: 1rem;
   }
+  .bd-pricing-grid input.form-control {
+    min-width: 88px;
+    text-align: center;
+  }
+  .bd-pricing-grid .table thead th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #878a99;
+    white-space: nowrap;
+  }
+  .bd-pricing-grid .table tbody th {
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  .bd-pricing-meta {
+    font-size: 0.8rem;
+    color: #878a99;
+  }
+  .bd-pricing-history {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .bd-pricing-history-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 0.65rem 0;
+    font-size: 0.85rem;
+  }
+  .bd-pricing-history-item:last-child {
+    border-bottom: none;
+  }
 </style>
 
 <%- contentFor('body') %>
@@ -395,6 +427,9 @@
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabShop" type="button">Shop orders</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabPricing" type="button" id="bdTabPricingBtn">Pricing</button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabFinancial" type="button">Financial</button>
@@ -535,6 +570,73 @@
           </thead>
           <tbody id="shopOrdersTableBody"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-pane fade" id="bdTabPricing" role="tabpanel">
+    <div class="bd-info-card mb-3">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+          <div class="bd-info-title mb-1"><i class="ri-price-tag-3-line"></i> Custom pricing</div>
+          <p class="text-muted small mb-0">Set per-business order and pickup fees. Empty fields use global platform rates.</p>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" role="switch" id="pricingEnabled">
+          <label class="form-check-label fw-semibold" for="pricingEnabled">Enable custom pricing</label>
+        </div>
+      </div>
+      <div id="pricingMeta" class="bd-pricing-meta mb-3"></div>
+
+      <div class="bd-pricing-grid">
+        <div class="table-responsive mb-3">
+          <table class="table table-bordered align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Region category</th>
+                <th>Deliver (EGP)</th>
+                <th>Return (EGP)</th>
+                <th>Exchange (EGP)</th>
+              </tr>
+            </thead>
+            <tbody id="pricingOrderGrid"></tbody>
+          </table>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="pricingExpressFee">Express shipping fee (EGP)</label>
+            <input type="number" min="0" step="1" class="form-control" id="pricingExpressFee" placeholder="Global default">
+            <div class="form-text" id="pricingExpressHint"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="pricingPickupFee">Pickup fee (EGP)</label>
+            <input type="number" min="0" step="1" class="form-control" id="pricingPickupFee" placeholder="Global default">
+            <div class="form-text" id="pricingPickupHint"></div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="pricingNote">Change note (optional)</label>
+          <textarea class="form-control" id="pricingNote" rows="2" placeholder="Reason for this pricing update (stored in audit trail)"></textarea>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button type="button" class="btn btn-warning" id="btnSavePricing">
+            <i class="ri-save-line me-1"></i>Save pricing
+          </button>
+          <button type="button" class="btn btn-soft-secondary" id="btnReloadPricing">
+            <i class="ri-refresh-line me-1"></i>Reload
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bd-info-card">
+      <div class="bd-info-title"><i class="ri-history-line"></i> Pricing change history</div>
+      <p class="text-muted small mb-2">Latest 50 changes for this business.</p>
+      <div class="bd-pricing-history" id="pricingHistoryMount">
+        <p class="text-muted small mb-0">Loading…</p>
       </div>
     </div>
   </div>
@@ -1245,6 +1347,220 @@
     }
   }
 
+  const PRICING_CATEGORIES = ['Cairo', 'Alexandria', 'Delta-Canal', 'Upper-RedSea'];
+  const ORDER_TYPES = ['Deliver', 'Return', 'Exchange'];
+  let pricingState = null;
+  let pricingLoaded = false;
+
+  function formatPricingValue(value) {
+    if (value === null || value === undefined || value === '') return '—';
+    return `${value} EGP`;
+  }
+
+  function formatPricingFieldLabel(field) {
+    if (field === 'enabled') return 'Custom pricing enabled';
+    if (field === 'expressFee') return 'Express fee';
+    if (field === 'pickupFee') return 'Pickup fee';
+    if (field.startsWith('order.')) {
+      const parts = field.split('.');
+      return `${parts[1]} · ${parts[2]}`;
+    }
+    return field;
+  }
+
+  function renderPricingMeta(customPricing) {
+    const meta = document.getElementById('pricingMeta');
+    if (!customPricing?.updatedAt) {
+      meta.textContent = 'No custom pricing saved yet.';
+      return;
+    }
+    meta.textContent = `Last updated ${formatDate(customPricing.updatedAt)} by ${customPricing.updatedByName || 'Admin'}`;
+  }
+
+  function renderPricingHistory(auditHistory) {
+    const mount = document.getElementById('pricingHistoryMount');
+    if (!auditHistory || !auditHistory.length) {
+      mount.innerHTML = '<p class="text-muted small mb-0">No pricing changes recorded yet.</p>';
+      return;
+    }
+    mount.innerHTML = auditHistory
+      .map((row) => {
+        const when = formatDate(row.createdAt);
+        const who = escapeHtml(row.changedByName || 'Admin');
+        const field = escapeHtml(formatPricingFieldLabel(row.field));
+        const oldVal = escapeHtml(formatPricingValue(row.oldValue));
+        const newVal = escapeHtml(formatPricingValue(row.newValue));
+        const note = row.note ? `<div class="text-muted">${escapeHtml(row.note)}</div>` : '';
+        return `
+          <div class="bd-pricing-history-item">
+            <div><strong>${field}</strong> · ${oldVal} → ${newVal}</div>
+            <div class="text-muted">${when} · ${who}</div>
+            ${note}
+          </div>`;
+      })
+      .join('');
+  }
+
+  function renderPricingForm(data) {
+    pricingState = data;
+    const { customPricing, globalDefaults } = data;
+
+    document.getElementById('pricingEnabled').checked = !!customPricing.enabled;
+
+    const grid = document.getElementById('pricingOrderGrid');
+    grid.innerHTML = PRICING_CATEGORIES.map((category) => {
+      const globalRow = globalDefaults.order[category] || {};
+      const customRow = customPricing.order[category] || {};
+      const cells = ORDER_TYPES.map((orderType) => {
+        const placeholder = globalRow[orderType] != null ? String(globalRow[orderType]) : '';
+        const value = customRow[orderType] != null ? customRow[orderType] : '';
+        return `
+          <td>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              class="form-control form-control-sm pricing-order-input"
+              data-category="${escapeHtml(category)}"
+              data-order-type="${orderType}"
+              placeholder="${escapeHtml(placeholder)}"
+              value="${value !== '' && value != null ? escapeHtml(String(value)) : ''}"
+            >
+          </td>`;
+      }).join('');
+      return `<tr><th scope="row">${escapeHtml(category)}</th>${cells}</tr>`;
+    }).join('');
+
+    const expressDefault = globalDefaults.expressFee;
+    const pickupDefault = globalDefaults.pickupFee?.Cairo ?? 100;
+    document.getElementById('pricingExpressFee').placeholder = String(expressDefault);
+    document.getElementById('pricingPickupFee').placeholder = String(pickupDefault);
+    document.getElementById('pricingExpressFee').value =
+      customPricing.expressFee != null ? customPricing.expressFee : '';
+    document.getElementById('pricingPickupFee').value =
+      customPricing.pickupFee != null ? customPricing.pickupFee : '';
+    document.getElementById('pricingExpressHint').textContent = `Global default: ${expressDefault} EGP`;
+    document.getElementById('pricingPickupHint').textContent = `Global default: ${pickupDefault} EGP`;
+    document.getElementById('pricingNote').value = '';
+
+    renderPricingMeta(customPricing);
+    renderPricingHistory(data.auditHistory || []);
+  }
+
+  function collectPricingPayload() {
+    const order = {};
+    PRICING_CATEGORIES.forEach((category) => {
+      order[category] = {};
+      ORDER_TYPES.forEach((orderType) => {
+        order[category][orderType] = null;
+      });
+    });
+
+    document.querySelectorAll('.pricing-order-input').forEach((input) => {
+      const category = input.dataset.category;
+      const orderType = input.dataset.orderType;
+      if (!category || !orderType || !order[category]) return;
+      const raw = input.value.trim();
+      order[category][orderType] = raw === '' ? null : Number(raw);
+    });
+
+    const expressRaw = document.getElementById('pricingExpressFee').value.trim();
+    const pickupRaw = document.getElementById('pricingPickupFee').value.trim();
+
+    return {
+      enabled: document.getElementById('pricingEnabled').checked,
+      order,
+      expressFee: expressRaw === '' ? null : Number(expressRaw),
+      pickupFee: pickupRaw === '' ? null : Number(pickupRaw),
+      note: document.getElementById('pricingNote').value.trim(),
+    };
+  }
+
+  async function loadBusinessPricing() {
+    try {
+      const response = await fetch(`/admin/api/business/${businessId}/pricing`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to load pricing');
+      }
+      renderPricingForm(data);
+      pricingLoaded = true;
+    } catch (e) {
+      console.error(e);
+      Swal.fire({
+        icon: 'error',
+        title: 'Pricing error',
+        text: e.message || 'Failed to load business pricing',
+        confirmButtonColor: '#F39720',
+      });
+    }
+  }
+
+  async function saveBusinessPricing() {
+    const payload = collectPricingPayload();
+    for (const category of PRICING_CATEGORIES) {
+      for (const orderType of ORDER_TYPES) {
+        const val = payload.order[category][orderType];
+        if (val != null && (!Number.isFinite(val) || val < 0)) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Invalid fee',
+            text: `${category} ${orderType} must be a non-negative number or empty.`,
+            confirmButtonColor: '#F39720',
+          });
+          return;
+        }
+      }
+    }
+    if (
+      (payload.expressFee != null && (!Number.isFinite(payload.expressFee) || payload.expressFee < 0)) ||
+      (payload.pickupFee != null && (!Number.isFinite(payload.pickupFee) || payload.pickupFee < 0))
+    ) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid fee',
+        text: 'Express and pickup fees must be non-negative numbers or empty.',
+        confirmButtonColor: '#F39720',
+      });
+      return;
+    }
+
+    const btn = document.getElementById('btnSavePricing');
+    btn.disabled = true;
+    try {
+      const response = await fetch(`/admin/api/business/${businessId}/pricing`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to save pricing');
+      }
+      renderPricingForm(data);
+      Swal.fire({
+        icon: 'success',
+        title: data.changed ? 'Pricing saved' : 'No changes',
+        text: data.changed
+          ? 'Custom pricing updated and recorded in audit history.'
+          : 'No pricing fields were changed.',
+        confirmButtonColor: '#F39720',
+        timer: data.changed ? 2200 : 1800,
+        showConfirmButton: !data.changed,
+      });
+    } catch (e) {
+      console.error(e);
+      Swal.fire({
+        icon: 'error',
+        title: 'Save failed',
+        text: e.message || 'Could not save pricing',
+        confirmButtonColor: '#F39720',
+      });
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   async function loadBusinessDetails() {
     try {
       const response = await fetch(`/admin/get-business-details/${businessId}`);
@@ -1280,5 +1596,11 @@
         });
       });
     }
+
+    document.getElementById('btnSavePricing')?.addEventListener('click', saveBusinessPricing);
+    document.getElementById('btnReloadPricing')?.addEventListener('click', loadBusinessPricing);
+    document.getElementById('bdTabPricingBtn')?.addEventListener('click', () => {
+      if (!pricingLoaded) loadBusinessPricing();
+    });
   });
 </script>

@@ -1,5 +1,5 @@
 const { validateOrderFieldsStructural } = require('../../utils/orderCreationHelper');
-const { calculateOrderFee } = require('../../utils/fees');
+const { calculateOrderFee, resolveBusinessPricing } = require('../../utils/fees');
 const { getFieldLabel } = require('../gemini/prompts');
 const { formatZoneForDisplay } = require('./regionResolver');
 const { normalizeDraftFields } = require('./textNormalizer');
@@ -73,8 +73,6 @@ function enforcePostStructuralOrder(fields, userData) {
 
   if (!next.COD) {
     delete next.amountCOD;
-    next.isExpressShipping = false;
-    next.shippingSpeedConfirmed = false;
     return next;
   }
 
@@ -315,7 +313,12 @@ function buildOrderPreview(fields, userData, lang) {
   let estimatedFee = null;
   try {
     if (gov && fields.orderType) {
-      estimatedFee = calculateOrderFee(gov, fields.orderType, !!fields.isExpressShipping);
+      estimatedFee = calculateOrderFee(
+        gov,
+        fields.orderType,
+        !!fields.isExpressShipping,
+        resolveBusinessPricing(userData)
+      );
     }
   } catch {
     estimatedFee = null;
