@@ -898,54 +898,6 @@
       window.history.replaceState({}, '', '/business/settings');
     }
 
-    const wooPairBtn = document.getElementById('wooGeneratePairingBtn');
-    const wooPairOut = document.getElementById('wooPairingResult');
-    if (wooPairBtn && wooPairOut) {
-      wooPairBtn.addEventListener('click', async function () {
-        wooPairBtn.disabled = true;
-        const prevLabel = wooPairBtn.innerHTML;
-        wooPairBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Generating…';
-        wooPairOut.classList.remove('d-none', 'alert-danger', 'alert-success');
-        wooPairOut.classList.add('alert-secondary');
-        wooPairOut.textContent = 'Generating pairing code…';
-        try {
-          const res = await fetch('/business/woocommerce/pairing', {
-            method: 'POST',
-            headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-            body: '{}',
-            credentials: 'same-origin',
-          });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            throw new Error(data.message || data.error || ('HTTP ' + res.status));
-          }
-          if (!data.publicCode || !data.secret) {
-            throw new Error('Server returned an incomplete pairing response');
-          }
-          wooPairOut.classList.remove('alert-secondary', 'alert-danger');
-          wooPairOut.classList.add('alert-success');
-          wooPairOut.innerHTML =
-            '<strong>Public code</strong><br><code class="user-select-all">' +
-            data.publicCode +
-            '</code><br><br><strong>Secret (copy now — shown once)</strong><br><code class="user-select-all">' +
-            data.secret +
-            '</code><br><small class="text-muted">Expires: ' +
-            (data.expiresAt || '') +
-            '</small>';
-        } catch (e) {
-          wooPairOut.classList.remove('alert-secondary', 'alert-success');
-          wooPairOut.classList.add('alert-danger');
-          wooPairOut.textContent = e.message || 'Failed to generate pairing code';
-          if (typeof Swal !== 'undefined') {
-            Swal.fire({ icon: 'error', title: 'Pairing failed', text: e.message || 'Failed to generate pairing code' });
-          }
-        } finally {
-          wooPairBtn.disabled = false;
-          wooPairBtn.innerHTML = prevLabel;
-        }
-      });
-    }
-
   // Profile photo upload + placeholder
   const profileImageInput = document.getElementById('profileImageInput');
   const profileImagePreview = document.getElementById('profileImagePreview');
@@ -2161,5 +2113,100 @@
     });
   }
   }); // End of DOMContentLoaded
+</script>
+
+<script>
+(function () {
+  var WOO_PLUGIN_DOWNLOAD = '/api/woocommerce/plugin/download';
+
+  function initWooCommerceIntegration() {
+    var wooPairBtn = document.getElementById('wooGeneratePairingBtn');
+    var wooPairOut = document.getElementById('wooPairingResult');
+    var wooDownloadLink = document.getElementById('wooPluginDownloadLink');
+
+    if (wooDownloadLink) {
+      var href = (wooDownloadLink.getAttribute('href') || '').trim();
+      if (!href || href === '#') {
+        wooDownloadLink.setAttribute('href', WOO_PLUGIN_DOWNLOAD);
+      }
+      wooDownloadLink.addEventListener('click', function (e) {
+        var linkHref = (wooDownloadLink.getAttribute('href') || '').trim();
+        if (!linkHref || linkHref === '#') {
+          e.preventDefault();
+          window.open(WOO_PLUGIN_DOWNLOAD, '_blank', 'noopener');
+        }
+      });
+    }
+
+    if (!wooPairBtn || !wooPairOut) {
+      return;
+    }
+
+    wooPairBtn.addEventListener('click', async function () {
+      console.log('[woo] pairing button clicked');
+      wooPairBtn.disabled = true;
+      var prevLabel = wooPairBtn.innerHTML;
+      wooPairBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Generating…';
+      wooPairOut.classList.remove('d-none', 'alert-danger', 'alert-success');
+      wooPairOut.classList.add('alert-secondary');
+      wooPairOut.textContent = 'Generating pairing code…';
+
+      try {
+        var res = await fetch('/business/woocommerce/pairing', {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          body: '{}',
+          credentials: 'same-origin',
+        });
+        var rawText = await res.text();
+        var data = {};
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch (parseErr) {
+          console.error('[woo] pairing response not JSON:', rawText.slice(0, 500));
+          throw new Error('Unexpected server response. Please refresh and try again.');
+        }
+
+        if (!res.ok) {
+          console.error('[woo] pairing failed:', res.status, data);
+          throw new Error(data.message || data.error || ('HTTP ' + res.status));
+        }
+        if (!data.publicCode || !data.secret) {
+          console.error('[woo] incomplete pairing payload:', data);
+          throw new Error('Server returned an incomplete pairing response');
+        }
+
+        wooPairOut.classList.remove('alert-secondary', 'alert-danger');
+        wooPairOut.classList.add('alert-success');
+        wooPairOut.innerHTML =
+          '<strong>Public code</strong><br><code class="user-select-all">' +
+          data.publicCode +
+          '</code><br><br><strong>Secret (copy now — shown once)</strong><br><code class="user-select-all">' +
+          data.secret +
+          '</code><br><small class="text-muted">Expires: ' +
+          (data.expiresAt || '') +
+          '</small>';
+      } catch (e) {
+        var errMsg = (e && e.message) ? e.message : 'Failed to generate pairing code';
+        console.error('[woo] pairing error:', e);
+        wooPairOut.classList.remove('alert-secondary', 'alert-success');
+        wooPairOut.classList.add('alert-danger');
+        wooPairOut.textContent = errMsg;
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({ icon: 'error', title: 'Pairing failed', text: errMsg });
+        }
+      } finally {
+        wooPairBtn.disabled = false;
+        wooPairBtn.innerHTML = prevLabel;
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWooCommerceIntegration);
+  } else {
+    initWooCommerceIntegration();
+  }
+})();
 </script>
 
