@@ -26,25 +26,42 @@ function getPluginLatest(req, res) {
   }
 }
 
+function loadPluginManifest() {
+  if (process.env.WOOCOMMERCE_PLUGIN_LATEST_JSON) {
+    return JSON.parse(process.env.WOOCOMMERCE_PLUGIN_LATEST_JSON);
+  }
+  const fp = path.join(__dirname, '..', 'public', 'woocommerce-plugin-latest.json');
+  if (fs.existsSync(fp)) {
+    return JSON.parse(fs.readFileSync(fp, 'utf8'));
+  }
+  return null;
+}
+
+function localPluginZipPath(manifest) {
+  const version = (manifest && manifest.version) || '1.0.1';
+  const candidates = [
+    path.join(__dirname, '..', 'public', 'downloads', `now-shipping-for-woocommerce-${version}.zip`),
+    path.join(__dirname, '..', 'public', 'downloads', 'now-shipping-for-woocommerce-1.0.1.zip'),
+    path.join(__dirname, '..', 'public', 'downloads', 'now-shipping-for-woocommerce-1.0.0.zip'),
+  ];
+  return candidates.find((p) => fs.existsSync(p)) || null;
+}
+
 /**
- * GET /api/woocommerce/plugin/download — redirect to ZIP URL from manifest or env
+ * GET /api/woocommerce/plugin/download — redirect to ZIP URL from manifest, or serve local ZIP fallback
  */
 function getPluginDownload(req, res) {
   try {
-    let manifest = null;
-    if (process.env.WOOCOMMERCE_PLUGIN_LATEST_JSON) {
-      manifest = JSON.parse(process.env.WOOCOMMERCE_PLUGIN_LATEST_JSON);
-    } else {
-      const fp = path.join(__dirname, '..', 'public', 'woocommerce-plugin-latest.json');
-      if (fs.existsSync(fp)) {
-        manifest = JSON.parse(fs.readFileSync(fp, 'utf8'));
-      }
-    }
+    const manifest = loadPluginManifest();
     const url = manifest && manifest.download_url;
-    if (!url) {
-      return res.status(404).send('Plugin package URL not configured.');
+    if (url) {
+      return res.redirect(302, url);
     }
-    return res.redirect(302, url);
+    const localZip = localPluginZipPath(manifest);
+    if (localZip) {
+      return res.download(localZip, path.basename(localZip));
+    }
+    return res.status(404).send('Plugin package URL not configured.');
   } catch (err) {
     console.error('[woocommercePlugin] download:', err.message || err);
     return res.status(500).send('Download unavailable');

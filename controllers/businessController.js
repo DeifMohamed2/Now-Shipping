@@ -3267,8 +3267,8 @@ const getSettingsPage = async (req, res) => {
       uninstalledAt: null,
     }).lean();
 
-    const rawBase = process.env.APP_URL || process.env.HOST || 'https://now.com.eg';
-    const wooPluginDownloadUrl = `${String(rawBase).replace(/\/$/, '')}/api/woocommerce/plugin/download`;
+    // Relative path so Download works on nowshipping.co / now.com.eg / localhost alike
+    const wooPluginDownloadUrl = '/api/woocommerce/plugin/download';
 
     res.render('business/settings', {
       title: req.translations.business.pages.settings.title,

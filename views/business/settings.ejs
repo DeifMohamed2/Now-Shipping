@@ -903,6 +903,11 @@
     if (wooPairBtn && wooPairOut) {
       wooPairBtn.addEventListener('click', async function () {
         wooPairBtn.disabled = true;
+        const prevLabel = wooPairBtn.innerHTML;
+        wooPairBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Generating…';
+        wooPairOut.classList.remove('d-none', 'alert-danger', 'alert-success');
+        wooPairOut.classList.add('alert-secondary');
+        wooPairOut.textContent = 'Generating pairing code…';
         try {
           const res = await fetch('/business/woocommerce/pairing', {
             method: 'POST',
@@ -912,23 +917,31 @@
           });
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            throw new Error(data.error || res.statusText);
+            throw new Error(data.message || data.error || ('HTTP ' + res.status));
           }
-          wooPairOut.classList.remove('d-none');
+          if (!data.publicCode || !data.secret) {
+            throw new Error('Server returned an incomplete pairing response');
+          }
+          wooPairOut.classList.remove('alert-secondary', 'alert-danger');
+          wooPairOut.classList.add('alert-success');
           wooPairOut.innerHTML =
             '<strong>Public code</strong><br><code class="user-select-all">' +
-            (data.publicCode || '') +
-            '</code><br><br><strong>Secret (copy now)</strong><br><code class="user-select-all">' +
-            (data.secret || '') +
+            data.publicCode +
+            '</code><br><br><strong>Secret (copy now — shown once)</strong><br><code class="user-select-all">' +
+            data.secret +
             '</code><br><small class="text-muted">Expires: ' +
             (data.expiresAt || '') +
             '</small>';
         } catch (e) {
-          wooPairOut.classList.remove('d-none', 'alert-secondary');
+          wooPairOut.classList.remove('alert-secondary', 'alert-success');
           wooPairOut.classList.add('alert-danger');
           wooPairOut.textContent = e.message || 'Failed to generate pairing code';
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'error', title: 'Pairing failed', text: e.message || 'Failed to generate pairing code' });
+          }
         } finally {
           wooPairBtn.disabled = false;
+          wooPairBtn.innerHTML = prevLabel;
         }
       });
     }
