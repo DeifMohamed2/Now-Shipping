@@ -54,18 +54,43 @@ function getGlobalDefaults() {
   };
 }
 
-function snapshotPricing(pricing) {
-  const src = pricing || {};
-  const order = {};
+const LEGACY_BROAD_PRICING_KEYS = ['Alexandria', 'Delta-Canal', 'Upper-RedSea'];
+
+function isLegacyBroadPricingOrder(order) {
+  if (!order || typeof order !== 'object') return false;
+  return LEGACY_BROAD_PRICING_KEYS.some((key) =>
+    Object.prototype.hasOwnProperty.call(order, key)
+  );
+}
+
+function snapshotOrderPricing(order) {
+  const src = order || {};
+  const legacyBroad = isLegacyBroadPricingOrder(src);
+  const legacyCairo = src.Cairo || {};
+  const out = {};
+
   for (const category of PRICING_CATEGORIES) {
-    order[category] = {};
+    out[category] = {};
     for (const orderType of ORDER_TYPES) {
-      order[category][orderType] = src.order?.[category]?.[orderType] ?? null;
+      const direct = src[category]?.[orderType];
+      if (direct != null) {
+        out[category][orderType] = direct;
+      } else if (legacyBroad) {
+        out[category][orderType] = legacyCairo[orderType] ?? null;
+      } else {
+        out[category][orderType] = null;
+      }
     }
   }
+
+  return out;
+}
+
+function snapshotPricing(pricing) {
+  const src = pricing || {};
   return {
     enabled: !!src.enabled,
-    order,
+    order: snapshotOrderPricing(src.order),
     expressFee: src.expressFee ?? null,
     pickupFee: src.pickupFee ?? null,
   };

@@ -346,17 +346,12 @@ const UserSchema = new mongoose.Schema(
           Return: { type: Number, default: null },
           Exchange: { type: Number, default: null },
         },
-        Alexandria: {
+        Giza: {
           Deliver: { type: Number, default: null },
           Return: { type: Number, default: null },
           Exchange: { type: Number, default: null },
         },
-        'Delta-Canal': {
-          Deliver: { type: Number, default: null },
-          Return: { type: Number, default: null },
-          Exchange: { type: Number, default: null },
-        },
-        'Upper-RedSea': {
+        Qalyubia: {
           Deliver: { type: Number, default: null },
           Return: { type: Number, default: null },
           Exchange: { type: Number, default: null },

@@ -1,44 +1,43 @@
 // Centralized fee config and helpers (orders + pickups)
 
-const PRICING_CATEGORIES = ['Cairo', 'Alexandria', 'Delta-Canal', 'Upper-RedSea'];
+const {
+  METRO_GOVERNORATE_KEYS,
+  normalizeGovKey,
+} = require('./deliveryZonesBosta');
+
+/** Per-governorate pricing keys — same as Create order (Cairo, Giza, Qalyubia). */
+const PRICING_CATEGORIES = [...METRO_GOVERNORATE_KEYS];
 const ORDER_TYPES = ['Deliver', 'Return', 'Exchange'];
 
+/** @deprecated Broad fee regions — kept for Shopify / import helpers that list legacy labels. */
 const governmentCategories = {
-  'Cairo': ['Cairo', 'Giza', 'Qalyubia'],
-  'Alexandria': ['Alexandria', 'Beheira', 'Matrouh'],
+  Cairo: ['Cairo', 'Giza', 'Qalyubia'],
+  Alexandria: ['Alexandria', 'Beheira', 'Matrouh'],
   'Delta-Canal': [
     'Dakahlia', 'Sharqia', 'Monufia', 'Gharbia',
-    'Kafr el-Sheikh', 'Damietta', 'Port Said', 'Ismailia', 'Suez'
+    'Kafr el-Sheikh', 'Damietta', 'Port Said', 'Ismailia', 'Suez',
   ],
   'Upper-RedSea': [
     'Fayoum', 'Beni Suef', 'Minya', 'Asyut',
     'Sohag', 'Qena', 'Luxor', 'Aswan', 'Red Sea',
-    'North Sinai', 'South Sinai', 'New Valley'
-  ]
+    'North Sinai', 'South Sinai', 'New Valley',
+  ],
 };
 
-const orderBaseFees = {
-  'Cairo': { Deliver: 100, Return: 100, Exchange: 100 },
-  'Alexandria': { Deliver: 100, Return: 100, Exchange: 100 },
-  'Delta-Canal': { Deliver: 100, Return: 100, Exchange: 100 },
-  'Upper-RedSea': { Deliver: 100, Return: 100, Exchange: 100 },
-};
+const orderBaseFees = Object.fromEntries(
+  PRICING_CATEGORIES.map((gov) => [gov, { Deliver: 100, Return: 100, Exchange: 100 }])
+);
 
-const pickupBaseFees = {
-  'Cairo': 100,
-  'Alexandria': 100,
-  'Delta-Canal': 100,
-  'Upper-RedSea': 100,
-};
+const pickupBaseFees = Object.fromEntries(
+  PRICING_CATEGORIES.map((gov) => [gov, 100])
+);
 
 const GLOBAL_EXPRESS_FEE = 200;
 
 function resolveCategoryByCity(city) {
-  let category = 'Cairo';
-  for (const [cat, govs] of Object.entries(governmentCategories)) {
-    if (govs.includes(city)) { category = cat; break; }
-  }
-  return category;
+  const key = normalizeGovKey(city);
+  if (key && PRICING_CATEGORIES.includes(key)) return key;
+  return 'Cairo';
 }
 
 /**

@@ -32,15 +32,16 @@ console.log('=== Global fees (no business context) ===\n');
 assert(calculateOrderFee('Cairo', 'Deliver', false) === 100, 'Cairo Deliver = 100');
 assert(calculateOrderFee('Cairo', 'Deliver', true) === GLOBAL_EXPRESS_FEE, 'Express = global 200');
 assert(calculatePickupFee('Cairo', 0) === 100, 'Pickup Cairo = 100');
+assert(calculateOrderFee('Giza', 'Deliver', false) === 100, 'Giza Deliver = 100');
+assert(calculateOrderFee('Qalyubia', 'Return', false) === 100, 'Qalyubia Return = 100');
 
 console.log('\n=== Custom pricing enabled — full override ===\n');
 const fullPricing = {
   enabled: true,
   order: {
     Cairo: { Deliver: 75, Return: 80, Exchange: 85 },
-    Alexandria: { Deliver: 90, Return: 90, Exchange: 90 },
-    'Delta-Canal': { Deliver: null, Return: null, Exchange: null },
-    'Upper-RedSea': { Deliver: null, Return: null, Exchange: null },
+    Giza: { Deliver: 90, Return: 90, Exchange: 90 },
+    Qalyubia: { Deliver: 95, Return: 95, Exchange: 95 },
   },
   expressFee: 150,
   pickupFee: 60,
@@ -64,9 +65,8 @@ const partialPricing = {
   enabled: true,
   order: {
     Cairo: { Deliver: 70, Return: null, Exchange: null },
-    Alexandria: { Deliver: null, Return: null, Exchange: null },
-    'Delta-Canal': { Deliver: null, Return: null, Exchange: null },
-    'Upper-RedSea': { Deliver: null, Return: null, Exchange: null },
+    Giza: { Deliver: null, Return: null, Exchange: null },
+    Qalyubia: { Deliver: null, Return: null, Exchange: null },
   },
   expressFee: null,
   pickupFee: null,
@@ -84,8 +84,12 @@ assert(
   'Partial: express falls back to global 200'
 );
 assert(
-  calculatePickupFee('Alexandria', 0, partialPricing) === 100,
+  calculatePickupFee('Giza', 0, partialPricing) === 100,
   'Partial: pickup falls back to global 100'
+);
+assert(
+  calculateOrderFee('Giza', 'Deliver', false, fullPricing) === 90,
+  'Custom Giza Deliver = 90'
 );
 
 console.log('\n=== Disabled pricing — ignores stored values ===\n');
@@ -129,7 +133,19 @@ const snap = snapshotPricing({
   updatedAt: new Date(),
 });
 assert(snap.order.Cairo.Deliver === 80, 'snapshot: preserves custom Deliver');
-assert(snap.order.Alexandria.Return === null, 'snapshot: fills missing with null');
+assert(snap.order.Giza.Return === null, 'snapshot: fills missing with null');
+
+const legacySnap = snapshotPricing({
+  enabled: true,
+  order: {
+    Cairo: { Deliver: 65, Return: 70, Exchange: null },
+    Alexandria: { Deliver: null, Return: null, Exchange: null },
+    'Delta-Canal': { Deliver: null, Return: null, Exchange: null },
+    'Upper-RedSea': { Deliver: null, Return: null, Exchange: null },
+  },
+});
+assert(legacySnap.order.Giza.Deliver === 65, 'legacy broad Cairo fee maps to Giza');
+assert(legacySnap.order.Qalyubia.Return === 70, 'legacy broad Cairo fee maps to Qalyubia');
 assert(getGlobalDefaults().expressFee === GLOBAL_EXPRESS_FEE, 'global defaults include express');
 
 console.log('\n=== Validation ===\n');
