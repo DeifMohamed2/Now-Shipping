@@ -1152,6 +1152,8 @@ const editOrder = async (req, res) => {
     phoneNumber,
     otherPhoneNumber,
     address,
+    buildingNo,
+    apartmentNo,
     government,
     zone,
     deliverToWorkAddress,
@@ -1248,6 +1250,8 @@ const editOrder = async (req, res) => {
         phoneNumber,
         otherPhoneNumber: otherPhoneNumber || null,
         address,
+        buildingNo: buildingNo != null && String(buildingNo).trim() !== '' ? String(buildingNo).trim() : null,
+        apartmentNo: apartmentNo != null && String(apartmentNo).trim() !== '' ? String(apartmentNo).trim() : null,
         government,
         zone,
         deliverToWorkAddress: deliverToWorkAddress === 'on' || deliverToWorkAddress === true,
@@ -3833,6 +3837,23 @@ const recoverOrderCourier = async (req, res) => {
 
 // ======================================== MULTIPLE PICKUP ADDRESSES ======================================== //
 
+const getPickupAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.userData._id).select('pickUpAddresses').lean();
+    if (!user) {
+      return res.status(404).json({ status: 'error', error: 'User not found' });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      addresses: user.pickUpAddresses || [],
+    });
+  } catch (error) {
+    console.error('Error in getPickupAddresses:', error);
+    return res.status(500).json({ error: 'Internal server error. Please try again.' });
+  }
+};
+
 // Add a new pickup address
 const addPickupAddress = async (req, res) => {
   try {
@@ -4861,6 +4882,7 @@ module.exports = {
   verifyPhoneOtp,
   
   // Multiple Pickup Addresses
+  getPickupAddresses,
   addPickupAddress,
   updatePickupAddress,
   deletePickupAddress,

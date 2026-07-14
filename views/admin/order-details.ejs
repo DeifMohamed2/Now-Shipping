@@ -502,6 +502,12 @@
                 <div class="flex-grow-1 ms-3">
                   <p class="text-muted mb-0">Shipping Address</p>
                     <h6 class="fs-14 mb-1"><%= order.orderCustomer.address %></h6>
+                    <% if (order.orderCustomer.buildingNo) { %>
+                    <h6 class="fs-14 mb-1 text-muted">Building No.: <%= order.orderCustomer.buildingNo %></h6>
+                    <% } %>
+                    <% if (order.orderCustomer.apartmentNo) { %>
+                    <h6 class="fs-14 mb-1 text-muted">Apartment No.: <%= order.orderCustomer.apartmentNo %></h6>
+                    <% } %>
                     <h6 class="fs-14 mb-1"><%= order.orderCustomer.zone %></h6>
                     <h6 class="fs-14 mb-1"><%= order.orderCustomer.government %></h6>
                 </div>

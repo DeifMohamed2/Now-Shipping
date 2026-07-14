@@ -204,6 +204,25 @@
                 <div class="co-field-error" id="err-address"><%= Co.errAddress %></div>
             </div>
 
+              <div class="co-field-row">
+                <div class="co-field">
+                  <label class="co-field__label" for="buildingNo">
+                    <%= Eo.buildingNo %> <span class="co-optional"><%= Co.optionalTag %></span>
+                  </label>
+                  <input type="text" class="co-input" id="buildingNo" name="buildingNo"
+                         value="<%= order.orderCustomer.buildingNo || '' %>"
+                         placeholder="<%= Co.phBuildingNo %>" dir="auto" inputmode="numeric">
+                </div>
+                <div class="co-field">
+                  <label class="co-field__label" for="apartmentNo">
+                    <%= Eo.apartmentNo %> <span class="co-optional"><%= Co.optionalTag %></span>
+                  </label>
+                  <input type="text" class="co-input" id="apartmentNo" name="apartmentNo"
+                         value="<%= order.orderCustomer.apartmentNo || '' %>"
+                         placeholder="<%= Co.phApartmentNo %>" dir="auto" inputmode="numeric">
+                </div>
+              </div>
+
               <button type="button"
                       class="co-check-card <%= order.orderCustomer.deliverToWorkAddress ? 'co-check-card--on' : '' %>"
                       id="co-work-addr-toggle" onclick="eoToggleWorkAddress()">
@@ -601,6 +620,14 @@
                 <div class="co-review-item">
                   <p class="co-review-item__label"><%= Eo.streetAddress %></p>
                   <p class="co-review-item__value" id="rev-address" style="font-size:0.8rem;"><%= order.orderCustomer.address %></p>
+                </div>
+                <div class="co-review-item" id="rev-building-row" style="<%= order.orderCustomer.buildingNo ? '' : 'display:none;' %>">
+                  <p class="co-review-item__label"><%= Eo.buildingNo %></p>
+                  <p class="co-review-item__value" id="rev-building"><%= order.orderCustomer.buildingNo || '' %></p>
+                </div>
+                <div class="co-review-item" id="rev-apartment-row" style="<%= order.orderCustomer.apartmentNo ? '' : 'display:none;' %>">
+                  <p class="co-review-item__label"><%= Eo.apartmentNo %></p>
+                  <p class="co-review-item__value" id="rev-apartment"><%= order.orderCustomer.apartmentNo || '' %></p>
                 </div>
               </div>
 

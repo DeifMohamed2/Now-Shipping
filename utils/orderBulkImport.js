@@ -36,6 +36,16 @@ const COLUMN_ALIASES = {
   deliveryaddress: 'address',
   address: 'address',
 
+  buildingno: 'buildingNo',
+  buildingnumber: 'buildingNo',
+  building: 'buildingNo',
+
+  apartmentno: 'apartmentNo',
+  apartmentnumber: 'apartmentNo',
+  apartment: 'apartmentNo',
+  flatno: 'apartmentNo',
+  flatnumber: 'apartmentNo',
+
   governorate: 'government',
   government: 'government',
 

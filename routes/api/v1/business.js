@@ -168,6 +168,15 @@ router.get('/orders/print-policy/:orderNumber/:pageSize', businessController.pri
 
 
 
+// ==================== PICKUP ADDRESSES APIs ==================== //
+// Mirrors web /business/pickup-addresses/* for the mobile app.
+
+router.get('/pickup-addresses', businessController.getPickupAddresses);
+router.post('/pickup-addresses/add', businessController.addPickupAddress);
+router.put('/pickup-addresses/:addressId', businessController.updatePickupAddress);
+router.delete('/pickup-addresses/:addressId', businessController.deletePickupAddress);
+router.post('/pickup-addresses/:addressId/set-default', businessController.setDefaultPickupAddress);
+
 //pickups
 
 router.get('/get-pickups', businessController.get_pickups);

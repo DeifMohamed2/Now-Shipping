@@ -357,12 +357,20 @@
     var gv   = (el('government-value')  || {}).value || '';
     var zv   = (el('zone-value')        || {}).value || '';
     var addr = (el('address')           || {}).value || '—';
+    var bldg = ((el('buildingNo')       || {}).value || '').trim();
+    var apt  = ((el('apartmentNo')      || {}).value || '').trim();
     var area = zv && gv ? zv + ', ' + gv : (gv || zv || '—');
 
     var revCust = el('rev-customer'); if (revCust) revCust.textContent = fn;
     var revPh   = el('rev-phone');    if (revPh)   revPh.textContent   = ph;
     var revArea = el('rev-area');     if (revArea) revArea.textContent  = area;
     var revAddr = el('rev-address');  if (revAddr) revAddr.textContent  = addr;
+    var revBldg = el('rev-building'); var revBldgRow = el('rev-building-row');
+    if (revBldg) revBldg.textContent = bldg;
+    if (revBldgRow) revBldgRow.style.display = bldg ? '' : 'none';
+    var revApt = el('rev-apartment'); var revAptRow = el('rev-apartment-row');
+    if (revApt) revApt.textContent = apt;
+    if (revAptRow) revAptRow.style.display = apt ? '' : 'none';
     var revExp  = el('rev-express');  if (revExp)  revExp.textContent   = state.isExpress ? t('yes', 'Yes') : t('no', 'No');
     var revFee  = el('rev-fee-num');  if (revFee)  revFee.textContent   = state.lastFee;
 

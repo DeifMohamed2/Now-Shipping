@@ -281,6 +281,14 @@ const orderSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
+      buildingNo: {
+        type: String,
+        required: false,
+      },
+      apartmentNo: {
+        type: String,
+        required: false,
+      },
       government: {
         type: String,
         required: true,

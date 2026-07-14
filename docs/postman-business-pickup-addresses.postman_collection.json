@@ -1,0 +1,134 @@
+{
+  "info": {
+    "name": "Business API — Pickup addresses",
+    "description": "Manage saved business pickup addresses via /api/v1/business/pickup-addresses. Auth: Bearer JWT from POST /api/v1/auth/login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "addressId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Business login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"shop@example.com\",\n  \"password\": \"yourPassword\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "description": "Copy `token` from the response into the `accessToken` collection variable."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pickup addresses",
+      "item": [
+        {
+          "name": "List pickup addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": "{{baseUrl}}/api/v1/business/pickup-addresses",
+            "description": "Returns only `pickUpAddresses`. Alternative: GET /api/v1/business/user-data includes the full user document."
+          }
+        },
+        {
+          "name": "Add pickup address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressName\": \"Warehouse\",\n  \"country\": \"Egypt\",\n  \"city\": \"Cairo\",\n  \"zone\": \"Nasr City\",\n  \"adressDetails\": \"12 Abbas El Akkad St, Building 3\",\n  \"nearbyLandmark\": \"Near City Stars\",\n  \"pickupPhone\": \"+201012345678\",\n  \"otherPickupPhone\": \"\",\n  \"pickUpPointInMaps\": \"https://maps.google.com/?q=30.0444,31.2357\",\n  \"coordinates\": { \"lat\": 30.0444, \"lng\": 31.2357 }\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/business/pickup-addresses/add",
+            "description": "Required: country, city, zone, adressDetails. First address is auto-set as default. Save `address.addressId` for update/delete."
+          }
+        },
+        {
+          "name": "Update pickup address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressName\": \"Main warehouse\",\n  \"adressDetails\": \"12 Abbas El Akkad St, Floor 2\",\n  \"nearbyLandmark\": \"Opposite mall entrance\",\n  \"pickupPhone\": \"+201098765432\",\n  \"coordinates\": { \"lat\": 30.0444, \"lng\": 31.2357 }\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/business/pickup-addresses/{{addressId}}",
+            "description": "Send only fields to change. `addressId` is the stable id from list/add responses (e.g. addr_1739...)."
+          }
+        },
+        {
+          "name": "Set default pickup address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": "{{baseUrl}}/api/v1/business/pickup-addresses/{{addressId}}/set-default",
+            "description": "Clears isDefault on all other addresses and sets this one as default."
+          }
+        },
+        {
+          "name": "Delete pickup address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": "{{baseUrl}}/api/v1/business/pickup-addresses/{{addressId}}",
+            "description": "Cannot delete the only remaining address. If the deleted address was default, the first remaining address becomes default."
+          }
+        },
+        {
+          "name": "List via user-data (legacy)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": "{{baseUrl}}/api/v1/business/user-data",
+            "description": "Full user profile including pickUpAddresses. Prefer GET /pickup-addresses for address-only screens."
+          }
+        },
+        {
+          "name": "Delivery zones catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": "{{baseUrl}}/api/v1/business/delivery-zones",
+            "description": "Use when building city/zone pickers for add/update address forms."
+          }
+        }
+      ]
+    }
+  ]
+}
