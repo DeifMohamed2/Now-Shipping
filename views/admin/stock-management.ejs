@@ -1419,7 +1419,7 @@
     let actionButtons = '';
     const rawZone = item.orderCustomer?.zone || '';
     if (item.orderStatus === 'inStock' || item.orderStatus === 'inProgress' || item.orderStatus === 'inReturnStock') {
-      actionButtons += `<li><button type="button" class="dropdown-item" onclick="getCouriers('${item.orderNumber}', ${JSON.stringify(rawZone)})"><i class="ri-user-received-2-line text-success"></i><span>Assign courier</span></button></li>`;
+      actionButtons += `<li><button type="button" class="dropdown-item js-assign-courier" data-order-number="${escapeHtml(String(item.orderNumber))}" data-zone="${escapeHtml(rawZone)}"><i class="ri-user-received-2-line text-success"></i><span>Assign courier</span></button></li>`;
     }
     actionButtons += `<li><a class="dropdown-item" href="/admin/order/${item.orderNumber}"><i class="ri-eye-line text-primary"></i><span>View Details</span></a></li>`;
     actionButtons += `<li><button type="button" class="dropdown-item" onclick="printLabel('${item.orderNumber}')"><i class="ri-printer-line text-info"></i><span>Print Label</span></button></li>`;
@@ -1919,50 +1919,58 @@
   }
 
   // Assign to courier
- async function getCouriers(orderNumber, zone) {
-    document.getElementById('courierOrderIds').value = orderNumber;
-    document.getElementById('courierZone').value = zone || '';
-    document.getElementById('courierLoader').style.display = 'block';
-    
-    // Fetch available couriers from API (substring zone match + proper encoding)
+  function showAssignCourierModal(title) {
+    document.getElementById('assignToCourierModalLabel').textContent = title || 'Assign to Courier';
+    const modalEl = document.getElementById('assignToCourierModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
+
+  async function loadCouriersByZones(zones) {
+    const zoneList = Array.isArray(zones) ? zones.filter(Boolean) : (zones ? [zones] : []);
     const params = new URLSearchParams();
-    if (zone) params.append('zone', zone);
-    await fetch(`/admin/get-couriers-by-zone?${params.toString()}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(response => response.json()) 
-    .then(couriers => {
+    zoneList.forEach((z) => params.append('zone', z));
+    const courierSelect = document.getElementById('courierSelect');
+    document.getElementById('courierLoader').style.display = 'block';
+    courierSelect.disabled = true;
+    courierSelect.innerHTML = '<option value="">Loading couriers...</option>';
+
+    try {
+      const response = await fetch(`/admin/get-couriers-by-zone?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const couriers = await response.json();
       if (couriers && couriers.error) {
         throw new Error(couriers.error);
       }
-      const courierSelect = document.getElementById('courierSelect');
       courierSelect.innerHTML = '<option value="">Select a courier</option>';
-      
-      couriers.forEach(courier => {
+      (Array.isArray(couriers) ? couriers : []).forEach((courier) => {
         const option = document.createElement('option');
         option.value = courier._id;
         option.textContent = courier.name;
         courierSelect.appendChild(option);
       });
-    })
-    .catch(error => {
+    } catch (error) {
       console.error('Error fetching couriers:', error);
+      courierSelect.innerHTML = '<option value="">Failed to load couriers</option>';
       Swal.fire({
         icon: 'error',
-        title: 'Error', 
-        text: 'Failed to load available couriers. Please try again.'
+        title: 'Error',
+        text: 'Failed to load available couriers. Please try again.',
       });
-    })
-    .finally(() => {
+    } finally {
+      courierSelect.disabled = false;
       document.getElementById('courierLoader').style.display = 'none';
-    });
+    }
+  }
 
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('assignToCourierModal'));
-    modal.show();
+  function getCouriers(orderNumber, zone) {
+    document.getElementById('courierOrderIds').value = orderNumber;
+    document.getElementById('courierZone').value = zone || '';
+    showAssignCourierModal('Assign to Courier');
+    loadCouriersByZones(zone ? [zone] : []);
   }
 
   // Assign multiple orders
@@ -1978,54 +1986,14 @@
     console.log(selectedItems); 
 
     document.getElementById('courierOrderIds').value = selectedItems.join(',');
-    document.getElementById('courierLoader').style.display = 'block';
     const uniqueZones = [...new Set(
       selectedItems.map((id) =>
         document.querySelector(`input[data-order-id="${id}"]`)?.getAttribute('data-zone')
       ).filter(Boolean)
     )];
     document.getElementById('courierZone').value = uniqueZones.join(', ');
-    try {
-      const params = new URLSearchParams();
-      uniqueZones.forEach((z) => params.append('zone', z));
-      const response = await fetch(`/admin/get-couriers-by-zone?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const couriers = await response.json();
-      if (couriers && couriers.error) {
-        throw new Error(couriers.error);
-      }
-      const courierSelect = document.getElementById('courierSelect');
-      courierSelect.innerHTML = '<option value="">Select a courier</option>';
-      
-      couriers.forEach(courier => {
-        const option = document.createElement('option');
-        option.value = courier._id;
-        option.textContent = courier.name;
-        courierSelect.appendChild(option);
-      });
-
-    } catch (error) {
-      console.error('Error fetching couriers:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to load available couriers. Please try again.'
-      });
-    } finally {
-      document.getElementById('courierLoader').style.display = 'none';
-    }
-
-    // Update modal title to reflect multiple orders
-    document.getElementById('assignToCourierModalLabel').textContent = `Assign ${selectedItems.length} Orders to Courier`;
-    
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('assignToCourierModal'));
-    modal.show();
+    showAssignCourierModal(`Assign ${selectedItems.length} Orders to Courier`);
+    loadCouriersByZones(uniqueZones);
   }
 
   
@@ -2469,6 +2437,26 @@
     initStockDatePicker();
     initStockZoneChoices();
     fetchStockItems();
+
+    function handleStockAssignCourierClick(assignBtn, e) {
+      e.preventDefault();
+      const menu = assignBtn.closest('.dropdown-menu');
+      const dropdown = assignBtn.closest('.orders-table-dropdown') || (menu && menu._adminDropdownOwner);
+      if (dropdown && window.AdminTableDropdowns) {
+        AdminTableDropdowns.close(dropdown);
+      }
+      getCouriers(
+        assignBtn.getAttribute('data-order-number') || '',
+        assignBtn.getAttribute('data-zone') || ''
+      );
+    }
+
+    // Portaled row menus live outside #stockList — handle assign at document level
+    document.addEventListener('click', (e) => {
+      const assignBtn = e.target.closest('.js-assign-courier');
+      if (!assignBtn || !document.getElementById('stockList')) return;
+      handleStockAssignCourierClick(assignBtn, e);
+    }, true);
 
     document.getElementById('stockList').addEventListener('click', (e) => {
       const textBtn = e.target.closest('.js-show-full-text');
