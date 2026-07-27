@@ -41,6 +41,7 @@ const assistantRouterApi = require('./routes/api/v1/assistant');
 const courierRouterApi = require('./routes/api/v1/courier');
 const ticketRouterApi = require('./routes/api/v1/ticketRoutes');
 const uploadRouterApi = require('./routes/api/v1/upload');
+const publicApiV1Router = require('./routes/api/public/v1');
 
 // Import jobs
 const { initPayoutProcessing } = require('./jobs/payoutProcessing');
@@ -259,6 +260,13 @@ app.use('/api/v1/assistant', assistantRouterApi);
 app.use('/api/v1/courier', courierRouterApi);
 app.use('/api/v1/tickets', ticketRouterApi);
 app.use('/api/v1/upload', uploadRouterApi);
+
+// Public integration API (business API keys)
+app.use('/api/public/v1', (req, res, next) => {
+  res.setHeader('Cache-Control', 'private, no-transform');
+  next();
+});
+app.use('/api/public/v1', publicApiV1Router);
 
 app.get('/api/shopify/auth/callback', shopifyController.oauthCallback);
 

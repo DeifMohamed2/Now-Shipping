@@ -306,6 +306,28 @@ const UserSchema = new mongoose.Schema(
       sparse: true,
       trim: true,
     },
+    /**
+     * Multi-tenant integrator: parent company account (owns merchant sub-accounts).
+     * When true, API keys on this account are company-wide; requests use X-Merchant-Id.
+     */
+    isCompanyAccount: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    /** Merchant sub-account under a parent company (integrator model). */
+    parentCompany: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'users',
+      default: null,
+      index: true,
+    },
+    /** Integrator's own shop/merchant identifier (unique per parent company). */
+    externalMerchantId: {
+      type: String,
+      default: null,
+      index: true,
+    },
     /** Soft-delete: account removed by admin; operational data may remain for audit. */
     isDeleted: {
       type: Boolean,
@@ -393,6 +415,17 @@ UserSchema.pre('save', async function assignBusinessCode() {
   }
   throw new Error('Failed to assign unique businessAccountCode');
 });
+
+UserSchema.index(
+  { parentCompany: 1, externalMerchantId: 1 },
+  {
+    unique: true,
+    sparse: true,
+    partialFilterExpression: {
+      externalMerchantId: { $type: 'string', $ne: null },
+    },
+  }
+);
 
 // Method to generate a verification token
 UserSchema.methods.generateVerificationToken = function () {

@@ -4,6 +4,7 @@
 const Order = require('../models/order');
 const statusHelper = require('./statusHelper');
 const { calculateOrderFee, resolveBusinessPricing } = require('./fees');
+const { validateGovernmentAndZone } = require('./deliveryZonesBosta');
 const {
   getDefaultPickupAddressId,
   findPickupAddressById,
@@ -179,6 +180,30 @@ function validateOrderFieldsStructural(fields) {
     }
   }
 
+  return { errors };
+}
+
+/**
+ * Validate government + zone against the delivery-zones catalog and canonicalize values.
+ * Mutates `fields.government` and `fields.zone` on success.
+ */
+function validateAndCanonicalizeGovernmentZone(fields) {
+  const errors = [];
+  if (!fields || !fields.government || !fields.zone) {
+    errors.push('Government and zone are required.');
+    return { errors };
+  }
+
+  const zoneCheck = validateGovernmentAndZone(fields.government, fields.zone);
+  if (!zoneCheck.ok) {
+    errors.push(
+      `${zoneCheck.error} Call GET /delivery-zones and use an exact zone value from the catalog.`
+    );
+    return { errors };
+  }
+
+  fields.government = zoneCheck.canonicalGovernment;
+  fields.zone = zoneCheck.canonicalZone;
   return { errors };
 }
 
@@ -515,6 +540,7 @@ module.exports = {
   generateUniqueOrderNumber,
   normalizeFieldsFromBody,
   validateOrderFieldsStructural,
+  validateAndCanonicalizeGovernmentZone,
   applyPickupDefaults,
   validatePickupForOrderCreation,
   validateReturnOrderAsync,

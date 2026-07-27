@@ -47,7 +47,8 @@ const {
   canBusinessChangeAddress,
   ADDRESS_EDITABLE_STATUSES,
 } = require('../utils/orderUiPolicy');
-const { applyBusinessLikeCancellation } = require('../utils/orderCancellationFlow');
+const orderService = require('../services/orderService');
+const pickupService = require('../services/pickupService');
 const orderWaitingActionPolicy = require('../utils/orderWaitingActionPolicy');
 const {
   DASHBOARD_HEATMAP_TIMEZONE,
@@ -719,91 +720,10 @@ const get_ordersPage = async (req, res) => {
 
 const get_orders = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 50,
-      orderType,
-      status,
-      statusCategory,
-      paymentType, // amountType (e.g. COD, CD, NA)
-      dateFrom,
-      dateTo,
-      search
-    } = req.query;
-
-    // Build query
-    const query = { business: req.userData._id };
-
-    // Filter by order type if provided
-    if (orderType && orderType !== 'All') {
-      query['orderShipping.orderType'] = orderType;
-    }
-
-    // Filter by status if provided
-    if (status && status !== 'All') {
-      query.orderStatus = status;
-    }
-
-    // Filter by status category if provided
-    if (statusCategory && statusCategory !== 'All') {
-      query.statusCategory = statusCategory;
-    }
-    
-    // Filter by payment/amount type
-    if (paymentType && paymentType !== 'All') {
-      query['orderShipping.amountType'] = paymentType;
-    }
-
-    // Date range filter
-    if (dateFrom || dateTo) {
-      query.orderDate = {};
-      if (dateFrom) query.orderDate.$gte = new Date(dateFrom);
-      if (dateTo) query.orderDate.$lte = new Date(dateTo);
-    }
-
-    // Text search across key fields
-    if (search && search.trim() !== '') {
-      const searchRegex = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { orderNumber: searchRegex },
-        { 'orderCustomer.fullName': searchRegex },
-        { 'orderCustomer.phoneNumber': searchRegex },
-        { 'orderShipping.productDescription': searchRegex },
-        { 'orderShipping.productDescriptionReplacement': searchRegex }
-      ];
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const orders = await Order.find(query)
-      .sort({ orderDate: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-    const totalCount = await Order.countDocuments(query);
-
-    // Enhance orders with status info + UI flags aligned with API rules
-    const enhancedOrders = orders.map(order => {
-      const orderObj = order.toObject();
-      orderObj.statusLabel = statusHelper.getOrderStatusLabel(order.orderStatus);
-      orderObj.statusDescription = statusHelper.getOrderStatusDescription(order.orderStatus);
-      orderObj.categoryClass = statusHelper.getCategoryClass(order.statusCategory);
-      orderObj.categoryColor = statusHelper.getCategoryColor(order.statusCategory);
-      orderObj.isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
-      orderObj.canCancel = canBusinessCancel(order);
-      orderObj.canEditAddress = canBusinessChangeAddress(order);
-      orderObj.canDelete = order.orderStatus === 'new';
-      return orderObj;
-    });
-
+    const data = await orderService.listOrdersForBusiness(req.userData, req.query);
     res.status(200).json({
-      orders: enhancedOrders || [],
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalCount / parseInt(limit)),
-        totalCount,
-        hasNext: skip + orders.length < totalCount,
-        hasPrev: parseInt(page) > 1
-      }
+      orders: data.orders || [],
+      pagination: data.pagination,
     });
   } catch (error) {
     console.error('Error in orders:', error);
@@ -1068,29 +988,11 @@ const get_createOrderPage = async (req, res) => {
 const submitOrder = async (req, res) => {
   try {
     console.log(req.body);
-
-    const fields = normalizeFieldsFromBody(req.body);
-    applyPickupDefaults(req.userData, fields);
-
-    const structural = validateOrderFieldsStructural(fields);
-    if (structural.errors.length) {
-      return res.status(400).json({ error: structural.errors[0] });
+    const result = await orderService.createOrderForBusiness(req.userData, req.body);
+    if (!result.ok) {
+      return res.status(result.status).json({ error: result.error });
     }
-
-    const pickupVal = validatePickupForOrderCreation(req.userData, fields);
-    if (pickupVal.errors.length) {
-      return res.status(400).json({ error: pickupVal.errors[0] });
-    }
-
-    const returnVal = await validateReturnOrderAsync(req.userData._id, fields);
-    if (returnVal.errors.length) {
-      return res.status(400).json({ error: returnVal.errors[0] });
-    }
-
-    const orderNumber = await generateUniqueOrderNumber();
-    const newOrder = buildOrderDocumentFromFields(req.userData, fields, orderNumber);
-    const savedOrder = await newOrder.save();
-    res.status(201).json({ message: 'Order created successfully.', order: savedOrder });
+    res.status(result.status).json({ message: result.message, order: result.order });
   } catch (error) {
     console.error('Error in submitOrder:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -1147,140 +1049,15 @@ const get_editOrderPage = async (req, res) => {
 
 const editOrder = async (req, res) => {
   const { orderId } = req.params;
-  const {
-    fullName,
-    phoneNumber,
-    otherPhoneNumber,
-    address,
-    buildingNo,
-    apartmentNo,
-    government,
-    zone,
-    deliverToWorkAddress,
-    orderType,
-    productDescription,
-    numberOfItems,
-    COD,
-    amountCOD,
-    currentPD,
-    numberOfItemsCurrentPD,
-    newPD,
-    numberOfItemsNewPD,
-    CashDifference,
-    amountCashDifference,
-    previewPermission,
-    referralNumber,
-    Notes,
-    isExpressShipping
-  } = req.body;
 
   try {
-    const order = await findOrderByIdOrNumber(orderId);
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+    const result = await orderService.updateOrderForBusiness(req.userData, orderId, req.body);
+    if (!result.ok) {
+      const payload = { error: result.error };
+      if (result.meta) Object.assign(payload, result.meta);
+      return res.status(result.status).json(payload);
     }
-
-    // Verify the order belongs to the user's business
-    if (order.business.toString() !== req.userData._id.toString()) {
-      return res.status(403).json({ error: 'You do not have permission to edit this order' });
-    }
-
-    if (!canBusinessChangeAddress(order)) {
-      return res.status(403).json({
-        error:
-          'Address and order details cannot be edited — a courier may already be assigned, or this order is past the editable stage.',
-        orderStatus: order.orderStatus,
-        allowedStatuses: Array.from(ADDRESS_EDITABLE_STATUSES),
-        courierAssigned: Boolean(order.deliveryMan),
-      });
-    }
-
-    // Use existing order type if not provided in form (since radio buttons are disabled in form)
-    const updatedOrderType = orderType || order.orderShipping.orderType;
-
-    // Validate required fields
-    if (!fullName || !phoneNumber || !address || !government || !zone) {
-      return res.status(400).json({ error: 'All customer info fields are required' });
-    }
-
-    // Check if order was created more than 6 hours ago
-    const orderCreationTime = new Date(order.createdAt).getTime();
-    const currentTime = new Date().getTime();
-    const sixHoursInMs = 6 * 60 * 60 * 1000;
-    const isOrderOlderThanSixHours = (currentTime - orderCreationTime) > sixHoursInMs;
-    
-    // Convert isExpressShipping to boolean for comparison
-    const requestedExpressShipping = isExpressShipping === true || isExpressShipping === 'true' || isExpressShipping === 'on';
-    const currentExpressShipping = order.orderShipping.isExpressShipping;
-
-    // Check if user is trying to change express shipping on an old order
-    if (isOrderOlderThanSixHours && requestedExpressShipping !== currentExpressShipping) {
-      return res.status(403).json({ 
-        error: 'Express shipping option cannot be changed for orders older than 6 hours.',
-        orderAge: 'old'
-      });
-    }
-
-    // Calculate fees based on updated information
-    const expressShippingValue = requestedExpressShipping;
-    const pricing = resolveBusinessPricing(req.userData);
-    const orderFees = calculateFees(government, updatedOrderType, expressShippingValue, pricing);
-
-    // Determine the amount value based on order type
-    let amountFromConditions = 0;
-    let amountType = 'NA';
-    
-    if (COD === 'on' || COD === true) {
-      amountType = 'COD';
-      amountFromConditions = parseFloat(amountCOD) || 0;
-    } else if (CashDifference === 'on' || CashDifference === true) {
-      amountType = 'CD';
-      amountFromConditions = parseFloat(amountCashDifference) || 0;
-    }
-
-    // Get the shipping fee (either from the frontend or calculate it here)
-    const calculatedOrderFees = orderFees ? Number(orderFees) : 120; // Default fee if not provided
-
-    // ✅ 3. Update Order (always by Mongo _id; :orderId may be order number)
-    const updatedOrder = await Order.findByIdAndUpdate(
-      order._id,
-      {
-      orderCustomer: {
-        fullName,
-        phoneNumber,
-        otherPhoneNumber: otherPhoneNumber || null,
-        address,
-        buildingNo: buildingNo != null && String(buildingNo).trim() !== '' ? String(buildingNo).trim() : null,
-        apartmentNo: apartmentNo != null && String(apartmentNo).trim() !== '' ? String(apartmentNo).trim() : null,
-        government,
-        zone,
-        deliverToWorkAddress: deliverToWorkAddress === 'on' || deliverToWorkAddress === true,
-      },
-      orderFees: calculatedOrderFees,
-      orderShipping: {
-        productDescription: productDescription || currentPD || '',
-        numberOfItems: numberOfItems || numberOfItemsCurrentPD || 0,
-        productDescriptionReplacement: newPD || '',
-        numberOfItemsReplacement: numberOfItemsNewPD || 0,
-        orderType: updatedOrderType,
-        amountType: amountType,
-        amount: amountFromConditions,
-        isExpressShipping: expressShippingValue,
-      },
-      isOrderAvailableForPreview: previewPermission === 'on',
-      orderNotes: Notes || '',
-      referralNumber: referralNumber || '',
-      },
-      { new: true } // Return the updated document
-    );
-
-    
-
-    if (!updatedOrder) {
-      return res.status(404).json({ error: "Order not found." });
-    }
-
-    res.status(200).json({ message: "Order updated successfully.", order: updatedOrder });
+    res.status(result.status).json({ message: result.message, order: result.order });
   } catch (error) {
     console.error("Error in editOrder:", error);
     res.status(500).json({ error: "Internal server error. Please try again." });
@@ -1339,7 +1116,7 @@ const get_orderDetailsAPI = async (req, res) => {
   try {
     const { orderNumber } = req.params;
     const userData = req.userData;
-    
+
     if (!userData || !userData._id) {
       return res.status(401).json({
         status: 'error',
@@ -1347,115 +1124,19 @@ const get_orderDetailsAPI = async (req, res) => {
       });
     }
 
-    const order = await Order.findOne({ orderNumber: orderNumber, business: userData._id })
-      .populate('deliveryMan', 'name phone email')
-      .populate({
-        path: 'courierHistory.courier',
-        model: 'courier',
-        select: 'name phone email'
-      })
-      .populate('business', 'name email phone brandInfo pickUpAddresses');
-
-    if (!order) {
-      return res.status(404).json({
+    const result = await orderService.getOrderDetailsForBusiness(userData, orderNumber);
+    if (!result.ok) {
+      return res.status(result.status).json({
         status: 'error',
-        message: 'Order not found'
+        message: result.error
       });
     }
 
-    // Enhance order with status information
-    const orderObj = order.toObject();
-    orderObj.statusLabel = statusHelper.getOrderStatusLabel(order.orderStatus);
-    orderObj.statusDescription = statusHelper.getOrderStatusDescription(order.orderStatus);
-    orderObj.categoryClass = statusHelper.getCategoryClass(order.statusCategory);
-    orderObj.categoryColor = statusHelper.getCategoryColor(order.statusCategory);
-    
-    // Add fast shipping indicator
-    orderObj.isFastShipping = order.orderShipping && order.orderShipping.isExpressShipping;
-
-    // Calculate progress percentage for order stages
-    const orderType = order.orderShipping && order.orderShipping.orderType;
-    let orderStages;
-    if (orderType === 'Exchange') {
-      orderStages = [
-        'orderPlaced', 'packed', 'shipping', 'inProgress',
-        'outForDelivery', 'exchangePickup', 'delivered', 'returnCompleted',
-      ];
-    } else {
-      orderStages = [
-        'orderPlaced', 'packed', 'shipping', 'inProgress',
-        'outForDelivery', 'delivered'
-      ];
-    }
-    
-    const completedStages = orderStages.filter(stage => 
-      order.orderStages[stage]?.isCompleted
-    ).length;
-    
-    const progressPercentage = Math.round((completedStages / orderStages.length) * 100);
-
-    // Get stage timeline
-    const stageTimeline = orderStages.map(stage => ({
-      stage,
-      isCompleted: order.orderStages[stage]?.isCompleted || false,
-      completedAt: order.orderStages[stage]?.completedAt || null,
-      notes: order.orderStages[stage]?.notes || '',
-      ...(order.orderStages[stage]?.toObject ? order.orderStages[stage].toObject() : order.orderStages[stage] || {})
-    }));
-
-    const { address: resolvedPickupAddress, addressId: resolvedPickupAddressId } =
-      resolvePickupAddressForOrder(order, order.business);
-
-    const businessForApi =
-      orderObj.business && typeof orderObj.business === 'object'
-        ? (() => {
-            const b = { ...orderObj.business };
-            delete b.pickUpAddresses;
-            return b;
-          })()
-        : orderObj.business;
-
-    // Prepare response data
-    const responseData = {
+    res.status(200).json({
       status: 'success',
       message: 'Order details retrieved successfully',
-      order: {
-        _id: orderObj._id,
-        orderNumber: orderObj.orderNumber,
-        orderDate: orderObj.orderDate,
-        completedDate: orderObj.completedDate,
-        orderStatus: orderObj.orderStatus,
-        statusLabel: orderObj.statusLabel,
-        statusDescription: orderObj.statusDescription,
-        categoryClass: orderObj.categoryClass,
-        categoryColor: orderObj.categoryColor,
-        isFastShipping: orderObj.isFastShipping,
-        orderCustomer: orderObj.orderCustomer,
-        orderShipping: orderObj.orderShipping,
-        orderFees: orderObj.orderFees,
-        orderNotes: orderObj.orderNotes,
-        referralNumber: orderObj.referralNumber,
-        isOrderAvailableForPreview: orderObj.isOrderAvailableForPreview,
-        deliveryMan: orderObj.deliveryMan,
-        courierHistory: orderObj.courierHistory,
-        orderStages: orderObj.orderStages,
-        progressPercentage,
-        stageTimeline,
-        business: businessForApi,
-        scheduledRetryAt: orderObj.scheduledRetryAt,
-        createdAt: orderObj.createdAt,
-        updatedAt: orderObj.updatedAt,
-        canCancelOrder: canBusinessCancel(order),
-        canChangeAddress: canBusinessChangeAddress(order),
-        canDelete: order.orderStatus === 'new',
-        waitingAction: orderWaitingActionPolicy.getWaitingActionFlags(order),
-        selectedPickupAddressId: orderObj.selectedPickupAddressId,
-        selectedPickupAddress: resolvedPickupAddress,
-        resolvedPickupAddressId,
-      }
-    };
-
-    res.status(200).json(responseData);
+      order: result.order
+    });
   } catch (error) {
     console.error('Error in get_orderDetailsAPI:', error);
     res.status(500).json({
@@ -1473,59 +1154,13 @@ const cancelOrder = async (req, res) => {
   const { orderId } = req.params;
 
   try {
-    const order = await findOrderByIdOrNumber(orderId);
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+    const result = await orderService.cancelOrderForBusiness(req.userData, orderId);
+    if (!result.ok) {
+      const payload = { error: result.error };
+      if (result.meta) Object.assign(payload, result.meta);
+      return res.status(result.status).json(payload);
     }
-
-    // Check if business owns this order
-    if (order.business.toString() !== req.userData._id.toString()) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-
-    // Same rule as UI / order list: only if cancel API would proceed
-    if (!canBusinessCancel(order)) {
-      return res.status(400).json({
-        error: 'This order cannot be canceled from its current status.',
-        currentStatus: order.orderStatus,
-        statusLabel: statusHelper.getOrderStatusLabel(order.orderStatus),
-      });
-    }
-
-    const cancelOutcome = applyBusinessLikeCancellation(order, { canceledBy: 'business' });
-    if (cancelOutcome.result === 'already_in_return') {
-      return res.status(400).json({ error: cancelOutcome.message });
-    }
-    order.$locals = order.$locals || {};
-    order.$locals.nextStatusHistoryNote = cancelOutcome.message;
-    await order.save();
-
-    if (cancelOutcome.notifyCourier && order.deliveryMan) {
-      try {
-        const reason =
-          cancelOutcome.result === 'exchange_cancel'
-            ? 'Exchange order canceled by business'
-            : 'Order canceled by business before pickup';
-        await firebase.sendOrderStatusNotification(
-          order.deliveryMan,
-          order.orderNumber,
-          'canceled',
-          {
-            cancelledBy: 'Business',
-            cancelledAt: new Date(),
-            reason,
-          }
-        );
-      } catch (notificationError) {
-        console.error(
-          `Failed to send push notification to courier ${order.deliveryMan}:`,
-          notificationError
-        );
-      }
-    }
-
-    return res.status(200).json({ message: cancelOutcome.message });
-
+    return res.status(result.status).json({ message: result.message });
   } catch (error) {
     console.error('Error in cancelOrder:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -1536,25 +1171,13 @@ const deleteOrder = async (req, res) => {
   const { orderId } = req.params;
 
   try {
-    const order = await findOrderByIdOrNumber(orderId);
-
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+    const result = await orderService.deleteOrderForBusiness(req.userData, orderId);
+    if (!result.ok) {
+      const payload = { error: result.error };
+      if (result.meta) Object.assign(payload, result.meta);
+      return res.status(result.status).json(payload);
     }
-
-    if (order.business.toString() !== req.userData._id.toString()) {
-      return res.status(403).json({ error: 'You do not have permission to delete this order' });
-    }
-
-    if (order.orderStatus !== 'new') {
-      return res.status(400).json({
-        error: 'This order can no longer be deleted — it has already been processed.',
-        currentStatus: order.orderStatus,
-      });
-    }
-
-    await order.deleteOne();
-    res.status(200).json({ message: 'Order deleted successfully.' });
+    res.status(result.status).json({ message: result.message });
   } catch (error) {
     console.error('Error in deleteOrder:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -2108,81 +1731,10 @@ const get_pickupPage = (req, res) => {
 
 const get_pickups = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 30,
-      status, // picikupStatus or statusCategory mapping
-      statusCategory,
-      dateFrom,
-      dateTo,
-      search,
-      pickupType // Upcoming / Completed
-    } = req.query;
-
-    const query = { business: req.userData._id };
-
-    // Legacy pickupType handling to keep original UX
-    if (pickupType === 'Upcoming') {
-      query.statusCategory = { $in: [statusHelper.STATUS_CATEGORIES.NEW, statusHelper.STATUS_CATEGORIES.PROCESSING] };
-    } else if (pickupType === 'Completed') {
-      query.statusCategory = statusHelper.STATUS_CATEGORIES.SUCCESSFUL;
-    }
-
-    // Map status filters
-    if (status && status !== 'all') {
-      query.picikupStatus = status;
-    }
-
-    if (statusCategory && statusHelper.STATUS_CATEGORIES[statusCategory]) {
-      query.statusCategory = statusCategory;
-    }
-
-    // Date range filter (pickupDate)
-    if (dateFrom || dateTo) {
-      query.pickupDate = {};
-      if (dateFrom) query.pickupDate.$gte = new Date(dateFrom);
-      if (dateTo) query.pickupDate.$lte = new Date(dateTo);
-    }
-
-    // Text search
-    if (search && search.trim() !== '') {
-      const searchRegex = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { pickupNumber: searchRegex },
-        { phoneNumber: searchRegex }
-      ];
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const pickups = await Pickup.find(query)
-      .sort({ pickupDate: -1, createdAt: -1 })
-      .populate('business')
-      .populate('assignedDriver')
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    const totalCount = await Pickup.countDocuments(query);
-
-    // Enhance pickups with status information
-    const enhancedPickups = pickups.map(pickup => {
-      const pickupObj = pickup.toObject();
-      pickupObj.statusLabel = statusHelper.getPickupStatusLabel(pickup.picikupStatus);
-      pickupObj.statusDescription = statusHelper.getPickupStatusDescription(pickup.picikupStatus);
-      pickupObj.categoryClass = statusHelper.getCategoryClass(pickup.statusCategory);
-      pickupObj.categoryColor = statusHelper.getCategoryColor(pickup.statusCategory);
-      return pickupObj;
-    });
-
+    const data = await pickupService.listPickupsForBusiness(req.userData, req.query);
     res.status(200).json({
-      pickups: enhancedPickups || [],
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalCount / parseInt(limit)),
-        totalCount,
-        hasNext: skip + pickups.length < totalCount,
-        hasPrev: parseInt(page) > 1
-      }
+      pickups: data.pickups || [],
+      pagination: data.pagination,
     });
   } catch (error) {
     console.error('Error in pickups:', error);
@@ -2335,74 +1887,13 @@ const exportPickupsToExcel = async (req, res) => {
 };
 
 const createPickup = async (req, res) => {
-  const {
-    numberOfOrders,
-    pickupDate,
-    phoneNumber,
-    isFragileItems,
-    isLargeItems,
-    pickupNotes,
-    pickupLocation,
-    pickupAddressId
-  } = req.body;
-
   try {
-    // ✅ 1. Validate required fields
-    if (!numberOfOrders || !pickupDate || !phoneNumber) {
-      return res
-        .status(400)
-        .json({ error: 'All pickup info fields are required.' });
-    }
-    if (!isValidPickupDate(pickupDate)) {
-      return res.status(400).json({ error: getPickupDateTooEarlyApiError() });
-    }
     console.log(req.body);
-    // ✅ 2. Compute pickup fee based on business zone/city and number of picked orders rule
-    const business = await User.findById(req.userData._id);
-    
-    // Get pickup address - use selected address or default
-    let selectedAddress = null;
-    if (pickupAddressId && business.pickUpAddresses && business.pickUpAddresses.length > 0) {
-      selectedAddress = business.pickUpAddresses.find(addr => addr.addressId === pickupAddressId);
+    const result = await pickupService.createPickupForBusiness(req.userData, req.body);
+    if (!result.ok) {
+      return res.status(result.status).json({ error: result.error });
     }
-    if (!selectedAddress && business.pickUpAddresses && business.pickUpAddresses.length > 0) {
-      selectedAddress = business.pickUpAddresses.find(addr => addr.isDefault) || business.pickUpAddresses[0];
-    }
-    
-    const businessCity = selectedAddress?.city || business?.pickUpAdress?.city || 'Cairo';
-    const initialPickedCount = 0;
-    const computedPickupFee = calcPickupFee(businessCity, initialPickedCount, resolveBusinessPricing(business));
-
-    // ✅ 3. Create Pickup
-    // Use selected address phone if available, otherwise use provided phoneNumber
-    const pickupPhoneNumber = phoneNumber || selectedAddress?.pickupPhone || business.phoneNumber || '';
-    
-    const newPickup = new Pickup({
-      business: req.userData._id,
-      pickupNumber: `${
-        Math.floor(Math.random() * (900000 - 100000 + 1)) + 100000
-      }`,
-      numberOfOrders,
-      pickupDate,
-      phoneNumber: pickupPhoneNumber,
-      isFragileItems: isFragileItems === 'true',
-      isLargeItems: isLargeItems === 'true',
-      picikupStatus: 'new',
-      pickupNotes,
-      pickupFees: computedPickupFee,
-      pickupAddressId: pickupAddressId || (selectedAddress?.addressId || null),
-      pickupLocation: pickupLocation || (selectedAddress ? `${selectedAddress.adressDetails}, ${selectedAddress.city}, ${selectedAddress.country}` : '')
-    });
-    newPickup.pickupStages.push({
-      stageName: 'Pickup Created',
-      stageDate: new Date(),
-      stageNotes: [{ text: 'Pickup has been created.', date: new Date() }],
-    });
-
-    const savedPickup = await newPickup.save();
-    res
-      .status(201)
-      .json({ message: 'Pickup created successfully.', pickup: savedPickup });
+    res.status(result.status).json({ message: result.message, pickup: result.pickup });
   } catch (error) {
     console.error('Error in createPickup:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -2519,124 +2010,27 @@ const ratePickup = async (req, res) => {
  */
 async function findPickupByIdOrNumberParam(req, extraPopulates = []) {
   const raw = req.params.pickupId ?? req.params.pickupNumber;
-  if (!raw) {
-    return null;
-  }
-  const buildQuery = (filter) => {
-    let q = Pickup.findOne(filter).populate('business');
-    extraPopulates.forEach((path) => {
-      q = q.populate(path);
-    });
-    return q;
-  };
-  let pickup = null;
-  if (mongoose.Types.ObjectId.isValid(raw)) {
-    pickup = await buildQuery({ _id: raw });
-  }
-  if (!pickup) {
-    pickup = await buildQuery({ pickupNumber: raw });
-  }
-  return pickup;
+  if (!raw) return null;
+  return pickupService.findPickupByIdOrNumber(raw, extraPopulates);
 }
 
 /**
  * Resolve an order from a route param that may be Mongo _id or orderNumber.
  * Some clients (and URLs) use order number instead of _id.
  */
-async function findOrderByIdOrNumber(orderId) {
-  if (orderId == null || String(orderId).trim() === '') {
-    return null;
-  }
-  const raw = String(orderId).trim();
-  let order = null;
-  if (mongoose.Types.ObjectId.isValid(raw)) {
-    order = await Order.findById(raw);
-  }
-  if (!order) {
-    order = await Order.findOne({ orderNumber: raw });
-  }
-  return order;
-}
+const { findOrderByIdOrNumber } = orderService;
 
 /** Soft-cancel pickup for business: status → canceled, with ownership + status guards. */
 const cancelPickup = async (req, res) => {
   try {
-    const pickup = await findPickupByIdOrNumberParam(req, ['assignedDriver']);
-
-    if (!pickup) {
-      return res.status(404).json({ error: 'Pickup not found' });
+    const pickupIdOrNumber = req.params.pickupId ?? req.params.pickupNumber;
+    const result = await pickupService.cancelPickupForBusiness(req.userData, pickupIdOrNumber);
+    if (!result.ok) {
+      const payload = { error: result.error };
+      if (result.meta) Object.assign(payload, result.meta);
+      return res.status(result.status).json(payload);
     }
-
-    const businessId = pickup.business._id
-      ? pickup.business._id.toString()
-      : pickup.business.toString();
-    if (businessId !== req.userData._id.toString()) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-
-    if (pickup.picikupStatus === 'canceled') {
-      return res.status(400).json({ error: 'This pickup is already cancelled.' });
-    }
-
-    if (!canBusinessCancelPickupStatus(pickup.picikupStatus)) {
-      return res.status(400).json({
-        error:
-          'This pickup can no longer be cancelled — it is already in progress or completed.',
-        currentStatus: pickup.picikupStatus,
-      });
-    }
-
-    pickup.picikupStatus = 'canceled';
-    pickup.pickupStages.push({
-      stageName: 'Cancelled',
-      stageDate: new Date(),
-      stageNotes: [
-        {
-          text: 'Pickup cancelled by business',
-          date: new Date(),
-        },
-      ],
-    });
-
-    await pickup.save();
-
-    try {
-      await firebase.sendPickupStatusNotification(
-        pickup.business._id || pickup.business,
-        pickup.pickupNumber,
-        'canceled',
-        {
-          cancelledAt: new Date(),
-          cancelledBy: 'Business',
-        }
-      );
-    } catch (notificationError) {
-      console.error(
-        'Failed to send pickup cancellation notification to business:',
-        notificationError
-      );
-    }
-
-    if (pickup.assignedDriver) {
-      try {
-        await firebase.sendPickupStatusNotification(
-          pickup.assignedDriver._id,
-          pickup.pickupNumber,
-          'canceled',
-          {
-            cancelledAt: new Date(),
-            cancelledBy: 'Business',
-          }
-        );
-      } catch (notificationError) {
-        console.error(
-          'Failed to send pickup cancellation notification to courier:',
-          notificationError
-        );
-      }
-    }
-
-    res.status(200).json({ message: 'Pickup cancelled successfully.' });
+    res.status(result.status).json({ message: result.message });
   } catch (error) {
     console.error('Error in cancelPickup:', error);
     res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -2645,74 +2039,19 @@ const cancelPickup = async (req, res) => {
 
 /** Update editable pickup fields (only while status is new / pendingPickup). */
 const updatePickup = async (req, res) => {
-  const {
-    numberOfOrders,
-    pickupDate,
-    phoneNumber,
-    isFragileItems,
-    isLargeItems,
-    pickupNotes,
-    pickupLocation,
-    pickupAddressId,
-  } = req.body;
-
   try {
-    const pickup = await findPickupByIdOrNumberParam(req, []);
-
-    if (!pickup) {
-      return res.status(404).json({ error: 'Pickup not found.' });
+    const pickupIdOrNumber = req.params.pickupId ?? req.params.pickupNumber;
+    const result = await pickupService.updatePickupForBusiness(
+      req.userData,
+      pickupIdOrNumber,
+      req.body
+    );
+    if (!result.ok) {
+      const payload = { error: result.error };
+      if (result.meta) Object.assign(payload, result.meta);
+      return res.status(result.status).json(payload);
     }
-
-    const businessId = pickup.business._id
-      ? pickup.business._id.toString()
-      : pickup.business.toString();
-    if (businessId !== req.userData._id.toString()) {
-      return res.status(403).json({ error: 'Forbidden.' });
-    }
-
-    if (!canBusinessEditPickupStatus(pickup.picikupStatus)) {
-      return res.status(400).json({
-        error: 'This pickup can no longer be edited — it is already in progress.',
-        currentStatus: pickup.picikupStatus,
-      });
-    }
-
-    if (!numberOfOrders || !pickupDate || !phoneNumber) {
-      return res.status(400).json({ error: 'numberOfOrders, pickupDate and phoneNumber are required.' });
-    }
-    if (!isValidPickupDate(pickupDate)) {
-      return res.status(400).json({ error: getPickupDateTooEarlyApiError() });
-    }
-
-    // Re-resolve address and recompute fee
-    const business = pickup.business;
-    let selectedAddress = null;
-    const addressId = pickupAddressId || pickup.pickupAddressId;
-    if (addressId && business.pickUpAddresses && business.pickUpAddresses.length > 0) {
-      selectedAddress = business.pickUpAddresses.find(addr => addr.addressId === addressId);
-    }
-    if (!selectedAddress && business.pickUpAddresses && business.pickUpAddresses.length > 0) {
-      selectedAddress = business.pickUpAddresses.find(addr => addr.isDefault) || business.pickUpAddresses[0];
-    }
-
-    const businessCity = selectedAddress?.city || business?.pickUpAdress?.city || 'Cairo';
-    const computedPickupFee = calcPickupFee(businessCity, 0, resolveBusinessPricing(business));
-
-    pickup.numberOfOrders = numberOfOrders;
-    pickup.pickupDate = pickupDate;
-    pickup.phoneNumber = phoneNumber;
-    pickup.isFragileItems = isFragileItems === 'true' || isFragileItems === true;
-    pickup.isLargeItems = isLargeItems === 'true' || isLargeItems === true;
-    pickup.pickupNotes = pickupNotes || pickup.pickupNotes;
-    pickup.pickupFees = computedPickupFee;
-    if (pickupAddressId) pickup.pickupAddressId = pickupAddressId;
-    if (pickupLocation) pickup.pickupLocation = pickupLocation;
-    else if (selectedAddress && pickupAddressId) {
-      pickup.pickupLocation = `${selectedAddress.adressDetails}, ${selectedAddress.city}, ${selectedAddress.country}`;
-    }
-
-    const saved = await pickup.save();
-    return res.status(200).json({ message: 'Pickup updated successfully.', pickup: saved });
+    return res.status(result.status).json({ message: result.message, pickup: result.pickup });
   } catch (error) {
     console.error('Error in updatePickup:', error);
     return res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -2722,31 +2061,22 @@ const updatePickup = async (req, res) => {
 /** Hard-delete a pickup. Business-side: only allowed while status is new / pendingPickup. */
 const deletePickup = async (req, res) => {
   try {
-    const pickup = await findPickupByIdOrNumberParam(req, []);
-
-    if (!pickup) {
-      return res.status(404).json({ error: 'Pickup not found.' });
-    }
-
-    // Ownership check (skip for admin routes that go through a different auth middleware)
-    if (req.userData) {
-      const businessId = pickup.business._id
-        ? pickup.business._id.toString()
-        : pickup.business.toString();
-      if (businessId !== req.userData._id.toString()) {
-        return res.status(403).json({ error: 'Forbidden.' });
+    const pickupIdOrNumber = req.params.pickupId ?? req.params.pickupNumber;
+    if (!req.userData) {
+      const pickup = await findPickupByIdOrNumberParam(req, []);
+      if (!pickup) {
+        return res.status(404).json({ error: 'Pickup not found.' });
       }
-
-      if (!canBusinessHardDeletePickupStatus(pickup.picikupStatus)) {
-        return res.status(400).json({
-          error: 'This pickup can no longer be deleted — it is already in progress or has been assigned to a driver.',
-          currentStatus: pickup.picikupStatus,
-        });
-      }
+      await Pickup.findByIdAndDelete(pickup._id);
+      return res.status(200).json({ message: 'Pickup deleted successfully.' });
     }
-
-    await Pickup.findByIdAndDelete(pickup._id);
-    return res.status(200).json({ message: 'Pickup deleted successfully.' });
+    const result = await pickupService.deletePickupForBusiness(req.userData, pickupIdOrNumber);
+    if (!result.ok) {
+      const payload = { error: result.error };
+      if (result.meta) Object.assign(payload, result.meta);
+      return res.status(result.status).json(payload);
+    }
+    return res.status(result.status).json({ message: result.message });
   } catch (error) {
     console.error('Error in deletePickup:', error);
     return res.status(500).json({ error: 'Internal server error. Please try again.' });
@@ -2911,25 +2241,11 @@ const calculateFees = (government, orderType, isExpressShipping, pricing) => {
 
 const calculateOrderFees = async (req, res) => {
   try {
-    const { government, orderType, isExpressShipping } = req.body;
-
-    // Validate inputs
-    if (!government || !orderType) {
-      return res.status(400).json({ error: 'Government and orderType are required' });
+    const result = orderService.calculateOrderFeesForBusiness(req.userData, req.body);
+    if (!result.ok) {
+      return res.status(result.status).json({ error: result.error });
     }
-
-    const pricing = resolveBusinessPricing(req.userData);
-
-    // Calculate the fee
-    const fee = calculateFees(
-      government, 
-      orderType, 
-      isExpressShipping === 'true' || isExpressShipping === true,
-      pricing
-    );
-
-    // Return the calculated fee
-    return res.json({ fee });
+    return res.json({ fee: result.fee });
   } catch (error) {
     console.error('Error calculating fees:', error);
     return res.status(500).json({ error: 'An error occurred while calculating fees' });
@@ -3026,17 +2342,13 @@ const validateOriginalOrder = async (req, res) => {
 // Calculate pickup fee (server-side) using centralized fees
 const calculatePickupFee = async (req, res) => {
   try {
-    const { numberOfOrders } = req.body;
-    const user = await User.findById(req.userData._id);
-    const city = user?.pickUpAdress?.city || 'Cairo';
-    const count = parseInt(numberOfOrders || '0');
-    const fee = calcPickupFee(city, count, resolveBusinessPricing(user));
-    return res.json({ fee });
+    const result = pickupService.calculatePickupFeeForBusiness(req.userData, req.body);
+    return res.json({ fee: result.fee });
   } catch (error) {
     console.error('Error calculating pickup fee:', error);
     return res.status(500).json({ error: 'Failed to calculate pickup fee' });
   }
-}
+};
 
 
 // ================================================= Edit Profile ================================================= //
@@ -4737,13 +4049,13 @@ const getBusinessLanguage = async (req, res) => {
 
 const getDeliveryZonesCatalog = (req, res) => {
   try {
-    const etag = getMetroDeliveryZonesCatalogWeakEtag();
-    if (req.headers['if-none-match'] === etag) {
-      res.setHeader('ETag', etag);
+    const result = orderService.getDeliveryZonesCatalogData(req);
+    if (result.notModified) {
+      res.setHeader('ETag', result.etag);
       return res.status(304).end();
     }
-    res.setHeader('ETag', etag);
-    return res.json(getMetroDeliveryZonesCatalog());
+    res.setHeader('ETag', result.etag);
+    return res.json(result.catalog);
   } catch (error) {
     console.error('Error in getDeliveryZonesCatalog:', error);
     return res.status(500).json({ message: 'Failed to load delivery zones' });

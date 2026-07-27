@@ -1,0 +1,761 @@
+openapi: 3.1.0
+info:
+  title: Now Shipping Public API
+  version: 1.0.0
+  description: |
+    Public REST API for business integrations with Now Shipping.
+    Fees are always computed server-side — never send orderFees or pickupFees in requests.
+    Company integrators use one API key and send X-Merchant-Id per order/pickup request.
+  contact:
+    name: Now Shipping Integrations
+
+servers:
+  - url: /api/public/v1
+    description: Public API v1
+
+security:
+  - BearerAuth: []
+  - ApiKeyHeader: []
+
+tags:
+  - name: System
+  - name: Merchants
+  - name: Zones & Fees
+  - name: Orders
+  - name: Pickups
+
+paths:
+  /ping:
+    get:
+      tags: [System]
+      summary: Health check and business identity
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessPing'
+
+  /delivery-zones:
+    get:
+      tags: [Zones & Fees]
+      summary: Delivery zones catalog
+      responses:
+        '200':
+          description: Zone catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessZones'
+        '304':
+          description: Not modified (ETag)
+
+  /fees/calculate:
+    post:
+      tags: [Zones & Fees]
+      summary: Preview shipping fee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeeCalculateRequest'
+      responses:
+        '200':
+          description: Calculated fee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessFee'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /merchants:
+    get:
+      tags: [Merchants]
+      summary: List merchant sub-accounts (company keys only)
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Merchant list
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Merchants]
+      summary: Onboard a merchant sub-account (company keys only)
+      description: |
+        Creates a ready-to-ship merchant linked to your company account.
+        Returns `businessAccountCode` — use it immediately as `X-Merchant-Id` for orders and pickups.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantCreateRequest'
+      responses:
+        '201':
+          description: Merchant created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMerchantCreate'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /merchants/{merchantId}:
+    get:
+      tags: [Merchants]
+      summary: Get merchant sub-account (company keys only)
+      parameters:
+        - name: merchantId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Merchant detail
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /pickups/calculate-fee:
+    post:
+      tags: [Pickups]
+      summary: Preview pickup fee
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                numberOfOrders:
+                  type: integer
+                pickupAddressId:
+                  type: string
+      responses:
+        '200':
+          description: Calculated pickup fee
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /pickups:
+    get:
+      tags: [Pickups]
+      summary: List pickups
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Pickup list
+    post:
+      tags: [Pickups]
+      summary: Create pickup
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupCreateRequest'
+      responses:
+        '201':
+          description: Pickup created
+
+  /pickups/{pickupNumber}:
+    get:
+      tags: [Pickups]
+      summary: Get pickup details
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+        - name: pickupNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pickup detail
+    put:
+      tags: [Pickups]
+      summary: Update pickup
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+        - name: pickupNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pickup updated
+    delete:
+      tags: [Pickups]
+      summary: Delete pickup
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+        - name: pickupNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pickup deleted
+
+  /pickups/{pickupNumber}/cancel:
+    post:
+      tags: [Pickups]
+      summary: Cancel pickup
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+        - name: pickupNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pickup cancelled
+
+  /orders:
+    get:
+      tags: [Orders]
+      summary: List orders
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: orderType
+          in: query
+          schema:
+            type: string
+            enum: [Deliver, Return, Exchange, All]
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessOrderList'
+    post:
+      tags: [Orders]
+      summary: Create order
+      description: Fees are computed automatically. Do not send orderFees.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessOrderCreate'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /orders/{orderNumber}:
+    get:
+      tags: [Orders]
+      summary: Get order by order number
+      parameters:
+        - $ref: '#/components/parameters/OrderNumber'
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessOrderDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders/{orderNumber}/awb:
+    get:
+      tags: [Orders]
+      summary: Download AWB / shipping label PDF
+      parameters:
+        - $ref: '#/components/parameters/OrderNumber'
+        - name: size
+          in: query
+          schema:
+            type: string
+            enum: [A4, A5]
+            default: A4
+      responses:
+        '200':
+          description: PDF document
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders/{orderId}:
+    put:
+      tags: [Orders]
+      summary: Update order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderUpdateRequest'
+      responses:
+        '200':
+          description: Order updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessOrderUpdate'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Orders]
+      summary: Delete order (status must be new)
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders/{orderId}/cancel:
+    post:
+      tags: [Orders]
+      summary: Cancel order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Canceled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: API key as Bearer token (nsk_live_...)
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+
+  parameters:
+    MerchantId:
+      name: X-Merchant-Id
+      in: header
+      description: Merchant businessAccountCode, externalMerchantId, or Mongo _id (required for company API keys on order/pickup routes)
+      schema:
+        type: string
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 50
+    OrderNumber:
+      name: orderNumber
+      in: path
+      required: true
+      schema:
+        type: string
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: MongoDB _id or order number
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Resource conflict (e.g. duplicate merchant)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+
+    SuccessPing:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+            business:
+              type: object
+            scopes:
+              type: array
+              items:
+                type: string
+
+    FeeCalculateRequest:
+      type: object
+      required: [government, orderType]
+      properties:
+        government:
+          type: string
+          enum: [Cairo, Giza, Qalyubia]
+        orderType:
+          type: string
+          enum: [Deliver, Return, Exchange]
+        isExpressShipping:
+          type: boolean
+          default: false
+
+    SuccessFee:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            fee:
+              type: number
+            currency:
+              type: string
+              example: EGP
+
+    SuccessZones:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+
+    OrderCreateRequest:
+      type: object
+      required: [fullName, phoneNumber, address, government, zone, orderType]
+      properties:
+        fullName:
+          type: string
+        phoneNumber:
+          type: string
+        otherPhoneNumber:
+          type: string
+        address:
+          type: string
+        buildingNo:
+          type: string
+        apartmentNo:
+          type: string
+        government:
+          type: string
+          enum: [Cairo, Giza, Qalyubia]
+        zone:
+          type: string
+        deliverToWorkAddress:
+          type: boolean
+        orderType:
+          type: string
+          enum: [Deliver, Return, Exchange]
+        productDescription:
+          type: string
+        numberOfItems:
+          type: integer
+        isExpressShipping:
+          type: boolean
+        COD:
+          type: boolean
+        amountCOD:
+          type: number
+        CashDifference:
+          type: boolean
+        amountCashDifference:
+          type: number
+        previewPermission:
+          type: boolean
+        referralNumber:
+          type: string
+        Notes:
+          type: string
+        originalOrderNumber:
+          type: string
+        selectedPickupAddressId:
+          type: string
+
+    OrderUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/OrderCreateRequest'
+
+    PickupCreateRequest:
+      type: object
+      required: [numberOfOrders, pickupDate, phoneNumber]
+      properties:
+        numberOfOrders:
+          type: integer
+        pickupDate:
+          type: string
+          format: date
+        phoneNumber:
+          type: string
+        isFragileItems:
+          type: boolean
+        isLargeItems:
+          type: boolean
+        pickupNotes:
+          type: string
+        pickupLocation:
+          type: string
+        pickupAddressId:
+          type: string
+
+    MerchantPickupAddress:
+      type: object
+      required: [city, zone, addressDetails, pickupPhone]
+      properties:
+        city:
+          type: string
+          enum: [Cairo, Giza, Qalyubia]
+          description: Governorate (metro). Use the same values as Create order.
+        zone:
+          type: string
+          description: Exact zone `value` from GET /delivery-zones for the selected governorate (not free text)
+        addressDetails:
+          type: string
+        pickupPhone:
+          type: string
+          description: 11-digit Egyptian mobile number
+        nearbyLandmark:
+          type: string
+        country:
+          type: string
+          default: Egypt
+
+    MerchantCreateRequest:
+      type: object
+      required: [name, email, phone, brandName, pickupAddress]
+      properties:
+        name:
+          type: string
+          description: Merchant owner or business name
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          description: 11-digit Egyptian mobile number
+        brandName:
+          type: string
+        externalMerchantId:
+          type: string
+          description: Your platform's shop/merchant ID (unique per company)
+        pickupAddress:
+          $ref: '#/components/schemas/MerchantPickupAddress'
+
+    Merchant:
+      type: object
+      properties:
+        id:
+          type: string
+        businessAccountCode:
+          type: string
+          description: Use as X-Merchant-Id for orders and pickups
+        name:
+          type: string
+        brandName:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        externalMerchantId:
+          type: string
+        isCompleted:
+          type: boolean
+        isVerified:
+          type: boolean
+        parentCompany:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    SuccessMerchantCreate:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+            merchant:
+              $ref: '#/components/schemas/Merchant'
+
+    OrderSummary:
+      type: object
+      properties:
+        orderId:
+          type: string
+        orderNumber:
+          type: string
+        orderStatus:
+          type: string
+        orderFees:
+          type: number
+        orderType:
+          type: string
+        isExpressShipping:
+          type: boolean
+
+    SuccessOrderCreate:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+            order:
+              $ref: '#/components/schemas/OrderSummary'
+
+    SuccessOrderUpdate:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+            order:
+              $ref: '#/components/schemas/OrderSummary'
+
+    SuccessOrderList:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            orders:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderSummary'
+            pagination:
+              type: object
+
+    SuccessOrderDetail:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            order:
+              type: object
+
+    SuccessMessage:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            message:
+              type: string

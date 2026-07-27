@@ -4473,11 +4473,22 @@ const get_businessDetails = async (req, res) => {
 
     const businessDisplayName = getBusinessDisplayName(business);
 
+    let parentCompanyName = null;
+    if (business.parentCompany) {
+      const parent = await User.findById(business.parentCompany)
+        .select('name brandInfo businessAccountCode')
+        .lean();
+      if (parent) {
+        parentCompanyName = parent.brandInfo?.brandName || parent.name;
+      }
+    }
+
     res.status(200).json({
       business: {
         ...business,
         balance: unsettledBalance,
         businessDisplayName,
+        parentCompanyName,
       },
       stats,
       revenueBreakdown,

@@ -432,6 +432,9 @@
         <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabPricing" type="button" id="bdTabPricingBtn">Pricing</button>
       </li>
       <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabApiAccess" type="button" id="bdTabApiAccessBtn">API Access</button>
+      </li>
+      <li class="nav-item" role="presentation">
         <button class="nav-link" data-bs-toggle="pill" data-bs-target="#bdTabFinancial" type="button">Financial</button>
       </li>
       <li class="nav-item" role="presentation">
@@ -641,6 +644,93 @@
     </div>
   </div>
 
+  <div class="tab-pane fade" id="bdTabApiAccess" role="tabpanel">
+    <div class="bd-info-card mb-3">
+      <div class="bd-info-title mb-2"><i class="ri-building-2-line"></i> Integration account type</div>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="isCompanyAccountSwitch">
+            <label class="form-check-label fw-semibold" for="isCompanyAccountSwitch">Company account (multi-tenant integrator)</label>
+          </div>
+          <div class="form-text">When enabled, API keys are company-wide. Integrators send <code>X-Merchant-Id</code> per request to target a merchant sub-account.</div>
+        </div>
+        <div class="col-md-6" id="parentCompanySection">
+          <label class="form-label fw-semibold" for="parentCompanySearch">Parent company</label>
+          <input type="text" class="form-control form-control-sm" id="parentCompanySearch" placeholder="Search company by name or code…" autocomplete="off">
+          <input type="hidden" id="parentCompanyId">
+          <div id="parentCompanyResults" class="list-group mt-1 d-none" style="max-height: 180px; overflow-y: auto;"></div>
+          <div class="form-text" id="parentCompanyHint">Assign this merchant to a parent company integrator.</div>
+          <button type="button" class="btn btn-sm btn-soft-primary mt-2" id="btnSaveParentCompany">Save parent company</button>
+          <button type="button" class="btn btn-sm btn-light mt-2" id="btnClearParentCompany">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bd-info-card mb-3 d-none" id="companyMerchantsCard">
+      <div class="bd-info-title mb-2"><i class="ri-store-2-line"></i> Merchant sub-accounts</div>
+      <p class="text-muted small">Merchants linked to this company. Integrators use each merchant's <code>businessAccountCode</code> as <code>X-Merchant-Id</code>.</p>
+      <div class="admin-table-scroll admin-table-scroll--compact">
+        <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table">
+          <thead class="text-muted">
+            <tr>
+              <th>Code</th>
+              <th>Name</th>
+              <th>Brand</th>
+              <th>Email</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="companyMerchantsTableBody">
+            <tr><td colspan="5" class="text-muted small">No merchants linked yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bd-info-card mb-3">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+          <div class="bd-info-title mb-1"><i class="ri-key-2-line"></i> Public API tokens</div>
+          <p class="text-muted small mb-0">
+            Issue API keys so this business can integrate with Now Shipping (create orders, print AWB, etc.).
+            Keys are shown <strong>once</strong> at creation — copy immediately.
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <a class="btn btn-soft-primary btn-sm" href="/api/public/v1/docs" target="_blank" rel="noopener">
+            <i class="ri-book-open-line me-1"></i>API docs
+          </a>
+          <button type="button" class="btn btn-primary btn-sm" id="btnGenerateApiToken">
+            <i class="ri-add-line me-1"></i>Generate token
+          </button>
+        </div>
+      </div>
+      <div class="admin-table-scroll admin-table-scroll--compact">
+        <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table">
+          <thead class="text-muted">
+            <tr>
+              <th>Name</th>
+              <th>Key</th>
+              <th>Status</th>
+              <th>Last used</th>
+              <th>Requests</th>
+              <th>Created</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="apiTokensTableBody">
+            <tr><td colspan="7" class="text-muted small">Loading tokens…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="alert alert-info small mb-0" id="apiAccessHint">
+      <strong>Base URL:</strong> <code>/api/public/v1</code> &nbsp;|&nbsp;
+      <strong>Auth:</strong> <code>Authorization: Bearer nsk_live_...</code> or <code>X-Api-Key</code>
+    </div>
+  </div>
+
   <div class="tab-pane fade" id="bdTabFinancial" role="tabpanel">
     <div class="d-flex justify-content-end mb-2">
       <a class="btn btn-soft-warning btn-sm" href="/admin/business/<%= businessId %>/ledger" target="_blank">
@@ -714,6 +804,51 @@
     </div>
   </div>
 </div>
+</div>
+
+<!-- API token: generate modal -->
+<div class="modal fade" id="apiTokenGenerateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Generate API token</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label fw-semibold" for="apiTokenName">Token name</label>
+        <input type="text" class="form-control" id="apiTokenName" maxlength="120" placeholder="e.g. WooCommerce integration">
+        <div class="form-text">A label to identify this key later (prefix only is stored for display).</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btnConfirmGenerateApiToken">Generate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- API token: one-time reveal modal -->
+<div class="modal fade" id="apiTokenRevealModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-warning-subtle">
+        <h5 class="modal-title"><i class="ri-alert-line me-1"></i> Copy your API key now</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">This is the <strong>only time</strong> the full key will be shown. Store it securely — it cannot be recovered.</p>
+        <div class="input-group">
+          <input type="text" class="form-control font-monospace" id="apiTokenRevealValue" readonly>
+          <button class="btn btn-outline-primary" type="button" id="btnCopyApiToken">
+            <i class="ri-file-copy-line"></i> Copy
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I have copied the key</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <%- contentFor('FooterJs') %>
@@ -1351,6 +1486,7 @@
   const ORDER_TYPES = ['Deliver', 'Return', 'Exchange'];
   let pricingState = null;
   let pricingLoaded = false;
+  let apiTokensLoaded = false;
 
   function formatPricingValue(value) {
     if (value === null || value === undefined || value === '') return '—';
@@ -1578,10 +1714,215 @@
       renderShopOrders(data.recentShopOrders || []);
       renderFinancial(data);
       renderAnalytics(data.stats, data.revenueBreakdown || { income: 0, expenses: 0 });
+      renderApiAccessSettings(data.business);
     } catch (e) {
       console.error(e);
       Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load business details', confirmButtonColor: '#F39720' });
     }
+  }
+
+  function renderApiAccessSettings(business) {
+    const isCompany = Boolean(business.isCompanyAccount);
+    const companySwitch = document.getElementById('isCompanyAccountSwitch');
+    const parentSection = document.getElementById('parentCompanySection');
+    const merchantsCard = document.getElementById('companyMerchantsCard');
+    const hint = document.getElementById('apiAccessHint');
+
+    if (companySwitch) {
+      companySwitch.checked = isCompany;
+      companySwitch.disabled = Boolean(business.parentCompany);
+    }
+    if (parentSection) {
+      parentSection.classList.toggle('d-none', isCompany);
+    }
+    if (merchantsCard) {
+      merchantsCard.classList.toggle('d-none', !isCompany);
+    }
+    if (hint) {
+      hint.innerHTML = isCompany
+        ? '<strong>Company API key:</strong> send <code>X-Merchant-Id</code> (merchant <code>businessAccountCode</code> or Mongo <code>_id</code>) on order/pickup requests. List merchants via <code>GET /api/public/v1/merchants</code>.'
+        : '<strong>Base URL:</strong> <code>/api/public/v1</code> &nbsp;|&nbsp; <strong>Auth:</strong> <code>Authorization: Bearer nsk_live_...</code> or <code>X-Api-Key</code>';
+    }
+
+    const parentInput = document.getElementById('parentCompanySearch');
+    const parentIdInput = document.getElementById('parentCompanyId');
+    if (parentInput && parentIdInput) {
+      parentIdInput.value = business.parentCompany || '';
+      parentInput.value = business.parentCompanyName || business.parentCompany || '';
+      if (business.parentCompany && !business.parentCompanyName) {
+        parentInput.placeholder = 'Parent company assigned (reload to see name)';
+      }
+    }
+
+    if (isCompany) {
+      loadCompanyMerchants();
+    }
+  }
+
+  async function saveAccountType(isCompanyAccount) {
+    const response = await fetch(`/admin/business/${businessId}/account-type`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isCompanyAccount }),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to update account type');
+    }
+    return data;
+  }
+
+  async function saveParentCompany(parentCompanyId) {
+    const response = await fetch(`/admin/business/${businessId}/parent-company`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parentCompanyId: parentCompanyId || null }),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to update parent company');
+    }
+    return data;
+  }
+
+  async function searchCompanies(query) {
+    const response = await fetch(`/admin/api/companies/search?q=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    if (!response.ok || !data.success) return [];
+    return data.companies || [];
+  }
+
+  async function loadCompanyMerchants() {
+    const tbody = document.getElementById('companyMerchantsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" class="text-muted small">Loading merchants…</td></tr>';
+    try {
+      const response = await fetch(`/admin/business/${businessId}/merchants`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to load merchants');
+      }
+      const merchants = data.merchants || [];
+      if (!merchants.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-muted small">No merchants linked yet. Assign parent company on merchant business accounts.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = merchants.map((m) => `<tr>
+        <td><code>${escapeHtml(m.businessAccountCode || '—')}</code></td>
+        <td>${escapeHtml(m.name)}</td>
+        <td>${escapeHtml(m.brandName || '—')}</td>
+        <td class="small">${escapeHtml(m.email || '—')}</td>
+        <td>${m.isCompleted ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-warning-subtle text-warning">Incomplete</span>'}</td>
+      </tr>`).join('');
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-danger small">Failed to load merchants.</td></tr>';
+    }
+  }
+
+  function formatApiTokenDate(value) {
+    if (!value) return '—';
+    try {
+      return new Date(value).toLocaleString();
+    } catch {
+      return '—';
+    }
+  }
+
+  function renderApiTokensTable(tokens) {
+    const tbody = document.getElementById('apiTokensTableBody');
+    if (!tbody) return;
+    if (!tokens || tokens.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-muted small">No API tokens yet. Generate one to enable integrations.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = tokens.map((t) => {
+      const statusBadge = t.isActive
+        ? '<span class="badge bg-success-subtle text-success">Active</span>'
+        : '<span class="badge bg-secondary-subtle text-secondary">Revoked</span>';
+      const revokeBtn = t.isActive
+        ? `<button type="button" class="btn btn-sm btn-soft-danger btn-revoke-api-token" data-token-id="${t.id}">Revoke</button>`
+        : '';
+      return `<tr>
+        <td>${escapeHtml(t.name)}</td>
+        <td><code>${escapeHtml(t.keyPrefix)}…${escapeHtml(t.lastFour)}</code></td>
+        <td>${statusBadge}</td>
+        <td class="small">${formatApiTokenDate(t.lastUsedAt)}</td>
+        <td>${Number(t.requestCount || 0).toLocaleString()}</td>
+        <td class="small">${formatApiTokenDate(t.createdAt)}</td>
+        <td class="text-end">${revokeBtn}</td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.btn-revoke-api-token').forEach((btn) => {
+      btn.addEventListener('click', () => revokeApiToken(btn.dataset.tokenId));
+    });
+  }
+
+  async function loadApiTokens() {
+    const tbody = document.getElementById('apiTokensTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-muted small">Loading tokens…</td></tr>';
+    try {
+      const response = await fetch(`/admin/business/${businessId}/api-tokens`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to load tokens');
+      }
+      renderApiTokensTable(data.tokens || []);
+      apiTokensLoaded = true;
+    } catch (e) {
+      console.error(e);
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-danger small">Failed to load API tokens.</td></tr>';
+      }
+    }
+  }
+
+  async function createApiToken(name) {
+    const response = await fetch(`/admin/business/${businessId}/api-tokens`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to create token');
+    }
+    return data;
+  }
+
+  async function revokeApiToken(tokenId) {
+    const confirm = await Swal.fire({
+      icon: 'warning',
+      title: 'Revoke API token?',
+      text: 'Integrations using this key will stop working immediately.',
+      showCancelButton: true,
+      confirmButtonText: 'Revoke',
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+    });
+    if (!confirm.isConfirmed) return;
+
+    try {
+      const response = await fetch(`/admin/business/${businessId}/api-tokens/${tokenId}/revoke`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to revoke token');
+      }
+      Swal.fire({ icon: 'success', title: 'Revoked', text: data.message, confirmButtonColor: '#F39720' });
+      loadApiTokens();
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'Error', text: e.message, confirmButtonColor: '#F39720' });
+    }
+  }
+
+  function openApiTokenRevealModal(apiKey) {
+    const input = document.getElementById('apiTokenRevealValue');
+    if (input) input.value = apiKey;
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('apiTokenRevealModal'));
+    modal.show();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -1601,6 +1942,113 @@
     document.getElementById('btnReloadPricing')?.addEventListener('click', loadBusinessPricing);
     document.getElementById('bdTabPricingBtn')?.addEventListener('click', () => {
       if (!pricingLoaded) loadBusinessPricing();
+    });
+
+    document.getElementById('bdTabApiAccessBtn')?.addEventListener('click', () => {
+      if (!apiTokensLoaded) loadApiTokens();
+    });
+
+    document.getElementById('isCompanyAccountSwitch')?.addEventListener('change', async (e) => {
+      try {
+        await saveAccountType(e.target.checked);
+        Swal.fire({ icon: 'success', title: 'Saved', timer: 1200, showConfirmButton: false });
+        loadBusinessDetails();
+      } catch (err) {
+        e.target.checked = !e.target.checked;
+        Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#F39720' });
+      }
+    });
+
+    let parentSearchTimer = null;
+    document.getElementById('parentCompanySearch')?.addEventListener('input', (e) => {
+      clearTimeout(parentSearchTimer);
+      const q = e.target.value.trim();
+      const resultsEl = document.getElementById('parentCompanyResults');
+      if (!q || q.length < 2) {
+        resultsEl?.classList.add('d-none');
+        return;
+      }
+      parentSearchTimer = setTimeout(async () => {
+        const companies = await searchCompanies(q);
+        if (!resultsEl) return;
+        if (!companies.length) {
+          resultsEl.innerHTML = '<div class="list-group-item small text-muted">No companies found</div>';
+        } else {
+          resultsEl.innerHTML = companies.map((c) =>
+            `<button type="button" class="list-group-item list-group-item-action small parent-company-option" data-id="${c.id}" data-label="${escapeHtml(c.name)} (${escapeHtml(c.businessAccountCode || c.id)})">
+              ${escapeHtml(c.name)} <span class="text-muted">— ${escapeHtml(c.businessAccountCode || '')}</span>
+            </button>`
+          ).join('');
+          resultsEl.querySelectorAll('.parent-company-option').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              document.getElementById('parentCompanyId').value = btn.dataset.id;
+              document.getElementById('parentCompanySearch').value = btn.dataset.label;
+              resultsEl.classList.add('d-none');
+            });
+          });
+        }
+        resultsEl.classList.remove('d-none');
+      }, 300);
+    });
+
+    document.getElementById('btnSaveParentCompany')?.addEventListener('click', async () => {
+      const parentId = document.getElementById('parentCompanyId')?.value;
+      if (!parentId) {
+        Swal.fire({ icon: 'warning', title: 'Select a company', text: 'Search and select a parent company first.', confirmButtonColor: '#F39720' });
+        return;
+      }
+      try {
+        await saveParentCompany(parentId);
+        Swal.fire({ icon: 'success', title: 'Parent company saved', confirmButtonColor: '#F39720' });
+        loadBusinessDetails();
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#F39720' });
+      }
+    });
+
+    document.getElementById('btnClearParentCompany')?.addEventListener('click', async () => {
+      try {
+        await saveParentCompany(null);
+        document.getElementById('parentCompanyId').value = '';
+        document.getElementById('parentCompanySearch').value = '';
+        Swal.fire({ icon: 'success', title: 'Parent company cleared', confirmButtonColor: '#F39720' });
+        loadBusinessDetails();
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error', text: err.message, confirmButtonColor: '#F39720' });
+      }
+    });
+
+    document.getElementById('btnGenerateApiToken')?.addEventListener('click', () => {
+      document.getElementById('apiTokenName').value = '';
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('apiTokenGenerateModal')).show();
+    });
+
+    document.getElementById('btnConfirmGenerateApiToken')?.addEventListener('click', async () => {
+      const name = document.getElementById('apiTokenName')?.value?.trim();
+      if (!name) {
+        Swal.fire({ icon: 'warning', title: 'Name required', text: 'Enter a name for this token.', confirmButtonColor: '#F39720' });
+        return;
+      }
+      try {
+        const data = await createApiToken(name);
+        bootstrap.Modal.getInstance(document.getElementById('apiTokenGenerateModal'))?.hide();
+        await loadApiTokens();
+        openApiTokenRevealModal(data.apiKey);
+      } catch (e) {
+        Swal.fire({ icon: 'error', title: 'Error', text: e.message, confirmButtonColor: '#F39720' });
+      }
+    });
+
+    document.getElementById('btnCopyApiToken')?.addEventListener('click', async () => {
+      const value = document.getElementById('apiTokenRevealValue')?.value;
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        Swal.fire({ icon: 'success', title: 'Copied', timer: 1200, showConfirmButton: false });
+      } catch {
+        document.getElementById('apiTokenRevealValue')?.select();
+        document.execCommand('copy');
+      }
     });
   });
 </script>

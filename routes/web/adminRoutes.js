@@ -8,6 +8,8 @@ const adminController = require('../../controllers/adminController.js');
 const applicationController = require('../../controllers/applicationController.js');
 const adminWhatsAppController = require('../../controllers/adminWhatsAppController.js');
 const notificationController = require('../../controllers/notificationController.js');
+const apiTokenController = require('../../controllers/apiTokenController.js');
+const adminMerchantController = require('../../controllers/adminMerchantController.js');
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -218,6 +220,17 @@ router.get(
   adminController.get_businessDeletionImpact
 );
 router.post('/business/:businessId/delete', adminController.delete_business);
+
+// Business API tokens (public integration keys)
+router.get('/business/:businessId/api-tokens', apiTokenController.listApiTokens);
+router.post('/business/:businessId/api-tokens', apiTokenController.createApiToken);
+router.post('/business/:businessId/api-tokens/:tokenId/revoke', apiTokenController.revokeApiToken);
+
+// Multi-tenant company / merchant management
+router.put('/business/:businessId/account-type', adminMerchantController.updateAccountType);
+router.put('/business/:businessId/parent-company', adminMerchantController.updateParentCompany);
+router.get('/business/:businessId/merchants', adminMerchantController.listCompanyMerchants);
+router.get('/api/companies/search', adminMerchantController.searchCompanies);
 
 // tickets
 router.get('/tickets', adminController.get_ticketsPage);
