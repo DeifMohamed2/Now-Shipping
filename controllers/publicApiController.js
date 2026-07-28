@@ -333,9 +333,9 @@ const deletePickup = async (req, res) => {
   }
 };
 
-const calculatePickupFee = (req, res) => {
+const calculatePickupFee = async (req, res) => {
   try {
-    const result = pickupService.calculatePickupFeeForBusiness(req.userData, req.body);
+    const result = await pickupService.calculatePickupFeeForBusiness(req.userData, req.body);
     return sendSuccess(res, 200, {
       fee: result.fee,
       currency: 'EGP',

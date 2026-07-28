@@ -3,7 +3,8 @@ const User = require('../models/user');
 const Pickup = require('../models/pickup');
 const firebase = require('../config/firebase');
 const statusHelper = require('../utils/statusHelper');
-const { calculatePickupFee: calcPickupFee, resolveBusinessPricing } = require('../utils/fees');
+const { calculatePickupFee: calcPickupFee } = require('../utils/fees');
+const { resolveEffectivePricing } = require('../utils/effectivePricing');
 const { resolvePickupAddressForOrder } = require('../utils/pickupAddressResolve');
 const {
   isValidPickupDate,
@@ -62,11 +63,12 @@ function resolveSelectedPickupAddress(business, pickupAddressId) {
   return selectedAddress;
 }
 
-function computePickupFeeForBusiness(business, pickupAddressId, numberOfOrders = 0) {
+async function computePickupFeeForBusiness(business, pickupAddressId, numberOfOrders = 0) {
   const selectedAddress = resolveSelectedPickupAddress(business, pickupAddressId);
   const businessCity = selectedAddress?.city || business?.pickUpAdress?.city || 'Cairo';
   const count = parseInt(numberOfOrders, 10) || 0;
-  return calcPickupFee(businessCity, count, resolveBusinessPricing(business));
+  const pricing = await resolveEffectivePricing(business);
+  return calcPickupFee(businessCity, count, pricing);
 }
 
 async function createPickupForBusiness(business, body) {
@@ -91,7 +93,7 @@ async function createPickupForBusiness(business, body) {
 
   const businessDoc = business._id ? await User.findById(business._id) : business;
   const selectedAddress = resolveSelectedPickupAddress(businessDoc, pickupAddressId);
-  const computedPickupFee = computePickupFeeForBusiness(businessDoc, pickupAddressId, 0);
+  const computedPickupFee = await computePickupFeeForBusiness(businessDoc, pickupAddressId, 0);
   const pickupPhoneNumber =
     phoneNumber || selectedAddress?.pickupPhone || businessDoc.phoneNumber || '';
 
@@ -376,9 +378,9 @@ async function deletePickupForBusiness(business, pickupIdOrNumber) {
   return { ok: true, status: 200, message: 'Pickup deleted successfully.' };
 }
 
-function calculatePickupFeeForBusiness(business, { numberOfOrders, pickupAddressId } = {}) {
+async function calculatePickupFeeForBusiness(business, { numberOfOrders, pickupAddressId } = {}) {
   const businessDoc = business;
-  const fee = computePickupFeeForBusiness(
+  const fee = await computePickupFeeForBusiness(
     businessDoc,
     pickupAddressId,
     numberOfOrders || 0

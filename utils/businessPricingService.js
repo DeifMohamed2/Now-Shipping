@@ -135,7 +135,8 @@ function buildPricingDiffs(oldSnap, newSnap, note) {
 
 async function getBusinessPricing(businessId) {
   const business = await User.findById(businessId)
-    .select('role customPricing brandInfo name')
+    .select('role customPricing brandInfo name parentCompany')
+    .populate('parentCompany', 'name brandInfo businessAccountCode customPricing')
     .lean();
 
   if (!business || !isBusinessRole(business.role)) {
@@ -149,21 +150,43 @@ async function getBusinessPricing(businessId) {
     .limit(50)
     .lean();
 
+  const parentCompany = business.parentCompany || null;
+  const pricingInheritedFromParent = Boolean(parentCompany);
+
   return {
     businessId: business._id.toString(),
     businessName: business.brandInfo?.brandName || business.name,
     customPricing: snapshotPricing(business.customPricing),
     globalDefaults: getGlobalDefaults(),
     auditHistory,
+    pricingInheritedFromParent,
+    parentCompany: parentCompany
+      ? {
+          id: parentCompany._id,
+          name: parentCompany.brandInfo?.brandName || parentCompany.name,
+          businessAccountCode: parentCompany.businessAccountCode || null,
+        }
+      : null,
+    inheritedPricing: pricingInheritedFromParent
+      ? snapshotPricing(parentCompany.customPricing)
+      : null,
   };
 }
 
 async function updateBusinessPricing(businessId, body, adminData) {
-  const business = await User.findById(businessId).select('role customPricing');
+  const business = await User.findById(businessId).select('role customPricing parentCompany');
 
   if (!business || !isBusinessRole(business.role)) {
     const err = new Error('Business not found');
     err.code = 'NOT_FOUND';
+    throw err;
+  }
+
+  if (business.parentCompany) {
+    const err = new Error(
+      'This sub-business inherits pricing from its parent company. Edit pricing on the parent company account instead.'
+    );
+    err.code = 'PRICING_INHERITED';
     throw err;
   }
 

@@ -10,6 +10,8 @@
     "start": "nodemon app.js",
     "dev": "nodemon app.js",
     "smoke:deps": "node scripts/smoke-deps.js",
+    "test:public-api": "node scripts/test-public-api.js",
+    "test:pricing-inheritance": "node scripts/test-pricing-inheritance.js",
     "test:notifications": "node scripts/test-business-notifications.js",
     "test:notifications:business": "node scripts/test-business-notifications.js",
     "verify:dashboard": "node scripts/verify-dashboard-invariants.js",

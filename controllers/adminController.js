@@ -4013,10 +4013,20 @@ function buildAdminBusinessListQuery({
   search,
   status,
   onboarding = 'all',
+  accountType = 'all',
   dateFrom,
   dateTo,
 }) {
   const query = { ...activeBusinessRoleFilter() };
+
+  if (accountType === 'company') {
+    query.isCompanyAccount = true;
+  } else if (accountType === 'sub') {
+    query.parentCompany = { $ne: null };
+  } else if (accountType === 'standalone') {
+    query.isCompanyAccount = { $ne: true };
+    query.parentCompany = null;
+  }
 
   if (onboarding === 'completed') {
     query.isCompleted = true;
@@ -4231,6 +4241,7 @@ const get_businesses = async (req, res) => {
       search,
       status,
       onboarding = 'all',
+      accountType = 'all',
       sortBy = 'createdAt',
       sortOrder = 'desc',
       dateFrom,
@@ -4243,6 +4254,7 @@ const get_businesses = async (req, res) => {
       search,
       status,
       onboarding,
+      accountType,
       dateFrom,
       dateTo,
     });
@@ -4548,6 +4560,9 @@ const update_businessPricing = async (req, res) => {
   } catch (error) {
     if (error.code === 'NOT_FOUND') {
       return res.status(404).json({ success: false, error: error.message });
+    }
+    if (error.code === 'PRICING_INHERITED') {
+      return res.status(403).json({ success: false, error: error.message });
     }
     if (error.message && error.message.includes('non-negative')) {
       return res.status(400).json({ success: false, error: error.message });

@@ -916,7 +916,7 @@ const postOrdersImportCommit = async (req, res) => {
         await session.withTransaction(async () => {
           for (const { fields } of parsed.rows) {
             applyPickupDefaults(req.userData, fields);
-            const doc = buildOrderDocumentFromFields(
+            const doc = await buildOrderDocumentFromFields(
               req.userData,
               fields,
               await generateUniqueOrderNumber()
@@ -934,7 +934,7 @@ const postOrdersImportCommit = async (req, res) => {
         created.length = 0;
         for (const { fields } of parsed.rows) {
           applyPickupDefaults(req.userData, fields);
-          const doc = buildOrderDocumentFromFields(
+          const doc = await buildOrderDocumentFromFields(
             req.userData,
             fields,
             await generateUniqueOrderNumber()
@@ -2342,7 +2342,7 @@ const validateOriginalOrder = async (req, res) => {
 // Calculate pickup fee (server-side) using centralized fees
 const calculatePickupFee = async (req, res) => {
   try {
-    const result = pickupService.calculatePickupFeeForBusiness(req.userData, req.body);
+    const result = await pickupService.calculatePickupFeeForBusiness(req.userData, req.body);
     return res.json({ fee: result.fee });
   } catch (error) {
     console.error('Error calculating pickup fee:', error);

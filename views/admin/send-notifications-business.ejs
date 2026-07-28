@@ -2,6 +2,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
 <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
 <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<link href="/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <%- contentFor('body') %>
 
@@ -170,9 +171,17 @@
     border-bottom: 1px solid #eee;
   }
   
-  #notification-mode-badge {
-    font-size: 10px;
-    padding: 3px 8px;
+  #business-select-container.is-hidden {
+    display: none !important;
+  }
+
+  #business-select-container .choices {
+    margin-bottom: 0;
+  }
+
+  #business-select-container .choices__inner {
+    min-height: 42px;
+    border-color: #0d6efd;
   }
 </style>
 <!-- container-fluid -->
@@ -190,12 +199,12 @@
               <p class="mb-0">Use this form to send push notifications to your businesses. You can send to all businesses at once or to a specific business.</p>
             </div>
 
-            <div id="notification-success" class="alert alert-success alert-dismissible fade" role="alert">
+            <div id="notification-success" class="alert alert-success alert-dismissible fade d-none" role="alert">
               <div id="success-message"></div>
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
-            <div id="notification-error" class="alert alert-danger alert-dismissible fade" role="alert">
+            <div id="notification-error" class="alert alert-danger alert-dismissible fade d-none" role="alert">
               <div id="error-message"></div>
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -212,12 +221,12 @@
                 </div>
               </div>
 
-              <div class="mb-3" id="business-select-container" style="display: none;">
+              <div class="mb-3 is-hidden" id="business-select-container">
                 <label for="business-select" class="form-label">Select Business</label>
                 <select class="form-select border-primary" id="business-select">
-                  <option value="" selected disabled>-- Select a Business --</option>
+                  <option value="">Search by business name or email...</option>
                   <% businesses.forEach(business => { %>
-                    <option value="<%= business._id %>"><%= business.name %> (<%= business.email %>)</option>
+                    <option value="<%= business._id %>" data-display-name="<%= business.displayName %>"><%= business.displayName %> — <%= business.email %></option>
                   <% }); %>
                 </select>
                 <div class="form-text text-danger">
@@ -299,7 +308,7 @@
               <label for="filter-type" class="form-label">Type</label>
               <select class="form-select form-select-sm" id="filter-type">
                 <option value="">All Types</option>
-                <option value="broadcast">All Businesses</option>
+                <option value="broadcast">Broadcast</option>
                 <option value="personal">Individual</option>
               </select>
             </div>
@@ -308,7 +317,7 @@
               <select class="form-select form-select-sm" id="filter-business">
                 <option value="">All Businesses</option>
                 <% businesses.forEach(business => { %>
-                  <option value="<%= business._id %>"><%= business.name %> (<%= business.email %>)</option>
+                  <option value="<%= business._id %>"><%= business.displayName %> — <%= business.email %></option>
                 <% }); %>
               </select>
             </div>
@@ -362,11 +371,80 @@
 
 <%- contentFor('FooterJs') %>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Hide alert messages initially
-    document.getElementById('notification-success').classList.remove('show');
-    document.getElementById('notification-error').classList.remove('show');
+    let businessSelectChoices = null;
+    let filterBusinessChoices = null;
+
+    function getSelectedBusinessDisplayName() {
+      const businessSelect = document.getElementById('business-select');
+      if (!businessSelect || !businessSelect.value) return null;
+      const selectedOption = businessSelect.options[businessSelect.selectedIndex];
+      return selectedOption?.dataset?.displayName
+        || selectedOption?.textContent?.split('—')[0]?.trim()
+        || null;
+    }
+
+    function initBusinessSelectChoices() {
+      const businessSelect = document.getElementById('business-select');
+      if (!businessSelect || businessSelectChoices || typeof Choices === 'undefined') return;
+
+      businessSelectChoices = new Choices(businessSelect, {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Type business name or email...',
+        placeholder: true,
+        placeholderValue: 'Search by business name or email...',
+        itemSelectText: '',
+        shouldSort: false,
+        searchResultLimit: 100,
+        renderChoiceLimit: 100,
+        searchFloor: 1,
+        fuseOptions: { threshold: 0.3, ignoreLocation: true },
+        position: 'bottom',
+      });
+
+      businessSelect.addEventListener('change', updateIndividualPreviewTitle);
+    }
+
+    function initFilterBusinessChoices() {
+      const filterBusiness = document.getElementById('filter-business');
+      if (!filterBusiness || filterBusinessChoices || typeof Choices === 'undefined') return;
+
+      filterBusinessChoices = new Choices(filterBusiness, {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Filter by business...',
+        itemSelectText: '',
+        shouldSort: false,
+        searchResultLimit: 100,
+        renderChoiceLimit: 100,
+        searchFloor: 1,
+        fuseOptions: { threshold: 0.3, ignoreLocation: true },
+        position: 'bottom',
+      });
+    }
+
+    function updateIndividualPreviewTitle() {
+      const previewTitle = document.getElementById('preview-title');
+      const currentTitle = document.getElementById('notification-title').value || 'Notification Title';
+      const businessName = getSelectedBusinessDisplayName();
+
+      if (businessName) {
+        previewTitle.textContent = `[Individual] ${currentTitle} (Hi ${businessName})`;
+      } else {
+        previewTitle.textContent = `[Individual] ${currentTitle}`;
+      }
+    }
+    function hideNotificationAlerts() {
+      ['notification-success', 'notification-error'].forEach((id) => {
+        const alertEl = document.getElementById(id);
+        if (!alertEl) return;
+        alertEl.classList.remove('show');
+        alertEl.classList.add('d-none');
+      });
+    }
+
+    hideNotificationAlerts();
 
     // Initialize the preview with the broadcast prefix
     const previewTitle = document.getElementById('preview-title');
@@ -382,64 +460,48 @@
       clear: true
     });
 
-    // Toggle business selection based on notification type
-    document.getElementById('notification-type').addEventListener('change', function() {
+    function applyNotificationTypeUi() {
+      const notificationType = document.getElementById('notification-type').value;
       const businessSelectContainer = document.getElementById('business-select-container');
       const previewTitle = document.getElementById('preview-title');
       const modeBadge = document.getElementById('notification-mode-badge');
+      const formContainer = document.querySelector('.form-container');
       const currentTitle = document.getElementById('notification-title').value || 'Notification Title';
-      
-      if (this.value === 'individual') {
-        // Show business selection and update the preview to indicate individual mode
-        businessSelectContainer.style.display = 'block';
-        
-        // Update the form appearance to indicate individual mode
-        document.querySelector('.form-container').classList.add('border-primary', 'border');
-        
-        // Update preview title - check if a business is already selected
-        const businessSelect = document.getElementById('business-select');
-        const selectedOption = businessSelect.options[businessSelect.selectedIndex];
-        if (selectedOption && selectedOption.value) {
-          // Add personalized greeting if a business is selected
-          const businessName = selectedOption.text.split('(')[0].trim();
-          const personalizedTitle = `${currentTitle} (Hi ${businessName})`;
-          previewTitle.textContent = `[Individual] ${personalizedTitle}`;
-        } else {
-          // No business selected yet
-          previewTitle.textContent = `[Individual] ${currentTitle}`;
-        }
-        
-        // Update the mode badge
+      const isIndividual = notificationType === 'individual';
+
+      businessSelectContainer.classList.toggle('is-hidden', !isIndividual);
+      businessSelectContainer.setAttribute('aria-hidden', isIndividual ? 'false' : 'true');
+
+      if (isIndividual) {
+        initBusinessSelectChoices();
+        formContainer.classList.add('border-primary', 'border');
+        updateIndividualPreviewTitle();
         modeBadge.textContent = 'Individual Mode';
         modeBadge.classList.remove('bg-info');
         modeBadge.classList.add('bg-primary');
       } else {
-        // Hide business selection and update the preview to indicate broadcast mode
-        businessSelectContainer.style.display = 'none';
-        
-        // Update the form appearance to indicate broadcast mode
-        document.querySelector('.form-container').classList.remove('border-primary', 'border');
-        
-        // Update preview title - remove any personalized greeting
+        if (businessSelectChoices) {
+          businessSelectChoices.setChoiceByValue('');
+        }
+        formContainer.classList.remove('border-primary', 'border');
         previewTitle.textContent = `[Broadcast] ${currentTitle.replace(/\s*\(Hi.*?\)/, '')}`;
-        
-        // Update the mode badge
         modeBadge.textContent = 'Broadcast Mode';
         modeBadge.classList.remove('bg-primary');
         modeBadge.classList.add('bg-info');
       }
+    }
+
+    // Toggle business selection based on notification type
+    document.getElementById('notification-type').addEventListener('change', applyNotificationTypeUi);
+
+    document.getElementById('notification-form').addEventListener('reset', function() {
+      window.setTimeout(applyNotificationTypeUi, 0);
     });
 
-    // Update the preview to show personalized title when a business is selected
-    document.getElementById('business-select').addEventListener('change', function() {
-      const selectedOption = this.options[this.selectedIndex];
-      if (selectedOption.value) {
-        const businessName = selectedOption.text.split('(')[0].trim();
-        const currentTitle = document.getElementById('notification-title').value || 'Notification Title';
-        const personalizedTitle = `${currentTitle} (Hi ${businessName})`;
-        document.getElementById('preview-title').textContent = `[Individual] ${personalizedTitle}`;
-      }
-    });
+    applyNotificationTypeUi();
+
+    // Update the preview when a business is selected
+    document.getElementById('business-select').addEventListener('change', updateIndividualPreviewTitle);
 
     // Live preview of notification
     document.getElementById('notification-title').addEventListener('input', function() {
@@ -448,12 +510,9 @@
       
       if (this.value) {
         if (notificationType === 'individual') {
-          const businessSelect = document.getElementById('business-select');
-          const selectedOption = businessSelect.options[businessSelect.selectedIndex];
-          if (selectedOption && selectedOption.value) {
-            const businessName = selectedOption.text.split('(')[0].trim();
-            const personalizedTitle = `${this.value} (Hi ${businessName})`;
-            document.getElementById('preview-title').textContent = prefix + personalizedTitle;
+          const businessName = getSelectedBusinessDisplayName();
+          if (businessName) {
+            document.getElementById('preview-title').textContent = `${prefix}${this.value} (Hi ${businessName})`;
           } else {
             document.getElementById('preview-title').textContent = prefix + this.value;
           }
@@ -597,7 +656,6 @@
         let response;
         
         if (notificationType === 'broadcast') {
-          // Send to all businesses
           response = await fetch('/admin/notifications/businesses/broadcast', {
             method: 'POST',
             headers: {
@@ -606,7 +664,6 @@
             body: JSON.stringify({ title, body })
           });
         } else if (notificationType === 'individual') {
-          // Send to specific business
           const businessId = document.getElementById('business-select').value;
           if (!businessId) {
             showError('Please select a business');
@@ -632,21 +689,25 @@
         const result = await response.json();
         
         if (response.ok && result.success) {
-          showSuccess('Notification sent successfully!');
+          const successDetail = notificationType === 'broadcast' && result.fcmResponse
+            ? ` Sent to ${result.fcmResponse.successCount || 0} business device(s).`
+            : '';
+          showSuccess(`Notification sent successfully!${successDetail}`);
           document.getElementById('notification-form').reset();
-          document.getElementById('preview-title').textContent = 'Notification Title';
+          document.getElementById('preview-title').textContent = '[Broadcast] Notification Title';
           document.getElementById('preview-body').textContent = 'Notification message will appear here';
-          // Hide business selection if it was visible
-          document.getElementById('business-select-container').style.display = 'none';
+          applyNotificationTypeUi();
           fetchRecentNotifications();
         } else {
-          // Handle specific error cases
-          if (result.error && result.error.includes('FCM token')) {
+          const errorText = typeof result.error === 'string'
+            ? result.error
+            : (result.error?.message || result.deliveryError || '');
+          if (errorText.includes('FCM token')) {
             showError('Unable to send notification: Business does not have a valid device token. The notification was saved but not delivered.');
-          } else if (result.error && result.error.includes('configuration')) {
+          } else if (errorText.includes('configuration')) {
             showError('Firebase configuration error: Please contact support to verify your setup.');
           } else {
-            showError(result.message || 'Failed to send notification: ' + (result.error || 'Unknown error'));
+            showError(result.message || `Failed to send notification: ${errorText || 'Unknown error'}`);
           }
         }
       } catch (error) {
@@ -658,29 +719,40 @@
       }
     });
 
-    // Show success message
     function showSuccess(message) {
       const successAlert = document.getElementById('notification-success');
+      const errorAlert = document.getElementById('notification-error');
+      errorAlert.classList.remove('show');
+      errorAlert.classList.add('d-none');
       document.getElementById('success-message').textContent = message;
+      successAlert.classList.remove('d-none');
       successAlert.classList.add('show');
+      successAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       
-      // Auto-hide after 5 seconds
       setTimeout(() => {
         successAlert.classList.remove('show');
+        successAlert.classList.add('d-none');
       }, 5000);
     }
 
-    // Show error message
     function showError(message) {
+      const successAlert = document.getElementById('notification-success');
       const errorAlert = document.getElementById('notification-error');
+      successAlert.classList.remove('show');
+      successAlert.classList.add('d-none');
       document.getElementById('error-message').textContent = message;
+      errorAlert.classList.remove('d-none');
       errorAlert.classList.add('show');
+      errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       
-      // Auto-hide after 10 seconds
       setTimeout(() => {
         errorAlert.classList.remove('show');
+        errorAlert.classList.add('d-none');
       }, 10000);
     }
+
+    document.getElementById('notification-success')?.querySelector('.btn-close')?.addEventListener('click', hideNotificationAlerts);
+    document.getElementById('notification-error')?.querySelector('.btn-close')?.addEventListener('click', hideNotificationAlerts);
 
     // Fetch recent notifications
     async function fetchRecentNotifications() {
@@ -703,6 +775,9 @@
         
         // Add page size
         params.push(`limit=${pageSize}`);
+
+        // Hide per-business rows created by broadcast sends
+        params.push('excludeBroadcastChildren=true');
         
         // Add type filter if selected
         if (filters.type) {
@@ -800,10 +875,10 @@
             <td>${escapeHtml(truncateText(notification.body, 40))}</td>
             <td>
               <span class="badge ${notification.type === 'broadcast' ? 'bg-info' : 'bg-primary'}">
-                ${notification.type === 'broadcast' ? 'All Businesses' : 'Individual'}
+                ${notification.type === 'broadcast' ? 'Broadcast' : 'Individual'}
               </span>
             </td>
-            <td>${notification.recipient ? escapeHtml(notification.recipientName || 'Unknown') : 'All Businesses'}</td>
+            <td>${notification.type === 'broadcast' ? 'All Businesses' : escapeHtml(notification.recipientName || 'Unknown')}</td>
             <td>${statusDisplay}</td>
             <td>${new Date(notification.createdAt).toLocaleString()}</td>
           </tr>
@@ -830,6 +905,8 @@
 
     // Refresh notifications when button is clicked
     document.getElementById('refresh-notifications').addEventListener('click', fetchRecentNotifications);
+
+    initFilterBusinessChoices();
 
     // Initial fetch of notifications
     fetchRecentNotifications();

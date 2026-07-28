@@ -178,9 +178,15 @@
           </div>
         </li>
         <li class="nav-item">
-          <a class="nav-link menu-link ns-link" href="/admin/businesses" role="button">
+          <a class="nav-link menu-link ns-link" href="/admin/businesses" role="button" data-ns-nav="/admin/businesses">
             <i class="ri-building-line ns-icon"></i>
             <span><%= AS.businesses || 'Businesses' %></span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link menu-link ns-link" href="/admin/companies" role="button" data-ns-nav="/admin/companies">
+            <i class="ri-community-line ns-icon"></i>
+            <span><%= AS.companies || 'Companies' %></span>
           </a>
         </li>
         <li class="nav-item">
@@ -311,10 +317,23 @@
     document.addEventListener('DOMContentLoaded', function () {
       initSidebarToggle();
       initMobileMenuBtn();
+      initNavActiveState();
     });
   } else {
     initSidebarToggle();
     initMobileMenuBtn();
+    initNavActiveState();
+  }
+
+  function initNavActiveState() {
+    var path = window.location.pathname || '';
+    document.querySelectorAll('.app-menu [data-ns-nav]').forEach(function (link) {
+      var target = link.getAttribute('data-ns-nav');
+      if (!target) return;
+      if (path === target || path.startsWith(target + '/')) {
+        link.classList.add('active');
+      }
+    });
   }
 })();
 </script>

@@ -1763,7 +1763,7 @@ async function confirmOrder(userId, conversation) {
   const normalized = ready.normalized;
 
   const orderNumber = await generateUniqueOrderNumber();
-  const newOrder = buildOrderDocumentFromFields(userData, normalized, orderNumber);
+  const newOrder = await buildOrderDocumentFromFields(userData, normalized, orderNumber);
   const savedOrder = await newOrder.save();
 
   conversation.activeDraft = {

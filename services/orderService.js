@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const Order = require('../models/order');
 const firebase = require('../config/firebase');
 const statusHelper = require('../utils/statusHelper');
-const { calculateOrderFee, resolveBusinessPricing } = require('../utils/fees');
+const { calculateOrderFee } = require('../utils/fees');
+const { resolveEffectivePricing } = require('../utils/effectivePricing');
 const {
   normalizeFieldsFromBody,
   validateOrderFieldsStructural,
@@ -55,8 +56,8 @@ async function findOrderByIdOrNumber(orderId) {
   return order;
 }
 
-function computeOrderFee(government, orderType, isExpressShipping, business) {
-  const pricing = resolveBusinessPricing(business);
+async function computeOrderFee(government, orderType, isExpressShipping, business) {
+  const pricing = await resolveEffectivePricing(business);
   return calculateOrderFee(government, orderType, isExpressShipping, pricing);
 }
 
@@ -89,7 +90,7 @@ async function createOrderForBusiness(business, body) {
   }
 
   const orderNumber = await generateUniqueOrderNumber();
-  const newOrder = buildOrderDocumentFromFields(business, fields, orderNumber);
+  const newOrder = await buildOrderDocumentFromFields(business, fields, orderNumber);
   const savedOrder = await newOrder.save();
 
   return {
@@ -188,7 +189,7 @@ async function updateOrderForBusiness(business, orderId, body) {
   }
 
   const expressShippingValue = requestedExpressShipping;
-  const calculatedOrderFees = computeOrderFee(
+  const calculatedOrderFees = await computeOrderFee(
     canonicalGovernment,
     updatedOrderType,
     expressShippingValue,
@@ -507,7 +508,7 @@ async function getOrderDetailsForBusiness(business, orderNumber) {
   };
 }
 
-function calculateOrderFeesForBusiness(business, { government, orderType, isExpressShipping }) {
+async function calculateOrderFeesForBusiness(business, { government, orderType, isExpressShipping }) {
   if (!government || !orderType) {
     return { ok: false, status: 400, error: 'Government and orderType are required' };
   }
@@ -521,7 +522,7 @@ function calculateOrderFeesForBusiness(business, { government, orderType, isExpr
   }
   const express =
     isExpressShipping === 'true' || isExpressShipping === true || isExpressShipping === 'on';
-  const fee = computeOrderFee(govKey, orderType, express, business);
+  const fee = await computeOrderFee(govKey, orderType, express, business);
   return { ok: true, fee };
 }
 

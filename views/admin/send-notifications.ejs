@@ -299,7 +299,7 @@
               <label for="filter-type" class="form-label">Type</label>
               <select class="form-select form-select-sm" id="filter-type">
                 <option value="">All Types</option>
-                <option value="broadcast">All Couriers</option>
+                <option value="broadcast">Broadcast</option>
                 <option value="personal">Individual</option>
               </select>
             </div>
@@ -800,10 +800,10 @@
             <td>${escapeHtml(truncateText(notification.body, 40))}</td>
             <td>
               <span class="badge ${notification.type === 'broadcast' ? 'bg-info' : 'bg-primary'}">
-                ${notification.type === 'broadcast' ? 'All Couriers' : 'Individual'}
+                ${notification.type === 'broadcast' ? 'Broadcast' : 'Individual'}
               </span>
             </td>
-            <td>${notification.recipient ? escapeHtml(notification.recipientName || 'Unknown') : 'All Couriers'}</td>
+            <td>${notification.type === 'broadcast' ? 'All Couriers' : escapeHtml(notification.recipientName || 'Unknown')}</td>
             <td>${statusDisplay}</td>
             <td>${new Date(notification.createdAt).toLocaleString()}</td>
           </tr>

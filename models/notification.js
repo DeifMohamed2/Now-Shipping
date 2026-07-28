@@ -59,7 +59,14 @@ const notificationSchema = new Schema(
     deliveryStats: {
       type: Object,
       default: null
-    }
+    },
+    /** Set on per-recipient rows created by a broadcast send (hidden from admin summary list). */
+    sourceBroadcastId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'notification',
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true }
 );

@@ -15,4 +15,17 @@ function activeBusinessRoleFilter() {
   };
 }
 
-module.exports = { businessRoleFilter, activeBusinessRoleFilter };
+/** Eligible mobile-app business recipients for push notifications (excludes company API parents). */
+function businessNotificationRecipientFilter() {
+  return {
+    ...activeBusinessRoleFilter(),
+    isCompleted: true,
+    isCompanyAccount: { $ne: true },
+  };
+}
+
+module.exports = {
+  businessRoleFilter,
+  activeBusinessRoleFilter,
+  businessNotificationRecipientFilter,
+};

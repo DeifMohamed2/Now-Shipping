@@ -3,7 +3,8 @@
  */
 const Order = require('../models/order');
 const statusHelper = require('./statusHelper');
-const { calculateOrderFee, resolveBusinessPricing } = require('./fees');
+const { calculateOrderFee } = require('./fees');
+const { resolveEffectivePricing } = require('./effectivePricing');
 const { validateGovernmentAndZone } = require('./deliveryZonesBosta');
 const {
   getDefaultPickupAddressId,
@@ -386,12 +387,12 @@ async function buildReturnPreload(businessId, originalNumbers) {
  * @param {object} fields - normalized fields from normalizeFieldsFromBody or import
  * @param {string} [orderNumber] - defaults to generateOrderNumber(); prefer generateUniqueOrderNumber() at save sites to avoid collisions.
  */
-function buildOrderDocumentFromFields(userData, fields, orderNumber) {
+async function buildOrderDocumentFromFields(userData, fields, orderNumber) {
   const orderType = fields.orderType;
   const isPartialReturn = fields.isPartialReturn;
   const expressShippingValue = !!fields.isExpressShipping;
 
-  const pricing = resolveBusinessPricing(userData);
+  const pricing = await resolveEffectivePricing(userData);
   const orderFees = calculateFees(fields.government, orderType, expressShippingValue, pricing);
 
   const amountType = fields.COD

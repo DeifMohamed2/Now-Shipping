@@ -1,0 +1,378 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<style>
+  .cd-page {
+    --cd-brand: #f39720;
+    --cd-brand-dark: #c97d12;
+    --cd-brand-soft: rgba(243, 151, 32, 0.18);
+  }
+  .cd-hero {
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #f39720 0%, #e8891a 45%, #c97d12 100%);
+    color: #fff;
+    padding: 1.75rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(243, 151, 32, 0.28);
+  }
+  .cd-hero-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 16px;
+    border: 3px solid rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.2);
+    font-size: 2.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .cd-kpi-card {
+    border: 1px solid var(--vz-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 0.5rem;
+    padding: 1rem 1.1rem;
+    height: 100%;
+    background: #fff;
+    transition: box-shadow 0.2s ease;
+  }
+  .cd-kpi-card:hover { box-shadow: 0 0.35rem 1rem rgba(243, 151, 32, 0.12); }
+  .cd-kpi-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #878a99;
+    font-weight: 600;
+  }
+  .cd-kpi-value { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+  .cd-info-card {
+    border: 1px solid var(--vz-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    background: #fff;
+  }
+  .cd-info-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .cd-table-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+    background: linear-gradient(135deg, #f39720, #e8891a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  tr.cd-sub-row { cursor: pointer; }
+  tr.cd-sub-row:hover { background-color: rgba(243, 151, 32, 0.06) !important; }
+  .cd-page .btn-primary {
+    background-color: var(--cd-brand);
+    border-color: var(--cd-brand);
+  }
+  .cd-page .btn-primary:hover {
+    background-color: var(--cd-brand-dark);
+    border-color: var(--cd-brand-dark);
+  }
+  .cd-badge-accent {
+    background: var(--cd-brand-soft);
+    color: #8a5a0f;
+    border: 1px solid rgba(243, 151, 32, 0.35);
+    font-weight: 600;
+  }
+  .cd-pricing-banner {
+    background: var(--cd-brand-soft);
+    border: 1px solid rgba(243, 151, 32, 0.35);
+    border-radius: 0.5rem;
+    padding: 1rem 1.25rem;
+  }
+  .cd-table-scroll {
+    max-height: 480px;
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+  .cd-table-scroll table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--vz-card-bg, #fff);
+    z-index: 2;
+    box-shadow: 0 1px 0 var(--vz-border-color, #e9ebec);
+  }
+</style>
+
+<%- contentFor('body') %>
+<div class="cd-page">
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <a href="/admin/companies" class="btn btn-sm btn-soft-secondary">
+      <i class="ri-arrow-left-line me-1"></i>All companies
+    </a>
+  </div>
+
+  <div class="cd-hero" id="companyHero">
+    <div class="d-flex flex-wrap align-items-center gap-3">
+      <div class="cd-hero-avatar" id="companyAvatar">…</div>
+      <div class="flex-grow-1 min-w-0">
+        <h4 class="mb-1 fw-bold" id="companyTitle">Loading company…</h4>
+        <p class="mb-2 opacity-75 small" id="companySubtitle"></p>
+        <div class="d-flex flex-wrap gap-2" id="companyBadges"></div>
+      </div>
+      <div class="text-end">
+        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addSubModal">
+          <i class="ri-add-line me-1"></i>Add sub-business
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="companyKpis">
+    <div class="col-lg-3 col-md-6">
+      <div class="cd-kpi-card">
+        <div class="cd-kpi-label">Sub-businesses</div>
+        <div class="cd-kpi-value text-primary" id="kpiSubs">—</div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="cd-kpi-card">
+        <div class="cd-kpi-label">Total orders</div>
+        <div class="cd-kpi-value" id="kpiOrders">—</div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="cd-kpi-card">
+        <div class="cd-kpi-label">Success rate</div>
+        <div class="cd-kpi-value text-success" id="kpiSuccess">—</div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="cd-kpi-card">
+        <div class="cd-kpi-label">Revenue (EGP)</div>
+        <div class="cd-kpi-value" id="kpiRevenue">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cd-info-card mb-3">
+    <div class="cd-info-title"><i class="ri-store-2-line text-warning"></i> Sub-Businesses</div>
+    <p class="text-muted small mb-3">Merchants under this company network. Click a row to open full business details. All sub-businesses inherit pricing from this company.</p>
+    <div class="cd-table-scroll">
+      <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table">
+        <thead class="text-muted">
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>Sub-business</th>
+            <th>Code</th>
+            <th>External ID</th>
+            <th>Orders</th>
+            <th>Success</th>
+            <th>Pickups</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody id="subBusinessesBody">
+          <tr><td colspan="8" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-warning"></div> Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="subsNoResult" class="text-center py-5" style="display:none;">
+      <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#F39720,secondary:#c97d12" style="width:64px;height:64px"></lord-icon>
+      <p class="text-muted mt-2 mb-0">No sub-businesses yet. Click <strong>Add sub-business</strong> to onboard one.</p>
+    </div>
+  </div>
+
+  <div class="cd-info-card">
+    <div class="cd-info-title"><i class="ri-price-tag-3-line text-warning"></i> Company pricing</div>
+    <div class="cd-pricing-banner mb-3">
+      <p class="mb-2 small" id="pricingSummaryText">Loading pricing…</p>
+      <a href="#" id="editCompanyPricingLink" class="btn btn-sm btn-warning">
+        <i class="ri-edit-line me-1"></i>Edit company pricing
+      </a>
+    </div>
+    <p class="text-muted small mb-0">
+      <i class="ri-information-line me-1"></i>
+      Pricing set here applies to <strong>all sub-businesses</strong> under this company. Sub-accounts cannot override it.
+    </p>
+  </div>
+</div>
+
+<div class="modal fade" id="addSubModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title"><i class="ri-store-2-line me-1 text-warning"></i> Add sub-business</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small">Onboard a new merchant under this company. They will be ready to ship immediately and inherit company pricing.</p>
+        <form id="addSubForm" class="row g-3">
+          <div class="col-md-6"><label class="form-label fw-semibold">Contact name *</label><input class="form-control" name="name" required placeholder="Merchant contact name"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">Brand name *</label><input class="form-control" name="brandName" required placeholder="Shop / brand name"></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">Email *</label><input type="email" class="form-control" name="email" required></div>
+          <div class="col-md-6"><label class="form-label fw-semibold">Phone (11 digits) *</label><input class="form-control" name="phone" pattern="[0-9]{11}" maxlength="11" required placeholder="01xxxxxxxxx"></div>
+          <div class="col-12"><label class="form-label fw-semibold">External merchant ID</label><input class="form-control" name="externalMerchantId" placeholder="Your platform's shop ID (optional)"></div>
+          <div class="col-12"><hr class="my-1"><h6 class="text-muted mb-0"><i class="ri-map-pin-line me-1"></i> Pickup address</h6></div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Governorate *</label>
+            <select class="form-select" name="city" required>
+              <option value="Cairo">Cairo</option>
+              <option value="Giza">Giza</option>
+              <option value="Qalyubia">Qalyubia</option>
+            </select>
+          </div>
+          <div class="col-md-8"><label class="form-label fw-semibold">Zone *</label><input class="form-control" name="zone" required placeholder="Exact value from delivery zones catalog"></div>
+          <div class="col-md-8"><label class="form-label fw-semibold">Address details *</label><input class="form-control" name="addressDetails" required></div>
+          <div class="col-md-4"><label class="form-label fw-semibold">Pickup phone *</label><input class="form-control" name="pickupPhone" pattern="[0-9]{11}" maxlength="11" required></div>
+        </form>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btnCreateSub">
+          <i class="ri-check-line me-1"></i>Create sub-business
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script>
+  const companyId = '<%= companyId %>';
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount || 0);
+  }
+
+  async function loadCompanyDetails() {
+    const res = await fetch(`/admin/get-company-details/${companyId}`);
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load');
+
+    const c = data.company;
+    const rollup = data.rollupStats || {};
+    const title = c.brandName || c.name;
+    const initial = title.charAt(0).toUpperCase();
+
+    document.getElementById('companyAvatar').textContent = initial;
+    document.getElementById('companyTitle').textContent = title;
+    document.getElementById('companySubtitle').textContent =
+      `Account code ${c.businessAccountCode || '—'} · ${c.email || ''}`;
+    document.getElementById('companyBadges').innerHTML = `
+      <span class="badge bg-light text-dark"><i class="ri-community-line me-1"></i>Company account</span>
+      ${c.isVerified ? '<span class="badge bg-success">Verified</span>' : '<span class="badge bg-warning text-dark">Unverified</span>'}
+      <span class="badge cd-badge-accent">${rollup.subAccountCount || 0} sub-businesses</span>`;
+
+    document.getElementById('kpiSubs').textContent = rollup.subAccountCount ?? 0;
+    document.getElementById('kpiOrders').textContent = rollup.totalOrders ?? 0;
+    document.getElementById('kpiSuccess').textContent = `${parseFloat(rollup.successRate || 0).toFixed(1)}%`;
+    document.getElementById('kpiRevenue').textContent = formatCurrency(rollup.revenue);
+
+    const pricing = data.pricingSummary;
+    document.getElementById('pricingSummaryText').textContent = pricing?.enabled
+      ? 'Custom pricing is enabled on this company and automatically inherited by all sub-businesses.'
+      : 'No custom company pricing — sub-businesses currently use global platform rates.';
+    document.getElementById('editCompanyPricingLink').href = `/admin/business-details/${companyId}`;
+
+    const subs = data.subBusinesses || [];
+    const tbody = document.getElementById('subBusinessesBody');
+    const noResult = document.getElementById('subsNoResult');
+    const tableScroll = document.querySelector('.cd-table-scroll');
+
+    if (!subs.length) {
+      tbody.innerHTML = '';
+      if (tableScroll) tableScroll.style.display = 'none';
+      noResult.style.display = 'block';
+      return;
+    }
+    noResult.style.display = 'none';
+    if (tableScroll) tableScroll.style.display = '';
+
+    tbody.innerHTML = subs.map((s, i) => {
+      const stats = s.stats || {};
+      const name = s.brandName || s.name;
+      const ini = name.charAt(0).toUpperCase();
+      const rate = parseFloat(stats.successRate || 0).toFixed(1);
+      return `<tr class="cd-sub-row" data-href="/admin/business-details/${s.id}">
+        <td class="text-muted">${i + 1}</td>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <div class="cd-table-logo">${escapeHtml(ini)}</div>
+            <div class="min-w-0">
+              <div class="fw-semibold text-truncate">${escapeHtml(name)}</div>
+              <div class="text-muted small text-truncate">${escapeHtml(s.email || '')}</div>
+            </div>
+          </div>
+        </td>
+        <td><code class="small">${escapeHtml(s.businessAccountCode || '—')}</code></td>
+        <td class="small text-muted">${escapeHtml(s.externalMerchantId || '—')}</td>
+        <td class="fw-semibold">${stats.totalOrders || 0}</td>
+        <td><span class="badge cd-badge-accent">${rate}%</span></td>
+        <td>${stats.totalPickups || 0}</td>
+        <td class="fw-semibold">${formatCurrency(stats.revenue)}</td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.cd-sub-row').forEach((row) => {
+      row.addEventListener('click', () => {
+        const href = row.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+    });
+  }
+
+  document.getElementById('btnCreateSub').addEventListener('click', async () => {
+    const form = document.getElementById('addSubForm');
+    if (!form.reportValidity()) return;
+    const fd = new FormData(form);
+    const payload = {
+      name: fd.get('name'),
+      brandName: fd.get('brandName'),
+      email: fd.get('email'),
+      phone: fd.get('phone'),
+      externalMerchantId: fd.get('externalMerchantId') || undefined,
+      pickupAddress: {
+        city: fd.get('city'),
+        zone: fd.get('zone'),
+        addressDetails: fd.get('addressDetails'),
+        pickupPhone: fd.get('pickupPhone'),
+      },
+    };
+
+    const btn = document.getElementById('btnCreateSub');
+    btn.disabled = true;
+    try {
+      const res = await fetch(`/admin/company/${companyId}/merchants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to create sub-business');
+      bootstrap.Modal.getInstance(document.getElementById('addSubModal'))?.hide();
+      form.reset();
+      await loadCompanyDetails();
+      Swal.fire({ icon: 'success', title: 'Sub-business created', text: 'Merchant is ready to ship.', confirmButtonColor: '#F39720' });
+    } catch (e) {
+      Swal.fire({ icon: 'error', title: 'Error', text: e.message, confirmButtonColor: '#F39720' });
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  loadCompanyDetails().catch((e) => {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Failed to load company', text: e.message, confirmButtonColor: '#F39720' });
+  });
+</script>

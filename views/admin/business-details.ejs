@@ -578,7 +578,12 @@
   </div>
 
   <div class="tab-pane fade" id="bdTabPricing" role="tabpanel">
-    <div class="bd-info-card mb-3">
+    <div id="pricingInheritedBanner" class="alert alert-info d-none mb-3" role="alert">
+      <i class="ri-information-line me-1"></i>
+      <strong>Pricing inherited from parent company.</strong>
+      <span id="pricingInheritedText">This sub-business uses the parent company's pricing. Edit pricing on the parent company account.</span>
+    </div>
+    <div class="bd-info-card mb-3" id="pricingFormCard">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <div>
           <div class="bd-info-title mb-1"><i class="ri-price-tag-3-line"></i> Custom pricing</div>
@@ -1537,16 +1542,41 @@
       .join('');
   }
 
+  function setPricingFormReadOnly(readOnly) {
+    const card = document.getElementById('pricingFormCard');
+    if (!card) return;
+    card.querySelectorAll('input, textarea, button').forEach((el) => {
+      if (el.id === 'btnReloadPricing') return;
+      el.disabled = readOnly;
+    });
+    const banner = document.getElementById('pricingInheritedBanner');
+    if (banner) banner.classList.toggle('d-none', !readOnly);
+  }
+
   function renderPricingForm(data) {
     pricingState = data;
+    const inherited = !!data.pricingInheritedFromParent;
+    const pricingSource = inherited && data.inheritedPricing ? data.inheritedPricing : data.customPricing;
     const { customPricing, globalDefaults } = data;
+    void customPricing;
 
-    document.getElementById('pricingEnabled').checked = !!customPricing.enabled;
+    if (inherited && data.parentCompany) {
+      const parentLabel =
+        data.parentCompany.name ||
+        data.parentCompany.businessAccountCode ||
+        'parent company';
+      const textEl = document.getElementById('pricingInheritedText');
+      if (textEl) {
+        textEl.textContent = `This sub-business uses pricing from ${parentLabel}. Edit pricing on the parent company account.`;
+      }
+    }
+
+    document.getElementById('pricingEnabled').checked = !!pricingSource.enabled;
 
     const grid = document.getElementById('pricingOrderGrid');
     grid.innerHTML = PRICING_CATEGORIES.map((category) => {
       const globalRow = globalDefaults.order[category] || {};
-      const customRow = customPricing.order[category] || {};
+      const customRow = pricingSource.order[category] || {};
       const cells = ORDER_TYPES.map((orderType) => {
         const placeholder = globalRow[orderType] != null ? String(globalRow[orderType]) : '';
         const value = customRow[orderType] != null ? customRow[orderType] : '';
@@ -1572,15 +1602,16 @@
     document.getElementById('pricingExpressFee').placeholder = String(expressDefault);
     document.getElementById('pricingPickupFee').placeholder = String(pickupDefault);
     document.getElementById('pricingExpressFee').value =
-      customPricing.expressFee != null ? customPricing.expressFee : '';
+      pricingSource.expressFee != null ? pricingSource.expressFee : '';
     document.getElementById('pricingPickupFee').value =
-      customPricing.pickupFee != null ? customPricing.pickupFee : '';
+      pricingSource.pickupFee != null ? pricingSource.pickupFee : '';
     document.getElementById('pricingExpressHint').textContent = `Global default: ${expressDefault} EGP`;
     document.getElementById('pricingPickupHint').textContent = `Global default: ${pickupDefault} EGP`;
     document.getElementById('pricingNote').value = '';
 
-    renderPricingMeta(customPricing);
-    renderPricingHistory(data.auditHistory || []);
+    renderPricingMeta(inherited ? pricingSource : data.customPricing);
+    renderPricingHistory(inherited ? [] : data.auditHistory || []);
+    setPricingFormReadOnly(inherited);
   }
 
   function collectPricingPayload() {

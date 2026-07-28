@@ -10,6 +10,7 @@ const adminWhatsAppController = require('../../controllers/adminWhatsAppControll
 const notificationController = require('../../controllers/notificationController.js');
 const apiTokenController = require('../../controllers/apiTokenController.js');
 const adminMerchantController = require('../../controllers/adminMerchantController.js');
+const adminCompanyController = require('../../controllers/adminCompanyController.js');
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -232,6 +233,13 @@ router.put('/business/:businessId/parent-company', adminMerchantController.updat
 router.get('/business/:businessId/merchants', adminMerchantController.listCompanyMerchants);
 router.get('/api/companies/search', adminMerchantController.searchCompanies);
 
+// Companies (multi-tenant parent accounts)
+router.get('/companies', adminCompanyController.get_companiesPage);
+router.get('/get-companies', adminCompanyController.get_companies);
+router.get('/company-details/:companyId', adminCompanyController.get_companyDetailsPage);
+router.get('/get-company-details/:companyId', adminCompanyController.get_companyDetails);
+router.post('/company/:companyId/merchants', adminCompanyController.createCompanyMerchant);
+
 // tickets
 router.get('/tickets', adminController.get_ticketsPage);
 
@@ -288,6 +296,10 @@ router.post(
 
 // Notification routes - Businesses
 router.get('/notifications/businesses', notificationController.getBusinessNotificationsPage);
+router.get(
+  '/notifications/businesses/search',
+  notificationController.getNotificationFilterBusinesses
+);
 router.post(
   '/notifications/business',
   notificationController.sendNotificationToBusiness

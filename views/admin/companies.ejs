@@ -1,0 +1,532 @@
+<%- contentFor('HeaderCss') %>
+<link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+<style>
+  .admin-co-page {
+    --co-brand: #f39720;
+    --co-brand-dark: #c97d12;
+    --co-brand-soft: rgba(243, 151, 32, 0.18);
+    --co-brand-ink: #8a5a0f;
+  }
+  .admin-co-page .admin-co-hero {
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #f39720 0%, #c97d12 55%, #a86a0f 100%);
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 0;
+  }
+  .admin-co-page .admin-co-hero h5 { color: #fff; }
+  .admin-co-leaderboard {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-co-lb-card {
+    flex: 0 0 auto;
+    min-width: 260px;
+    max-width: 300px;
+    border: 1px solid var(--vz-border-color, rgba(0, 0, 0, 0.08));
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .admin-co-lb-card:hover {
+    box-shadow: 0 0.35rem 1rem rgba(243, 151, 32, 0.2);
+    transform: translateY(-2px);
+  }
+  .admin-co-lb-rank {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #878a99;
+  }
+  .admin-co-lb-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #212529;
+    line-height: 1.25;
+  }
+  .admin-co-lb-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #f39720, #e8891a);
+    flex-shrink: 0;
+  }
+  .admin-co-rate-bar {
+    height: 6px;
+    border-radius: 4px;
+    background: #eef0f7;
+    overflow: hidden;
+    margin-top: 0.35rem;
+  }
+  .admin-co-rate-bar > span {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #ffb45c, #f39720);
+  }
+  .admin-co-table-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+    background: linear-gradient(135deg, #f39720, #e8891a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .admin-co-mini-rate { min-width: 120px; }
+  .admin-co-mini-rate .progress {
+    height: 6px;
+    border-radius: 4px;
+    background: #eef0f7;
+  }
+  .admin-co-mini-rate .progress-bar {
+    border-radius: 4px;
+    background: linear-gradient(90deg, #ffd08a, #f39720) !important;
+  }
+  tr.admin-co-row { cursor: pointer; }
+  tr.admin-co-row:hover { background-color: rgba(243, 151, 32, 0.06) !important; }
+  .admin-co-page .admin-co-kpi-icon-brand {
+    background: var(--co-brand-soft) !important;
+    color: var(--co-brand-dark) !important;
+  }
+  .admin-co-page .admin-co-badge-accent {
+    background: var(--co-brand-soft);
+    color: var(--co-brand-ink);
+    border: 1px solid rgba(243, 151, 32, 0.35);
+  }
+  .admin-co-page .admin-co-badge-rate {
+    background: var(--co-brand-soft);
+    color: var(--co-brand-ink);
+    font-weight: 600;
+  }
+  .admin-co-page #adminCompaniesCard .btn-primary {
+    background-color: var(--co-brand);
+    border-color: var(--co-brand);
+  }
+  .admin-co-page #adminCompaniesCard .btn-primary:hover {
+    background-color: var(--co-brand-dark);
+    border-color: var(--co-brand-dark);
+  }
+  .admin-co-page #adminCompaniesCard .pagination .page-item.active .page-link {
+    background-color: var(--co-brand);
+    border-color: var(--co-brand);
+    color: #fff;
+  }
+  .admin-co-page #adminCompaniesCard .spinner-border {
+    color: var(--co-brand);
+    border-right-color: transparent;
+  }
+  .admin-co-page .co-table-scroll {
+    max-height: calc(100vh - 360px);
+    min-height: 320px;
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+  .admin-co-page .co-table-scroll table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--vz-card-bg, #fff);
+    z-index: 2;
+    box-shadow: 0 1px 0 var(--vz-border-color, #e9ebec);
+  }
+</style>
+
+<%- contentFor('body') %>
+<div class="row admin-co-page">
+  <div class="col-lg-12">
+    <div class="card admin-data-card" id="adminCompaniesCard">
+      <div class="card-header border-0">
+        <div class="row align-items-center gy-3">
+          <div class="col-sm">
+            <h5 class="card-title mb-0">Companies</h5>
+            <p class="text-muted small mb-0 mt-1">
+              Multi-tenant integrator accounts. Track sub-businesses, orders, and revenue across each company network.
+            </p>
+          </div>
+          <div class="col-sm-auto">
+            <span class="badge admin-co-badge-accent fs-6 px-3 py-2">
+              <i class="ri-community-line me-1"></i>
+              <span id="summaryTotalDisplay">0</span> companies
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body border-bottom">
+        <div class="row g-3">
+          <div class="col-lg-3 col-md-6">
+            <div class="d-flex align-items-center p-3 rounded border border-dashed">
+              <div class="avatar-sm flex-shrink-0">
+                <div class="avatar-title admin-co-kpi-icon-brand rounded fs-4">
+                  <i class="ri-community-line"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="text-muted mb-1 small">Total companies</p>
+                <h5 class="mb-0" id="kpiTotal">0</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="d-flex align-items-center p-3 rounded border border-dashed">
+              <div class="avatar-sm flex-shrink-0">
+                <div class="avatar-title bg-soft-success text-success rounded fs-4">
+                  <i class="ri-store-2-line"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="text-muted mb-1 small">Sub-businesses</p>
+                <h5 class="mb-0" id="kpiSubs">0</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="d-flex align-items-center p-3 rounded border border-dashed">
+              <div class="avatar-sm flex-shrink-0">
+                <div class="avatar-title bg-soft-info text-info rounded fs-4">
+                  <i class="ri-shopping-bag-3-line"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="text-muted mb-1 small">Network orders</p>
+                <h5 class="mb-0" id="kpiOrders">0</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="d-flex align-items-center p-3 rounded border border-dashed">
+              <div class="avatar-sm flex-shrink-0">
+                <div class="avatar-title bg-soft-warning text-warning rounded fs-4">
+                  <i class="ri-money-dollar-circle-line"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="text-muted mb-1 small">Network revenue</p>
+                <h5 class="mb-0" id="kpiRevenue">—</h5>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-co-hero mt-3">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <h5 class="mb-1 fw-semibold">
+                <i class="ri-bar-chart-grouped-line me-1"></i> Top performers
+              </h5>
+              <p class="mb-0 small opacity-75">Companies ranked by total orders across their sub-business network.</p>
+            </div>
+          </div>
+          <div class="admin-co-leaderboard mt-3" id="leaderboardStrip">
+            <div class="text-white-50 small">Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body border border-dashed border-end-0 border-start-0">
+        <form class="admin-data-filters" onsubmit="return false;">
+          <div class="row g-3 align-items-end">
+            <div class="col-xxl-5 col-lg-6">
+              <label class="form-label mb-1">Search</label>
+              <div class="search-box">
+                <input type="text" class="form-control search" id="searchInput" placeholder="Company name, email, code…" autocomplete="off" />
+                <i class="ri-search-line search-icon"></i>
+              </div>
+            </div>
+            <div class="col-xxl-4 col-md-6">
+              <label class="form-label mb-1">Sort by</label>
+              <select id="sortByFilter" class="form-select">
+                <option value="createdAt|desc">Newest first</option>
+                <option value="name|asc">Name A–Z</option>
+                <option value="subAccountCount|desc">Most sub-businesses</option>
+                <option value="totalOrders|desc">Most orders</option>
+                <option value="successRate|desc">Best success rate</option>
+                <option value="revenue|desc">Highest revenue</option>
+              </select>
+            </div>
+            <div class="col-xxl-3 col-md-6 d-flex gap-2">
+              <button type="button" class="btn btn-primary flex-grow-1" id="applyFiltersBtn" title="Apply filters">
+                <i class="ri-filter-3-line"></i> Apply
+              </button>
+              <button type="button" class="btn btn-soft-secondary" id="resetFilters" title="Clear">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="card-body pt-0">
+        <div class="co-table-scroll mb-1">
+          <table class="table table-nowrap table-striped align-middle mb-0 admin-data-table" id="companiesTable">
+            <thead class="text-muted">
+              <tr>
+                <th scope="col" style="width:48px;">#</th>
+                <th>Company</th>
+                <th>Code</th>
+                <th>Sub-businesses</th>
+                <th>Orders</th>
+                <th>Success rate</th>
+                <th>Revenue</th>
+                <th style="width:56px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="companiesTableBody">
+              <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                  <div class="spinner-border" role="status"></div>
+                  <p class="mt-2 mb-0">Loading companies…</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="noresult py-5" id="companiesNoResult" style="display:none;">
+          <div class="text-center">
+            <lord-icon
+              src="https://cdn.lordicon.com/msoeawqm.json"
+              trigger="loop"
+              colors="primary:#F39720,secondary:#c97d12"
+              style="width:75px;height:75px"
+            ></lord-icon>
+            <h5 class="mt-2">No companies found</h5>
+            <p class="text-muted mb-0">Mark a business as a <strong>Company account</strong> in Business details → API Access to see it here.</p>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center mt-2">
+          <div class="pagination-wrap hstack gap-2 justify-content-center">
+            <a class="page-item pagination-prev disabled" href="javascript:void(0);" id="coPagePrev">Previous</a>
+            <ul class="pagination mb-0" id="paginationContainer"></ul>
+            <a class="page-item pagination-next" href="javascript:void(0);" id="coPageNext">Next</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- contentFor('FooterJs') %>
+<script src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+<script>
+  let currentPage = 1;
+  let lastPagination = { totalPages: 1, currentPage: 1 };
+  let searchDebounce = null;
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function escapeAttr(s) { return escapeHtml(s).replace(/'/g, '&#39;'); }
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount || 0);
+  }
+
+  function companyLogoMarkup(initial) {
+    return `<div class="admin-co-table-logo">${escapeHtml((initial || 'C').charAt(0).toUpperCase())}</div>`;
+  }
+
+  function updateSummary(companies, pagination) {
+    const total = pagination?.totalCount || companies.length || 0;
+    document.getElementById('kpiTotal').textContent = total;
+    document.getElementById('summaryTotalDisplay').textContent = total;
+    let subs = 0, orders = 0, revenue = 0;
+    companies.forEach((c) => {
+      subs += c.subAccountCount || 0;
+      orders += c.stats?.totalOrders || 0;
+      revenue += c.stats?.revenue || 0;
+    });
+    document.getElementById('kpiSubs').textContent = subs;
+    document.getElementById('kpiOrders').textContent = orders;
+    document.getElementById('kpiRevenue').textContent = formatCurrency(revenue);
+  }
+
+  function renderLeaderboard(companies) {
+    const el = document.getElementById('leaderboardStrip');
+    const top = [...companies]
+      .sort((a, b) => (b.stats?.totalOrders || 0) - (a.stats?.totalOrders || 0))
+      .slice(0, 5);
+    if (!top.length) {
+      el.innerHTML = '<span class="text-white-50 small">No company data yet. Enable company accounts to get started.</span>';
+      return;
+    }
+    el.innerHTML = top.map((c, i) => {
+      const name = (c.brandName || c.name || 'Company').trim();
+      const orders = c.stats?.totalOrders || 0;
+      const rate = parseFloat(c.stats?.successRate) || 0;
+      const w = Math.min(100, Math.max(0, rate));
+      return `<div class="admin-co-lb-card" role="button" data-co-id="${escapeAttr(String(c.id))}">
+        <div class="admin-co-lb-rank mb-1">#${i + 1} · ${orders} order${orders === 1 ? '' : 's'}</div>
+        <div class="admin-co-lb-name text-truncate mb-2">${escapeHtml(name)}</div>
+        <div class="d-flex align-items-center gap-2">
+          <div class="admin-co-lb-avatar">${escapeHtml(name.charAt(0).toUpperCase())}</div>
+          <div class="flex-grow-1 min-w-0">
+            <span class="badge bg-success">${rate.toFixed(1)}% success</span>
+            <span class="badge admin-co-badge-accent ms-1">${c.subAccountCount || 0} subs</span>
+            <div class="admin-co-rate-bar"><span style="width:${w}%"></span></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.admin-co-lb-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-co-id');
+        if (id) window.location.href = `/admin/company-details/${id}`;
+      });
+    });
+  }
+
+  async function loadCompanies() {
+    const sortVal = document.getElementById('sortByFilter').value || 'createdAt|desc';
+    const [sortBy, sortOrder] = sortVal.split('|');
+    const params = new URLSearchParams({
+      page: currentPage,
+      limit: 50,
+      search: document.getElementById('searchInput').value.trim(),
+      sortBy,
+      sortOrder: sortOrder || 'desc',
+    });
+
+    try {
+      const res = await fetch(`/admin/get-companies?${params}`);
+      const data = await res.json();
+      if (!data.companies) throw new Error('Invalid response');
+      updateSummary(data.companies, data.pagination);
+      renderLeaderboard(data.companies);
+      renderTable(data.companies, data.pagination);
+      lastPagination = data.pagination || lastPagination;
+      renderPagination(data.pagination);
+    } catch (e) {
+      console.error(e);
+      document.getElementById('companiesTableBody').innerHTML =
+        '<tr><td colspan="8" class="text-danger text-center py-4">Failed to load companies.</td></tr>';
+    }
+  }
+
+  function renderTable(companies, pagination) {
+    const tbody = document.getElementById('companiesTableBody');
+    const noResult = document.getElementById('companiesNoResult');
+    const tableWrap = document.querySelector('.co-table-scroll');
+    if (!companies.length) {
+      tbody.innerHTML = '';
+      noResult.style.display = 'block';
+      if (tableWrap) tableWrap.style.display = 'none';
+      return;
+    }
+    noResult.style.display = 'none';
+    if (tableWrap) tableWrap.style.display = '';
+    const offset = ((pagination?.currentPage || 1) - 1) * (pagination?.limit || 50);
+
+    tbody.innerHTML = companies.map((c, idx) => {
+      const name = c.brandName || c.name || '—';
+      const stats = c.stats || {};
+      const rate = parseFloat(stats.successRate) || 0;
+      const rateW = Math.min(100, Math.max(0, rate));
+      const initial = name.charAt(0).toUpperCase();
+      return `<tr class="admin-co-row" data-href="/admin/company-details/${escapeAttr(String(c.id))}">
+        <td class="text-muted">${offset + idx + 1}</td>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            ${companyLogoMarkup(initial)}
+            <div class="min-w-0">
+              <div class="fw-semibold text-truncate">${escapeHtml(name)}</div>
+              <div class="text-muted small text-truncate">${escapeHtml(c.email || '')}</div>
+            </div>
+          </div>
+        </td>
+        <td><code class="small">${escapeHtml(c.businessAccountCode || '—')}</code></td>
+        <td><span class="badge admin-co-badge-accent">${c.subAccountCount || 0}</span></td>
+        <td class="fw-semibold">${stats.totalOrders || 0}</td>
+        <td class="admin-co-mini-rate">
+          <span class="badge admin-co-badge-rate">${rate.toFixed(1)}%</span>
+          <div class="progress mt-1"><div class="progress-bar" style="width:${rateW}%"></div></div>
+        </td>
+        <td class="fw-semibold">${formatCurrency(stats.revenue)}</td>
+        <td class="text-end" onclick="event.stopPropagation()">
+          <a href="/admin/company-details/${escapeAttr(String(c.id))}" class="btn btn-sm btn-icon btn-ghost-secondary" title="View details">
+            <i class="ri-arrow-right-s-line"></i>
+          </a>
+        </td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.admin-co-row').forEach((row) => {
+      row.addEventListener('click', () => {
+        const href = row.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+    });
+  }
+
+  function renderPagination(pagination) {
+    const ul = document.getElementById('paginationContainer');
+    const prev = document.getElementById('coPagePrev');
+    const next = document.getElementById('coPageNext');
+    if (!pagination || pagination.totalPages <= 1) {
+      ul.innerHTML = '';
+      prev.classList.add('disabled');
+      next.classList.add('disabled');
+      return;
+    }
+    const { currentPage: p, totalPages: total } = pagination;
+    prev.classList.toggle('disabled', p <= 1);
+    next.classList.toggle('disabled', p >= total);
+    const pages = new Set([1, total, p, p - 1, p + 1]);
+    const sorted = [...pages].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+    let html = '';
+    let last = 0;
+    sorted.forEach((i) => {
+      if (last && i > last + 1) html += '<li class="page-item disabled"><span class="page-link">…</span></li>';
+      html += `<li class="page-item ${i === p ? 'active' : ''}"><a class="page-link" href="javascript:void(0);" data-page="${i}">${i}</a></li>`;
+      last = i;
+    });
+    ul.innerHTML = html;
+    ul.querySelectorAll('a.page-link[data-page]').forEach((a) => {
+      a.addEventListener('click', () => {
+        const pg = parseInt(a.getAttribute('data-page'), 10);
+        if (!Number.isNaN(pg)) { currentPage = pg; loadCompanies(); }
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCompanies();
+    document.getElementById('applyFiltersBtn').addEventListener('click', () => { currentPage = 1; loadCompanies(); });
+    document.getElementById('resetFilters').addEventListener('click', () => {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('sortByFilter').value = 'createdAt|desc';
+      currentPage = 1;
+      loadCompanies();
+    });
+    document.getElementById('coPagePrev').addEventListener('click', () => {
+      if (currentPage > 1) { currentPage -= 1; loadCompanies(); }
+    });
+    document.getElementById('coPageNext').addEventListener('click', () => {
+      if (currentPage < (lastPagination.totalPages || 1)) { currentPage += 1; loadCompanies(); }
+    });
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => { currentPage = 1; loadCompanies(); }, 400);
+    });
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { currentPage = 1; loadCompanies(); }
+    });
+  });
+</script>

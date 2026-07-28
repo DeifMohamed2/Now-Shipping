@@ -129,7 +129,7 @@ async function syncOrderCreate(shopDomain, orderPayload, options = {}) {
     }
 
     const orderNumber = await generateUniqueOrderNumber();
-    const doc = buildOrderDocumentFromFields(userData, fields, orderNumber);
+    const doc = await buildOrderDocumentFromFields(userData, fields, orderNumber);
     doc.externalSource = 'shopify';
     doc.externalOrderId = String(orderPayload.id);
     doc.externalOrderNumber = orderPayload.name || '';
@@ -286,7 +286,7 @@ async function manualImportShopifyOrder(shopDomain, orderPayload, zonePick = {})
     }
 
     const orderNumber = await generateUniqueOrderNumber();
-    const doc = buildOrderDocumentFromFields(userData, fields, orderNumber);
+    const doc = await buildOrderDocumentFromFields(userData, fields, orderNumber);
     doc.externalSource = 'shopify';
     doc.externalOrderId = String(orderPayload.id);
     doc.externalOrderNumber = orderPayload.name || '';

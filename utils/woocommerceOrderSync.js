@@ -131,7 +131,7 @@ async function syncWcOrderCreate(storeUrl, wcOrder, options = {}) {
     }
 
     const orderNumber = await generateUniqueOrderNumber();
-    const doc = buildOrderDocumentFromFields(userData, fields, orderNumber);
+    const doc = await buildOrderDocumentFromFields(userData, fields, orderNumber);
     doc.externalSource = 'woocommerce';
     doc.externalOrderId = String(wcOrder.id);
     doc.externalOrderNumber = wcOrderNumber;
@@ -286,7 +286,7 @@ async function manualImportWcOrder(storeUrl, wcOrder, zonePick = {}) {
     }
 
     const orderNumber = await generateUniqueOrderNumber();
-    const doc = buildOrderDocumentFromFields(userData, fields, orderNumber);
+    const doc = await buildOrderDocumentFromFields(userData, fields, orderNumber);
     doc.externalSource = 'woocommerce';
     doc.externalOrderId = String(wcOrder.id);
     doc.externalOrderNumber = wcOrderNumber;

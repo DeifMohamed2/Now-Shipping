@@ -1,8 +1,13 @@
 const Courier = require('../models/courier');
 const User = require('../models/user');
-const { businessRoleFilter } = require('../utils/businessRoleQuery');
+const { businessNotificationRecipientFilter } = require('../utils/businessRoleQuery');
+const { getBusinessDisplayName } = require('../utils/businessDisplayName');
 const Notification = require('../models/notification');
 const firebase = require('../config/firebase');
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 
 const sendNotificationToCourier = async (req, res) => {
@@ -385,14 +390,22 @@ const getNotificationsPage = async (req, res) => {
  */
 const getBusinessNotificationsPage = async (req, res) => {
   try {
-    // Get all businesses for the dropdown
-    const businesses = await User.find(businessRoleFilter()).select('name email');
+    const businesses = await User.find(businessNotificationRecipientFilter())
+      .select('name email brandInfo.brandName')
+      .sort({ 'brandInfo.brandName': 1, name: 1 })
+      .lean();
+
+    const businessesForView = businesses.map((business) => ({
+      _id: business._id,
+      email: business.email,
+      displayName: getBusinessDisplayName(business) || business.name || business.email,
+    }));
     
     res.render('admin/send-notifications-business', {
       title: 'Send Business Notifications',
       page_title: 'Send Business Notifications',
       folder: 'Pages',
-      businesses
+      businesses: businessesForView
     });
   } catch (error) {
     console.error('Error loading business notifications page:', error);
@@ -400,6 +413,44 @@ const getBusinessNotificationsPage = async (req, res) => {
       message: 'Failed to load business notifications page',
       error
     });
+  }
+};
+
+const getNotificationFilterBusinesses = async (req, res) => {
+  try {
+    const raw = (req.query.q || '').trim();
+    const mongoQuery = { ...businessNotificationRecipientFilter() };
+
+    if (raw) {
+      const searchRegex = new RegExp(escapeRegex(raw), 'i');
+      mongoQuery.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex },
+        { 'brandInfo.brandName': searchRegex },
+      ];
+    }
+
+    const users = await User.find(mongoQuery)
+      .select('name email brandInfo.brandName')
+      .sort({ 'brandInfo.brandName': 1, name: 1 })
+      .limit(raw ? 50 : 500)
+      .lean();
+
+    const businesses = users.map((user) => {
+      const displayName = getBusinessDisplayName(user) || user.name || user.email || 'Business';
+      return {
+        id: user._id.toString(),
+        label: `${displayName} — ${user.email}`,
+        displayName,
+        email: user.email,
+      };
+    });
+
+    res.status(200).json({ businesses });
+  } catch (error) {
+    console.error('Error in notification filter businesses:', error);
+    res.status(500).json({ success: false, message: 'Failed to load businesses' });
   }
 };
 
@@ -581,29 +632,57 @@ const getRecentNotifications = async (req, res) => {
         $lte: endDate
       };
     }
+
+    if (req.query.excludeBroadcastChildren === 'true') {
+      query.sourceBroadcastId = null;
+    }
     
     // Get total count for pagination
     const totalCount = await Notification.countDocuments(query);
     
     // Get notifications with pagination and filters
-    // Populate recipient - could be courier or business
     const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('recipient', 'name courierID email');
-    
+      .lean();
+
+    const recipientIds = [
+      ...new Set(
+        notifications
+          .map((n) => n.recipient?.toString())
+          .filter(Boolean)
+      ),
+    ];
+
+    const [couriers, businesses] = await Promise.all([
+      recipientIds.length
+        ? Courier.find({ _id: { $in: recipientIds } }).select('name courierID').lean()
+        : [],
+      recipientIds.length
+        ? User.find({ _id: { $in: recipientIds } }).select('name email brandInfo').lean()
+        : [],
+    ]);
+
+    const recipientMap = new Map();
+    couriers.forEach((courier) => {
+      recipientMap.set(courier._id.toString(), `${courier.name} (${courier.courierID})`);
+    });
+    businesses.forEach((business) => {
+      const displayName = getBusinessDisplayName(business) || business.name || business.email;
+      recipientMap.set(business._id.toString(), `${displayName} (${business.email})`);
+    });
+
     // Format notifications for the table
-    const formattedNotifications = notifications.map(notification => {
-      const formatted = notification.toObject();
-      if (notification.recipient) {
-        // Check if it's a courier (has courierID) or business (has email)
-        if (notification.recipient.courierID) {
-          formatted.recipientName = `${notification.recipient.name} (${notification.recipient.courierID})`;
-        } else {
-          formatted.recipientName = `${notification.recipient.name} (${notification.recipient.email})`;
-        }
+    const formattedNotifications = notifications.map((notification) => {
+      const formatted = { ...notification };
+      const rawRecipientId = notification.recipient?.toString() || null;
+
+      if (rawRecipientId && recipientMap.has(rawRecipientId)) {
+        formatted.recipientName = recipientMap.get(rawRecipientId);
+        formatted.recipientId = rawRecipientId;
       }
+
       return formatted;
     });
     
@@ -631,7 +710,6 @@ const getRecentNotifications = async (req, res) => {
 const sendNotificationToBusiness = async (req, res) => {
   try {
     const { businessId, title, body, data } = req.body;
-    console.log(businessId, title, body, data);
     if (!businessId || !title || !body) {
       return res.status(400).json({
         success: false,
@@ -639,18 +717,19 @@ const sendNotificationToBusiness = async (req, res) => {
       });
     }
 
-    // Find the business
-    const business = await User.findById(businessId);
+    const business = await User.findOne({
+      _id: businessId,
+      ...businessNotificationRecipientFilter(),
+    });
     if (!business) {
       return res.status(404).json({
         success: false,
         message: 'Business not found'
       });
     }
-    console.log(business);
-    
-    // Add business name to the title for personalization
-    const personalizedTitle = `${title} (Hi ${business.name})`;
+
+    const businessName = getBusinessDisplayName(business) || business.name;
+    const personalizedTitle = `${title} (Hi ${businessName})`;
     
     // Create notification in database (initially with pending status)
     const notification = new Notification({
@@ -763,9 +842,9 @@ const sendNotificationToAllBusinesses = async (req, res) => {
     // Find all businesses with FCM tokens
     const businesses = await User.find({
       fcmToken: { $ne: null },
-      ...businessRoleFilter(),
+      ...businessNotificationRecipientFilter(),
     });
-    
+
     if (businesses.length === 0) {
       return res.status(404).json({
         success: false,
@@ -928,6 +1007,7 @@ const sendNotificationToAllBusinesses = async (req, res) => {
         body,
         recipient: business._id,
         type: 'personal',
+        sourceBroadcastId: notification._id,
         data: data || {},
         status,
         deliveryError,
@@ -943,6 +1023,7 @@ const sendNotificationToAllBusinesses = async (req, res) => {
         body,
         recipient: business._id,
         type: 'personal',
+        sourceBroadcastId: notification._id,
         data: data || {},
         status: 'failed',
         deliveryError: 'No FCM token available',
@@ -1262,6 +1343,7 @@ module.exports = {
   sendNotificationToAllBusinesses,
   getNotificationsPage,
   getBusinessNotificationsPage,
+  getNotificationFilterBusinesses,
   getCourierNotifications,
   getBusinessNotifications,
   markNotificationAsRead,
