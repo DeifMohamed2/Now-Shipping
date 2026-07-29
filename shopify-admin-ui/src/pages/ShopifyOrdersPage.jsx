@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppBridge } from '@shopify/app-bridge-react';
 import { authFetch, authFetchBlob } from '../authFetch.js';
-import { ImportOrderModal } from './ImportOrderModal.jsx';
 import { EditImportModal } from './EditImportModal.jsx';
+import { needsShopifyFulfillmentSync, parseAdminLinkOrderIds } from '../utils/shopifyOrderIds.js';
 import {
   Page,
   BlockStack,
@@ -27,47 +28,15 @@ const STATUS_OPTIONS = [
   { label: 'Cancelled', value: 'cancelled' },
 ];
 
-/** Parse Shopify admin link query params (ids[]=123&ids[]=456). */
-function parseAdminLinkOrderIds() {
-  const params = new URLSearchParams(window.location.search);
-  const ids = new Set();
-  for (const [key, value] of params.entries()) {
-    if (
-      value &&
-      (key === 'ids' ||
-        key === 'ids[]' ||
-        key === 'orderIds' ||
-        key === 'orderIds[]' ||
-        key.startsWith('ids['))
-    ) {
-      ids.add(String(value));
-    }
-  }
-  return Array.from(ids);
-}
-
-function stripAdminLinkQueryParams() {
-  const url = new URL(window.location.href);
-  let changed = false;
-  for (const key of [...url.searchParams.keys()]) {
-    if (key === 'from' || key === 'orderIds' || key === 'orderIds[]' || key.startsWith('ids')) {
-      url.searchParams.delete(key);
-      changed = true;
-    }
-  }
-  if (changed) {
-    const next = `${url.pathname}${url.search}${url.hash}`;
-    window.history.replaceState({}, '', next);
-  }
-}
-
-function needsShopifyFulfillmentSync(row) {
-  return !!row.nowOrderNumber && row.fulfillment_status !== 'fulfilled';
+function fulfillmentBadge(status) {
+  if (status === 'fulfilled') return <Badge tone="success">Fulfilled</Badge>;
+  if (status === 'partial') return <Badge tone="attention">Partial</Badge>;
+  return <Badge tone="warning">Unfulfilled</Badge>;
 }
 
 export function ShopifyOrdersPage() {
   const app = useAppBridge();
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [orders, setOrders] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
@@ -76,8 +45,6 @@ export function ShopifyOrdersPage() {
   const [status, setStatus] = useState('any');
   const [q, setQ] = useState('');
   const [qDebounced, setQDebounced] = useState('');
-  const [importOpen, setImportOpen] = useState(false);
-  const [deepLinkOrders, setDeepLinkOrders] = useState(null);
   const [editOrder, setEditOrder] = useState(null);
   const [printAwbLoading, setPrintAwbLoading] = useState(false);
   const [printAwbProgress, setPrintAwbProgress] = useState(0);
@@ -102,7 +69,6 @@ export function ShopifyOrdersPage() {
     useIndexResourceState(orders);
   const clearSelectionRef = React.useRef(clearSelection);
   clearSelectionRef.current = clearSelection;
-  const deepLinkHandledRef = React.useRef(false);
 
   useEffect(() => {
     const t = setTimeout(() => setQDebounced(q.trim()), 400);
@@ -138,75 +104,30 @@ export function ShopifyOrdersPage() {
   }, [load]);
 
   useEffect(() => {
-    if (deepLinkHandledRef.current) return undefined;
     const ids = parseAdminLinkOrderIds();
-    if (!ids.length) return undefined;
-
-    deepLinkHandledRef.current = true;
-    stripAdminLinkQueryParams();
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await authFetch(
-          app,
-          `/api/shopify/app/shopify-orders/by-ids?ids=${encodeURIComponent(ids.join(','))}`
-        );
-        if (cancelled) return;
-        const rows = data.orders || [];
-        const importable = rows.filter((o) => !o.nowOrderNumber && o.hasShippingAddress);
-        const needsSync = rows.filter((o) => needsShopifyFulfillmentSync(o));
-        if (importable.length) {
-          setDeepLinkOrders(importable);
-          setImportOpen(true);
-        } else if (needsSync.length) {
-          setSyncFulfillmentLoading(true);
-          try {
-            await authFetch(app, '/api/shopify/app/bulk-sync-fulfillment', {
-              method: 'POST',
-              body: JSON.stringify({ shopifyOrderIds: needsSync.map((o) => o.id) }),
-            });
-            if (!cancelled) await load({ cursor: '' });
-          } catch (e) {
-            if (!cancelled) setError(e.message || 'sync_fulfillment_failed');
-          } finally {
-            if (!cancelled) setSyncFulfillmentLoading(false);
-          }
-        } else if (rows.length) {
-          setError('Selected orders are already imported or cannot be delivered with Now.');
-        } else {
-          setError('Could not load the selected Shopify orders.');
-        }
-      } catch (e) {
-        if (!cancelled) setError(e.message || 'deep_link_failed');
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [app, load]);
+    if (ids.length) {
+      navigate(`/deliver?ids=${encodeURIComponent(ids.join(','))}`, { replace: true });
+    }
+  }, [navigate]);
 
   const selectedOrders = useMemo(
     () => orders.filter((o) => selectedResources.includes(o.id)),
     [orders, selectedResources]
   );
 
-  const importOrders = deepLinkOrders || selectedOrders;
-
   const canPrintAwb = selectedOrders.length > 0 && selectedOrders.every((o) => o.nowOrderNumber);
   const canDeliverWithNow =
-    importOrders.length > 0 &&
-    importOrders.every((o) => o.hasShippingAddress) &&
-    importOrders.some((o) => !o.nowOrderNumber);
+    selectedOrders.length > 0 &&
+    selectedOrders.every((o) => o.hasShippingAddress);
 
   const canSyncFulfillment =
     selectedOrders.length > 0 && selectedOrders.every((o) => needsShopifyFulfillmentSync(o));
 
   const handleBulkDeliver = useCallback(() => {
-    if (!canDeliverWithNow) return;
-    setImportOpen(true);
-  }, [canDeliverWithNow]);
+    if (!selectedOrders.length) return;
+    const ids = selectedOrders.map((o) => o.id).join(',');
+    navigate(`/deliver?ids=${encodeURIComponent(ids)}`);
+  }, [selectedOrders, navigate]);
 
   const handleSyncFulfillment = useCallback(
     async (orderRows) => {
@@ -351,7 +272,11 @@ export function ShopifyOrdersPage() {
 
   if (loading && orders.length === 0) {
     return (
-      <Page fullWidth title="Orders" subtitle="Deliver with Now · import with your real zones">
+      <Page
+        fullWidth
+        title="Orders"
+        subtitle="Import Shopify orders into Now and sync fulfillment & tracking back to Shopify"
+      >
         <BlockStack gap="400" inlineAlign="center">
           <Spinner accessibilityLabel="Loading Shopify orders" size="large" />
           <Text as="p" tone="subdued">
@@ -363,7 +288,15 @@ export function ShopifyOrdersPage() {
   }
 
   return (
-    <Page fullWidth title="Orders" subtitle="Deliver with Now · import with your real zones">
+    <Page
+      fullWidth
+      title="Orders"
+      subtitle="Import Shopify orders into Now and sync fulfillment & tracking back to Shopify"
+      primaryAction={{
+        content: 'Deliver with Now',
+        onAction: () => navigate('/deliver'),
+      }}
+    >
       <BlockStack gap="500">
         {error ? (
           <Banner tone="critical" title="Something went wrong" onDismiss={() => setError(null)}>
@@ -457,7 +390,7 @@ export function ShopifyOrdersPage() {
                       {row.total_price != null ? `${row.total_price} ${row.currency || ''}` : '—'}
                     </IndexTable.Cell>
                     <IndexTable.Cell>{row.financial_status || '—'}</IndexTable.Cell>
-                    <IndexTable.Cell>{row.fulfillment_status || '—'}</IndexTable.Cell>
+                    <IndexTable.Cell>{fulfillmentBadge(row.fulfillment_status)}</IndexTable.Cell>
                     <IndexTable.Cell>
                       {row.nowOrderNumber ? (
                         <Badge tone="success">Now #{row.nowOrderNumber}</Badge>
@@ -520,19 +453,6 @@ export function ShopifyOrdersPage() {
         </BlockStack>
       </BlockStack>
 
-      <ImportOrderModal
-        open={importOpen}
-        onClose={() => {
-          setImportOpen(false);
-          setDeepLinkOrders(null);
-        }}
-        app={app}
-        orders={importOrders}
-        onSuccess={() => {
-          setDeepLinkOrders(null);
-          load({ cursor: listCursor || '' });
-        }}
-      />
       <EditImportModal
         open={!!editOrder}
         onClose={() => setEditOrder(null)}

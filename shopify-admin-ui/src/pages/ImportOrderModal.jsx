@@ -1,84 +1,53 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, BlockStack, Text, Select, Banner, Spinner } from '@shopify/polaris';
+import React, { useEffect } from 'react';
+import { Modal, BlockStack, Banner } from '@shopify/polaris';
 import { authFetch } from '../authFetch.js';
-import { ZoneSearchCombobox } from '../components/ZoneSearchCombobox.jsx';
+import { DeliverZoneAssignment } from '../components/DeliverZoneAssignment.jsx';
+import { useDeliverZones } from '../hooks/useDeliverZones.js';
 
 /**
- * Import selected Shopify orders into Now with merchant-chosen governorate + zone (required).
- * Uses one governorate/zone for all orders in the batch (typical bulk to same area).
+ * Import selected Shopify orders into Now with merchant-chosen governorate + zone.
  */
 export function ImportOrderModal({ open, onClose, app, orders, onSuccess }) {
-  const [loadingZones, setLoadingZones] = useState(false);
-  const [zonesError, setZonesError] = useState(null);
-  const [governorates, setGovernorates] = useState([]);
-  const [govKey, setGovKey] = useState('');
-  const [zoneValue, setZoneValue] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
+  const orderList = orders || [];
+  const isBulk = orderList.length > 1;
+  const [submitting, setSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState(null);
 
-  const loadZones = useCallback(async () => {
-    setZonesError(null);
-    setLoadingZones(true);
-    try {
-      const data = await authFetch(app, '/api/shopify/app/zones');
-      setGovernorates(data.governorates || []);
-    } catch (e) {
-      setZonesError(e.message || 'zones_failed');
-    } finally {
-      setLoadingZones(false);
-    }
-  }, [app]);
+  const zones = useDeliverZones(app, { enabled: open });
+  const { resetZones, buildImportPayload, ...zoneFields } = zones;
 
   useEffect(() => {
     if (open) {
-      loadZones();
-      setGovKey('');
-      setZoneValue('');
+      resetZones(orderList);
       setSubmitError(null);
     }
-  }, [open, loadZones]);
-
-  const govOptions = useMemo(
-    () => [{ label: 'Select governorate…', value: '' }, ...governorates.map((g) => ({ label: g.label, value: g.key }))],
-    [governorates]
-  );
-
-  const selectedGov = useMemo(() => governorates.find((g) => g.key === govKey), [governorates, govKey]);
-  const zoneAreas = selectedGov?.areas || [];
-
-  const handleGovChange = (v) => {
-    setGovKey(v);
-    setZoneValue('');
-  };
+  }, [open, orderList, resetZones]);
 
   const handleSubmit = async () => {
     setSubmitError(null);
-    if (!govKey || !zoneValue) {
-      setSubmitError('Please select governorate and zone.');
+    if (!orderList.length) return;
+
+    const built = buildImportPayload(orderList);
+    if (!built.ok) {
+      setSubmitError(built.error);
       return;
     }
-    if (!orders || !orders.length) return;
+
     setSubmitting(true);
     try {
-      if (orders.length === 1) {
+      if (built.payloadOrders.length === 1) {
         await authFetch(app, '/api/shopify/app/import-order', {
           method: 'POST',
           body: JSON.stringify({
-            shopifyOrderId: orders[0].id,
-            government: govKey,
-            zone: zoneValue,
+            shopifyOrderId: built.payloadOrders[0].shopifyOrderId,
+            government: built.payloadOrders[0].government,
+            zone: built.payloadOrders[0].zone,
           }),
         });
       } else {
         await authFetch(app, '/api/shopify/app/bulk-import', {
           method: 'POST',
-          body: JSON.stringify({
-            orders: orders.map((o) => ({
-              shopifyOrderId: o.id,
-              government: govKey,
-              zone: zoneValue,
-            })),
-          }),
+          body: JSON.stringify({ orders: built.payloadOrders }),
         });
       }
       onSuccess?.();
@@ -94,55 +63,41 @@ export function ImportOrderModal({ open, onClose, app, orders, onSuccess }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={orders.length > 1 ? `Deliver with Now (${orders.length} orders)` : 'Deliver with Now'}
+      size={isBulk && zones.mode === 'individual' ? 'large' : undefined}
+      title={isBulk ? `Deliver with Now (${orderList.length} orders)` : 'Deliver with Now'}
       primaryAction={{
-        content: 'Import order',
+        content: isBulk ? `Import ${orderList.length} orders` : 'Import order',
         onAction: handleSubmit,
         loading: submitting,
-        disabled: loadingZones || !!zonesError,
+        disabled: zones.loadingZones || !!zones.zonesError,
       }}
       secondaryActions={[{ content: 'Cancel', onAction: onClose }]}
     >
       <Modal.Section>
         <div className="now-zone-combobox-modal-section">
           <BlockStack gap="400">
-          {zonesError ? (
-            <Banner tone="critical" title="Could not load zones">
-              <p>{zonesError}</p>
-            </Banner>
-          ) : null}
-          {submitError ? (
-            <Banner tone="critical" title="Import failed">
-              <p>{submitError}</p>
-            </Banner>
-          ) : null}
-          {loadingZones ? (
-            <Spinner accessibilityLabel="Loading zones" size="small" />
-          ) : null}
-          <Text as="p" tone="subdued">
-            Select the correct Now governorate and delivery zone. This applies to all selected orders.
-          </Text>
-          <BlockStack gap="200">
-            {orders.slice(0, 8).map((o) => (
-              <Text key={o.id} as="p" variant="bodyMd">
-                <strong>{o.name}</strong> — {o.customerName || '—'} · {o.addressSummary || '—'}
-              </Text>
-            ))}
-            {orders.length > 8 ? (
-              <Text as="p" tone="subdued">
-                …and {orders.length - 8} more
-              </Text>
+            {submitError ? (
+              <Banner tone="critical" title="Import failed">
+                <p>{submitError}</p>
+              </Banner>
             ) : null}
+            <DeliverZoneAssignment
+              orders={orderList}
+              governorates={zones.governorates}
+              loadingZones={zones.loadingZones}
+              zonesError={zones.zonesError}
+              mode={zones.mode}
+              setMode={zones.setMode}
+              govKey={zones.govKey}
+              setGovKey={zones.setGovKey}
+              zoneValue={zones.zoneValue}
+              setZoneValue={zones.setZoneValue}
+              perOrderZones={zones.perOrderZones}
+              setOrderZone={zones.setOrderZone}
+              applySameZoneToAll={zones.applySameZoneToAll}
+              copyFirstOrderZoneToAll={zones.copyFirstOrderZoneToAll}
+            />
           </BlockStack>
-          <Select label="Governorate" options={govOptions} value={govKey} onChange={handleGovChange} />
-          <ZoneSearchCombobox
-            label="Zone / area"
-            areas={zoneAreas}
-            value={zoneValue}
-            onChange={setZoneValue}
-            disabled={!govKey}
-          />
-        </BlockStack>
         </div>
       </Modal.Section>
     </Modal>

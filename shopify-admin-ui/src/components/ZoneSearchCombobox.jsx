@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Combobox, Listbox, Text, AutoSelection } from '@shopify/polaris';
+import { Combobox, Listbox, Text, AutoSelection, Icon } from '@shopify/polaris';
+import { SearchIcon } from '@shopify/polaris-icons';
 
 /** Same idea as `area-selection-modal.js` — match typed query against Arabic, English, and values. */
 export function normalizeArabicDigitsToLatin(s) {
@@ -65,15 +66,22 @@ export function formatZoneDisplay(area) {
   return en || ar || String(area.value || '');
 }
 
+const MAX_VISIBLE_ZONES = 80;
+
 /**
  * Searchable zone field (English + Arabic), aligned with main app `area-selection-modal.js` matching.
- * @param {{ value: string, labelEn: string, labelAr: string }[]} areas
- * @param {string} value — selected zone `value` sent to the API
- * @param {(value: string) => void} onChange
  */
-export function ZoneSearchCombobox({ areas, value, onChange, disabled, label }) {
+export function ZoneSearchCombobox({
+  areas,
+  value,
+  onChange,
+  disabled,
+  label,
+  placeholder = 'Search zone (English or Arabic)…',
+}) {
   const list = Array.isArray(areas) ? areas : [];
   const [inputValue, setInputValue] = useState('');
+  const [active, setActive] = useState(false);
   const inputValueRef = useRef('');
 
   useEffect(() => {
@@ -90,14 +98,15 @@ export function ZoneSearchCombobox({ areas, value, onChange, disabled, label }) 
 
   const filteredAreas = useMemo(() => {
     if (!list.length) return [];
-    const q = inputValueRef.current.trim();
-    if (!q) return list;
-    return list.filter((a) => areaMatchesQuery(a, q));
+    const q = String(inputValue || '').trim();
+    const matched = q ? list.filter((a) => areaMatchesQuery(a, q)) : list;
+    return matched.slice(0, MAX_VISIBLE_ZONES);
   }, [list, inputValue]);
 
   const handleTextChange = (v) => {
     inputValueRef.current = v;
     setInputValue(v);
+    setActive(true);
     if (!String(v).trim()) {
       onChange('');
     }
@@ -112,11 +121,13 @@ export function ZoneSearchCombobox({ areas, value, onChange, disabled, label }) 
       const display = formatZoneDisplay(a);
       setInputValue(display);
       inputValueRef.current = display;
+      setActive(false);
     },
     [list, onChange]
   );
 
   const handleBlur = useCallback(() => {
+    window.setTimeout(() => setActive(false), 150);
     const raw = inputValueRef.current;
     if (!String(raw).trim()) {
       onChange('');
@@ -149,65 +160,88 @@ export function ZoneSearchCombobox({ areas, value, onChange, disabled, label }) 
     }
   }, [list, value, onChange]);
 
-  const noResults = list.length > 0 && filteredAreas.length === 0 && String(inputValue).trim().length > 0;
+  const handleFocus = useCallback(() => {
+    if (disabled || !list.length) return;
+    setActive(true);
+  }, [disabled, list.length]);
+
+  const noResults =
+    list.length > 0 && filteredAreas.length === 0 && String(inputValue).trim().length > 0;
+  const showList = active && list.length > 0 && !disabled;
 
   return (
-    <Combobox
-      preferredPosition="below"
-      height="240px"
-      activator={
-        <Combobox.TextField
-          label={label}
-          value={inputValue}
-          onChange={handleTextChange}
-          onBlur={handleBlur}
-          autoComplete="off"
-          disabled={disabled || !list.length}
-          placeholder="Search zone (English or Arabic)…"
-        />
-      }
-    >
-      {list.length > 0 ? (
-        <Listbox autoSelection={AutoSelection.First} enableKeyboardControl onSelect={handleSelect}>
-          {noResults ? (
-            <Listbox.Option value="_nomatch_" disabled accessibilityLabel="No matching zones">
-              <div className="now-zone-option now-zone-option--empty">
-                <Text as="p" tone="subdued">
-                  No matching zones — try another spelling (English or Arabic)
-                </Text>
-              </div>
-            </Listbox.Option>
-          ) : (
-            filteredAreas.map((area) => (
-              <Listbox.Option
-                key={area.value}
-                value={area.value}
-                selected={value === area.value}
-                accessibilityLabel={formatZoneDisplay(area)}
-              >
-                <div className="now-zone-option" translate="no">
-                  <div className="now-zone-option__line" dir="ltr">
-                    <span className="now-zone-option__en" lang="en">
-                      {area.labelEn || area.value}
-                    </span>
-                    {area.labelAr ? (
-                      <>
-                        <span className="now-zone-option__dash" aria-hidden="true">
-                          {' '}
-                          -{' '}
-                        </span>
-                        <bdi className="now-zone-option__ar" dir="rtl" lang="ar">
-                          {area.labelAr}
-                        </bdi>
-                      </>
-                    ) : null}
-                  </div>
+    <div className="now-zone-combobox">
+      <Combobox
+        preferredPosition="below"
+        height="280px"
+        activator={
+          <Combobox.TextField
+            label={label}
+            value={inputValue}
+            onChange={handleTextChange}
+            onBlur={handleBlur}
+            onFocus={handleFocus}
+            autoComplete="off"
+            disabled={disabled || !list.length}
+            placeholder={placeholder}
+            prefix={<Icon source={SearchIcon} tone="subdued" />}
+            clearButton
+            onClearButtonClick={() => {
+              setInputValue('');
+              inputValueRef.current = '';
+              onChange('');
+              setActive(true);
+            }}
+          />
+        }
+      >
+        {showList ? (
+          <Listbox autoSelection={AutoSelection.First} enableKeyboardControl onSelect={handleSelect}>
+            {noResults ? (
+              <Listbox.Option value="_nomatch_" disabled accessibilityLabel="No matching zones">
+                <div className="now-zone-option now-zone-option--empty">
+                  <Text as="p" tone="subdued">
+                    No matching zones — try another spelling (English or Arabic)
+                  </Text>
                 </div>
               </Listbox.Option>
-            ))
-          )}
-        </Listbox>
+            ) : (
+              filteredAreas.map((area) => (
+                <Listbox.Option
+                  key={area.value}
+                  value={area.value}
+                  selected={value === area.value}
+                  accessibilityLabel={formatZoneDisplay(area)}
+                >
+                  <div className="now-zone-option" translate="no">
+                    <div className="now-zone-option__line" dir="ltr">
+                      <span className="now-zone-option__en" lang="en">
+                        {area.labelEn || area.value}
+                      </span>
+                      {area.labelAr ? (
+                        <>
+                          <span className="now-zone-option__dash" aria-hidden="true">
+                            {' '}
+                            -{' '}
+                          </span>
+                          <bdi className="now-zone-option__ar" dir="rtl" lang="ar">
+                            {area.labelAr}
+                          </bdi>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                </Listbox.Option>
+              ))
+            )}
+          </Listbox>
+        ) : null}
+      </Combobox>
+      {!disabled && list.length > 0 && !value ? (
+        <Text as="p" variant="bodySm" tone="subdued">
+          {list.length} zones available — click the field and type to filter
+        </Text>
       ) : null}
-    </Combobox>
+    </div>
   );
 }

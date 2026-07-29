@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, BlockStack, Text, Select, Banner, Spinner, TextField } from '@shopify/polaris';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Modal, BlockStack, Text, Banner, Spinner, TextField } from '@shopify/polaris';
 import { authFetch } from '../authFetch.js';
-import { ZoneSearchCombobox } from '../components/ZoneSearchCombobox.jsx';
+import { ZonePickerFields } from '../components/ZonePickerFields.jsx';
 
 function buildInitialForm(order) {
   const addr = order?.shipping_address;
@@ -58,19 +58,6 @@ export function EditImportModal({ open, onClose, app, order, onSuccess }) {
       setSubmitError(null);
     }
   }, [open, order, loadZones]);
-
-  const govOptions = useMemo(
-    () => [{ label: 'Select governorate…', value: '' }, ...governorates.map((g) => ({ label: g.label, value: g.key }))],
-    [governorates]
-  );
-
-  const selectedGov = useMemo(() => governorates.find((g) => g.key === govKey), [governorates, govKey]);
-  const zoneAreas = selectedGov?.areas || [];
-
-  const handleGovChange = (v) => {
-    setGovKey(v);
-    setZoneValue('');
-  };
 
   const handleSubmit = async () => {
     setSubmitError(null);
@@ -164,13 +151,13 @@ export function EditImportModal({ open, onClose, app, order, onSuccess }) {
             multiline={3}
             autoComplete="street-address"
           />
-          <Select label="Governorate" options={govOptions} value={govKey} onChange={handleGovChange} />
-          <ZoneSearchCombobox
-            label="Zone / area"
-            areas={zoneAreas}
-            value={zoneValue}
-            onChange={setZoneValue}
-            disabled={!govKey}
+          <ZonePickerFields
+            governorates={governorates}
+            govKey={govKey}
+            zoneValue={zoneValue}
+            onGovChange={setGovKey}
+            onZoneChange={setZoneValue}
+            disabled={loadingZones}
           />
         </BlockStack>
         </div>

@@ -89,6 +89,69 @@
   padding-bottom: clamp(10rem, 30vh, 18rem);
 }
 
+.now-zone-combobox {
+  position: relative;
+  z-index: 1;
+}
+
+.now-deliver-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-200);
+  max-height: min(45vh, 360px);
+  overflow-y: auto;
+}
+
+.now-deliver-review-row {
+  padding: var(--p-space-300);
+  border-radius: var(--p-border-radius-200);
+  border: 1px solid var(--p-color-border-secondary);
+  background: var(--p-color-bg-surface);
+}
+
+.now-deliver-review-row:hover {
+  border-color: rgba(243, 151, 32, 0.45);
+  background: rgba(255, 248, 237, 0.65);
+}
+
+.now-import-order-list,
+.now-import-per-order-list {
+  max-height: min(40vh, 320px);
+  overflow-y: auto;
+  padding: var(--p-space-300);
+  border-radius: var(--p-border-radius-200);
+  background: var(--p-color-bg-surface-secondary);
+  border: 1px solid var(--p-color-border-secondary);
+}
+
+.now-import-per-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-300);
+  max-height: min(50vh, 420px);
+}
+
+/* Zone combobox dropdown — ensure clickable above modal layers */
+.Polaris-Modal-Dialog__Modal .Polaris-Combobox__Popover,
+.Polaris-Modal-Dialog__Modal .Polaris-Popover,
+.Polaris-Modal-Dialog__Modal .Polaris-PositionedOverlay {
+  z-index: 10001 !important;
+}
+
+.Polaris-Combobox__Listbox .Polaris-Listbox-Option,
+.Polaris-Combobox__Listbox .Polaris-Listbox-Option .now-zone-option {
+  cursor: pointer;
+}
+
+.Polaris-Combobox__Listbox .Polaris-Listbox-Option:hover,
+.Polaris-Combobox__Listbox .Polaris-Listbox-Option[aria-selected='true'] {
+  background: rgba(243, 151, 32, 0.12);
+}
+
+.Polaris-Combobox__Listbox .Polaris-Listbox-Option .now-zone-option {
+  pointer-events: auto;
+}
+
 /* Zone combobox dropdown (Polaris Combobox — only used for zones in this app) */
 .Polaris-Combobox__Listbox {
   padding-block: var(--p-space-200);
