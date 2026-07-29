@@ -6,6 +6,9 @@ export default async () => {
   render(<Extension />, document.body);
 };
 
+const ZONE_MODE_SAME = 'same';
+const ZONE_MODE_PER_ORDER = 'per_order';
+
 function statusLabel(status) {
   switch (status) {
     case 'ready_import':
@@ -30,11 +33,12 @@ function Extension() {
   const [error, setError] = useState(null);
   const [orders, setOrders] = useState([]);
   const [governorates, setGovernorates] = useState([]);
+  const [zoneMode, setZoneMode] = useState(ZONE_MODE_SAME);
   const [govKey, setGovKey] = useState('');
   const [zoneValue, setZoneValue] = useState('');
   const [perOrderZones, setPerOrderZones] = useState({});
-  const [done, setDone] = useState(false);
   const [importCount, setImportCount] = useState(0);
+  const [view, setView] = useState('form');
 
   const readyImport = useMemo(
     () => orders.filter((o) => orderStatus(o) === 'ready_import'),
@@ -54,15 +58,31 @@ function Extension() {
     [governorates, govKey]
   );
 
+  const applySameZoneToReadyOrders = useCallback(
+    (nextGovKey, nextZoneValue) => {
+      if (!nextGovKey || !nextZoneValue) return;
+      setPerOrderZones((prev) => {
+        const next = { ...prev };
+        for (const o of readyImport) {
+          next[o.id] = { govKey: nextGovKey, zoneValue: nextZoneValue };
+        }
+        return next;
+      });
+    },
+    [readyImport]
+  );
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
       if (!orderIds.length) {
         setLoading(false);
+        setView('empty');
         return;
       }
       setLoading(true);
       setError(null);
+      setView('form');
       try {
         const [ordersData, zonesData] = await Promise.all([
           extensionFetch(`/shopify-orders/by-ids?ids=${encodeURIComponent(orderIds.join(','))}`),
@@ -77,8 +97,13 @@ function Extension() {
           zones[o.id] = { govKey: '', zoneValue: '' };
         }
         setPerOrderZones(zones);
+        const ready = rows.filter((o) => orderStatus(o) === 'ready_import');
+        setView(ready.length ? 'form' : 'empty');
       } catch (e) {
-        if (!cancelled) setError(e.message || 'load_failed');
+        if (!cancelled) {
+          setError(e.message || 'load_failed');
+          setView('empty');
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -89,28 +114,69 @@ function Extension() {
     };
   }, [orderIds.join(',')]);
 
-  const applySameZoneToAll = useCallback(() => {
-    if (!govKey || !zoneValue) return;
-    setPerOrderZones((prev) => {
-      const next = { ...prev };
-      for (const o of readyImport) {
-        next[o.id] = { govKey, zoneValue };
+  const handleGovChange = useCallback(
+    (value) => {
+      setGovKey(value);
+      setZoneValue('');
+      if (zoneMode === ZONE_MODE_SAME) {
+        setPerOrderZones((prev) => {
+          const next = { ...prev };
+          for (const o of readyImport) {
+            next[o.id] = { govKey: value, zoneValue: '' };
+          }
+          return next;
+        });
       }
-      return next;
-    });
-  }, [govKey, zoneValue, readyImport]);
+    },
+    [zoneMode, readyImport]
+  );
+
+  const handleZoneChange = useCallback(
+    (value) => {
+      setZoneValue(value);
+      if (zoneMode === ZONE_MODE_SAME) {
+        applySameZoneToReadyOrders(govKey, value);
+      }
+    },
+    [zoneMode, govKey, applySameZoneToReadyOrders]
+  );
+
+  const handlePerOrderGovChange = useCallback((orderId, value) => {
+    setPerOrderZones((prev) => ({
+      ...prev,
+      [orderId]: { govKey: value, zoneValue: '' },
+    }));
+  }, []);
+
+  const handlePerOrderZoneChange = useCallback((orderId, value) => {
+    setPerOrderZones((prev) => ({
+      ...prev,
+      [orderId]: { ...prev[orderId], zoneValue: value },
+    }));
+  }, []);
+
+  const handleModeChange = useCallback(
+    (value) => {
+      setZoneMode(value);
+      if (value === ZONE_MODE_SAME && govKey && zoneValue) {
+        applySameZoneToReadyOrders(govKey, zoneValue);
+      }
+    },
+    [govKey, zoneValue, applySameZoneToReadyOrders]
+  );
+
+  const handleClose = useCallback(() => {
+    close();
+  }, [close]);
 
   const handleImport = useCallback(async () => {
     setError(null);
-    if (!readyImport.length) {
-      close();
-      return;
-    }
+    if (!readyImport.length) return;
 
     const payloadOrders = [];
     for (const o of readyImport) {
       const z = perOrderZones[o.id] || {};
-      const g = governorates.find((g) => g.key === z.govKey);
+      const g = governorates.find((gov) => gov.key === z.govKey);
       if (!g || !z.zoneValue) {
         setError(`Select governorate and zone for ${o.name}`);
         return;
@@ -143,154 +209,220 @@ function Extension() {
         count = (result.results || []).filter((r) => r.ok).length;
       }
       setImportCount(count);
-      setDone(true);
+      setView('done');
     } catch (e) {
       setError(e.message || 'import_failed');
     } finally {
       setSubmitting(false);
     }
-  }, [readyImport, perOrderZones, governorates, close]);
+  }, [readyImport, perOrderZones, governorates]);
 
-  if (!orderIds.length) {
-    return (
-      <s-admin-action heading={i18n.translate('name')}>
+  const handlePrimaryAction = useCallback(() => {
+    if (view === 'done' || view === 'empty') {
+      handleClose();
+      return;
+    }
+    if (view === 'form') {
+      if (readyImport.length > 0) {
+        handleImport();
+      } else {
+        handleClose();
+      }
+    }
+  }, [view, readyImport.length, handleClose, handleImport]);
+
+  const primaryLabel = useMemo(() => {
+    if (submitting) return 'Importing…';
+    if (view === 'done') return 'Done';
+    if (view === 'empty' || !readyImport.length) return 'Close';
+    return `Import ${readyImport.length} order${readyImport.length === 1 ? '' : 's'}`;
+  }, [submitting, view, readyImport.length]);
+
+  const showSecondary = view === 'form' && readyImport.length > 0;
+  const primaryDisabled = submitting;
+
+  const heading = i18n.translate('name');
+
+  return (
+    <s-admin-action heading={heading}>
+      {loading ? (
+        <s-text>
+          Loading {orderIds.length} order{orderIds.length === 1 ? '' : 's'}…
+        </s-text>
+      ) : null}
+
+      {!loading && !orderIds.length ? (
         <s-banner tone="warning">No orders selected.</s-banner>
-        <s-button slot="secondary-actions" onClick={close}>
-          Close
-        </s-button>
-      </s-admin-action>
-    );
-  }
+      ) : null}
 
-  if (loading) {
-    return (
-      <s-admin-action heading={i18n.translate('name')}>
-        <s-text>Loading {orderIds.length} order{orderIds.length === 1 ? '' : 's'}…</s-text>
-      </s-admin-action>
-    );
-  }
-
-  if (done) {
-    return (
-      <s-admin-action heading={i18n.translate('name')}>
+      {!loading && view === 'done' ? (
         <s-banner tone="success" dismissible={false}>
           {importCount > 0
             ? `${importCount} order${importCount === 1 ? '' : 's'} imported into Now. Fulfillment and tracking will sync to Shopify automatically.`
             : 'Done. Fulfillment syncs to Shopify automatically.'}
         </s-banner>
-        <s-button slot="primary-action" onClick={close}>
-          Done
-        </s-button>
-      </s-admin-action>
-    );
-  }
-
-  if (!orders.length) {
-    return (
-      <s-admin-action heading={i18n.translate('name')}>
-        <s-banner tone="critical">{error || 'Could not load selected orders.'}</s-banner>
-        <s-button slot="secondary-actions" onClick={close}>
-          Close
-        </s-button>
-      </s-admin-action>
-    );
-  }
-
-  const canImport = readyImport.length > 0;
-  const primaryLabel = canImport
-    ? `Import ${readyImport.length} order${readyImport.length === 1 ? '' : 's'}`
-    : 'Close';
-
-  return (
-    <s-admin-action heading={i18n.translate('name')}>
-      {error ? (
-        <s-banner tone="critical" dismissible={false}>
-          {error}
-        </s-banner>
       ) : null}
 
-      <s-section heading="Selected orders">
-        <s-stack gap="base">
-          {orders.map((o) => (
-            <s-box key={o.id} padding="base" borderWidth="base" borderRadius="base">
-              <s-stack gap="small">
-                <s-text type="strong">{o.name}</s-text>
-                <s-text tone="subdued">
-                  {o.customerName || '—'} · {o.addressSummary || '—'}
-                </s-text>
-                <s-text>{statusLabel(orderStatus(o))}</s-text>
-                {o.nowOrderNumber ? <s-text>Now tracking: #{o.nowOrderNumber}</s-text> : null}
+      {!loading && view === 'empty' && error ? (
+        <s-banner tone="critical">{error}</s-banner>
+      ) : null}
+
+      {!loading && view === 'empty' && !error && orders.length === 0 && orderIds.length > 0 ? (
+        <s-banner tone="critical">Could not load selected orders.</s-banner>
+      ) : null}
+
+      {!loading && view === 'form' && orders.length > 0 ? (
+        <>
+          {error ? (
+            <s-banner tone="critical" dismissible={false}>
+              {error}
+            </s-banner>
+          ) : null}
+
+          {alreadyInNow.length > 0 ? (
+            <s-banner tone="info" dismissible={false}>
+              {alreadyInNow.length} order{alreadyInNow.length === 1 ? ' is' : 's are'} already in Now.
+              Fulfillment and tracking sync to Shopify automatically.
+            </s-banner>
+          ) : null}
+
+          {blocked.length > 0 ? (
+            <s-banner tone="warning" dismissible={false}>
+              {blocked.length} order{blocked.length === 1 ? '' : 's'} cannot be delivered (missing shipping
+              address).
+            </s-banner>
+          ) : null}
+
+          {readyImport.length > 0 ? (
+            <s-section heading="Delivery zones">
+              <s-stack gap="base">
+                <s-select label="Zone assignment" value={zoneMode} onChange={(e) => handleModeChange(e.currentTarget.value)}>
+                  <s-option value={ZONE_MODE_SAME}>Same zone for all orders</s-option>
+                  <s-option value={ZONE_MODE_PER_ORDER}>Different zone per order</s-option>
+                </s-select>
+
+                {zoneMode === ZONE_MODE_SAME ? (
+                  <>
+                    <s-text tone="subdued">
+                      Choose one governorate and zone for all {readyImport.length} order
+                      {readyImport.length === 1 ? '' : 's'}.
+                    </s-text>
+                    <s-select label="Governorate" value={govKey} onChange={(e) => handleGovChange(e.currentTarget.value)}>
+                      <s-option value="">Select governorate</s-option>
+                      {governorates.map((g) => (
+                        <s-option key={g.key} value={g.key}>
+                          {g.label}
+                        </s-option>
+                      ))}
+                    </s-select>
+                    <s-select
+                      label="Zone"
+                      value={zoneValue}
+                      disabled={!selectedGov}
+                      onChange={(e) => handleZoneChange(e.currentTarget.value)}
+                    >
+                      <s-option value="">Select zone</s-option>
+                      {(selectedGov?.areas || []).map((a) => (
+                        <s-option key={a.value} value={a.value}>
+                          {a.labelEn || a.value}
+                        </s-option>
+                      ))}
+                    </s-select>
+                  </>
+                ) : (
+                  <s-text tone="subdued">Set governorate and zone for each order below.</s-text>
+                )}
               </s-stack>
-            </s-box>
-          ))}
-        </s-stack>
-      </s-section>
+            </s-section>
+          ) : null}
 
-      {alreadyInNow.length > 0 ? (
-        <s-banner tone="info" dismissible={false}>
-          {alreadyInNow.length} order{alreadyInNow.length === 1 ? ' is' : 's are'} already in Now.
-          Fulfillment and tracking sync to Shopify automatically — no action needed.
-        </s-banner>
+          <s-section heading="Selected orders">
+            <s-stack gap="base">
+              {orders.map((o) => {
+                const status = orderStatus(o);
+                const isReady = status === 'ready_import';
+                const rowZone = perOrderZones[o.id] || { govKey: '', zoneValue: '' };
+                const rowGov = governorates.find((g) => g.key === rowZone.govKey) || null;
+
+                return (
+                  <s-box key={o.id} padding="base" borderWidth="base" borderRadius="base">
+                    <s-stack gap="small">
+                      <s-text type="strong">{o.name}</s-text>
+                      <s-text tone="subdued">
+                        {o.customerName || '—'} · {o.addressSummary || '—'}
+                      </s-text>
+                      <s-text>{statusLabel(status)}</s-text>
+                      {o.nowOrderNumber ? <s-text>Now tracking: #{o.nowOrderNumber}</s-text> : null}
+
+                      {isReady && zoneMode === ZONE_MODE_PER_ORDER ? (
+                        <s-stack gap="small">
+                          <s-select
+                            label={`Governorate — ${o.name}`}
+                            value={rowZone.govKey}
+                            onChange={(e) => handlePerOrderGovChange(o.id, e.currentTarget.value)}
+                          >
+                            <s-option value="">Select governorate</s-option>
+                            {governorates.map((g) => (
+                              <s-option key={g.key} value={g.key}>
+                                {g.label}
+                              </s-option>
+                            ))}
+                          </s-select>
+                          <s-select
+                            label={`Zone — ${o.name}`}
+                            value={rowZone.zoneValue}
+                            disabled={!rowGov}
+                            onChange={(e) => handlePerOrderZoneChange(o.id, e.currentTarget.value)}
+                          >
+                            <s-option value="">Select zone</s-option>
+                            {(rowGov?.areas || []).map((a) => (
+                              <s-option key={a.value} value={a.value}>
+                                {a.labelEn || a.value}
+                              </s-option>
+                            ))}
+                          </s-select>
+                        </s-stack>
+                      ) : null}
+
+                      {isReady && zoneMode === ZONE_MODE_SAME && rowZone.govKey && rowZone.zoneValue ? (
+                        <s-text tone="subdued">
+                          Zone: {governorates.find((g) => g.key === rowZone.govKey)?.label || rowZone.govKey} —{' '}
+                          {rowZone.zoneValue}
+                        </s-text>
+                      ) : null}
+                    </s-stack>
+                  </s-box>
+                );
+              })}
+            </s-stack>
+          </s-section>
+        </>
       ) : null}
 
-      {blocked.length > 0 ? (
-        <s-banner tone="warning" dismissible={false}>
-          {blocked.length} order{blocked.length === 1 ? '' : 's'} cannot be delivered (missing shipping address).
-        </s-banner>
+      {!loading && view === 'empty' && orders.length > 0 && readyImport.length === 0 ? (
+        <>
+          {alreadyInNow.length > 0 ? (
+            <s-banner tone="info" dismissible={false}>
+              {alreadyInNow.length} order{alreadyInNow.length === 1 ? ' is' : 's are'} already in Now. Fulfillment
+              syncs automatically.
+            </s-banner>
+          ) : null}
+          {blocked.length > 0 ? (
+            <s-banner tone="warning" dismissible={false}>
+              {blocked.length} order{blocked.length === 1 ? '' : 's'} cannot be delivered.
+            </s-banner>
+          ) : null}
+        </>
       ) : null}
 
-      {canImport ? (
-        <s-section heading="Delivery zones">
-          <s-stack gap="base">
-            <s-text tone="subdued">
-              Assign governorate and zone for {readyImport.length} order
-              {readyImport.length === 1 ? '' : 's'}. Tracking syncs to Shopify automatically after import.
-            </s-text>
-            <s-select
-              label="Governorate (all orders)"
-              value={govKey}
-              onChange={(e) => {
-                setGovKey(e.currentTarget.value);
-                setZoneValue('');
-              }}
-            >
-              <s-option value="">Select governorate</s-option>
-              {governorates.map((g) => (
-                <s-option key={g.key} value={g.key}>
-                  {g.label}
-                </s-option>
-              ))}
-            </s-select>
-            <s-select
-              label="Zone (all orders)"
-              value={zoneValue}
-              disabled={!selectedGov}
-              onChange={(e) => setZoneValue(e.currentTarget.value)}
-            >
-              <s-option value="">Select zone</s-option>
-              {(selectedGov?.areas || []).map((a) => (
-                <s-option key={a.value} value={a.value}>
-                  {a.labelEn || a.value}
-                </s-option>
-              ))}
-            </s-select>
-            <s-button disabled={!govKey || !zoneValue} onClick={applySameZoneToAll}>
-              Apply zone to all orders
-            </s-button>
-          </s-stack>
-        </s-section>
-      ) : null}
-
-      <s-button
-        slot="primary-action"
-        onClick={canImport ? handleImport : close}
-        disabled={submitting}
-      >
-        {submitting ? 'Importing…' : primaryLabel}
+      <s-button slot="primary-action" onClick={handlePrimaryAction} disabled={primaryDisabled}>
+        {primaryLabel}
       </s-button>
-      <s-button slot="secondary-actions" onClick={close} disabled={submitting}>
-        Cancel
-      </s-button>
+      {showSecondary ? (
+        <s-button slot="secondary-actions" onClick={handleClose} disabled={submitting}>
+          Cancel
+        </s-button>
+      ) : null}
     </s-admin-action>
   );
 }
