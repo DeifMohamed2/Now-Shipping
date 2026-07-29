@@ -263,6 +263,32 @@ function formatGovernoratesForApp() {
     });
 }
 
+function buildLatestNowOrderMap(matches) {
+  const byExt = new Map();
+  const sorted = [...(matches || [])].sort((a, b) => {
+    const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return tb - ta;
+  });
+  for (const m of sorted) {
+    const key = String(m.externalOrderId);
+    if (!byExt.has(key)) byExt.set(key, m);
+  }
+  return byExt;
+}
+
+function dedupeOrderRows(rows) {
+  const seen = new Set();
+  const out = [];
+  for (const row of rows || []) {
+    const id = String(row.id);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(row);
+  }
+  return out;
+}
+
 function mapShopifyOrderRow(o, nowMatch) {
   const addr = o.shipping_address;
   const addrSummary = addr
@@ -322,12 +348,12 @@ async function getShopifyOrders(req, res) {
         externalSource: 'shopify',
         externalOrderId: { $in: ids },
       })
-        .select('externalOrderId orderNumber orderStatus orderCustomer.zone')
+        .select('externalOrderId orderNumber orderStatus orderCustomer.zone createdAt')
         .lean();
-      byExt = new Map(matches.map((m) => [String(m.externalOrderId), m]));
+      byExt = buildLatestNowOrderMap(matches);
     }
 
-    const rows = withAddr.map((o) => mapShopifyOrderRow(o, byExt.get(String(o.id))));
+    const rows = dedupeOrderRows(withAddr.map((o) => mapShopifyOrderRow(o, byExt.get(String(o.id)))));
 
     return res.json({
       orders: rows,
@@ -348,11 +374,12 @@ async function getShopifyOrdersByIds(req, res) {
   try {
     const inst = req.shopifyInstallation;
     const rawIds = req.query.ids ? String(req.query.ids) : '';
-    const idList = rawIds
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 30);
+    const idList = [...new Set(
+      rawIds
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    )].slice(0, 30);
 
     if (!idList.length) {
       return res.status(400).json({ error: 'ids_required' });
@@ -383,12 +410,12 @@ async function getShopifyOrdersByIds(req, res) {
         externalSource: 'shopify',
         externalOrderId: { $in: extIds },
       })
-        .select('externalOrderId orderNumber orderStatus orderCustomer.zone')
+        .select('externalOrderId orderNumber orderStatus orderCustomer.zone createdAt')
         .lean();
-      byExt = new Map(matches.map((m) => [String(m.externalOrderId), m]));
+      byExt = buildLatestNowOrderMap(matches);
     }
 
-    const rows = withAddr.map((o) => mapShopifyOrderRow(o, byExt.get(String(o.id))));
+    const rows = dedupeOrderRows(withAddr.map((o) => mapShopifyOrderRow(o, byExt.get(String(o.id)))));
     const missingIds = idList.filter((id) => !orders.some((o) => String(o.id) === String(id)));
 
     return res.json({

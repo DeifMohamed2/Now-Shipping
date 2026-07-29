@@ -6,7 +6,7 @@
     "build": "npm run build:shopify-ui",
     "build:shopify-ui": "npm install --prefix shopify-admin-ui && npm run build --prefix shopify-admin-ui",
     "build:woo-plugin": "mkdir -p public/downloads && rm -f public/downloads/now-shipping-for-woocommerce-1.0.1.zip && cd wp-plugin && zip -r ../public/downloads/now-shipping-for-woocommerce-1.0.1.zip now-shipping-for-woocommerce -x '*.DS_Store'",
-    "shopify:deploy": "shopify app deploy --allow-updates",
+    "shopify:deploy": "shopify app deploy --allow-updates --allow-deletes",
     "start": "nodemon app.js",
     "dev": "nodemon app.js",
     "smoke:deps": "node scripts/smoke-deps.js",

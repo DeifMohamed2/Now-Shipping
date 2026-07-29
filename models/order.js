@@ -744,6 +744,35 @@ orderSchema.post('save', async function () {
   }
 });
 
+// Post-save: auto-sync Shopify fulfillment + tracking when a Now order has a tracking number.
+orderSchema.post('save', function () {
+  const order = this;
+  if (order.externalSource !== 'shopify') return;
+  if (!order.orderNumber) return;
+  if (order.externalFulfillmentId) return;
+
+  setImmediate(async () => {
+    try {
+      const ShopifyInstallation = require('../models/shopifyInstallation');
+      const installation = await ShopifyInstallation.findOne({
+        business: order.business,
+        uninstalledAt: null,
+      });
+      if (!installation) return;
+
+      const fresh = await order.constructor.findById(order._id);
+      if (!fresh || fresh.externalSource !== 'shopify' || !fresh.orderNumber || fresh.externalFulfillmentId) {
+        return;
+      }
+
+      const { syncFulfillmentAfterImport } = require('../utils/shopifyFulfillmentSync');
+      await syncFulfillmentAfterImport({ installation, order: fresh });
+    } catch (err) {
+      console.error(`[order post-save shopify sync] order=${order.orderNumber}:`, err.message || err);
+    }
+  });
+});
+
 orderSchema.index(
   { business: 1, externalSource: 1, externalOrderId: 1 },
   {

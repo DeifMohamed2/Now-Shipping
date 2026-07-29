@@ -19,7 +19,7 @@ import { authFetch } from '../authFetch.js';
 import { DeliverZoneAssignment } from '../components/DeliverZoneAssignment.jsx';
 import { useDeliverZones } from '../hooks/useDeliverZones.js';
 import { buildShopifyAppNavigateUrl } from '../utils/shopifyAppNavigate.js';
-import { needsShopifyFulfillmentSync, orderDeliverStatus, parseAdminLinkOrderIds } from '../utils/shopifyOrderIds.js';
+import { orderDeliverStatus, parseAdminLinkOrderIds } from '../utils/shopifyOrderIds.js';
 
 const STEPS = ['Review', 'Delivery zones', 'Complete'];
 
@@ -28,7 +28,7 @@ function statusBadge(status) {
     case 'ready_import':
       return <Badge tone="attention">Ready to import</Badge>;
     case 'needs_sync':
-      return <Badge tone="info">Sync to Shopify</Badge>;
+      return <Badge tone="info">In Now — syncing automatically</Badge>;
     case 'complete':
       return <Badge tone="success">Up to date</Badge>;
     case 'no_address':
@@ -76,17 +76,17 @@ export function DeliverPage() {
 
   const grouped = useMemo(() => {
     const readyImport = [];
-    const needsSync = [];
+    const alreadyInNow = [];
     const complete = [];
     const blocked = [];
     for (const o of orders) {
       const s = orderDeliverStatus(o);
       if (s === 'ready_import') readyImport.push(o);
-      else if (s === 'needs_sync') needsSync.push(o);
+      else if (s === 'needs_sync') alreadyInNow.push(o);
       else if (s === 'complete') complete.push(o);
       else blocked.push(o);
     }
-    return { readyImport, needsSync, complete, blocked };
+    return { readyImport, alreadyInNow, complete, blocked };
   }, [orders]);
 
   const loadOrders = useCallback(async () => {
@@ -119,52 +119,19 @@ export function DeliverPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
-  const runSyncOnly = useCallback(
-    async (rows) => {
-      if (!rows.length) return { synced: 0, results: [] };
-      const data = await authFetch(app, '/api/shopify/app/bulk-sync-fulfillment', {
-        method: 'POST',
-        body: JSON.stringify({ shopifyOrderIds: rows.map((o) => o.id) }),
-      });
-      const synced = (data.results || []).filter((r) => r.ok).length;
-      return { synced, results: data.results || [] };
-    },
-    [app]
-  );
-
-  const handleContinueFromReview = useCallback(async () => {
+  const handleContinueFromReview = useCallback(() => {
     setSubmitError(null);
-    const { readyImport, needsSync, complete, blocked } = grouped;
+    const { readyImport, alreadyInNow, complete, blocked } = grouped;
 
-    if (blocked.length && !readyImport.length && !needsSync.length) {
+    if (blocked.length && !readyImport.length && !alreadyInNow.length && !complete.length) {
       setSubmitError('None of the selected orders can be delivered with Now.');
-      return;
-    }
-
-    if (!readyImport.length && needsSync.length) {
-      setSubmitting(true);
-      try {
-        const syncResult = await runSyncOnly(needsSync);
-        setResults({
-          imported: 0,
-          synced: syncResult.synced,
-          skipped: complete.length,
-          blocked: blocked.length,
-        });
-        setStep(2);
-        await loadOrders();
-      } catch (e) {
-        setSubmitError(e.message || 'sync_failed');
-      } finally {
-        setSubmitting(false);
-      }
       return;
     }
 
     if (!readyImport.length) {
       setResults({
         imported: 0,
-        synced: 0,
+        alreadyInNow: alreadyInNow.length,
         skipped: complete.length,
         blocked: blocked.length,
       });
@@ -174,11 +141,11 @@ export function DeliverPage() {
 
     resetZones(readyImport);
     setStep(1);
-  }, [grouped, runSyncOnly, loadOrders, resetZones]);
+  }, [grouped, resetZones]);
 
   const handleImport = useCallback(async () => {
     setSubmitError(null);
-    const { readyImport, needsSync } = grouped;
+    const { readyImport } = grouped;
     const built = buildImportPayload(readyImport);
     if (!built.ok) {
       setSubmitError(built.error);
@@ -206,15 +173,9 @@ export function DeliverPage() {
         importCount = (data.results || []).filter((r) => r.ok).length;
       }
 
-      let synced = 0;
-      if (needsSync.length) {
-        const syncResult = await runSyncOnly(needsSync);
-        synced = syncResult.synced;
-      }
-
       setResults({
         imported: importCount,
-        synced,
+        alreadyInNow: grouped.alreadyInNow.length,
         skipped: grouped.complete.length,
         blocked: grouped.blocked.length,
       });
@@ -225,7 +186,7 @@ export function DeliverPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [app, grouped, buildImportPayload, runSyncOnly, loadOrders]);
+  }, [app, grouped, buildImportPayload, loadOrders]);
 
   const progress = ((step + 1) / STEPS.length) * 100;
 
@@ -246,9 +207,6 @@ export function DeliverPage() {
                     <strong>Deliver with Now</strong>.
                   </p>
                 </Banner>
-                <Text as="p" tone="subdued">
-                  You can also open this page from the Now Shipping app after selecting orders in the embedded orders list.
-                </Text>
                 <InlineStack gap="300">
                   <Button variant="primary" onClick={() => navigate(buildShopifyAppNavigateUrl('/'))}>
                     Go to orders
@@ -293,8 +251,7 @@ export function DeliverPage() {
                 ) : (
                   <Banner tone="warning" title="Orders not found">
                     <p>
-                      We could not load {orderIds.length} selected order{orderIds.length === 1 ? '' : 's'}. They may have
-                      been removed, or your store connection may need to be refreshed.
+                      We could not load {orderIds.length} selected order{orderIds.length === 1 ? '' : 's'}.
                     </p>
                   </Banner>
                 )}
@@ -344,7 +301,7 @@ export function DeliverPage() {
           <Banner tone="warning" title="Some orders could not be loaded">
             <p>
               {missingCount} of {orderIds.length} selected order{orderIds.length === 1 ? '' : 's'} could not be found in
-              Shopify. You can continue with the orders below.
+              Shopify.
             </p>
           </Banner>
         ) : null}
@@ -363,7 +320,7 @@ export function DeliverPage() {
                     Review selected orders
                   </Text>
                   <Text as="p" tone="subdued">
-                    Confirm which orders will be imported into Now and synced back to Shopify with tracking.
+                    Orders already in Now sync fulfillment and tracking to Shopify automatically.
                   </Text>
                   <div className="now-deliver-review-list">
                     {orders.map((o) => (
@@ -393,10 +350,10 @@ export function DeliverPage() {
                       <strong>{grouped.readyImport.length}</strong> to import
                     </Text>
                     <Text as="span" variant="bodySm">
-                      <strong>{grouped.needsSync.length}</strong> to sync to Shopify
+                      <strong>{grouped.alreadyInNow.length}</strong> already in Now
                     </Text>
                     <Text as="span" variant="bodySm">
-                      <strong>{grouped.complete.length}</strong> already up to date
+                      <strong>{grouped.complete.length}</strong> up to date
                     </Text>
                     {grouped.blocked.length ? (
                       <Text as="span" variant="bodySm" tone="critical">
@@ -406,29 +363,9 @@ export function DeliverPage() {
                   </InlineStack>
                   <InlineStack align="end">
                     <Button variant="primary" loading={submitting} onClick={handleContinueFromReview}>
-                      {grouped.readyImport.length ? 'Continue to zones' : grouped.needsSync.length ? 'Sync to Shopify' : 'Finish'}
+                      {grouped.readyImport.length ? 'Continue to zones' : 'Finish'}
                     </Button>
                   </InlineStack>
-                </BlockStack>
-              </Card>
-            </Layout.Section>
-            <Layout.Section variant="oneThird">
-              <Card>
-                <BlockStack gap="300">
-                  <Text as="h3" variant="headingSm">
-                    What happens next
-                  </Text>
-                  <BlockStack gap="200">
-                    <Text as="p" variant="bodySm">
-                      1. Orders are created in Now with your delivery zones.
-                    </Text>
-                    <Text as="p" variant="bodySm">
-                      2. Shopify is marked <strong>Fulfilled</strong> with Now tracking numbers.
-                    </Text>
-                    <Text as="p" variant="bodySm">
-                      3. You can print AWBs from the Orders page anytime.
-                    </Text>
-                  </BlockStack>
                 </BlockStack>
               </Card>
             </Layout.Section>
@@ -444,7 +381,7 @@ export function DeliverPage() {
                 </Text>
                 <Text as="p" tone="subdued">
                   Assign governorate and zone for {grouped.readyImport.length} order
-                  {grouped.readyImport.length === 1 ? '' : 's'}. Tracking will sync to Shopify automatically.
+                  {grouped.readyImport.length === 1 ? '' : 's'}. Tracking syncs to Shopify automatically.
                 </Text>
               </BlockStack>
               <div className="now-zone-combobox-modal-section">
@@ -470,7 +407,7 @@ export function DeliverPage() {
                   Back
                 </Button>
                 <Button variant="primary" loading={submitting} onClick={handleImport}>
-                  Import {grouped.readyImport.length} order{grouped.readyImport.length === 1 ? '' : 's'} & sync
+                  Import {grouped.readyImport.length} order{grouped.readyImport.length === 1 ? '' : 's'}
                 </Button>
               </InlineStack>
             </BlockStack>
@@ -485,21 +422,17 @@ export function DeliverPage() {
                   {results.imported > 0
                     ? `${results.imported} order${results.imported === 1 ? '' : 's'} imported into Now. `
                     : ''}
-                  {results.synced > 0
-                    ? `${results.synced} fulfillment${results.synced === 1 ? '' : 's'} synced to Shopify. `
+                  {results.alreadyInNow > 0
+                    ? `${results.alreadyInNow} already in Now (syncing automatically). `
                     : ''}
                   {results.skipped > 0 ? `${results.skipped} already up to date. ` : ''}
                   {results.blocked > 0 ? `${results.blocked} could not be processed.` : ''}
                 </p>
               </Banner>
-              <Text as="p" tone="subdued">
-                Check the native Shopify Orders page — imported orders should show as Fulfilled with Now tracking.
-              </Text>
               <InlineStack gap="300">
                 <Button variant="primary" onClick={() => navigate(buildShopifyAppNavigateUrl('/'))}>
                   View all orders
                 </Button>
-                <Button onClick={() => window.location.reload()}>Process more orders</Button>
               </InlineStack>
             </BlockStack>
           </Card>

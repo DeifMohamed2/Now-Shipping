@@ -1,0 +1,11 @@
+api_version = "2026-04"
+
+[[extensions]]
+name = "t:name"
+handle = "deliver-with-now-action"
+uid = "b3c8e1f2-4a5d-6e7f-8a9b-0c1d2e3f4a5b6c7d8e"
+type = "ui_extension"
+
+[[extensions.targeting]]
+module = "./src/ActionExtension.jsx"
+target = "admin.order-index.selection-action.render"

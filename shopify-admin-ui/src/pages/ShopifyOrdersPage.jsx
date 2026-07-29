@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppBridge } from '@shopify/app-bridge-react';
 import { authFetch, authFetchBlob } from '../authFetch.js';
 import { EditImportModal } from './EditImportModal.jsx';
-import { needsShopifyFulfillmentSync, parseAdminLinkOrderIds } from '../utils/shopifyOrderIds.js';
+import { parseAdminLinkOrderIds } from '../utils/shopifyOrderIds.js';
 import { buildShopifyAppNavigateUrl } from '../utils/shopifyAppNavigate.js';
 import {
   Page,
@@ -50,8 +50,6 @@ export function ShopifyOrdersPage() {
   const [editOrder, setEditOrder] = useState(null);
   const [printAwbLoading, setPrintAwbLoading] = useState(false);
   const [printAwbProgress, setPrintAwbProgress] = useState(0);
-  const [syncFulfillmentLoading, setSyncFulfillmentLoading] = useState(false);
-  const [syncingOrderId, setSyncingOrderId] = useState(null);
   const [awbPdfUrl, setAwbPdfUrl] = useState(null);
   const [awbPdfModalOpen, setAwbPdfModalOpen] = useState(false);
 
@@ -122,56 +120,11 @@ export function ShopifyOrdersPage() {
     selectedOrders.length > 0 &&
     selectedOrders.every((o) => o.hasShippingAddress);
 
-  const canSyncFulfillment =
-    selectedOrders.length > 0 && selectedOrders.every((o) => needsShopifyFulfillmentSync(o));
-
   const handleBulkDeliver = useCallback(() => {
     if (!selectedOrders.length) return;
     const ids = selectedOrders.map((o) => o.id).join(',');
     navigate(buildShopifyAppNavigateUrl('/deliver', { ids }));
   }, [selectedOrders, navigate]);
-
-  const handleSyncFulfillment = useCallback(
-    async (orderRows) => {
-      if (!orderRows.length) return;
-      setSyncFulfillmentLoading(true);
-      setError(null);
-      try {
-        if (orderRows.length === 1) {
-          await authFetch(app, '/api/shopify/app/sync-fulfillment', {
-            method: 'POST',
-            body: JSON.stringify({ shopifyOrderId: orderRows[0].id }),
-          });
-        } else {
-          await authFetch(app, '/api/shopify/app/bulk-sync-fulfillment', {
-            method: 'POST',
-            body: JSON.stringify({ shopifyOrderIds: orderRows.map((o) => o.id) }),
-          });
-        }
-        await load({ cursor: listCursor || '' });
-      } catch (e) {
-        setError(e.message || 'sync_fulfillment_failed');
-      } finally {
-        setSyncFulfillmentLoading(false);
-        setSyncingOrderId(null);
-      }
-    },
-    [app, load, listCursor]
-  );
-
-  const handleBulkSyncFulfillment = useCallback(() => {
-    if (!canSyncFulfillment) return;
-    handleSyncFulfillment(selectedOrders);
-  }, [canSyncFulfillment, handleSyncFulfillment, selectedOrders]);
-
-  const handleRowSyncFulfillment = useCallback(
-    (row) => {
-      if (!needsShopifyFulfillmentSync(row)) return;
-      setSyncingOrderId(row.id);
-      handleSyncFulfillment([row]);
-    },
-    [handleSyncFulfillment]
-  );
 
   const handlePrintAwb = useCallback(async () => {
     if (!selectedOrders.length || !selectedOrders.every((o) => o.nowOrderNumber)) return;
@@ -331,13 +284,6 @@ export function ShopifyOrdersPage() {
                 Deliver with Now
               </Button>
               <Button
-                disabled={!canSyncFulfillment || syncFulfillmentLoading}
-                loading={syncFulfillmentLoading}
-                onClick={handleBulkSyncFulfillment}
-              >
-                Sync to Shopify
-              </Button>
-              <Button
                 disabled={!canPrintAwb || printAwbLoading}
                 loading={printAwbLoading}
                 onClick={handlePrintAwb}
@@ -417,15 +363,6 @@ export function ShopifyOrdersPage() {
                       {!row.nowOrderNumber && row.hasShippingAddress ? (
                         <Button size="slim" className="now-edit-import-btn" onClick={() => setEditOrder(row)}>
                           Edit & import
-                        </Button>
-                      ) : needsShopifyFulfillmentSync(row) ? (
-                        <Button
-                          size="slim"
-                          loading={syncingOrderId === row.id}
-                          disabled={syncFulfillmentLoading}
-                          onClick={() => handleRowSyncFulfillment(row)}
-                        >
-                          Sync to Shopify
                         </Button>
                       ) : (
                         <Text as="span" tone="subdued">

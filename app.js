@@ -137,7 +137,8 @@ const woocommerceAppJson = express.json({
 app.use('/api/woocommerce/app', woocommerceAppJson, woocommerceAppRouter);
 
 app.use(express.json());
-app.use('/api/shopify/app', shopifyAppRouter);
+const { shopifyExtensionCors } = require('./middleware/shopifyExtensionCors');
+app.use('/api/shopify/app', shopifyExtensionCors, shopifyAppRouter);
 
 app.get('/api/woocommerce/plugin/latest', woocommercePluginController.getPluginLatest);
 app.get('/api/woocommerce/plugin/download', woocommercePluginController.getPluginDownload);
