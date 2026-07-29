@@ -4,6 +4,7 @@ import { useAppBridge } from '@shopify/app-bridge-react';
 import { authFetch, authFetchBlob } from '../authFetch.js';
 import { EditImportModal } from './EditImportModal.jsx';
 import { needsShopifyFulfillmentSync, parseAdminLinkOrderIds } from '../utils/shopifyOrderIds.js';
+import { buildShopifyAppNavigateUrl } from '../utils/shopifyAppNavigate.js';
 import {
   Page,
   BlockStack,
@@ -37,6 +38,7 @@ function fulfillmentBadge(status) {
 export function ShopifyOrdersPage() {
   const app = useAppBridge();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [orders, setOrders] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
@@ -106,7 +108,7 @@ export function ShopifyOrdersPage() {
   useEffect(() => {
     const ids = parseAdminLinkOrderIds();
     if (ids.length) {
-      navigate(`/deliver?ids=${encodeURIComponent(ids.join(','))}`, { replace: true });
+      navigate(buildShopifyAppNavigateUrl('/deliver', { ids: ids.join(',') }), { replace: true });
     }
   }, [navigate]);
 
@@ -126,7 +128,7 @@ export function ShopifyOrdersPage() {
   const handleBulkDeliver = useCallback(() => {
     if (!selectedOrders.length) return;
     const ids = selectedOrders.map((o) => o.id).join(',');
-    navigate(`/deliver?ids=${encodeURIComponent(ids)}`);
+    navigate(buildShopifyAppNavigateUrl('/deliver', { ids }));
   }, [selectedOrders, navigate]);
 
   const handleSyncFulfillment = useCallback(
@@ -294,7 +296,7 @@ export function ShopifyOrdersPage() {
       subtitle="Import Shopify orders into Now and sync fulfillment & tracking back to Shopify"
       primaryAction={{
         content: 'Deliver with Now',
-        onAction: () => navigate('/deliver'),
+        onAction: () => navigate(buildShopifyAppNavigateUrl('/deliver')),
       }}
     >
       <BlockStack gap="500">

@@ -19,6 +19,7 @@ import {
 import { authFetch } from '../authFetch.js';
 import { DeliverZoneAssignment } from '../components/DeliverZoneAssignment.jsx';
 import { useDeliverZones } from '../hooks/useDeliverZones.js';
+import { buildShopifyAppNavigateUrl } from '../utils/shopifyAppNavigate.js';
 import { needsShopifyFulfillmentSync, orderDeliverStatus, parseAdminLinkOrderIds } from '../utils/shopifyOrderIds.js';
 
 const STEPS = ['Review', 'Delivery zones', 'Complete'];
@@ -233,13 +234,13 @@ export function DeliverPage() {
       <Page
         title="Deliver with Now"
         subtitle="Import Shopify orders and push tracking back to Shopify"
-        backAction={{ content: 'Orders', onAction: () => navigate('/') }}
+        backAction={{ content: 'Orders', onAction: () => navigate(buildShopifyAppNavigateUrl('/')) }}
       >
         <Banner tone="info" title="No orders selected">
           <p>Select orders on the Shopify Orders page, then choose <strong>Deliver with Now</strong> from More actions.</p>
         </Banner>
         <Box paddingBlockStart="400">
-          <Button onClick={() => navigate('/')}>Go to orders</Button>
+          <Button onClick={() => navigate(buildShopifyAppNavigateUrl('/'))}>Go to orders</Button>
         </Box>
       </Page>
     );
@@ -262,7 +263,7 @@ export function DeliverPage() {
     <Page
       title="Deliver with Now"
       subtitle={`${orderIds.length} order${orderIds.length === 1 ? '' : 's'} from Shopify`}
-      backAction={{ content: 'Orders', onAction: () => navigate('/') }}
+      backAction={{ content: 'Orders', onAction: () => navigate(buildShopifyAppNavigateUrl('/')) }}
     >
       <BlockStack gap="500">
         <Card>
@@ -432,7 +433,7 @@ export function DeliverPage() {
                 Check the native Shopify Orders page — imported orders should show as Fulfilled with Now tracking.
               </Text>
               <InlineStack gap="300">
-                <Button variant="primary" onClick={() => navigate('/')}>
+                <Button variant="primary" onClick={() => navigate(buildShopifyAppNavigateUrl('/'))}>
                   View all orders
                 </Button>
                 <Button onClick={() => window.location.reload()}>Process more orders</Button>
