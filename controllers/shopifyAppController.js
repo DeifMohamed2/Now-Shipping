@@ -9,6 +9,7 @@ const {
   shopifyRestGetOrder,
 } = require('../utils/shopifyService');
 const { manualImportShopifyOrder } = require('../utils/shopifyOrderSync');
+const { syncFulfillmentAfterImport } = require('../utils/shopifyFulfillmentSync');
 const { renderMergedDeliveryPolicyPdfBuffers } = require('../utils/deliveryPolicyPdf');
 
 function appPublicBaseUrl() {
@@ -340,6 +341,68 @@ async function getShopifyOrders(req, res) {
 }
 
 /**
+ * GET /api/shopify/app/shopify-orders/by-ids?ids=1,2,3
+ * Fetch specific Shopify orders (used by admin link deep links from native Orders page).
+ */
+async function getShopifyOrdersByIds(req, res) {
+  try {
+    const inst = req.shopifyInstallation;
+    const rawIds = req.query.ids ? String(req.query.ids) : '';
+    const idList = rawIds
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 30);
+
+    if (!idList.length) {
+      return res.status(400).json({ error: 'ids_required' });
+    }
+
+    const token = await getValidAccessToken(inst);
+    const fetched = await Promise.all(
+      idList.map(async (id) => {
+        try {
+          return await shopifyRestGetOrder(inst.shopDomain, token, id);
+        } catch (e) {
+          console.warn('[shopifyApp] getShopifyOrdersByIds fetch failed:', id, e.message || e);
+          return null;
+        }
+      })
+    );
+
+    const orders = fetched.filter(Boolean);
+    const withAddr = orders.filter(
+      (o) => o.shipping_address && typeof o.shipping_address === 'object' && Object.keys(o.shipping_address).length
+    );
+
+    const extIds = withAddr.map((o) => String(o.id));
+    let byExt = new Map();
+    if (extIds.length) {
+      const matches = await Order.find({
+        business: inst.business,
+        externalSource: 'shopify',
+        externalOrderId: { $in: extIds },
+      })
+        .select('externalOrderId orderNumber orderStatus orderCustomer.zone')
+        .lean();
+      byExt = new Map(matches.map((m) => [String(m.externalOrderId), m]));
+    }
+
+    const rows = withAddr.map((o) => mapShopifyOrderRow(o, byExt.get(String(o.id))));
+    const missingIds = idList.filter((id) => !orders.some((o) => String(o.id) === String(id)));
+
+    return res.json({
+      orders: rows,
+      requestedIds: idList,
+      missingIds,
+    });
+  } catch (err) {
+    console.error('[shopifyApp] getShopifyOrdersByIds:', err.message || err);
+    return res.status(500).json({ error: 'shopify_orders_by_ids_failed', detail: err.message });
+  }
+}
+
+/**
  * GET /api/shopify/app/zones
  */
 async function getZones(req, res) {
@@ -449,6 +512,94 @@ async function postBulkImport(req, res) {
 }
 
 /**
+ * POST /api/shopify/app/sync-fulfillment
+ * Backfill Shopify fulfillment + tracking for an already-imported order.
+ */
+async function postSyncFulfillment(req, res) {
+  try {
+    const inst = req.shopifyInstallation;
+    const { shopifyOrderId, orderNumber } = req.body || {};
+
+    const filter = { business: inst.business, externalSource: 'shopify' };
+    if (orderNumber != null && String(orderNumber).trim()) {
+      filter.orderNumber = String(orderNumber).trim();
+    } else if (shopifyOrderId != null && String(shopifyOrderId).trim()) {
+      filter.externalOrderId = String(shopifyOrderId).trim();
+    } else {
+      return res.status(400).json({ error: 'shopify_order_id_or_order_number_required' });
+    }
+
+    const order = await Order.findOne(filter);
+    if (!order) {
+      return res.status(404).json({ error: 'order_not_found' });
+    }
+
+    const result = await syncFulfillmentAfterImport({ installation: inst, order });
+    const ok = !!result.created || (result.skipped && result.reason !== 'missing_args');
+
+    return res.json({
+      ok,
+      orderNumber: order.orderNumber,
+      shopifyOrderId: order.externalOrderId,
+      result,
+    });
+  } catch (err) {
+    console.error('[shopifyApp] postSyncFulfillment:', err.message || err);
+    return res.status(500).json({ error: 'sync_fulfillment_failed', detail: err.message });
+  }
+}
+
+/**
+ * POST /api/shopify/app/bulk-sync-fulfillment
+ * Backfill Shopify fulfillment + tracking for multiple already-imported orders.
+ */
+async function postBulkSyncFulfillment(req, res) {
+  try {
+    const inst = req.shopifyInstallation;
+    const { shopifyOrderIds } = req.body || {};
+    if (!Array.isArray(shopifyOrderIds) || !shopifyOrderIds.length) {
+      return res.status(400).json({ error: 'shopify_order_ids_required' });
+    }
+
+    const ids = shopifyOrderIds.map((id) => String(id).trim()).filter(Boolean).slice(0, 30);
+    const results = [];
+
+    for (const shopifyOrderId of ids) {
+      try {
+        const order = await Order.findOne({
+          business: inst.business,
+          externalSource: 'shopify',
+          externalOrderId: shopifyOrderId,
+        });
+        if (!order) {
+          results.push({ shopifyOrderId, ok: false, error: 'order_not_found' });
+          continue;
+        }
+        const result = await syncFulfillmentAfterImport({ installation: inst, order });
+        const ok = !!result.created || (result.skipped && result.reason !== 'missing_args');
+        results.push({
+          shopifyOrderId,
+          ok,
+          orderNumber: order.orderNumber,
+          result,
+        });
+      } catch (e) {
+        results.push({
+          shopifyOrderId,
+          ok: false,
+          error: e && e.message ? String(e.message) : 'sync_error',
+        });
+      }
+    }
+
+    return res.json({ results });
+  } catch (err) {
+    console.error('[shopifyApp] postBulkSyncFulfillment:', err.message || err);
+    return res.status(500).json({ error: 'bulk_sync_fulfillment_failed', detail: err.message });
+  }
+}
+
+/**
  * POST /api/shopify/app/print-awb
  */
 async function postPrintAwb(req, res) {
@@ -493,8 +644,11 @@ module.exports = {
   getOrders,
   getPickups,
   getShopifyOrders,
+  getShopifyOrdersByIds,
   getZones,
   postImportOrder,
   postBulkImport,
+  postSyncFulfillment,
+  postBulkSyncFulfillment,
   postPrintAwb,
 };

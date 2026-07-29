@@ -27,6 +27,44 @@ const STATUS_OPTIONS = [
   { label: 'Cancelled', value: 'cancelled' },
 ];
 
+/** Parse Shopify admin link query params (ids[]=123&ids[]=456). */
+function parseAdminLinkOrderIds() {
+  const params = new URLSearchParams(window.location.search);
+  const ids = new Set();
+  for (const [key, value] of params.entries()) {
+    if (
+      value &&
+      (key === 'ids' ||
+        key === 'ids[]' ||
+        key === 'orderIds' ||
+        key === 'orderIds[]' ||
+        key.startsWith('ids['))
+    ) {
+      ids.add(String(value));
+    }
+  }
+  return Array.from(ids);
+}
+
+function stripAdminLinkQueryParams() {
+  const url = new URL(window.location.href);
+  let changed = false;
+  for (const key of [...url.searchParams.keys()]) {
+    if (key === 'from' || key === 'orderIds' || key === 'orderIds[]' || key.startsWith('ids')) {
+      url.searchParams.delete(key);
+      changed = true;
+    }
+  }
+  if (changed) {
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState({}, '', next);
+  }
+}
+
+function needsShopifyFulfillmentSync(row) {
+  return !!row.nowOrderNumber && row.fulfillment_status !== 'fulfilled';
+}
+
 export function ShopifyOrdersPage() {
   const app = useAppBridge();
   const [loading, setLoading] = useState(true);
@@ -39,9 +77,12 @@ export function ShopifyOrdersPage() {
   const [q, setQ] = useState('');
   const [qDebounced, setQDebounced] = useState('');
   const [importOpen, setImportOpen] = useState(false);
+  const [deepLinkOrders, setDeepLinkOrders] = useState(null);
   const [editOrder, setEditOrder] = useState(null);
   const [printAwbLoading, setPrintAwbLoading] = useState(false);
   const [printAwbProgress, setPrintAwbProgress] = useState(0);
+  const [syncFulfillmentLoading, setSyncFulfillmentLoading] = useState(false);
+  const [syncingOrderId, setSyncingOrderId] = useState(null);
   const [awbPdfUrl, setAwbPdfUrl] = useState(null);
   const [awbPdfModalOpen, setAwbPdfModalOpen] = useState(false);
 
@@ -61,6 +102,7 @@ export function ShopifyOrdersPage() {
     useIndexResourceState(orders);
   const clearSelectionRef = React.useRef(clearSelection);
   clearSelectionRef.current = clearSelection;
+  const deepLinkHandledRef = React.useRef(false);
 
   useEffect(() => {
     const t = setTimeout(() => setQDebounced(q.trim()), 400);
@@ -95,21 +137,118 @@ export function ShopifyOrdersPage() {
     load({ cursor: '' });
   }, [load]);
 
+  useEffect(() => {
+    if (deepLinkHandledRef.current) return undefined;
+    const ids = parseAdminLinkOrderIds();
+    if (!ids.length) return undefined;
+
+    deepLinkHandledRef.current = true;
+    stripAdminLinkQueryParams();
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await authFetch(
+          app,
+          `/api/shopify/app/shopify-orders/by-ids?ids=${encodeURIComponent(ids.join(','))}`
+        );
+        if (cancelled) return;
+        const rows = data.orders || [];
+        const importable = rows.filter((o) => !o.nowOrderNumber && o.hasShippingAddress);
+        const needsSync = rows.filter((o) => needsShopifyFulfillmentSync(o));
+        if (importable.length) {
+          setDeepLinkOrders(importable);
+          setImportOpen(true);
+        } else if (needsSync.length) {
+          setSyncFulfillmentLoading(true);
+          try {
+            await authFetch(app, '/api/shopify/app/bulk-sync-fulfillment', {
+              method: 'POST',
+              body: JSON.stringify({ shopifyOrderIds: needsSync.map((o) => o.id) }),
+            });
+            if (!cancelled) await load({ cursor: '' });
+          } catch (e) {
+            if (!cancelled) setError(e.message || 'sync_fulfillment_failed');
+          } finally {
+            if (!cancelled) setSyncFulfillmentLoading(false);
+          }
+        } else if (rows.length) {
+          setError('Selected orders are already imported or cannot be delivered with Now.');
+        } else {
+          setError('Could not load the selected Shopify orders.');
+        }
+      } catch (e) {
+        if (!cancelled) setError(e.message || 'deep_link_failed');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [app, load]);
+
   const selectedOrders = useMemo(
     () => orders.filter((o) => selectedResources.includes(o.id)),
     [orders, selectedResources]
   );
 
+  const importOrders = deepLinkOrders || selectedOrders;
+
   const canPrintAwb = selectedOrders.length > 0 && selectedOrders.every((o) => o.nowOrderNumber);
   const canDeliverWithNow =
-    selectedOrders.length > 0 &&
-    selectedOrders.every((o) => o.hasShippingAddress) &&
-    selectedOrders.some((o) => !o.nowOrderNumber);
+    importOrders.length > 0 &&
+    importOrders.every((o) => o.hasShippingAddress) &&
+    importOrders.some((o) => !o.nowOrderNumber);
+
+  const canSyncFulfillment =
+    selectedOrders.length > 0 && selectedOrders.every((o) => needsShopifyFulfillmentSync(o));
 
   const handleBulkDeliver = useCallback(() => {
     if (!canDeliverWithNow) return;
     setImportOpen(true);
   }, [canDeliverWithNow]);
+
+  const handleSyncFulfillment = useCallback(
+    async (orderRows) => {
+      if (!orderRows.length) return;
+      setSyncFulfillmentLoading(true);
+      setError(null);
+      try {
+        if (orderRows.length === 1) {
+          await authFetch(app, '/api/shopify/app/sync-fulfillment', {
+            method: 'POST',
+            body: JSON.stringify({ shopifyOrderId: orderRows[0].id }),
+          });
+        } else {
+          await authFetch(app, '/api/shopify/app/bulk-sync-fulfillment', {
+            method: 'POST',
+            body: JSON.stringify({ shopifyOrderIds: orderRows.map((o) => o.id) }),
+          });
+        }
+        await load({ cursor: listCursor || '' });
+      } catch (e) {
+        setError(e.message || 'sync_fulfillment_failed');
+      } finally {
+        setSyncFulfillmentLoading(false);
+        setSyncingOrderId(null);
+      }
+    },
+    [app, load, listCursor]
+  );
+
+  const handleBulkSyncFulfillment = useCallback(() => {
+    if (!canSyncFulfillment) return;
+    handleSyncFulfillment(selectedOrders);
+  }, [canSyncFulfillment, handleSyncFulfillment, selectedOrders]);
+
+  const handleRowSyncFulfillment = useCallback(
+    (row) => {
+      if (!needsShopifyFulfillmentSync(row)) return;
+      setSyncingOrderId(row.id);
+      handleSyncFulfillment([row]);
+    },
+    [handleSyncFulfillment]
+  );
 
   const handlePrintAwb = useCallback(async () => {
     if (!selectedOrders.length || !selectedOrders.every((o) => o.nowOrderNumber)) return;
@@ -257,6 +396,13 @@ export function ShopifyOrdersPage() {
                 Deliver with Now
               </Button>
               <Button
+                disabled={!canSyncFulfillment || syncFulfillmentLoading}
+                loading={syncFulfillmentLoading}
+                onClick={handleBulkSyncFulfillment}
+              >
+                Sync to Shopify
+              </Button>
+              <Button
                 disabled={!canPrintAwb || printAwbLoading}
                 loading={printAwbLoading}
                 onClick={handlePrintAwb}
@@ -337,6 +483,15 @@ export function ShopifyOrdersPage() {
                         <Button size="slim" className="now-edit-import-btn" onClick={() => setEditOrder(row)}>
                           Edit & import
                         </Button>
+                      ) : needsShopifyFulfillmentSync(row) ? (
+                        <Button
+                          size="slim"
+                          loading={syncingOrderId === row.id}
+                          disabled={syncFulfillmentLoading}
+                          onClick={() => handleRowSyncFulfillment(row)}
+                        >
+                          Sync to Shopify
+                        </Button>
                       ) : (
                         <Text as="span" tone="subdued">
                           —
@@ -367,10 +522,16 @@ export function ShopifyOrdersPage() {
 
       <ImportOrderModal
         open={importOpen}
-        onClose={() => setImportOpen(false)}
+        onClose={() => {
+          setImportOpen(false);
+          setDeepLinkOrders(null);
+        }}
         app={app}
-        orders={selectedOrders}
-        onSuccess={() => load({ cursor: listCursor || '' })}
+        orders={importOrders}
+        onSuccess={() => {
+          setDeepLinkOrders(null);
+          load({ cursor: listCursor || '' });
+        }}
       />
       <EditImportModal
         open={!!editOrder}

@@ -17,6 +17,7 @@ const {
   writeShopifySyncLog,
   updateShopifySyncLog,
 } = require('./shopifySyncLogHelper');
+const { syncFulfillmentAfterImport } = require('./shopifyFulfillmentSync');
 
 /**
  * @param {string} shopDomain
@@ -141,6 +142,7 @@ async function syncOrderCreate(shopDomain, orderPayload, options = {}) {
         { _id: installation._id },
         { $set: { lastWebhookAt: installation.lastWebhookAt } }
       );
+      await syncFulfillmentAfterImport({ installation, order: doc });
       return await finalizeCreateLog({ created: true, orderNumber: doc.orderNumber }, installation.business);
     } catch (err) {
       if (err && err.code === 11000) {
@@ -317,7 +319,14 @@ async function manualImportShopifyOrder(shopDomain, orderPayload, zonePick = {})
       nowOrderNumber: String(doc.orderNumber),
     });
 
-    return { ok: true, orderNumber: doc.orderNumber, orderId: String(doc._id) };
+    const fulfillmentResult = await syncFulfillmentAfterImport({ installation, order: doc });
+
+    return {
+      ok: true,
+      orderNumber: doc.orderNumber,
+      orderId: String(doc._id),
+      shopifyFulfillment: fulfillmentResult,
+    };
   } catch (err) {
     const msg = err && err.message ? String(err.message) : 'unknown_error';
     console.error(

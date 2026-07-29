@@ -468,6 +468,11 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    /** Shopify fulfillment id after pushing tracking back to Shopify */
+    externalFulfillmentId: {
+      type: String,
+      required: false,
+    },
     // Selected pickup address for express shipping orders
     selectedPickupAddressId: {
       type: String,

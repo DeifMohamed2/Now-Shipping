@@ -64,6 +64,20 @@ See [`.env.example`](.env.example). Critical vars:
 
 After changing `APP_URL`, **reinstall or reconnect** Shopify so webhooks re-register to the new host.
 
+### 3.1 Fulfillment + tracking push-back (Shopify Orders page)
+
+When a merchant imports an order via **Deliver with Now**, the app now:
+
+1. Creates the Now delivery order (as before).
+2. Calls Shopify Admin API `POST /fulfillments.json` with tracking number = Now `orderNumber` and tracking URL `https://<APP_URL>/t/{orderNumber}`.
+3. Stores the Shopify fulfillment id on the Now order as `externalFulfillmentId`.
+
+**Scopes required:** `write_fulfillments` must be in both Partner app scopes and `.env` `SHOPIFY_SCOPES`. If fulfillment sync fails with **403**, the merchant must **reconnect** the store (Business → Settings → Integrations → Connect Shopify) so the new scope is granted.
+
+**Native Shopify Orders page:** An admin link extension (`extensions/deliver-with-now/`) adds **Deliver with Now** to the bulk **More actions** menu when orders are selected. It opens the embedded app with those order IDs pre-loaded for import. Deploy with `npm run shopify:deploy` after building the UI.
+
+Optional: set `SHOPIFY_FULFILLMENT_NOTIFY_CUSTOMER=true` to email customers when fulfillment is created (default: false).
+
 ---
 
 ## 4. Embedded admin UI build (`shopify-admin-ui`)
@@ -119,6 +133,7 @@ Topics:
 |-------|------------|
 | `orders/create` | Maps eligible Egypt **Deliver** orders → creates `Order` with `externalSource: 'shopify'`. Writes `ShopifySyncLog`. Respects installation `isActive` (pause). |
 | `orders/updated` | If Shopify order cancelled, cancels matching early-stage Now order. Logs to `ShopifySyncLog`. |
+| `fulfillment/create` | After import into Now, creates Shopify fulfillment with Now `orderNumber` as tracking + `/t/{orderNumber}` URL. Logged in `ShopifySyncLog`. |
 | `app/uninstalled` | Clears token, sets `uninstalledAt`, logs uninstall. |
 | `customers/data_request` | Logged (shop, `data_request.id`, customer id, order count). Respond **200**; fulfill merchant obligations within 30 days. |
 | `customers/redact` | Logged (shop, customer id, `orders_to_redact` count). Respond **200**; complete redaction within policy. |
@@ -168,8 +183,17 @@ The session token is a JWT from **App Bridge**, verified in `middleware/shopifyS
 |--------|------|---------|
 | GET | `/api/shopify/app/status` | Connection, `isActive`, last webhook, 24h stats, portal URL |
 | PUT | `/api/shopify/app/toggle-sync` | Flip `isActive` (pause/resume imports) |
+| GET | `/api/shopify/app/sync-logs` | Import/webhook/fulfillment sync log |
 | GET | `/api/shopify/app/orders` | Paginated orders with `externalSource: shopify` for this business |
 | GET | `/api/shopify/app/pickups` | Paginated pickups for this business |
+| GET | `/api/shopify/app/shopify-orders` | Live Shopify orders for embedded UI |
+| GET | `/api/shopify/app/shopify-orders/by-ids` | Fetch specific Shopify orders by id (admin link deep links) |
+| GET | `/api/shopify/app/zones` | Egypt governorate/zone picker |
+| POST | `/api/shopify/app/import-order` | Manual import single order |
+| POST | `/api/shopify/app/bulk-import` | Batch import (max 30) |
+| POST | `/api/shopify/app/sync-fulfillment` | Push fulfillment + tracking to Shopify for one imported order |
+| POST | `/api/shopify/app/bulk-sync-fulfillment` | Push fulfillment + tracking for multiple imported orders |
+| POST | `/api/shopify/app/print-awb` | PDF airway bills |
 
 ## 9. Production (Nginx + PM2)
 
@@ -191,7 +215,8 @@ Release steps:
 1. `npm ci` (or `npm install --production`)
 2. `npm run build:shopify-ui`
 3. `npm run build` (if you use webpack for main assets)
-4. `pm2 reload now-shipping`
+4. `npm run shopify:deploy` (publishes webhooks + admin link extension to Partner)
+5. `pm2 reload now-shipping`
 
 ---
 
@@ -217,6 +242,9 @@ Release steps:
 - [ ] **Resume** toggle: imports work again
 - [ ] Uninstall app in Shopify → `uninstalledAt` set, token cleared
 - [ ] `orders/updated` cancel reflects on early `new` / `pendingPickup` orders
+- [ ] Import creates Shopify fulfillment with Now tracking number; native Orders page shows **Fulfilled**
+- [ ] **Sync to Shopify** button works for already-imported orders (e.g. backfill before fulfillment sync shipped)
+- [ ] Native Shopify Orders → select orders → **More actions** → **Deliver with Now** opens embedded import flow
 
 ---
 
@@ -232,6 +260,8 @@ Release steps:
 | `403` webhook *protected customer data* | Complete Partner Dashboard **Protected customer data access** (see §2.1), then uninstall + reconnect the app |
 | Orders never import | Filters: Egypt shipping, shippable items, shipping lines, `isActive`, business pickup rules |
 | `invalid_session_token` on app API | Clock skew, wrong secret, or `aud` not matching Client ID |
+| Shopify order stays **Unfulfilled** after import | Missing `write_fulfillments` scope — reconnect store; or use **Sync to Shopify** in embedded Orders page |
+| `fulfillment/create` failed with **403** | Reinstall/reconnect app so `write_fulfillments` is granted |
 
 ---
 
