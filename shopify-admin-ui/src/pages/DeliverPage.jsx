@@ -53,11 +53,16 @@ export function DeliverPage() {
   const [results, setResults] = useState(null);
 
   const orderIds = useMemo(() => {
-    const fromQuery = searchParams.get('ids');
-    if (fromQuery) {
-      return fromQuery.split(',').map((s) => s.trim()).filter(Boolean);
+    const parsed = parseAdminLinkOrderIds();
+    const fromIds = searchParams.get('ids');
+    if (fromIds) {
+      const extra = fromIds
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      return [...new Set([...parsed, ...extra])];
     }
-    return parseAdminLinkOrderIds();
+    return parsed;
   }, [searchParams]);
 
   const {
@@ -119,6 +124,10 @@ export function DeliverPage() {
     loadOrders();
   }, [loadOrders]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
   const runSyncOnly = useCallback(
     async (rows) => {
       if (!rows.length) return { synced: 0, results: [] };
@@ -172,7 +181,7 @@ export function DeliverPage() {
       return;
     }
 
-    zones.resetZones(readyImport);
+    resetZones(readyImport);
     setStep(1);
   }, [grouped, runSyncOnly, loadOrders, resetZones]);
 
