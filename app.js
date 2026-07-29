@@ -14,6 +14,8 @@ mongoose.set('strictQuery', false);
 const express = require('express');
 const app = express();
 const path = require('path');
+const fs = require('fs');
+const { renderNotFound } = require('./utils/renderNotFound');
 const http = require('http');
 const server = http.createServer(app);
 const socketController = require('./controllers/socketController');
@@ -279,55 +281,36 @@ app.get(/^\/shopify\/?$/, (req, res) => {
 
 // Express 5 / path-to-regexp: do not use app.get('/shopify-app/*') — bare * is invalid.
 const shopifySpaDir = path.join(__dirname, 'public', 'shopify-app');
-app.use('/shopify-app', express.static(shopifySpaDir));
-app.get(/^\/shopify-app\/?$/, (req, res) => {
-  res.sendFile(path.join(shopifySpaDir, 'index.html'));
-});
-app.use('/shopify-app', (req, res, next) => {
+const shopifySpaIndex = path.join(shopifySpaDir, 'index.html');
+
+function sendShopifySpa(req, res, next) {
+  if (!fs.existsSync(shopifySpaIndex)) {
+    console.error(
+      '[shopify-app] Missing SPA build at public/shopify-app/index.html — run: npm run build:shopify-ui'
+    );
+    return next();
+  }
+  res.sendFile(shopifySpaIndex, (err) => {
+    if (err) {
+      console.error('[shopify-app] Failed to serve SPA index:', err.message);
+      next(err);
+    }
+  });
+}
+
+// Static assets (JS/CSS/images). index:false so /shopify-app/ is handled by explicit routes below.
+app.use('/shopify-app', express.static(shopifySpaDir, { fallthrough: true, index: false }));
+
+// SPA shell: root and client routes (e.g. /deliver, /pickups, /settings)
+app.get(/^\/shopify-app\/?$/, sendShopifySpa);
+app.get(/^\/shopify-app\/.+/, (req, res, next) => {
   if (/\.[a-zA-Z0-9]+$/.test(req.path)) return next();
-  res.sendFile(path.join(shopifySpaDir, 'index.html'), (err) => {
-    if (err) next(err);
-  });
+  sendShopifySpa(req, res, next);
 });
 
-// Catch-all 404 handler — uses the business dashboard layout for /business/* routes,
-// the auth layout for everything else.
+// Catch-all 404 — branded page with layout per area (business, admin, courier, public).
 app.use(function (req, res) {
-  res.status(404);
-  const url = req.originalUrl || req.url || '';
-  const isBusinessRoute = url.startsWith('/business');
-  const isCourierRoute  = url.startsWith('/courier');
-  const isAdminRoute    = url.startsWith('/admin');
-
-  if (isBusinessRoute) {
-    return res.render('business/404', {
-      layout: 'layouts/layout',
-      title: 'Page not found',
-      page_title: '404 — Page not found',
-      requestedUrl: url,
-    });
-  }
-
-  if (isAdminRoute) {
-    return res.render('auth/auth-404', {
-      layout: 'layouts/admin-layout',
-      title: 'Page not found',
-      requestedUrl: url,
-    });
-  }
-
-  if (isCourierRoute) {
-    return res.render('auth/auth-404', {
-      layout: 'layouts/courier-layout',
-      title: 'Page not found',
-      requestedUrl: url,
-    });
-  }
-
-  res.render('auth/auth-404', {
-    layout: 'layouts/layout-without-nav',
-    title: 'Error 404',
-  });
+  renderNotFound(req, res);
 });
 
 // Server is now started inside the mongoose.connect().then() callback

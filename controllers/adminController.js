@@ -32,6 +32,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { sendSms } = require('../utils/sms');
+const { renderNotFound } = require('../utils/renderNotFound');
 const {
   canAdminCancel,
   canAdminChangeAddress,
@@ -4325,10 +4326,9 @@ const get_businessDetailsPage = async (req, res) => {
       .lean();
 
     if (!business || !isBusinessRole(business.role)) {
-      return res.status(404).render('auth/auth-404', {
-        title: '404',
-        page_title: 'Business Not Found',
-        folder: 'Pages',
+      return renderNotFound(req, res, {
+        notFoundTitle: 'Business not found',
+        notFoundSubtitle: 'The business you are looking for does not exist or was removed.',
       });
     }
 

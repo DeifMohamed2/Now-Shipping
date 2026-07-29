@@ -1,0 +1,46 @@
+<div class="error-404-wrap">
+  <div class="error-404-card card">
+    <div class="card-body">
+      <div class="error-404-icon-wrap">
+        <i class="ri-road-map-line"></i>
+      </div>
+
+      <div class="error-404-code">404</div>
+
+      <h2 class="error-404-title">
+        <% if (typeof notFoundTitle !== 'undefined' && notFoundTitle) { %>
+          <%= notFoundTitle %>
+        <% } else if (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.notFound) { %>
+          <%= translation.business.pages.notFound.title || 'Page not found' %>
+        <% } else { %>
+          Page not found
+        <% } %>
+      </h2>
+
+      <p class="error-404-sub">
+        <% if (typeof notFoundSubtitle !== 'undefined' && notFoundSubtitle) { %>
+          <%= notFoundSubtitle %>
+        <% } else if (typeof translation !== 'undefined' && translation.business && translation.business.pages && translation.business.pages.notFound) { %>
+          <%= translation.business.pages.notFound.subtitle || "The page you are looking for doesn't exist or has been moved." %>
+        <% } else { %>
+          The page you are looking for doesn't exist or has been moved.
+        <% } %>
+      </p>
+
+      <% if (typeof requestedUrl !== 'undefined' && requestedUrl) { %>
+      <div class="error-404-url-badge"><%= requestedUrl %></div>
+      <% } %>
+
+      <div class="error-404-actions">
+        <a href="<%= typeof homeHref !== 'undefined' ? homeHref : '/' %>" class="btn btn-primary">
+          <i class="ri-home-5-line me-1"></i>
+          <%= typeof homeLabel !== 'undefined' ? homeLabel : 'Back to home' %>
+        </a>
+        <button type="button" onclick="history.back()" class="btn btn-outline-secondary">
+          <i class="ri-arrow-go-back-line me-1"></i>
+          Go back
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -14,7 +14,6 @@ import {
   Badge,
   ProgressBar,
   Divider,
-  Box,
 } from '@shopify/polaris';
 import { authFetch } from '../authFetch.js';
 import { DeliverZoneAssignment } from '../components/DeliverZoneAssignment.jsx';
@@ -53,16 +52,8 @@ export function DeliverPage() {
   const [results, setResults] = useState(null);
 
   const orderIds = useMemo(() => {
-    const parsed = parseAdminLinkOrderIds();
-    const fromIds = searchParams.get('ids');
-    if (fromIds) {
-      const extra = fromIds
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-      return [...new Set([...parsed, ...extra])];
-    }
-    return parsed;
+    const fromSearch = parseAdminLinkOrderIds(`?${searchParams.toString()}`);
+    return [...new Set(fromSearch)];
   }, [searchParams]);
 
   const {
@@ -245,12 +236,28 @@ export function DeliverPage() {
         subtitle="Import Shopify orders and push tracking back to Shopify"
         backAction={{ content: 'Orders', onAction: () => navigate(buildShopifyAppNavigateUrl('/')) }}
       >
-        <Banner tone="info" title="No orders selected">
-          <p>Select orders on the Shopify Orders page, then choose <strong>Deliver with Now</strong> from More actions.</p>
-        </Banner>
-        <Box paddingBlockStart="400">
-          <Button onClick={() => navigate(buildShopifyAppNavigateUrl('/'))}>Go to orders</Button>
-        </Box>
+        <Layout>
+          <Layout.Section>
+            <Card>
+              <BlockStack gap="400">
+                <Banner tone="info" title="No orders selected">
+                  <p>
+                    Select one or more orders on the Shopify Orders page, open <strong>More actions</strong>, then choose{' '}
+                    <strong>Deliver with Now</strong>.
+                  </p>
+                </Banner>
+                <Text as="p" tone="subdued">
+                  You can also open this page from the Now Shipping app after selecting orders in the embedded orders list.
+                </Text>
+                <InlineStack gap="300">
+                  <Button variant="primary" onClick={() => navigate(buildShopifyAppNavigateUrl('/'))}>
+                    Go to orders
+                  </Button>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+        </Layout>
       </Page>
     );
   }
@@ -267,6 +274,45 @@ export function DeliverPage() {
       </Page>
     );
   }
+
+  if (!orders.length) {
+    return (
+      <Page
+        title="Deliver with Now"
+        subtitle="Import Shopify orders and push tracking back to Shopify"
+        backAction={{ content: 'Orders', onAction: () => navigate(buildShopifyAppNavigateUrl('/')) }}
+      >
+        <Layout>
+          <Layout.Section>
+            <Card>
+              <BlockStack gap="400">
+                {error ? (
+                  <Banner tone="critical" title="Could not load orders">
+                    <p>{error}</p>
+                  </Banner>
+                ) : (
+                  <Banner tone="warning" title="Orders not found">
+                    <p>
+                      We could not load {orderIds.length} selected order{orderIds.length === 1 ? '' : 's'}. They may have
+                      been removed, or your store connection may need to be refreshed.
+                    </p>
+                  </Banner>
+                )}
+                <InlineStack gap="300">
+                  <Button variant="primary" onClick={() => loadOrders()}>
+                    Try again
+                  </Button>
+                  <Button onClick={() => navigate(buildShopifyAppNavigateUrl('/'))}>Go to orders</Button>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+        </Layout>
+      </Page>
+    );
+  }
+
+  const missingCount = Math.max(0, orderIds.length - orders.length);
 
   return (
     <Page
@@ -292,6 +338,14 @@ export function DeliverPage() {
         {error ? (
           <Banner tone="critical" title="Could not load orders" onDismiss={() => setError(null)}>
             <p>{error}</p>
+          </Banner>
+        ) : null}
+        {missingCount > 0 ? (
+          <Banner tone="warning" title="Some orders could not be loaded">
+            <p>
+              {missingCount} of {orderIds.length} selected order{orderIds.length === 1 ? '' : 's'} could not be found in
+              Shopify. You can continue with the orders below.
+            </p>
           </Banner>
         ) : null}
         {submitError ? (

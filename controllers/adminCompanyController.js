@@ -4,6 +4,7 @@ const Order = require('../models/order');
 const Pickup = require('../models/pickup');
 const merchantService = require('../services/merchantService');
 const businessPricingService = require('../utils/businessPricingService');
+const { renderNotFound } = require('../utils/renderNotFound');
 const { activeBusinessRoleFilter } = require('../utils/businessRoleQuery');
 
 function isValidObjectId(id) {
@@ -100,10 +101,9 @@ const get_companyDetailsPage = async (req, res) => {
   try {
     const { companyId } = req.params;
     if (!isValidObjectId(companyId)) {
-      return res.status(404).render('auth/auth-404', {
-        title: '404',
-        page_title: 'Company Not Found',
-        folder: 'Pages',
+      return renderNotFound(req, res, {
+        notFoundTitle: 'Company not found',
+        notFoundSubtitle: 'The company you are looking for does not exist or was removed.',
       });
     }
 
@@ -116,10 +116,9 @@ const get_companyDetailsPage = async (req, res) => {
       .lean();
 
     if (!company) {
-      return res.status(404).render('auth/auth-404', {
-        title: '404',
-        page_title: 'Company Not Found',
-        folder: 'Pages',
+      return renderNotFound(req, res, {
+        notFoundTitle: 'Company not found',
+        notFoundSubtitle: 'The company you are looking for does not exist or was removed.',
       });
     }
 
@@ -131,10 +130,11 @@ const get_companyDetailsPage = async (req, res) => {
     });
   } catch (error) {
     console.error('[adminCompany] get_companyDetailsPage:', error);
-    return res.status(500).render('auth/auth-404', {
-      title: 'Error',
+    return renderNotFound(req, res, {
+      status: 500,
       page_title: 'Error',
-      folder: 'Pages',
+      notFoundTitle: 'Something went wrong',
+      notFoundSubtitle: 'We could not load this company. Please try again later.',
     });
   }
 };
