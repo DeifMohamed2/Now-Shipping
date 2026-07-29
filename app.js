@@ -272,6 +272,12 @@ app.use('/api/public/v1', publicApiV1Router);
 
 app.get('/api/shopify/auth/callback', shopifyController.oauthCallback);
 
+// Admin link extension used url="/deliver" (origin-absolute) → now.com.eg/deliver. Redirect to SPA route.
+app.get(/^\/deliver\/?$/, (req, res) => {
+  const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  res.redirect(302, `/shopify-app/deliver${q}`);
+});
+
 // Embedded Shopify Admin UI (Vite build → public/shopify-app)
 // If Partner "App URL" was set to /shopify by mistake, redirect to the real SPA (preserve query e.g. host=).
 app.get(/^\/shopify\/?$/, (req, res) => {
