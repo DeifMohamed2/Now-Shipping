@@ -498,7 +498,9 @@
       }
     }
     const d = new Date();
-    d.setDate(d.getDate() + 1);
+    if (d.getHours() >= 16) {
+      d.setDate(d.getDate() + 1);
+    }
     d.setHours(12, 0, 0, 0);
     return d;
   }
@@ -753,6 +755,8 @@
         onChange: function(selectedDates) {
           if (!selectedDates || !selectedDates[0]) return;
           const selected = selectedDates[0];
+          const today = new Date();
+          today.setHours(12, 0, 0, 0);
           const tomorrow = new Date();
           tomorrow.setDate(tomorrow.getDate() + 1);
           tomorrow.setHours(12, 0, 0, 0);
@@ -761,7 +765,9 @@
           dayAfter.setHours(12, 0, 0, 0);
           const I2 = __pickupI18n();
           let prefix = '';
-          if (selected.toDateString() === tomorrow.toDateString()) {
+          if (selected.toDateString() === today.toDateString()) {
+            prefix = (I2.todayPrefix || (I2.locale === 'ar-EG' ? 'النهاردة' : 'Today')) + ', ';
+          } else if (selected.toDateString() === tomorrow.toDateString()) {
             prefix = (I2.tomorrowPrefix || (I2.locale === 'ar-EG' ? 'بكرة' : 'Tomorrow')) + ', ';
           } else if (selected.toDateString() === dayAfter.toDateString()) {
             prefix = (I2.afterTomorrowPrefix || (I2.locale === 'ar-EG' ? 'بعد بكرة' : 'Day after tomorrow')) + ', ';

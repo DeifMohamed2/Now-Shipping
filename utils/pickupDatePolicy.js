@@ -1,7 +1,7 @@
 /**
- * Pickups must be scheduled from tomorrow onward (not same-day).
+ * Pickup scheduling: same-day before 4 PM local time, next day from 4 PM onward.
  */
-const PICKUP_MIN_LEAD_DAYS = 1;
+const PICKUP_SAME_DAY_CUTOFF_HOUR = 16;
 
 function startOfLocalDay(date = new Date()) {
   const d = new Date(date);
@@ -15,12 +15,19 @@ function addCalendarDays(date, days) {
   return d;
 }
 
-function getEarliestPickupDate() {
-  return addCalendarDays(new Date(), PICKUP_MIN_LEAD_DAYS);
+function getPickupMinLeadDays(now = new Date()) {
+  return now.getHours() < PICKUP_SAME_DAY_CUTOFF_HOUR ? 0 : 1;
 }
 
-function getDefaultPickupDate() {
-  return getEarliestPickupDate();
+/** @deprecated Use getPickupMinLeadDays() — kept for backward compatibility */
+const PICKUP_MIN_LEAD_DAYS = 1;
+
+function getEarliestPickupDate(now = new Date()) {
+  return addCalendarDays(now, getPickupMinLeadDays(now));
+}
+
+function getDefaultPickupDate(now = new Date()) {
+  return getEarliestPickupDate(now);
 }
 
 function toIsoDateString(date) {
@@ -31,29 +38,39 @@ function toIsoDateString(date) {
   return `${y}-${m}-${day}`;
 }
 
-function getEarliestPickupDateIso() {
-  return toIsoDateString(getEarliestPickupDate());
+function getEarliestPickupDateIso(now = new Date()) {
+  return toIsoDateString(getEarliestPickupDate(now));
 }
 
-function isValidPickupDate(date) {
+function isValidPickupDate(date, now = new Date()) {
   if (!date) return false;
   const d = date instanceof Date ? startOfLocalDay(date) : startOfLocalDay(new Date(date));
   if (Number.isNaN(d.getTime())) return false;
-  return d >= getEarliestPickupDate();
+  return d >= getEarliestPickupDate(now);
 }
 
-function getPickupDateTooEarlyMessage(lang) {
+function getPickupDateTooEarlyMessage(lang, now = new Date()) {
+  if (getPickupMinLeadDays(now) === 0) {
+    return lang === 'ar'
+      ? 'تاريخ الاستلام لازم يكون النهاردة أو بعد كده.'
+      : 'Pickup must be scheduled for today or later.';
+  }
   return lang === 'ar'
-    ? 'تاريخ الاستلام لازم يكون بكرة أو بعد كده. اختار بكرة أو تاريخ لاحق.'
-    : 'Pickup must be scheduled for tomorrow or later.';
+    ? 'تاريخ الاستلام لازم يكون بكرة أو بعد كده. بعد الساعة ٤ مساءً الاستلام نفس اليوم مش متاح.'
+    : 'Pickup must be scheduled for tomorrow or later. Same-day pickup is not available after 4 PM.';
 }
 
-function getPickupDateTooEarlyApiError() {
-  return 'Pickup date must be tomorrow or later.';
+function getPickupDateTooEarlyApiError(now = new Date()) {
+  if (getPickupMinLeadDays(now) === 0) {
+    return 'Pickup date cannot be earlier than today.';
+  }
+  return 'Pickup date must be tomorrow or later. Same-day pickup is not available after 4 PM.';
 }
 
 module.exports = {
+  PICKUP_SAME_DAY_CUTOFF_HOUR,
   PICKUP_MIN_LEAD_DAYS,
+  getPickupMinLeadDays,
   getEarliestPickupDate,
   getDefaultPickupDate,
   getEarliestPickupDateIso,

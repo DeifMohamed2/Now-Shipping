@@ -1478,6 +1478,7 @@
         "exportStartedTitle": "بدأ التصدير",
         "exportStartedText": "سيبدأ تنزيل الملف قريباً.",
         "currencyCode": "ج.م",
+        "todayPrefix": "النهاردة",
         "tomorrowPrefix": "غداً",
         "locale": "ar-EG",
         "actionEdit": "تعديل",

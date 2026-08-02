@@ -134,8 +134,8 @@ console.log('\n=== Structured field builder ===\n');
 {
   const sf = buildPickupStructuredField('pickupDate', 'ar', userContext, {}, userData);
   assert(sf && sf.type === 'date_inline', 'pickupDate structured field type');
-  assert(sf.minDate === getEarliestPickupDateIso(), 'pickupDate minDate is tomorrow');
-  assert(sf.defaultDate === getEarliestPickupDateIso(), 'pickupDate default is tomorrow');
+  assert(sf.minDate === getEarliestPickupDateIso(), 'pickupDate minDate matches earliest allowed');
+  assert(sf.defaultDate === getEarliestPickupDateIso(), 'pickupDate default matches earliest allowed');
 }
 
 console.log('\n=== Draft queue ===\n');

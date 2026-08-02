@@ -1478,6 +1478,7 @@
         "exportStartedTitle": "Export started",
         "exportStartedText": "Your file should download shortly.",
         "currencyCode": "EGP",
+        "todayPrefix": "Today",
         "tomorrowPrefix": "Tomorrow",
         "locale": "en-US",
         "actionEdit": "Edit",
