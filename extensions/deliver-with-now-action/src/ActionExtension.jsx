@@ -1,6 +1,6 @@
 import { render } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
-import { extensionFetch, orderStatus, selectedOrderIds } from './api.js';
+import { extensionFetch, fulfillmentErrorMessage, orderStatus, selectedOrderIds } from './api.js';
 
 export default async () => {
   render(<Extension />, document.body);
@@ -13,10 +13,10 @@ function statusLabel(status) {
   switch (status) {
     case 'ready_import':
       return 'Ready to import';
-    case 'in_now':
-      return 'In Now — syncing to Shopify';
+    case 'needs_sync':
+      return 'In Now — pushing tracking to Shopify';
     case 'complete':
-      return 'Up to date';
+      return 'Fulfilled on Shopify';
     case 'no_address':
       return 'No shipping address';
     default:
@@ -38,6 +38,8 @@ function Extension() {
   const [zoneValue, setZoneValue] = useState('');
   const [perOrderZones, setPerOrderZones] = useState({});
   const [importCount, setImportCount] = useState(0);
+  const [fulfillmentSyncedCount, setFulfillmentSyncedCount] = useState(0);
+  const [importTrackingNumbers, setImportTrackingNumbers] = useState([]);
   const [view, setView] = useState('form');
 
   const readyImport = useMemo(
@@ -45,7 +47,7 @@ function Extension() {
     [orders]
   );
   const alreadyInNow = useMemo(
-    () => orders.filter((o) => ['in_now', 'complete'].includes(orderStatus(o))),
+    () => orders.filter((o) => ['needs_sync', 'complete'].includes(orderStatus(o))),
     [orders]
   );
   const blocked = useMemo(
@@ -96,7 +98,26 @@ function Extension() {
         ]);
         if (cancelled) return;
 
-        const rows = ordersData.orders || [];
+        let rows = ordersData.orders || [];
+
+        const needsRepair = rows.filter((o) => orderStatus(o) === 'needs_sync');
+        if (needsRepair.length) {
+          await Promise.all(
+            needsRepair.map((o) =>
+              extensionFetch('/sync-fulfillment', {
+                method: 'POST',
+                body: { shopifyOrderId: o.id },
+              }).catch(() => null)
+            )
+          );
+          const refreshed = await extensionFetch(
+            `/shopify-orders/by-ids?ids=${encodeURIComponent(orderIds.join(','))}`
+          );
+          rows = refreshed.orders || rows;
+        }
+
+        if (cancelled) return;
+
         setOrders(rows);
         setGovernorates(zonesData.governorates || []);
         const zones = {};
@@ -199,8 +220,11 @@ function Extension() {
     setSubmitting(true);
     try {
       let count = 0;
+      let syncedCount = 0;
+      const trackingNumbers = [];
+
       if (payloadOrders.length === 1) {
-        await extensionFetch('/import-order', {
+        const data = await extensionFetch('/import-order', {
           method: 'POST',
           body: {
             shopifyOrderId: payloadOrders[0].shopifyOrderId,
@@ -209,14 +233,32 @@ function Extension() {
           },
         });
         count = 1;
+        if (data.fulfillment?.synced) syncedCount = 1;
+        if (data.fulfillment?.trackingNumber) trackingNumbers.push(data.fulfillment.trackingNumber);
+        if (data.fulfillment && !data.fulfillment.synced) {
+          setError(fulfillmentErrorMessage(data.fulfillment));
+        }
       } else {
         const result = await extensionFetch('/bulk-import', {
           method: 'POST',
           body: { orders: payloadOrders },
         });
-        count = (result.results || []).filter((r) => r.ok).length;
+        for (const row of result.results || []) {
+          if (!row.ok) continue;
+          count += 1;
+          if (row.fulfillment?.synced) syncedCount += 1;
+          if (row.fulfillment?.trackingNumber) trackingNumbers.push(row.fulfillment.trackingNumber);
+        }
+        if (syncedCount < count) {
+          setError(
+            `${count - syncedCount} order${count - syncedCount === 1 ? '' : 's'} imported but Shopify fulfillment failed. Reconnect your store in Now Shipping settings.`
+          );
+        }
       }
+
       setImportCount(count);
+      setFulfillmentSyncedCount(syncedCount);
+      setImportTrackingNumbers(trackingNumbers);
       setView('done');
     } catch (e) {
       setError(e.message || 'import_failed');
@@ -264,11 +306,27 @@ function Extension() {
       ) : null}
 
       {!loading && view === 'done' ? (
-        <s-banner tone="success" dismissible={false}>
-          {importCount > 0
-            ? `${importCount} order${importCount === 1 ? '' : 's'} imported into Now. Fulfillment and tracking will sync to Shopify automatically.`
-            : 'Done. Fulfillment syncs to Shopify automatically.'}
-        </s-banner>
+        <>
+          {fulfillmentSyncedCount > 0 ? (
+            <s-banner tone="success" dismissible={false}>
+              {fulfillmentSyncedCount} order{fulfillmentSyncedCount === 1 ? '' : 's'} imported into Now.
+              {importTrackingNumbers.length
+                ? ` Tracking #${importTrackingNumbers.join(', #')} is now on Shopify.`
+                : ' Tracking is now on Shopify.'}
+            </s-banner>
+          ) : null}
+          {importCount > 0 && fulfillmentSyncedCount < importCount ? (
+            <s-banner tone="critical" dismissible={false}>
+              {error ||
+                'Order imported into Now but Shopify fulfillment failed. Reconnect your store in Now Shipping settings.'}
+            </s-banner>
+          ) : null}
+          {importCount === 0 ? (
+            <s-banner tone="info" dismissible={false}>
+              Done.
+            </s-banner>
+          ) : null}
+        </>
       ) : null}
 
       {!loading && view === 'empty' && error ? (
@@ -293,8 +351,10 @@ function Extension() {
 
           {alreadyInNow.length > 0 ? (
             <s-banner tone="info" dismissible={false}>
-              {alreadyInNow.length} order{alreadyInNow.length === 1 ? ' is' : 's are'} already in Now.
-              Fulfillment and tracking sync to Shopify automatically.
+              {alreadyInNow.length} order{alreadyInNow.length === 1 ? ' is' : 's are'} already in Now
+              {alreadyInNow.some((o) => orderStatus(o) === 'complete')
+                ? ' with tracking on Shopify.'
+                : '.'}
             </s-banner>
           ) : null}
 
@@ -415,8 +475,10 @@ function Extension() {
         <>
           {alreadyInNow.length > 0 ? (
             <s-banner tone="info" dismissible={false}>
-              {alreadyInNow.length} order{alreadyInNow.length === 1 ? ' is' : 's are'} already in Now. Fulfillment
-              syncs automatically.
+              {alreadyInNow.length} order{alreadyInNow.length === 1 ? ' is' : 's are'} already in Now
+              {alreadyInNow.some((o) => orderStatus(o) === 'complete')
+                ? ' with tracking on Shopify.'
+                : '.'}
             </s-banner>
           ) : null}
           {blocked.length > 0 ? (

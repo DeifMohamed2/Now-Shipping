@@ -33,7 +33,7 @@ const shopifySyncLogSchema = new mongoose.Schema(
     topic: {
       type: String,
       required: true,
-      enum: ['orders/create', 'orders/updated', 'app/uninstalled', 'manual/import', 'customers/data_request', 'customers/redact', 'shop/redact'],
+      enum: ['orders/create', 'orders/updated', 'app/uninstalled', 'manual/import', 'fulfillment/create', 'customers/data_request', 'customers/redact', 'shop/redact'],
     },
     status: {
       type: String,

@@ -17,7 +17,7 @@ const {
   writeShopifySyncLog,
   updateShopifySyncLog,
 } = require('./shopifySyncLogHelper');
-const { syncFulfillmentAfterImport } = require('./shopifyFulfillmentSync');
+const { syncFulfillmentAfterImport, formatFulfillmentApiResult } = require('./shopifyFulfillmentSync');
 
 /**
  * @param {string} shopDomain
@@ -277,14 +277,22 @@ async function manualImportShopifyOrder(shopDomain, orderPayload, zonePick = {})
       return { ok: false, error: pickupVal.errors[0] };
     }
 
-    const exists = await Order.findOne({
+    const existing = await Order.findOne({
       business: installation.business,
       externalSource: 'shopify',
       externalOrderId: String(orderPayload.id),
-    }).select('_id');
+    });
 
-    if (exists) {
-      return { ok: false, error: 'duplicate' };
+    if (existing) {
+      const fulfillmentResult = await syncFulfillmentAfterImport({ installation, order: existing });
+      const fulfillment = formatFulfillmentApiResult(fulfillmentResult, existing.orderNumber);
+      return {
+        ok: true,
+        duplicate: true,
+        orderNumber: existing.orderNumber,
+        orderId: String(existing._id),
+        fulfillment,
+      };
     }
 
     const orderNumber = await generateUniqueOrderNumber();
@@ -320,12 +328,13 @@ async function manualImportShopifyOrder(shopDomain, orderPayload, zonePick = {})
     });
 
     const fulfillmentResult = await syncFulfillmentAfterImport({ installation, order: doc });
+    const fulfillment = formatFulfillmentApiResult(fulfillmentResult, doc.orderNumber);
 
     return {
       ok: true,
       orderNumber: doc.orderNumber,
       orderId: String(doc._id),
-      shopifyFulfillment: fulfillmentResult,
+      fulfillment,
     };
   } catch (err) {
     const msg = err && err.message ? String(err.message) : 'unknown_error';

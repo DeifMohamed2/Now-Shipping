@@ -22,7 +22,7 @@ Create a **Custom app** (or public app) and configure:
 |--------|--------|
 | **App URL** | `https://<YOUR_HOST>/shopify-app/` (embedded React UI). Must end with **`/shopify-app/`** — if you use `/shopify` or `/` the iframe will hit the wrong route and show the public site **404**. |
 | **Allowed redirection URL(s)** | Exactly: `https://<YOUR_HOST>/api/shopify/auth/callback` |
-| **Scopes** | Must match `.env` `SHOPIFY_SCOPES` character-for-character (comma-separated). Suggested: `read_customers,read_fulfillments,write_fulfillments,read_orders,write_orders` |
+| **Scopes** | Must match `.env` `SHOPIFY_SCOPES` character-for-character (comma-separated). Required: `read_customers,read_fulfillments,write_fulfillments,read_merchant_managed_fulfillment_orders,write_merchant_managed_fulfillment_orders,read_third_party_fulfillment_orders,write_third_party_fulfillment_orders,read_orders,write_orders,read_all_orders` |
 | **Webhooks API version** | Same date style as `SHOPIFY_API_VERSION` (e.g. `2026-04`) |
 | **Embedded** | Enabled |
 | **Legacy install flow** | Disabled |
@@ -72,7 +72,7 @@ When a merchant imports an order via **Deliver with Now**, the app now:
 2. Calls Shopify Admin API `POST /fulfillments.json` with tracking number = Now `orderNumber` and tracking URL `https://<APP_URL>/t/{orderNumber}`.
 3. Stores the Shopify fulfillment id on the Now order as `externalFulfillmentId`.
 
-**Scopes required:** `write_fulfillments` must be in both Partner app scopes and `.env` `SHOPIFY_SCOPES`. If fulfillment sync fails with **403**, the merchant must **reconnect** the store (Business → Settings → Integrations → Connect Shopify) so the new scope is granted.
+**Scopes required:** `write_fulfillments` plus **fulfillment-order scopes** (`read_merchant_managed_fulfillment_orders`, `write_merchant_managed_fulfillment_orders`, `read_third_party_fulfillment_orders`, `write_third_party_fulfillment_orders`) must be in both Partner app scopes and `.env` `SHOPIFY_SCOPES`. Without fulfillment-order scopes, Shopify returns an empty fulfillment-order list and tracking never appears. After adding scopes, the merchant must **reconnect** the store (Business → Settings → Integrations → Connect Shopify).
 
 **Native Shopify Orders page:** An admin link extension (`extensions/deliver-with-now/`) adds **Deliver with Now** to the bulk **More actions** menu when orders are selected. It opens the embedded app with those order IDs pre-loaded for import. Deploy with `npm run shopify:deploy` after building the UI.
 
@@ -260,8 +260,8 @@ Release steps:
 | `403` webhook *protected customer data* | Complete Partner Dashboard **Protected customer data access** (see §2.1), then uninstall + reconnect the app |
 | Orders never import | Filters: Egypt shipping, shippable items, shipping lines, `isActive`, business pickup rules |
 | `invalid_session_token` on app API | Clock skew, wrong secret, or `aud` not matching Client ID |
-| Shopify order stays **Unfulfilled** after import | Missing `write_fulfillments` scope — reconnect store; or use **Sync to Shopify** in embedded Orders page |
-| `fulfillment/create` failed with **403** | Reinstall/reconnect app so `write_fulfillments` is granted |
+| Shopify order stays **Unfulfilled** after import | Missing fulfillment-order scopes — add scopes to `shopify.app.toml` + `.env`, run `npm run shopify:deploy`, then **reconnect** the store |
+| `fulfillment/create` failed with **403** or `missing_fulfillment_scopes` | Reinstall/reconnect app so fulfillment-order scopes are granted |
 
 ---
 

@@ -9,7 +9,7 @@ const {
   shopifyRestGetOrder,
 } = require('../utils/shopifyService');
 const { manualImportShopifyOrder } = require('../utils/shopifyOrderSync');
-const { syncFulfillmentAfterImport } = require('../utils/shopifyFulfillmentSync');
+const { syncFulfillmentAfterImport, formatFulfillmentApiResult } = require('../utils/shopifyFulfillmentSync');
 const { renderMergedDeliveryPolicyPdfBuffers } = require('../utils/deliveryPolicyPdf');
 
 function appPublicBaseUrl() {
@@ -476,10 +476,16 @@ async function postImportOrder(req, res) {
       customerOverrides,
     });
     if (!result.ok) {
-      const code = result.error === 'duplicate' || result.error === 'duplicate_race' ? 409 : 400;
+      const code = result.error === 'duplicate_race' ? 409 : 400;
       return res.status(code).json({ ok: false, error: result.error });
     }
-    return res.json({ ok: true, orderNumber: result.orderNumber, orderId: result.orderId });
+    return res.json({
+      ok: true,
+      orderNumber: result.orderNumber,
+      orderId: result.orderId,
+      duplicate: !!result.duplicate,
+      fulfillment: result.fulfillment || null,
+    });
   } catch (err) {
     console.error('[shopifyApp] postImportOrder:', err.message || err);
     return res.status(500).json({ error: 'import_failed', detail: err.message });
@@ -521,6 +527,8 @@ async function postBulkImport(req, res) {
             ok: true,
             orderNumber: result.orderNumber,
             orderId: result.orderId,
+            duplicate: !!result.duplicate,
+            fulfillment: result.fulfillment || null,
           });
         }
       } catch (e) {
@@ -562,13 +570,13 @@ async function postSyncFulfillment(req, res) {
     }
 
     const result = await syncFulfillmentAfterImport({ installation: inst, order });
-    const ok = !!result.created || (result.skipped && result.reason !== 'missing_args');
+    const fulfillment = formatFulfillmentApiResult(result, order.orderNumber);
 
     return res.json({
-      ok,
+      ok: fulfillment.synced,
       orderNumber: order.orderNumber,
       shopifyOrderId: order.externalOrderId,
-      result,
+      fulfillment,
     });
   } catch (err) {
     console.error('[shopifyApp] postSyncFulfillment:', err.message || err);
@@ -603,12 +611,12 @@ async function postBulkSyncFulfillment(req, res) {
           continue;
         }
         const result = await syncFulfillmentAfterImport({ installation: inst, order });
-        const ok = !!result.created || (result.skipped && result.reason !== 'missing_args');
+        const fulfillment = formatFulfillmentApiResult(result, order.orderNumber);
         results.push({
           shopifyOrderId,
-          ok,
+          ok: fulfillment.synced,
           orderNumber: order.orderNumber,
-          result,
+          fulfillment,
         });
       } catch (e) {
         results.push({

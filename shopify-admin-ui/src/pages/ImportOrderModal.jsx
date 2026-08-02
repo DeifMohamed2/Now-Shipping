@@ -35,8 +35,10 @@ export function ImportOrderModal({ open, onClose, app, orders, onSuccess }) {
 
     setSubmitting(true);
     try {
+      let fulfillmentWarning = null;
+
       if (built.payloadOrders.length === 1) {
-        await authFetch(app, '/api/shopify/app/import-order', {
+        const data = await authFetch(app, '/api/shopify/app/import-order', {
           method: 'POST',
           body: JSON.stringify({
             shopifyOrderId: built.payloadOrders[0].shopifyOrderId,
@@ -44,12 +46,29 @@ export function ImportOrderModal({ open, onClose, app, orders, onSuccess }) {
             zone: built.payloadOrders[0].zone,
           }),
         });
+        if (data.fulfillment && !data.fulfillment.synced) {
+          fulfillmentWarning =
+            data.fulfillment.needsReconnect
+              ? 'Imported into Now but Shopify fulfillment failed. Reconnect your store in Now Shipping settings.'
+              : `Imported into Now but Shopify fulfillment failed: ${data.fulfillment.reason || 'unknown'}`;
+        }
       } else {
-        await authFetch(app, '/api/shopify/app/bulk-import', {
+        const data = await authFetch(app, '/api/shopify/app/bulk-import', {
           method: 'POST',
           body: JSON.stringify({ orders: built.payloadOrders }),
         });
+        const imported = (data.results || []).filter((r) => r.ok);
+        const synced = imported.filter((r) => r.fulfillment?.synced);
+        if (synced.length < imported.length) {
+          fulfillmentWarning = `${imported.length - synced.length} order${imported.length - synced.length === 1 ? '' : 's'} imported but Shopify fulfillment failed. Reconnect your store in Now Shipping settings.`;
+        }
       }
+
+      if (fulfillmentWarning) {
+        setSubmitError(fulfillmentWarning);
+        return;
+      }
+
       onSuccess?.();
       onClose();
     } catch (e) {

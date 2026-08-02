@@ -18,6 +18,18 @@ export function selectedOrderIds(data) {
   return [...new Set(ids.filter(Boolean))];
 }
 
+export function needsShopifyFulfillmentSync(row) {
+  return !!row?.nowOrderNumber && row.fulfillment_status !== 'fulfilled';
+}
+
+export function orderStatus(row) {
+  if (!row) return 'unknown';
+  if (!row.hasShippingAddress) return 'no_address';
+  if (!row.nowOrderNumber) return 'ready_import';
+  if (needsShopifyFulfillmentSync(row)) return 'needs_sync';
+  return 'complete';
+}
+
 export async function extensionFetch(path, options = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -60,10 +72,10 @@ export async function extensionFetch(path, options = {}) {
   }
 }
 
-export function orderStatus(row) {
-  if (!row) return 'unknown';
-  if (!row.hasShippingAddress) return 'no_address';
-  if (!row.nowOrderNumber) return 'ready_import';
-  if (row.fulfillment_status !== 'fulfilled') return 'in_now';
-  return 'complete';
+export function fulfillmentErrorMessage(fulfillment) {
+  if (!fulfillment || fulfillment.synced) return '';
+  if (fulfillment.needsReconnect || fulfillment.reason === 'missing_fulfillment_scopes') {
+    return 'Shopify fulfillment failed. Reconnect your store in Now Shipping settings to grant fulfillment permissions.';
+  }
+  return `Shopify fulfillment failed: ${fulfillment.reason || 'unknown_error'}`;
 }

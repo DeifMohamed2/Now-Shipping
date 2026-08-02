@@ -102,8 +102,25 @@ export function DeliverPage() {
         app,
         `/api/shopify/app/shopify-orders/by-ids?ids=${encodeURIComponent(orderIds.join(','))}`
       );
-      setOrders(data.orders || []);
-      resetZones(data.orders || []);
+      let rows = data.orders || [];
+      const needsRepair = rows.filter((o) => orderDeliverStatus(o) === 'needs_sync');
+      if (needsRepair.length) {
+        await Promise.all(
+          needsRepair.map((o) =>
+            authFetch(app, '/api/shopify/app/sync-fulfillment', {
+              method: 'POST',
+              body: JSON.stringify({ shopifyOrderId: o.id }),
+            }).catch(() => null)
+          )
+        );
+        const refreshed = await authFetch(
+          app,
+          `/api/shopify/app/shopify-orders/by-ids?ids=${encodeURIComponent(orderIds.join(','))}`
+        );
+        rows = refreshed.orders || rows;
+      }
+      setOrders(rows);
+      resetZones(rows);
     } catch (e) {
       setError(e.message || 'load_failed');
     } finally {
@@ -155,8 +172,11 @@ export function DeliverPage() {
     setSubmitting(true);
     try {
       let importCount = 0;
+      let fulfillmentSynced = 0;
+      const trackingNumbers = [];
+
       if (built.payloadOrders.length === 1) {
-        await authFetch(app, '/api/shopify/app/import-order', {
+        const data = await authFetch(app, '/api/shopify/app/import-order', {
           method: 'POST',
           body: JSON.stringify({
             shopifyOrderId: built.payloadOrders[0].shopifyOrderId,
@@ -165,16 +185,37 @@ export function DeliverPage() {
           }),
         });
         importCount = 1;
+        if (data.fulfillment?.synced) fulfillmentSynced = 1;
+        if (data.fulfillment?.trackingNumber) trackingNumbers.push(data.fulfillment.trackingNumber);
+        if (data.fulfillment && !data.fulfillment.synced) {
+          setSubmitError(
+            data.fulfillment.needsReconnect
+              ? 'Imported into Now but Shopify fulfillment failed. Reconnect your store in Now Shipping settings.'
+              : `Imported into Now but Shopify fulfillment failed: ${data.fulfillment.reason || 'unknown'}`
+          );
+        }
       } else {
         const data = await authFetch(app, '/api/shopify/app/bulk-import', {
           method: 'POST',
           body: JSON.stringify({ orders: built.payloadOrders }),
         });
-        importCount = (data.results || []).filter((r) => r.ok).length;
+        for (const row of data.results || []) {
+          if (!row.ok) continue;
+          importCount += 1;
+          if (row.fulfillment?.synced) fulfillmentSynced += 1;
+          if (row.fulfillment?.trackingNumber) trackingNumbers.push(row.fulfillment.trackingNumber);
+        }
+        if (fulfillmentSynced < importCount) {
+          setSubmitError(
+            `${importCount - fulfillmentSynced} order${importCount - fulfillmentSynced === 1 ? '' : 's'} imported but Shopify fulfillment failed. Reconnect your store in Now Shipping settings.`
+          );
+        }
       }
 
       setResults({
         imported: importCount,
+        fulfillmentSynced,
+        trackingNumbers,
         alreadyInNow: grouped.alreadyInNow.length,
         skipped: grouped.complete.length,
         blocked: grouped.blocked.length,
@@ -417,18 +458,39 @@ export function DeliverPage() {
         {step === 2 && results ? (
           <Card>
             <BlockStack gap="400">
-              <Banner tone="success" title="Delivery batch processed">
-                <p>
-                  {results.imported > 0
-                    ? `${results.imported} order${results.imported === 1 ? '' : 's'} imported into Now. `
-                    : ''}
-                  {results.alreadyInNow > 0
-                    ? `${results.alreadyInNow} already in Now (syncing automatically). `
-                    : ''}
-                  {results.skipped > 0 ? `${results.skipped} already up to date. ` : ''}
-                  {results.blocked > 0 ? `${results.blocked} could not be processed.` : ''}
-                </p>
-              </Banner>
+              {results.fulfillmentSynced > 0 ? (
+                <Banner tone="success" title="Tracking on Shopify">
+                  <p>
+                    {results.imported > 0
+                      ? `${results.imported} order${results.imported === 1 ? '' : 's'} imported into Now. `
+                      : ''}
+                    {results.trackingNumbers?.length
+                      ? `Tracking #${results.trackingNumbers.join(', #')} is now on Shopify.`
+                      : 'Tracking is now on Shopify.'}
+                  </p>
+                </Banner>
+              ) : (
+                <Banner tone="success" title="Delivery batch processed">
+                  <p>
+                    {results.imported > 0
+                      ? `${results.imported} order${results.imported === 1 ? '' : 's'} imported into Now. `
+                      : ''}
+                    {results.alreadyInNow > 0
+                      ? `${results.alreadyInNow} already in Now. `
+                      : ''}
+                    {results.skipped > 0 ? `${results.skipped} already up to date. ` : ''}
+                    {results.blocked > 0 ? `${results.blocked} could not be processed.` : ''}
+                  </p>
+                </Banner>
+              )}
+              {results.imported > 0 && results.fulfillmentSynced < results.imported ? (
+                <Banner tone="critical" title="Shopify fulfillment failed">
+                  <p>
+                    Some orders were imported into Now but Shopify fulfillment did not complete. Reconnect your store
+                    in Now Shipping settings, then open Deliver with Now again.
+                  </p>
+                </Banner>
+              ) : null}
               <InlineStack gap="300">
                 <Button variant="primary" onClick={() => navigate(buildShopifyAppNavigateUrl('/'))}>
                   View all orders

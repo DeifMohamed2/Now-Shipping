@@ -9,7 +9,7 @@ const ShopifySyncLog = require('../models/shopifySyncLog');
  * @param {string} opts.shopDomain
  * @param {string} [opts.shopifyOrderId]
  * @param {string} [opts.shopifyOrderName]
- * @param {'orders/create'|'orders/updated'|'app/uninstalled'|'manual/import'|'customers/data_request'|'customers/redact'|'shop/redact'} opts.topic
+ * @param {'orders/create'|'orders/updated'|'app/uninstalled'|'manual/import'|'fulfillment/create'|'customers/data_request'|'customers/redact'|'shop/redact'} opts.topic
  * @param {'success'|'skipped'|'failed'} opts.status
  * @param {string} [opts.reason]
  * @param {string} [opts.nowOrderNumber]

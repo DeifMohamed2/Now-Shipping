@@ -6,6 +6,19 @@ const {
 } = require('./shopifyService');
 const { writeShopifySyncLog } = require('./shopifySyncLogHelper');
 
+const OPEN_FULFILLMENT_ORDER_STATUSES = new Set(['open', 'in_progress', 'scheduled']);
+const FULFILLMENT_RETRY_ATTEMPTS = 3;
+const FULFILLMENT_RETRY_DELAY_MS = 400;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableShopifyError(err) {
+  const status = err && err.status;
+  return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+}
+
 /**
  * @param {string} shopDomain
  * @param {string} accessToken
@@ -59,7 +72,8 @@ async function getFulfillmentOrders(shopDomain, accessToken, shopifyOrderId) {
  * @param {import('../models/order')} order
  */
 function buildTrackingInfo(order) {
-  const appUrl = getAppUrl().replace(/\/$/, '');
+  const rawUrl = getAppUrl().replace(/\/$/, '');
+  const appUrl = rawUrl.startsWith('http://') ? rawUrl.replace(/^http:\/\//, 'https://') : rawUrl;
   const trackingNumber = String(order.orderNumber || '').trim();
   return {
     number: trackingNumber,
@@ -68,31 +82,74 @@ function buildTrackingInfo(order) {
   };
 }
 
-const OPEN_FULFILLMENT_ORDER_STATUSES = new Set(['open', 'in_progress', 'scheduled']);
+/**
+ * Normalize raw sync result into API-friendly fulfillment payload.
+ * @param {object} result
+ * @param {string|number} [orderNumber]
+ */
+function formatFulfillmentApiResult(result, orderNumber) {
+  const trackingNumber = orderNumber != null ? String(orderNumber) : '';
+  if (result?.created) {
+    return {
+      synced: true,
+      fulfillmentId: result.fulfillmentId || '',
+      trackingNumber,
+      reason: '',
+      needsReconnect: false,
+    };
+  }
+  if (result?.skipped && result.reason === 'already_synced') {
+    return {
+      synced: true,
+      fulfillmentId: result.fulfillmentId || '',
+      trackingNumber,
+      reason: 'already_synced',
+      needsReconnect: false,
+    };
+  }
+  if (result?.skipped && result.reason === 'already_fulfilled_in_shopify') {
+    return {
+      synced: true,
+      fulfillmentId: result.fulfillmentId || '',
+      trackingNumber,
+      reason: 'already_fulfilled_in_shopify',
+      needsReconnect: false,
+    };
+  }
+  const reason = result?.reason || result?.error || 'fulfillment_failed';
+  return {
+    synced: false,
+    fulfillmentId: result?.fulfillmentId || '',
+    trackingNumber,
+    reason,
+    needsReconnect: !!result?.needsReconnect || reason === 'missing_fulfillment_scopes',
+  };
+}
 
 /**
  * Create a Shopify fulfillment with Now tracking for an imported order.
  * Idempotent: skips when externalFulfillmentId is set or Shopify order is already fulfilled.
  *
  * @param {{ installation: import('../models/shopifyInstallation'), order: import('../models/order') }} params
- * @returns {Promise<{ created?: boolean, skipped?: boolean, reason?: string, fulfillmentId?: string, error?: string }>}
+ * @returns {Promise<{ created?: boolean, skipped?: boolean, reason?: string, fulfillmentId?: string, error?: string, needsReconnect?: boolean, trackingNumber?: string }>}
  */
 async function createFulfillmentWithTracking({ installation, order }) {
   const shopDomain = installation?.shopDomain;
   const shopifyOrderId = order?.externalOrderId != null ? String(order.externalOrderId) : '';
-  const shopifyOrderName = order?.externalOrderNumber ? String(order.externalOrderNumber) : '';
+  const trackingNumber = order?.orderNumber != null ? String(order.orderNumber) : '';
 
   if (!installation || !order) {
-    return { skipped: true, reason: 'missing_args' };
+    return { skipped: true, reason: 'missing_args', trackingNumber };
   }
   if (order.externalSource !== 'shopify' || !shopifyOrderId) {
-    return { skipped: true, reason: 'not_shopify_order' };
+    return { skipped: true, reason: 'not_shopify_order', trackingNumber };
   }
   if (order.externalFulfillmentId) {
     return {
       skipped: true,
       reason: 'already_synced',
       fulfillmentId: String(order.externalFulfillmentId),
+      trackingNumber,
     };
   }
 
@@ -100,10 +157,10 @@ async function createFulfillmentWithTracking({ installation, order }) {
 
   const shopifyOrder = await shopifyRestGetOrder(shopDomain, token, shopifyOrderId);
   if (!shopifyOrder) {
-    return { skipped: true, reason: 'shopify_order_not_found' };
+    return { skipped: true, reason: 'shopify_order_not_found', trackingNumber };
   }
   if (shopifyOrder.fulfillment_status === 'fulfilled') {
-    return { skipped: true, reason: 'already_fulfilled_in_shopify' };
+    return { skipped: true, reason: 'already_fulfilled_in_shopify', trackingNumber };
   }
 
   const fulfillmentOrders = await getFulfillmentOrders(shopDomain, token, shopifyOrderId);
@@ -112,32 +169,53 @@ async function createFulfillmentWithTracking({ installation, order }) {
   );
 
   if (!openFulfillmentOrders.length) {
-    return { skipped: true, reason: 'no_open_fulfillment_orders' };
+    const reason =
+      fulfillmentOrders.length === 0 ? 'missing_fulfillment_scopes' : 'no_open_fulfillment_orders';
+    return {
+      skipped: true,
+      reason,
+      needsReconnect: reason === 'missing_fulfillment_scopes',
+      trackingNumber,
+    };
   }
 
   const notifyCustomer = process.env.SHOPIFY_FULFILLMENT_NOTIFY_CUSTOMER === 'true';
   const trackingInfo = buildTrackingInfo(order);
 
-  const json = await shopifyRestRequest(shopDomain, token, '/fulfillments.json', {
-    method: 'POST',
-    body: {
-      fulfillment: {
-        line_items_by_fulfillment_order: openFulfillmentOrders.map((fo) => ({
-          fulfillment_order_id: fo.id,
-        })),
-        tracking_info: trackingInfo,
-        notify_customer: notifyCustomer,
-      },
-    },
-  });
+  let lastErr;
+  for (let attempt = 1; attempt <= FULFILLMENT_RETRY_ATTEMPTS; attempt += 1) {
+    try {
+      const json = await shopifyRestRequest(shopDomain, token, '/fulfillments.json', {
+        method: 'POST',
+        body: {
+          fulfillment: {
+            line_items_by_fulfillment_order: openFulfillmentOrders.map((fo) => ({
+              fulfillment_order_id: fo.id,
+            })),
+            tracking_info: trackingInfo,
+            notify_customer: notifyCustomer,
+          },
+        },
+      });
 
-  const fulfillmentId = json.fulfillment?.id != null ? String(json.fulfillment.id) : '';
-  if (fulfillmentId) {
-    order.externalFulfillmentId = fulfillmentId;
-    await order.save();
+      const fulfillmentId = json.fulfillment?.id != null ? String(json.fulfillment.id) : '';
+      if (fulfillmentId) {
+        order.externalFulfillmentId = fulfillmentId;
+        await order.save();
+      }
+
+      return { created: true, fulfillmentId, trackingNumber };
+    } catch (err) {
+      lastErr = err;
+      if (attempt < FULFILLMENT_RETRY_ATTEMPTS && isRetryableShopifyError(err)) {
+        await sleep(FULFILLMENT_RETRY_DELAY_MS * attempt);
+        continue;
+      }
+      throw err;
+    }
   }
 
-  return { created: true, fulfillmentId };
+  throw lastErr || new Error('fulfillment_create_failed');
 }
 
 /**
@@ -173,6 +251,13 @@ async function syncFulfillmentAfterImport({ installation, order }) {
         (result.fulfillmentId ? ` fulfillmentId=${result.fulfillmentId}` : '')
     );
 
+    if (reason === 'missing_fulfillment_scopes') {
+      console.error(
+        `[Shopify fulfillment] shop=${shopDomain} shopify=${shopifyOrderName || shopifyOrderId} ` +
+          'No fulfillment orders returned — reconnect store to grant fulfillment-order scopes.'
+      );
+    }
+
     return result;
   } catch (err) {
     const msg = err && err.message ? String(err.message) : 'unknown_error';
@@ -194,7 +279,12 @@ async function syncFulfillmentAfterImport({ installation, order }) {
       msg
     );
 
-    return { skipped: false, error: msg, needsReconnect };
+    return {
+      skipped: false,
+      error: msg,
+      needsReconnect,
+      trackingNumber: order.orderNumber != null ? String(order.orderNumber) : '',
+    };
   }
 }
 
@@ -203,4 +293,5 @@ module.exports = {
   buildTrackingInfo,
   createFulfillmentWithTracking,
   syncFulfillmentAfterImport,
+  formatFulfillmentApiResult,
 };
