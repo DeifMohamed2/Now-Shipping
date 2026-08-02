@@ -2241,7 +2241,7 @@ const calculateFees = (government, orderType, isExpressShipping, pricing) => {
 
 const calculateOrderFees = async (req, res) => {
   try {
-    const result = orderService.calculateOrderFeesForBusiness(req.userData, req.body);
+    const result = await orderService.calculateOrderFeesForBusiness(req.userData, req.body);
     if (!result.ok) {
       return res.status(result.status).json({ error: result.error });
     }

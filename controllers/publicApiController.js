@@ -57,9 +57,9 @@ const getDeliveryZones = (req, res) => {
   }
 };
 
-const calculateFees = (req, res) => {
+const calculateFees = async (req, res) => {
   try {
-    const result = orderService.calculateOrderFeesForBusiness(req.userData, req.body);
+    const result = await orderService.calculateOrderFeesForBusiness(req.userData, req.body);
     if (!result.ok) {
       return sendApiErrorWithMeta(res, result.status, 'VALIDATION_ERROR', result.error);
     }
