@@ -1,0 +1,11 @@
+api_version = "2026-04"
+
+[[extensions]]
+name = "t:name"
+handle = "deliver-with-now-order-details"
+uid = "c4d9f2a3-5b6e-7f8a-9c0d-1e2f3a4b5c6d7e8f"
+type = "ui_extension"
+
+[[extensions.targeting]]
+module = "./src/ActionExtension.jsx"
+target = "admin.order-details.action.render"
