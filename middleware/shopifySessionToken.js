@@ -8,21 +8,25 @@
 const jwt = require('jsonwebtoken');
 const ShopifyInstallation = require('../models/shopifyInstallation');
 
-function hostnameFromSessionDestOrIss(payload) {
+function shopDomainFromPayload(payload) {
   const dest = payload.dest != null ? String(payload.dest) : '';
-  const iss = payload.iss != null ? String(payload.iss) : '';
-  const urlStr = dest || iss;
-  if (!urlStr) return '';
-  try {
-    const u = new URL(urlStr);
-    return u.hostname.toLowerCase();
-  } catch {
-    return '';
+  if (dest) {
+    const match = /([a-z0-9][a-z0-9-]*\.myshopify\.com)/i.exec(dest);
+    if (match) return match[1].toLowerCase();
   }
+
+  const iss = payload.iss != null ? String(payload.iss) : '';
+  if (iss) {
+    const match = /([a-z0-9][a-z0-9-]*\.myshopify\.com)/i.exec(iss);
+    if (match) return match[1].toLowerCase();
+  }
+
+  return '';
 }
 
 /**
  * Express middleware — attaches `req.shopifyInstallation` and `req.shopifyShopDomain`.
+ * Accepts App Bridge session tokens and Admin UI extension OpenID Connect ID tokens.
  */
 async function verifyShopifySessionToken(req, res, next) {
   const apiSecret = process.env.SHOPIFY_API_SECRET;
@@ -43,11 +47,13 @@ async function verifyShopifySessionToken(req, res, next) {
     payload = jwt.verify(token, apiSecret, {
       algorithms: ['HS256'],
       audience: apiKey,
+      clockTolerance: 10,
     });
   } catch {
     try {
       payload = jwt.verify(token, apiSecret, {
         algorithms: ['HS256'],
+        clockTolerance: 10,
       });
       const aud = payload.aud;
       const audOk =
@@ -61,7 +67,7 @@ async function verifyShopifySessionToken(req, res, next) {
     }
   }
 
-  const shopDomain = hostnameFromSessionDestOrIss(payload);
+  const shopDomain = shopDomainFromPayload(payload);
   if (!shopDomain || !shopDomain.endsWith('.myshopify.com')) {
     return res.status(401).json({ error: 'invalid_shop_in_token' });
   }

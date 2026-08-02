@@ -76,19 +76,26 @@ function Extension() {
     let cancelled = false;
     async function load() {
       if (!orderIds.length) {
-        setLoading(false);
-        setView('empty');
+        if (!cancelled) {
+          setLoading(false);
+          setView('empty');
+        }
         return;
       }
-      setLoading(true);
-      setError(null);
-      setView('form');
+
+      if (!cancelled) {
+        setLoading(true);
+        setError(null);
+        setView('form');
+      }
+
       try {
         const [ordersData, zonesData] = await Promise.all([
           extensionFetch(`/shopify-orders/by-ids?ids=${encodeURIComponent(orderIds.join(','))}`),
           extensionFetch('/zones'),
         ]);
         if (cancelled) return;
+
         const rows = ordersData.orders || [];
         setOrders(rows);
         setGovernorates(zonesData.governorates || []);
@@ -105,9 +112,10 @@ function Extension() {
           setView('empty');
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     }
+
     load();
     return () => {
       cancelled = true;
@@ -269,6 +277,10 @@ function Extension() {
 
       {!loading && view === 'empty' && !error && orders.length === 0 && orderIds.length > 0 ? (
         <s-banner tone="critical">Could not load selected orders.</s-banner>
+      ) : null}
+
+      {!loading && view === 'empty' && !error && orderIds.length === 0 ? (
+        <s-banner tone="warning">No orders selected.</s-banner>
       ) : null}
 
       {!loading && view === 'form' && orders.length > 0 ? (

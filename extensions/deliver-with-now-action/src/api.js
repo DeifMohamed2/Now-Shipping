@@ -1,4 +1,5 @@
 const API_BASE = 'https://now.com.eg/api/shopify/app';
+const FETCH_TIMEOUT_MS = 25000;
 
 export function normalizeOrderId(id) {
   const s = String(id || '');
@@ -18,30 +19,45 @@ export function selectedOrderIds(data) {
 }
 
 export async function extensionFetch(path, options = {}) {
-  const token = await shopify.auth.idToken();
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: options.method || 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
-    },
-    body: options.body != null ? JSON.stringify(options.body) : undefined,
-  });
-  const text = await res.text();
-  let body;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
   try {
-    body = text ? JSON.parse(text) : {};
-  } catch {
-    body = { raw: text };
+    // Requests to the app's auth domain get Authorization injected by Shopify automatically.
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: options.method || 'GET',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+      body: options.body != null ? JSON.stringify(options.body) : undefined,
+    });
+
+    const text = await res.text();
+    let body;
+    try {
+      body = text ? JSON.parse(text) : {};
+    } catch {
+      body = { raw: text };
+    }
+
+    if (!res.ok) {
+      const err = new Error(body.error || body.detail || res.statusText || 'request_failed');
+      err.status = res.status;
+      err.body = body;
+      throw err;
+    }
+
+    return body;
+  } catch (e) {
+    if (e && e.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  if (!res.ok) {
-    const err = new Error(body.error || body.detail || res.statusText || 'request_failed');
-    err.status = res.status;
-    err.body = body;
-    throw err;
-  }
-  return body;
 }
 
 export function orderStatus(row) {
