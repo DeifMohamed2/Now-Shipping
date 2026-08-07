@@ -441,6 +441,11 @@ function populateOrdersTable(orders) {
         <span class="status-badge ${order.categoryClass || getStatusCategoryClass(order.statusCategory)}">
           ${getLocalizedOrderStatusLabel(order.orderStatus)}
         </span>
+        ${order.retrySchedule && order.retrySchedule.hasRetry ? `
+        <span class="retry-schedule-pill${order.retrySchedule.isConfirmed ? ' retry-schedule-pill--confirmed' : ' retry-schedule-pill--pending'}" title="${(order.retrySchedule.absoluteLabel || '').replace(/"/g, '&quot;')}">
+          <i class="ri-time-line" aria-hidden="true"></i>
+          <span>${order.retrySchedule.pillText || ''}</span>
+        </span>` : ''}
       </td>
       <td class="tries">
         <div>${(__NSO.triesOf || '{n}/2').replace('{n}', String(order.Attemps || 0))}</div>

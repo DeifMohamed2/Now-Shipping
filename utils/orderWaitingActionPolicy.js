@@ -30,6 +30,11 @@ function canCancelFromWaiting(order) {
   return isWaitingActionStatus(order);
 }
 
+/** Admin may schedule retry for waiting-action or in-stock orders. */
+function canAdminScheduleRetry(order) {
+  return ['waitingAction', 'inStock'].includes(order?.orderStatus);
+}
+
 /**
  * @param {object} body - req.body (JSON or urlencoded: `date` field)
  * @returns {{ ok: true, when: Date } | { ok: false, code: string, error: string }}
@@ -70,6 +75,7 @@ module.exports = {
   canRetryScheduled,
   canReturnToWarehouseFromWaiting,
   canCancelFromWaiting,
+  canAdminScheduleRetry,
   validateRetryScheduledDate,
   getWaitingActionFlags,
   MAX_RETRY_SCHEDULE_DAYS,

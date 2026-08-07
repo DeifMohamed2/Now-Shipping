@@ -339,6 +339,32 @@
         </div>
       </div>
 
+      <!-- Schedule Retry Modal -->
+      <div class="modal fade" id="scheduleRetryModal" tabindex="-1" aria-labelledby="scheduleRetryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="scheduleRetryModalLabel">Schedule delivery retry</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="scheduleRetryForm">
+                <input type="hidden" id="scheduleRetryOrderId" name="orderId" value="">
+                <p class="text-muted small mb-3">Choose when this order should be attempted again. The business will see the scheduled retry on their orders page.</p>
+                <div class="mb-3">
+                  <label for="scheduleRetryDate" class="form-label">Retry date &amp; time</label>
+                  <input type="datetime-local" id="scheduleRetryDate" name="date" class="form-control" required>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                  <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Schedule retry</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

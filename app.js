@@ -209,6 +209,9 @@ app.use(
 // Site contact email for footers, mailto links, and shared templates (`config/site.js`).
 app.use((req, res, next) => {
   res.locals.siteContactEmail = siteConfig.contactEmail;
+  res.locals.sitePublicPhone = siteConfig.publicPhone;
+  res.locals.sitePhysicalAddress = siteConfig.physicalAddress;
+  res.locals.siteLegalEntityName = siteConfig.legalEntityName;
   const p = req.path || '';
   if (p.startsWith('/admin')) res.locals.logoHomeHref = '/admin/dashboard';
   else if (p.startsWith('/business')) res.locals.logoHomeHref = '/business/dashboard';

@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken');
 const sms = require('../utils/sms');
 const { emailService } = require('../utils/email');
 const Order = require('../models/order');
+const enTranslations = require('../i18n/en.json');
 
 // Transporter moved to centralized emailService
 
@@ -47,7 +48,16 @@ const faqPage = (req, res) => {
 };
 
 const privacyPolicyPage = (req, res) => {
-  res.redirect(302, '/');
+  const lang = req.query.lang || req.cookies.language || 'ar';
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.render('landing/privacy-policy', {
+    title: 'Privacy Policy — Now Shipping',
+    layout: 'layouts/layout-landing',
+    currentLang: lang,
+    privacyPolicyData: enTranslations.pages.privacyPolicy,
+  });
 };
 
 /** Public order tracking (search + /t/:orderNumber for WhatsApp links) */

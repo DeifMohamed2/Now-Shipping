@@ -50,6 +50,7 @@ const {
 const orderService = require('../services/orderService');
 const pickupService = require('../services/pickupService');
 const orderWaitingActionPolicy = require('../utils/orderWaitingActionPolicy');
+const { applyOrderRetrySchedule, applyInProgressRetryTouch, ensureInProgressStageDoc } = require('../utils/orderRetrySchedule');
 const {
   DASHBOARD_HEATMAP_TIMEZONE,
   resolveDashboardRange,
@@ -720,7 +721,11 @@ const get_ordersPage = async (req, res) => {
 
 const get_orders = async (req, res) => {
   try {
-    const data = await orderService.listOrdersForBusiness(req.userData, req.query);
+    const locale = req.language === 'ar' ? 'ar' : 'en';
+    const data = await orderService.listOrdersForBusiness(req.userData, {
+      ...req.query,
+      locale,
+    });
     res.status(200).json({
       orders: data.orders || [],
       pagination: data.pagination,
@@ -1239,19 +1244,6 @@ const printPolicy = async (req, res) => {
 // ================= WaitingAction Actions ================= //
 // See utils/orderWaitingActionPolicy.js for eligibility; :orderId may be Mongo _id or orderNumber.
 
-function ensureInProgressStageDoc(order) {
-  if (!order.orderStages) {
-    order.orderStages = {};
-  }
-  if (!order.orderStages.inProgress) {
-    order.orderStages.inProgress = {
-      isCompleted: false,
-      completedAt: null,
-      notes: '',
-    };
-  }
-}
-
 function ensureOutForDeliveryStageDoc(order) {
   if (!order.orderStages) {
     order.orderStages = {};
@@ -1262,18 +1254,6 @@ function ensureOutForDeliveryStageDoc(order) {
       completedAt: null,
       notes: '',
     };
-  }
-}
-
-function applyInProgressRetryTouch(order, notes) {
-  ensureInProgressStageDoc(order);
-  if (!order.orderStages.inProgress.isCompleted) {
-    order.orderStages.inProgress.isCompleted = true;
-    order.orderStages.inProgress.completedAt = new Date();
-    order.orderStages.inProgress.notes = notes;
-  }
-  if (typeof order.markModified === 'function') {
-    order.markModified('orderStages');
   }
 }
 
@@ -1292,9 +1272,11 @@ const retryTomorrow = async (req, res) => {
         currentStatus: order.orderStatus,
       });
     }
-    order.scheduledRetryAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    applyInProgressRetryTouch(order, 'Retry scheduled for tomorrow');
-    order.orderStatus = 'rescheduled';
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    applyOrderRetrySchedule(order, tomorrow, {
+      actor: 'business',
+      note: 'Retry scheduled for tomorrow',
+    });
     await order.save();
     return res.status(200).json({ message: 'Retry scheduled for tomorrow' });
   } catch (e) {
@@ -1326,9 +1308,10 @@ const retryScheduled = async (req, res) => {
         currentStatus: order.orderStatus,
       });
     }
-    order.scheduledRetryAt = dateParsed.when;
-    applyInProgressRetryTouch(order, 'Retry rescheduled');
-    order.orderStatus = 'rescheduled';
+    applyOrderRetrySchedule(order, dateParsed.when, {
+      actor: 'business',
+      note: 'Retry rescheduled',
+    });
     await order.save();
     return res.status(200).json({ message: 'Retry scheduled' });
   } catch (e) {

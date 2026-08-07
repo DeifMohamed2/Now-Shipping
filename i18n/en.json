@@ -500,18 +500,173 @@
     },
     "privacyPolicy": {
       "title": "Privacy Policy",
-      "subtitle": "How we protect and use your information",
-      "lastUpdated": "Last updated: January 2024",
-      "introduction": "Introduction",
-      "introductionText": "We are committed to protecting your privacy and personal information.",
-      "informationCollection": "Information We Collect",
-      "informationCollectionText": "We collect information you provide directly to us and information we obtain automatically.",
-      "informationUse": "How We Use Information",
-      "informationUseText": "We use your information to provide, maintain, and improve our services.",
-      "informationSharing": "Information Sharing",
-      "informationSharingText": "We do not sell, trade, or otherwise transfer your personal information to third parties.",
-      "contact": "Contact",
-      "contactText": "Questions about this policy? Email us at"
+      "subtitle": "How Now Shipping collects, uses, and protects your information across our mobile apps and website.",
+      "lastUpdated": "Last updated: August 7, 2026",
+      "effectiveDate": "Effective date: August 7, 2026",
+      "appsCovered": "This policy applies to the Now Shipping Business mobile app, Courier mobile app, and the website at now.com.eg.",
+      "tocTitle": "Table of Contents",
+      "sections": [
+        {
+          "id": "introduction",
+          "title": "1. Introduction",
+          "paragraphs": [
+            "Now Shipping (\"we,\" \"us,\" or \"our\") operates a logistics and delivery platform that connects businesses, couriers, and customers in Egypt. This Privacy Policy explains how we collect, use, disclose, and safeguard personal information when you use our Business mobile app, Courier mobile app, website, and related services (collectively, the \"Platform\").",
+            "By creating an account, using our apps, or accessing our website, you agree to the collection and use of information as described in this policy. If you do not agree, please do not use the Platform."
+          ]
+        },
+        {
+          "id": "who-we-are",
+          "title": "2. Who We Are",
+          "paragraphs": [
+            "Legal entity: Now Shipping",
+            "Address: Cairo, Egypt",
+            "Email: info@now.com.eg",
+            "Phone: +201119177677",
+            "Website: https://now.com.eg"
+          ]
+        },
+        {
+          "id": "information-we-collect",
+          "title": "3. Information We Collect",
+          "paragraphs": [
+            "We collect information that you provide directly, information generated through your use of the Platform, and information from third-party integrations you authorize."
+          ],
+          "list": [
+            "Account and profile data: name, email address, phone number, password (stored in hashed form), profile photo, and language preference.",
+            "Business account data: brand or company name, industry, monthly order volume, social media links, pickup addresses (including map coordinates), and notification preferences (e.g., WhatsApp or SMS).",
+            "Know Your Customer (KYC) and verification data: national ID numbers, tax registration numbers, identity documents, brand verification photos, and other documents you upload for account verification.",
+            "Courier account data: date of birth, residential address, vehicle type and plate number, assigned delivery zones, availability status, and courier identity and vehicle documents.",
+            "Order and shipment data: customer names, phone numbers, delivery addresses, order details, cash-on-delivery amounts, barcodes, delivery notes, and order status history.",
+            "Location data (Courier app): GPS coordinates collected when location tracking is enabled in the app, including latitude, longitude, and timestamp of last update. Location is used for dispatch, operations, and live courier tracking by authorized administrators.",
+            "Device and push notification data: Firebase Cloud Messaging (FCM) device tokens used to deliver push notifications to your device.",
+            "Photos and file uploads: profile images, KYC documents, exchange or delivery completion photos, support ticket attachments, and other files you upload through the app.",
+            "AI assistant data (Business app): text messages and voice audio you submit to our AINOW assistant, which may be processed to transcribe speech, answer questions, and help create orders or pickups.",
+            "Communications data: SMS one-time passwords (OTPs), delivery status messages sent via SMS or WhatsApp, and email communications related to your account.",
+            "Technical and security data: IP address, device type, operating system, app version, API usage logs, and authentication records collected to secure the Platform and prevent fraud."
+          ]
+        },
+        {
+          "id": "how-we-use",
+          "title": "4. How We Use Your Information",
+          "paragraphs": [
+            "We use the information we collect for the following purposes:"
+          ],
+          "list": [
+            "Provide, operate, and maintain the Platform, including order creation, pickup scheduling, delivery fulfillment, and wallet services.",
+            "Authenticate users, verify accounts, and process registrations and password resets.",
+            "Assign and manage courier deliveries, pickups, and returns.",
+            "Send transactional notifications about order status, pickups, deliveries, and account activity via push notifications, SMS, WhatsApp, or email.",
+            "Enable courier location tracking for operational dispatch and authorized live monitoring when tracking is enabled.",
+            "Process voice and text inputs through our AI assistant to help you manage orders and access platform features.",
+            "Provide customer support, respond to inquiries, and resolve disputes.",
+            "Comply with legal obligations, enforce our terms, and protect the safety and security of users and the Platform.",
+            "Analyze usage patterns to improve our services, fix bugs, and develop new features."
+          ]
+        },
+        {
+          "id": "how-we-share",
+          "title": "5. How We Share Your Information",
+          "paragraphs": [
+            "We do not sell your personal information. We may share information in the following circumstances:"
+          ],
+          "list": [
+            "With couriers and operational partners: delivery addresses, customer contact details, and order information necessary to complete pickups and deliveries.",
+            "With service providers: third-party vendors who help us operate the Platform (see Section 6), subject to contractual obligations to protect your data.",
+            "With businesses and merchants: couriers' names and contact information may be shared with business users for active orders; end customers receive tracking links but not couriers' live GPS location.",
+            "For legal reasons: when required by law, regulation, court order, or governmental request, or to protect our rights, users, or the public.",
+            "In business transfers: in connection with a merger, acquisition, or sale of assets, with notice to you where required by law.",
+            "With your consent: when you authorize a specific sharing arrangement, such as connecting a Shopify or other e-commerce store."
+          ]
+        },
+        {
+          "id": "third-party-services",
+          "title": "6. Third-Party Services",
+          "paragraphs": [
+            "We use the following third-party services to operate the Platform. These providers may process your data according to their own privacy policies:"
+          ],
+          "list": [
+            "Google Firebase Cloud Messaging — push notifications to Business and Courier mobile apps.",
+            "Google Gemini (Google AI) — processing AI assistant chat messages and voice audio transcription in the Business app.",
+            "Google Maps — map display for zone selection and administrative courier tracking.",
+            "WhySMS — sending SMS messages including OTP verification and delivery notifications.",
+            "Wasender (WhatsApp API) — sending transactional WhatsApp messages such as delivery updates and tracking links.",
+            "Shopify — order synchronization for merchants who connect their Shopify stores (when applicable).",
+            "Email service providers — transactional emails such as account verification and password reset.",
+            "MongoDB Atlas / cloud hosting — secure storage of Platform data."
+          ]
+        },
+        {
+          "id": "location-data",
+          "title": "7. Location Data",
+          "paragraphs": [
+            "The Courier mobile app may collect precise GPS location data when you enable location tracking in the app settings. Location data is collected only while tracking is enabled and is used to assign deliveries, support operations, and display courier positions to authorized Now Shipping administrators on internal dispatch maps.",
+            "You can disable location tracking at any time through the in-app location preferences. Disabling location tracking may limit your ability to receive and complete certain courier assignments.",
+            "We do not share couriers' live GPS coordinates with end customers. Customers receive order status updates and tracking links that show shipment progress, not real-time courier location."
+          ]
+        },
+        {
+          "id": "data-retention",
+          "title": "8. Data Retention",
+          "paragraphs": [
+            "We retain your personal information for as long as your account is active and as needed to provide the Platform and fulfill the purposes described in this policy.",
+            "When you delete your account, we remove or anonymize personal information associated with your account profile. Certain operational records — including order history, ledger entries, payout records, and communications required for accounting, tax, legal compliance, or dispute resolution — may be retained for a limited period as required by applicable law or legitimate business needs, after which they are deleted or anonymized.",
+            "Backup copies may persist for a limited time before being permanently deleted in accordance with our backup retention schedule."
+          ]
+        },
+        {
+          "id": "data-security",
+          "title": "9. Data Security",
+          "paragraphs": [
+            "We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. These measures include HTTPS encryption for data in transit, hashed password storage, access controls, and restricted access to personal data by authorized personnel only.",
+            "No method of transmission over the internet or electronic storage is completely secure. While we strive to protect your information, we cannot guarantee absolute security."
+          ]
+        },
+        {
+          "id": "your-rights",
+          "title": "10. Your Rights and Choices",
+          "paragraphs": [
+            "Depending on your location and applicable law, you may have the following rights regarding your personal information:"
+          ],
+          "list": [
+            "Access and update: you can review and update your profile information through the app or website account settings.",
+            "Delete your account: you may delete your account from within the mobile app under Account Settings. Account deletion initiates removal of your profile data; certain operational records may be retained as described in Section 8.",
+            "Notification preferences: you can manage push notification, SMS, and WhatsApp notification preferences in your account settings where available.",
+            "Location tracking (Courier app): you can enable or disable GPS location tracking through the in-app location preferences.",
+            "Marketing communications: we send primarily transactional messages. If we send promotional communications, you may opt out using the instructions in those messages.",
+            "Contact us: for other requests regarding your data (such as access or correction requests), contact us at info@now.com.eg."
+          ]
+        },
+        {
+          "id": "children",
+          "title": "11. Children's Privacy",
+          "paragraphs": [
+            "The Platform is not directed to children under the age of 13, and we do not knowingly collect personal information from children under 13. If we learn that we have collected personal information from a child under 13, we will delete that information promptly.",
+            "The Courier mobile app is intended for adults aged 18 and older. The Business mobile app is intended for business users and merchants who are at least 18 years old or the age of legal majority in their jurisdiction."
+          ]
+        },
+        {
+          "id": "international-transfers",
+          "title": "12. International Data Transfers",
+          "paragraphs": [
+            "Your information may be transferred to and processed in countries other than Egypt, including countries where our service providers (such as Google) operate data centers. When we transfer data internationally, we take steps to ensure appropriate safeguards are in place to protect your information in accordance with this Privacy Policy."
+          ]
+        },
+        {
+          "id": "changes",
+          "title": "13. Changes to This Policy",
+          "paragraphs": [
+            "We may update this Privacy Policy from time to time. When we make material changes, we will update the \"Last updated\" date at the top of this page and, where appropriate, notify you through the app or by email.",
+            "Your continued use of the Platform after the effective date of any changes constitutes your acceptance of the updated policy."
+          ]
+        }
+      ],
+      "contact": {
+        "title": "14. Contact Us",
+        "text": "If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:",
+        "email": "info@now.com.eg",
+        "phone": "+201119177677",
+        "address": "Cairo, Egypt"
+      }
     },
     "comingSoon": {
       "title": "Coming Soon",
@@ -821,6 +976,12 @@
         "paginationNext": "Next",
         "loadingTable": "Loading…",
         "triesOf": "{n}/2",
+        "retryTomorrow": "Retry tomorrow",
+        "retryInDays": "Retry in {n} days",
+        "retryInWeeks": "Retry in {n} week(s)",
+        "retryOnDate": "Retry on {date}",
+        "retryScheduledShort": "Retry scheduled",
+        "retryPendingConfirmation": "Retry scheduled — awaiting confirmation",
         "typeDeliver": "Deliver",
         "typeReturn": "Return",
         "typeExchange": "Exchange",

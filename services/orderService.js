@@ -28,6 +28,7 @@ const {
 } = require('../utils/orderUiPolicy');
 const { applyBusinessLikeCancellation } = require('../utils/orderCancellationFlow');
 const orderWaitingActionPolicy = require('../utils/orderWaitingActionPolicy');
+const { getScheduledRetryDisplay } = require('../utils/scheduledRetryDisplay');
 const { renderDeliveryPolicyPdfBuffer } = require('../utils/deliveryPolicyPdf');
 
 const FEE_FIELDS_TO_STRIP = ['orderFees', 'fee', 'amountOfFees', 'shippingFee'];
@@ -333,6 +334,7 @@ async function listOrdersForBusiness(business, query = {}) {
     dateFrom,
     dateTo,
     search,
+    locale,
   } = query;
 
   const mongoQuery = { business: business._id };
@@ -384,6 +386,7 @@ async function listOrdersForBusiness(business, query = {}) {
     orderObj.canCancel = canBusinessCancel(order);
     orderObj.canEditAddress = canBusinessChangeAddress(order);
     orderObj.canDelete = order.orderStatus === 'new';
+    orderObj.retrySchedule = getScheduledRetryDisplay(orderObj, locale);
     return orderObj;
   });
 

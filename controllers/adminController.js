@@ -39,6 +39,9 @@ const {
 } = require('../utils/orderUiPolicy');
 const { DASHBOARD_HEATMAP_TIMEZONE } = require('../utils/dashboardMetricHelpers');
 const { applyBusinessLikeCancellation } = require('../utils/orderCancellationFlow');
+const orderWaitingActionPolicy = require('../utils/orderWaitingActionPolicy');
+const { applyOrderRetrySchedule } = require('../utils/orderRetrySchedule');
+const { getScheduledRetryDisplay } = require('../utils/scheduledRetryDisplay');
 const {
   resolvePickupAddressForOrder,
   getDefaultPickupAddressId,
@@ -1198,6 +1201,8 @@ const get_orders = async (req, res) => {
         };
       }
       attachBusinessDisplayName(orderObj);
+      orderObj.canAdminScheduleRetry = orderWaitingActionPolicy.canAdminScheduleRetry(order);
+      orderObj.retrySchedule = getScheduledRetryDisplay(orderObj, 'en');
       return orderObj;
     });
 
@@ -1271,6 +1276,8 @@ const get_orderDetailsPage = async (req, res) => {
       selectedPickupAddress: selectedPickupAddress,
       canCancelOrder: canAdminCancel(order),
       canChangeAddress: canAdminChangeAddress(order),
+      canAdminScheduleRetry: orderWaitingActionPolicy.canAdminScheduleRetry(order),
+      retrySchedule: getScheduledRetryDisplay(order, 'en'),
       trackingDisplay,
       statusHistoryChronological,
       orderStatusLabel: statusHelper.getOrderStatusLabel(order.orderStatus),
@@ -4665,9 +4672,15 @@ const adminRetryTomorrow = async (req, res) => {
     const { orderId } = req.params;
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.orderStatus !== 'waitingAction')
-      return res.status(400).json({ error: 'Order not in waitingAction' });
-    order.scheduledRetryAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    if (!orderWaitingActionPolicy.canAdminScheduleRetry(order)) {
+      return res.status(400).json({
+        error: 'Scheduling is only available for orders in waiting action or in stock.',
+        code: 'INVALID_STATUS',
+        currentStatus: order.orderStatus,
+      });
+    }
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    applyOrderRetrySchedule(order, tomorrow, { actor: 'admin' });
     await order.save();
     return res.status(200).json({ message: 'Retry scheduled for tomorrow' });
   } catch (e) {
@@ -4678,15 +4691,24 @@ const adminRetryTomorrow = async (req, res) => {
 const adminRetryScheduled = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { date } = req.body;
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.orderStatus !== 'waitingAction')
-      return res.status(400).json({ error: 'Order not in waitingAction' });
-    const when = new Date(date);
-    if (isNaN(when.getTime()))
-      return res.status(400).json({ error: 'Invalid date' });
-    order.scheduledRetryAt = when;
+    if (!orderWaitingActionPolicy.canAdminScheduleRetry(order)) {
+      return res.status(400).json({
+        error: 'Scheduling is only available for orders in waiting action or in stock.',
+        code: 'INVALID_STATUS',
+        currentStatus: order.orderStatus,
+      });
+    }
+    const dateParsed = orderWaitingActionPolicy.validateRetryScheduledDate(req.body);
+    if (!dateParsed.ok) {
+      return res.status(400).json({
+        error: dateParsed.error,
+        code: dateParsed.code,
+        currentStatus: order.orderStatus,
+      });
+    }
+    applyOrderRetrySchedule(order, dateParsed.when, { actor: 'admin' });
     await order.save();
     return res.status(200).json({ message: 'Retry scheduled' });
   } catch (e) {

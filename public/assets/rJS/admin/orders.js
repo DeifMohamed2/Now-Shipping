@@ -434,6 +434,9 @@
     } else if (status === 'waitingAction') {
       statusText = 'Waiting Action';
       badgeClass = 'bg-danger-subtle text-danger';
+    } else if (status === 'rescheduled') {
+      statusText = 'Rescheduled';
+      badgeClass = 'bg-info-subtle text-info';
     } else if (status === 'inReturnStock') {
       statusText = 'In Return Stock';
       badgeClass = 'bg-warning-subtle text-warning';
@@ -772,6 +775,13 @@
 
       const showComplete = !TERMINAL_COMPLETE_STATUSES.has(order.orderStatus);
 
+      const retrySubLabel =
+        order.retrySchedule && order.retrySchedule.hasRetry
+          ? `<div class="admin-orders-retry-hint text-muted mt-1" title="${escHtml(order.retrySchedule.absoluteLabel || '')}">
+              <i class="ri-time-line"></i> ${escHtml(order.retrySchedule.absoluteLabel || order.retrySchedule.pillText || '')}
+            </div>`
+          : '';
+
       row.innerHTML = `
         <th scope="row">
           <div class="form-check">
@@ -816,6 +826,7 @@
         </td>
         <td class="cell-compact">
           <span class="badge text-uppercase ${st.badgeClass}">${st.statusText}</span>
+          ${retrySubLabel}
         </td>
         <td class="cell-compact">${assignBlock}</td>
         <td class="cell-compact text-nowrap"><span title="${new Date(order.orderDate).toISOString()}">${shortDate}</span></td>
@@ -845,6 +856,16 @@
                 <button type="button" class="dropdown-item" data-act="assign-return" data-order="${order.orderNumber}" data-zone="${encodeURIComponent(zone)}">
                   <i class="ri-user-received-2-line text-info"></i>
                   <span>Assign Courier (Return)</span>
+                </button>
+              </li>`
+                  : ''
+              }
+              ${
+                order.canAdminScheduleRetry
+                  ? `<li>
+                <button type="button" class="dropdown-item" data-act="schedule-retry" data-id="${order._id}" data-order-number="${escHtml(String(order.orderNumber))}">
+                  <i class="ri-calendar-schedule-line text-primary"></i>
+                  <span>Schedule Retry</span>
                 </button>
               </li>`
                   : ''
@@ -934,6 +955,14 @@
       row.querySelectorAll('[data-act="print-awb"]').forEach((btn) => {
         btn.addEventListener('click', () =>
           handlePrintPolicy(btn.getAttribute('data-order'))
+        );
+      });
+      row.querySelectorAll('[data-act="schedule-retry"]').forEach((btn) => {
+        btn.addEventListener('click', () =>
+          openScheduleRetryModal(
+            btn.getAttribute('data-id'),
+            btn.getAttribute('data-order-number')
+          )
         );
       });
 
@@ -1074,6 +1103,67 @@
       document.getElementById('assignReturnCourierModal')
     );
     assignReturnCourierModal.show();
+  }
+
+  function openScheduleRetryModal(orderId, orderNumber) {
+    document.querySelectorAll('.orders-table-dropdown.show').forEach((d) => {
+      d.classList.remove('show');
+    });
+    const orderIdInput = document.getElementById('scheduleRetryOrderId');
+    const dateInput = document.getElementById('scheduleRetryDate');
+    if (orderIdInput) orderIdInput.value = orderId || '';
+    if (dateInput) {
+      const min = new Date(Date.now() + 60 * 1000);
+      min.setSeconds(0, 0);
+      dateInput.min = min.toISOString().slice(0, 16);
+      dateInput.value = '';
+    }
+    const modalEl = document.getElementById('scheduleRetryModal');
+    if (!modalEl) return;
+    const title = modalEl.querySelector('.modal-title');
+    if (title && orderNumber) {
+      title.textContent = `Schedule retry — #${orderNumber}`;
+    }
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  }
+
+  async function submitScheduleRetry(event) {
+    event.preventDefault();
+    const orderId = document.getElementById('scheduleRetryOrderId')?.value;
+    const dateVal = document.getElementById('scheduleRetryDate')?.value;
+    if (!orderId || !dateVal) {
+      Swal.fire({ icon: 'warning', title: 'Missing date', text: 'Please select a retry date and time.' });
+      return;
+    }
+    try {
+      const response = await fetch(`/admin/orders/${orderId}/retry-scheduled`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: dateVal }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to schedule retry');
+      }
+      const modalEl = document.getElementById('scheduleRetryModal');
+      const modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+      if (modal) modal.hide();
+      Swal.fire({
+        icon: 'success',
+        title: 'Retry scheduled',
+        text: data.message || 'The business will see this on their orders page.',
+        timer: 2200,
+      }).then(() => {
+        fetchOrders(getActiveOrderType(), currentPageAdmin);
+      });
+    } catch (error) {
+      console.error('submitScheduleRetry:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Could not schedule retry',
+        text: error.message || 'Please try again.',
+      });
+    }
   }
 
   async function cancelOrder(orderId) {
@@ -1614,6 +1704,11 @@
       });
     }
 
+    const scheduleRetryForm = document.getElementById('scheduleRetryForm');
+    if (scheduleRetryForm) {
+      scheduleRetryForm.addEventListener('submit', submitScheduleRetry);
+    }
+
     document.addEventListener('hidden.bs.modal', function () {
       document.querySelectorAll('.modal-backdrop').forEach((b) => b.remove());
       document.body.classList.remove('modal-open');
@@ -1635,4 +1730,5 @@
   window.selectPaperSize = selectPaperSize;
   window.handlePrintPolicy = handlePrintPolicy;
   window.printPolicy = printPolicy;
+  window.openScheduleRetryModal = openScheduleRetryModal;
 })();
